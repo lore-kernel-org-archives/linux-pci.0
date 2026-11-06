@@ -1,60 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=212.227.17.24
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793989819;
-	b=c6allUZnfyHIsngpSmKky+IMcrC+CRTn6f7///OUM5CHCuyFbYWRjdpeP+QlZ93O5+Jd
-	 DYHW6ez66gQSHPOCTdWzuqjTkPALAnMDspStAa7moJ/cz9OMuutzHV1pN+ozLo0z47ZPd
-	 xU0KgiDUssIhROw/enZCwsz/Cz4W5sc3KrKr4Oz76woEuR6PVyy6P3zwGv4vqKCskHyY1
-	 HTeo2CJPKzgRKkHxsVt9OoWxgehe+E5NB3DzYkr5Vx/GgWKhk3I749P+v96vdWEbGhtil
-	 vz0FTwfNu7TIjP9CeBoC7mcYaCDsy6SzmrrhhyqCSzIutWmL6RV1djLwiqElm1MmRzA==
+	t=1793989872;
+	b=zsUfOLWw9Y1Ab5wGH4XaQm55UDKFjzGdbbCLBnyOnlEE4XLLqEcPp5ALKru8WcICehMX
+	 c8UvMaGfU97ABQFUKC/R++i3Yp17dz/+OzeUws+5/3TZdGEvwsFhZv8LIt0UhTNWfOgSE
+	 RE6FjwkHSTpuG2xXNAW8idqpKyp1eFuh9Xg/BltdIUcil0u6AH5Kuad3KXVjklVUfSk99
+	 jYyv5clwa+xPyuWHMTjpHB77CcgYsgdEYlmq4pyuZCdtetvDBy75hQ8d2Wwyx8q8Bme4b
+	 yt+PvkZSWs9vGILoNrRiLnoOawn+zZH7L0N8SuA4FvMrCbyYR2QlIJ+NQeuA/azOTIA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793989819;
-	h=DMARC-Filter:DKIM-Signature:X-UI-Sender-Class:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Provags-ID:X-Spam-Flag:UI-OutboundReport;
-	bh=XeCWC0we14RDO6PsuYQS3ZgZBwQlD8qMOkqFFl7IHZY=;
-	b=2f9JErzuQEP3hURKCCVlICEDooSDr2d3Nkp4e95v2w057cQ1mLmltvK6S+QJwwD7jq7N
-	 sxrrm/r7AQlgkqAmQ5PsOzLXuSnZ/CO7V7eoq0Fspuyi/4JhPp2Ix54/9Pjm0oFd2ISU+
-	 LbCq9PBTQtBiPCscAYIFKJjkGq9zIu7AxYT0jaYljyPogQuxI71UtHn7BXZmUscZQ+BfT
-	 6hzZLVU2a/6UE39+3PAv7giVn9RKZobQeK+szlybDsaAGNSrRaPGmA1ZgWFqIs9s4Z8+W
-	 w1VI+AwdpSddKn5GTHcnruVBYK4jbBPEgd6sAUY26+K5+UipRqeLkcOBvyCoEHZ7S6Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793989872;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-TM-AS-GCONF:
+	 X-Proofpoint-Reinject:X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
+	 X-Authority-Analysis:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=3xH03NUHcmWpaKwCeok9TVi3U0p01vOJ09Gd/XJiWe0=;
+	b=l6W7HLbbtt30cee0N+7iaazsUkWsO+5GWe8iI5BQkCOw8xxzGT2vAtmBw4X27+jw3QvS
+	 +gZKuF381DWjhBG/TmiKq1TIWs2lh/YEA981nup/iaNhoJVZC+aROMGQHL+M8d6kH4GJ/
+	 BtZT+ZJLGJK+XrjGjBMqx9Odhw+EtxJBmDe55FsdxBvjuFwPf96XWSyoGg7pifZZX2BEQ
+	 NTLbbnUy7cfjN70XmLRtAYOvMlDyz1DKo/7mByZFIX8SQ9xednid66pNF/4zwtjxVyQkt
+	 +s6viknLr/uUH5QHxkjZGvOhykk/ukObDCqdeusi0cZlPLUSXay+WOw02OV5CJOjLwg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oldschoolsolutions.biz;
-	spf=pass smtp.mailfrom=oldschoolsolutions.biz;
-	dkim=pass header.d=oldschoolsolutions.biz header.i=jens.glathe@oldschoolsolutions.biz header.a=rsa-sha256 header.s=s1-ionos header.b=LK1bBsOY;
-	arc=none smtp.remote-ip=212.227.17.24
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.24])
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=nb55O+XA;
+	arc=none smtp.remote-ip=148.163.158.5
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C21ED606A331
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 18:30:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C21ED606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oldschoolsolutions.biz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oldschoolsolutions.biz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5028606A326;
+	Fri,  6 Nov 2026 18:31:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B5028606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=oldschoolsolutions.biz header.i=jens.glathe@oldschoolsolutions.biz header.a=rsa-sha256 header.s=s1-ionos header.b=LK1bBsOY
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=oldschoolsolutions.biz; s=s1-ionos; t=1793989806; x=1794594606;
-	i=jens.glathe@oldschoolsolutions.biz;
-	bh=XeCWC0we14RDO6PsuYQS3ZgZBwQlD8qMOkqFFl7IHZY=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=LK1bBsOYu4BGhHHExf6Yb7mxO64hLTLN1qQSuTwB4Alx5MS3hL2QA+lyjuY3DQvY
-	 yGTTH4icF4ObAOjt74OtjmrfabyRDh2hjS9IhoLbCyw0eErvJKGVwZ9FWi2beD6I3
-	 ECUqqVhkeDz0nxu8X5tIKUQBOmQ4w80M7ionKqX6fUfykIuHFovi5EQvkm1AUzZ6E
-	 QTCcz9VtyYG0R51uCyL8jACaqE4/3PyBkQE76ixpHHNWJCpJAjLL6bKtRjTdKt8zg
-	 oYA/4Yh4cxH929glho3wOSOrvJd8OMYqpNaENTQnRBk/7Bdon7yDfubY9//6E/RAS
-	 OmmYam+IZv+FxMRH+Q==
-X-UI-Sender-Class: 55c96926-9e95-11ee-ae09-1f7a4046a0f6
-Received: from client.hidden.invalid by mrelayeu.kundenserver.de (mreue108
- [212.227.15.183]) with ESMTPSA (Nemesis) id 1MDQmW-1xEypU2o1m-00Fcgd; Fri, 06
- Nov 2026 19:30:06 +0100
-Message-ID: <1c9b4722-0466-4c74-ac86-4d0f61c350a9@oldschoolsolutions.biz>
-Date: Fri, 6 Nov 2026 19:30:06 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=nb55O+XA
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A6IEJIu1994429;
+	Fri, 6 Nov 2026 18:30:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=3xH03N
+	UHcmWpaKwCeok9TVi3U0p01vOJ09Gd/XJiWe0=; b=nb55O+XAdWXyEP0OZno9us
+	APw9l5dI2UZvlDXH7ehkieTeuOSUMnSHT2C2j6lr7L1wBS8ujGrlaC0SUOp4Kuy3
+	KbAIz2wjChEcMG+M8KC8fuPn73WrJRWrBXIXayZjmSxOGSbfur/VXEqvMcy7rXyE
+	yUSd1mSLe7+IHzfC9Pv54IRv+YIp49CjjoY+bnfhNjcY0Hi9gFORFcYBawaWdzOa
+	DkhHMQIjibI48tYPncuYyt877McUc/uh/4OaER6l/qm+5g8jpo9FrDPLHRc3vGfF
+	hgUhb2UU9mAsYJC1uDqRrFRustujfsKCXMYMkYlHy1hM9KUBuvbXMMyY1F/HWOtQ
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hs3rbxv5v-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 06 Nov 2026 18:30:54 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6A6I4rWl3846102;
+	Fri, 6 Nov 2026 18:30:54 GMT
+Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hrka73fat-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 06 Nov 2026 18:30:54 +0000 (GMT)
+Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
+	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6A6IUr3g21758552
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 6 Nov 2026 18:30:53 GMT
+Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6056F58061;
+	Fri,  6 Nov 2026 18:30:53 +0000 (GMT)
+Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 7B61D58059;
+	Fri,  6 Nov 2026 18:30:51 +0000 (GMT)
+Received: from [9.61.255.215] (unknown [9.61.255.215])
+	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Fri,  6 Nov 2026 18:30:51 +0000 (GMT)
+Message-ID: <0a003a9e-573b-4c4d-b0a7-f88bc11818f4@linux.ibm.com>
+Date: Fri, 6 Nov 2026 10:30:50 -0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,195 +87,104 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC] power: sequencing: pcie-m2: stop requiring subsystem
- IDs for WCN6855/WCN7850
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-References: <20261106-pwrseq-bt-subsystem-v1-1-11fb09f63c93@oldschoolsolutions.biz>
- <sashiko-outbox-201312@kernel.org>
+Subject: Re: [PATCH v2 1/2] PCI/MSI: Skip MSI-X restoration when configuration
+ is inaccessible
+To: Richard Cheng <icheng@nvidia.com>, bhelgaas@google.com, dave@stgolabs.net,
+        jic23@kernel.org, dave.jiang@intel.com, alison.schofield@intel.com,
+        vishal.l.verma@intel.com, benjamin.cheatham@amd.com
+Cc: iweiny@kernel.org, ming.li@zohomail.com, linux-cxl@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        tglx@kernel.org, wangruikang@iscas.ac.cn, vidyas@nvidia.com,
+        lihaoxiang@isrc.iscas.ac.cn, xiangzao@linux.alibaba.com,
+        shawn.lin@rock-chips.com, 18255117159@163.com
+References: <20261106111829.55823-1-icheng@nvidia.com>
+ <20261106111829.55823-2-icheng@nvidia.com>
 Content-Language: en-US
-From: Jens Glathe <jens.glathe@oldschoolsolutions.biz>
-In-Reply-To: <sashiko-outbox-201312@kernel.org>
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20261106111829.55823-2-icheng@nvidia.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:lSJgv4tmDjZoe6kN573hLoabpWwG4Q52LPY+pON8+mtV0OZBQWi
- 53fS+oIc6t3KMqxstnrxtw1V1V8SkjFUotXWNhrB0xY+A2suc1eJXSGl3YT8NT7FQ78NI9x
- LlvNq8J4S5KO30PPt/WKzQAmagyURguD1y/GU4AS0ZbinXiTMaKqR/APDZGLAkIVwussYgN
- WCkJRzSZTe4hO0pnVnaug==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:CvfCFQMXMbI=;Ynf9fkQgEG/QDEC9oTRKvuN2mbB
- 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
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-ORIG-GUID: _6eCb96jv-51KZVfLGMn8J0PlJOwuhUY
+X-Proofpoint-GUID: oxIXGDitamPJ_v_ajjSIbD-jiLmezUeo
+X-Authority-Analysis: v=2.4 cv=MqLHeGae c=1 sm=1 tr=0 ts=6aee1cdf cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=Ikd4Dj_1AAAA:8
+ a=letvWEv4QDVn0nEJEU4A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA2MDA3MiBTYWx0ZWRfXxdlrruOzhuwy
+ xkZED9U/q2ps5OazJbtcIod30XwrSkREJGwxYVFM98akOiX4S4jyfrElkdydXLWUgOXa4hFoeJ+
+ mQCv9pLGs6EK8jIUNLtKz0z6YjJjKQE=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA2MDA3MiBTYWx0ZWRfX6zE1yD7Fz1a4
+ zNHR6E9DQrXJyRGfMO64JXq/psSJBfsfpIabFklOCQdWTZv/+mR0v37FPMh4Qduskqb5Xi0suBP
+ EgycJZ5seGSGlrS9BAXINq2OxbGTmXRsW5ag8LnttvyhW96H7/utNP0a5dUW715ZJ/2Fvm/rwxP
+ 6VJeoN4DeryzkKnC9tU2dWtI8g3qtfTHkthsIIe5VQgvVldf+xW4EuDhzuosbYNCmpRrp3rX20t
+ 6UhxepyHIJ3vvv1v46l7iPjDLWF1fjpninKjioXfLZWWNW4cmL6j+TC5oVJpUcOZOI+UUBAmGN4
+ OfwWmWrm+W3ugU1vWTRjgXYpmRvAV1+m8jqVlwOXEriX8Bp18HCV3d9K4STDbKCB9xizKzBp+aP
+ l3UJHOz7nCJP2VsL4+geWy0LocceBr6fkjasLu3w/XRGGpiKql5VjmoIBJl4lwGq50vnZZ0wAJA
+ qKX+2aCmM/S58IuNZTg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-06_06,2026-11-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 phishscore=0 priorityscore=1501 adultscore=0 clxscore=1011
+ malwarescore=0 impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611060072
 
-Hi sashiko-bot,
 
-On 11/6/26 12:26, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential
-> issue to consider:
-> - [High] pwrseq: pcie-m2: bare PCI_DEVICE() creates bogus serdev on
->    USB-BT cards
-> --
+On 11/6/2026 3:18 AM, Richard Cheng wrote:
+> PCI state restoration runs even when a reset fails. If the device's
+> configuration space remains inaccessible, MSI-X restoration can issue
+> table MMIO accesses that trigger additional errors, including DPC
+> containment.
 >
-> commit 651d16502b81077112cba212f5fb84dc03306321
-> Author: Jens Glathe <jens.glathe@oldschoolsolutions.biz>
+> Check the existing PCI Command register read and skip MSI-X restoration
+> if it fails or returns all ones. Preserve the existing handling of a
+> valid Command register with Memory Space Enable clear, which temporarily
+> enables memory decoding while restoring the MSI-X table.
 >
-> power: sequencing: pcie-m2: stop requiring subsystem IDs for WCN6855/WCN=
-7850
+> Limit the change to MSI-X restoration. Leave other PCI state
+> restoration, driver reset callbacks, and reset return values unchanged.
 >
-> This commit replaces the subsystem-specific PCI_DEVICE_SUB() entries for
-> Qualcomm WCN6855 (0x1103) and WCN7850 (0x1107) in pwrseq_m2_pci_ids[] wi=
-th
-> bare PCI_DEVICE() entries.
+> Signed-off-by: Richard Cheng <icheng@nvidia.com>
+
+Just curious, why are we limiting this to only MSI-X and not MSI? I 
+think MSI restoration will fail as well since the config space is not 
+accessible.
+
+> ---
+>   drivers/pci/msi/msi.c | 6 +++++-
+>   1 file changed, 5 insertions(+), 1 deletion(-)
 >
->> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/=
-sequencing/pwrseq-pcie-m2.c
->> index 56c5d51293c10..72c721149dfae 100644
->> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
->> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
->> @@ -217,15 +217,9 @@ static const struct pci_device_id pwrseq_m2_pci_id=
-s[] =3D {
->>   	  .driver_data =3D (kernel_ulong_t)"nxp,88w8987-bt" },
->>   	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_QCOM, 0x0=
-108),
->>   	  .driver_data =3D (kernel_ulong_t)"qcom,qca2066-bt" },
->> -	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_FOXCONN, 0=
-xe105),
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1103),
->>   	  .driver_data =3D (kernel_ulong_t)"qcom,wcn6855-bt" },
->> -	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_QCOM, 0x33=
-7e),
->> -	  .driver_data =3D (kernel_ulong_t)"qcom,wcn6855-bt" },
->> -	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1107, PCI_VENDOR_ID_QCOM, 0x33=
-7c),
->> -	  .driver_data =3D (kernel_ulong_t)"qcom,wcn7850-bt" },
->> -	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1107, PCI_VENDOR_ID_LENOVO, 0x=
-e0e9),
->> -	  .driver_data =3D (kernel_ulong_t)"qcom,wcn7850-bt" },
->> -	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1107, PCI_VENDOR_ID_FOXCONN, 0=
-xe0ee),
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
->>   	  .driver_data =3D (kernel_ulong_t)"qcom,wcn7850-bt" },
->>   	{ } /* Sentinel */
->>   };
-> [Severity: High]
-> Won't matching bare 0x1103 and 0x1107 device IDs reintroduce the regress=
-ion
-> fixed by a39ac4651e3b ("power: sequencing: pcie-m2: Match WCN6855 and
-> WCN7851 UART BT variants by subdevice ID") whenever a USB-BT M.2 card is
-> plugged into a socketed M.2 Key E slot?
->
-> The pcie-m2-e-connector node describes the physical M.2 slot wiring on t=
-he
-> host board, not the card installed in it.  Boards with a general-purpose=
- M.2
-> Key E socket (such as arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts) wire t=
-he
-> SoC UART to the slot and define port@3 unconditionally in their static D=
-T.
->
-> When a USB-BT WCN6855 or WCN7850/WCN7851 card is inserted into such a sl=
-ot,
-> pwrseq_pcie_m2_create_serdev() -> pwrseq_pcie_m2_create_serdev_one() see=
-s
-> port@3 on ctx->dev and matches 0x1103 or 0x1107 in pwrseq_m2_pci_ids[]. =
- It
-> then creates a bogus bluetooth OF node and UART serdev device, causing
-> hci_qca to bind alongside btusb and fail with -ETIMEDOUT in qca_setup() =
-on
-> the unconnected UART lines.
->
-> Also, the commit message notes that Lenovo T14s Gen 6 (17aa:e0e9) is mis=
-sing
-> from the table, but 58a003302481 ("power: sequencing: pcie-m2: Add Lenov=
-o
-> ThinkPad T14s gen6 WCN7850 subsystem PCI ids") already added that entry
-> above.
-Well. It was missing upstream when I made the experience on my T14s G6.=20
-Having a whitelist for every subsystem that is allowed in such a generic=
-=20
-driver is not the best design decision, IMO.
-I took another look, this driver is loaded when it is a compatible in a=20
-device tree. Usually this means the hardware got described, and you can=20
-draw conclusions from the device tree on what is supported. For the=20
-conflicting case, the device tree would need to describe the USB and the=
-=20
-serial port on the e-key connector. When you have a connector wired up=20
-this way, the driver would need directions on what to choose, for=20
-instance by providing the subsystem IDs as base for a decision. These=20
-are the special cases, though. For most boards describing the uart on=20
-the connector would suffice to choose the right, mostly generic driver=20
-for WCN6855 and WCN7850. So it would be better to have the driver detect=
-=20
-the "both ports are defined in the dt" case and=C2=A0 not create a serdev:
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 8a0133a6a286..37de31f4cfb6 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -887,7 +887,11 @@ void __pci_restore_msix_state(struct pci_dev *dev)
+>   	 * Since the MSI-X Table and PBA are in Memory Space, enable it
+>   	 * while restoring them.
+>   	 */
+> -	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> +	if (pci_read_config_word(dev, PCI_COMMAND, &cmd) ||
+> +	    PCI_POSSIBLE_ERROR(cmd)) {
+> +		pci_warn(dev, "Device config space inaccessible; unable to restore MSI-X state\n");
+> +		return;
+> +	}
 
-static bool pwrseq_pcie_m2_bt_ambiguous(struct device *dev)
-{
- =C2=A0 =C2=A0 bool has_usb=C2=A0 =3D pwrseq_pcie_m2_check_remote_node(dev=
-, 2, 0, "usb");
- =C2=A0 =C2=A0 bool has_uart =3D pwrseq_pcie_m2_check_remote_node(dev, 3, =
-0, "serial");
+We have a helper function pci_dev_config_accessible() that does the same 
+check, so might be appropriate to use (of course we would have to make 
+the function global rather than static).
 
- =C2=A0 =C2=A0 return has_usb && has_uart;
-}
+And maybe the check should be moved up before any config space access in 
+this function?
 
-Then in the create path (and before registering the notifier):
+Thanks
 
-if (pwrseq_pcie_m2_bt_ambiguous(ctx->dev)) { dev_info(ctx->dev,=20
-"connector describes both USB and UART BT; refusing automatic serdev=20
-creation\n"); return 0; }
+Farhan
 
-For the rare board that is wired for both and still wants automatic=20
-selection, an explicit bt-interface property (or a fall-back to the=20
-subsystem-ID table) can be added later. That keeps the subsystem catalog=
-=20
-out of the common path.
 
-Using subsystem IDs for the ambiguous case is possible, but it does=20
-require separate driver data (or at least separate table entries) for=20
-each known UART-BT SKU, which is exactly the growing whitelist I am=20
-trying to avoid for the normal case. The port check handles the common=20
-case without it; the whitelist only becomes necessary again if we want=20
-zero-DT-change behaviour on dual-wired sockets.
-
-with best regards
-
-Jens
-
+>   	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+>   
+>   	write_msg = arch_restore_msi_irqs(dev);
