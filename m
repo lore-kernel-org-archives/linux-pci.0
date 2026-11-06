@@ -1,121 +1,192 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.209.12
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=192.198.163.16
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793945424;
-	b=ksXqJBQm9/LQPLc1n26F8+Z/mcXv4w2h6QxCA+qUf9ZN1oNgMaG3cv2gUcF/ELl4wT0E
-	 kC2CkA9sZ/5Tf1P2xVVojaAWCagol3jMVK0Rv3pHHkcNpAMWamQkjUlO9LFNWnVhe0U/z
-	 d/x7zVA1vXmmCRpP0SL5Vn8UPQPeR1FFCJ/fY7naDuIAO0gWsvKu3tlyOTWpRAu0rRdO1
-	 ThHm6qhBYSUBMaFtG5JnNCGDUp5ynNRhIPhAlqifAWJCjVplUd5DQsT+3zjq4jAzRuIQv
-	 vA+Im8wlqaT4u2WG9AdrqX84nXrXozQhp9NS+StKr+9HJQ7zo4CuGRCByyfkYSwXDhA==
+	t=1793948710;
+	b=atue/Ns5ouRgyVhlA6kDTENWuhx0Vm6Fv5Rv0rbd+FJ/kfKMzn0kESG91LBGhSfgZ7Re
+	 WMfSMNiZtPqLz0DlfZ+vdSsYom4iTP3T4w6mAJCeab4OkV4rpx2Pa9g8AibjbrptO+HpS
+	 2AEuuZFAB99Sy815Lcrfdt2NWUl+BT/dqFnGdEWcQSoEzlDfVFh7836U4PkjJC8MaO86K
+	 gbE+hpKOmdC9ZUivLjRzEDED8j5SW75I3C8NNlEfphHkVNvoh7z3AzbuJfwwDiRNBnFzx
+	 tR+QZHh0I6CbE1aqHsRhFRJIl/39lucGMXLiulYa7tT/4zfotsq7l85EwdcoLycdcnQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793945424;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding:Content-Type:
-	 X-Originating-IP:X-ClientProxiedBy:X-EOPAttributedMessage:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793948710;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Received:
+	 Received:Received:Received:From:To:CC:Subject:Thread-Topic:
+	 Thread-Index:Date:Message-ID:References:In-Reply-To:Accept-Language:
+	 Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
+	 x-ms-office365-filtering-correlation-id:x-ms-exchange-senderadcheck:
+	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:
+	 X-Exchange-RoutingPolicyChecked:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-AuthSource:
 	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=Mj0dMbTy9r7pAxspLE4xjkVaRiqXhWh61EYylaJz/Uc=;
-	b=0bdzXVXDRDYt/+7fspUT4lWFmLilNc2a5Jj63Wordkeze4NydxySogkQXT73LPevKaYR
-	 PC7cLzrn5Rf+FkZJs44Kr3nmTvr0UlWr4kJ62V078n8MHjjiADP2cx3YfiRAk8GWNI9Ok
-	 qBxTDxGIxa4f5Ga8uEnyvXJiBSctDmCeJoRpOjs5gNS3e23hX0+hfJ/BHbT4B+I+f1+sH
-	 nIJpt7zDEEsW5o0BJG/oiwMC82K2LbKVvdRpA62Y2UMzJz9MykPFvui796/ruW17KrsVx
-	 Ep2/TJw8FYk0xBq1hoHRt23YY315gC+UesMKcw9oQebZUmMomg/BHRuF76FiKL2yNpw==
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:X-OriginatorOrg;
+	bh=9LB1IZDbqOR8K+DtX2GZ5X4sg/qJ7NHiqj/TxK2kaiY=;
+	b=LeDtP0DEqcKuRv24pHAi6YyQJyeEIL59XzINF+Mh2102dPTxX2plvX+dOlJy2UWtUAAk
+	 XjdNYTiAR0Py7ljglLQeCgWG6TTKCdDwDloycvfxkMnfTgOCj6Gyj5q4XPDP/gjoPgJk9
+	 SlWFmpWbpHZLBzeDmUt7yzefazeiPEwEwLAu5Hqw0WoWr1GyiJwrQJhzZ4dNdiowKrfwO
+	 bt6t7cuR0p57Q1GQ2Z5sudxeB6oBAv3Xa9XGFLK0v1FDXecs5hwdybdg+cLDxC1Yt/trL
+	 moa1rVx/4GNQ2rcbHYp1B3QVcxHTaeUQA04kC5uwcCFZTynAq3KCz0rweagIViJl1Iw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=V1LtrWYH;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.209.12
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012012.outbound.protection.outlook.com [40.107.209.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=FF+iuXNp;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=192.198.163.16
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D2B8606A329;
-	Fri,  6 Nov 2026 06:10:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7D2B8606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3944F606A329;
+	Fri,  6 Nov 2026 07:05:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3944F606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=V1LtrWYH
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=FF+iuXNp
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793948709; x=1825484709;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=9LB1IZDbqOR8K+DtX2GZ5X4sg/qJ7NHiqj/TxK2kaiY=;
+  b=FF+iuXNpXJQa7jZDheR/DoTD6zGWnE540q049vSjUbVCB0v4E/ie+W3F
+   pXi9gUjQOFONk0DcNb4U/nfxY6JFN9Wqisz41FjB8XikWu9D1RYEjvPf9
+   hyno7x9OMduYdschBYR4LqFqeO3LoNYVooUm226wSy7HRWCWRgtM+Q8KF
+   +0KBaBv0nCCfLGLpwSEeWE5dD8MpOZtvG1njQHu1iX/h5eQflVDJicgmy
+   crFuAZCjYEa33RsWlCwtgJRVGtDwKvM26nsL5m+hmvFcOvnK0mdtdGn3A
+   S8lvXJpicatVDStXJjDCjY4isKZ0UI9a7UxdukpZD9AcDICRJmzSgBDh9
+   Q==;
+X-CSE-ConnectionGUID: iL35sedXSLqGfxH4MCU5Mw==
+X-CSE-MsgGUID: J+/RsmmwTDi6WQbhRJhF3w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2780160"
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="2780160"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 23:04:29 -0800
+X-CSE-ConnectionGUID: L++C+rslQ/WQFxYI6Rp8IQ==
+X-CSE-MsgGUID: 22/lGefCQC6VOxL7KyJFTw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
+   d="scan'208";a="7551352"
+Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
+  by fmviesa006.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2026 23:04:29 -0800
+Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Thu, 5 Nov 2026 23:04:29 -0800
+Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
+ FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56 via Frontend Transport; Thu, 5 Nov 2026 23:04:29 -0800
+Received: from MW6PR02CU001.outbound.protection.outlook.com (52.101.48.69) by
+ edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Thu, 5 Nov 2026 23:04:28 -0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=wX8akh4aHrmWTx9BwxmWispKonjfiitSDhgWnB4+dzzkqIABjLkrXLJNyhjpRohCk3zJbc0QBcppdIQ4E1G+ygfjN5q70uiJtgNOF5fi2tvSGjUEqDMJdtktsZW4yy8GHq2yAlHDuS6b2fyiPhtsdFkUHUtiFZwXZpHRkqZovPFx6HjX6xMO+5DOzl4PDDxVlUaKBvW6kJRMMTHC272KrUYjHHFlhVb7UKy1+kQ7gwpHAMSgkPKRrt/RwsU0AuZSAXI3pilKt3w6JcivPUJ7EtJC+MZuzEevGJH5Lj92qlIDqJael3/uu2/1wnmxCyhpHLRWlrFJIzH64Cic0h/yLQ==
+ b=zTaImur7op15LkgycOYkswBiWRqY1Fv68f85I2UV7QuHcE2ritvICecVqj/q15WZG94qT4g4SzozFQQsFdJqzvlaADvVqi36TkI7bVeIbbL21rI39I3+1kogpIUaDMp9U4XiIzvLb7tUNykyyGQip7ekofY6Gy5VB4cw/gwJUuZfXIPAmvqx4IdeIAzdRU6BnCtcXKmXX0tfBTSri/diIOGNEAWGEK85LpIPxHJo1MRB9rCumWSZOeRB5uUlQBM1IShC0yDrg+VnnilOFWLemVf+2uIbirU2QYaymyOKhthdPKvCzLy0yqA7V6E8YG30rv2gceMrpNP0E7ctQOe/Fg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Mj0dMbTy9r7pAxspLE4xjkVaRiqXhWh61EYylaJz/Uc=;
- b=op0uaZ/EEwZ6xzihJsiCl7nuGgZkrdR708UQpFk7CaayI4uDwLS7FxUW3415mKNIJ+A9Dj9JnZmgHWfsW7dunv9fbqMTRK8OKHLYDolDJZpC1ud1xpvWYYcDIR0xnXj8+InAllUI3lvP2beOAFBI5Ir6P/S54GASah9869wI6stYiP1Ot+YGkLxc4ZUNJ/aWvKD9qzozIHrfwdNaXRk2HypR74OATGgHw7ohzs2arJe+iSEFUglKrOsHPdyu+dj4MtbUqFqKfp9iJl7bHrUAYFyxkS2/a+LjCNzeigoA9oDbpc/s7hSed2ZesLtmQ+PnAOzn8gRpU7JGgHqkl4yB3A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Mj0dMbTy9r7pAxspLE4xjkVaRiqXhWh61EYylaJz/Uc=;
- b=V1LtrWYHio+a8Zw/33w9zFXkRGCwwCf+C8KXWS41BYSqZyvM8VtwsaEia4ca8Vts5oh5eEZqcHQRJJ9cibjxKj9XGVnHVAwa7V6rijY0vy12NhX7lRkl4c/5yBuKCnOhaSX8I1veBq8aihuBZgp42ggEtUr9b1LqtyT2selTcStd146g1EBpyT78HETYlFFsAOqMe0AKNCjMCu+hI8f4LYt7fHMRDoWHnQmjifZgfp8xoJjShsfVK2zKExQZQTG4FrFBQGL1xBq5POvkOxp48tGSf96PHgRDFNOg7t+fHmPKVDbDeawSBBhCrFOE2z1isxXhuOGt3/EeKci0o2HNRw==
-Received: from DS7P221CA0017.NAMP221.PROD.OUTLOOK.COM (2603:10b6:8:25c::7) by
- SA0PR12MB4381.namprd12.prod.outlook.com (2603:10b6:806:70::14) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.592.11; Fri, 6 Nov 2026 06:10:17 +0000
-Received: from CY7PEPF000000F6.namprd05.prod.outlook.com
- (2603:10b6:8:25c:cafe::4e) by DS7P221CA0017.outlook.office365.com
- (2603:10b6:8:25c::7) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.11 via Frontend Transport; Fri, 6
- Nov 2026 06:10:16 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- CY7PEPF000000F6.mail.protection.outlook.com (10.167.247.154) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.615.4 via Frontend Transport; Fri, 6 Nov 2026 06:10:16 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 5 Nov
- 2026 22:09:58 -0800
-Received: from kalok-SPC741D16QM3.nvidia.com (10.126.230.37) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Thu, 5 Nov 2026 22:09:45 -0800
-From: Alok Kumar <alkumar@nvidia.com>
-To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
-	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
-	<linux-pci@vger.kernel.org>
-CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
-	<skolothumtho@nvidia.com>, <kevin.tian@intel.com>, <airlied@gmail.com>,
-	<simona@ffwll.ch>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
-	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
-	<lossin@kernel.org>, <a.hindborg@kernel.org>, <aliceryhl@google.com>,
-	<tmgross@umich.edu>, <markus.probst@posteo.de>, <jhubbard@nvidia.com>,
-	<apopple@nvidia.com>, <joelagnelf@nvidia.com>, <ecourtney@nvidia.com>,
-	<cjia@nvidia.com>, <smitra@nvidia.com>, <kjaju@nvidia.com>,
-	<alkumar@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
-	<kwankhede@nvidia.com>, <targupta@nvidia.com>,
-	<linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
-	<boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
-	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
-	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: [PATCH v2 1/1] gpu: nova-core: add fwctl driver for firmware control interface
-Date: Fri, 6 Nov 2026 11:39:14 +0530
-Message-ID: <f262007aa406b2c8383501e2c0f8278db7ebef98.1793906674.git.alkumar@nvidia.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <cover.1793906674.git.alkumar@nvidia.com>
-References: <cover.1793906674.git.alkumar@nvidia.com>
+ bh=9LB1IZDbqOR8K+DtX2GZ5X4sg/qJ7NHiqj/TxK2kaiY=;
+ b=WeQadPrimVJBPSINOfoodX6iEDQnVMlwDzHBhX3KfwngLPsUWa4E/pNrigKhwEjEsbemuRhp0wEflUEBq/PWMlqEgTqfO0RlGWCpDPIhp5DgnbEcRIIu+7WTBHY5jAw1awFX/TiFrXlY17ZtmJp9tNW7cUwbvzq7Fyq3M1P0Nqz0qRnbNzCgAOrfTDnNFSXaIzHPdtpZ+gM9Rf/QPBA6bEZx3NBRBAgO9qsvfM5bORfDOnIV7+vv9FXWkyxPSxKSgo1i4XHl+hS8YSqO0cAtRQfc1Blkw1hKh4g08Qh8cz+e88/BMGHktL3Dx6fmgCRToUQuUleaXQ+rx/Tmt3Hbrg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from CO1PR11MB4835.namprd11.prod.outlook.com (2603:10b6:303:9e::22)
+ by DS0PR11MB7334.namprd11.prod.outlook.com (2603:10b6:8:11d::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.12; Fri, 6 Nov
+ 2026 07:04:26 +0000
+Received: from CO1PR11MB4835.namprd11.prod.outlook.com
+ ([fe80::d051:d948:c209:9225]) by CO1PR11MB4835.namprd11.prod.outlook.com
+ ([fe80::d051:d948:c209:9225%6]) with mapi id 15.21.0592.009; Fri, 6 Nov 2026
+ 07:04:25 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	"iommu@lists.linux.dev" <iommu@lists.linux.dev>
+CC: Alex Williamson <alex@shazbot.org>, Alexey Kardashevskiy <aik@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas
+	<catalin.marinas@arm.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, "Jason
+ Gunthorpe" <jgg@ziepe.ca>, Joerg Roedel <joro@8bytes.org>, Jonathan Cameron
+	<jic23@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, Krishna Reddy
+	<vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Nicolin Chen
+	<nicolinc@nvidia.com>, Robin Murphy <robin.murphy@arm.com>, Samuel Ortiz
+	<sameo@rivosinc.com>, Shameer Kolothum
+	<shameerali.kolothum.thodi@huawei.com>, Steven Price <steven.price@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, Suzuki K Poulose
+	<suzuki.poulose@arm.com>, Thierry Reding <thierry.reding@kernel.org>, "Vasant
+ Hegde" <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>, Xu Yilun
+	<yilun.xu@linux.intel.com>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "linux-coco@lists.linux.dev"
+	<linux-coco@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-tegra@vger.kernel.org"
+	<linux-tegra@vger.kernel.org>
+Subject: RE: [PATCH v8 02/15] virt: coco: tsm: Remove the device from lookup
+ before PCI teardown
+Thread-Topic: [PATCH v8 02/15] virt: coco: tsm: Remove the device from lookup
+ before PCI teardown
+Thread-Index: AQHdbHf99QBixGxn/kqVKnemFrPHc7cgoQSg
+Date: Fri, 6 Nov 2026 07:04:25 +0000
+Message-ID: <CO1PR11MB48355969750E4D2995609A588C762@CO1PR11MB4835.namprd11.prod.outlook.com>
+References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
+ <20261104161632.3547423-3-aneesh.kumar@kernel.org>
+In-Reply-To: <20261104161632.3547423-3-aneesh.kumar@kernel.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: CO1PR11MB4835:EE_|DS0PR11MB7334:EE_
+x-ms-office365-filtering-correlation-id: 19d3fda9-4912-4b4e-47eb-08df3bd4312c
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|376014|23010399003|7416014|366016|1800799024|38070700021|261026140227099003|261026121527099003|56012099006|261021121427099003|11063799006|4143699003|261028144727099003|261022105027099003|10067099003|22082099003|261102123227099003|18002099003;
+x-microsoft-antispam-message-info: 56A9bXxpKqvA7ZbnkA4hrUST5RP4ap5seQkRIo1knvoja9KIcLOLcXIxo1opIjJhjUzU1qQwVi/eG2hoWa731gF/z2viSs6fX0ONBxXgSNcJOGj0cTyna9l9l4tEuTj+6DBaH4r0Kyczb0qcZ8xRx3/wRTKf09qdsBHmgUG7pZkTV0JAVC6n0f5BLoZ94408v23AuOD9B6cZusL2Fvw3b/RFDH7lIEbQJar4xkwvoSKsJde4hzlYsQefbT+RI/e9EgeuK+aDKAK24HZ/8j3G119gRQlQvIEW5VS0gIXgPP6whxBvX5T16l/j0G9JA/AiZFyDGCDGebq3gY/TlWCQ9V4fwVPsDlthAV5OsJAQKgWox1P1vqgz/aFkAZZBn4PXRDkdG2Wjf0PaAx9q77ykZV1BIfR8MnRZPr7/ULh9DuFhW82dRSTuvmsAApEYhPp7rRZ3txwxPZta7YHuSdCKQAs+Mv+xFV9g+/rluREPr0sHcMhfCfnUNgLKezj8INGu9joJqabK3gknhXZGGNODzQLCmIWbZ6SxdBgtQs/EOPPgQq9jmwO5taGZkzmhCEu9NBZHKBj+o4Hh0dN8aiBHTnjoJWEZKFOZfRD8fzg/I8ngnwY0UPYHwUetomQA0P+pMjPBCPr/NYncloLFqAa0/gjhZyY1XpM48FrNjjsYb8EY2u4EJktZ5T0gSFKDCOOX+gJibbshfkNKuEe/SINj1389z+HWtYuDgSwbEEPGf9E=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO1PR11MB4835.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(366016)(1800799024)(38070700021)(261026140227099003)(261026121527099003)(56012099006)(261021121427099003)(11063799006)(4143699003)(261028144727099003)(261022105027099003)(10067099003)(22082099003)(261102123227099003)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Zrq9ciMBZMEtM0XlMuyvjuK8mQAl5z9WfzOEo+M4rg/YhEFTFvd9GFfIj8YF?=
+ =?us-ascii?Q?2c/l+6MxSQ7avJPyuxpvg2xIYd1kpIlOKutRlSaZM/2T52yqBxLMGVEdSjob?=
+ =?us-ascii?Q?fTLizLuIM15O0tx16jCEU4h4B8eG+ZH+VQ8NIGqnJZZrtAjWbQvAH3UlSRK6?=
+ =?us-ascii?Q?5TjOvs1bO1zW/FoO2HtGlcLGVT6UML5PyLu8wci9PFGsUCCDaID7GKtAD34w?=
+ =?us-ascii?Q?oTN8qdPn61HuOZv3xXpYbiVIhZbYJcVGHd1I+3RJ7A7Wn71HHC+erDQVAbuA?=
+ =?us-ascii?Q?tIjWzS5t5M81AsET+xPQqmokERy+mTVZrXNfKrojYy+kPurOFLFz/uWgaSLT?=
+ =?us-ascii?Q?Wn521taLzSALxuECwJFq+zRKL5V01ehz35frg9IVO4goyCgyRpZw96IHVVT0?=
+ =?us-ascii?Q?O8InxqxMgeofa8fxVpYH/fhhiDA6jGOa9pLYInn5qygdTdV/aVfzCAwyxMQm?=
+ =?us-ascii?Q?3vPRRoZ/2OnNY0wzS8abrZMcpWN0kyymWdO9MtliKXHcylNI0fKLEBvcZqpf?=
+ =?us-ascii?Q?KEzY0TAC+IjJEt6naiplyCpqeijGAHgCpvm8VfZkOZE2QfCtDm4QYwLG1COH?=
+ =?us-ascii?Q?ST1sDbgyfzE9XkGrBvZZEfJYDwUMS55Qiz5K64R1tT6x47N/kxhUwncf/9os?=
+ =?us-ascii?Q?kagOT91dyK9W9+BNnadEUzmOdSKbSCZcgviJQLd1B2un2q5botRRYyIADjHD?=
+ =?us-ascii?Q?Ty6ebaKUEjh+EXgu1upgXmiFPu2c4gzABzA1hmp80K19olh8Lh6PO4MZe9MF?=
+ =?us-ascii?Q?k2vNIm0g9lrIfHVIYpcJS+3xS0JFS0JujnVWCZXaAVCIrgDuJY/pX4nyo8Vf?=
+ =?us-ascii?Q?t/nCTDcOhfLlq1sx95UxmS8NiunRreRDQ1ALxA0Cur3B9+qj1M3OHzNh+mK6?=
+ =?us-ascii?Q?5BcWO1ShfX09j/nbIFrJivaBjlXA29u/J38nDXgPoEoIQ+IqFYhAp/1eDYEu?=
+ =?us-ascii?Q?2J68owHgOllgZNXYsfXl6W6hd0pUorRdBO8XUqojuxKg7xezvPH5UTTjlSpx?=
+ =?us-ascii?Q?hr3U6OsbPLSTM7e6WimyLMBMf2T2QpkIB6C0XpAIVTewctLPLaAGlZ/FCw3b?=
+ =?us-ascii?Q?20OFZSKfF4vefbTkdC2pxg8qKV0d2YhS7qK0tsoeykcUHcwskE9sCV4gXEbX?=
+ =?us-ascii?Q?H5TUrQGJiLjxj0WZ5IkImnfdEdWUBErnBk5ucbZIEzaR9Tc0NAE7LDz6TCHH?=
+ =?us-ascii?Q?/BCr13NqzJ0eWwbGL+Rj1XvEx/UnI9V34uOllc7yLLVJGDlocMIfRyKwbQUu?=
+ =?us-ascii?Q?5Y2KXSXRV024zgSh4kDhX3LX44R/0CM+wsMxNrJBZujSJhEPd8MfzwXTwCZW?=
+ =?us-ascii?Q?hGcbVWlUeRwmdsB6+2qSlzl9F1kHeQFkOGK1jTFRmysfcyaBFqWn700a4Z5u?=
+ =?us-ascii?Q?ppKWmtftx1mtrf8hO3wph1jLhxQz3gQmb5ryWhYUp98/jMhLFMiv2b5QcilT?=
+ =?us-ascii?Q?O1gbpZfUIavIhSUaF2vLSRpslBh2CS7Wos1j86kKWUSA1Vv8WQeiQICEbb/1?=
+ =?us-ascii?Q?JvZDYvRxSrz11hevVD8SSMoWxyPfHI8MqmdE3VYUWufvze+cP91XmiPUy/+h?=
+ =?us-ascii?Q?lX/Rf8s/XSuElNiz5qx5+HLlet104D5mqHaFHv06hJ4BKxMZduBQe+zQnte4?=
+ =?us-ascii?Q?thtAOd4VIrkN5nrwE1k/S9RM/VCWlXDAqU7UejH8hUhAXu4Qumr5lgYpan20?=
+ =?us-ascii?Q?4hs9ldMIVHPcsLTCoroJGkrE4g2iwoUhhDJXL6z/4jJWpNp8Rsxbn4o+/QZk?=
+ =?us-ascii?Q?kh7Jmtp5hA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -125,416 +196,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY7PEPF000000F6:EE_|SA0PR12MB4381:EE_
-X-MS-Office365-Filtering-Correlation-Id: da3637c4-c940-4227-eba9-08df3bcca0ac
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|82310400026|36860700016|260925021311599003|260925022911599003|260925021911599003|11063799006|56012099006|261022113327099003|261022105027099003|261021123027099003|261021121427099003|261022075727099003|261009223027099003|261102123227099003|261026121527099003|261026140227099003|261028144727099003|10067099003|22082099003|18002099003|6133799003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	AokVjBK9tDtH95x8VehkFeRV8NEspDuKrubDi42I+NTRgsH6HRIA97bIfk4zRSGpPgC5VLIiPOiZs6Bvm6M8iUGn0ZsoA4eRcGAvC+Kq9Z0tkqKzZs4zheUbWx1wNqY6+quDeBkLp3BtA7sv8XzTOfnVZFT1vWNUDICJBXFnwKb5EE1/iAqnHTv8TZ+JUSNiLys//dcCMUZfypD1QrGfZkr9rVX1dPGXcjhAQr3cfYEokhydGNFwOlbVX63uTMZXv+xm4YTB5Zn8zu6/m3gqCKR8yKlwu1w2iVLgZHbqGKRTw8yw2J37SSYbS5NPnrsQXhusr7cYWucbZzudZk/d77nN0uVn5gga3d7a6HBFgb6I6ye/EpAhR1E88tGfUU7GQm1V02DzxvV7QoXPamsa+98gEy6NR4oJyoIlSvjbp/UX+++7teLKsjXEsSSKle1kcwbemgHAvDOwKGJ08YUyO48uUDF0PHPm8k5J7j5bN7fwPnvu0ucVhWBp+A1wvJ8/1E1Xt0WESjZrfix541WYL0lwQuA4VLz6eQzW7hCNbSf+P2s9n4Ie/dUMZGgWIVTwfLRCaswpy1S4WxRItbq8eLVKBju2414p+peuLEji2aGPdIuH1E2HSfRPSF7RBQD2WBGxCNm2FtLQD3T/adOG+Umaba/kxWxMjBddiTb71+jA/yqypvsh4rdw0En/prpj0OoekDZMGYzQWU+hiwqYnQ==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(82310400026)(36860700016)(260925021311599003)(260925022911599003)(260925021911599003)(11063799006)(56012099006)(261022113327099003)(261022105027099003)(261021123027099003)(261021121427099003)(261022075727099003)(261009223027099003)(261102123227099003)(261026121527099003)(261026140227099003)(261028144727099003)(10067099003)(22082099003)(18002099003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	KIUJF5x7ZvL892gR2380LicNvFb15sXEELuPZvF3rcqtI65DdU9kSTPjYpSZR9VZKngl5cyV28cJsIqaUz0jMdrb2ex0A6Cm+96/4FI6JtD5pLNOKH9Jlmwb6wHqb/OmUFU377nQlSvrICRQfZQ1n6uoUmM519rtWyZkVBSlyhjIPtIoqVicK0S1n11hv15PzMlSqrx8/AadxTWACuOakUgZR34uMazxJDr0B1aVkiC3URCG1cafhk4g8U8yKEUmeN2qIpIUXP4XusG8Drb9T44nZfGgIGiKsxGwTbCzMLQpi7hcWGJhZPhFv0FTmeCE/+7XAuZTbjcGAEU7K3UkZ7L76asjqReF9NJlrAPcccvB7oKu13SUKsLebsajc0rCh4g6zKaXN/0sWhmoUlpFuinkfSjVkOlEauTmONYMuvnW2oBtx5vefHsfECRRfaJO
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2026 06:10:16.4055
+X-Exchange-RoutingPolicyChecked: iv7vrocInDMqb3AR6VN6A9sj0mQJyXyCOITCCmyyy4njvpCfJzIEK03AKIzsGumn9sdkI+WXw03PeU/5eCJak++i7m2yFHJTUAfR5y21ygbXTVMT1NYaJMhmouBTuzkFhNNIo9rorN83fplTp/nhhM9TnIzxas1IKmjYaX2I3G+ninTn2PnPAePUmDqSdXSWgLiqzprSvbjYAb+LGVy3IdbpN+oiH4EOc2I8Ttx0R14RwE6Rt0XjPUlhaSmyxP1Qi0pC+11O9WXga/Url4w+iQMoKiTloPBiTYQwo9Ofwt+vbHycZhke11rwrOOD/9hNMCfMN3Ff4MjjHu7qOzg3yA==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CO1PR11MB4835.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 19d3fda9-4912-4b4e-47eb-08df3bd4312c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2026 07:04:25.3399
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: da3637c4-c940-4227-eba9-08df3bcca0ac
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CY7PEPF000000F6.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4381
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: hQoSNJpEgO6zrIA955I9//ce96vMR7Zv7mh3QKYm44fNYag6Ufx6/bQRJkt0Y8JDMN17EbgDjA/9uGmbeawnsg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB7334
+X-OriginatorOrg: intel.com
 
-From: Zhi Wang <zhiw@nvidia.com>
+> From: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> Sent: Thursday, November 5, 2026 12:16 AM
+>=20
+> PCI connect looks up a TSM by ID under pci_tsm_rwsem. Previously,
+> tsm_unregister() released that lock after tearing down PCI state while
+> the TSM was still in the class lookup. A racing connect could then
+> attach a new PCI context that the teardown would never see.
+>=20
+> Remove the device from the class lookup first, then take the PCI write
+> lock to drain in-flight operations and destroy their contexts. Drop the
+> device reference only after PCI teardown completes.
+>=20
+> Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encrypt=
+ion")
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 
-Add a fwctl driver that provides an interface for userspace to issue
-GMC API commands to the GSP. Userspace supplies the command ID and
-payload while the transport headers remain internal to the kernel.
+Reviewed-by: Kevin Tian <kevin.tian@intel.com>
 
-Allow the seven vGPU management commands in the configuration scope.
-Reject all other commands and scopes.
-
-zhiw: Adapt to the GPU-owned command queue and its GMC transaction API.
-Use the existing vGPU firmware module for command constants and register
-fwctl after GPU and auxiliary-device initialization.
-
-Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-Signed-off-by: Alok Kumar <alkumar@nvidia.com>
----
- drivers/gpu/nova-core/Kconfig      |   2 +
- drivers/gpu/nova-core/driver.rs    |  27 +++++++
- drivers/gpu/nova-core/fwctl.rs     | 119 +++++++++++++++++++++++++++++
- drivers/gpu/nova-core/nova_core.rs |   2 +
- drivers/gpu/nova-core/vgpu.rs      |  10 +++
- drivers/gpu/nova-core/vgpu/fw.rs   |  18 ++++-
- include/uapi/fwctl/fwctl.h         |   1 +
- include/uapi/fwctl/nova-core.h     |  34 +++++++++
- rust/kernel/fwctl.rs               |   2 +
- rust/uapi/uapi_helper.h            |   2 +
- 10 files changed, 215 insertions(+), 2 deletions(-)
- create mode 100644 drivers/gpu/nova-core/fwctl.rs
- create mode 100644 include/uapi/fwctl/nova-core.h
-
-diff --git a/drivers/gpu/nova-core/Kconfig b/drivers/gpu/nova-core/Kconfig
-index 2e11e46c99c7..3431cac7f3ba 100644
---- a/drivers/gpu/nova-core/Kconfig
-+++ b/drivers/gpu/nova-core/Kconfig
-@@ -4,8 +4,10 @@ config NOVA_CORE
- 	depends on PCI
- 	depends on RUST
- 	depends on !CPU_BIG_ENDIAN
-+	depends on FWCTL=y
- 	select AUXILIARY_BUS
- 	select GPU_BUDDY
-+	select RUST_FWCTL_ABSTRACTIONS
- 	select RUST_FW_LOADER_ABSTRACTIONS
- 	default n
- 	help
-diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driver.rs
-index 560a70c4f5a7..7ad93eca485b 100644
---- a/drivers/gpu/nova-core/driver.rs
-+++ b/drivers/gpu/nova-core/driver.rs
-@@ -6,6 +6,7 @@
-         Bound,
-         Core, //
-     },
-+    fwctl,
-     io::resource,
-     pci,
-     pci::{
-@@ -24,6 +25,10 @@
- 
- use crate::{
-     api::NovaCoreApi,
-+    fwctl::{
-+        NovaCoreFwCtl,
-+        NovaCoreFwCtlData, //
-+    },
-     gpu::Gpu, //
- };
- 
-@@ -34,6 +39,8 @@
- pub(crate) struct NovaCore<'bound> {
-     #[allow(clippy::type_complexity)]
-     _reg: auxiliary::Registration<'bound, ForLt!(NovaCoreApi<'_>)>,
-+    /// Unregisters fwctl and drains its callbacks before GPU resources are dropped.
-+    _fwctl: fwctl::Registration<'bound, NovaCoreFwCtl>,
-     #[pin]
-     pub(crate) gpu: Gpu<'bound>,
-     bar: pci::Bar<'bound, BAR0_SIZE>,
-@@ -168,6 +175,26 @@ fn probe<'bound>(
-                     )?
-                 }
-             },
-+
-+            _fwctl: {
-+                // SAFETY: `gpu` is initialized at its final pinned address. `_fwctl` is
-+                // declared before `gpu`, so unregistering fwctl drains callbacks before the
-+                // GPU is dropped. Initializer cleanup also unregisters it first, since this
-+                // registration is initialized last. The private registration is never leaked.
-+                let gpu = unsafe { &*core::ptr::from_ref(gpu.as_ref().get_ref()) };
-+                let fwctl_dev = fwctl::Device::<NovaCoreFwCtl>::new(pdev.as_ref())?;
-+
-+                // SAFETY: The device is newly allocated, unregistered, and parented to `pdev`.
-+                // The registration borrows the pinned GPU as described above, and its Drop
-+                // runs before the parent device unbinds.
-+                unsafe {
-+                    fwctl::Registration::new(
-+                        pdev.as_ref(),
-+                        &fwctl_dev,
-+                        NovaCoreFwCtlData::new(gpu.cmdq()),
-+                    )?
-+                }
-+            },
-         })
-     }
- }
-diff --git a/drivers/gpu/nova-core/fwctl.rs b/drivers/gpu/nova-core/fwctl.rs
-new file mode 100644
-index 000000000000..f1f750e86e4f
---- /dev/null
-+++ b/drivers/gpu/nova-core/fwctl.rs
-@@ -0,0 +1,119 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! fwctl driver for nova-core GMC API pass-through.
-+
-+use kernel::{
-+    fwctl,
-+    fwctl::{
-+        DeviceType,
-+        FwRpcResponse,
-+        RpcScope, //
-+    },
-+    prelude::*, //
-+};
-+
-+use crate::{
-+    gsp::cmdq::Cmdq,
-+    vgpu::{
-+        GMCAPI_CMD_ADD_VGPU_TYPE,
-+        GMCAPI_CMD_ASSIGN_VGPU_TYPE,
-+        GMCAPI_CMD_DEASSIGN_VGPU_TYPE,
-+        GMCAPI_CMD_QUERY_ASSIGNED_VF_VGPU_TYPE,
-+        GMCAPI_CMD_QUERY_CREATABLE_VGPU_TYPES,
-+        GMCAPI_CMD_QUERY_SUPPORTED_VGPU_TYPES,
-+        GMCAPI_CMD_QUERY_VGPU_PROPERTIES, //
-+    },
-+};
-+
-+/// Resources used by fwctl callbacks while the GPU is bound.
-+#[pin_data]
-+pub(crate) struct NovaCoreFwCtlData<'a> {
-+    cmdq: &'a Cmdq<'a>,
-+}
-+
-+impl<'a> NovaCoreFwCtlData<'a> {
-+    pub(crate) fn new(cmdq: &'a Cmdq<'a>) -> impl PinInit<Self, Error> {
-+        try_pin_init!(Self { cmdq })
-+    }
-+}
-+
-+/// Per-file fwctl context for nova-core.
-+#[pin_data]
-+pub(crate) struct NovaCoreFwCtl {}
-+
-+impl fwctl::Operations for NovaCoreFwCtl {
-+    type RegistrationData<'a> = NovaCoreFwCtlData<'a>;
-+
-+    const DEVICE_TYPE: DeviceType = DeviceType::NovaCore;
-+
-+    fn open<'a>(
-+        _device: &fwctl::Device<Self>,
-+        _reg_data: &Self::RegistrationData<'a>,
-+    ) -> impl PinInit<Self, Error> {
-+        try_pin_init!(Self {})
-+    }
-+
-+    fn fw_rpc<'a>(
-+        _this: Pin<&Self>,
-+        _device: &fwctl::Device<Self>,
-+        reg_data: &Self::RegistrationData<'a>,
-+        scope: RpcScope,
-+        rpc_buf: &mut [u8],
-+        _max_output_len: usize,
-+    ) -> Result<FwRpcResponse, Error> {
-+        if rpc_buf.len() < RPC_HEADER_SIZE {
-+            return Err(EINVAL);
-+        }
-+
-+        let (header, payload) = rpc_buf.split_at(RPC_HEADER_SIZE);
-+        let command_id = u32::from_le_bytes(header[..4].try_into().map_err(|_| EINVAL)?);
-+        let reserved = u32::from_le_bytes(header[4..].try_into().map_err(|_| EINVAL)?);
-+
-+        if reserved != 0 {
-+            return Err(EINVAL);
-+        }
-+        if !is_command_permitted(scope, command_id) {
-+            return Err(EPERM);
-+        }
-+
-+        let response =
-+            reg_data
-+                .cmdq
-+                .send_gmc_and_receive(command_id, payload, GSP_GMC_MAX_RESPONSE_SIZE)?;
-+        if response.status != 0 {
-+            return Err(EIO);
-+        }
-+
-+        let response_len = RPC_HEADER_SIZE
-+            .checked_add(response.payload.len())
-+            .ok_or(EOVERFLOW)?;
-+        let mut out = KVVec::with_capacity(response_len, GFP_KERNEL)?;
-+        out.extend_from_slice(&command_id.to_le_bytes(), GFP_KERNEL)?;
-+        out.extend_from_slice(&0u32.to_le_bytes(), GFP_KERNEL)?;
-+        out.extend_from_slice(&response.payload, GFP_KERNEL)?;
-+
-+        Ok(FwRpcResponse::NewBuffer(out))
-+    }
-+}
-+
-+/// Size of `fwctl_rpc_nova_core` (`command_id` plus `reserved`).
-+const RPC_HEADER_SIZE: usize = 8;
-+
-+const GSP_GMC_MAX_RESPONSE_SIZE: u32 = 16_384;
-+
-+/// Returns whether `command_id` may be issued under `scope`.
-+fn is_command_permitted(scope: RpcScope, command_id: u32) -> bool {
-+    match scope {
-+        RpcScope::Configuration => matches!(
-+            command_id,
-+            GMCAPI_CMD_ADD_VGPU_TYPE
-+                | GMCAPI_CMD_QUERY_SUPPORTED_VGPU_TYPES
-+                | GMCAPI_CMD_QUERY_CREATABLE_VGPU_TYPES
-+                | GMCAPI_CMD_ASSIGN_VGPU_TYPE
-+                | GMCAPI_CMD_DEASSIGN_VGPU_TYPE
-+                | GMCAPI_CMD_QUERY_VGPU_PROPERTIES
-+                | GMCAPI_CMD_QUERY_ASSIGNED_VF_VGPU_TYPE
-+        ),
-+        _ => false,
-+    }
-+}
-diff --git a/drivers/gpu/nova-core/nova_core.rs b/drivers/gpu/nova-core/nova_core.rs
-index f7753d63c432..5f09b69f3b54 100644
---- a/drivers/gpu/nova-core/nova_core.rs
-+++ b/drivers/gpu/nova-core/nova_core.rs
-@@ -16,6 +16,7 @@
- mod fb;
- mod firmware;
- mod fsp;
-+mod fwctl;
- mod gpu;
- mod gsp;
- mod irq;
-@@ -83,6 +84,7 @@ fn init(module: &'static kernel::ThisModule) -> impl PinInit<Self, Error> {
-     description: "Nova Core GPU driver",
-     license: "GPL v2",
-     firmware: [],
-+    imports_ns: ["FWCTL"],
- }
- 
- kernel::module_firmware!(firmware::ModInfoBuilder);
-diff --git a/drivers/gpu/nova-core/vgpu.rs b/drivers/gpu/nova-core/vgpu.rs
-index 47a27236a086..f198fa218297 100644
---- a/drivers/gpu/nova-core/vgpu.rs
-+++ b/drivers/gpu/nova-core/vgpu.rs
-@@ -46,6 +46,16 @@
- pub(crate) mod vgpu_api;
- mod vram;
- 
-+pub(crate) use fw::{
-+    GMCAPI_CMD_ADD_VGPU_TYPE,
-+    GMCAPI_CMD_ASSIGN_VGPU_TYPE,
-+    GMCAPI_CMD_DEASSIGN_VGPU_TYPE,
-+    GMCAPI_CMD_QUERY_ASSIGNED_VF_VGPU_TYPE,
-+    GMCAPI_CMD_QUERY_CREATABLE_VGPU_TYPES,
-+    GMCAPI_CMD_QUERY_SUPPORTED_VGPU_TYPES,
-+    GMCAPI_CMD_QUERY_VGPU_PROPERTIES, //
-+};
-+
- /// vGPU state detected during GPU construction.
- #[derive(Debug, Clone, Copy)]
- pub(crate) enum VgpuState {
-diff --git a/drivers/gpu/nova-core/vgpu/fw.rs b/drivers/gpu/nova-core/vgpu/fw.rs
-index 795ce4855586..8f0fb26da86b 100644
---- a/drivers/gpu/nova-core/vgpu/fw.rs
-+++ b/drivers/gpu/nova-core/vgpu/fw.rs
-@@ -31,10 +31,24 @@
- 
- pub(super) use commands::RpcMessage;
- 
--pub(super) const GMCAPI_CMD_QUERY_ASSIGNED_VF_VGPU_TYPE: u32 =
-+pub(crate) const GMCAPI_CMD_ADD_VGPU_TYPE: u32 = bindings::GMCAPI_COMMANDS_GMCAPI_CMD_ADD_VGPU_TYPE;
-+
-+pub(crate) const GMCAPI_CMD_QUERY_SUPPORTED_VGPU_TYPES: u32 =
-+    bindings::GMCAPI_COMMANDS_GMCAPI_CMD_QUERY_SUPPORTED_VGPU_TYPES;
-+
-+pub(crate) const GMCAPI_CMD_QUERY_CREATABLE_VGPU_TYPES: u32 =
-+    bindings::GMCAPI_COMMANDS_GMCAPI_CMD_QUERY_CREATABLE_VGPU_TYPES;
-+
-+pub(crate) const GMCAPI_CMD_ASSIGN_VGPU_TYPE: u32 =
-+    bindings::GMCAPI_COMMANDS_GMCAPI_CMD_ASSIGN_VGPU_TYPE;
-+
-+pub(crate) const GMCAPI_CMD_DEASSIGN_VGPU_TYPE: u32 =
-+    bindings::GMCAPI_COMMANDS_GMCAPI_CMD_DEASSIGN_VGPU_TYPE;
-+
-+pub(crate) const GMCAPI_CMD_QUERY_ASSIGNED_VF_VGPU_TYPE: u32 =
-     bindings::GMCAPI_COMMANDS_GMCAPI_CMD_QUERY_ASSIGNED_VF_VGPU_TYPE;
- 
--pub(super) const GMCAPI_CMD_QUERY_VGPU_PROPERTIES: u32 =
-+pub(crate) const GMCAPI_CMD_QUERY_VGPU_PROPERTIES: u32 =
-     bindings::GMCAPI_COMMANDS_GMCAPI_CMD_QUERY_VGPU_PROPERTIES;
- 
- pub(super) const GMCAPI_CMD_BOOTLOAD_GSP_VGPU_PLUGIN_TASK: u32 =
-diff --git a/include/uapi/fwctl/fwctl.h b/include/uapi/fwctl/fwctl.h
-index 2d6d4049c205..0e336cbbeb6b 100644
---- a/include/uapi/fwctl/fwctl.h
-+++ b/include/uapi/fwctl/fwctl.h
-@@ -46,6 +46,7 @@ enum fwctl_device_type {
- 	FWCTL_DEVICE_TYPE_CXL = 2,
- 	FWCTL_DEVICE_TYPE_BNXT = 3,
- 	FWCTL_DEVICE_TYPE_PDS = 4,
-+	FWCTL_DEVICE_TYPE_NOVA_CORE = 8,
- };
- 
- /**
-diff --git a/include/uapi/fwctl/nova-core.h b/include/uapi/fwctl/nova-core.h
-new file mode 100644
-index 000000000000..c11619660058
---- /dev/null
-+++ b/include/uapi/fwctl/nova-core.h
-@@ -0,0 +1,34 @@
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-+/*
-+ * Copyright (c) 2025-2026, NVIDIA CORPORATION & AFFILIATES
-+ *
-+ * NVIDIA nova-core fwctl interface. All fwctl traffic uses the GMC API
-+ * transport. User-space supplies a command_id and optional payload; the
-+ * kernel constructs the GMC transport headers, validates the command_id
-+ * against the permitted set for the requested scope, and returns only the
-+ * response payload.
-+ *
-+ * The device_type for this file is FWCTL_DEVICE_TYPE_NOVA_CORE.
-+ */
-+#ifndef _UAPI_FWCTL_NOVA_CORE_H
-+#define _UAPI_FWCTL_NOVA_CORE_H
-+
-+#include <linux/types.h>
-+
-+/**
-+ * struct fwctl_rpc_nova_core - ioctl(FWCTL_RPC) in/out buffer format
-+ * @command_id: GMC API command identifier (from GMCAPI_COMMANDS).
-+ * @reserved: Must be zero.
-+ *
-+ * The request buffer passed to FWCTL_RPC begins with this header,
-+ * followed by the command-specific payload bytes (if any).
-+ *
-+ * The response buffer returned by FWCTL_RPC begins with this same
-+ * header (echoing the command_id), followed by the response payload.
-+ */
-+struct fwctl_rpc_nova_core {
-+	__u32 command_id;
-+	__u32 reserved;
-+};
-+
-+#endif
-diff --git a/rust/kernel/fwctl.rs b/rust/kernel/fwctl.rs
-index b7778e4d5ee0..92e1cdf6da2d 100644
---- a/rust/kernel/fwctl.rs
-+++ b/rust/kernel/fwctl.rs
-@@ -44,6 +44,8 @@ pub enum DeviceType {
-     Pds = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_PDS,
-     /// Broadcom NetXtreme (bnxt) device.
-     Bnxt = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_BNXT,
-+    /// NVIDIA nova-core GPU device.
-+    NovaCore = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_NOVA_CORE,
- }
- 
- /// Scope of access for an RPC request.
-diff --git a/rust/uapi/uapi_helper.h b/rust/uapi/uapi_helper.h
-index 44fb6203c0ad..428a756a9b5c 100644
---- a/rust/uapi/uapi_helper.h
-+++ b/rust/uapi/uapi_helper.h
-@@ -11,6 +11,8 @@
- #include <uapi/drm/drm.h>
- #include <uapi/drm/nova_drm.h>
- #include <uapi/drm/panthor_drm.h>
-+#include <uapi/fwctl/fwctl.h>
-+#include <uapi/fwctl/nova-core.h>
- #include <uapi/linux/android/binder.h>
- #include <uapi/linux/android/binder_netlink.h>
- #include <uapi/linux/ioctl.h>
--- 
-2.53.0
-
+btw this can be sent separately.
