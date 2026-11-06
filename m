@@ -1,85 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793972778;
-	b=DuEnVSGpxXF4UjCBbD3Nv+iXSHcNfOJMhPFDiwgOhQjEoIbISRGQhZkS66j2sfACmR68
-	 vndAkeVYpAoLKBBVC0zh3yRn0NKFHvCbDsmRDydN2l4na2+Sz6LJvZLg1B7CKT4tOL1wK
-	 I6S9X7MuP02wtXITud96GthljLJ3jtfhBv7MQVCzyth8LjxogWdNw5lipnsL3yXGm2mfZ
-	 mBRi0+P71QJUtbZwT0PEDPanffV5nvuJgYH1fxX+r438M0w+7eX8MlvaJzGwjDxNPK/Ni
-	 h4H/jS3wrPRJkS7mOIbvPdvj40DZHeGNuNtEs/0DFot4aRImKgEoH4NhYgImnR/nWKw==
+	t=1793973155;
+	b=SgJx/x4UI8M7u1xyI75U5E+f8RoKx4VpbHUWkpdlrLXssZ+1lHHjjcvg5VsFom002/Yh
+	 ExXf4wWMgFeljeYD907nvAFzPVVIrGwNmI7i8TtsD4J31oNjVO6fsLaYHY/U83YOvwm0a
+	 SsUiDU2aOQYRG82BZVDbvsX7fAMb3BGIxMyO0Vs2EJbCw8TOBHbd/9ZOJYr9ciVKSl8BK
+	 0PK07EPbwZovigylImpaCr8I0qqMm6EnOhK7P5FLIvkwsOP7QB8eGkDKej/l2UFOiELwn
+	 LnDGy2bnDJSsZa6NjullcAbJLS9lzfOr3Xn6b1ngFD94KU9C5jO9xGbO/xNaPvBd6Yg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793972778;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=3UpHoGVFaxBU8Zr3Ydkphw2SbHlUyep3ui1rx2LUD8c=;
-	b=DKUFeUsfHO5cfCNvZc27PQtQJOb5wkG3y4pmYnZW9iu1ss2w+gMt67vjRypYB39Z3+kH
-	 Rwh/BkfdBWCkaPADh2Ttauv5QKh1ZWXAMNXGyK6n1VQdPDOlXF1ONlEC8jlD75KE499H0
-	 SBm2inXYZtxCsKqxzoDDKOnhfNa9vlpDseLwvJ3HY2o1LFN+49RCrTHhOnUAC5twb244k
-	 kt+AZPwprxkkGb0FoXHM/5Le/zwy8tA7yMLo8LobdPsyf4StzX+pfceQu3mceK5bB/J4C
-	 lkguWcYWa75S1SwkxlyYB/CeFKXYa7p05NN/aJ3aR2exZcov9k6WFpsNohEgzWQK6Aw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793973155;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=dsbuEkVnz3SjXATy5v3apG2kcpt5k5ogs72dTLmdjS0=;
+	b=2r0snawLcnSZin5YFPwps8X48LVjV5cdmnheCD1Tsj70Jhq3o6P6qS7uWi+gvFXnhboz
+	 0VfbNhg63GERs9j8DU6LiGaJOMwiB9xeERtw1tWqrBMTlH9oqGIBF6YdUV7wu0HL3GtQE
+	 P5+IiVKVlAtrkpLB4bTeqH7UxQnMTQ/53y8tc1lRfeR0KKrCqCu1tqmUZk1lAv3AOvADm
+	 I/qS2t3NjJTqgbJKCOoESgmdf17MYnVCjAn5h9mJhP/il/ReyU6I2LUwR8zcoWvxtfkg8
+	 scb4v0sXIbsb06hIM7UCvKkR4yiu0RHvkSmJm+L6XbYfGiX0+u7Mv1oiD5k/w6kbpYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=H0vwCw5o;
-	arc=none smtp.remote-ip=198.175.65.11
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=do7pe9rv;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B86C0606EEA3;
-	Fri,  6 Nov 2026 13:46:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B86C0606EEA3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B97606A326
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 13:52:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=H0vwCw5o
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793972778; x=1825508778;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=SixzZejWP3/MIPZ6dsP1Dj+mtcCMzHPIHSfjMfby3nk=;
-  b=H0vwCw5oKi3bh0zKuYPkL3lvFpnwTYeQJrfedJod0bQo+dc/7JpcZS1U
-   QnmIDAFCETuDHgwtJu5zjBdhvdTA6kzJ48GB66LaI8FLBTzEHYYu4ZknJ
-   egN3HOK6eK7R+FkUsNovBRA2uyfMoLDrSis19WhrNpdBo9Rsuplr4hs4d
-   nUbQ8zWxVVcbxhoH+J+WFMEIG6avf4qASdjkGWziANi9FqU9EBxiWC0II
-   UfVGlRR3EwYKF23924AL8AwGgs28pvCHNtLlUzAzhIkMU7xkZdiVLBXUJ
-   PHucJl+v7dfMUiPxwblIDcnUfJTN83ZaDiwKKmrQqdCiX2Vws7T1wMrDU
-   g==;
-X-CSE-ConnectionGUID: gm6UqfSYQHCubvx2VEJM+g==
-X-CSE-MsgGUID: x9s1vbYzTjWp5g7NK2i8sA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2672720"
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2672720"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:46:17 -0800
-X-CSE-ConnectionGUID: lijwk9xmTxShsiV8zwxZ/w==
-X-CSE-MsgGUID: eQ+uWD2HTM+Euwz6weyyIQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7271457"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.104])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 05:46:14 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: Maciej Grochowski <Maciej.Grochowski@sony.com>,
-	Geramy Loveless <gloveless@jqluv.com>,
-	Eric Auger <eauger@redhat.com>,
-	Alexey Fomenko <alexey.fomenko@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Mesih Kilinc <Mesih.Kilinc@sony.com>,
-	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v5 14/14] PCI: Add debug printing to window sizing
-Date: Fri,  6 Nov 2026 15:43:35 +0200
-Message-ID: <20261106134341.39493-15-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=do7pe9rv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E9E21F0089F;
+	Fri,  6 Nov 2026 13:52:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793973154;
+	bh=dsbuEkVnz3SjXATy5v3apG2kcpt5k5ogs72dTLmdjS0=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=do7pe9rvSWfQU3gUBS5e2q0j5NE8R7AaWpolNbPGeowgNn2pWlmH2w7z6ppIJ7eWB
+	 +Y7PMT51aTQql9llPWIoMPnHhxYmMXAIpsHvra6RkSAOd1Fk9ygDSi+ifYjhRePLGI
+	 Ta8MPBQutymoxcEnT/n33AdAsNtTlKK2837W0iMEQYi7bDZEzhHM70VSxrhBDkyyLn
+	 zv8h3GjkZ3SJr1cmWaZ/PQNFBTcqvd2OasRLwdyqflbFgokPM9hEt/2Wjaydq5JCDk
+	 KzxpYd3alvC5Dx56dnN0U2WPxpgaIUz3+6jxekk1zKUNjq/xfjWzCeTyNciqrkXhlc
+	 kFriBvyKoW/mA==
+Message-ID: <sashiko-outbox-201509@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 01/14] resource: Mark free space assigned
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
+In-Reply-To: <20261106134341.39493-2-ilpo.jarvinen@linux.intel.com>
 References: <20261106134341.39493-1-ilpo.jarvinen@linux.intel.com>
+ <20261106134341.39493-2-ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 06 Nov 2026 13:52:34 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -88,64 +58,18 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Bridge window sizing prints nothing about its decisions. Some values
-used for the calculations are not easy to derive from other log lines
-that are already available.
+> Free space ranges are (part of) assigned ranges. Since new resources
+> have IORESOURCE_UNSET, the flag gets copied also to full_avail.flags,
+> which hampers printing them with %pR.
+>=20
+> Clear IORESOURCE_UNSET for the free space indicator resource.
+>=20
+> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
-Add window sizing debug print to make troubleshooting easier.
+Sashiko has reviewed this patch and found no issues.
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/pci/setup-bus.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 86c9557bc2fb..22da18347488 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1265,7 +1265,7 @@ static resource_size_t __pbus_size_mem(struct pci_bus *bus,
- 				       struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
--	resource_size_t winsize = 0, win_align;
-+	resource_size_t winsize = 0, win_align, final_winsize;
- 	resource_size_t aligns[PCI_RES_ALIGN_RANGE] = {};
- 	resource_size_t partial_blocks = 0, max_partial = 0;
- 	unsigned int nonaligning = 0, rescount = 0;
-@@ -1379,7 +1379,28 @@ static resource_size_t __pbus_size_mem(struct pci_bus *bus,
- 	*head_align = calculate_head_align(aligns, max_order);
- 	*head_align = max(*head_align, win_align);
- 
--	return ALIGN(max(winsize + gap, min_size), win_align);
-+	final_winsize = ALIGN(max(winsize + gap, min_size), win_align);
-+
-+	if (bus->self) {
-+		int idx = pci_resource_num(bus->self, b_res);
-+		const char *r_name = pci_resource_name(bus->self, idx);
-+		struct resource print_res = *b_res; /* b_res update is delayed */
-+
-+		resource_set_range(&print_res, *head_align, final_winsize);
-+		if (final_winsize) {
-+			print_res.flags &= ~(IORESOURCE_UNSET |
-+					     IORESOURCE_DISABLED);
-+		} else {
-+			print_res.flags |= IORESOURCE_DISABLED;
-+		}
-+
-+		pci_dbg(bus->self, "%s %pR: non-aligning %u/%u gap %llx partials %llx\n",
-+			r_name, &print_res, nonaligning, rescount,
-+			(unsigned long long)gap,
-+			(unsigned long long)partial_blocks);
-+	}
-+
-+	return final_winsize;
- }
- 
- /**
--- 
-2.47.3
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261106134341.3949=
+3-1-ilpo.jarvinen@linux.intel.com?part=3D1
 
