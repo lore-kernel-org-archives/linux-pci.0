@@ -1,53 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.95.204
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793962667;
-	b=a5EPZ5UQZL+l3Etc9Wy9lEPRZ/f/RKpjdCIQgKmrsQleofzl0DOTEJo4TK20i1pwYvGx
-	 7ubmxQy6z7LmXp7gzcuoQp0IkAjAy+HX9zcf16z9lpVCv4zytsGkeNn3dlRin/cUdQNjg
-	 4yaHqIo48VxYhEKvh9UhfJNrMJB+VX/jBtdf1+ukwn3OH+Uusb6JKZr0D1AEWTe4Wk9OF
-	 +XnQwjYIhJb3Ges3GDjqvwnZ9tiv8Gvhd2BvqJZX1iE0kvko64XlsJ7P5sSVXTacaeSZp
-	 3LjSUu5D1SgYjGM5qd7D6PgrRijVPp9m5cFsa9hcNLVL0LkCfEEQ9mhLC4eri0SBPHA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793962667;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=gwJh3h/inOCBwquXjCvi2zo6J77wkYoOHQMFDR2AV0k=;
-	b=JBRvU1j7XfA3RJ4uyWjDBpaYnnMsxexlTI3au8VAtI1oG1/6aDn9PWRn51EA9innCOEA
-	 zA4QRvr90rI1+eVgXlSWmrhfBvvdSsv5/WDGk2zBFNGwjzkzsBg4Jq3kn7Xjz+ck5qIwZ
-	 nD9jsifHBVfgO9VYybMl3WNOSiXZmchDl7tqrzWPui8eUbJhpD/zjxngwpB6seS2pYOwR
-	 ynSrI7LiGxbJKoegvxZQmvNiOK0UXCbo86JaWX5+4uOesgaULBcGpqO6dehOhKwHDKGCe
-	 N8jsY5pba55IhvPIrl+xJFg2umv089OTiHK8KnzZt8RJvMKtzN45kcY5DRwjtn1Q9hA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=83.223.95.204
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793963404;
+	b=WkXIalcOteZb12/QbyyLh1qy8fgeW57sGjt+YMoEK/p02MpJFfgbL9ulX5cpCtYYoRlp
+	 gX/cVO9ErbXwvYIoWF+NH7mihUFbH8/lcOks4t2lQ7+yfmcVAcwwS5dYW0/qvMZcZlVkw
+	 IVJFTSsPvYmb2oRxUKXJtevC9jaDgL/Yf/7Xk0biX0GTm+MN3gh7req+sZZJlAliHa7ED
+	 9HNXVj2X2UU1j57SvJddQJevBThBbUYb1kkIlYewF1cIWJooUfs6u0E7Ab7k1vfHCJqLy
+	 IvCeph5DkFSI3By2q5mDZ5XqdqEIadgKglM9FZXj0U9u8Oy2BEKq1/xAG+4PwHCq2Vg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793963404;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=g/leEMY3T0xFKOpb94XgJ/IAKICADBoapFLrHWlkHIg=;
+	b=WrnbjhWEM0Oob2q8ia2H9RBbVcw9N+4twZjxOyn9kLzhJQlxeQ8cIwtK+RJJIv3qMc1a
+	 EE/32yKMk79kLmTc9VQTjME21YU209c3ub+/zCSVi7Se9oJfbDawZvdkhVb1NCdZw0e6v
+	 2UtbOaI1EPJkKLe7Pb6Cyn5Sbw9nWoA12k1nQhLqwL1Wd6ySjHmogVWzJI+J3Zjo3ygsb
+	 rMRaWV9kKrtp3e3+478iZ83TB2/qrR9PUGzeU8wzY8AKgQqRCt+Fs+l8H/2mevURMsyu4
+	 nzMdHHiZl1pwytt0p8B8TWRm8B6vjiZ9b6ZrvGrbICV/tvqcRJBE8elptmNIKe50eTw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FxRTYJ9k;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3658C606A329;
+	Fri,  6 Nov 2026 11:10:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FxRTYJ9k
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793963403;
+	b=CX6PPLW49MfBKCrNO7mKZV1k21IV1fOGlaaV/QGsox3Gyd2vYKRgTnhBt3v9M8fXNdVB
+	 0tggfwdfyKKQ1uEDhhd02pACpNKFz6q3hcfS2Wfo4RxpwGKu+S1xOqGRGPTPBMM3/cBa/
+	 SRGXuKPCCVGmrkriQe2sB12OTJJeba7GpSmbWnEHgCDGasOQa3UpBCp01WOPQn4MTPw9h
+	 1BVlegeS1FhSGOflNlCN/EiDP+mMl9uu2N12r3geYMyli8se/UDGdt8N7KqHyDuSg7p9p
+	 hzh9geTVpfKB4O7pqLDlyPalXqzzcDRIEkCsWrH4ezO/9s67Bn402Veg1r2K9JcqRjg==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793963403;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=g/leEMY3T0xFKOpb94XgJ/IAKICADBoapFLrHWlkHIg=;
+	b=EyDX9e1f9jM7gO5bEF21VC5Y0Gmo9tBaHz7g7u90AqXBLUxcO6+xWaBleo+RVgp9SEjA
+	 v2+qoQZkec3rKznPalNP8jqMXfoitoyhCnU35ibTfmfy/0BfTxc6TsdP+7DeuI55b5Vs0
+	 PBHXzE2w5Xy0/4JjQDXGSBvruv+48uL4O9gqj1hWabwgtYEriJI1fset6qTu071YqydOz
+	 b4ws1GupYg3c9xTtuVuoTBeyyaogs+glJxjetyEU1AI2NpYTOSdCrpqekGruixx7zCHsn
+	 KfFkuQ1/QGmLdPdiszTF4/Kyvz0akKnBKpM68GE0+bEHOwZOeBBfmicISfuextii31g==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B449606A326;
-	Fri,  6 Nov 2026 10:57:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B449606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id C7D1235FC;
-	Fri, 06 Nov 2026 11:57:35 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id B4A35606F4EF; Fri,  6 Nov 2026 11:57:35 +0100 (CET)
-Date: Fri, 6 Nov 2026 11:57:35 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jennifer Chan <jenniferchan@meta.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [PATCH] PCI: Add d3cold delay quirk for NVIDIA LR10 NVSwitch
-Message-ID: <au2yn5QLQo1ziw0Y@wunner.de>
-References: <20261105201010.2297078-1-jenniferchan@meta.com>
- <20261105215148.GA1566818@bhelgaas>
+	by smtp.kernel.org (Postfix) with ESMTPS id 482DB1F0089F;
+	Fri,  6 Nov 2026 11:10:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793963403;
+	bh=g/leEMY3T0xFKOpb94XgJ/IAKICADBoapFLrHWlkHIg=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=FxRTYJ9kF0QZwkNeH12mJldeUPKLJJDeCRkaU7b0vG2kCuC1lg5IGkRRaExVX2o5L
+	 ySYae0muusyxHfnRxTesRP26XtbVoM2DdC/olow8iU5eR49eJ9Qu+FyA9pf2VfgZ13
+	 mVmSaX8bl9WkGTaJH8D4J1IULqflNWjb8hiP1ygP+2vl7y8Jq/kskWaka6CJx3gm9E
+	 dtqYLRWfkK7Xi4jMTCF0Td5+gGX4BLJvhIpLb1sA/yYdg60AGFm1pNom9fweO+uu2N
+	 KbhPe/jisy227Eww+d/gR8VC8dTv8/iFSh7HF9+ZjvNQFy9tnPVONPWftcbbrDaC2t
+	 6Y/Th0hD2KFpw==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 92DDF45CF0;
+	Fri,  6 Nov 2026 11:10:02 +0000 (UTC)
+From: Jens Glathe via B4 Relay <devnull+jens.glathe.oldschoolsolutions.biz@kernel.org>
+Date: Fri, 06 Nov 2026 12:09:59 +0100
+Subject: [PATCH RFC] power: sequencing: pcie-m2: stop requiring subsystem
+ IDs for WCN6855/WCN7850
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,167 +83,95 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261105215148.GA1566818@bhelgaas>
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261106-pwrseq-bt-subsystem-v1-1-11fb09f63c93@oldschoolsolutions.biz>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzNDQwMz3YLyouLUQt2kEt3i0qTiyuKS1FxdIxPLZHOLVAsDo+QkJaDOgqL
+ UtMwKsKnRSkFuzkqxtbUAp1bYMWoAAAA=
+X-Change-ID: 20261106-pwrseq-bt-subsystem-249c78e802cb
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Bartosz Golaszewski <brgl@kernel.org>, Wei Deng <wei.deng@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+ linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, 
+ Jens Glathe <jens.glathe@oldschoolsolutions.biz>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793963402; l=3002;
+ i=jens.glathe@oldschoolsolutions.biz; s=20240919;
+ h=from:subject:message-id;
+ bh=t5UII2v99mLuMKVxGQklvEBJsKKUJFSN4tb1ImMhs0k=;
+ b=w/e8/FRzz6dIH+oxyAlLxQfsWrqcdJm7iFVI1QuyVeFH6PoCpRsMpGN4qOtU3cdHjsY+ll4Dk
+ DkK+mUkRAs6AXl5Gv9xCUltGGe9clDlEvEBWvC18dFgvMdomfojfkol
+X-Developer-Key: i=jens.glathe@oldschoolsolutions.biz; a=ed25519;
+ pk=JcRJqJc/y8LsxOlPakALD3juGfOKmFBWtO+GfELMJVg=
+X-Endpoint-Received: by B4 Relay for
+ jens.glathe@oldschoolsolutions.biz/20240919 with auth_id=216
+X-Original-From: Jens Glathe <jens.glathe@oldschoolsolutions.biz>
+Reply-To: jens.glathe@oldschoolsolutions.biz
+Content-Transfer-Encoding: 7bit
 
-On Thu, Nov 05, 2026 at 03:51:48PM -0600, Bjorn Helgaas wrote:
-> On Thu, Nov 05, 2026 at 12:10:10PM -0800, Jennifer Chan wrote:
-> > On a Supermicro HGX A100 system (X12DGO-6), each of the six LR10
-> > NVSwitches (10de:1af1) sits alone behind a PLX PEX 8725 (10b5:8725)
-> > downstream port.  "nvidia-smi -r" resets all GPUs: NVML unbinds the
-> > switches from the nvidia-nvswitch driver, resets each one through sysfs
-> > (reset_method "bus", a Secondary Bus Reset of its port) and binds them
-> > again.  The PCI core waits 100 ms after the link comes back, the switch
-> > answers config reads and the reset completes.
+From: Jens Glathe <jens.glathe@oldschoolsolutions.biz>
 
-Broadcom PEX 89xxx switches support a "virtual switch" feature whereby
-the switch spoofs responses from downstream devices when they're
-inaccessible.  I just checked the datasheet of the PEX 8725 and it
-seems to support this feature as well.
+Commit a39ac4651e3b ("power: sequencing: pcie-m2: Match WCN6855 and
+WCN7851 UART BT variants by subdevice ID") narrowed the PCI match for
+the WCN6855/WCN7850 family from PCI_DEVICE() to PCI_DEVICE_SUB() in
+order to avoid creating a UART serdev on USB-BT variants that share
+the same device ID.
 
-This feature makes the kernel believe that the downstream device is
-ready even though it actually isn't.
+The practical result is that every legitimate UART-BT board must now be
+explicitly listed. Missing entries (e.g. Lenovo T14s Gen 6, subsystem
+17aa:e0e9) silently prevent serdev creation even though the DT graph
+already describes a UART link on the connector.
 
-I was made aware of this internally because a Supermicro server used
-for testing contained two PEX 89xxx switches which had that feature
-enabled.  I see you're using a Supermicro server as well, so perhaps
-it has the same problem.
+The graph link is the reliable signal that a UART BT interface exists.
+Once it is present, the vendor + device ID is sufficient to select the
+correct compatible string for the dynamically created node. A pure
+USB-BT card simply has no UART graph endpoint, so no serdev is created.
 
-I developed a patch (included below, goes on top of v7.4-rc1) to work
-around this misbehavior.  You may want to give it a spin and see if
-it helps.  I never upstreamed the patch because after a lengthy
-back and forth with Broadcom it turned out that the Supermicro server
-shipped with an outdated firmware on the PEX 89xxx switches.  Updating
-to a newer firmware made the issue go away.  The BIOS of the Supermicro
-server was up to date, but it does not include the switch firmware.
-I had to obtain a separate firmware update specifically for the switches
-and install it through an EFI shell.
+Keep a single PCI_DEVICE_SUB() entry for the QCA2066 (which shares the
+1103 ID but needs distinct BT driver data) and fall back to bare
+PCI_DEVICE() matches for the rest of the 1103 and 1107 families.
 
-Obviously, a blanket wait of 1 second will work around Broadcom's virtual
-switch feature as well, but it's not a proper fix.
+This removes the growing OEM subsystem-ID catalog from the critical
+path while preserving the one case that actually needs a subsystem
+distinction.
 
-The amdgpu driver contains a workaround for the virtual switch feature,
-see 1dd2fa0e00f1.  Obviously, this only helps amdgpu and other drivers
-don't benefit.  So we'd need to solve this for everyone in the PCI core,
-as my patch below does.  I kind of hate putting a workaround for this
-vendor-specific misbehavior in core code, but problem reports caused
-by it keep landing on my desk, so maybe I should amend the patch with
-a commit message and submit it.  But please test it first because perhaps
-the issue you're seeing has some entirely different cause.
+Fixes: a39ac4651e3b ("power: sequencing: pcie-m2: Match WCN6855 and WCN7851 UART BT variants by subdevice ID")
 
-Thanks,
-
-Lukas
-
--- >8 --
-
-From 6ae81de682389f8522e96cea309e5e5304829b55 Mon Sep 17 00:00:00 2001
-From: Lukas Wunner <lukas@wunner.de>
-Date: Thu, 16 Oct 2025 10:56:15 +0200
-Subject: [PATCH] PCI: Check for Broadcom placeholder device in pci_dev_wait()
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Jens Glathe <jens.glathe@oldschoolsolutions.biz>
 ---
- drivers/pci/pci.c | 70 +++++++++++++++++++++++++++++------------------
- 1 file changed, 44 insertions(+), 26 deletions(-)
+ drivers/power/sequencing/pwrseq-pcie-m2.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 9f82b0bc72ff..437e82cb47ac 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1225,18 +1225,19 @@ void pci_resume_bus(struct pci_bus *bus)
- 		pci_walk_bus(bus, pci_resume_one, NULL);
- }
- 
--static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
-+static bool pci_dev_ready(struct pci_dev *dev, struct pci_dev *root,
-+			  struct pci_dev *bridge)
- {
--	int delay = 1;
--	bool retrain = false;
--	struct pci_dev *root, *bridge;
--
--	root = pcie_find_root_port(dev);
-+	u32 id;
- 
--	if (pci_is_pcie(dev)) {
--		bridge = pci_upstream_bridge(dev);
--		if (bridge)
--			retrain = true;
-+	/*
-+	 * Broadcom (LSI Logic) PEX 89000 PCIe switches spoof responses from a
-+	 * placeholder device with ID 0x02b2 if the real device is not ready.
-+	 */
-+	if (bridge && bridge->vendor == PCI_VENDOR_ID_LSI_LOGIC) {
-+		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-+		if (id == (PCI_VENDOR_ID_LSI_LOGIC | 0x02b2 << 16))
-+			return false;
- 	}
- 
- 	/*
-@@ -1260,28 +1261,45 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
- 	 * ID for VFs and non-existent devices also returns ~0, so read the
- 	 * Command register until it returns something other than ~0.
- 	 */
--	for (;;) {
--		u32 id;
-+	if (root && root->config_rrs_sv) {
-+		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-+		if (!pci_bus_rrs_vendor_id(id)) {
-+			if (PCI_POSSIBLE_ERROR(id) && dev->is_virtfn)
-+				pci_read_config_dword(dev, PCI_COMMAND, &id);
-+			if (!PCI_POSSIBLE_ERROR(id))
-+				return true;
-+		}
-+	} else {
-+		pci_read_config_dword(dev, PCI_COMMAND, &id);
-+		if (!PCI_POSSIBLE_ERROR(id))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
-+{
-+	int delay = 1;
-+	bool retrain = false;
-+	struct pci_dev *root, *bridge = NULL;
- 
-+	root = pcie_find_root_port(dev);
-+
-+	if (pci_is_pcie(dev)) {
-+		bridge = pci_upstream_bridge(dev);
-+		if (bridge)
-+			retrain = true;
-+	}
-+
-+	for (;;) {
- 		if (pci_dev_is_disconnected(dev)) {
- 			pci_dbg(dev, "disconnected; not waiting\n");
- 			return -ENOTTY;
- 		}
- 
--		if (root && root->config_rrs_sv) {
--			pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
--			if (!pci_bus_rrs_vendor_id(id)) {
--				if (PCI_POSSIBLE_ERROR(id) && dev->is_virtfn)
--					pci_read_config_dword(dev, PCI_COMMAND,
--							      &id);
--				if (!PCI_POSSIBLE_ERROR(id))
--					break;
--			}
--		} else {
--			pci_read_config_dword(dev, PCI_COMMAND, &id);
--			if (!PCI_POSSIBLE_ERROR(id))
--				break;
--		}
-+		if (pci_dev_ready(dev, root, bridge))
-+			break;
- 
- 		if (delay > timeout) {
- 			pci_err(dev, "not ready %dms after %s; giving up\n",
+diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+index 56c5d51293c10..72c721149dfae 100644
+--- a/drivers/power/sequencing/pwrseq-pcie-m2.c
++++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+@@ -217,15 +217,9 @@ static const struct pci_device_id pwrseq_m2_pci_ids[] = {
+ 	  .driver_data = (kernel_ulong_t)"nxp,88w8987-bt" },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_QCOM, 0x0108),
+ 	  .driver_data = (kernel_ulong_t)"qcom,qca2066-bt" },
+-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_FOXCONN, 0xe105),
++	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1103),
+ 	  .driver_data = (kernel_ulong_t)"qcom,wcn6855-bt" },
+-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1103, PCI_VENDOR_ID_QCOM, 0x337e),
+-	  .driver_data = (kernel_ulong_t)"qcom,wcn6855-bt" },
+-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1107, PCI_VENDOR_ID_QCOM, 0x337c),
+-	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
+-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1107, PCI_VENDOR_ID_LENOVO, 0xe0e9),
+-	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
+-	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x1107, PCI_VENDOR_ID_FOXCONN, 0xe0ee),
++	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
+ 	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
+ 	{ } /* Sentinel */
+ };
+
+---
+base-commit: ddfe51b0a0f5dc9e415cc2c8ad8db17532dd426b
+change-id: 20261106-pwrseq-bt-subsystem-249c78e802cb
+
+Best regards,
 -- 
-2.53.0
+Jens Glathe <jens.glathe@oldschoolsolutions.biz>
+
 
