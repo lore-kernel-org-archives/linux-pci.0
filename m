@@ -1,71 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793925791;
-	b=FLj8czztg2DeyjxySwRSNPxnG/zgB/pSXzGVl1Ye4g9nXzT93HsmufKiru9mgJn6PBsZ
-	 NCdgI8H5Z9iXoi/2G+FDXSOXKefgLuFrhyirfW5TndRSaWZxlKsBa1Xr8ur6WJBr8dB65
-	 7z9Qq9d36An01TnC6Ay1S3rQj0C9xL4NzHXN+bEnGAKZoCWIU4vVJjUGwXpcx6jbsL4dr
-	 V3hcMr2zqz6FK5n0ip7+skIMDTP8Uz28AEgQorFSlK3sUib2wGBCV7sBm6ea72eKYF0Js
-	 2sqvS6pjwjd4TcCJMcNE9HIuYRYSGhLZrDAk1hR9YGD5MKgQ5T0V+Cdv4UZ2Qm+8p3A==
+	t=1793925793;
+	b=vkYnuzojf2QOpZwExGmBwA6IZ56Rhcw1/KNaHeGucA2D+q5nUlSAj+F0mgunV7O+0pPE
+	 KyH0bEwN9I+RI1ikIs/dF1TM9bE4vjW+xrwCHIdfBMHOz6JUAoSqujwNKwWHTxacz/FSb
+	 7fSXEkmwphqWbLv+VkR1CY9FTMDda2rVseFNMKNp2vboFdsz5mgWdbdamCMPoJD3d9S78
+	 l/8gGzNNjdG67DAqCAS5skWQq2WlxxoObQLMz5RyROP2kuELeKAAANRHNXADmitBCEoZ+
+	 g/ulgU+PtlycZU9m949IZUnnlC+UbSzughsPJ3sKtmn+6FNCZcTwlB+q2bEvlYVMnbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793925791;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793925793;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=7sjq9VdN6W+I9NBwFH2LvF9xugKaVKfSc0OTWV+x1HY=;
-	b=G9A99blImU2kExtdaVSzHOQPwpEgDkoZqrsTnyzt0fNwljf/Ffpdp8hR6y0Pi+eFnqwP
-	 +XkdIzD2fzZWaKR6r4+L34+mR9cgUgzMvwLR/WcobPwHydBmapXNY5jrSnH1IVkZdyneQ
-	 TY3ZufD0cGnTYB0KeT7mYmxgHTAC0NkK94J/tK8zIocqeYM5xVqPfxUbZWX4WfQpE5Zo2
-	 x0xFXQmZmHmMRt29eaGCFw7NMl0KZ/u1MJ97ALzPCIdeZ/3hF9XEBEzyZk+QdOFPNAYPC
-	 xbHMAJ65Xghllc0eKTNRyhpLOxMFGRBpITQlfnv2Mc1YJZOfMDWnzDtBojLfQUC8HZA==
+	bh=mFWOpusTgBwcgTKpEgyRpVaqUUx06BhmoFjl8K/HM58=;
+	b=Co3H+gi9QHWdTkBWOPXeb+SAIjuKx07g0rxg936VfJX7dNBeO6+97Reag0eHvgtBgDMM
+	 wA0sZ34V/wDjVWHtONKADvLM4z08gr32HwELN83apeae1xzqvit2doexVtOa2l3jykVR+
+	 XcACO4XWMR/hR+hTd3oJOU2Lp9mWK1tVegGyijsBC6rlc6/nmMg5r3jYkEaFWgzImOdf9
+	 GARwkWS6bFsE2QmpmaPsSpsTOUr87RTk8r+lhUTI7rpYeWxtJOQFOans02rcOVICQznRr
+	 AWNGWKASLBhNCH0fdUyGLjzzMpQcBd5jhGWFvVZsc7xJOVISxYc4HhZWRPL3cMMxnvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com;
-	arc=none smtp.remote-ip=209.85.210.70
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=MTsy0IKF;
+	arc=none smtp.remote-ip=209.85.167.198
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809BF606D809
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 809BF606D809
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDFA8606D817
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 00:43:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DDFA8606D817
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-8437834ad7eso274840a34.1
-        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:01 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=MTsy0IKF
+Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-55bf11583d9so197830b6e.1
+        for <linux-pci@vger.kernel.org>; Thu, 05 Nov 2026 16:43:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793925780; x=1794530580; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793925792; x=1794530592; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=7sjq9VdN6W+I9NBwFH2LvF9xugKaVKfSc0OTWV+x1HY=;
-        b=e3fgR/SKD7ZyBVYRl7Ae0tV/CpkJ3uQsY9YcR2LfwSQAFQCFPjqLB1c/fT6Gqbadmt
-         ULYEUQfX6JH+Ek7RAlk+Zqx1a/KjaBwGVFNrtWMzcUdTjxUjrIheTV9GXEmfkhMLUVPn
-         qTA7HLoyNb7MV3jDquhCnQqNVlEbfcvgJtI/SFMbzYfIKur+ef+6kHbgQsdcX0Ub7j5U
-         OXbgf2YmSVAgE2EWqFjJ3p4xqN/vZYO69UghPLfQCXDYCeh/VIOSdo4OnFsvvna+wYKY
-         kZqF/M61lpwmhFlX64o3SvBtrtHTSxU9OJEqN77aix0KR0KM+7JOc3bGKCa0BaphVgay
-         MRvA==
+        bh=mFWOpusTgBwcgTKpEgyRpVaqUUx06BhmoFjl8K/HM58=;
+        b=MTsy0IKFpyxLLVaOm4299dWx6WcmcnErsBTSr+AlXko/9KnB8UjC7jewf2G8Ple4as
+         loau05GedXce9+dd4TVTjPJ+rPvu842mjUHhVzvkVumV36Qq1GMuYycPO8iMLdE2Xi7o
+         RK3A7LiqkFZCz7mKfc2a6fqfKykSHvnmwvKoTFDhQ4riARhNAORuZ4wJvk7JGYN+DFby
+         ROPKtjn7SMG/ken38U33bYARlNrvHAqixPiJA2HwrwEk0QCYvjESscAUvXl38TS9oKWX
+         dQVdRBIVWmr25orO1MjNMrGTY1ZuYeBig79RDz+lMmtbci6TIoQyooMbYzqqrqJv+5md
+         /Okg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793925780; x=1794530580;
+        d=1e100.net; s=20260707; t=1793925792; x=1794530592;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=7sjq9VdN6W+I9NBwFH2LvF9xugKaVKfSc0OTWV+x1HY=;
-        b=ufkKIfvNB3FqDzUktQyiDTuN5Kgz5614lHyLyQGSO1wHLVkuIBnP33v3ZpzZ3LGJ1i
-         hm+Iu7Ufo1PYG8OMfNVvGUB+vswZz9eMP18i5/oLXKHJM4Fsao0R3YzUaRr1VgM1O0Ae
-         n71Ohr8fHvxLltLfPECIMudvRxVcCUBSHFMVxtJ4YPjTfzcmsmtlmAOH68XFvoDCqlz8
-         fY6tIbmFxIzjc5hyl4W5Xn6R7ql0kp6JDaGbfxA9UnY94A3GExn1VybpXrsDqpXPlFM/
-         85LrNpqQx/KS+TVZpJW6pMYDFPfJGxOFKA2RRIbhmh/anqm6WaOUMhytCokajNkV/vdc
-         V29Q==
-X-Forwarded-Encrypted: i=1; AKwUvBwmSTt7wlu1VtOkwy8rD2hefa8dYdWsCoY7/a7SSyWEdEuer8SAJT7i5dsq3I806zE2Sqy7Ja/oK8o=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9stdOeLp6AvzLwslGY/YIZ74cIiYb+iZhVKqkcRMXbCPQ+ylNq
-	mvPCL3Q3g707YAna1JzIcH9mNSoV186OFGUvhIbKmWYWCvlmGTWNlsTE5P4/Sw3/3FOC87IKlH+
-	8ZsJngIbT/MS1aA==
-X-Received: from jaan3-n1.prod.google.com ([2002:a05:6638:aac3:10b0:61c:f758:dde6])
+        bh=mFWOpusTgBwcgTKpEgyRpVaqUUx06BhmoFjl8K/HM58=;
+        b=lLn6+hkMTE5LpzMb6dP3KTwLEBPyJKUsRoH789GZ7EY7FQRMXDB4slipStzKLH8hRl
+         s+zPxwV+MVHFqPTDzj4PpEcD6Mskl2N9QvG5Yf1om4SMP1iYTWeOv1YlfQfNZEqG9nhm
+         qN9jf9QPxfimuz5elqYdyeqZwawWSHg4PIPmVvEMScFn5Wdu6DwHD3U0VW0PqaCo/6p+
+         TzgAqgO/dSHBq8N/cClr7LDFavD24RZT+jv0Vh9kLFzmRwHf5VR8dWlkQEYBCBU0nifU
+         XjXWffyRt90kNnWpPhhE+lGdslVhJIl7uUeOETs5akahFDBHnlVwxPnerMGb2g9x+dkN
+         D6hg==
+X-Forwarded-Encrypted: i=1; AKwUvBz+cTckvLalFjMwu4rssypZfRM+svK6apR83VlL/zuz0s/Rd8A81pmHFEhfEbt+1N1q9+6X/c1Z20U=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/w9btu9Jgus++9AkJ51S/TQ6Xl4miIsdUrLF2tJ2Bkq3RLAfUM
+	7+4IC1ay/funk1porLYLWBqapCQRrtm84/FLtB2fwWoIk13BoOKey+iytR+avNnSM48f+0geOf+
+	qn15FE7Jb9URSIA==
+X-Received: from ilbeb27.prod.google.com ([2002:a05:6e02:461b:b0:520:6d86:da98])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6808:6f92:b0:55c:6ea:3e3f with SMTP id 5614622812f47-567e1038164mr750724b6e.28.1793925780223;
- Thu, 05 Nov 2026 16:43:00 -0800 (PST)
-Date: Fri,  6 Nov 2026 00:42:04 +0000
+ 2002:a05:6808:1686:b0:546:306d:45eb with SMTP id 5614622812f47-567be662ce8mr2365687b6e.35.1793925791448;
+ Thu, 05 Nov 2026 16:43:11 -0800 (PST)
+Date: Fri,  6 Nov 2026 00:42:13 +0000
 In-Reply-To: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,9 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261106004218.604799-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.56.0.455.g6c5a503b38-goog
-Message-ID: <20261106004218.604799-4-dmatlack@google.com>
-Subject: [PATCH v2 03/17] PCI: Lay out struct pci_saved_state by configuration
- space offset
+Message-ID: <20261106004218.604799-13-dmatlack@google.com>
+Subject: [PATCH v2 12/17] PCI: Save ACS state in the saved capability store
 From: David Matlack <dmatlack@google.com>
 To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
@@ -95,233 +97,226 @@ Cc: Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>,
 	Vipin Sharma <vipinsh@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Store a device's saved state as a bitmap of the configuration space DWORDs
-that were saved plus their values, instead of a copy of the configuration
-space header followed by a list of pci_cap_saved_data records.
+Save and restore the ACS Control register and the ACS Egress Control
+Vector through the per-device saved capability store instead of a
+private pci_cap_saved_state buffer.
 
-The old layout is described entirely by the kernel: which capabilities have
-a record, how large each record is, and what each word within a record
-means are all properties of the code that happens to be saving them. That
-ties the blob to the kernel that produced it, so VFIO cannot carry a
-device's saved state across a Live Update. The new layout is
-described by the device: a value's position is the offset of its
-register in the device's own configuration space.
+Rename pci_allocate_acs_save_buffer() to pci_reserve_acs_state(), to
+match pci_save_acs_state() and pci_restore_acs_state().
 
-Keep refusing state that the device has nowhere to put in
-pci_load_saved_state(), the equivalent of the old check that the
-capability existed and its record was the expected size. Use
-pci_saved_cap_reserved() for the check, since state saved from another
-device or kernel can legitimately name an offset that this device did
-not reserve.
+Reserve the Egress Control Vector using the size the device reports in
+its HwInit ACS Capability register during setup, as the save buffer was
+sized before. Save or restore the vector only if all of it is reserved,
+since its size is read from the device again each time.
 
-No capability uses the store yet, and the patches that follow move them
-into it one at a time, so keep appending the records of the capabilities
-that still have their own buffer after the saved DWORDs. The blob
-therefore continues to describe all of a device's saved state at every
-step; a later patch drops the records once there are none left.
+pci_liveupdate_adopt_acs() checked for the ACS save buffer to make sure
+adopted controls would survive a later reset. Check that the ACS
+Control register has room in the store instead, which also fails if the
+store could not be allocated.
 
-struct pci_saved_state is opaque to everything outside drivers/pci, so no
-caller needs to change.
+No functional change intended for devices whose Egress Control Vector
+size does not change after setup.
 
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/pci/pci.c        | 89 +++++++++++++++++++++++++++++++++++-----
- drivers/pci/pci.h        |  4 ++
- drivers/pci/saved-caps.c | 14 +++++++
- 3 files changed, 96 insertions(+), 11 deletions(-)
+ drivers/pci/liveupdate.c | 15 +++----
+ drivers/pci/pci.c        | 87 ++++++++++++++++++----------------------
+ 2 files changed, 46 insertions(+), 56 deletions(-)
 
+diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+index 6f92d4ddca2b..8334e6fdd3ec 100644
+--- a/drivers/pci/liveupdate.c
++++ b/drivers/pci/liveupdate.c
+@@ -932,14 +932,15 @@ int pci_liveupdate_adopt_acs(struct pci_dev *dev)
+ 
+ 	/*
+ 	 * Adopting the previous kernel's controls depends on them being
+-	 * captured in the ACS save buffer, so that they are reapplied if the
+-	 * device is later reset. Without that buffer, e.g. because it could
+-	 * not be allocated under memory pressure, the adopted controls would
+-	 * be silently lost by the first reset. Program ACS from scratch
+-	 * instead, which is a better outcome than leaving ACS disabled.
++	 * captured in the saved capability store, so that they are reapplied
++	 * if the device is later reset. Without room in the store, e.g.
++	 * because it could not be allocated under memory pressure, the adopted
++	 * controls would be silently lost by the first reset. Program ACS from
++	 * scratch instead, which is a better outcome than leaving ACS disabled.
+ 	 */
+-	if (dev->acs_cap && !pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS)) {
+-		pci_err(dev, "No ACS save buffer, not adopting ACS controls\n");
++	if (dev->acs_cap &&
++	    !pci_saved_cap_reserved(dev, dev->acs_cap + PCI_ACS_CTRL)) {
++		pci_err(dev, "No ACS save state, not adopting ACS controls\n");
+ 		return -EINVAL;
+ 	}
+ 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e5b960ca26e6..007f9bb289d5 100644
+index 29d9474db1ae..977b7dbd19ce 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -2032,11 +2032,40 @@ void pci_restore_state(struct pci_dev *dev)
+@@ -1023,15 +1023,6 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
+ 		caps->ctrl |= (dev->acs_capabilities & PCI_ACS_TB);
  }
- EXPORT_SYMBOL(pci_restore_state);
  
-+/**
-+ * struct pci_saved_state - a device's saved configuration space
-+ * @dword_map: one bit per DWORD of configuration space, set if that DWORD
-+ *	       was saved
-+ * @dword_val: saved values, in ascending configuration space offset order
-+ *
-+ * Laid out so that the position of every value is described by the device's
-+ * configuration space rather than by the kernel.
-+ *
-+ * Capabilities that have not moved to the saved capability store yet keep
-+ * their own buffer, and their records trail @dword_val until the last of
-+ * those buffers goes away. Both areas vary in length and only one of them
-+ * can be a flexible array member, so the records are reached with
-+ * pci_saved_state_records() rather than declared here.
-+ */
- struct pci_saved_state {
--	u32 config_space[16];
--	struct pci_cap_saved_data cap[];
-+	unsigned long	dword_map[BITS_TO_LONGS(PCI_CFG_SPACE_EXP_DWORDS)];
-+	u32		dword_val[];
-+	/* struct pci_cap_saved_data cap[] follows dword_val */
- };
+-/*
+- * Layout of the ACS save buffer. @ecv holds the ACS Egress Control Vector, if
+- * implemented, and is sized by pci_allocate_acs_save_buffer().
+- */
+-struct pci_acs_saved_state {
+-	u16 ctrl;
+-	u32 ecv[];
+-};
+-
+ /*
+  * Return the number of DWORDs in the ACS Egress Control Vector, or 0 if the
+  * device does not implement P2P Egress Control. The Egress Control Vector
+@@ -1055,30 +1046,44 @@ static unsigned int pci_acs_ecv_dwords(struct pci_dev *dev, int pos)
+ }
  
-+/*
-+ * The records that follow the saved DWORDs, one per capability that still has
-+ * its own save buffer, terminated by an empty record.
-+ */
-+static struct pci_cap_saved_data *
-+pci_saved_state_records(struct pci_saved_state *state)
-+{
-+	unsigned int nr_dwords = bitmap_weight(state->dword_map,
-+					       PCI_CFG_SPACE_EXP_DWORDS);
-+
-+	return (struct pci_cap_saved_data *)&state->dword_val[nr_dwords];
-+}
-+
- /**
-  * pci_store_saved_state - Allocate and return an opaque struct containing
-  *			   the device saved state.
-@@ -2046,16 +2075,28 @@ struct pci_saved_state {
+ /*
+- * Return the number of Egress Control Vector DWORDs held in @save_state, as
+- * sized by pci_allocate_acs_save_buffer().
++ * Return the number of Egress Control Vector DWORDs that are reserved in the
++ * saved capability store, or 0 if the device does not implement P2P Egress
++ * Control or the vector was not reserved in full, e.g. because the device
++ * reports a different size than it did during setup.
   */
- struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev)
+-static unsigned int
+-pci_acs_saved_ecv_dwords(struct pci_cap_saved_state *save_state)
++static unsigned int pci_acs_saved_ecv_dwords(struct pci_dev *dev)
  {
--	struct pci_saved_state *state;
-+	DECLARE_BITMAP(map, PCI_CFG_SPACE_EXP_DWORDS);
-+	struct pci_saved_caps *caps = &dev->saved_caps;
- 	struct pci_cap_saved_state *tmp;
- 	struct pci_cap_saved_data *cap;
-+	struct pci_saved_state *state;
-+	unsigned int dword, nr_dwords, i = 0;
- 	size_t size;
- 
- 	if (!dev->state_saved)
- 		return NULL;
- 
--	size = sizeof(*state) + sizeof(struct pci_cap_saved_data);
-+	bitmap_zero(map, PCI_CFG_SPACE_EXP_DWORDS);
-+	bitmap_set(map, 0, PCI_STD_HEADER_DWORDS);
-+	if (caps->dword_val)
-+		bitmap_or(map, map, caps->dword_map, PCI_CFG_SPACE_EXP_DWORDS);
+-	return (save_state->cap.size -
+-		offsetof(struct pci_acs_saved_state, ecv)) / sizeof(u32);
++	int pos = dev->acs_cap + PCI_ACS_EGRESS_CTL_V;
++	unsigned int i, dwords;
 +
-+	nr_dwords = bitmap_weight(map, PCI_CFG_SPACE_EXP_DWORDS);
-+
-+	size = struct_size(state, dword_val, nr_dwords);
- 
-+	/* Room for the buffers that are left, and for the terminator */
-+	size += sizeof(struct pci_cap_saved_data);
- 	hlist_for_each_entry(tmp, &dev->saved_cap_space, next)
- 		size += sizeof(struct pci_cap_saved_data) + tmp->cap.size;
- 
-@@ -2063,16 +2104,25 @@ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev)
- 	if (!state)
- 		return NULL;
- 
--	memcpy(state->config_space, dev->saved_config_space,
--	       sizeof(state->config_space));
-+	bitmap_copy(state->dword_map, map, PCI_CFG_SPACE_EXP_DWORDS);
- 
--	cap = state->cap;
-+	for_each_set_bit(dword, state->dword_map, PCI_CFG_SPACE_EXP_DWORDS) {
-+		u32 *val = &state->dword_val[i++];
-+
-+		if (dword < PCI_STD_HEADER_DWORDS)
-+			*val = dev->saved_config_space[dword];
-+		else
-+			pci_read_saved_cap_dword(dev, dword * sizeof(u32), val);
++	dwords = pci_acs_ecv_dwords(dev, dev->acs_cap);
++	for (i = 0; i < dwords; i++) {
++		if (!pci_saved_cap_reserved(dev, pos + i * sizeof(u32)))
++			return 0;
 +	}
 +
-+	cap = pci_saved_state_records(state);
- 	hlist_for_each_entry(tmp, &dev->saved_cap_space, next) {
- 		size_t len = sizeof(struct pci_cap_saved_data) + tmp->cap.size;
-+
- 		memcpy(cap, &tmp->cap, len);
- 		cap = (struct pci_cap_saved_data *)((u8 *)cap + len);
- 	}
--	/* Empty cap_save terminates list */
-+	/* Empty record terminates the list */
- 
- 	return state;
++	return dwords;
  }
-@@ -2087,16 +2137,33 @@ int pci_load_saved_state(struct pci_dev *dev,
- 			 struct pci_saved_state *state)
+ 
+-static void pci_allocate_acs_save_buffer(struct pci_dev *dev)
++static void pci_reserve_acs_state(struct pci_dev *dev)
  {
- 	struct pci_cap_saved_data *cap;
-+	unsigned int dword, i = 0;
+-	size_t size;
+-	int pos;
++	unsigned int dwords;
++	int pos, rc;
  
- 	dev->state_saved = false;
+ 	/* dev->acs_cap is not set yet, pci_acs_init() runs later */
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+ 	if (!pos)
+ 		return;
  
- 	if (!state)
- 		return 0;
- 
--	memcpy(dev->saved_config_space, state->config_space,
--	       sizeof(state->config_space));
-+	for_each_set_bit(dword, state->dword_map, PCI_CFG_SPACE_EXP_DWORDS) {
-+		unsigned int off = dword * sizeof(u32);
-+		u32 val = state->dword_val[i++];
+-	size = struct_size_t(struct pci_acs_saved_state, ecv,
+-			     pci_acs_ecv_dwords(dev, pos));
+-	if (pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_ACS, size))
+-		pci_err(dev, "unable to allocate suspend buffer for ACS\n");
++	rc = pci_reserve_saved_cap(dev, pos + PCI_ACS_CTRL, sizeof(u16));
 +
-+		if (dword < PCI_STD_HEADER_DWORDS) {
-+			dev->saved_config_space[dword] = val;
-+			continue;
-+		}
-+
-+		/*
-+		 * Refuse state that the device has nowhere to put, e.g.
-+		 * because it was saved from a different device.
-+		 */
-+		if (!pci_saved_cap_reserved(dev, off))
-+			return -EINVAL;
-+
-+		pci_write_saved_cap_dword(dev, off, val);
-+	}
- 
--	cap = state->cap;
-+	cap = pci_saved_state_records(state);
- 	while (cap->size) {
- 		struct pci_cap_saved_state *tmp;
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6676177706ba..206e0d04e06e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -258,6 +258,9 @@ struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap);
- struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev,
- 						   u16 cap);
- 
-+/* DWORDs of the configuration space header, i.e. pci_dev.saved_config_space */
-+#define PCI_STD_HEADER_DWORDS	(PCI_STD_HEADER_SIZEOF / sizeof(u32))
-+
- void pci_saved_caps_finalize(struct pci_dev *dev);
- void pci_saved_caps_release(struct pci_dev *dev);
- int pci_reserve_saved_cap(struct pci_dev *dev, unsigned int off, unsigned int len);
-@@ -269,6 +272,7 @@ void pci_restore_cap_dword(struct pci_dev *dev, unsigned int off);
- bool pci_read_saved_cap_word(struct pci_dev *dev, unsigned int off, u16 *val);
- bool pci_read_saved_cap_dword(struct pci_dev *dev, unsigned int off, u32 *val);
- void pci_write_saved_cap_word(struct pci_dev *dev, unsigned int off, u16 val);
-+void pci_write_saved_cap_dword(struct pci_dev *dev, unsigned int off, u32 val);
- 
- #define PCI_PM_D2_DELAY         200	/* usec; see PCIe r4.0, sec 5.9.1 */
- #define PCI_PM_D3HOT_WAIT       10	/* msec */
-diff --git a/drivers/pci/saved-caps.c b/drivers/pci/saved-caps.c
-index 92865891514e..4647ce59ce74 100644
---- a/drivers/pci/saved-caps.c
-+++ b/drivers/pci/saved-caps.c
-@@ -211,6 +211,20 @@ void pci_write_saved_cap_word(struct pci_dev *dev, unsigned int off, u16 val)
- 	*slot |= (u32)val << shift;
++	dwords = pci_acs_ecv_dwords(dev, pos);
++	if (!rc && dwords)
++		rc = pci_reserve_saved_cap(dev, pos + PCI_ACS_EGRESS_CTL_V,
++					   dwords * sizeof(u32));
++	if (rc)
++		pci_err(dev, "unable to reserve ACS save state (%pe)\n",
++			ERR_PTR(rc));
  }
  
-+/**
-+ * pci_write_saved_cap_dword - change the saved value of a 32-bit register
-+ * @dev: the PCI device
-+ * @off: offset of the register in configuration space
-+ * @val: value to save
-+ */
-+void pci_write_saved_cap_dword(struct pci_dev *dev, unsigned int off, u32 val)
-+{
-+	u32 *slot = pci_saved_cap_slot(dev, off);
-+
-+	if (slot)
-+		*slot = val;
-+}
-+
  /**
-  * pci_restore_cap_dword - restore a 32-bit capability register
-  * @dev: the PCI device
+@@ -1090,27 +1095,19 @@ static void pci_allocate_acs_save_buffer(struct pci_dev *dev)
+  */
+ static void pci_save_acs_state(struct pci_dev *dev)
+ {
+-	struct pci_cap_saved_state *save_state;
+-	struct pci_acs_saved_state *acs;
+ 	unsigned int i, dwords;
+ 	int ecv_pos;
+ 
+-	if (!dev->acs_cap)
+-		return;
+-
+-	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
+-	if (!save_state)
++	if (!dev->acs_cap ||
++	    !pci_saved_cap_reserved(dev, dev->acs_cap + PCI_ACS_CTRL))
+ 		return;
+ 
+-	acs = (struct pci_acs_saved_state *)save_state->cap.data;
+-
+-	pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL, &acs->ctrl);
++	pci_save_cap_word(dev, dev->acs_cap + PCI_ACS_CTRL);
+ 
+ 	ecv_pos = dev->acs_cap + PCI_ACS_EGRESS_CTL_V;
+-	dwords = pci_acs_saved_ecv_dwords(save_state);
++	dwords = pci_acs_saved_ecv_dwords(dev);
+ 	for (i = 0; i < dwords; i++)
+-		pci_read_config_dword(dev, ecv_pos + i * sizeof(u32),
+-				      &acs->ecv[i]);
++		pci_save_cap_dword(dev, ecv_pos + i * sizeof(u32));
+ }
+ 
+ /**
+@@ -1120,14 +1117,9 @@ static void pci_save_acs_state(struct pci_dev *dev)
+  */
+ static void pci_restore_acs_state(struct pci_dev *dev)
+ {
+-	struct pci_cap_saved_state *save_state = NULL;
+-	struct pci_acs_saved_state *acs;
+ 	unsigned int i, dwords;
+ 	int ecv_pos;
+ 
+-	if (dev->acs_cap && !pci_need_dev_specific_enable_acs(dev))
+-		save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS);
+-
+ 	/*
+ 	 * Devices that rely on device-specific quirks to enable an ACS
+ 	 * equivalent keep that configuration outside of the ACS Control
+@@ -1135,25 +1127,23 @@ static void pci_restore_acs_state(struct pci_dev *dev)
+ 	 * ACS from scratch instead, which also covers devices that have no
+ 	 * saved ACS state at all.
+ 	 */
+-	if (!save_state) {
++	if (!dev->acs_cap || pci_need_dev_specific_enable_acs(dev) ||
++	    !pci_saved_cap_reserved(dev, dev->acs_cap + PCI_ACS_CTRL)) {
+ 		pci_enable_acs(dev);
+ 		return;
+ 	}
+ 
+-	acs = (struct pci_acs_saved_state *)save_state->cap.data;
+-
+ 	/*
+ 	 * Restore the Egress Control Vector before the ACS Control register.
+ 	 * The vector resets to zero, so enabling P2P Egress Control first
+ 	 * would briefly apply the reset vector instead of the saved one.
+ 	 */
+ 	ecv_pos = dev->acs_cap + PCI_ACS_EGRESS_CTL_V;
+-	dwords = pci_acs_saved_ecv_dwords(save_state);
++	dwords = pci_acs_saved_ecv_dwords(dev);
+ 	for (i = 0; i < dwords; i++)
+-		pci_write_config_dword(dev, ecv_pos + i * sizeof(u32),
+-				       acs->ecv[i]);
++		pci_restore_cap_dword(dev, ecv_pos + i * sizeof(u32));
+ 
+-	pci_write_config_word(dev, dev->acs_cap + PCI_ACS_CTRL, acs->ctrl);
++	pci_restore_cap_word(dev, dev->acs_cap + PCI_ACS_CTRL);
+ }
+ 
+ /**
+@@ -3745,8 +3735,7 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
+ 	pci_reserve_pcie_state(dev);
+ 	pci_reserve_pcix_state(dev);
+ 	pci_reserve_ltr_state(dev);
+-
+-	pci_allocate_acs_save_buffer(dev);
++	pci_reserve_acs_state(dev);
+ 	pci_allocate_vc_save_buffers(dev);
+ }
+ 
 -- 
 2.56.0.455.g6c5a503b38-goog
 
