@@ -1,106 +1,134 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.152
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794004534;
-	b=f0ax9XlMozUtitl7K9WxiVOkQMZS89lfxcof8jYX7CasAuEAtfPp8b/K/dLleflWrpi7
-	 izjH0jEUloup0GHxDBhBZ5peGqIF0Gx7VFRCtHl/UKBzUpx1Go+6Il3Qou2nEs+yqCFHk
-	 O6ntUjvHb+TVR3W/f3Xx6BX2MdNlOIE2Za5DpnCozaoWBwTp6RquRLqjYtYwoWRetw48W
-	 ul+2JXk6MTdu/TPBgz7RNBsSjHQ9YVg4NG2KxR36IVm2txlf3zx2V/PuOWzf1Jyww02HS
-	 KiVyAeVbwbCVoQ2SQGolJFE1K5QUu/QyCS4XahUmMC3VqVNQUla76qk1OSb6OBdJnXQ==
+	t=1794005504;
+	b=wf5iSdEcy5fj+TQxNKUy30SJ1YttYHYolAWdrBjo3wl+WyOE31v/ADjD0kbSRW7ZUiTn
+	 nGfRWId+Y+4IprYGCmX3eSYW1p49DfZDq4297p1YKSF+HmlqZ51NjzZwX7WlaLvUcJdTc
+	 PzYz24VCVdc7f/WP1Xg7kANqs5EX1RZpe3Lf1HPvtKTiOvoEq+1t5FkqrodkMPcHGydLP
+	 AoDUosR3sUOcbmQVxPKjB2TCcfyyhrE55YHs6oIkGXk1dJ0bb5m1ayYCRjj4LNi5hTSxk
+	 TIYwK9lBnt3YgjpblZqOPVW/Lcii8s9OPKQZBj5eV654gxf0eHYgcjyuAWT5A+XLiHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794004534;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=BwjRA8ftZApzwOyImkXY8LHZEAElz+0AJdwAhV3strc=;
-	b=0zLbPIDZldY3WEgYdSSSbdszxAwtihDnPY5at3QuQcr9XvNrutPjX2iLxEJ/gEzcksnQ
-	 O7U+/ZLHuNLzc3MQ7chECmma2dUdeCiuym+PYPapzsYT96pb1JV/T3Btto0rbSGyE8gg4
-	 td062Z8TU7qMIZFpldjHdv2+oJ6KKL2gd3EeIPQwERZYJ1cpOjUW9XDBwBJe6gmPIyLVm
-	 n25ecXyzzX8+1b1T3D1FYg//JtwuevZCNlA1hhouL0Ba7+JmX7+DkmBf/PHiPGVXzCX0/
-	 jo45gcDZTK+o0jDBzCa6NLsLv26Tq/vQTPY2pTmWyRQ793dB0YK5mPVm3WSZ9ZvDiOA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794005504;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
+	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
+	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
+	 Received:Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 X-Mailer:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=pCINyycb2Yi7eXcN76C9p3VO8yXHWknwGqsZ4naX5E4=;
+	b=v1l/RZcsU/8HV+lPG4cacuQoqZlpTZ5uKn3ZOyqsJSlEe7BlDeK8aSIcnTTOGPu89acP
+	 6FFPC/3+eiw0SkETLdBP6QeUfMpqeRYkJfcOJINYV+VwqmmBLV80FTSOcAPzremf10nkn
+	 Ym+CQngw30Eh+fnc7KiKYz14bVkjx9B370QKnI5wKlyDADuCT3iO1t9Vss/286zYzB9vq
+	 4jus2KB0m08WvdNKI5UxgKiJ0z32tgiPqNOc71k37Lib7HTADFvaEaEIZP1k+q9NwzBQD
+	 88HtdSJETKfwWtolky5V3ElHhzRWum8+/N0974vyaePKIjCxhnX8xgJKcN+X9S0KZsw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=NcAlRRKK;
-	arc=none smtp.remote-ip=209.85.214.174
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=shazbot.org;
+	spf=pass smtp.mailfrom=shazbot.org;
+	dkim=pass header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=eXwYvvvp;
+	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b="a/EV4SN3";
+	arc=none smtp.remote-ip=103.168.172.152
+Received: from fhigh-a1-smtp.messagingengine.com (fhigh-a1-smtp.messagingengine.com [103.168.172.152])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02772606A330
-	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 22:35:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 02772606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80018606A330
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 22:51:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 80018606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=NcAlRRKK
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2ed3f563739so12065ad.0
-        for <linux-pci@vger.kernel.org>; Fri, 06 Nov 2026 14:35:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794004533; x=1794609333; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=BwjRA8ftZApzwOyImkXY8LHZEAElz+0AJdwAhV3strc=;
-        b=NcAlRRKKPAjjj3R0MQ8Ie5G6V+chJBOIADQ7AtGo4vYYAU7+dXyxFCDK9w2/J+ZwmC
-         6RltoK7XvSt70AoArkEGwuuNsTmkAgRiMRAppL0XaKswD0jPS9oTw17FnAvJswuvB8ye
-         6PE5MkBZZYcLdTsdGBrM4IQCAd5QvEgr866oOdSyBFVpAY/DrMjmLVNUuylh8y3lpKzh
-         2sDUKwJriyrG9RaErLw/St3p58hw8sRTZrpLIo49nReVZzVbdb8NQJo7qQwMWk4Y2hjL
-         611IM0bnsdq0vhGRw8UhAmPiK5k80UA8hBDbwLtYvRs8EoAQ1VrK6XzBvz6afbizQmsr
-         9yag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794004533; x=1794609333;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=BwjRA8ftZApzwOyImkXY8LHZEAElz+0AJdwAhV3strc=;
-        b=QTvV2yb/qiDHVVinpjcjo2ZuRLFtG6btb1Ji4Ldyueh4x32yGicAEl71wnuYNTeM5P
-         +KQNi3+6osJgF3Q5yRFoU05jxzu1BgKXgW7IyPCzSRRQHBli+upQg1f45kCgKxnttwCO
-         lg6rdz9y9AZg48RWKtwSzON73PGR+Zf77adl83RYExcSrSrFbMV6VFt+L+J7+v/PA4TS
-         QV5hrWP4J5qYSbhXTgsty9yqK1TNDSQk3RjCIHZJv9zv+GNw4THr9GAZu6GbREk0WRs0
-         2u8MYuPqTGyfILMe2olDlSgcxd4zkfDIxKorREifEGPt1M8rgw+1dc3c7WnFtv2gJR6u
-         100Q==
-X-Forwarded-Encrypted: i=1; AL+hErE0i9M0z6mlvVdGcDUXVmV/IK68d6hiDUk43wARwg/d2rmwHkE5FpfCsIzW7CL+NuFHHv9PGlxUOmg=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+eWIcaTB8V2HiNABKe/0ma1gUYUc3qmlW8M8wxGnPhZodBqRUZ
-	OrkQuDJD8gE9dj18PwHqRO7SB6CHGJhotDeIUUq6UROfPuTvQgAn7kR2eONmklU9Bw==
-X-Gm-Gg: AYBFou1x+XY4YoUPiKc5KjImkP/4+iDpI8mpWtA17KQwfp9hTLpaNBrmObGCDADAUSG
-	rqU5w8Cf2YrPaUDe3XRLVr09iYptU2o2Vnd8VAMbu/Rvp0lCZzS07Ktj5j3e0qTK5akGlcSVNEs
-	lkPA1l1Ys+LZ8I1hru+gzW09FyP27yKxCyiU75oPJRLa2AP5hjW9eJkPc+sh/GcA3A68CBWB5g6
-	ABCK3cFT3ESLMKp0JqYC6BXAj582l8IjhW4rfjNn3ZFC/qGS1d3FmlqNMfF315QRwW7vgPk4Srw
-	nVjfnBF7O+Iu/AW4L3XiOxOI5h+p8cpc46AHeYNlZn+7Q0joPvsThPemsMGm9wY9gZDKGsISCPQ
-	rO9Zu1UqWVJw+UDmot+Hg6R7+TXqflLMpBIe+RGgXdFmFnBXBtKYaJpU76aH3XqO53YgUAkFFVg
-	o2GJ7T1ZHkC3YgsBdawbLV2sYaGM9FNASU2vbGhX8CVwRlys5C2P9jmuIGyfa+E4bESb5VbAJPf
-	+AB5Ek0gTNB1EQ+pVwfExuxWsDC0w1zSEopEuk2TBQ7Cx2axLpTJio+rtf7eu2XUyzTmWJxRwzW
-	NV/5zwdIY3Jzf46MxZhOSWy3+hnx+wM9bPw53mOmqecoy1rdX21rNjv/37izbrNE6bjxX4hTHBn
-	2DmWOFv9FL0xIq+Xdc5tg
-X-Received: by 2002:a17:902:e80e:b0:2ea:1079:e519 with SMTP id d9443c01a7336-2ed6a97c2c6mr202835ad.17.1794004532665;
-        Fri, 06 Nov 2026 14:35:32 -0800 (PST)
-Received: from google.com (25.75.145.34.bc.googleusercontent.com. [34.145.75.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b103435561sm482994a91.3.2026.11.06.14.35.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Nov 2026 14:35:31 -0800 (PST)
-Date: Fri, 6 Nov 2026 22:35:27 +0000
-From: Samiullah Khawaja <skhawaja@google.com>
-To: Vipin Sharma <vipinsh@google.com>
-Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org, ajayachandra@nvidia.com, 
-	alex@shazbot.org, amastro@fb.com, ankita@nvidia.com, apopple@nvidia.com, 
-	bhelgaas@google.com, chrisl@kernel.org, christian.koenig@amd.com, corbet@lwn.net, 
-	dmatlack@google.com, graf@amazon.com, jacob.pan@linux.microsoft.com, jgg@nvidia.com, 
-	jgg@ziepe.ca, jrhilke@google.com, julianr@linux.ibm.com, kees@kernel.org, 
-	kevin.tian@intel.com, leon@kernel.org, leonro@nvidia.com, lukas@wunner.de, 
-	mattev@meta.com, michal.winiarski@intel.com, parav@nvidia.com, 
-	pasha.tatashin@soleen.com, praan@google.com, pratyush@kernel.org, rananta@google.com, 
-	rdunlap@infradead.org, rientjes@google.com, rodrigo.vivi@intel.com, rppt@kernel.org, 
-	saeedm@nvidia.com, schnelle@linux.ibm.com, skhan@linuxfoundation.org, 
-	vivek.kasireddy@intel.com, witu@nvidia.com, yanjun.zhu@linux.dev, yi.l.liu@intel.com
-Subject: Re: [PATCH v6 07/27] vfio/pci: Preserve vfio-pci device files across
- Live Update
-Message-ID: <au5VMy7zhOb65xIE@google.com>
-References: <20261102153656.1431701-1-vipinsh@google.com>
- <20261102153656.1431701-8-vipinsh@google.com>
+	dkim=pass (2048-bit key, unprotected) header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=eXwYvvvp;
+	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=a/EV4SN3
+Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id C53B6140011F
+	for <linux-pci@vger.kernel.org>; Fri,  6 Nov 2026 17:51:42 -0500 (EST)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-12.internal (MEProxy); Fri, 06 Nov 2026 17:51:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1794005502;
+	 x=1794091902; bh=pCINyycb2Yi7eXcN76C9p3VO8yXHWknwGqsZ4naX5E4=; b=
+	eXwYvvvpQVKBaBpNbRUe/+3hYKCeOcbuVWiYmYLKEvLXtRoAGvUf8RbrmXwsx48p
+	RMEOXPcOMIYiwlgJiG2tu6GhNLXDb72Rz1d/Z1gV4gjhVv9VROtq60SjULmH35ib
+	PZVrZi6T4LBfl535OcFR2LdFMLf4CbQXL6pHnWFKuPquS9UGc9oQZsVTiFUgLCFO
+	++dgLLlhCWRIaIzw48OyM5BEywklope1/SwKtMCifcb2M47t9hktfmi7eSt/M3UA
+	7rwZSjQBVEa4VMwNCbH7KonnGQdnp8Hay/5XF84slGoGYXimieBUP8P7D3ZU/b2o
+	1QG4Ab+IwWFzwNIrtne2Iw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1794005502; x=
+	1794091902; bh=pCINyycb2Yi7eXcN76C9p3VO8yXHWknwGqsZ4naX5E4=; b=a
+	/EV4SN34LhFKeoYm6dLT3OPcpHdaXHaATWoVHjVvgCPGmJTb5pjnZxCvn7ukG+JG
+	sLQeOwxldI5cEywnOf3f4YLOJoqeg3ghymFxn15lA9qe69MLo4CH2NozGNukA+8i
+	j3L4X2Vu/aL2SxDhWHewSeAdY5047siA2UMT0W3qVXejXKCwHQRk28cPB/r0iB5e
+	gYwQTPe9hbzlX34JPw9yzWAbqMnB4dSbHNt+X4NsJ2wEcplyKIrGlQM+h7vwDFyH
+	Z/s5D5/h/AMuCYCTEbMCSHFl7X51iK8VERLJkDK6HasGlxqsOHSR3atmfynWe/Fo
+	TMhS7FmeFF8DXAtm257Tw==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=sign d=shazbot.org a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1794005502; d=shazbot.org;
+	mf=PGFsZXhAc2hhemJvdC5vcmc+;
+	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm2:rsa-sha256:a3neq/T74USYCeyl90Ucr8cOobqmg3asXMx8zCfw2Tg9Uwu
+	chTD3Tm3NFH58LeMrP1TjMELwPjFr4AMfYqcCtqvwhosvlEbNIuk+wBMsxMqSU+4
+	9I1grv+8SrksFwoy/0L2lLrQVrdHW5eS09UCVwCO4NL2jgs94zlnWdDjGnlJhXe5
+	LcxfjRSOAyHgxYCS51Qt0YI/dyyyQhthQESwBShzJnaisE5Gi4p9K3cLE7UjMAlK
+	TMGXnBgFVaOB2GFXnylHQZsOD1I8xvchIsFRAOWqtCRuV7Fbfle7SfSCkfM1G9qj
+	OVj60+J+ZDp0u6fjhWrmc03r6E3/wXfI9EGSbzA==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
+	from,in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:RaomtIcuXvUIFwt+5sZpEeZA5wqZr6f0fW2ssedUVHc=:TOM4g+7xSqNy0WSFjfB2JfWoxxEEleNx6wst9aJJXmM=;
+X-ME-Sender: <xms:_lnuasrUXba2FrX_QVudFK--ZVFTg4U3il0mSRvOBIMemZgedb16gA>
+    <xme:_lnuagTR-JZN5SUaZs4jWkwPnnep0J1QxGJoPLO1ZKiHJzt3oisUygEk2CYWdEjQi
+    kn6AEVtgCwNvxqoNeA5hKsRwEvOEySqBQnA_8Y4wUZpHOyj_6Dn4IQ>
+X-ME-Received: <xmr:_lnuaokoo8q81RfRbxNYqIAseOSj28-drfG_yAOgxIVVx0ALfmNpvcnrHow0rg>
+X-ME-Proxy-Cause: dmFkZTE6cr9qQxQy/NTdx2j4Uy5Tstc9ECcua64GU/0jH4N0I8lrKEWqW0lQfJCEnrS+FW
+    gyx3ol9myKVUtTXCA9e+BjNluWF9Pe7xw62YCW5NHRrMlGafLSXEyWuu/BRNxfSmaaNYk3
+    ehoFW8RAO9Lo2QPPkRc7SLF4DF8EkO0phNnJDBOrFkTdcKiJ1wl5a7GZTtFoVK5dKSI/Se
+    QAzufhGQWi4yhKr6pr77YJ5raXlX+1ksTpMfWqQQAN9wbkNk72zgi+E5g2y54K+q2tyjLE
+    Mbj4vpmCNPkzKYz9fyM4HMsfdMMUfYjpxN4v9LT2xRoZ6OeTk1TG0ide3UTnOQh3yMMdZ+
+    3TJl5bkNUPm9aDoS0Y71plJGBC28Zx0F4P6vPaH82ObBxWqh1SwdHWnETNDfw1BXPNOL0M
+    XeD+jGnmuSG7Fv9QHEoBl3VDJNBjaFcPBYKUn5hpg+f95Ka9UmSJvvCB9wKbxJ0Yysqy9w
+    FeNhXvPq3VKx8yPfk+rkNwJgHtk9dl5/+VNboIkvc7Z8TZUJlAfcX/b0bRp8Gt0DM4ErT/
+    8NovABCzt5qxLsbChHORU0PWnhIjppVCbJ76ra3OJz3PKFXWkZBS5TrqXD/Ad6Gmpgvom+
+    JT3/5L0/Ke5nO6i2sYG95fXtvrgBuHmUDoINrVDtRLny7nYXAbRN2zE4+PGQ
+X-ME-Proxy: <xmx:_lnuasEkV9zy_rdKjRXk4w0T4o0Yq0f5dU4bKCOuzR-TyNvkqkv_sw>
+    <xmx:_lnuajnE82WfU-nm3AOPdykNkoAc96cZkOvAKNMdlXGNzqgB9jC--Q>
+    <xmx:_lnuajRDMaG3gWHBcqQVfE8kK4lQAqaYCFH0b3kXUjn8tumL42oY1Q>
+    <xmx:_lnuag6gKPuHTLIN96fk-wGeWaIaOqccowAhMFZ0bnSdh4_a-vjm8Q>
+    <xmx:_lnuasGNzPibMYWZ8e9ucvV1agWqbApqR8cu9IgskTYC2TRgUOBPftzE>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 6 Nov 2026 17:51:40 -0500 (EST)
+Date: Fri, 6 Nov 2026 15:51:37 -0700
+From: Alex Williamson <alex@shazbot.org>
+To: <mhonap@nvidia.com>
+Cc: <jgg@ziepe.ca>, <ankita@nvidia.com>, <jic23@kernel.org>,
+ <dave.jiang@intel.com>, <alejandro.lucero-palau@amd.com>,
+ <smadhavan@nvidia.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
+ <dave@stgolabs.net>, <alison.schofield@intel.com>,
+ <vishal.l.verma@intel.com>, <iweiny@kernel.org>, <ming.li@zohomail.com>,
+ <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
+ <bhelgaas@google.com>, <dmatlack@google.com>, <kees@kernel.org>,
+ <gustavoars@kernel.org>, <cjia@nvidia.com>, <kjaju@nvidia.com>,
+ <vsethi@nvidia.com>, <zhiw@nvidia.com>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
+ <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kselftest@vger.kernel.org>, <linux-hardening@vger.kernel.org>,
+ alex@shazbot.org
+Subject: Re: [PATCH v6 12/31] vfio/pci: Call the CXL open and close hooks
+ around device use
+Message-ID: <20261106155137.5fcf7259@shazbot.org>
+In-Reply-To: <20261016161839.2765592-13-mhonap@nvidia.com>
+References: <20261016161839.2765592-1-mhonap@nvidia.com>
+	<20261016161839.2765592-13-mhonap@nvidia.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -110,177 +138,170 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20261102153656.1431701-8-vipinsh@google.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, Nov 02, 2026 at 07:36:36AM -0800, Vipin Sharma wrote:
->Implement the Live Update file handler callbacks to preserve a vfio-pci
->device in noiommu mode across a Live Update while keeping it running
->across kexec. Subsequent commits will enable userspace to retrieve and
->take over this file after the Live Update.
->
->State about each device is serialized into struct vfio_pci_core_device_ser
->using Kexec-Handover (KHO) to preserve the pages holding the struct and
->the Live Update Orchestrator (LUO) to preserve the physical address of
->the struct.
->
->Key design notes and constraints:
->
-> * Noiommu-only policy and bound cdev requirement: can_preserve() verifies
->   that the preserved file is a bound vfio-pci cdev file descriptor via
->   vfio_file_is_bound_cdev(), and preserve() requires the device to be in
->   noiommu mode via vfio_device_is_noiommu() (returning -EOPNOTSUPP
->   otherwise). CONFIG_VFIO_PCI_LIVEUPDATE now depends on
->   CONFIG_VFIO_DEVICE_CDEV and CONFIG_VFIO_NOIOMMU.
->
-> * Serialized state: During preserve(), serialize the PCI domain, BDF,
->   config space size, reset_works flag, and the initial pci_saved_state
->   captured when the device was first opened. During freeze(), snapshot
->   the virtualized PCI config space (vconfig) and capability map
->   (pci_config_map).
->
-> * Keep-running freeze and unfreeze: Do not reset the device, clear
->   PCI_COMMAND_MASTER, zap BAR mappings, or revoke dma-bufs during
->   freeze(). Validate that VFIO interrupts are disabled, that the device
->   is in PCI_D0 (and not in VFIO runtime PM low-power mode), and that
->   SR-IOV is not enabled, as VFs are not preserved and the next kernel
->   disables SR-IOV on the running device. Then mask physical INTx
->   (recording the prior state) and mark the device frozen. If the
->   Live Update is aborted after freeze(), unfreeze() restores the physical
->   INTx state and clears liveupdate_frozen so the existing FD remains
->   usable.
->
-> * TOCTOU synchronization: vfio_pci_dev_is_frozen() is checked locklessly
->   on entry to the ioctl, read/write and mmap paths, and re-checked under
->   a lock that freeze() holds before any operation that could change the
->   device or vconfig: under vdev->igate in vfio_pci_ioctl_set_irqs() and
->   around every config-space write in vfio_pci_config_rw_single(), under
->   vdev->memory_lock in vfio_pci_runtime_pm_entry(),
->   vfio_pci_ioctl_reset() and the SR-IOV enable path of
->   vfio_pci_core_sriov_configure(), and under dev_set->lock in
->   vfio_pci_dev_set_hot_reset(). A racing operation thus either completes
->   before freeze() takes its snapshot or fails, while existing BAR mmaps,
->   ioeventfds and dma-bufs keep working. Serializing config writes on
->   igate covers the PCI_COMMAND, INTx disable emulation, power state and
->   FLR paths at one point (the INTx disable emulation now uses the
->   igate-held __vfio_pci_intx_mask() and __vfio_pci_intx_unmask()
->   helpers), and also serializes the irq_type and virq_disabled accesses
->   of config writes with VFIO_DEVICE_SET_IRQS.
->
->Co-developed-by: David Matlack <dmatlack@google.com>
->Signed-off-by: David Matlack <dmatlack@google.com>
->Signed-off-by: Vipin Sharma <vipinsh@google.com>
->---
-> drivers/vfio/pci/Kconfig               |   2 +-
-> drivers/vfio/pci/vfio_pci_config.c     |  19 +-
-> drivers/vfio/pci/vfio_pci_core.c       |  49 +++-
-> drivers/vfio/pci/vfio_pci_intrs.c      |   4 +-
-> drivers/vfio/pci/vfio_pci_liveupdate.c | 303 ++++++++++++++++++++++++-
-> drivers/vfio/pci/vfio_pci_priv.h       |  13 ++
-> include/linux/kho/abi/vfio_pci.h       |  52 ++++-
-> include/linux/vfio_pci_core.h          |   4 +
-> 8 files changed, 434 insertions(+), 12 deletions(-)
->
+On Fri, 16 Oct 2026 21:48:19 +0530
+<mhonap@nvidia.com> wrote:
 
-[snip]
+> From: Manish Honap <mhonap@nvidia.com>
+> 
+> vfio-pci-core frees device regions and excluded ranges on close and on a
+> failed open, so a CXL provider must set them up at each open.
+> 
+> Add open and close to the CXL ops and call them from the common enable
+> and close paths. A failed open unwinds the enable in reverse order:
+> release the device regions, unmap the BARs, drop the excluded ranges,
+> then free the virtual config.
+> 
+> Factor the device region release and the BAR unmap out of
+> vfio_pci_core_disable() into helpers so the enable failure path and the
+> disable path share them.
+> 
+> Assisted-by: LLM
+> Signed-off-by: Manish Honap <mhonap@nvidia.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_core.c | 57 +++++++++++++++++++++++---------
+>  include/linux/vfio_pci_core.h    |  2 ++
+>  2 files changed, 44 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 211fff6045e2..3d4e01eea7b1 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -590,6 +590,31 @@ static const struct dev_pm_ops vfio_pci_core_pm_ops = {
+>  
+>  static void vfio_pci_free_excluded_ranges(struct vfio_pci_core_device *vdev);
+>  
+> +static void vfio_pci_core_unmap_bars(struct vfio_pci_core_device *vdev)
+> +{
+> +	struct pci_dev *pdev = vdev->pdev;
+> +
+> +	for (int i = 0; i < PCI_STD_NUM_BARS; i++) {
+> +		int bar = i + PCI_STD_RESOURCES;
+> +
+> +		if (IS_ERR_OR_NULL(vdev->barmap[bar]))
+> +			continue;
+> +		pci_iounmap(pdev, vdev->barmap[bar]);
+> +		pci_release_selected_regions(pdev, 1 << bar);
+> +		vdev->barmap[bar] = NULL;
+> +	}
+> +}
+> +
+> +static void vfio_pci_core_free_dev_regions(struct vfio_pci_core_device *vdev)
+> +{
+> +	for (int i = 0; i < vdev->num_regions; i++)
+> +		vdev->region[i].ops->release(vdev, &vdev->region[i]);
+> +
+> +	vdev->num_regions = 0;
+> +	kfree(vdev->region);
+> +	vdev->region = NULL; /* don't krealloc a freed pointer */
+> +}
 
->diff --git a/include/linux/kho/abi/vfio_pci.h b/include/linux/kho/abi/vfio_pci.h
->index 67e8199eec59..725043a44b55 100644
->--- a/include/linux/kho/abi/vfio_pci.h
->+++ b/include/linux/kho/abi/vfio_pci.h
->@@ -9,14 +9,19 @@
-> #ifndef _LINUX_LIVEUPDATE_ABI_VFIO_PCI_H
-> #define _LINUX_LIVEUPDATE_ABI_VFIO_PCI_H
->
->+#include <linux/bits.h>
->+#include <linux/compiler.h>
->+#include <linux/types.h>
->+
-> /**
->  * DOC: VFIO PCI Live Update ABI
->  *
->  * VFIO uses the ABI defined below for preserving device files across a kexec
->  * reboot using LUO.
->  *
->- * Device metadata is serialized into memory which is then handed to the next
->- * kernel via KHO.
->+ * Device metadata, virtualized PCI configuration space, VFIO's capability map,
->+ * and the initial PCI saved state captured when the device was first opened are
->+ * serialized into memory which is then handed to the next kernel via KHO.
->  *
->  * This interface is a contract. Any modification to any of the serialization
->  * structs defined here constitutes a breaking change. Such changes require
->@@ -25,4 +30,47 @@
->
-> #define VFIO_PCI_LUO_FH_COMPATIBLE "vfio-pci-v1"
->
->+/**
->+ * define VFIO_PCI_SER_RESET_WORKS - Device supports function reset.
->+ *
->+ * Set in &vfio_pci_core_device_ser.flags when the preserved device had
->+ * ``vdev->reset_works == true`` prior to kexec.
->+ */
->+#define VFIO_PCI_SER_RESET_WORKS	BIT(0)
->+
->+#define VFIO_PCI_SER_KNOWN_FLAGS	VFIO_PCI_SER_RESET_WORKS
->+
->+/**
->+ * struct vfio_pci_core_device_ser - Serialized state of a single VFIO PCI
->+ * device.
->+ *
->+ * @domain: The device's PCI domain number (segment).
->+ * @bdf: The device's PCI bus, device, and function number.
->+ * @cfg_size: Size in bytes of the device's PCI configuration space
->+ *            (``PCI_CFG_SPACE_SIZE`` or ``PCI_CFG_SPACE_EXP_SIZE``).
->+ * @size: Total size in bytes of this serialized buffer, equal to
->+ *        ``sizeof(struct vfio_pci_core_device_ser) + 2 * @cfg_size + @saved_state_size``.
->+ * @flags: Bitmask of ``VFIO_PCI_SER_*`` flags; unknown bits are rejected.
->+ * @saved_state_size: Size in bytes of the serialized &struct pci_saved_state_ser
->+ *                    blob stored in @data after ``config_map``, or 0 if none.
->+ * @reserved: Reserved for future use; must be 0.
->+ * @data: Variable-length payload containing, in order:
->+ *        1. ``u8 vconfig[@cfg_size]`` - VFIO virtualized config space snapshot
->+ *           captured during ``freeze()``.
->+ *        2. ``u8 config_map[@cfg_size]`` - VFIO capability map snapshot
->+ *           captured during ``freeze()``.
->+ *        3. ``u8 saved_state[@saved_state_size]`` - serialized
->+ *           &struct pci_saved_state_ser captured during ``preserve()``.
->+ */
->+struct vfio_pci_core_device_ser {
->+	u32 domain;
->+	u16 bdf;
->+	u16 cfg_size;
->+	u32 size;
->+	u32 flags;
->+	u32 saved_state_size;
+Mechanical changes like this should be done in a separate patch.
 
-We will need space for iommufd_token when we preserve that, we should
-probably add it now as otherwise the compatibility would be broken when
-we add it? Is the reserved here for that?
->+	u32 reserved;
->+	u8 data[];
->+} __packed;
->+
-> #endif /* _LINUX_LIVEUPDATE_ABI_VFIO_PCI_H */
->diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
->index 9a1674c152aa..6bae7581f4f4 100644
->--- a/include/linux/vfio_pci_core.h
->+++ b/include/linux/vfio_pci_core.h
->@@ -149,6 +149,10 @@ struct vfio_pci_core_device {
-> 	struct notifier_block	nb;
-> 	struct rw_semaphore	memory_lock;
-> 	struct list_head	dmabufs;
->+#ifdef CONFIG_VFIO_PCI_LIVEUPDATE
->+	bool			liveupdate_frozen;
->+	bool			liveupdate_intx_disabled;
->+#endif
-> };
->
-> enum vfio_pci_io_width {
->-- 
->2.56.0.317.g454f8302e1-goog
->
+> +
+>  int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+>  {
+>  	struct pci_dev *pdev = vdev->pdev;
+> @@ -691,8 +716,20 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+>  
+>  	vfio_pci_core_map_bars(vdev);
+>  
+> +	if (vdev->cxl_ops) {
+> +		ret = vdev->cxl_ops->open_device(vdev);
+> +		if (ret)
+> +			goto out_free_config;
+> +	}
+> +
+>  	return 0;
+>  
+> +out_free_config:
+> +	/* A failed first open never reaches vfio_pci_core_disable(). */
+> +	vfio_pci_core_free_dev_regions(vdev);
+> +	vfio_pci_core_unmap_bars(vdev);
+> +	vfio_pci_free_excluded_ranges(vdev);
+> +	vfio_config_free(vdev);
 
-Thanks,
-Sami
+Raising again that this doesn't account for the code previously added
+to this function that has its own unwind.
+
+There also remains the question of whether excluded range setup should
+be moved to init/release.
+
+>  out_free_zdev:
+>  	vfio_pci_zdev_close_device(vdev);
+>  out_free_state:
+> @@ -713,7 +750,6 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+>  	struct pci_dev *pdev = vdev->pdev;
+>  	struct vfio_pci_dummy_resource *dummy_res, *tmp;
+>  	struct vfio_pci_ioeventfd *ioeventfd, *ioeventfd_tmp;
+> -	int i, bar;
+>  
+>  	/* For needs_reset */
+>  	lockdep_assert_held(&vdev->vdev.dev_set->lock);
+> @@ -759,24 +795,12 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+>  
+>  	vdev->virq_disabled = false;
+>  
+> -	for (i = 0; i < vdev->num_regions; i++)
+> -		vdev->region[i].ops->release(vdev, &vdev->region[i]);
+> -
+> -	vdev->num_regions = 0;
+> -	kfree(vdev->region);
+> -	vdev->region = NULL; /* don't krealloc a freed pointer */
+> +	vfio_pci_core_free_dev_regions(vdev);
+>  
+>  	vfio_config_free(vdev);
+>  	vfio_pci_free_excluded_ranges(vdev);
+>  
+> -	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
+> -		bar = i + PCI_STD_RESOURCES;
+> -		if (IS_ERR_OR_NULL(vdev->barmap[bar]))
+> -			continue;
+> -		pci_iounmap(pdev, vdev->barmap[bar]);
+> -		pci_release_selected_regions(pdev, 1 << bar);
+> -		vdev->barmap[bar] = NULL;
+> -	}
+> +	vfio_pci_core_unmap_bars(vdev);
+>  
+>  	list_for_each_entry_safe(dummy_res, tmp,
+>  				 &vdev->dummy_resources_list, res_next) {
+> @@ -859,6 +883,9 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
+>  #endif
+>  	vfio_pci_dma_buf_cleanup(vdev);
+>  
+> +	if (vdev->cxl_ops)
+> +		vdev->cxl_ops->close_device(vdev);
+> +
+
+Mismatched in both naming and conventions.
+
+vfio_pci_core_enable() -> cxl_ops->open_device()
+
+vfio_pci_core_close_device() -> cxl_ops->close_device()
+
+Some variant drivers unwind a failure after core_enable() with
+core_disable(), so the placement in the close_device() path is not only
+inconsistent, it's wrong.  The hooks should also be consistently named
+relative to where they're called from the core.  Thanks,
+
+Alex
+
+>  	vfio_pci_core_disable(vdev);
+>  
+>  	mutex_lock(&vdev->igate);
+> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+> index fd1ad0baf470..6520a2dcfd4a 100644
+> --- a/include/linux/vfio_pci_core.h
+> +++ b/include/linux/vfio_pci_core.h
+> @@ -70,6 +70,8 @@ struct vfio_pci_device_ops {
+>  struct vfio_cxl_ops {
+>  	int	(*init)(struct vfio_pci_core_device *vdev);
+>  	void	(*release)(struct vfio_pci_core_device *vdev);
+> +	int	(*open_device)(struct vfio_pci_core_device *vdev);
+> +	void	(*close_device)(struct vfio_pci_core_device *vdev);
+>  	/* Pinned per bound CXL device so vfio-cxl cannot unload under usage */
+>  	struct module *owner;
+>  };
+
