@@ -1,72 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793987005;
-	b=yZZUNJQcmeivOUZau1IXTewb8gRnK6w4yFM54aLYDhJtjdmLMjm/z3ggsLeYpdHrX23a
-	 lYn2P1KBTFhfFiZAnGc6i7qrF/qt6QmE7K4rGO5CvJS3pysW0C5WNb4KDaL5MEoXkOkPI
-	 RQCWwGPrFGRVb2/H3Y2R83VvA56qtljfjchbiQhWDpZodT7X1vYxdW80A8ogBAzKH9QQ1
-	 sZh7O87bXpM86Qj/f9YzXIb0JpDEYhTlTpj7MTMI7cic1YqMqGGLX1nLRD6zKUEjRdBC3
-	 9b2nGmT+twn5EexWxgKLMIs2s3K2AxbDKsj1OvI0NOJHNzmsisMlhuTe3P6BXlbnlyw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793987005;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=6wGlqMA/F4fTxwEsT9uA7hyyP8LHb9wChy2k5aVeW4E=;
-	b=f/P+PolgmovmuQvyCa/9MfC/aoPEjoPo1DyPtvOu+V7hcEz7Gzw30w0hxyiqRYhkusoL
-	 tTZfwvHcFRRkpE22WRZccyNDRdEd7KK1nhVbKI+uD+Wt4BDViSe//LDzNl4w9Y60rXEpP
-	 I/EnMPyZYKwbmloF8ASqh8nxCoo0BEmnYK/N8fyN4+hDW37XOKX5vSO410jZH8OVGe2aI
-	 er3ts2sVIVnWjzt/Pf134Iaq4zNXBeNrzqakgI3GmSS5Mo1otsqXL9zAE40bGFhYaQWOx
-	 fdLO8TlfAjK1MY3TbMS7eRRFMrc1IF46FMMNgghasveKEHmFWRd/jf7e/No9Fmd6AVg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DSW8m5eM;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.21
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793987022;
+	b=Tf4oJAYzanF10XljQsPs/571gEeziVSL0YxixbDTbLUf6Kes41A3Z6fKO/KhyE4m/qcl
+	 PNtPeebjiGTGeOrbUrfsASnsIKKh+rX/IRWh0j1d5TpZqw8eRWH7CuA0X/RLfTnIOQAWM
+	 fov2CBCeGG17X6j4iHbByEjLu2qKNspIuTU+92MwwCCPCDf+SVb0vxDIWiL05Q7oF/y+o
+	 43ogskCtEk4c/IqQGfYp3u7iwBMYBDD6FFYntj/2e1m2bkb2yvA77U20cjwIhJrWprXTa
+	 gIePSKMVQ5jO911FmeaHu4z411dDckzYMTfpO+YMBpaNMBUX1/ZB7X/qpf4WGZ0zFTQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793987022;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:Content-Type:Content-Disposition:
+	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=hhPLlf43hSxbGXoeqLOSauBXNEGYnNvjjcgPdU3ZUmI=;
+	b=30GZPNPzvhqfNdd15A0+KoZ7P78I6AcMgMO6H+DvDVfOUesoKyVvyOMrWwpLC8XwWi3I
+	 aq9YjfYllbiDDYwR8eFqRVmfOun9956MODsCHPCWM53AS6A7swOwYgrXOw9GbucLa3RVZ
+	 FVe4tPYz/l9wNw6gzBerEsGjITym4LAvuv0sPJ7udZ1P+5aEycPeY3cx/30RD4Z3V8OLc
+	 JEb5Skh3g+JpF2ECp+CPHH6h/VW7Gev3pP9dg0T71jXj6JyQ5guCAlvHEtNJWGY1xlMC7
+	 vS8Ad8kCsgfCDpJUxoT+Zcyo1EPg91ZFhUMDbPELQFnsQrzxxW3tMj6WY5sSfrtF3Sw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=TZBpG3tj;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.21
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010021.outbound.protection.outlook.com [52.101.201.21])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AA65606A33E;
-	Fri,  6 Nov 2026 17:43:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57126606A32E;
+	Fri,  6 Nov 2026 17:43:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57126606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DSW8m5eM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1C231F0089F;
-	Fri,  6 Nov 2026 17:43:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793987005;
-	bh=6wGlqMA/F4fTxwEsT9uA7hyyP8LHb9wChy2k5aVeW4E=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=DSW8m5eMB/det3mgB6XM5gVX5mjkKsYV4lKG5MFV2YZPwh5vVWskH9wDlPYfM9yF4
-	 irejDE8pRLdDjhP9zHiBNnixER+vM7evtS+4cWtmACeEQBCgHebhzpZ/uiYrzaMea/
-	 1YdpExGk+fg8NUHkgdFUUg7G31Woi4EuRLEz004dbhdS+1MEAI23TdYRU3SdSHugZW
-	 ZY+Jsj+VzbFLkArxQiB8Eqac9rlBY46naW9zkn3DQ4s66EvNM+0gmZO2rndk3ZKHNY
-	 llGT0pw6l6737MNIv0AkH4qeVD746k6WJLrSqWE532yl0Ri+47qLKSNdgmHtl8rdFZ
-	 PqNzeHOgByIOg==
-Date: Fri, 6 Nov 2026 11:43:23 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v10 06/13] PCI: liveupdate: Preserve bus numbers during
- Live Update
-Message-ID: <20261106174323.GA1635842@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=TZBpG3tj
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=MPj04mqAnNy8TliGG2uawANfnOcq87uE7qgjvHHItyFSelz19AdItvnNEosrZtRAkqyODAc6DC007wp1HV9wbWaiDh8hsuFcpIO86xQkO506oC3nEGbkf7aaXLQsZCcduZF6/U2rjLT2zHVyPUy0XQnmKnPiDc3pcrGxN2aq/DPGgps1dJmwefbTyr3FUiKEXF3iXryIKU5To09D0dHvRsppYQ1e/92IQEXf8s/WbA1bdw99A5qMymit1rwTd6wowo3DChnBROESkFaz48NI5vEXPGMJgPHMJxwXpBvdGYBXdruKwsxsm7m8FM/3pvAuPU5tF5J/ukeMNgx/xIPstg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hhPLlf43hSxbGXoeqLOSauBXNEGYnNvjjcgPdU3ZUmI=;
+ b=Rbum5aBEkML6VihWhd64hv8oYLbjgdlovIYKIpDVsZ9QAHemt1ifPzskIdZeU2YwYGvfzrmJEtjCkHcUhO9FE1lKrSvyMYCoquoEnOsaMMWuzxK3CQN3ZrzjCWxuJj2jyANhz07UV6VxBQqLH4BJeM1pnYYv3zaAcXZqqqDZMqHZt4F8BVkZhpmeH5EQpFdxOoicM7yjj9FjP9A3pJlIVXUDQMNSIPyQVTuF/pmNUEQbCpmyRNbPy8d3bvcAEXLYf7yUFU0HfD2zyvoGRinrcK2e7Lhq38gTyTkVThxgeFVHzBDpkwIsQtYNOLmZb1TnuVyU9yGhHaP03SOXdi6peg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hhPLlf43hSxbGXoeqLOSauBXNEGYnNvjjcgPdU3ZUmI=;
+ b=TZBpG3tjCb2gmO+MKxU/plmgNF2EAMZJHAL/yevNYNJbJjcLo8Wg943kvY/O+tjwu78WR1g2tV+4MvPpZsCd8SWGHD2XfdzAATZ3lejDHnwpIR9rUAlPDkkrt/c8ob3n4qU6JI3rLga4z18M5YB7xR63X2wbDRZznUdPHEjB+9t9Zk/7TKlF0SCzfFDWKcuZv3ds94V4jsJZuCf19LIlWUNFRTRw1Hz7dp8TsHW1dfknGiFqGFJZBP3YNV9vmpSbRSlJtin7bv0ExZPjYNeLInDhecJPA3G1hLpKSxdGobDhV/LnEugKc574sqgoo5irJ6Jx2HX4/9Nsyup+v6fXJg==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12) by PH7PR12MB8777.namprd12.prod.outlook.com
+ (2603:10b6:510:26b::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.11; Fri, 6 Nov
+ 2026 17:43:32 +0000
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0592.010; Fri, 6 Nov 2026
+ 17:43:32 +0000
+Date: Fri, 6 Nov 2026 13:43:31 -0400
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jennifer Chan <jenniferchan@meta.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH] PCI: Add d3cold delay quirk for NVIDIA LR10 NVSwitch
+Message-ID: <20261106174331.GH770409@nvidia.com>
+References: <20261105201010.2297078-1-jenniferchan@meta.com>
+ <20261105215148.GA1566818@bhelgaas>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261105215148.GA1566818@bhelgaas>
+X-ClientProxiedBy: YT4PR01CA0502.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:10c::11) To CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,348 +97,73 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261013162529.1928093-7-dmatlack@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|PH7PR12MB8777:EE_
+X-MS-Office365-Filtering-Correlation-Id: 70400cab-21b6-4d20-6754-08df3c2d79cd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|23010399003|1800799024|366016|11063799006|4143699003|56012099006|261026121527099003|10067099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	m9la8xJChdXzuLbgpsMNwT6VXKVI2Ik5ykqDMclbNjBkqDM7gjNOGSDo51M5tmagN+B6ZEkFqu2GnGla9U5AyIBvGfAy+Nmvronl8tRmoa82c5jkcKGfJbag/DC1mYBKQ4FauZgvCh/jraZ313pSkZpW83t6740isi6dZA+L9x+xyy1DlgIM9nXYJEJ4S6penRJpwPjykeWMYnOzMeQOwKP4JX3Ec6serZGWaIJh4RD6ZlM9Dj1/+n1IjyzgAOvRv5+/GFlwz7sb9zcyITlbOncdJiYwV4PZ3MPiy3Rdq3/6DMFUVfo/EB9uajQ1yDPvOu45mC/t9WcxycVHqy/DUiI1mmqs2mFqMRAj/O1UcolR/6TGcQPkLK42cJ0BR5k5+whc60NBz25PbwHMVR7al0xPfCtDfoSNBFWA1bYwOte8EIkQE39EgkDnZaR18221r0Mta5z4mrhmcLe8MWG6pG1+0yUY7pW5UuaYTfcPhFSZNyq+Vnq9DiM19snsNK2PpxhK2dF4krjZHzI3Q5ySbhHo5LK8LM2B4QUqhOeB5ECo1CH0wpRaC57e5Iht6lW+1k65iV0CiW6gG6M1+Et0TgT0JsBgvI0xp0bn0xFneT6S9cs5MuwQonA7YnlCvBx+2RFzo3FYNsul4NXbsdtr8XHV4GWkQXbBggbKrQroXqY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(1800799024)(366016)(11063799006)(4143699003)(56012099006)(261026121527099003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?tE+fnkY9WXLgDkuYx+tMoscb4IGsoyMPlCzZI8uMa8BPrhylhSJhhjqM5PZQ?=
+ =?us-ascii?Q?C7qlc8kBRM2foC5YoUvwCHRUPrZiE8F5oZVChV3aMI6KT3rTG9hjUX8GzC4m?=
+ =?us-ascii?Q?Ed5NUHs4s//5krHJ2wfp2sokzuWSMB+TqUDJntIfQ0o6G39/zlYVKHWtbZa+?=
+ =?us-ascii?Q?yA63qEU/s3UaMkW6EId4e2fZk7i/9DiYbwswkhoxAgZKSIbJAaEhAJM45+Nk?=
+ =?us-ascii?Q?eDj7S+CGTl2WLVrZSL30tvmfLwPcV2WXIqQqzPNRi0GzO+/sgGOm2/yg+JKa?=
+ =?us-ascii?Q?tM5QOK+FVSl4kveQBI/DSgtHe3+t79DDsoQxyjpzsQYYY16VSjBp2AcAchDN?=
+ =?us-ascii?Q?u99Qe/XWhT2qc3U6ksIG0GciFh82L2PK1V0s8Ui+ezFRJfg2CdzDGLYxbZ/G?=
+ =?us-ascii?Q?X81ZqXGL065Ok7EEjCTeMIyMFMVkeXvYhzxBfDbaibaO4t1fP3a715MK5LCP?=
+ =?us-ascii?Q?szn6hmx37sg+zDbDXArQ6W6rikQ+n8sFnCEyVEO+JW7u5d2xTG1siTWnNG4/?=
+ =?us-ascii?Q?Tf8ALG/nsM13v57bDsPWfCf1sxhnGTW0IMOQogLQEuKrChTLlbyX2WwNiwt2?=
+ =?us-ascii?Q?l7lBDNqVj7PlwR8cCWZxxGwzgBuxjvR4xEuU1vqoCOJ+HB6CRhGjejMtn9aN?=
+ =?us-ascii?Q?g3hFOEv60HRn4HUbhFMjyhlTL9Mz2QultdsIZc37crVF5ZR48jjbIks43MWh?=
+ =?us-ascii?Q?Aw9sbO/6vEW2vTLPn8qkzs5nL6W8g+kanRYcNfpfB4hecvzWYxpl5iLbIPxP?=
+ =?us-ascii?Q?P8UTqbWQt6A4NFw9EUTG1o/ileh2nlsXlgtFo7dzG23PzU1vcPgvmmYQ68Ya?=
+ =?us-ascii?Q?tnQ9hCu5yqxIx/2ON+W/v70+v7H/6YZ0EidW60+NV3v1QNkNJlx2Rgyx5SgN?=
+ =?us-ascii?Q?fnVxGU6nQnpsQxkmKGbEMMI74UrB3D0bfKBdgP9K7UrMK/0XXssyhRlLfwfB?=
+ =?us-ascii?Q?McDEnUTjTmacbDhqeWDLQ/h3aGPuKfFjxXXjGh+4ohDb+mcY4L3eEKW3hPxA?=
+ =?us-ascii?Q?+IoPmoOmQss+pn9EDB2SVhii9+ZDIgLPfshHGmdRH9+yOiCZB+AWpMJnw+Mw?=
+ =?us-ascii?Q?2WOIVSmfUfXPKVv1tMk5ZyQFP442bsMB2yMzspG+YmxriPuDXD1B1h3AMkkg?=
+ =?us-ascii?Q?Nl6BkKHdmLuk3R3QSyGMm5g2Dh7iu9o5vt64svStuClzFASrzOzECTBl7Vgs?=
+ =?us-ascii?Q?nJsU1yBOS+VAJleo9H6tJs6N19ZfT/LYObuDiDe+ZKu0esOvnR2SFeTbbav2?=
+ =?us-ascii?Q?rcZx02tJQijPHJgP1zHdKMoKNA3u+6G9/1l91AjGupnF7+Pli8uyyaPb9MRv?=
+ =?us-ascii?Q?D3U24fiCnx81s1Uqih/uBT13sHLMEmM1v89JmpypkashTipTA0oG85Br4XJP?=
+ =?us-ascii?Q?6xOHszwSaMf6aeZnmof5NA06iJKAUwMWOSL+3pqR1ttfcFPnSMXI6BIdm4q6?=
+ =?us-ascii?Q?CB6lwDq8F8aTbA689WuMx03pTPF/o6W5G4HxBTfPs0tUMRr5G9db+Hs9Et3g?=
+ =?us-ascii?Q?idLVwU/KLaBrxskay02VlzJLeSyWHABn5SZIUW1QmybbVv7XASzcplBMZ+2Q?=
+ =?us-ascii?Q?3KEBtqNa6QNcF4EwDXTHjQToEXl2Oxm5SH/haSLVDC+wCcghPQawYcZySBWs?=
+ =?us-ascii?Q?+0+Nzp4Yo5Z6BnvgOs2q1obuzQQyDhkNLcMvpvTdEn1sx2IwfnM3Bw91lwcl?=
+ =?us-ascii?Q?6nLbkrKp7PbHzhI6q72XkBMJFhjue9eYJaqndLeRyBkmEkZq?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 70400cab-21b6-4d20-6754-08df3c2d79cd
+X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2026 17:43:32.5721
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: korBmPjeyxD7KzhBhqCpYIhgCqQE/Knj+mxDNaUnpj1UxELWXasrUlAQi2SdiD5c
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB8777
 
-On Tue, Oct 13, 2026 at 04:25:22PM +0000, David Matlack wrote:
-> Keep the secondary and subordinate bus numbers that the previous kernel
-> programmed into bridges, rather than assigning new ones, if the previous
-> kernel preserved any device across a Live Update. Do this even on
-> architectures that would otherwise always assign bus numbers themselves,
-> e.g. when pci=assign-busses is passed.
-> 
-> Preserved devices must be allowed to continue performing memory
-> transactions across a Live Update, so the kernel cannot change the
-> fabric topology. Changing the bus numbers of a bridge changes the
-> RequesterIDs of the devices below it, which would require disabling and
-> flushing any in-flight memory transactions first.
-> 
-> Apply the policy globally rather than only to the paths that contain
-> preserved devices. Bus numbers have to be preserved above a preserved
-> device anyway, since an upstream bridge cannot expand its window. A
-> global policy matches the scope of pcibios_assign_all_busses(), and
-> gives an answer that cannot change part way through the two passes of a
-> bridge scan.
-> 
-> Bridges that do not have bus numbers are still assigned new ones, so
-> hot-adding a bridge keeps working, both during and after a Live Update.
-> The two-pass bridge scan guarantees such bridges are only assigned bus
-> numbers above those already claimed by preserved bridges.
-> 
-> The exception is a bridge that was preserved but comes up without a
-> valid bus number configuration, e.g. because it was reset during kexec.
-> Refuse to assign it new bus numbers, since that would silently change
-> the BDF of every preserved device in its hierarchy. Also refuse to
-> assign bus numbers to the other bridges on the same bus, since the bus
-> numbers of the failed bridge can no longer be read from hardware and
-> handing them out would let an unrelated device inherit the BDF of a
-> preserved device.
-> 
-> Require that CONFIG_CARDBUS is not enabled to enable
-> CONFIG_PCI_LIVEUPDATE since preserving bus numbers on PCI-to-CardBus
-> bridges requires additional work but is not a priority at the moment.
-> 
-> Signed-off-by: David Matlack <dmatlack@google.com>
+On Thu, Nov 05, 2026 at 03:51:48PM -0600, Bjorn Helgaas wrote:
+> [+cc Lukas, author of ac91e6980563, Jason in case NVIDIA knows
+> anything]
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Yeah, please don't take quirks for our server silicon unless we send
+them. I've seen this a few times and rarely do users understand enough
+to get this right.
 
-When I download the series with "b4 am -om/
-https://lore.kernel.org/all/20261013162529.1928093-1-dmatlack@google.com",
-b4 finds and adds my Reviewed-by.  I suppose it notices the patch is
-identical to v9, where I did add the Reviewed-by:
-https://lore.kernel.org/linux-pci/20260925200407.GA2082921@bhelgaas/
+Lukas is correct that many bugs trace back go Broadcom's exciting
+interpretation of PCIe :\
 
-> ---
->  .../admin-guide/kernel-parameters.txt         |   7 +-
->  drivers/pci/Kconfig                           |   2 +-
->  drivers/pci/liveupdate.c                      | 114 ++++++++++++++++++
->  drivers/pci/liveupdate.h                      |  13 ++
->  drivers/pci/probe.c                           |  11 +-
->  include/linux/pci_liveupdate.h                |   5 +
->  6 files changed, 146 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index 68647ff4bdd2..7eabf6320abf 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -5170,7 +5170,12 @@ Kernel parameters
->  				explicitly which ones they are.
->  		assign-busses	[X86] Always assign all PCI bus
->  				numbers ourselves, overriding
-> -				whatever the firmware may have done.
-> +				whatever the firmware may have done. Ignored
-> +				if any device was preserved across a Live
-> +				Update, where the kernel must preserve the
-> +				PCI topology (including bus numbers) to
-> +				avoid interrupting ongoing memory transactions
-> +				of preserved devices.
->  		usepirqmask	[X86] Honor the possible IRQ mask stored
->  				in the BIOS $PIR table. This is needed on
->  				some systems with broken BIOSes, notably
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 8af20f558086..16fbd4212e0f 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -273,7 +273,7 @@ config VGA_ARB_MAX_GPUS
->  
->  config PCI_LIVEUPDATE
->  	bool "PCI Live Update Support"
-> -	depends on PCI && LIVEUPDATE && 64BIT
-> +	depends on PCI && LIVEUPDATE && 64BIT && !CARDBUS
->  	help
->  	  Enable PCI core support for preserving PCI devices across Live
->  	  Update. This, in combination with support in a device's driver,
-> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> index bffb3e1d8b2d..8d5ad26e948c 100644
-> --- a/drivers/pci/liveupdate.c
-> +++ b/drivers/pci/liveupdate.c
-> @@ -148,6 +148,32 @@
->   * This enables the PCI core and any drivers bound to the bridge to participate
->   * in the Live Update so that preserved endpoints can continue issuing memory
->   * transactions during the Live Update.
-> + *
-> + * BDF Stability
-> + * =============
-> + *
-> + * The PCI core guarantees that preserved devices can be identified by the same
-> + * bus, device, and function numbers for as long as they are preserved
-> + * (including across kexec). To accomplish this, the PCI core keeps the
-> + * secondary and subordinate bus numbers that the previous kernel programmed
-> + * into bridges, if the previous kernel preserved any device. This is true even
-> + * on architectures that always assign new bus numbers during scanning. The
-> + * kernel assumes the previous kernel established a sane bus topology across
-> + * kexec.
-> + *
-> + * Bridges that do not have bus numbers are assigned new ones as usual, so
-> + * hot-adding a bridge keeps working, both during and after a Live Update. The
-> + * two-pass bridge scan ensures such bridges are only assigned bus numbers above
-> + * those already claimed by preserved bridges.
-> + *
-> + * If a preserved bridge comes up without a valid bus number configuration, e.g.
-> + * because it was reset during kexec, the PCI core refuses to assign it new bus
-> + * numbers and does not enumerate anything below it. Assigning new bus numbers
-> + * would silently change the BDF of every preserved device in its hierarchy. The
-> + * PCI core also stops assigning bus numbers to the other bridges on the same
-> + * bus, since the bus numbers of the failed bridge can no longer be read from
-> + * hardware and handing them to another bridge would let an unrelated device
-> + * inherit the BDF of a preserved device.
->   */
->  
->  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
-> @@ -168,9 +194,13 @@
->   * struct pci_liveupdate_global - Global state for PCI Live Update support
->   * @rwsem: Reader/writer semaphore used to protect the incoming and outgoing
->   *         FLBs, and the references to them in struct pci_dev.
-> + * @had_incoming: True if the previous kernel preserved at least one PCI device.
-> + *                Set when the incoming FLB is retrieved and never cleared, so
-> + *                it stays true after Live Update finishes.
->   */
->  struct pci_liveupdate_global {
->  	struct rw_semaphore rwsem;
-> +	bool had_incoming;
->  };
->  
->  static struct pci_liveupdate_global pci_liveupdate = {
-> @@ -316,6 +346,14 @@ static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
->  			      ret);
->  	}
->  
-> +	/*
-> +	 * Remember that the previous kernel preserved devices for the lifetime
-> +	 * of this kernel, even after Live Update finishes and the incoming FLB
-> +	 * is freed. See pci_liveupdate_preserve_bus_numbers().
-> +	 */
-> +	if (!xa_empty(&incoming->xa))
-> +		pci_liveupdate.had_incoming = true;
-> +
->  	args->obj = incoming;
->  	return 0;
->  }
-> @@ -624,6 +662,80 @@ static void pci_liveupdate_flb_put_incoming(void)
->  	liveupdate_flb_put_incoming(&pci_liveupdate_flb);
->  }
->  
-> +/**
-> + * pci_liveupdate_preserve_bus_numbers() - Determine if the PCI core should
-> + *                                         preserve bus numbers when scanning
-> + *                                         bridges.
-> + *
-> + * This function is called by the PCI core when it is scanning a bridge. It
-> + * determines whether the PCI core should preserve the secondary and subordinate
-> + * bus numbers that the previous kernel programmed into that bridge, rather than
-> + * assigning new ones. This is necessary to keep RequesterIDs constant for
-> + * preserved devices issuing memory transactions.
-> + *
-> + * Bus numbers are preserved everywhere, and for the lifetime of the kernel, if
-> + * the previous kernel preserved any device. Bus numbers have to be preserved
-> + * above a preserved device anyway, since an upstream bridge cannot expand its
-> + * window. Applying the same policy everywhere matches the scope of
-> + * pcibios_assign_all_busses(), and gives an answer that cannot change part way
-> + * through the two passes of a bridge scan.
-> + *
-> + * The incoming FLB is retrieved while setting up the first device, which always
-> + * happens before any bridge is scanned, so this returns the same answer for the
-> + * entire enumeration.
-> + *
-> + * Note that this does not prevent the PCI core from assigning bus numbers to
-> + * bridges that do not have any, e.g. bridges that are hot-added after the
-> + * Live Update. See pci_liveupdate_refuse_bus_numbers() for the one case where
-> + * the PCI core must refuse to do so.
-> + *
-> + * Return: True if bus numbers should be preserved, false otherwise.
-> + */
-> +bool pci_liveupdate_preserve_bus_numbers(void)
-> +{
-> +	return pci_liveupdate.had_incoming;
-> +}
-> +
-> +/**
-> + * pci_liveupdate_refuse_bus_numbers() - Determine if the PCI core must refuse
-> + *                                       to assign bus numbers to the provided
-> + *                                       bridge.
-> + * @bus: The PCI bus the bus numbers would be assigned from.
-> + * @dev: The PCI bridge device the bus numbers would be assigned to.
-> + *
-> + * This function is called by the PCI core before it assigns bus numbers to a
-> + * bridge that does not have any.
-> + *
-> + * A bridge that was preserved by the previous kernel but came up without a
-> + * valid bus number configuration, e.g. because it was reset during kexec, is
-> + * left alone by the PCI core and therefore has no child bus once the first pass
-> + * of the bridge scan is done.
-> + *
-> + * The PCI core must not assign bus numbers from @bus while such a bridge is on
-> + * it, including to the failed bridge itself. Assigning new bus numbers to the
-> + * failed bridge would silently change the BDF of every preserved device in its
-> + * hierarchy. Its bus numbers cannot be read from hardware anymore either, so
-> + * they cannot be excluded from assignment, and handing them to another bridge
-> + * would let an unrelated device inherit the BDF of a preserved device.
-> + *
-> + * Return: True if @dev must not be assigned bus numbers, false otherwise.
-> + */
-> +bool pci_liveupdate_refuse_bus_numbers(struct pci_bus *bus, struct pci_dev *dev)
-> +{
-> +	struct pci_dev *bridge;
-> +
-> +	for_each_pci_bridge(bridge, bus) {
-> +		if (!bridge->liveupdate.was_incoming || bridge->subordinate)
-> +			continue;
-> +
-> +		pci_err(dev, "Not assigning bus numbers, preserved bridge %s lost its bus number configuration\n",
-> +			pci_name(bridge));
-> +		return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
->  void pci_liveupdate_setup_device(struct pci_dev *dev)
->  {
->  	struct pci_flb_incoming *incoming;
-> @@ -652,6 +764,8 @@ void pci_liveupdate_setup_device(struct pci_dev *dev)
->  
->  	pci_info(dev, "Device was preserved by previous kernel across Live Update\n");
->  	dev->liveupdate.incoming = dev_ser;
-> +	dev->liveupdate.was_incoming = true;
-> +
->  	pci_liveupdate_flb_put_incoming();
->  }
->  
-> diff --git a/drivers/pci/liveupdate.h b/drivers/pci/liveupdate.h
-> index eaaa3559fd77..e5d2a19d2ca2 100644
-> --- a/drivers/pci/liveupdate.h
-> +++ b/drivers/pci/liveupdate.h
-> @@ -13,6 +13,8 @@
->  #ifdef CONFIG_PCI_LIVEUPDATE
->  void pci_liveupdate_setup_device(struct pci_dev *dev);
->  void pci_liveupdate_cleanup_device(struct pci_dev *dev);
-> +bool pci_liveupdate_preserve_bus_numbers(void);
-> +bool pci_liveupdate_refuse_bus_numbers(struct pci_bus *bus, struct pci_dev *dev);
->  #else
->  static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
->  {
-> @@ -21,6 +23,17 @@ static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
->  static inline void pci_liveupdate_cleanup_device(struct pci_dev *dev)
->  {
->  }
-> +
-> +static inline bool pci_liveupdate_preserve_bus_numbers(void)
-> +{
-> +	return false;
-> +}
-> +
-> +static inline bool pci_liveupdate_refuse_bus_numbers(struct pci_bus *bus,
-> +						     struct pci_dev *dev)
-> +{
-> +	return false;
-> +}
->  #endif
->  
->  #endif /* DRIVERS_PCI_LIVEUPDATE_H */
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ad7fdf0d56b6..debe0ad1ef68 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1397,6 +1397,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  				  int max, unsigned int available_buses,
->  				  int pass)
->  {
-> +	bool preserve_bus_numbers = !pcibios_assign_all_busses() ||
-> +				    pci_liveupdate_preserve_bus_numbers();
->  	struct pci_bus *child;
->  	u32 buses;
->  	u16 bctl;
-> @@ -1449,8 +1451,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  		goto out;
->  	}
->  
-> -	if ((secondary || subordinate) &&
-> -	    !pcibios_assign_all_busses() && !broken) {
-> +	if ((secondary || subordinate) && preserve_bus_numbers && !broken) {
->  		unsigned int cmax, buses;
->  
->  		/*
-> @@ -1492,8 +1493,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  		 * do in the second pass.
->  		 */
->  		if (!pass) {
-> -			if (pcibios_assign_all_busses() || broken)
-> -
-> +			if (!preserve_bus_numbers || broken)
->  				/*
->  				 * Temporarily disable forwarding of the
->  				 * configuration cycles on all bridges in
-> @@ -1507,6 +1507,9 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  			goto out;
->  		}
->  
-> +		if (pci_liveupdate_refuse_bus_numbers(bus, dev))
-> +			goto out;
-> +
->  		/* Clear errors */
->  		pci_write_config_word(dev, PCI_STATUS, 0xffff);
->  
-> diff --git a/include/linux/pci_liveupdate.h b/include/linux/pci_liveupdate.h
-> index 710026ada2d5..d45a5b524909 100644
-> --- a/include/linux/pci_liveupdate.h
-> +++ b/include/linux/pci_liveupdate.h
-> @@ -17,10 +17,15 @@
->   * struct pci_liveupdate - PCI Live Update state for a struct pci_dev
->   * @outgoing: State preserved for the next kernel.
->   * @incoming: State preserved by the previous kernel.
-> + * @was_incoming: True if this struct pci_dev was incoming-preserved when it was
-> + *                set up, i.e. it was matched to state preserved by the previous
-> + *                kernel. Unlike @incoming, this is never cleared, so it stays
-> + *                true after the device finishes participating in Live Update.
->   */
->  struct pci_liveupdate {
->  	struct pci_dev_ser *outgoing;
->  	struct pci_dev_ser *incoming;
-> +	bool was_incoming;
->  };
->  
->  struct pci_dev;
-> -- 
-> 2.56.0.385.gd3acb90ef8-goog
-> 
+The user should open a case with their NVIDIA support and if a kernel
+quirk is in fact the correct fix the someone from NVIDIA will send
+it..
+
+Jason
