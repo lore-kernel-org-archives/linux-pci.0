@@ -1,32 +1,73 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794069645;
-	b=UVl616pYKl0ajqRtF43TgtuI81tMgZSw5gRbYQE+5Uk/xk1ORaYMxaMN7i9rS+tRsmgC
-	 S/5OsRv8TOizxp5/NsVUr7h1bLC9BjtYEwP8EpzzfL0VrYKPNJPQBwepk849sjCnEVjYP
-	 upgEFLpn4JGEbDDY8Ggz04imNJ4bOoJIHqsCepbFnvRWKSXnHjeagDvS3XS16EE3GhHhl
-	 7bNS99u2d7vcReB/qcZj7K9DVUGTYXMImOmicByQL647KYWw7UGtsZauys8QYPRyor+Vi
-	 Su7XdAcA7dUtOAcSEVAysy7671rOI2ob+jCM+scqV6SOLBLkMbFgjMxxEn+oKjozbxA==
+	t=1794069814;
+	b=X8nlDF0sXANpnSLfuYz/k39R8H7gKb44F1WYLef+2FDZ1qkebDKTj8wUw6QRtbf+tDSH
+	 cZbL4wyceg9fDcMCOGhutmdkoCbar2I8/jdV8cqXaxZI6tCCIQAdzyCh2E7i9sdCUgy0R
+	 cHOzJpEWSDGmPfhW0YIVT4zdd9hRQnp7fx4FsTggj692gvb7vF5MzvMnDK8dJ2xuTH3Uv
+	 F+3EzPw01CssFYHFdr9HZMG1MZDIrGU/XmLQfM1vuub6MhFCU0i46OuG+wI8Zlck8i3iO
+	 Vc1h7ymCPibi+sNc/ndUFXdbvHd4J666O/Z/1ulk7Th1CV9VhhR2F6qA5s87BNwbsHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794069645;
-	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
-	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key;
-	bh=oyZGN7VE4rzGGu6dwgYopEdGRTAy6qdzVMyyhZtR/qE=;
-	b=i0hxaMqlCvX1i5LiAaMfgKB/pbx/Yc8XHjlMplrJFDPKx8uZyLUV1v5DupxeFyqellbQ
-	 OsEAqUqnO1usj/U/Kg01aj2rG6qVeJCf87zPnK5vEQkxxIsfi+63KYLNl8wF11tUxJXRH
-	 06jZBlIOKNbr6eShDoq2CRt6AGWQpGWB4tMFAbXE/TADCCy80bxUnHUyOIRTvDK+KP0jA
-	 pvEJn2qc+6jP71W24Le4caB60RWhJEeLYa8D1Lml4yI32t6aAwuV7yhK9pDCPoR9ecor/
-	 +3R2An3LrZwjBRcZzDSmsnXnAtqGeKER+a1EFEoLvVHPdhYHPmqRXaG/D8ZlVKi+VGw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794069814;
+	h=Received:DKIM-Signature:Received:Received:X-ME-Sender:
+	 X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
+	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
+	 References:Subject:Content-Type:Content-Transfer-Encoding;
+	bh=vJlfnNqej/LkG6MaOOq3+jKdNMX9ZNsvcUBYJfUwMpw=;
+	b=cwBUHQ3tWJICORqVVwDzxCaGx2d5eeErnvq03OxGKh3BQ/uUb0ZjBK8LjAY3oIUSzFtS
+	 7b8GllKh4SSjqYUjkOcdcxdJNSscnP+bKRybu2SecM8YrhWm2NWfyYk8ih37qvDJzMhGp
+	 tco7caG3+NE71auliAI9ZYO/nan+fvFEztvTgMTf8YJeyzoP9CzHOnD3j8y6tHxy0ulcE
+	 1tlFB7Q+R35Hi67esCtRlVAGhJE9zdBSMuSG7SJ/XW/WrbMMp7hk1AeNBtd3zIanG+P6c
+	 4X/n2SKh+7gBgAEmDox/KCfjGjVYSXNooD86kj+Eonz01JJA4OgyMYEfoFDug+3m2iQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ec9OinBL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC246606A32C;
-	Sat,  7 Nov 2026 16:40:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DC8A1F0089F;
-	Sat,  7 Nov 2026 16:40:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6888E606D807;
+	Sat,  7 Nov 2026 16:43:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ec9OinBL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D87E21F008A3;
+	Sat,  7 Nov 2026 16:43:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794069813;
+	bh=vJlfnNqej/LkG6MaOOq3+jKdNMX9ZNsvcUBYJfUwMpw=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=Ec9OinBLTdERos6h50EC0xUMTn77I2eH+sW83Lh5kwSY9BvV2OOVa/KNof0GP2Q58
+	 RS4VV3vBrJ/LJog1T9lg0D2JE4OoyqUja1mYU0rh9TBbXyPIEhQRpsuojcmq8ZMIA4
+	 CCDIxEY1vZFYI7ppfT5M0lTExZ07bRV7cMY147urYKAEBYKJp+dYFF+px+uccoSGQJ
+	 uVAe3HJmFJqNBLzSUpkpxl6XM/ygvvEBAxQusxKpDQigosD1nBGLgkLmP/DR4y72y1
+	 LgnZYxUr+IR4Egl8rgUGA8KwMUI2eGvYxK8dwEAUy7fQvT097QujPauhtAAp8a8K3u
+	 wRcc9px1LLfNQ==
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 1E9E1F40067;
+	Sat,  7 Nov 2026 11:43:31 -0500 (EST)
+Received: from phl-imap-15 ([10.202.2.104])
+  by phl-compute-10.internal (MEProxy); Sat, 07 Nov 2026 11:43:31 -0500
+X-ME-Sender: <xms:MlXvakDJz2aoRG_Q0Tr3dYW0eo4APQUabQqIttoZFPRFZ-x9snzIqw>
+    <xme:MlXvahUE11fMZOXF9JjGlaXmovQ63rXPe9CVrxbGMz01XC2UXZ8Ub-s6v11mUcT7K
+    6EUgoab8dJTWAHO_c14xHkS1kUKnJq9SFX4dojoicG37nrqW8Y-SchLZQ>
+X-ME-Proxy-Cause: dmFkZTF47JQfJLdRdMge2GMs+GugpouQhIspgU7BDymJQjozGtWeayorP8T8qJjOJtez5n
+    Mu6YVQMuTAuQf8dNPbyiJidY6z5iDchqOk/rPreMnFBsaZEyFLA1xNLvX2+sRgAAEV6CpA
+    18n7d+taVvJebv5vU6jJPdclNeeGqwUnruqBfjOVpjA4xXpT5GCaWy76JSn+teNqAA0ny2
+    vVmyqvtCRPIMNOkOlHDxwf2R+IqqtIN68NFJGnHnqmIyGIjD3zNX0zKaDGqEk7Ze2onYqy
+    9RdgDPRA3PikGN1W/7nDb8NiYp8Q9/+7zqfHAJcBEVt9DgwuHrHPFfmetOJuJSFKJUDZpN
+    mbRzObrxaiH+VuPVfFTvBWVxOAq7xc3fchnSigBQCyM4PA4HDuL1vAF5IoeXrMQk2aUW21
+    59Pn6Ph8ElZIblHku0CFRDKCKdVU/6BJGsrAIobO6f/CRmXPwJZ+FZIWnzEq4zHbFnFSj5
+    2GavxWreHaI/dkosMa1/Hz50DzNovuOurQwGdhu5YM7nZSIaOcaigZUM86iQpTNPvFE5q8
+    X0RucoetdeEG7ZlTg0zjUFsHpRlOfhY/tCKI3ix9kioMo32DZjUgaL6ky8l30WUfX53owO
+    FaUB1P+IyjUQnKRpIIcJTsmMD1HsAXSFOSlEcd18MZD9Rox3fmXGxCSSzMdg
+X-ME-Proxy: <xmx:M1Xvarm_GuLHtdhc-beslZ2ZxZoqr1pVXnXixSSL7TSDZnhBDdRW2w>
+    <xmx:M1XvakuXdXodbZzwSGhXpuZDbgbK4xmWfFZIJTq2PW_KgUkMPLhQ2w>
+    <xmx:M1XvakHt6uhcrYM_XDobstbNvikecMWxKGRyUkZcuWV3Fx0M6IIITQ>
+    <xmx:M1XvakswcIzGwK3QU4AniovTIpZY-XUd3Ibq2iA0mAnVEdW_mDFClQ>
+    <xmx:M1XvaqI_u5j39OfSlUWtLpJlRc3Dik8eKjcfeQJUyBgtS0utAvmxR5za>
+Feedback-ID: ifa6e4810:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id DFD31782738; Sat,  7 Nov 2026 11:43:30 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -36,79 +77,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] PCI: qcom: Power on pwrctrl devices for
- firmware-managed hosts
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Zhangfei Gao <zhangfei.gao@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org, 
- lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
- bhelgaas@google.com, krishna.chundru@oss.qualcomm.com, 
- bartosz.golaszewski@oss.qualcomm.com, deepti.jaggi@oss.qualcomm.com, 
- yadu.mg@oss.qualcomm.com, shengchao.guo@oss.qualcomm.com, 
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <CAFkd8hu2aLp_MGbT3Lt0wv96sUQ705fBsaa_sn3P1_XUuruKYw@mail.gmail.com>
-References: <20261105101521.434361-1-zhangfei.gao@oss.qualcomm.com>
- <auyUXp1Fgk2yC7fZ@debian>
- <CAFkd8hu2aLp_MGbT3Lt0wv96sUQ705fBsaa_sn3P1_XUuruKYw@mail.gmail.com>
-Date: Sat, 07 Nov 2026 22:10:42 +0530
-Message-Id: <179406964231.65886.10596417299119607614.b4-reply@b4>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1969;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=jaCY8HUzhyhSMMPiHqi4Fxf0VtDkX8gvIrfoWBqCNzU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq71SLApPfRmhrU5GP/ZAEfiQYaGa3Fzl55nRVL
- /lyomfA7S+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCau9UiwAKCRBVnxHm/pHO
- 9Y/3CACKuMlSiJqG9S2SlOe7uSTm946oOt3cgsfeSZ3336Noajm0mDXI/InAHb342H+/7bEAKoz
- cDudP+i6xayXz8KY8aQTT4p9DAT0Ov8L2WN4TV2C1cOzQnLbhisevPFy83LPwm+aITQEpfl4fbw
- GvfytiQEsObXcvY/LUcAYb/UpU2rWZDgTu0m4TYb4wAE9Pjb5cUsS5/Slx7CtB3LSLww6TU4fWa
- 9wMiiskUJxLqso10g7/8Pjg9zZHdRQpbJr5vHsNPtm2avhuAQtoyCEbV/kOQDws8AJf+FaycK2R
- tTvDAKsyUVenFPh8WuYAZaJXsodvsgdGsLHu99FKBrR3sa4O
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-ThreadId: AE4uiykVHNXw
+Date: Sat, 07 Nov 2026 11:43:10 -0500
+From: "Chuck Lever" <cel@kernel.org>
+To: "Christian Brauner" <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+ "Jann Horn" <jannh@google.com>, "Josef Bacik" <josef@toxicpanda.com>,
+ "Chris Mason" <mason@kernel.org>, "Jeff Layton" <jlayton@kernel.org>,
+ NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>,
+ "Thomas Gleixner" <tglx@kernel.org>,
+ "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Jonathan Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>,
+ "Greg Kroah-Hartman" <gregkh@suse.de>,
+ "Joel Granados" <joel.granados@kernel.org>, "Kees Cook" <kees@kernel.org>,
+ "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>,
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-s390@vger.kernel.org,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
+ "Linuxppc Dev" <linuxppc-dev@lists.ozlabs.org>, netdev@vger.kernel.org,
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+ coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
+ jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
+ linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org,
+ linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
+ samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
+ linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
+ linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
+ "Takashi Iwai" <tiwai@suse.de>, linux-input@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org
+Message-Id: <39d3364c-d4d1-4919-86c0-695f75946c95@app.fastmail.com>
+In-Reply-To: <20261104-work-procfs-net-v2-7-221e2437fed1@kernel.org>
+References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+ <20261104-work-procfs-net-v2-7-221e2437fed1@kernel.org>
+Subject: Re: [PATCH RESEND v2 07/13] SUNRPC: let procfs copy in writes
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On 2026-11-06 10:24 +0800, Zhangfei Gao wrote:
-> On Thu, Nov 5, 2026 at 10:37 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> >
-> > On Thu, Nov 05, 2026 at 06:15:21PM +0800, Zhangfei Gao wrote:
-> > > commit b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power
-> > > on/off, destroy APIs") switched PCI pwrctrl users to explicit create and
-> > > power control APIs, but only added the calls to the regular DesignWare
-> > > host initialization path.
-> > >
-> > > Firmware-managed hosts bypass that path and probe the ECAM host bridge
-> > > directly. Endpoints already powered by firmware, such as NVMe devices,
-> > > remain discoverable. Endpoints that rely on Linux pwrctrl and pwrseq,
-> > > such as WCN7850, remain powered off and cannot be discovered.
-> > >
-> >
-> > NACK. For FW initialized platforms, FW should power on the Endpoints before
-> > booting Linux.
-> 
-> Thanks Mani for the clarification.
-> 
->   To confirm, for a firmware-initialized PCIe host, is the platform
->   firmware expected to perform the complete board-level Endpoint power
->   sequence as well, rather than only initializing the PCIe controller?
-> 
 
-Yes. By the time the Root Complex power domain gets turned on (which happens
-before the controller driver probe), both the controller and Endpoint should be
-ready.
 
->   On this platform, WCN7850 requires PMAU0102-E GPIOs 6/7/8 to enable its
->   power rails and GPIO10 for WLAN_EN. Should firmware assert these GPIOs
->   before Linux probes the ECAM host bridge and keep the Endpoint powered,
->   including across suspend/resume as appropriate?
-> 
->   If so, we will drop this driver change and coordinate the required
->   platform firmware update.
-> 
+On Wed, Nov 4, 2026, at 2:59 PM, Christian Brauner wrote:
+> Implement ->proc_write_buf() for the procfs channel, flush and
+> use-gss-proxy files so procfs copies in what is written before it pins
+> the entry. The channel file parses the downcall from that copy and the
+> flush files share the parsing with rpc_pipefs in do_write_flush(). The
+> rpc_pipefs files keep copying in themselves.
+>
+> CACHE_DOWNCALL_MAX and CACHE_FLUSH_MAX name the limits both sides
+> enforce, procfs through ->proc_write_size. The procfs files are removed
+> when the network namespace goes away and that no longer waits for a
+> writer that faults on its buffer.
+>
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-Yes. All the initialization required to power on the Endpoint should be done
-by the firmware when the SCMI power domain for RC gets enabled. And when the
-controller driver probes and scans the bus, the device should be visibile.
+Acked-by: Chuck Lever <cel@kernel.org>
 
-- Mani
 
+-- 
+Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
