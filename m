@@ -1,50 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794073349;
-	b=fDRyj6x1gRzkMzRNG5vE/K6qyEdMAE3rzgIgTsnAcAlncdhc5pVdaUPN3x/mUIjz9XHh
-	 namreGz4DYcimXbpKCixhbQY5N8Rv9oZ8TUP07IbD6jwkR5Nj2eTlx5CQPCRlLCg4HhxW
-	 ZjgfOv7a7gpnzeBzbjbgKJuhCNGGqH+S6YAGG+WUUG+9fnZZbPfc8cQpPIcT5ou2N7rAu
-	 XwFL4eFo4jH+t4/roBvpg3XS7GYyIiDOxDkwKa9+FxkW60sYuTR7aEl6gqCN2jEQ0qzG1
-	 ODKFXYktdKXdARjlNvOE38oBNhYtcF6PHqbncJL+IK9rSuzDZxPEVcsm7TRonIeS0vQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794073349;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=T0TcPMhnJboefGjG0dX42ucxF+Z41m2N3+6Nxl59W/o=;
-	b=P0TTxFB7Ep7OUeptu9wLug9LrDiEb1tPtl6VrAA4LodF0uj/JpppyQTzgljc4SNWsEso
-	 Rd5yQXCXC49B4oE7uCBleB0GwuT8QfkgZU+/FQe7drYGEKJ36bLFoEN4JRQ9ykr+N/+Yj
-	 wBzd6fEDmYtcYfx9EjOJ9IYcorG4PqInTHRmkgfbbNYz+Sxux14F7mjDiFrSUCbcRdxHV
-	 cHpHnHsKfR10eOFuioRwSzJIOjj8CYasdJhIlSjuLgPbk+sZHnBpsuOxPB5JcPnnaiZKT
-	 5s9qJJe26c65AA9ppwhxYF16gFLkFLxxMfsgf+rf6yw8ZFh82VPyN7o9kVcCp3R/eOA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Fi221Vvl;
-	arc=none smtp.remote-ip=117.135.210.5
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.11
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794073481;
+	b=MlPlzyq7+z6I2BSg9ZfUfmT4Ib7OWVuzJyFS1kbQL5K7s/zvWiUIdUunr5izAq70zgyH
+	 5n1wf3WTpKfotysisKUwbqfrE7rbpnWfHKs01AfF9MhWP/1naGf5OsLDOtwDcz5/61pbm
+	 /rzqPLp9bweB+egv1i+BP0BclMqlYmMaHbls6/TKS+onQfT9154BKyixTMJfBLfp9UxB+
+	 sm9iTqpqTt+s0GgaRjkzQrrEcK9dI72i0GSKr1Go2HgNgdrlEeGgQUTWzbAg87HPY7RXH
+	 91u7lU/3OPreEbK55U945dcSxsHBMV8F9mK2aoCpTqCXJds/1A26JKKZTq+BZfU9+tg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794073481;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-Zoho-Virus-Status:X-Zoho-AV-Stamp:
+	 X-ZohoMailClient;
+	bh=BEJxwQaGNWxQ+Lrjj9osjOpBls40KMYzaU0/7fZX5w4=;
+	b=j1HpU+3bo4BhBfcq11ETTxWonzTgZMo/G/IKFSck9vmacVsK7gr3yM9hCgibIPhkniKW
+	 ff0/GyL62fHxGpkykhlgI8YhHZmF8n5yWWOQXLMFGhnWEyw63mAv6Ol7PEZb+5nFLYDiC
+	 fyhaZzhMY0NHAdkr7bhL6bcmwxS4cxFYy69CrLYlBbN5YRjpUPPA9V6UVAf3LAo5vfZHA
+	 ZVWq56rok3WFp/g2cUTO033vLXyBtyeeziIxc6p1hIqtrnMfbjqh7GNTcEwxgnTgeaBza
+	 uBH0v5cXPl5GcvpU1U314aNQ/RKVKPGMWeLnOxQWhPegvoYs5WOPwt4WpRs5xSttx+A==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=collabora.com;
+	spf=pass smtp.mailfrom=collabora.com;
+	dkim=pass header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=zohomail header.b=TmqaGjf3;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.11
+Received: from sender6-op-o11.zoho.com (sender6-op-o11.zoho.com [165.173.180.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673E6606A326
-	for <linux-pci@vger.kernel.org>; Sat,  7 Nov 2026 17:42:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 673E6606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 029AB606A326;
+	Sat,  7 Nov 2026 17:44:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 029AB606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Fi221Vvl
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=T0TcPMhnJboefGjG0dX42ucxF+Z41m2N3+6Nxl59W/o=;
-	b=Fi221VvloIkNvZbdj3lKq+HdEGQPtgHh2/PWzntI6Mo1izjyXJ/McQnd04eCYp
-	o2csqEQI2t/NQWx37zq1bOGSzaay7/KWf4DsGH/z0mxkNGlwWn1R7g0tBzh6JUl+
-	jjOWCsqtGE3wci9D6Uv8uEGJn/w+SLk1nn1NzgnoJLxzo=
-Received: from [IPV6:240e:b8f:91b3:d000:dbd3:438:3de0:f148] (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYznHYu9qSfN5Eg--.55065S2;
-	Sun, 08 Nov 2026 01:41:27 +0800 (CST)
-Message-ID: <5512a99d-9c72-4988-aa94-0826d098a09d@163.com>
-Date: Sun, 8 Nov 2026 01:41:27 +0800
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=zohomail header.b=TmqaGjf3
+ARC-Seal: i=1; a=rsa-sha256; t=1794073455; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=fNANYMnjVjL8AQHETfCzsnCl7WDB7yl3eUtihPbGKy2hR1W99SMKsRX5irR+XSVNTg4auA1yoi9JVXZM+D9y/8l6ZB6hVHfDLPFe9pzVZsbuDEK4u/Ee0B4Lp7w5Dy4aAev+9l8N524Oy127oUc1+w0N7twpcwozRqKhF8TClaQ=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1794073455; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=BEJxwQaGNWxQ+Lrjj9osjOpBls40KMYzaU0/7fZX5w4=; 
+	b=QzfgnuvkvyJt+IsqFqXpPHmcUb4OOjyMLdvhsFGV9t2oBHBWVJJVcKDQ0CKGuU9Lzw4c/0AK75v41554Cisoj1x1Xb7O8ZAPyZ33UqR/0PMjvy/LIQ86SH/tqEemrAY2ztmpQhGKJY8X090klgzLbSGYI+VGgsFUDxN3T6AraSM=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=sebastian.reichel@collabora.com;
+	dmarc=pass header.from=<sebastian.reichel@collabora.com>
+DKIM-Signature: a=rsa-sha256; b=TmqaGjf3mJ5lZkS6OkEIKM8NO2XQWhbpiaR4nMZwYsnExEJISJyswJTitIlX1z+BhFQxWIYGPXkn7+SwWf4FNVSXB9BvWc95I6YEZiv5Jxeo9gSdRIPj2UmiQXnIkb5xD7cjksPiImCj95uZpJnOwceeE08YX6CMZksjkxcP7MQ=; c=relaxed/relaxed; s=zohomail; d=collabora.com; v=1; bh=BEJxwQaGNWxQ+Lrjj9osjOpBls40KMYzaU0/7fZX5w4=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: by smtp.zohomail.com with SMTPS id 1794073454367647.3084136884058;
+	Sat, 7 Nov 2026 09:44:14 -0800 (PST)
+Received: by venus (Postfix, from userid 1000)
+	id 62D63180370; Sat, 07 Nov 2026 18:44:07 +0100 (CET)
+Date: Sat, 7 Nov 2026 18:44:07 +0100
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	Jingoo Han <jingoohan1@gmail.com>, Shawn Lin <shawn.lin@rock-chips.com>, 
+	Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
+	"Yury Norov (NVIDIA)" <yury.norov@gmail.com>, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+	Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, kernel@collabora.com
+Subject: Re: [PATCH v9 9/9] PCI: dw-rockchip: Add system PM support
+Message-ID: <au9hRvuc09yjcUpd@venus>
+References: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
+ <20261105-rockchip-pcie-system-suspend-v9-9-a2e55846649e@collabora.com>
+ <179406940043.65886.12399286680610211664.b4-reply@b4>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -54,125 +76,114 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 01/16] PCI: dwc: Add pcie_cap field and caching helper
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: sashiko-reviews@lists.linux.dev, imx@lists.linux.dev,
- linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org,
- Frank.Li@kernel.org, neil.armstrong@linaro.org
-References: <20261028030652.2917756-1-18255117159@163.com>
- <20261028030652.2917756-2-18255117159@163.com>
- <sashiko-outbox-187403@kernel.org>
- <3773fc58-a6ab-4f8d-a9a1-c865217afe84@163.com>
- <179399401605.55876.3520713514569261990.b4-reply@b4>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <179399401605.55876.3520713514569261990.b4-reply@b4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PigvCgDHYznHYu9qSfN5Eg--.55065S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxuF43Cw48AFWfArWUCFy3Arb_yoWrGr18p3
-	9rJayYyF4DJr42vFnFv3WrXrnIyasxAFW7WwnrGrnIvr9Fyr17KF4ayFWjg3Z7GrWIkr1j
-	9rWaqr9ruFn8JFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jUzVbUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wdgBGrvYsdbgQAA3y
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="kzwu7rhoz7aasxwz"
+Content-Disposition: inline
+In-Reply-To: <179406940043.65886.12399286680610211664.b4-reply@b4>
+X-Zoho-Virus-Status: 1
+X-Zoho-AV-Stamp: zmail-av-0.2.13.1.5.4/294.65.33
+X-ZohoMailClient: External
 
 
+--kzwu7rhoz7aasxwz
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v9 9/9] PCI: dw-rockchip: Add system PM support
+MIME-Version: 1.0
 
-On 11/7/26 03:40, Manivannan Sadhasivam wrote:
-> On 2026-10-28 11:18 +0800, Hans Zhang wrote:
->>
->>
->> On 10/28/26 11:15, sashiko-bot@kernel.org wrote:
->>> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
->>> - [Medium] PCI: dwc: unconfirmed offset returned in dw_pcie_get_pcie_cap()
->>> --
->>>
->>> commit c6fcd840cdb57dd351ea1787cae915ad3164fb13
->>> Author: Hans Zhang <18255117159@163.com>
->>>
->>> PCI: dwc: Add pcie_cap field and caching helper
->>>
->>> This commit adds a pcie_cap field to struct dw_pcie and introduces a
->>> dw_pcie_get_pcie_cap() helper that lazily looks up and caches the PCI
->>> Express Capability offset on first use once confirmed via a DBI read-back.
->>>
->>>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
->>>> index 6d788aa000117..dede6b3966585 100644
->>>> --- a/drivers/pci/controller/dwc/pcie-designware.h
->>>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
->>> [ ... ]
->>>> @@ -832,6 +834,42 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
->>>>    	dw_pcie_writel_dbi(pci, reg, val);
->>>>    }
->>>>    
->>>> +/**
->>>> + * dw_pcie_get_pcie_cap() - Return the PCIe Capability offset
->>>> + * @pci: DWC instance
->>>> + *
->>> [ ... ]
->>>> + * Return: the offset of the PCIe Capability, or 0 if it could not be
->>>> + * found or has not been confirmed yet.
->>>> + */
->>>> +static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
->>>> +{
->>>> +	u8 cap = READ_ONCE(pci->pcie_cap);
->>>> +
->>>> +	if (!cap) {
->>>> +		cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
->>>> +		if (cap && dw_pcie_readb_dbi(pci, cap) == PCI_CAP_ID_EXP)
->>>> +			WRITE_ONCE(pci->pcie_cap, cap);
->>>> +	}
->>>> +
->>>> +	return cap;
->>>> +}
->>>
->>> [Severity: Medium]
->>> In drivers/pci/controller/dwc/pcie-designware.h, the kernel-doc for
->>> dw_pcie_get_pcie_cap() states that it returns 0 if the capability could not
->>> be found or has not been confirmed yet.
->>>
->>> However, when pci->pcie_cap is 0 and transient DBI data causes
->>> dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to return a non-zero offset cap
->>> while the confirmation check dw_pcie_readb_dbi(pci, cap) == PCI_CAP_ID_EXP
->>> evaluates to false, pci->pcie_cap is left as 0, but the unconfirmed non-zero
->>> cap is still returned to the caller.
->>>
->>> Callers that guard DBI writes on a non-zero return (such as
->>> rockchip_pcie_enable_l0s()) or cache a non-zero return in driver state (such
->>> as tegra_pcie_dw_host_init() setting pcie->pcie_cap_base when
->>> !pcie->pcie_cap_base) will then consume or permanently store the unconfirmed
->>> offset.
->>>
->>> Should dw_pcie_get_pcie_cap() return 0 when the confirmation read-back fails,
->>> or should the kernel-doc comment be updated to match the implementation?
->>>
->>
->> Hi,
->>
->> We have already replied to Bjorn before. According to the specification,
->> the value of pcie_cap is not equal to 0.
->>
-> 
-> Then please update the stale the kernel doc.
+Hi,
 
-Hello Mani,
+On Sat, Nov 07, 2026 at 10:06:40PM +0530, Manivannan Sadhasivam wrote:
+> > +static int rockchip_pcie_suspend(struct device *dev)
+> > +{
+> > +	struct rockchip_pcie *rockchip =3D dev_get_drvdata(dev);
+> > +	struct dw_pcie *pci =3D &rockchip->pci;
+> > +	int ret;
+> > +
+> > +	if (rockchip->data->mode =3D=3D DW_PCIE_EP_TYPE)
+> > +		return 0;
+> > +
+> > +	if (pci->suspended)
+> > +		return 0;
+>=20
+> This check looks wrong. 'suspended' flag is only set at the end of
+> dw_pcie_suspend_noirq() and is used as an indication to glue suspend call=
+backs
+> to turn off the resources or not. here is no way this can be set at the s=
+tart
+> of tne glue suspend callback.
+>=20
+> I'll drop this check while applying.
 
-How about modifying it to "stale the kernel documentation"? If the 
-description below is valid, do I still need to send the v6 series patch?
+I added this as a workaround in v8 for the issue Sashiko found in v7
+(see down below). We probably will never see it in reality, so I'm
+fine with dropping. Thanks for applying.
 
+Greetings,
 
-+ * A DBI read issued while the controller is not accessible returns
-+ * platform specific data, and a transient bogus value must not stick in
-+ * the cache.  The offset is therefore only cached once the capability
-+ * ID has been read back at that offset.  If the read-back does not
-+ * confirm the capability, the offset is still returned for the current
-+ * access but not cached, so the next call performs the lookup again.
-+ *
-+ * Return: the offset of the PCIe Capability, or 0 if it could not be
-+ * found.
+-- Sebastian
 
+-------------------------------------------------------------------
 
-Best regards,
-Hans
+[Severity: High]
+What happens on a subsequent suspend if rockchip_pcie_resume() fails?
+During suspend, dw_pcie_suspend_noirq() sets pci->suspended =3D true, and
+rockchip_pcie_suspend() then powers off the PHY, disables clocks, asserts
+reset, and disables rockchip->vpcie3v3.
+If a later call to rockchip_pcie_resume() fails (for example, if
+dw_pcie_resume_noirq() returns -ETIMEDOUT when dw_pcie_wait_for_link() times
+out, or if regulator, PHY, reset, or clock initialization fails), the error
+unwind path in rockchip_pcie_resume() disables the clocks, asserts reset,
+deinitializes the PHY, and disables rockchip->vpcie3v3 while pci->suspended
+remains true:
+drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_resume() {
+	...
+	ret =3D dw_pcie_resume_noirq(pci);
+	if (ret) {
+		dev_err(dev, "failed to resume: %d\n", ret);
+		goto err_clear_rst_gpio;
+	}
+	return 0;
+err_clear_rst_gpio:
+	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
+err_disable_clk:
+	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+err_assert_reset:
+	reset_control_assert(rockchip->rst);
+err_deinit_phy:
+	rockchip_pcie_phy_deinit(rockchip);
+err_disable_regulator:
+	if (rockchip->vpcie3v3)
+		regulator_disable(rockchip->vpcie3v3);
+	return ret;
+}
+Because the PM core logs the noirq resume error, clears is_noirq_suspended,
+and continues resuming the system, won't child PCI device resume and the ne=
+xt
+call to rockchip_pcie_suspend() read APB/DBI registers while the controller
+clocks are disabled and reset is asserted (causing an SError on ARM64), and
+then call rockchip_pcie_phy_deinit(), clk_bulk_disable_unprepare(), and
+regulator_disable() a second time?
 
+--kzwu7rhoz7aasxwz
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAmrvY2MACgkQ2O7X88g7
++pqeNBAAhRH8o+2ntbrtErJ/GWtKAM5B0MClHc1gk/Ul2QDBO9lU9J9e4/uz6nw5
+mhklQHDcVO9bkj/dcwwm1YpnDGJYyrLmuVbvvJktiKHGTzx0JbZ0oV3w3pFZFRps
+z3vGd+lJbxigSkYN7CxYyLFXIZI5JPE8saZwNmjTIwiqdQWTcpa1cCQxIiZAmucr
+qX8FWCgDyqV1R2lvZRKuzjaZ085Rm9qLTJp9VqHIKQdSO/5fCf+4c3Ukf3LpneDS
+TRrfSky9T93bKyDcaCWKXDGH6RpGetZiGozmYOWO9bxxnPfmUIQpBDreIo5AxpDx
+JtdH1J1+p2HGjOmtsID58bxzj14/N7So62YdmVFhtsVaURj06zxKdqavNKbojHev
+bebeU29+uMHIRCVOwoRzdWZaFmgXxQsRmE8mei7B0N6DFarEcaFWOQWfPOMqqqqe
+2eCMUSIxWEufq1RlcIOEhlEoWOWmWzBxikPzQfjM2S0efEzO7Bo3JR7boDiGuJ/N
+NckH1Mt1rTSytm7iizrapv0TYq7F+Qa574LefEIrRCEGWxRAXGC5uB02sAKZ30/Q
+9K0ZhiaROggfmjYA+hkOeX6q28H7me0FryEvLzMQJnKKXDrAHQldwdV/mA7t66L7
+27pmlJaSvgo/R6ePbnjZrYLy0XRe9b/Kfk2TsAi06u6sU18BDz4=
+=tNHG
+-----END PGP SIGNATURE-----
+
+--kzwu7rhoz7aasxwz--
