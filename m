@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794069176;
-	b=EZRWiEbSwXOWN3Zb8kb4O3ar3iG3F6tbxu32FRVVxsnMy/Ekyh2VpXcXIAL3qNnFJiSI
-	 q15AoGBfR6IFL9ECHe2fFYeer/PavrF97TkZGm+z/8GPyEOkrqx57Uw8Lfk1YeWmaz58C
-	 Uvm3OIKfTJR1R4lCHViYQgCEMFRJ88J8pHbr0ffmWmcvkBNxumDe3fAg8Xi23y2pVNEKl
-	 u6Wxyf5Pp/qP5mWhMXKV0zfnRH4FnKIQehkhtVmcMRH1BVjHZrDF6sm5YXH7VmJ5bTKbF
-	 YIbhDKX3RCnn25Bdmyg98dqySiOqlIQwp+zALcSCpvEskgWgOJgElxpv1o4XpOiBiUQ==
+	t=1794069403;
+	b=gX+LCaAY7uOiaVCcV+b+yzw/2WbxCUq1cuAM5h8n0lRrEDv6q3s0pdtZ88V5ZmAnJrIm
+	 7joG6kWNrHTSx3ZijM/dCWCTtVjGtGvzWAZj0QgBzpPak3+aGBAdSU48G0Z4TBVteEpI+
+	 m9yMdpD8N3qcvHblHoO2mrDSx0StrOoR87Yd4n+twpwyGxfjZUdyV/XOUiTfn6UuZUeLx
+	 V+wueUFwEtfYjjFbd3jZp0VeO9PCoA1BNydzDpvkL+f0TJpUh4ZBqxMRi6Zd6GRfEmP65
+	 atGU03kFYibJ//0Eke41Pm3nyRnOq6V8utgeczr6YYcTPPsGCgwbb6zsIU3OwNYrkbw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794069176;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794069403;
 	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
 	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key;
-	bh=zs5FfJViCFg/tM0lVAlPjBKrGvPI56RE48ujfmXXqM0=;
-	b=ONETHPgQT+QLbRFYS8X6tlCInmpuDz3G6QM9xReEe1NHC9xg9rV6qvcaztPfqHpvHksL
-	 SSiJS7VFl90y/S4MTmMU11S9lALZdkpinurbVUp0eErB6JQWVzp2E9vAQhhnHBSqN9UjH
-	 +0iNtlJOvXwIUCuckNghduTkg42xH/F8qnnea0KdqEyoVAd9UgSFPoaWL4jivu4YZpnYB
-	 aJtNUafYeP7fn62kzgpCVFeQaYZ+fBxViZTW+WF9Wa6l7US21e+PbT6zmISozTWgSM2yi
-	 iuVXILT+ZybIxwY6zmy6sYB4bPodYgU8fx7szK3Q6vjZ4KoHrdVMj83nMegKQImrq9A==
+	bh=oM5eh/s+Pspuu1PUdwzvcQsHh+H6EmixK49kWJ77C90=;
+	b=5noJPO6VUz506q1moH+0bm+kWNDlEXFecOVjvra5ILWdM/KIRjhX8+hNEwiDz9dGzQD0
+	 +PFl4BXeMpLTWv8YkaVnz8KSfy/jyD1DaIOCOaCFHAWTNCsQkHjDwWT5s62/PkdvcNHCh
+	 M1rwbSYGiykHaKsYxlhU5edScoxCdu68Mgf/pevnKl38B96Uqo06NaKew/wqVe9QYf6oC
+	 4QQD3t2UFJb6TV7RZ5HZvx5MvVNKXQ2TIuJVZjd+k4JXxcNgQTCyljGzRfEVnFXU9W9W1
+	 1BRiUskHA8kIqSV9qEYG3N7uc9iTj75J3xDifo91Z8+2ESnFLAB2Qqqin+a3GskUTMA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 840E5606A326;
-	Sat,  7 Nov 2026 16:32:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4345F1F0089F;
-	Sat,  7 Nov 2026 16:32:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F264606A339;
+	Sat,  7 Nov 2026 16:36:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B23661F008A2;
+	Sat,  7 Nov 2026 16:36:41 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -37,151 +37,103 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v8 7/9] PCI: dw-rockchip: Add pme_turn_off support
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v9 9/9] PCI: dw-rockchip: Add system PM support
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Sebastian Reichel <sebastian.reichel@collabora.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+To: Sebastian Reichel <sebastian.reichel@collabora.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
  Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
  Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
  Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>, 
- Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
+ Shawn Lin <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>, 
+ Mark Brown <broonie@kernel.org>, 
  "Yury Norov (NVIDIA)" <yury.norov@gmail.com>, 
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
  Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, 
  linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
  linux-kernel@vger.kernel.org, kernel@collabora.com
-In-Reply-To: <f047dcbe-efa2-4c60-8436-6d001c936467@rock-chips.com>
-References: <20261105-rockchip-pcie-system-suspend-v8-0-0434b4f373bc@collabora.com>
- <20261105-rockchip-pcie-system-suspend-v8-7-0434b4f373bc@collabora.com>
- <f047dcbe-efa2-4c60-8436-6d001c936467@rock-chips.com>
-Date: Sat, 07 Nov 2026 22:02:49 +0530
-Message-Id: <179406916971.65886.13520937092317191699.b4-reply@b4>
+In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-9-a2e55846649e@collabora.com>
+References: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
+ <20261105-rockchip-pcie-system-suspend-v9-9-a2e55846649e@collabora.com>
+Date: Sat, 07 Nov 2026 22:06:40 +0530
+Message-Id: <179406940043.65886.12399286680610211664.b4-reply@b4>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4382;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2514;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=S1IECqqIrwBd3k3Fr5mAm2lihZFlAHgQLQIBZRJ7QRA=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq71KyRfVqWX3CtO7dsMROvebs50h6vcEg5IdS2
- W1rMFiBT2mJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCau9SsgAKCRBVnxHm/pHO
- 9UrwB/4+I1ES4Zd9C/2fFs3eQQeARV9e13XPiWzamhcfg0B8YXrs08INU7QM1wwo2fAwGiM90Yt
- OyWU7QYBHJrwCenz4vxvgYe7Gor3kwPrs88ger4KB29Uu+KzyT+nRIaZqNCTtoCnyUTjHLqNzYQ
- M51/zfs8KLMv7HhcsWImH6auTs9cxZWFgH1ujGtPgWD+KpkzQfeMd8OWE38L/quU1r4mdSMaLcM
- W46aHmHXsGLSXvwHngIPXkmXsPGRUcARMPfguJzNLp48Ro5E6k+LyovvAOv0inS6HT3eMu6FbF/
- upDXISlYDN8EU3NYI+jJ8SRHzhhOWEweNZTXb6RcvyB8c99h
+ bh=8365VW6X0RcfnFpRVJgWusqFqAVt4w96wEE77tPrWjE=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq71OZbVmkYD9JMJROI0BZDcoNwWxrcAtLcQwbj
+ 0t0/rTYQ2GJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCau9TmQAKCRBVnxHm/pHO
+ 9bzuB/9qHp6yNX81ggnW8qnKGqz2yTTtqcKvB0xahmmLZBSKgA5YOzM1wRR1HdjHlfU3ijEyr1P
+ U9rY0H5/Zh44dXLHoRPwFTBIU14FHK5reN6PV5U9wfXkMbmZ9QqBerln+1dw9JYUoMEaZG0xtqm
+ 4zeUJc5pY+dYx23nV9udXC1gLaPvJq1cAlNba0qIK7Hmh0K4zFvmDSDY73MUzlDfYQ2zE3wQJSp
+ GuXDhmfyl/29yvSzvywp3smDG/YUyF729MzW3EI7GQrwe9MqJWSvkkT1N4oRlL5iWpikg+8QYpQ
+ WYfMP+sCtFR/EG+8bj7/Bg4h7cNMeIu1Amku3NJyW6Dn9EPA
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On 2026-11-05 08:51 +0800, Shawn Lin wrote:
-> 在 2026/11/05 星期四 7:47, Sebastian Reichel 写道:
-> > Prepare Rockchip PCIe controller for system suspend support by
-> > adding the PME turn off operation.
-> > 
-> > Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> > ---
-> >   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 47 +++++++++++++++++++++++++++
-> >   1 file changed, 47 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> > index 0e26abc50920..7933c50df340 100644
-> > --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> > +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> > @@ -47,6 +47,10 @@
-> >   #define  PCIE_CLIENT_ENABLE_LTSSM	FIELD_PREP_WM16(BIT(2), 1)
-> >   #define  PCIE_CLIENT_DISABLE_LTSSM	FIELD_PREP_WM16(BIT(2), 0)
-> >   
-> > +/* Interrupt Status Register for Received Messages */
-> > +#define PCIE_CLIENT_INTR_STATUS_MSG_RX	0x04
-> > +#define  PME_TO_ACK			BIT(9)
-> > +
-> >   /* Interrupt Status Register Related to Legacy Interrupt */
-> >   #define PCIE_CLIENT_INTR_STATUS_LEGACY	0x8
-> >   
-> > @@ -71,6 +75,11 @@
-> >   #define  PCIE_CLKREQ_READY		FIELD_PREP_WM16(BIT(0), 1)
-> >   #define  PCIE_CLKREQ_NOT_READY		FIELD_PREP_WM16(BIT(0), 0)
-> >   #define  PCIE_CLKREQ_PULL_DOWN		FIELD_PREP_WM16(GENMASK(13, 12), 1)
-> > +#define  PME_READY_ENTER_L23		BIT(3)
-> > +
-> > +/* Message Request Register */
-> > +#define PCIE_CLIENT_MSG_GEN		0x34
-> > +#define  PME_TURN_OFF			FIELD_PREP_WM16(BIT(4), 1)
-> >   
-> >   /* RASDES TBA information */
-> >   #define PCIE_CLIENT_CDM_RASDES_TBA_INFO_CMN	0x154
-> > @@ -439,8 +448,46 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
-> >   	return 0;
-> >   }
-> >   
-> > +static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
-> > +{
-> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > +	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-> > +	struct device *dev = rockchip->pci.dev;
-> > +	u32 status;
-> > +	int ret;
-> > +
-> > +	/* 1. Broadcast PME_Turn_Off Message, bit 4 self-clear once done */
-> > +	rockchip_pcie_writel_apb(rockchip, PME_TURN_OFF, PCIE_CLIENT_MSG_GEN);
-> > +	ret = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_MSG_GEN,
-> > +				 status, !(status & BIT(4)), PCIE_PME_TO_L2_TIMEOUT_US / 10,
-> > +				 PCIE_PME_TO_L2_TIMEOUT_US);
-> > +	if (ret) {
-> > +		dev_warn(dev, "Failed to send PME_Turn_Off\n");
-> > +		return;
-> > +	}
-> > +
-> > +	/* 2. Wait for PME_TO_Ack, bit 9 will be set once received */
-> > +	ret = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_INTR_STATUS_MSG_RX,
-> > +				 status, status & BIT(9), PCIE_PME_TO_L2_TIMEOUT_US / 10,
-> > +				 PCIE_PME_TO_L2_TIMEOUT_US);
-> > +	if (ret) {
-> > +		dev_warn(dev, "Failed to receive PME_TO_Ack\n");
-> > +		return;
-> > +	}
-> > +
-> > +	/* 3. Clear PME_TO_Ack and Wait for ready to enter L23 message */
-> > +	rockchip_pcie_writel_apb(rockchip, PME_TO_ACK, PCIE_CLIENT_INTR_STATUS_MSG_RX);
-> > +	ret = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_POWER_CON,
-> > +				 status, status & PME_READY_ENTER_L23,
-> > +				 PCIE_PME_TO_L2_TIMEOUT_US / 10,
-> > +				 PCIE_PME_TO_L2_TIMEOUT_US);
-> > +	if (ret)
-> > +		dev_err(dev, "Failed to get ready to enter L23 message\n");
-> > +}
+On 2026-11-05 14:33 +0100, Sebastian Reichel wrote:
+> Add system PM support for Rockchip PCIe Designware Controllers.
 > 
+> I've tested this on the Rockchip RK3576 EVB1, the Radxa ROCK 4D
+> and the ArmSom Sige5 boards.
 > 
-> This is a question for the DWC core: should we change
-> dw_pcie_host_ops::pme_turn_off() to return a value instead of silently
-> ignoring a failure?
+> While I haven't experienced any issues, most of my tests have been done
+> without any devices attached (i.e. default board without any extras), so
+> there _might_ still be some problems. As system suspend does not work at
+> all right now, I think it makes sense to get at least the basic
+> configurations working as soon as possible as it will allow us to catch
+> regressions by enabling system suspend in CI systems like KernelCI.
 > 
-> Looking at pcie-designware-host.c, we have:
+> Co-developed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 102 ++++++++++++++++++++++++++
+>  1 file changed, 102 insertions(+)
 > 
-> if (pci->pp.ops->pme_turn_off) {
->      pci->pp.ops->pme_turn_off(&pci->pp);
-> } else {
->      ret = dw_pcie_pme_turn_off(pci);
->      if (ret)
->          return ret;
-> }
-> 
-> The handling feels asymmetric. If ->pme_turn_off fails, shouldn't we 
-> abort dw_pcie_suspend_noirq as well?
-> 
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index a603475d4450..39faefaf568d 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -124,6 +124,7 @@ struct rockchip_pcie {
+>  	struct gpio_desc *rst_gpio;
+>  	struct regulator *vpcie3v3;
+>  	struct irq_domain *irq_domain;
+> +	u32 intx;
+>  	const struct rockchip_pcie_of_data *data;
+>  	bool supports_clkreq;
+>  	struct delayed_work trace_work;
+> @@ -807,6 +808,7 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+>  
+>  	pp = &rockchip->pci.pp;
+>  	pp->ops = &rockchip_pcie_host_ops;
+> +	pp->suspend_poweroff = true;
+>  
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+> @@ -1030,6 +1032,100 @@ static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
+>  	return ret;
+>  }
+>  
+> +static int rockchip_pcie_suspend(struct device *dev)
+> +{
+> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+> +	struct dw_pcie *pci = &rockchip->pci;
+> +	int ret;
+> +
+> +	if (rockchip->data->mode == DW_PCIE_EP_TYPE)
+> +		return 0;
+> +
+> +	if (pci->suspended)
+> +		return 0;
 
-Sure. The initial callback implementations were just broadcasing PME_Turn_off
-message and didn't check for PME_To_Ack. So they ended up being void. But for
-PME_To_Ack and L2/L3 Ready timeouts, we should definitely return failure and
-abort suspend as the link may not enter L2/L3.
+This check looks wrong. 'suspended' flag is only set at the end of
+dw_pcie_suspend_noirq() and is used as an indication to glue suspend callbacks
+to turn off the resources or not. here is no way this can be set at the start
+of tne glue suspend callback.
 
-> Other than that, this patch looks good to me in current shape,
-> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> We can further discuss the callback's return value issue on top.
-> 
-
-It can be done as a separate series.
+I'll drop this check while applying.
 
 - Mani
 
