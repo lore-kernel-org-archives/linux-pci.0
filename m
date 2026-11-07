@@ -1,59 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794071162;
-	b=imSljNqr87ibcRofCcxDxa51NuHD9C1cUBuRMIxwqzXWEQZ6rD28Lfj+F2KUVlkMUdZK
-	 dmX8lU/bPD3CF4k4d3SvTiNdMRaSLQR0XSMp8JvIe3a8Y7WOS3H2H4FJ+SunjjLj8hIP/
-	 y4zBrkiPyA4E5HggXlp/aX9hwd5IOIeZgRKRmCv8G4vCkpDlFIXorn2vRRkKNwudseYqQ
-	 jzrmuetQS1OuCHa1OeKb6aQlXEm3vB/JydY9HCqZI6Tt93E/OSa+eoSJ8bz00EUEWs5Yr
-	 ZjVMWErTxVkWCtCWVJNyivc2r8bnyTTYx/+5l5yA/KCD6nnxIK8pv8BgYgGqKYbJo4g==
+	t=1794071165;
+	b=vm/XWxtPSPNtyK5V4Qg1F4gcWKrmHVVLmPO3Bq6ur+dIUvYCbrAhvPtBLNoE3JiDTM7m
+	 xm/xhdxbljxbBJPa7QqchpfNiL+6fL61yYuKRFb8VrZH6CQZo36Uk3rIN10OPUceOWX0Q
+	 IXVI4DPVFF3PFe+lciSeV4HtCukVc1QnKK1GSxbvkO/KkbXMoWDA8+mimC92y8Vr2aklY
+	 ifh6xKGFJOESp7n/UOsk6wvPIIjDyhT8hYcWmz0FiTqYWJXrU6oJuD8y9JuEJOZUDv0uN
+	 cLBVbVHakV7uYnKaNCS0hHoncIcj8oya5BSoIO5d71C3bJbEpWsEtMLz6Jrya0cRJmw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794071162;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794071165;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=Fe4F4dXUwFtHilALHNjDKqLA8kT583a1m+7DZY5OsBc=;
-	b=OfgxFsxSdrlE95dtJK/jkBA7kAB4pB7wOt+wgL16lw0YUWwsP1dyJjl6I5ae58HzuBI8
-	 k+vt6bMuhlIBu1DXOy0OCmEJaUBQ1295+E1ldJGJAvvkXMBvQ92s55hNg9YPclmHDHSMb
-	 OO4f2HI6FrYOFJPZe77tIfffAGBbF/y/sPYL56QkDzobE5HPA1SrXVoPtr49QYhbyJ9Po
-	 mQRWxqBWGyPMRFpB+nIFEId2lbZa+QjLNmCiWndZpg2LVatEfnMeecUKz95CCiLhwG3DK
-	 wXwav9IQWQPy/46eJKh7Ogfc11GmxWi7U4D/6g7Vixq3Zd5DuP048HblbqxzZZabLWw==
+	bh=yXwGL1AZc0M9lqEVf5JtZMTpSZJEBwrczEg6pRkVWnI=;
+	b=1Tqb6HS+gI5W0bgtY8g6uEo80437f+ucCYgutttzVgrdWy+gld/f+S/bsFq7vAGs3IxN
+	 jlF971HlN9nlFQCPCi3INQ6RLX/r1F14zNMMaYpkAmbWftmK6aDb1JACUaQvu/wQZzWNW
+	 lW/JKbzbINEHHni9LqvGKVCiUK/VSOnS8HqjKhF4OkYfsku4TG3AKh/AkKU91e9WuBLFF
+	 nuohohPpRJTcj3bXU7IlfOXs3Fz4NwW0kR70fEBHuFR2ZR2guPhsbcROQVfUDW/Eo0Z1N
+	 6lFCgWrg1sspBEVEQ2Bbox97mCK1gH6AntFaLVcbGFi5FXo3bm2Ygnda92cNsBSPVZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gqBwnHBb;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d6yHADH8;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67D7D606A332;
-	Sat,  7 Nov 2026 17:06:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD8D5606A32F;
+	Sat,  7 Nov 2026 17:06:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gqBwnHBb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991641F008A1;
-	Sat,  7 Nov 2026 17:06:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d6yHADH8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06E661F008A2;
+	Sat,  7 Nov 2026 17:06:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794071162;
-	bh=Fe4F4dXUwFtHilALHNjDKqLA8kT583a1m+7DZY5OsBc=;
+	s=k20260515; t=1794071164;
+	bh=yXwGL1AZc0M9lqEVf5JtZMTpSZJEBwrczEg6pRkVWnI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=gqBwnHBbT4ltjC04v5T/t2uExKYybCerw9doHxHPyU8ZjB7LhTARzIskVeS1s4LsY
-	 niBjboNRR3EEqKstWkSmfEyI0DI/5lK2LS8gZ0SEkSkxuLVvP4IHNTGZ7B0nFdWLdv
-	 SriFBZ1beIye7YD1SV6ffuDrMOUZeQ+PsZ4z1Ke03+WZN/bXPee09MrElNMgwPt7tC
-	 6WVFnI9qER3+JTIRHSyuIju+QyVvo3w7KszLuVp0koF3g/OG8Jhgnn5EM2Vd6odkRf
-	 IH7zZMz0qk0jr5pNVQepPry2IH2nuCl66eMzB0Znga6KdrwqE3+cmFX0Khr5tnl3pr
-	 kWsxvBA3mAGVA==
+	b=d6yHADH8x1hJEqQF3nfvVmum2rHernfhB1XW6CMvJadKyl5nktUDfeupkHstjCnNf
+	 rvpKZOpwSQ0sZqo/WsBO7E2riroV/Js0ZaRbqHUWd0YoQLe6/5X9rlXIm0qPP7HCeL
+	 TZQ+JL9dJTyyQrSBI8rZA+G9xvPgQhEwo0EVih5cpG9gHobzwtMjHSUcTCiElsoNhM
+	 1oC78OQ1SSxgHrJrb8KDMxpM1DwgOev9YYXoM7phN2JLHfnc1XCFpShHN0LwErHwBb
+	 uKWX/PlHq7oMvCqukq8OT6h2K8+bcwme+AeZaIgVrbRDalKzF2V9Z6m7TzgmUvgDzh
+	 d099+0JQQV/9A==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
- Igor Velkov <iav@iav.lv>
-Cc: Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
- linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
- linux-kernel@vger.kernel.org
-In-Reply-To: <20261103-rockchip-pcie-async-v1-1-4dcadb94af64@iav.lv>
-References: <20261103-rockchip-pcie-async-v1-1-4dcadb94af64@iav.lv>
-Subject: Re: [PATCH] PCI: rockchip-host: Enable async probe by default
-Message-Id: <179407116151.87338.4711703729751463299.b4-ty@b4>
-Date: Sat, 07 Nov 2026 22:36:01 +0530
+To: sergio.paracuellos@gmail.com, lpieralisi@kernel.org, 
+ kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+ matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
+ p.zabel@pengutronix.de, Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org
+In-Reply-To: <20261101070121.2714-1-sreekuttan2156239@gmail.com>
+References: <20261101070121.2714-1-sreekuttan2156239@gmail.com>
+Subject: Re: [PATCH] PCI: mt7621: Fix reset control leak on PHY
+ initialization failure
+Message-Id: <179407116392.87368.9250979022176600686.b4-ty@b4>
+Date: Sat, 07 Nov 2026 22:36:03 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -68,24 +67,21 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
 
 
-On Tue, 03 Nov 2026 06:07:35 +0000, Igor Velkov wrote:
-> The probe waits for the link to come up, and with an empty slot it
-> holds the deferred-probe worker for about 0.7 s. On ROCK Pi 4 with
-> UHS-I enabled for the SD card, the I/O-domain driver then binds only
-> after the card has switched to 1.8 V, and tuning fails ("All phases
-> bad!").
+On Sun, 01 Nov 2026 07:01:21 +0000, Sreeraj S Kurup wrote:
+> The PCIe port initialization code acquires a reset control handle using
+> of_reset_control_get_exclusive(). However, when PHY initialization or
+> power-on fails, the port is removed from the PCIe port list without
+> releasing the acquired reset control handle.
 > 
-> Probe asynchronously, as commit c0e1eb441b1d ("PCI: qcom: Enable async
-> probe by default") does for the Qualcomm host driver. This does not
-> order the I/O domain before dw_mmc in general; an explicit dependency
-> was proposed in [1] and not merged.
+> Since the reset control cleanup iterates over the remaining ports in
+> the list, the removed port's reset control handle is never released.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: rockchip-host: Enable async probe by default
-      commit: abc53e14b57aa29fb0ec822a2a9eb5b279cd05b0
+[1/1] PCI: mt7621: Fix reset control leak on PHY initialization failure
+      commit: 1973b0f280bb753e0810346a9377766c38230752
 
 Best regards,
 -- 
