@@ -1,48 +1,165 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.69.126.157
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794026141;
-	b=kspq9S4D3K1s4lZgY1bJ688oRmZaiND9gzxWknc0iWjYOCnNBB7qnSpo4kurddd8WgaH
-	 0murEDX7+j8BL4YvJuy0LOyI8k8upVH7DXiZZxjVEpn82OZ0JaEBkGYcj93FZSl0fRkL4
-	 mOZRlx9kk7jwZP1UpWRwUZq/eOpZKBcobHOgRLvrXizNRXfXLDHLSfhQDMmXN0qbUYhTX
-	 A5dJgAMaxrkzbdFM1H8z1yLzckRQxGbF42jjGU0yN7CtfsQ144z6RsSR1y62F5AWl+twy
-	 faOByowcda2bHBACb3nvFXkRO4fKwtx5jMFmTQPUcgj78vugCMEqPY4FVl2eidk0z0Q==
+	t=1794042019;
+	b=e2fPw7Y2rRfKFAQfgwC5LjDb0RhR4W31LDr7IxSWb6hORKRWERUu+1WEtFOl92kMR+Zo
+	 KghAG8ZirLzfM7O1gCouNZzUt68wkwJV6tgZ3db2UgMcM0W2QqUOf+0rU7XvntFCPDPTH
+	 6DoYyeBDsdz0YtWcS2VHIGxLgZ5S5ulHoTuNVuDTsgWQczKtNgnwyeuE7JnG7oBfgc8bB
+	 MRbq+6xUakG07XZz2ZBE9I5J17UE1f/LP2TegmIelH/wNPkqoa6dkh2qRke1qcsAe+adS
+	 QjuLnrXh/kdciTOZEvHuYPlZFVJTgL6hxN2rk8dC6vB84lMaEuI+53+LWws/WsqcQwQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794026141;
-	h=DMARC-Filter:DKIM-Signature:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=MvHfwqxnITLEmZ60YMsWy2FLliYhfwUeFt5wDcWcge0=;
-	b=mEiYV7SM33qUioLBmJpuMCYYDiQH/kIxM2fTbkChiCmlPMmBwUGouENeqdUA4fJpBL2p
-	 ckKkDeUzr72u92LS3rSWKV8lw91ih4JO/bPSlFcnvGCZZwCvEG0wkkc2bUMHSpCI6nxkm
-	 jsj3p+a52XxPSoJsTcc9BrDmLvW8ubtKq5v/cXPvFTAlp7ug/HXfFgmTm/QuuJXXNG/aB
-	 VcF0OcWSbuePIqofJC/DZLIWBgSN2Kz4uXX/CL0iB8pOYaKoswTCyEe0tietTm1yCtyQB
-	 +ClIbNnkSBqaDv15apB2LNE9CEnxr0QVPaKyN2wIiFnq0cE3menwwzDXqSC4fCY0HPg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794042019;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:User-Agent:MIME-Version:Content-Type:
+	 X-Spamd-Result:X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:
+	 X-Spam-Score:X-Spam-Level:X-Rspamd-Queue-Id;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=5D5/GGSofHUZCuwGhKeC7U+sxjjoltIbDqU/QjDFsQ2ceMBoFrfaSYU7jb/1Ur+pAwN2
+	 4akgWSfdDrLoE000HVYCnn60RmiK0eCIHPypjyVxYdt8JNhTKiEIfkBfRVwH+MAFkhPND
+	 ERS+RS4lfKADF/CttTLIpX8/Ad3MYi+RL+VPHI9LVJVgIz192TU4HV7DRen8mHy+lfBja
+	 yqu//OkUoKd5MDeSIJZ0cSXHezE/3klqx2NGRqL9RhqqraIv/TIetiP7yEbkhA/FjOkMW
+	 /MaRIhfGsrx4+1WO4ZDaqTZ+lEa3tvkeGgxoDgaZ1KojurV2QCO/cdhlAoO0t1CbQLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=weissschuh.net;
-	spf=pass smtp.mailfrom=weissschuh.net;
-	dkim=pass header.d=weissschuh.net header.i=@weissschuh.net header.a=rsa-sha256 header.s=mail header.b=kxQ7+oKU;
-	arc=none smtp.remote-ip=159.69.126.157
-Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AwkH5jyM;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JTEoL3TZ;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=nvoaJ0mE;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DZerp02L;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F53F606A326;
-	Sat,  7 Nov 2026 04:35:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3F53F606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B62B6606A32D;
+	Sat,  7 Nov 2026 09:00:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B62B6606A32D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.a=rsa-sha256 header.s=mail header.b=kxQ7+oKU
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1794026137;
-	bh=xGrqAPM3/yGheJqqlcuYYHnksr4oG20RsPZFgl1bBFA=;
-	h=From:Date:Subject:To:Cc:From;
-	b=kxQ7+oKUB2lJmNxhxL2SoviSmJUWyUjxQLNq2XXyVdYAJPnamdBhHUiki7IY8OHnR
-	 xWNuGarXF2STBAdzSQEnhVn+X6cWQT9I0f0VKEAU62wElSqz522iwEJfFz06CIuvgB
-	 LT0o1AhAvusGgkhJYVq2LqxOl3FxOkXlAmGgVbow=
-From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Sat, 07 Nov 2026 04:35:29 +0000
-Subject: [PATCH] PCI: Constify struct configfs_attribute pointers
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AwkH5jyM;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JTEoL3TZ;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=nvoaJ0mE;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DZerp02L
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 630761F74D;
+	Sat,  7 Nov 2026 09:00:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794042016; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=AwkH5jyM7t60XRGf7G1aRSt+1A3cbarzW4z/QkvISjLGNPrA/fY2MleEP5q/AQIm+UOa85
+	wJkleCWTNZsU7rGkzPqgTOEFser1A2ESxcK9o91TyOKwj1NxwYRnab9MqOSmomM2duqzSM
+	4ziRifDlEsg/eNGZ4IfRyZBtKF7+5L4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794042016;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=JTEoL3TZlb1DCclunsyxaCbXUYbLeMKEOnsS7PWO9bNheMA+zCRiSp1byJB7A+sAicRsv4
+	5OXD2QVrenEMHmAQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=nvoaJ0mE;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=DZerp02L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794042015; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=nvoaJ0mEP/zd/0bKFGcoiLmtApr9OQGHZOiEECFWhUq1H30dGD7ZkdmACOX8M4XQGS4NuW
+	oB4Mc0g4OfzK2wWf0UF/9cqPMqA/oflypYavZBONS2BSNW+J/B7gdSUDzy/0qA9b4r1pv4
+	UXAedxogQW7c2CJkDX8oa4Afmn/sre4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794042015;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=DZerp02LRPNT9d5/AecFdQdh+IJlOFhOxwpkpzQNy3DQvQ4hOwgMkZ3mhYuZ46BFCA5rf0
+	CaTL33x7XZsPDhBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E0528132C9;
+	Sat,  7 Nov 2026 09:00:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 19k0LZ3o7mq9VwAAD6G6ig
+	(envelope-from <tiwai@suse.de>); Sat, 07 Nov 2026 09:00:13 +0000
+Date: Sat, 07 Nov 2026 10:00:13 +0100
+Message-ID: <87jympyq1u.wl-tiwai@suse.de>
+From: Takashi Iwai <tiwai@suse.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	Chuck Lever <cel@kernel.org>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH RESEND v2 03/51] ALSA: cs46xx: hand the region to the region proc files
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-3-021c84d852e0@kernel.org>
+References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
+	<20261104-work-procfs-bugfixes-v2-3-021c84d852e0@kernel.org>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -51,150 +168,57 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20261107-configfs-const-pci-v1-1-8545f5886a01@weissschuh.net>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/y2NywqDMBREf0Xu2kCSgn38SnGhcWJvF9HmRhHEf
- 2987ObAzJmVBJEh9CpWiphZeAgZTFmQ+zShh+IuM1ltK2P0XbkheO697EGSGh2rzlYej+dNaxj
- KwzHC83JI3/XJMrVfuLSbrkbEb8pv6apt2x+t31axiwAAAA==
-X-Change-ID: 20261107-configfs-const-pci-d26fe89300e1
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794026133; l=4715;
- i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=xGrqAPM3/yGheJqqlcuYYHnksr4oG20RsPZFgl1bBFA=;
- b=CnEILBanyVprfAhdyywENhFkctXXmmJIZezCMhgVADEPc/UkO7wl0pf5NV9HrHuCaMm3PhT5s
- RVbXszA4HmAD0k5scdpngNXILSm5UiBba/BuFDCEZEDkbrkgR14+R1g
-X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
- pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-Spamd-Result: default: False [-11.01 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:dkim];
+	R_RATELIMIT(0.00)[to_ip_from(RLij3mi59gqb8x3hiq1dpi8wgt)];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	RCPT_COUNT_GT_50(0.00)[60];
+	RCVD_COUNT_TWO(0.00)[2];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -11.01
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 630761F74D
 
-In preparation for the constification of configfs attributes, make the
-pointers to struct configfs_attribute in drivers/pci/ const
-and use the new ct_attrs_const field of struct config_item_type.
+On Wed, 04 Nov 2026 20:16:45 +0100,
+Christian Brauner wrote:
+> 
+> snd_cs46xx_proc_init() stores the chip in the private data of the five
+> region entries, but snd_cs46xx_io_read() reads that back as the region,
+> so a read of /proc/asound/cardN/CS46xx_BA0 and friends copies from
+> whatever sits at the region's offset in struct snd_cs46xx instead of
+> the mapped registers. Store the region.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
----
- drivers/pci/endpoint/functions/pci-epf-ntb.c  | 4 ++--
- drivers/pci/endpoint/functions/pci-epf-test.c | 4 ++--
- drivers/pci/endpoint/functions/pci-epf-vntb.c | 4 ++--
- drivers/pci/endpoint/pci-ep-cfs.c             | 8 ++++----
- 4 files changed, 10 insertions(+), 10 deletions(-)
+Reviewed-by: Takashi Iwai <tiwai@suse.de>
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-ntb.c b/drivers/pci/endpoint/functions/pci-epf-ntb.c
-index 5314aca2188a..ae3efbe4ef41 100644
---- a/drivers/pci/endpoint/functions/pci-epf-ntb.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-ntb.c
-@@ -1984,7 +1984,7 @@ CONFIGFS_ATTR(epf_ntb_, mw2);
- CONFIGFS_ATTR(epf_ntb_, mw3);
- CONFIGFS_ATTR(epf_ntb_, mw4);
- 
--static struct configfs_attribute *epf_ntb_attrs[] = {
-+static const struct configfs_attribute *const epf_ntb_attrs[] = {
- 	&epf_ntb_attr_spad_count,
- 	&epf_ntb_attr_db_count,
- 	&epf_ntb_attr_num_mws,
-@@ -1996,7 +1996,7 @@ static struct configfs_attribute *epf_ntb_attrs[] = {
- };
- 
- static const struct config_item_type ntb_group_type = {
--	.ct_attrs	= epf_ntb_attrs,
-+	.ct_attrs_const	= epf_ntb_attrs,
- 	.ct_owner	= THIS_MODULE,
- };
- 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index d4905aa8e4c0..a97a986ddf51 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -1441,7 +1441,7 @@ CONFIGFS_ATTR(pci_epf_test_, bar3_size);
- CONFIGFS_ATTR(pci_epf_test_, bar4_size);
- CONFIGFS_ATTR(pci_epf_test_, bar5_size);
- 
--static struct configfs_attribute *pci_epf_test_attrs[] = {
-+static const struct configfs_attribute *const pci_epf_test_attrs[] = {
- 	&pci_epf_test_attr_bar0_size,
- 	&pci_epf_test_attr_bar1_size,
- 	&pci_epf_test_attr_bar2_size,
-@@ -1452,7 +1452,7 @@ static struct configfs_attribute *pci_epf_test_attrs[] = {
- };
- 
- static const struct config_item_type pci_epf_test_group_type = {
--	.ct_attrs	= pci_epf_test_attrs,
-+	.ct_attrs_const	= pci_epf_test_attrs,
- 	.ct_owner	= THIS_MODULE,
- };
- 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-index f77e28f2fe96..31f527ae34c8 100644
---- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-@@ -1314,7 +1314,7 @@ CONFIGFS_ATTR(epf_ntb_, mw2_bar);
- CONFIGFS_ATTR(epf_ntb_, mw3_bar);
- CONFIGFS_ATTR(epf_ntb_, mw4_bar);
- 
--static struct configfs_attribute *epf_ntb_attrs[] = {
-+static const struct configfs_attribute *const epf_ntb_attrs[] = {
- 	&epf_ntb_attr_spad_count,
- 	&epf_ntb_attr_db_count,
- 	&epf_ntb_attr_num_mws,
-@@ -1335,7 +1335,7 @@ static struct configfs_attribute *epf_ntb_attrs[] = {
- };
- 
- static const struct config_item_type ntb_group_type = {
--	.ct_attrs	= epf_ntb_attrs,
-+	.ct_attrs_const	= epf_ntb_attrs,
- 	.ct_owner	= THIS_MODULE,
- };
- 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 590e5bde57ef..44f68188f307 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -210,7 +210,7 @@ static ssize_t pci_epc_start_show(struct config_item *item, char *page)
- 
- CONFIGFS_ATTR(pci_epc_, start);
- 
--static struct configfs_attribute *pci_epc_attrs[] = {
-+static const struct configfs_attribute *const pci_epc_attrs[] = {
- 	&pci_epc_attr_start,
- 	NULL,
- };
-@@ -263,7 +263,7 @@ static const struct configfs_item_operations pci_epc_item_ops = {
- 
- static const struct config_item_type pci_epc_type = {
- 	.ct_item_ops	= &pci_epc_item_ops,
--	.ct_attrs	= pci_epc_attrs,
-+	.ct_attrs_const	= pci_epc_attrs,
- 	.ct_owner	= THIS_MODULE,
- };
- 
-@@ -458,7 +458,7 @@ CONFIGFS_ATTR(pci_epf_, interrupt_pin);
- CONFIGFS_ATTR(pci_epf_, msi_interrupts);
- CONFIGFS_ATTR(pci_epf_, msix_interrupts);
- 
--static struct configfs_attribute *pci_epf_attrs[] = {
-+static const struct configfs_attribute *const pci_epf_attrs[] = {
- 	&pci_epf_attr_vendorid,
- 	&pci_epf_attr_deviceid,
- 	&pci_epf_attr_revid,
-@@ -515,7 +515,7 @@ static const struct configfs_item_operations pci_epf_ops = {
- 
- static const struct config_item_type pci_epf_type = {
- 	.ct_item_ops	= &pci_epf_ops,
--	.ct_attrs	= pci_epf_attrs,
-+	.ct_attrs_const	= pci_epf_attrs,
- 	.ct_owner	= THIS_MODULE,
- };
- 
 
----
-base-commit: ddfe51b0a0f5dc9e415cc2c8ad8db17532dd426b
-change-id: 20261107-configfs-const-pci-d26fe89300e1
+thanks,
 
-Best regards,
---  
-Thomas Weißschuh <linux@weissschuh.net>
-
+Takashi
