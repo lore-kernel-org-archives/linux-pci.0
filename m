@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794069403;
-	b=gX+LCaAY7uOiaVCcV+b+yzw/2WbxCUq1cuAM5h8n0lRrEDv6q3s0pdtZ88V5ZmAnJrIm
-	 7joG6kWNrHTSx3ZijM/dCWCTtVjGtGvzWAZj0QgBzpPak3+aGBAdSU48G0Z4TBVteEpI+
-	 m9yMdpD8N3qcvHblHoO2mrDSx0StrOoR87Yd4n+twpwyGxfjZUdyV/XOUiTfn6UuZUeLx
-	 V+wueUFwEtfYjjFbd3jZp0VeO9PCoA1BNydzDpvkL+f0TJpUh4ZBqxMRi6Zd6GRfEmP65
-	 atGU03kFYibJ//0Eke41Pm3nyRnOq6V8utgeczr6YYcTPPsGCgwbb6zsIU3OwNYrkbw==
+	t=1794069645;
+	b=UVl616pYKl0ajqRtF43TgtuI81tMgZSw5gRbYQE+5Uk/xk1ORaYMxaMN7i9rS+tRsmgC
+	 S/5OsRv8TOizxp5/NsVUr7h1bLC9BjtYEwP8EpzzfL0VrYKPNJPQBwepk849sjCnEVjYP
+	 upgEFLpn4JGEbDDY8Ggz04imNJ4bOoJIHqsCepbFnvRWKSXnHjeagDvS3XS16EE3GhHhl
+	 7bNS99u2d7vcReB/qcZj7K9DVUGTYXMImOmicByQL647KYWw7UGtsZauys8QYPRyor+Vi
+	 Su7XdAcA7dUtOAcSEVAysy7671rOI2ob+jCM+scqV6SOLBLkMbFgjMxxEn+oKjozbxA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794069403;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794069645;
 	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
 	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key;
-	bh=oM5eh/s+Pspuu1PUdwzvcQsHh+H6EmixK49kWJ77C90=;
-	b=5noJPO6VUz506q1moH+0bm+kWNDlEXFecOVjvra5ILWdM/KIRjhX8+hNEwiDz9dGzQD0
-	 +PFl4BXeMpLTWv8YkaVnz8KSfy/jyD1DaIOCOaCFHAWTNCsQkHjDwWT5s62/PkdvcNHCh
-	 M1rwbSYGiykHaKsYxlhU5edScoxCdu68Mgf/pevnKl38B96Uqo06NaKew/wqVe9QYf6oC
-	 4QQD3t2UFJb6TV7RZ5HZvx5MvVNKXQ2TIuJVZjd+k4JXxcNgQTCyljGzRfEVnFXU9W9W1
-	 1BRiUskHA8kIqSV9qEYG3N7uc9iTj75J3xDifo91Z8+2ESnFLAB2Qqqin+a3GskUTMA==
+	bh=oyZGN7VE4rzGGu6dwgYopEdGRTAy6qdzVMyyhZtR/qE=;
+	b=i0hxaMqlCvX1i5LiAaMfgKB/pbx/Yc8XHjlMplrJFDPKx8uZyLUV1v5DupxeFyqellbQ
+	 OsEAqUqnO1usj/U/Kg01aj2rG6qVeJCf87zPnK5vEQkxxIsfi+63KYLNl8wF11tUxJXRH
+	 06jZBlIOKNbr6eShDoq2CRt6AGWQpGWB4tMFAbXE/TADCCy80bxUnHUyOIRTvDK+KP0jA
+	 pvEJn2qc+6jP71W24Le4caB60RWhJEeLYa8D1Lml4yI32t6aAwuV7yhK9pDCPoR9ecor/
+	 +3R2An3LrZwjBRcZzDSmsnXnAtqGeKER+a1EFEoLvVHPdhYHPmqRXaG/D8ZlVKi+VGw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F264606A339;
-	Sat,  7 Nov 2026 16:36:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B23661F008A2;
-	Sat,  7 Nov 2026 16:36:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC246606A32C;
+	Sat,  7 Nov 2026 16:40:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DC8A1F0089F;
+	Sat,  7 Nov 2026 16:40:43 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -37,104 +37,78 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v9 9/9] PCI: dw-rockchip: Add system PM support
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] PCI: qcom: Power on pwrctrl devices for
+ firmware-managed hosts
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Sebastian Reichel <sebastian.reichel@collabora.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>, 
- Shawn Lin <shawn.lin@rock-chips.com>, Liam Girdwood <lgirdwood@gmail.com>, 
- Mark Brown <broonie@kernel.org>, 
- "Yury Norov (NVIDIA)" <yury.norov@gmail.com>, 
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
- Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
- linux-kernel@vger.kernel.org, kernel@collabora.com
-In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-9-a2e55846649e@collabora.com>
-References: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
- <20261105-rockchip-pcie-system-suspend-v9-9-a2e55846649e@collabora.com>
-Date: Sat, 07 Nov 2026 22:06:40 +0530
-Message-Id: <179406940043.65886.12399286680610211664.b4-reply@b4>
+To: Zhangfei Gao <zhangfei.gao@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org, 
+ lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
+ bhelgaas@google.com, krishna.chundru@oss.qualcomm.com, 
+ bartosz.golaszewski@oss.qualcomm.com, deepti.jaggi@oss.qualcomm.com, 
+ yadu.mg@oss.qualcomm.com, shengchao.guo@oss.qualcomm.com, 
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <CAFkd8hu2aLp_MGbT3Lt0wv96sUQ705fBsaa_sn3P1_XUuruKYw@mail.gmail.com>
+References: <20261105101521.434361-1-zhangfei.gao@oss.qualcomm.com>
+ <auyUXp1Fgk2yC7fZ@debian>
+ <CAFkd8hu2aLp_MGbT3Lt0wv96sUQ705fBsaa_sn3P1_XUuruKYw@mail.gmail.com>
+Date: Sat, 07 Nov 2026 22:10:42 +0530
+Message-Id: <179406964231.65886.10596417299119607614.b4-reply@b4>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2514;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1969;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=8365VW6X0RcfnFpRVJgWusqFqAVt4w96wEE77tPrWjE=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq71OZbVmkYD9JMJROI0BZDcoNwWxrcAtLcQwbj
- 0t0/rTYQ2GJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCau9TmQAKCRBVnxHm/pHO
- 9bzuB/9qHp6yNX81ggnW8qnKGqz2yTTtqcKvB0xahmmLZBSKgA5YOzM1wRR1HdjHlfU3ijEyr1P
- U9rY0H5/Zh44dXLHoRPwFTBIU14FHK5reN6PV5U9wfXkMbmZ9QqBerln+1dw9JYUoMEaZG0xtqm
- 4zeUJc5pY+dYx23nV9udXC1gLaPvJq1cAlNba0qIK7Hmh0K4zFvmDSDY73MUzlDfYQ2zE3wQJSp
- GuXDhmfyl/29yvSzvywp3smDG/YUyF729MzW3EI7GQrwe9MqJWSvkkT1N4oRlL5iWpikg+8QYpQ
- WYfMP+sCtFR/EG+8bj7/Bg4h7cNMeIu1Amku3NJyW6Dn9EPA
+ bh=jaCY8HUzhyhSMMPiHqi4Fxf0VtDkX8gvIrfoWBqCNzU=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq71SLApPfRmhrU5GP/ZAEfiQYaGa3Fzl55nRVL
+ /lyomfA7S+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCau9UiwAKCRBVnxHm/pHO
+ 9Y/3CACKuMlSiJqG9S2SlOe7uSTm946oOt3cgsfeSZ3336Noajm0mDXI/InAHb342H+/7bEAKoz
+ cDudP+i6xayXz8KY8aQTT4p9DAT0Ov8L2WN4TV2C1cOzQnLbhisevPFy83LPwm+aITQEpfl4fbw
+ GvfytiQEsObXcvY/LUcAYb/UpU2rWZDgTu0m4TYb4wAE9Pjb5cUsS5/Slx7CtB3LSLww6TU4fWa
+ 9wMiiskUJxLqso10g7/8Pjg9zZHdRQpbJr5vHsNPtm2avhuAQtoyCEbV/kOQDws8AJf+FaycK2R
+ tTvDAKsyUVenFPh8WuYAZaJXsodvsgdGsLHu99FKBrR3sa4O
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On 2026-11-05 14:33 +0100, Sebastian Reichel wrote:
-> Add system PM support for Rockchip PCIe Designware Controllers.
+On 2026-11-06 10:24 +0800, Zhangfei Gao wrote:
+> On Thu, Nov 5, 2026 at 10:37 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Thu, Nov 05, 2026 at 06:15:21PM +0800, Zhangfei Gao wrote:
+> > > commit b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power
+> > > on/off, destroy APIs") switched PCI pwrctrl users to explicit create and
+> > > power control APIs, but only added the calls to the regular DesignWare
+> > > host initialization path.
+> > >
+> > > Firmware-managed hosts bypass that path and probe the ECAM host bridge
+> > > directly. Endpoints already powered by firmware, such as NVMe devices,
+> > > remain discoverable. Endpoints that rely on Linux pwrctrl and pwrseq,
+> > > such as WCN7850, remain powered off and cannot be discovered.
+> > >
+> >
+> > NACK. For FW initialized platforms, FW should power on the Endpoints before
+> > booting Linux.
 > 
-> I've tested this on the Rockchip RK3576 EVB1, the Radxa ROCK 4D
-> and the ArmSom Sige5 boards.
+> Thanks Mani for the clarification.
 > 
-> While I haven't experienced any issues, most of my tests have been done
-> without any devices attached (i.e. default board without any extras), so
-> there _might_ still be some problems. As system suspend does not work at
-> all right now, I think it makes sense to get at least the basic
-> configurations working as soon as possible as it will allow us to catch
-> regressions by enabling system suspend in CI systems like KernelCI.
+>   To confirm, for a firmware-initialized PCIe host, is the platform
+>   firmware expected to perform the complete board-level Endpoint power
+>   sequence as well, rather than only initializing the PCIe controller?
 > 
-> Co-developed-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> ---
->  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 102 ++++++++++++++++++++++++++
->  1 file changed, 102 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index a603475d4450..39faefaf568d 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -124,6 +124,7 @@ struct rockchip_pcie {
->  	struct gpio_desc *rst_gpio;
->  	struct regulator *vpcie3v3;
->  	struct irq_domain *irq_domain;
-> +	u32 intx;
->  	const struct rockchip_pcie_of_data *data;
->  	bool supports_clkreq;
->  	struct delayed_work trace_work;
-> @@ -807,6 +808,7 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
->  
->  	pp = &rockchip->pci.pp;
->  	pp->ops = &rockchip_pcie_host_ops;
-> +	pp->suspend_poweroff = true;
->  
->  	ret = dw_pcie_host_init(pp);
->  	if (ret) {
-> @@ -1030,6 +1032,100 @@ static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
->  	return ret;
->  }
->  
-> +static int rockchip_pcie_suspend(struct device *dev)
-> +{
-> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-> +	struct dw_pcie *pci = &rockchip->pci;
-> +	int ret;
-> +
-> +	if (rockchip->data->mode == DW_PCIE_EP_TYPE)
-> +		return 0;
-> +
-> +	if (pci->suspended)
-> +		return 0;
 
-This check looks wrong. 'suspended' flag is only set at the end of
-dw_pcie_suspend_noirq() and is used as an indication to glue suspend callbacks
-to turn off the resources or not. here is no way this can be set at the start
-of tne glue suspend callback.
+Yes. By the time the Root Complex power domain gets turned on (which happens
+before the controller driver probe), both the controller and Endpoint should be
+ready.
 
-I'll drop this check while applying.
+>   On this platform, WCN7850 requires PMAU0102-E GPIOs 6/7/8 to enable its
+>   power rails and GPIO10 for WLAN_EN. Should firmware assert these GPIOs
+>   before Linux probes the ECAM host bridge and keep the Endpoint powered,
+>   including across suspend/resume as appropriate?
+> 
+>   If so, we will drop this driver change and coordinate the required
+>   platform firmware update.
+> 
+
+Yes. All the initialization required to power on the Endpoint should be done
+by the firmware when the SCMI power domain for RC gets enabled. And when the
+controller driver probes and scans the bus, the device should be visibile.
 
 - Mani
-
 
