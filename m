@@ -1,58 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794071151;
-	b=z5pSJKF9vT4hm981W1ZFJd/80s9AoscIX2jf2MvgSuK9JG4NWkxQoEISM46y9EzaImWs
-	 VnckijYJb513fAEDUI3CKUIyv1UBEugQ5hqGFyrKq8f6WgIOfWES2PGgcBHmGZsxGTcr9
-	 LGl0EcpwG2XEEpU212vfZu51Kccc1jFjL0cJVLli0mu3wMJsCMg3o671jIOx2osBXsNsa
-	 ryf1FeQf0MKMXcRyWWqfn+++6b2xq8JXOOO50+P+U/+ZQCiU5fRpD+kKahocSi0c0TtM1
-	 cCRampHvkZPhX8NDuIQrFZsnWjbYw5Oc3+jBtjnJvyazvhGwI8XZc2p3UYKJUnrxBlw==
+	t=1794071155;
+	b=m0SngaprfOFVkRFnc2BmDKwU6rI+QMIgvR5pmwIyOLebCwrv3fceMX938PdXZwqnPg8G
+	 6xyNORfbA3tl1RyeXyETlWE5t5g/Kgwl52lQEFy9fzMSizTvndo80FqEM3+L/UErIBAHM
+	 YDs0pNQQ8a7eLn+b3whYhc02XT+mjQ2PuXpep0HF00bn3/UKHNy4PuipjLJIGZgwE2+sN
+	 vRER87mpnNc+NUyE9J0Kw42Lf60y6vnslWLNYRKCqTq6yTBEFNxdXXbjFoILvDJG7Vw+/
+	 2lsgf2xDXWDC/dCmh0IfLBVBOQmiZwLl7Or1lhS/PapR5LzsiwzkfKGNLRHpHJPyukA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794071151;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794071155;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=rD2LIV4XhQpNzg1e3/EW3UGJWsumDmimOWVUWp68OWQ=;
-	b=bwbvx0AlvkVcbpdsoiw25E5sel2G+NB2UksZseHwTHp+WNPpRTKcIk0jKjf2QkkdLXJZ
-	 HTUqwRVKW6R8dlLR/6Fltp+GpuestDzEfdIDCAXG+mtVb5lyBtmd3h1QODhLCeY9g5SJQ
-	 ewYjj3MYA7EHrBMNNX0pZ3nYGS5qb6tiIjaQa1y1F+UnZm3JkAwd/BlddlNFXp/LOCpEV
-	 0WEjqFe2/qeQ9oTP1p8z1TvA0pNchBWUg2sm2wnYoZPQ1w+QxAqU2ezoSQa6Y/1z0CXtR
-	 PRL5KIf9mrZi0DOlafSTXVvqmZsj2U4Xrf8pU+8+NUkmyAfXcKrDcjlaNrEA9Z+9ueQ==
+	bh=FNKUE9KN5gqUNftHqErKO4XRPnmFTGx1efebnCS4O7w=;
+	b=bJ8FVG3u2Dm0ZugCmmsoK07FeopryExGhTWs1RnEJucbiHfCpT1cmvvESoLz+X9AWsW0
+	 dSfNcq9kzXXpYQL3lYMuzidXkK9Zah/LrmxEutfCplgXrCfyt8zGoN/86HlDJQaZhQsz5
+	 Yh4mvZ91lsG1UZnRVEEeRfkEOvKFQUSXWUx3DdGc2dhGcXtZAuWobSgMKtUfQYZ856Af6
+	 yoQgVfUJhFt7dbmlYqJ7buRsbZSz2uf6Joi48peJHR3CyWoOVbNIntzvjYKptPE3hVkfu
+	 NrhpS+H74cpuJV6NbNlnpe3LEWH/iRdADH6mhvTOZcLTHXwIIv1uQ8ARkSyk29F5KXg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PV9C7ypy;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BHAhYTR1;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFB3C606A32C;
-	Sat,  7 Nov 2026 17:05:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D00B606A326;
+	Sat,  7 Nov 2026 17:05:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PV9C7ypy
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B359D1F0089F;
-	Sat,  7 Nov 2026 17:05:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BHAhYTR1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8AC21F008BC;
+	Sat,  7 Nov 2026 17:05:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794071150;
-	bh=rD2LIV4XhQpNzg1e3/EW3UGJWsumDmimOWVUWp68OWQ=;
+	s=k20260515; t=1794071155;
+	bh=FNKUE9KN5gqUNftHqErKO4XRPnmFTGx1efebnCS4O7w=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=PV9C7ypyRPBPxI/9oeZ6oXKBSaSgZRN7M3pEZGQdEHyt1aFrRJrP/evv6HZLF7v8F
-	 QLYZ9LwJiQBeQd7aajYbmKGWPCeyOmihp8QziyoWDZjCfd3+4A85xk8pzZZRCXFGFr
-	 77qzkWRxeTRZ/L5uz9roMb+6THh5lGrYel881aXK6XV9dPJa+faW9T92S5CQsOEBpx
-	 G/pOtC2sui0XLzPGaMnSSw187NRZM6fiyQ2qbiooCZfnlGbdKCnRxAyj4WhEfwfEg/
-	 EhlCsx+5pvGptyouNzsYMQ2gDRKdmq8I4DmAKK53vi3vdjIANoIB5aB7k+h+JsNVwQ
-	 6HgfXM3UB1reA==
+	b=BHAhYTR17CvWOCfIwPyzFwTvS4Xhyt2C7Cyt48wzNl4x++bt5Y/f54VkWLcidgVr8
+	 V0i2qp2vOufmVhMtRaHkoH/sgowjTTLQsIjo7KOCwDOkk+GJSVd8OMueFNYuX3h+ra
+	 9eBGFiXJgnUH6E3JunuVa3x5aoeo5vUEsImDF0K5ZHfyUVYUxyiiHLU6pF9vTz73Lf
+	 LFt5/5Odk6GEQY5NVOK5H07sidjGPyXIHh+y0OroHZWYyrG//o9H6jtCauYds7dm5+
+	 JHY9k8tsru965IG8JjeCkfk18/bCSHHT8tBlppx07+Pu0zH9UifgvX4QWHaE9O830e
+	 cGf8na2IgzFTw==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
- bhelgaas@google.com, linux-pci@vger.kernel.org, 
- Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: robh@kernel.org, thierry.reding@kernel.org, jonathanh@nvidia.com, 
- vidyas@nvidia.com, cassel@kernel.org, linux-kernel@vger.kernel.org, 
- linux-tegra@vger.kernel.org
-In-Reply-To: <20261102092238.3917883-1-mmaddireddy@nvidia.com>
-References: <20261102092238.3917883-1-mmaddireddy@nvidia.com>
-Subject: Re: [PATCH v3 0/2] PCI: dwc: Clean up RAS-DES and register field
- handling
-Message-Id: <179407114962.87221.11691094749481167318.b4-ty@b4>
-Date: Sat, 07 Nov 2026 22:35:49 +0530
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>, 
+ Jingoo Han <jingoohan1@gmail.com>, Shawn Lin <shawn.lin@rock-chips.com>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
+ "Yury Norov (NVIDIA)" <yury.norov@gmail.com>, 
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+ Sebastian Reichel <sebastian.reichel@collabora.com>
+Cc: Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, kernel@collabora.com
+In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
+References: <20261105-rockchip-pcie-system-suspend-v9-0-a2e55846649e@collabora.com>
+Subject: Re: [PATCH v9 0/9] PCI: dw-rockchip: add system suspend support
+Message-Id: <179407115382.87267.12160393716568806842.b4-ty@b4>
+Date: Sat, 07 Nov 2026 22:35:53 +0530
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,23 +72,40 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
 
 
-On Mon, 02 Nov 2026 14:52:36 +0530, Manikanta Maddireddy wrote:
-> This series addresses review feedback around register field handling in the
-> DWC PCIe code and the Tegra194 PCIe driver.
+On Thu, 05 Nov 2026 14:33:08 +0100, Sebastian Reichel wrote:
+> I've been working on fixing up at least basic system suspend support on
+> the Rockchip RK3576 platform. This series is a follow-up for Shawn Lin's
+> series with feedback from Niklas Cassel and Manivannan Sadhasivam being
+> handled as well as some of my own changes fixing up things I noticed.
 > 
-> The first patch converts Tegra194 register programming to FIELD_PREP(),
-> FIELD_MODIFY() and FIELD_GET(). The second patch consolidates the RAS-DES
-> event counter register offsets, field masks and per-event enable values in
-> the DWC header and makes the common debugfs code use those definitions.
+> Tested boards:
+>  * Sige5 (RK3576)
+>  * Rock 4D (RK3576)
+>  * RK3588 EVB1 (RK3588)
+>  * ODROID-M1 (RK3568), Igor Velkov (previous version)
 > 
 > [...]
 
 Applied, thanks!
 
-[1/2] PCI: tegra194: Use FIELD_*() for register fields
-      commit: fe84c0b370889bbf65f75bb75a1810227c7ce150
-[2/2] PCI: dwc: Consolidate RAS-DES event counter fields
-      commit: aeddef180e7e70dea2cb684747890338b4d4b059
+[1/9] PCI: dw-rockchip: Fix LTSSM set functions
+      commit: 46d1b4f773b3a8d640c4cb44ccc2daf60043b737
+[2/9] PCI: dw-rockchip: Restore vpcie3v3 regulator handle
+      commit: 6c57adbbae715f91455c270e397cf8a604e27585
+[3/9] PCI: dw-rockchip: Move devm_phy_get out of phy_init
+      commit: 1335c85fdd3ae2bf118bf345e456f4f472ea0dc0
+[4/9] PCI: dw-rockchip: Add helper function for enhanced LTSSM control mode
+      commit: f266f1b24aaf63d33995ae81c54d903391f416b5
+[5/9] PCI: dw-rockchip: Add helper function for controller mode
+      commit: 301d905b81c16409a644a9bdad37cece03d5ee9d
+[6/9] PCI: dw-rockchip: Add helper function for DLL interrupts
+      commit: 7c7fdcb6bb28d377fba5be67d9672384081c0ce4
+[7/9] PCI: dw-rockchip: Add pme_turn_off support
+      commit: 7bd39e56b21329d99e59b7eb7dff760c2280d1bf
+[8/9] PCI: dw-rockchip: Set broken L1SS resume flag
+      commit: 39365e59ffcebbdf910935875a55af9bee83257f
+[9/9] PCI: dw-rockchip: Add system PM support
+      commit: efb2c00e3c47895aecee624d039473534764a6f8
 
 Best regards,
 -- 
