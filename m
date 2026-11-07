@@ -1,56 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794071172;
-	b=l7JuvmB88fi0Z21oxyovSyYww7M8r8Yhhl8SFVnm7iqniDV2B8e9KwTWW81s+T9VmHMK
-	 Nb/gVysBpQnUewZifpD0UjSuTBbO5szJrwda1PUpkUFXFtBIY4g0SL0JKTOVd+eRXHKyi
-	 xv2V4c4diVAhNJcoRzfS8GSOlvsTtS9dquMWm7N75uLjKQFrwsVb0oy5R/xbGlhJSX976
-	 eqv8ptj7ZjHTG82yTEvmzKpixaAA/p/JkGPIaLrNA4wcA4PdpNETfNDS4Nyao5ew8A1Wj
-	 tIrgICFHMJDvUsive2al7Io5hqjlNnE6UghBrZEYmLVtYymSV2mJCzF2IkvKgUah1mA==
+	t=1794073349;
+	b=fDRyj6x1gRzkMzRNG5vE/K6qyEdMAE3rzgIgTsnAcAlncdhc5pVdaUPN3x/mUIjz9XHh
+	 namreGz4DYcimXbpKCixhbQY5N8Rv9oZ8TUP07IbD6jwkR5Nj2eTlx5CQPCRlLCg4HhxW
+	 ZjgfOv7a7gpnzeBzbjbgKJuhCNGGqH+S6YAGG+WUUG+9fnZZbPfc8cQpPIcT5ou2N7rAu
+	 XwFL4eFo4jH+t4/roBvpg3XS7GYyIiDOxDkwKa9+FxkW60sYuTR7aEl6gqCN2jEQ0qzG1
+	 ODKFXYktdKXdARjlNvOE38oBNhYtcF6PHqbncJL+IK9rSuzDZxPEVcsm7TRonIeS0vQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794071172;
-	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
-	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Mailer;
-	bh=1orH5xtF0huo2qGzhqaqtOYDknfk3GU5H09iF9woKaE=;
-	b=Z1r+CGcV8EyBp8r93uITqZF6dgQoWspMf3oXgHVvK48FeyuqspbJQ6igkbO2U+WxGVLA
-	 eHHri6mSNvvJAgYv+X3CkG+eEV3BB3IHX1lIdPtlm0IwOfZQfbv6tGTmp9PDx7Py1f33L
-	 BHiyTqRgIMsp0wq0FoKpXl6DE+A+AO91SjlWQ5EUMYaqrQKj3IxJlXfQHgJi9UY5K+wg5
-	 0P1pbtJm8bRpCY2ypF1b1uSiGazN6A5fezrz2sPigwNXb9qvbYDBQIfRS7mhiEzq2Fxw9
-	 wXK/03LxVeeZ/JUDqGenn+MhoaS/yMy4b3ag2UwlBc1ssNQ/7WH4aiH67yYB/eM6mFg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794073349;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=T0TcPMhnJboefGjG0dX42ucxF+Z41m2N3+6Nxl59W/o=;
+	b=P0TTxFB7Ep7OUeptu9wLug9LrDiEb1tPtl6VrAA4LodF0uj/JpppyQTzgljc4SNWsEso
+	 Rd5yQXCXC49B4oE7uCBleB0GwuT8QfkgZU+/FQe7drYGEKJ36bLFoEN4JRQ9ykr+N/+Yj
+	 wBzd6fEDmYtcYfx9EjOJ9IYcorG4PqInTHRmkgfbbNYz+Sxux14F7mjDiFrSUCbcRdxHV
+	 cHpHnHsKfR10eOFuioRwSzJIOjj8CYasdJhIlSjuLgPbk+sZHnBpsuOxPB5JcPnnaiZKT
+	 5s9qJJe26c65AA9ppwhxYF16gFLkFLxxMfsgf+rf6yw8ZFh82VPyN7o9kVcCp3R/eOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Rz6AX5n7;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Fi221Vvl;
+	arc=none smtp.remote-ip=117.135.210.5
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 436B3606D830;
-	Sat,  7 Nov 2026 17:06:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673E6606A326
+	for <linux-pci@vger.kernel.org>; Sat,  7 Nov 2026 17:42:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 673E6606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Rz6AX5n7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58B2C1F008A1;
-	Sat,  7 Nov 2026 17:06:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794071171;
-	bh=1orH5xtF0huo2qGzhqaqtOYDknfk3GU5H09iF9woKaE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=Rz6AX5n7ZPDXU+vNW2Ek3TD9vV0joqowoS+4dzeEFwLyZmLK4DOGVNNJYQyBMLDyK
-	 u6K6tCik+3LDaqjnsqxJUGl0ROS/mG/McMoaN4ykogQNG1V2gQf20/XKKXF+jKKzLW
-	 fJQfdrTiW+wn0ODEsh+Xny3m43DdUGe/qYcxbfb3BI3GvLTnYNVvMO1e7sBx/VaxPs
-	 s3FMOkEGtEuoeUR5dMMNXqrYlUXAANaTUJzO2ao/wnvzfnJe2++NapnKuF+A4BGRo5
-	 AGPlFYACiXh5odWDo+JVi6Ig7+b23dDevQd8wnbsrczx15FOaO5bpYGCfKaV/GJU0o
-	 pU+5g2Li1W4yg==
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: nirmal.patel@linux.intel.com, bhelgaas@google.com, robh@kernel.org, 
- kwilczynski@kernel.org, lpieralisi@kernel.org, 
- asutosh.pathak@linux.intel.com, 
- Szymon Durawa <szymon.durawa@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20261106184256.4130-1-szymon.durawa@linux.intel.com>
-References: <20261106184256.4130-1-szymon.durawa@linux.intel.com>
-Subject: Re: [PATCH v10 0/7] VMD add second root bus support
-Message-Id: <179407117125.87472.9079167905703065780.b4-ty@b4>
-Date: Sat, 07 Nov 2026 22:36:11 +0530
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=Fi221Vvl
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=T0TcPMhnJboefGjG0dX42ucxF+Z41m2N3+6Nxl59W/o=;
+	b=Fi221VvloIkNvZbdj3lKq+HdEGQPtgHh2/PWzntI6Mo1izjyXJ/McQnd04eCYp
+	o2csqEQI2t/NQWx37zq1bOGSzaay7/KWf4DsGH/z0mxkNGlwWn1R7g0tBzh6JUl+
+	jjOWCsqtGE3wci9D6Uv8uEGJn/w+SLk1nn1NzgnoJLxzo=
+Received: from [IPV6:240e:b8f:91b3:d000:dbd3:438:3de0:f148] (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYznHYu9qSfN5Eg--.55065S2;
+	Sun, 08 Nov 2026 01:41:27 +0800 (CST)
+Message-ID: <5512a99d-9c72-4988-aa94-0826d098a09d@163.com>
+Date: Sun, 8 Nov 2026 01:41:27 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,40 +54,125 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.16.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 01/16] PCI: dwc: Add pcie_cap field and caching helper
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: sashiko-reviews@lists.linux.dev, imx@lists.linux.dev,
+ linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org,
+ Frank.Li@kernel.org, neil.armstrong@linaro.org
+References: <20261028030652.2917756-1-18255117159@163.com>
+ <20261028030652.2917756-2-18255117159@163.com>
+ <sashiko-outbox-187403@kernel.org>
+ <3773fc58-a6ab-4f8d-a9a1-c865217afe84@163.com>
+ <179399401605.55876.3520713514569261990.b4-reply@b4>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <179399401605.55876.3520713514569261990.b4-reply@b4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PigvCgDHYznHYu9qSfN5Eg--.55065S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxuF43Cw48AFWfArWUCFy3Arb_yoWrGr18p3
+	9rJayYyF4DJr42vFnFv3WrXrnIyasxAFW7WwnrGrnIvr9Fyr17KF4ayFWjg3Z7GrWIkr1j
+	9rWaqr9ruFn8JFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jUzVbUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wdgBGrvYsdbgQAA3y
 
 
-On Fri, 06 Nov 2026 18:42:48 +0000, Szymon Durawa wrote:
-> This series adds support for a second VMD root bus.
+
+On 11/7/26 03:40, Manivannan Sadhasivam wrote:
+> On 2026-10-28 11:18 +0800, Hans Zhang wrote:
+>>
+>>
+>> On 10/28/26 11:15, sashiko-bot@kernel.org wrote:
+>>> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+>>> - [Medium] PCI: dwc: unconfirmed offset returned in dw_pcie_get_pcie_cap()
+>>> --
+>>>
+>>> commit c6fcd840cdb57dd351ea1787cae915ad3164fb13
+>>> Author: Hans Zhang <18255117159@163.com>
+>>>
+>>> PCI: dwc: Add pcie_cap field and caching helper
+>>>
+>>> This commit adds a pcie_cap field to struct dw_pcie and introduces a
+>>> dw_pcie_get_pcie_cap() helper that lazily looks up and caches the PCI
+>>> Express Capability offset on first use once confirmed via a DBI read-back.
+>>>
+>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+>>>> index 6d788aa000117..dede6b3966585 100644
+>>>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>>>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>>> [ ... ]
+>>>> @@ -832,6 +834,42 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+>>>>    	dw_pcie_writel_dbi(pci, reg, val);
+>>>>    }
+>>>>    
+>>>> +/**
+>>>> + * dw_pcie_get_pcie_cap() - Return the PCIe Capability offset
+>>>> + * @pci: DWC instance
+>>>> + *
+>>> [ ... ]
+>>>> + * Return: the offset of the PCIe Capability, or 0 if it could not be
+>>>> + * found or has not been confirmed yet.
+>>>> + */
+>>>> +static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
+>>>> +{
+>>>> +	u8 cap = READ_ONCE(pci->pcie_cap);
+>>>> +
+>>>> +	if (!cap) {
+>>>> +		cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+>>>> +		if (cap && dw_pcie_readb_dbi(pci, cap) == PCI_CAP_ID_EXP)
+>>>> +			WRITE_ONCE(pci->pcie_cap, cap);
+>>>> +	}
+>>>> +
+>>>> +	return cap;
+>>>> +}
+>>>
+>>> [Severity: Medium]
+>>> In drivers/pci/controller/dwc/pcie-designware.h, the kernel-doc for
+>>> dw_pcie_get_pcie_cap() states that it returns 0 if the capability could not
+>>> be found or has not been confirmed yet.
+>>>
+>>> However, when pci->pcie_cap is 0 and transient DBI data causes
+>>> dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to return a non-zero offset cap
+>>> while the confirmation check dw_pcie_readb_dbi(pci, cap) == PCI_CAP_ID_EXP
+>>> evaluates to false, pci->pcie_cap is left as 0, but the unconfirmed non-zero
+>>> cap is still returned to the caller.
+>>>
+>>> Callers that guard DBI writes on a non-zero return (such as
+>>> rockchip_pcie_enable_l0s()) or cache a non-zero return in driver state (such
+>>> as tegra_pcie_dw_host_init() setting pcie->pcie_cap_base when
+>>> !pcie->pcie_cap_base) will then consume or permanently store the unconfirmed
+>>> offset.
+>>>
+>>> Should dw_pcie_get_pcie_cap() return 0 when the confirmation read-back fails,
+>>> or should the kernel-doc comment be updated to match the implementation?
+>>>
+>>
+>> Hi,
+>>
+>> We have already replied to Bjorn before. According to the specification,
+>> the value of pcie_cap is not equal to 0.
+>>
 > 
-> Today the VMD driver can enumerate and manage devices only behind the
-> first VMD root bus. Starting with Intel Arrow Lake, VMD may expose a
-> second root bus (BUS1), and devices behind that bus are not discovered
-> by the current driver.
-> 
-> [...]
+> Then please update the stale the kernel doc.
 
-Applied, thanks!
+Hello Mani,
 
-[1/7] PCI: vmd: Add vmd_bus_enumeration() helper function
-      commit: 9ec146e311d1bb69e1e76e523d5a2631838e9f2d
-[2/7] PCI: vmd: Add vmd_configure_cfgbar() helper function
-      commit: 2f3f85305a90be0b1f71636a55c286db49a49cb8
-[3/7] PCI: vmd: Add vmd_configure_membar() and vmd_configure_membar1_membar2()
-      commit: ed34664daffa63d455fc3a614d0722e57183a9ce
-[4/7] PCI: vmd: Add vmd_create_bus()
-      commit: b294e381f1de731dfbf8f7b150818fbb73120622
-[5/7] PCI: vmd: Replace hardcoded values with enum and defines
-      commit: 7aa850769255689870bd19080da2a398ac583d93
-[6/7] PCI: vmd: Convert bus, busn_start and sysdata to an array
-      commit: 99b617df5c36773206c492790863985137fb189a
-[7/7] PCI: vmd: Add support for second rootbus under VMD
-      commit: 4d790512e44ae235166faddf7cf10ade0c86c4a8
+How about modifying it to "stale the kernel documentation"? If the 
+description below is valid, do I still need to send the v6 series patch?
+
+
++ * A DBI read issued while the controller is not accessible returns
++ * platform specific data, and a transient bogus value must not stick in
++ * the cache.  The offset is therefore only cached once the capability
++ * ID has been read back at that offset.  If the read-back does not
++ * confirm the capability, the offset is still returned for the current
++ * access but not cached, so the next call performs the lookup again.
++ *
++ * Return: the offset of the PCIe Capability, or 0 if it could not be
++ * found.
+
 
 Best regards,
--- 
-மணிவண்ணன் சதாசிவம்
-
+Hans
 
