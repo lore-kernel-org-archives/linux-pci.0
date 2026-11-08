@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794148112;
-	b=YSU59vcR0p2qusKAKNWHKihoKp8CzAzBX6SHuLuGND+0evWuHn8h1aR61B//1bj7CwrK
-	 ER3ZQc+KAVP6k6OKBORQiF97Th+xhcGRAKeclDV/KEXNMubUgpd71OwXyzz5YEeZQWbVF
-	 ndDDI1juHwvIvK3gMoqsM48YUnSp9J7IhQCZLRabmc2Q4Qb5HdatmR9s71kQwjuRMr3a/
-	 6fhtvFhKin5LIHJfpFflO70GNjg9pUM2Wc/zxUEH75Nd081TbqHkv9LZNNO0rZJ1PAYKL
-	 K/BWGU/QjJtpOWbsDI6REXMDkhN7i+yaoMrysIOPzRAIo8lwfZzkOFBdp4+VRGQv5lQ==
+	t=1794148176;
+	b=IxjcZf3apDe4TMF6af9YIBK5PS4Of59nl3qDfIYWW2XxgyA++Siz7WbHbxt/aFa7SkJl
+	 o4a8wMs6bXJQzmH+5B6JZM/7Zhm/r8Mg2fca8p6s+6Al3W4gsJAn0lkv4+g6XvD6ewVRQ
+	 4wnQrXBg/9Uup0Nk6lQgCQNJ8fTbNEMl7/dj/03oRtSXRQg7NgZwN7gd+OmPPhrQHIvXa
+	 ocuI3QlK5751IAvvu+zFdH9QoZTboUTTjQKDgeXDu/1T24bBwQaVHN8aAIpNL1fwI4iF+
+	 7wucAYaJS4F+IO9H7+dn5+NIiHNIWKtNezr8n958wHAYQwDxJrLtYAjjDt4VYnxmCDw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794148112;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794148176;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mgPt8iZ4lhRucC8uTVyT45A/ycBpYjFQ903dh98+oS4=;
-	b=vhN24QGifBsYNuyzy793CK9OtgeMcCwozPKkxbMXZ7zwF3qaksRMPHHA2lHRtZWu4CKr
-	 pXQVRJpR968mXOhZSIbdhmyAe4yhuf1YYAddBLAxSbrszLx2BgNdPyk+c9mwojC5HgH2T
-	 ArPTX+HLFyOXHxXrnIRrcTbn4JbT0/AytwSwxjceEq9x0JWvF3NrsR1WJGbES2vWd26nR
-	 plSR5+4hMKnu4JPXhUUm2bbVjwr1INtrxmPbfRFIKf3L+jZjq9ahJztVSM2AtkNGFTbn6
-	 VdbGYRJfdQoichYFtp6YrM72HwH/de5LSIDnPM3dCupt9Ll6KOxxqDx0hWIyV5TLKCA==
+	bh=ILLrAl+2aYtS7exjPNHsKhe7m+b2eUcYoF/THiX3nRI=;
+	b=T4uuzLsOA4AIxTiU3RZDy+3ccYCaWce1oFRX8vEXMn2w4ouM6mHHfeQ8vW8PSF/pHOs9
+	 EUS/g+ZF/xhYaCaj9LFxTgCok1l4KrryyyJltU1i2jdVGuIextPFuYGBhA/bwKG7RO5Vx
+	 WMxSx+HLp3MW/ywHdUqL21WPbHf8Dy/Lwj0NDfr88vYSgeexIEHSQ4zJkCrzhALUU1cTi
+	 dJ4n3Im7A1wUS79HINpFdreowr89RZC5BcAOTYo9IhEXA1EMEbftjM4i7k2yzcsDMVuc4
+	 9UX2r2+nPlo0CAa62HVc5B9Z12h7VCYxmz4l0PR2aMngiW6CUm0WFOhR38CK7mmUEMw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="lB8Yvur/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hSGjUpNR;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A07E606A321
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 14:28:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A3E606A31C
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 14:29:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lB8Yvur/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D63F11F0089F;
-	Sun,  8 Nov 2026 14:28:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hSGjUpNR
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E4861F008A1;
+	Sun,  8 Nov 2026 14:29:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794148112;
-	bh=mgPt8iZ4lhRucC8uTVyT45A/ycBpYjFQ903dh98+oS4=;
+	s=k20260515; t=1794148176;
+	bh=ILLrAl+2aYtS7exjPNHsKhe7m+b2eUcYoF/THiX3nRI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lB8Yvur/Jx/+EqyDev7UVQ8NLt7fsUdC6stEK7ymCH8Q9/woSTYaE5gyK8HxR8rF/
-	 cy/apb9GlRA/ToSEksOd5hw8xeEx2PRbh6P1/epb7cTAUj8/hG6jSEFpq89vtdVFXK
-	 Tke49avOj3LY39sn19LFLFIm1FI7ASM2qJzXEoyC7MzhJt4btnlKEpuPtKB4tSOJRH
-	 e2K57dd4U43cSVnYMqXaGTZO3lq3oD9Lvg4TXVOh7NNCefHhChL03TLGkqiBGGtSoW
-	 OgVP+cO2FeEQ3Gf9JsZQr0Ckv/bbd3XZMaHZ8mkzJ6ARzioR1NH6e+WPwuoDTAwkay
-	 ZTmZ0zedS5mlw==
-Message-ID: <sashiko-outbox-203800@kernel.org>
+	b=hSGjUpNRp68qvONmt7MfTVgcLb5PhkBKjQo87Pk1rIzTeoHoFgth77UY810Zu6NPI
+	 G2GSt98LoSFInPkqvXaOeCUAbYC6zeIua/o0pAbOLjo5vpmtBovIcyZlvOWi+6ugnH
+	 vX7ySo4zlYkdLkzpbjzO8OodLRpmgAMBRM9RgJJ5IK4yq9d/C3bc8h7GI7aVfsDhZ+
+	 HT7pb3LCI7OKpwoDeJTguHqp5PZTvVgBfjdv2TWfHOjRYN/bhTMxshXZVbapZD0jIq
+	 SY4MPjs0ciLhXWWuGuVz4tN//4lOCE3IMacQPgs1sZvzsJubTniCZlM72h5u6xtK4L
+	 grhnM0YYafWcw==
+Message-ID: <sashiko-outbox-203804@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/7] arm64: dts: apple: t8122: Keep ps_apcie_phy_sw
- always-on
+Subject: Re: [PATCH v2 2/7] dt-bindings: PCI: apple,pcie: Add M3 generation
+ compatibles
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Janne Grunau" <j@jannau.net>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261108-apple-m3-pcie-v2-1-0e5ffec71da4@jannau.net>
+In-Reply-To: <20261108-apple-m3-pcie-v2-2-0e5ffec71da4@jannau.net>
 References: <20261108-apple-m3-pcie-v2-0-0e5ffec71da4@jannau.net>
- <20261108-apple-m3-pcie-v2-1-0e5ffec71da4@jannau.net>
+ <20261108-apple-m3-pcie-v2-2-0e5ffec71da4@jannau.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 08 Nov 2026 14:28:31 +0000
+Date: Sun, 08 Nov 2026 14:29:35 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,17 +61,16 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> The APCIE_PHY_SW power state is in Apple's device tree a child of the
-> virtual storage and general purpose PCIe power-states. MacOS however
-> keeps it always powered on. Mirror this behaviour like the M2 Pro/Max
-> device trees already do in t602x-pgmr.dtsi.
+> The PCIe controller on Apple M3, M3 Pro, Max and Ultra SoCs are
+> compatible with the one on M2 Pro and Max. Add their per SoC compatibles
+> "apple,t8122-pcie" (M3), "apple,t6030-pcie" (M3 Pro) and
+> "apple,t6031-pcie" (M3 Max/Ultra) to the bindings.
 >=20
-> Fixes: c65ab4905e58 ("arm64: dts: apple: Initial t8122 (M3) device trees")
 > Signed-off-by: Janne Grunau <j@jannau.net>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108-apple-m3-p=
-cie-v2-0-0e5ffec71da4@jannau.net?part=3D1
+cie-v2-0-0e5ffec71da4@jannau.net?part=3D2
 
