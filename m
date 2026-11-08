@@ -1,56 +1,87 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794136008;
-	b=vyenjMtCoPZBSUlFpMOkHNYjvTVFO2kAUxFpfpzUGvtwamD+qcHvAb8ytUPjV1aihkHV
-	 gYzsKz5+8WxCRNtwb9TuZ5jY1u/e1/soiICsbg2dNcdZUMCtkyiH2FAnQSj3f6+yggZNz
-	 cifUjTMKdjQdcB9zA1Te5BvXaEBCjbryD5xCT0di+CfPORyL5xSWhEJ8V8yHnSX7pTx41
-	 yWrBxuNLvj8xBRx79Dr1tkgkhk70MTWhS/tv5luGpWxbHnCyMrAfTd+ovXaOTXIGntDdG
-	 RezJFsvUEhRjofiAcoiZaqtQVH9Ex7LamXvYuTeWXCfafIMW2in7tdSnpuGPiuSJ/+A==
+	t=1794136154;
+	b=l1skM2H6YGtYQuaaILNdCsvpZ6qCIT8aKpK3+CXVBWuBnLcIv2+iJT+9PY3I5bFaszms
+	 5hGhhWM/RPJK2MnLHR2zKz+pDs8tc6Zv3EaIVNC31Tp6fKMVL6Ff/Qa4a6SIIsEJGytca
+	 bQKMwSaP5UMpfY4sRcdDJ5rZptHykZ4F4l7QRar9ACco4fYYjeibyYAcC28lU3r1LG0AF
+	 BBfuM/tQYS8mko/u38oEStvC/IShILZMOL0Noit3CK5guQz7oSd4WGvciy2wzXsQAjCQf
+	 mMtX73ZOVOLk8s2w/KIOnDxF3LF+yITMLJkrSor86KuuTZ7GaC17xsZURANqrsx0WBg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794136008;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=5y1WGOAziS2Inv8tLcRGxqHWYUed5rA5bprqUEOAF4M=;
-	b=LwnOvlBPQvhTH04dXSYV3cbLvvAZIn7yvioe6+VUjCgtXFSmTIKyuWydNhk1t6YP+26q
-	 wd9oIQlaczU6Hh2/Fu/lGAqyKsT1Fiu4/5gpiX4S+NhJ5ATHNcclX5eHbSRfVDRzp0qEo
-	 x94T+S/zyB2Rwa3oNPRooDyyCF7K8fXupzZfX/3yRVHkrIvaKu/Tywp9EuHNYzdp5ZGeb
-	 pTpdRM1t8ZOATYyuWf+eWUSJ7J1AoDO1+NCMfdPLIV/MmV5uvL0E9jnOxtQ2/KEQjlBGn
-	 4fL9RiZc7giQ89mY04cDRo+OycMxdDENn/BLAN7GIOsxS3qF15XbgauRdxy18YyOWUg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794136154;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=rRMDSUzD/4dqXKQ7EKZyKnxoCi/M0piqkjg2dM9fwCI=;
+	b=1ZRCRebOhBeS7O8eGQabP124RSjWW59es5u+++aT5TCVmq69xg1SbVKqyDGN7QtVSF1t
+	 5sHQ8lkim3CEQfkw3JHrlaBxVdP/6L0M0M+VLDx7x72/DWrE9g34buOXaXkksBg2JqU4j
+	 nxAGA7kAFiyGB4QVsoQSp/2+6kZ36uI6ertqwTFbYqmWTVrqZboP3VrBbsZut/rHNmuWD
+	 DMv+bmNZkEsRXoJny/S4Qz6V5mbrM8sjx37bnusqfqUmBvOy+aCyHiQierIQ1yMVaUkHP
+	 7dkhlQ4LcGjczgLce5Ynd5bHZhsQQwpnBln+5KZyr7wDFH5WNtjJK3DvdhT6/O/N77g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="b9BiN+//";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N0YYA4cp;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2CB0606A31C
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 11:06:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67CF4606A31C;
+	Sun,  8 Nov 2026 11:09:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b9BiN+//
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 825951F0089F;
-	Sun,  8 Nov 2026 11:06:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N0YYA4cp
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBFD11F008A1;
+	Sun,  8 Nov 2026 11:09:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794136007;
-	bh=5y1WGOAziS2Inv8tLcRGxqHWYUed5rA5bprqUEOAF4M=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=b9BiN+//42/n5oSUBM5ySL6hAlXqt0QDpg3+A0MgGlECE2uJKa4VQvK1PdtoOJ1yB
-	 GBTn6tIOg0t3qT9HOp3t49KQkRFijHLMQgYWNIjiYWFpYCIfDVPnAoc06SI2wSUM1q
-	 00nUHoQE5Lx9RrLMwpESP8dkdMWFg9Mt7EzK01P6NFKWi/Z9XYFPFrNQ31c4D/mAUl
-	 BqX5bbecz/TICwB4CdrA8xmEqISLk5sLufs4JIvjey6drLPR7prYanSbe19oQCROgm
-	 fmqfl8ir29W9XamOIOzc2h9OlElhCmgZJn14ghxeAS/8Jrty82VHIYdj5tll+nxU4Y
-	 Hxr2+iwaG+aBw==
-Message-ID: <sashiko-outbox-203687@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] PCI: microchip: Fix ECAM config window
- use-after-free
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hongyan Xu" <getshell@seu.edu.cn>, linux-pci@vger.kernel.org
-In-Reply-To: <20261108105640.875-3-getshell@seu.edu.cn>
-References: <20261108105640.875-1-getshell@seu.edu.cn>
- <20261108105640.875-3-getshell@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 08 Nov 2026 11:06:47 +0000
+	s=k20260515; t=1794136153;
+	bh=rRMDSUzD/4dqXKQ7EKZyKnxoCi/M0piqkjg2dM9fwCI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=N0YYA4cpwk2rSpGMMYuOqSqMumav/sn0wLJeni7+D5sRDUh6oQesbQll0590AxfPg
+	 YHZL34AcSy3m/oA/+Mg50SxmE2ticTBJ0JeVPjSjHFm7kxxRs5L8DQMA7BTnLRn9Qu
+	 2ZAZr5kKEMP1mX37TLY8VAg7PQwGUVqeJOcMERAGlH5l3zZZEjSFO6rqxrHnW3bvxF
+	 j8U2+HgWFrfZqDiA8t9jLRXdMwzd73OoApHczJMktKFXOELRAAGT46mdFrtZFBMPZ4
+	 MVG5MgmA0/z1plVr0CdzxGC6RsARpcD0nOIKT0WnIOzRGRQJttYGclefHMO9alDFAo
+	 8foRVxDwmD7Ew==
+Date: Sun, 8 Nov 2026 13:09:09 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH 05/17] USB: Lock registered interfaces during manual
+ driver binding
+Message-ID: <20261108110909.GA8635@unreal>
+References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
+ <20261105-device-trust-core-v1-5-1e536825b4eb@nvidia.com>
+ <bb83fe3c-cebb-4bc8-bfc9-24df1cf72b0b@rowland.harvard.edu>
+ <20261105184442.GF8298@unreal>
+ <bf756e50-c77e-40f2-916d-e88887426806@rowland.harvard.edu>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,32 +90,47 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bf756e50-c77e-40f2-916d-e88887426806@rowland.harvard.edu>
 
-> mc_host_probe() calls pci_host_common_probe() but has no ->remove, so an
-> unbind only runs devres_release_all(): gen_pci_unmap_cfg() ->
-> pci_ecam_free() frees the ECAM config window while the bus tree stays
-> registered - only pci_remove_bus() unlinks a bus, and only
-> pci_host_common_remove() reaches it for a root bus.  The next config acce=
-ss
-> is a use-after-free in pci_ecam_map_bus(), which reads cfg->ops->bus_shif=
-t.
-> Trigger: overlay rmdir in configfs, not rmmod (builtin_platform_driver()).
->=20
-> Fix: add .remove =3D pci_host_common_remove, as pci-host-generic.c does s=
-ince
-> commit 01fcb7f777a9 ("PCI: Add support for unbinding the generic PCI host
-> controller"), so pci_remove_root_bus() unlinks the bus before devres frees
-> cfg.  Scope: the PLDA IRQ domains it creates are not devres managed and
-> stay unreleased - a separate, pre-existing issue.
->=20
-> Fixes: 6f15a9c9f941 ("PCI: microchip: Add Microchip PolarFire PCIe contro=
-ller driver")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
+On Thu, Nov 05, 2026 at 03:04:18PM -0500, Alan Stern wrote:
+> On Thu, Nov 05, 2026 at 08:44:42PM +0200, Leon Romanovsky wrote:
+> > On Thu, Nov 05, 2026 at 12:24:33PM -0500, Alan Stern wrote:
+> > > On Thu, Nov 05, 2026 at 01:42:18PM +0200, Leon Romanovsky wrote:
+> > > > From: Leon Romanovsky <leonro@nvidia.com>
+> > > > 
+> > > > Interface claims hold the USB device lock, but device_bind_driver()
+> > > > requires the target interface lock. Without it, trust-policy writes can
+> > > > race admission.
+> > > 
+> > > This says nothing about usb_driver_release_refused_claim() and the code 
+> > > related to it.  It is an incomplete description of the patch.
+> > > 
+> > > Note that nothing prevents drivers from using an interface they claim 
+> > > before that interface is registered.  For your scheme to work properly, 
+> > > you should make sure the claim is authorized when 
+> > > usb_driver_claim_interface() is called, not when the interface is 
+> > > registered.
+> > 
+> > This patch is unrelated to authorization;
+> 
+> I meant "authorization" in its generic sense.  When you don't trust 
+> something, you don't authorize it to do anything.  Pretend I had written 
+> "the interface being claimed is trusted" in place of "the claim is 
+> authorized" above.
 
-Sashiko has reviewed this patch and found no issues.
+I will combine existing USB authorization scheme with device trust in v2.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108105640.875-=
-1-getshell@seu.edu.cn?part=3D2
+> 
+> >  it ensures that the lock is
+> > acquired when the driver is bound.
+> 
+> That may have been your intention when the patch was created, but if you 
+> read the patch you'll see that it includes a whole bunch of material 
+> not related to locking during binding.  Namely, this part:
 
+Once I added `device_lock()` to `bind`, I had to add it to `unbind` as well.
+
+Thanks
