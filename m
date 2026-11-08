@@ -1,64 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794135415;
-	b=TZYvOqrZmZ/mX0dagykGAtO62SHJyn4jRTBw8DADHViYHQkqRq9kRjiJdJOKyb41tdHQ
-	 rRrAF0IwywPFKKi1sVjfpheQxnqfnTGpyovfIHDQeIS0dWl8t/qwgA+To1J3g4+8z2HfS
-	 NvQjVyTd8RZ8cboa6mqvFCtQvMnU/SaySWSYAaiG+Xi0vy6ewLcaXkbND0mSJYt7mC+lT
-	 8bP2MAwjnwPDe56uSw0XKfBSnalLl0I1hvZEq9PE5CoHQNHA2BSKkK5BG0cf0zRW3qrm3
-	 Y47oSvS1QzNSgXh/BroXRX2Dp49sIP6jHG5W1Y/Y1dK7Z5OnBOETvKPwJ2VucNiRXrg==
+	t=1794135604;
+	b=Ff/oIdLNcf9VturBtxO2416gEk+RTVgcqL+Mc9Ui6ElmhZJVC3T8DggHTyChqcWR6D8x
+	 bnARbrWNW6UuBylZHgb6oApOcqbbG2P1VRoOUgJC/s5GT4CG5ruwflfp4r+t6+y8oXbW1
+	 JJI66RZ3aJRYypfKk+DFMwYocF16z7XhDllxpBWnQa34gAxSPsRPL23HprHuL7eCBsV1U
+	 WxhpYY4123Ipd/pDZw9QFr/e7EoX35bplAbiUfhwIvZ+WhC/O9ntO5NOAfZ5IwXucKvsp
+	 ohlh4rNqFS7cJq5DG2inz6cTOYgKOQmGpJvBMbKxs8pfx46gHH4JA6U3ui90dMOiskg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794135415;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
-	 X-HM-Tid:X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
-	bh=LQfWZFMR9WFMzlyRF7ueDqFRTYrzGXVUt1ZgeBbyRAQ=;
-	b=ld4CdQ5euh5P/JtIZ0VTvWz2fRgzr4bnku/OTHFlCuo7xyUEPdzPn8r1ET1tP73aYeyl
-	 PuM8jFrTmn6jJOif5/OrGabAExt4lwPuP1n4VxlEOIcuKsiq2Sq4Q5jplgjQck5pmEUJE
-	 JbuCWxoOdOop9/nBjGgH6MUS/ItMKHHTyjMDSkiuWsnJFltDQ4+RFL/03qRQPL1vW0ghC
-	 8ZEPxYORLQIJ306+AH9kwuR/mFAaNilxV1atb4Rw5cVYm3bFc2U16n38D8nG35HtEOs2n
-	 O9bV9JZU0Ks/NKLQdXxu0UxQyllrlbk7T1uqa82lgRZhbyXuUPoHulMvT05Kl2EUGxA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794135604;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=mDrcr7etSzQF+eaDqG+7YvVWlFSNFs5TZCRMvX6g0Eg=;
+	b=rSopb+tw5KHayH0zuZoJDElu+XMh2B2/i5lGamLbXmXwrkmuONQ7YqXCYrZ3qA/DQ7GK
+	 9NSleGNMgzzEksUx9fiaeLGpZo8H8L2Ee4qlYkWDdG54gXpc4K863qa354qdCPeuwrbTT
+	 jmXqrXdm+Y6pc6lDA++X11h+Fh6k3oVnuyuOVMyw5KwIU9rwxtIxqbEbSIHzxOYaiT9Aw
+	 CagQhXzFNGkq1B7majSutCTfRVDAZGk3cKpf/1eSqvs7EgPKFOLz5QRnifuVZOuNYAcGX
+	 fis9flnHPts9p7TX8VlgySFpslmNr9fb3eJ1RY5llBcBdi7TBqfilO6AT+D+ZyGrB1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=seu.edu.cn;
-	spf=pass smtp.mailfrom=seu.edu.cn;
-	dkim=pass header.d=seu.edu.cn header.i=@seu.edu.cn header.a=rsa-sha256 header.s=default header.b=TkyLtaea;
-	arc=none smtp.remote-ip=101.71.155.101
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QID3huY8;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA715606A33B;
-	Sun,  8 Nov 2026 10:56:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EA715606A33B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60C57606A31C
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 11:00:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.a=rsa-sha256 header.s=default header.b=TkyLtaea
-Received: from LAPTOP-99KJFSET (unknown [223.75.64.82])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 53e3dfdda;
-	Sun, 8 Nov 2026 18:56:43 +0800 (GMT+08:00)
-From: Hongyan Xu <getshell@seu.edu.cn>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Marc Zyngier <maz@kernel.org>,
-	Daire McNamara <daire.mcnamara@microchip.com>,
-	Conor Dooley <conor.dooley@microchip.com>,
-	Robert Richter <rric@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof Wilczynski <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	linux-riscv@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Hongyan Xu <getshell@seu.edu.cn>
-Subject: [PATCH 1/3] PCI: apple: Fix ECAM config window use-after-free
-Date: Sun,  8 Nov 2026 18:56:37 +0800
-Message-ID: <20261108105640.875-2-getshell@seu.edu.cn>
-X-Mailer: git-send-email 2.50.1.windows.1
-In-Reply-To: <20261108105640.875-1-getshell@seu.edu.cn>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QID3huY8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B9AE1F0089F;
+	Sun,  8 Nov 2026 11:00:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794135604;
+	bh=mDrcr7etSzQF+eaDqG+7YvVWlFSNFs5TZCRMvX6g0Eg=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=QID3huY8R2XWelqLQXaezjJRIQIyoOAcql2VvLqSyYw3G1pSpepEpTiwnqZdaI+Eo
+	 JHTBbBAegRnMH8+Og19u3X/LwAnmec3WQMyGPi4oPO0/J16RYthneKP4DMuMDKnECp
+	 h69a9djTaO9Of2nok8vLwJ1Spyqo9xSYNhYA73oKOgJR86oHoSgt/OkdXWHwSjcweU
+	 hGZsTXfX99+LO1vNKb8wsc2ZvDOazGTkW4KJlUxstY3GKmC04syvT/xvKem8WY2Ylg
+	 GEWFGKoHKnQh0Q1rDZtJ1lQVwqnh9g2MmMG18eB67tJFA13TZK2viiPfiXl3JYWri2
+	 +gT3TsbacNbQA==
+Message-ID: <sashiko-outbox-203686@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 3/3] PCI: thunder-pem, hisi, thunder-ecam: Fix ECAM
+ config window use-after-free
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hongyan Xu" <getshell@seu.edu.cn>, linux-pci@vger.kernel.org
+In-Reply-To: <20261108105640.875-4-getshell@seu.edu.cn>
 References: <20261108105640.875-1-getshell@seu.edu.cn>
+ <20261108105640.875-4-getshell@seu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 08 Nov 2026 11:00:03 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,52 +59,32 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1bacdac5103a1kunm546e4281ce699
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaSU1CVhpMGUJPSxhMThhCS1YeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVTE5VTU9VQ0lZV1kWGg8SFR0UWUFZT0tIVUpLSUJDQk
-	pVSktLVUtZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=TkyLtaeaGRYaWaR08vym002xhqiPJty9Igz67U9WHKDH1KRi5m4YECuVnF87xHBMvmRijKYmt1SsdDcbQcsSO6ezhfRTl0Vbn8aOZ1F9/KLgLpLf1IjsgD9T52MrZN8E15wtVobzquPYDHYYwUPuqBb11d3SESEw7482kYZ8Q4k=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
-	bh=LQfWZFMR9WFMzlyRF7ueDqFRTYrzGXVUt1ZgeBbyRAQ=;
-	h=date:mime-version:subject:message-id:from;
 
-pcie-apple.c has no ->remove for pci_host_common_init(), so unbinding only
-runs devres_release_all(): gen_pci_unmap_cfg() -> pci_ecam_free() frees the
-ECAM config window while the bus tree stays registered - only
-pci_remove_bus() unlinks a bus, and only pci_host_common_remove() reaches
-it for a root bus.  The next config access is a use-after-free in
-pci_ecam_map_bus(), which reads cfg->ops->bus_shift.
-Trigger: CONFIG_PCIE_APPLE=m; as root, one command: # rmmod apple_pcie
+> thunder-pem, hisi and thunder-ecam set .probe =3D pci_host_common_probe b=
+ut
+> have no ->remove, so unbinding only runs devres_release_all():
+> gen_pci_unmap_cfg() -> pci_ecam_free() frees the ECAM config window while
+> the bus tree stays registered - only pci_remove_bus() unlinks a bus, and
+> only pci_host_common_remove() reaches it for a root bus.  The next config
+> access in pci_ecam_map_bus() reads cfg->ops->bus_shift.
+> Trigger: DT overlay removal of the node that supplied or enabled it.
+>=20
+> Fix: give each driver the same .remove =3D pci_host_common_remove that
+> pci-host-generic.c got in commit 01fcb7f777a9 ("PCI: Add support for
+> unbinding the generic PCI host controller"), so the unlink comes first.
+>=20
+> Fixes: f12b76e56ada ("PCI: thunder: Add PCIe host driver for ThunderX pro=
+cessors")
+> Fixes: a2ec1996098c ("PCI: hisi: Add DT almost-ECAM support for Hip06/Hip=
+07 host controllers")
+> Fixes: 7b6e7ba8e81a ("PCI: thunder: Add driver for ThunderX-pass{1,2} on-=
+chip devices")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
 
-Fix: add .remove = pci_host_common_remove, as pci-host-generic.c does since
-commit 01fcb7f777a9 ("PCI: Add support for unbinding the generic PCI host
-controller"), so pci_remove_root_bus() unlinks the bus before devres frees
-cfg.  Scope: cfg lifetime only; its IRQ handlers stay unreleased, so the
-module is still unsafe to unload.
+Sashiko has reviewed this patch and found no issues.
 
-Fixes: 1e33888fbe44 ("PCI: apple: Add initial hardware bring-up")
-Cc: stable@vger.kernel.org
-Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
----
- drivers/pci/controller/pcie-apple.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-index 2d92fc79f6dd..805171551e01 100644
---- a/drivers/pci/controller/pcie-apple.c
-+++ b/drivers/pci/controller/pcie-apple.c
-@@ -884,6 +884,7 @@ MODULE_DEVICE_TABLE(of, apple_pcie_of_match);
- 
- static struct platform_driver apple_pcie_driver = {
- 	.probe	= apple_pcie_probe,
-+	.remove	= pci_host_common_remove,
- 	.driver	= {
- 		.name			= "pcie-apple",
- 		.of_match_table		= apple_pcie_of_match,
--- 
-2.50.1.windows.1
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108105640.875-=
+1-getshell@seu.edu.cn?part=3D3
 
