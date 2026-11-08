@@ -1,57 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794171691;
-	b=aeqn+BNBH4O7PVkggZ3jSHeSJxlQKbSE8XyHN804cJd7o8BDcD4z9FFjxIGuAQmadQFs
-	 8DP4PkhqXxPvu6a34xuaVJ9kA+/gSXvC9DVqZOm9BcO4QKM+y2p7qesi4t07sL8e07zpd
-	 B6nUf7bwjp4TlUUfkopcbgOwjJQgGkUfC3HXm0mR6NYs4S7HuWFMF0VhOcRhufQW1EUys
-	 a6wCbWXlrWHTv4DLglY70fJgLyXo3E6F6OSx+x3RtaIxVpGuVtvrD9rUz6/HK4qCbpzLI
-	 ZoTlDolTO9hbVGjKw1VcDN67jrJ2P0apopLKVJv1Doia9WTRNfisgJX15mg3Wo4dmTg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794171691;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=CCDT5czqSKuVF8dnEL2I3ztvJrFNsCyUNOb0I8ij6bw=;
-	b=Rcs4Nq2Rk3jfjooJfEgsHDRu0cBtzFC+/TsgXsnUEfdCISUYngibx5Z5mmivlztSbU2a
-	 hWlMXyP6QS0sasH7waGx6A18IbVypd/D0GBDUZsfqdsruYp0kmBF1vCXJNbIWKew5pM4h
-	 h/X1ZtCAKf1W2BtDcIi+w6ZLFn7zYd8CXHm0z+BgED9vUr5eVumWHwCdIL73bZuHzGybK
-	 1zj1sBY7J8gU3fKYCyAwtAApGV0gR42hIDsuGq/RbEA5Ucn/5DABeqphEMN+4cpkFtjTT
-	 JJDhFeWsURLG2cU8ZoGp0MNoF2zK0Xebqbf8rU0wYdYAMIY1xO9461i3MK0sK5fyGCA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PEPoB+M6;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.17
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794179195;
+	b=pFafiKpjynowxQAse2hX/ZLmpfwcrE03IoLFrCpBA4eyQ4uQ7F4nFm6IUpJikZ8m4I8B
+	 QLaRCHhyP069g/AgtGqRUKNsKZaMplB6OnbgCGOP9CPnMXGUU2FDOMGWQVPTI48Kv1fA9
+	 j/EiabIbWvOoJnrGStisl8I8O/7vl3rrp8AMCm4xcJHsSPNbahXLhuVr4otTodzuvmoEI
+	 A+5bzSjruEVmz9W0XBQDn/hf9P+uRAJHq44N/MMF1/mNaZcCcxMGM8ardV5l2Kk+wlLKi
+	 vqVPAunH7X9xmvDPYI6QMt5WeAQvA7ZnZQUW0ObkjIHtprfxpyWO2uE0NJhF01zAIWA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794179195;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=r+y8CQ+aNutDnqhoFEXjnp4bJTLJopAbpRetz6dHelc=;
+	b=p0CuhSuj3J6C7+UbMRYmAefwU4wWw/dTzujVPY0c5hE3EwxfuEF6w7fy7v5G4kKgAWx9
+	 0SbuFp8fdlF3qI0RKCVErP1RrAs3ydmHytB5v0N+0w9sLynmFSQeSJl4wGhxagXfGWeiY
+	 3cgppjmPwI8WFKg9tOjorLCDScbrsRCzTqBVaSnLMnrjBrP2iNvhfcTsiOMI/nDrm3wQ6
+	 pcZFR7XNNcJtOOr46/8IreePLddRU/nF3DQ5o+m49Sgw5A2A33rW0+N8rWEeU/f8haChd
+	 pwUYFnB+UaD9LeJpGEqCPKIUcJM/ewhx9Sj37FwX5XgLD6mSVaQvXRi/45kQQ83kEiw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=none header.from=iav.lv;
+	spf=pass smtp.mailfrom=iav.lv;
+	dkim=pass header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=U+xl+M8D;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.17
+Received: from sender-op-o17.zoho.eu (sender-op-o17.zoho.eu [136.143.169.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69291606A320;
-	Sun,  8 Nov 2026 21:01:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 501DB606A320;
+	Sun,  8 Nov 2026 23:06:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 501DB606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iav.lv
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PEPoB+M6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B22AF1F0089F;
-	Sun,  8 Nov 2026 21:01:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794171690;
-	bh=CCDT5czqSKuVF8dnEL2I3ztvJrFNsCyUNOb0I8ij6bw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=PEPoB+M6W27TGTVULDx6PMHDtm1KDmwnHPbWXSeSQRPlMO1NQoviHOUKeWMQ0jX94
-	 KLRbF9xWaCzCjblUkt6J3mVgf8bHEUswOIuHBtO1o2Iix2wbcwC6xGJ9FAcUE5YG26
-	 dxfgAvzWso7PxxbOYWsCsiwXvUoqzhKtM5Qx2eeyqv80NLeoku2cHArU57/5hmFNYq
-	 eSIjqdp0IfssJDYtAttZCQ4sDFAOfXppW7E7xQ3VsleSDWXsXTRd4tOBG7yYxX+rRS
-	 80uxSPtqGFHlWUlzpR7/fWGe1qPJbQg4uLSr1WyHB8jvCkzla9kQFaH/2ooOo262M0
-	 6VH+8frUXc18g==
-Date: Sun, 8 Nov 2026 15:01:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Louis H. Poulin II" <poulin.louis@student.oaklandcc.edu>
-Cc: linux-pci@vger.kernel.org, zhaojinming@uniontech.com, lukas@wunner.de,
-	linux-kernel@vger.kernel.org,
-	manivannan.sadhasivam@oss.qualcomm.com, dsimic@manjaro.org,
-	shawn.lin@rock-chips.com, kees@kernel.org,
-	krishna.chundru@oss.qualcomm.com,
-	Daniel Stodden <daniel.stodden@gmail.com>,
-	Ding Hui <dinghui@sangfor.com.cn>
-Subject: Re: [PATCH] PCI/ASPM: Add missing NULL check for link in sysfs
- show/store callbacks
-Message-ID: <20261108210129.GA51008@bhelgaas>
+	dkim=pass (1024-bit key) header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=U+xl+M8D
+ARC-Seal: i=1; a=rsa-sha256; t=1794179162; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=U+XdoxztM7eUIcyKziLbVWP8OQzzFhPIlMFZhr4hdtPqgrf/9tt4ahY8NuVCXRZODMqUFgKNN1J74C2CY/Ebxl1rscXqEEgrxo/mfKlkj2NFt4gMcuHT5XFKdiPbpAlmV6i3ud6bwMeJic7KGRcIFc2d06qEOX4tKytxtgLvCaw=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1794179162; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=r+y8CQ+aNutDnqhoFEXjnp4bJTLJopAbpRetz6dHelc=; 
+	b=WCJkCA7y3/E+eXiLYiRkmsp/A7i7i3XYL+UE0CwJzk3uuBGugLiStR7W/xqD1xJbDpvq8kF0fTXmjv6ipimcYbyHJpVuSOOiOcC8toZ8k9TZXV1bqgZRICpK6dalakePHnQqOyyzEPCnhTuxhCq2nnKOTZnC0owig3AE2hWDrKA=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=iav.lv;
+	spf=pass  smtp.mailfrom=iav@iav.lv;
+	dmarc=pass header.from=<iav@iav.lv>
+DKIM-Signature: a=rsa-sha256; b=U+xl+M8D5b6oVRqjnpVsocm0e+FbUMz3SZYXQ88EcUMnerg8h+e3ZrWFG0cxMLFG379cPDnWnUh+gz3gCoyy2/aXj0f9wC015pIgHjYOYnXCr2VXbm20LOzCV8SNSO6ipSFNsw+PmFIoUXA4FqQW9bV82AlJQxy5m5R2vJgMM8w=; c=relaxed/relaxed; s=zoho; d=iav.lv; v=1; bh=r+y8CQ+aNutDnqhoFEXjnp4bJTLJopAbpRetz6dHelc=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: by smtp.zoho.eu with SMTPS id 1794179160553615.2293146265968;
+	Mon, 9 Nov 2026 00:06:00 +0100 (CET)
+Date: Mon, 09 Nov 2026 01:05:59 +0200
+From: Igor Velkov <iav@iav.lv>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Enrique Hernández Bello <ehbello@gmail.com>, lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com, robh@kernel.org, heiko@sntech.de, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Igor Velkov <iav@iav.lv>
+Subject: Re: [PATCH RFC 0/2] PCI: rockchip-host: Retry training and hot-reset a JMB585 on RK3399
+Message-ID: <20261109-rockchip-pcie-deskew-result-1@iav.lv>
+In-Reply-To: <6c9adabe-d632-471e-8fc1-aafe62115167@rock-chips.com>
+References: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv> <20261106-rockchip-pcie-ltssm-trace-1@iav.lv> <6c9adabe-d632-471e-8fc1-aafe62115167@rock-chips.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,191 +64,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAGQButvJXLyiK2eRvuRmx=rGxN1M334=7vsp1Whq3w0mpeV1yg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-[+cc Daniel, Ding]
+Hi Shawn,
 
-On Sun, Nov 08, 2026 at 12:36:30PM -0800, Louis H. Poulin II wrote:
-> Hi Bjorn,
-> 
-> > Your next message suggests that the device and upstream bridge are
-> > valid, so possibly bridge->link_state was NULL. I would instrument
-> > pcie_aspm_get_link() to verify that and add a dump_stack() in
-> > free_link_state().
-> 
-> Yes. The instrumentation shows bridge->link_state becoming NULL after
-> function-0 removal. Later lookups for surviving functions 0000:75:00.4
-> and 0000:75:00.6 still find upstream bridge 0000:00:08.1, but its
-> link_state is NULL.
-> 
-> This was on the ASUS TUF GAMING X870-PLUS WIFI, BIOS 1805, running
-> 7.2.15-ogc1.1.fc45.aspm453.x86_64 (#453). It was built from Linux
-> 7.2.15 plus the OpenGamingCollective downstream patch set and local
-> diagnostics. This is not a reproduction on unmodified upstream.
-> 
-> The diagnostic patch logs initialization, publication, visibility,
-> lookup and teardown, with dump_stack() in free_link_state(). It also
-> adds NULL checks returning -ENODEV to the ASPM and clock power-management
-> sysfs show/store callbacks so collection can continue. These checks
-> are diagnostic containment, not a proposed fix.
-> 
-> The trigger is a local systemd oneshot,
-> helix-gaming-disable-igpu.service. Its stated purpose is to keep the
-> iGPU display function out of Gamescope DRM enumeration. Its command is:
-> 
->   /bin/sh -c 'if [ -e /sys/bus/pci/devices/0000:75:00.0/remove ]; then
-> echo 1 > /sys/bus/pci/devices/0000:75:00.0/remove; fi'
+Thanks. Deskew makes no difference. Helios64, x2, bind/unbind, variants
+alternating every cycle, bad link bring-ups:
 
-Thanks for the debugging.  Before that remove, can you collect the
-output of "sudo lspci -vv" so we have a picture of the whole topology?
+  defaults 6/104, auto deskew off + trim 0xf: 5/104
+  defaults 6/104, magnitude off: 6/104
 
-It seems legit to remove one function of the multi-function device at
-75:00.x (from a software perspective; obviously we can't physically
-remove it separately from the other functions), but seems like we
-prematurely discard the ASPM link info when doing so.  I haven't dug
-into them, but maybe these commits have some bearing on this:
+Your mail has the magnitude at 0xb, but TRM V1.3 part 2, 17.6.10.1 has
+TX_TERMINATION_TRIM there and DESKEW_MAGNITUDE at 0xc, so I wrote 0xc.
 
-  456d8aa37d0f ("PCI/ASPM: Disable ASPM on MFD function removal to avoid use-after-free")
-  cbf937dcadfd ("PCI/ASPM: Fix link state exit during switch upstream function removal")
+DEBUG_DATA_OUT did show something. With Debug Mux Control (0x208) = 5,
+share of samples with in_dllp0_data_valid set, 100 ms window after hot reset:
 
-> It targets function .0, not the bridge or siblings. In the same boot,
-> systemd retains ExecMainPID=2486, matching the shell PID in the stack.
-> Its recorded execution interval is 10.303980-10.348137 s monotonic;
-> the journal records exit-free at 10.308186 s, within that interval.
-> The dmesg timestamps in the separate excerpt below are left unchanged.
-> 
-> Stack excerpt from the dump_stack() in free_link_state():
-> 
->   CPU: 1 UID: 0 PID: 2486 Comm: sh Not tainted
-> 7.2.15-ogc1.1.fc45.aspm453.x86_64 #453 PREEMPT(lazy)
->   dump_stack_lvl+0x5d/0x80
->   pcie_aspm_exit_link_state.cold+0x5/0x14
->   pci_remove_bus_device+0x10b/0x170
->   pci_stop_and_remove_bus_device_locked+0x22/0x30
->   remove_store+0x83/0xa0
->   kernfs_fop_write_iter+0x178/0x200
->   vfs_write+0x281/0x560
->   ksys_write+0x7b/0x110
-> 
-> The matching vmlinux resolves the cold frame to free_link_state(),
-> inlined into pcie_aspm_exit_link_state().
-> 
-> Selected dmesg fields (abridged; attr= names the downstream device in
-> publish-link, free-link and clear-link records):
-> 
->   [0.367481] seq=98 event=publish-link dev=0000:00:08.1
-> link_state=present attr=0000:75:00.0
->   [0.367583] seq=159 event=visible dev=0000:75:00.4
-> bridge=0000:00:08.1 link_state=present attr=l0s_aspm arg=420
->   [0.367609] seq=177 event=visible dev=0000:75:00.6
-> bridge=0000:00:08.1 link_state=present attr=l0s_aspm arg=420
->   [10.307508] seq=191 event=exit-free dev=0000:75:00.0
-> bridge=0000:00:08.1 link_state=present
->   [10.308089] seq=192 event=free-link dev=0000:00:08.1
-> link_state=present attr=0000:75:00.0
->   [10.308728] seq=193 event=clear-link dev=0000:00:08.1
-> link_state=NULL attr=0000:75:00.0
->   [10.896953] seq=194 event=get-bridge-link-null dev=0000:75:00.6
-> bridge=0000:00:08.1 link_state=NULL
->   [10.896958] seq=195 event=show dev=0000:75:00.6 bridge=0000:00:08.1
-> link_state=NULL attr=l0s_aspm
->   [10.896960] seq=196 event=show-result dev=0000:75:00.6
-> bridge=0000:00:08.1 link_state=NULL attr=l0s_aspm arg=-19
->   [297.729199] seq=242 event=get-bridge-link-null dev=0000:75:00.4
-> bridge=0000:00:08.1 link_state=NULL
->   [297.729204] seq=244 event=show-result dev=0000:75:00.4
-> bridge=0000:00:08.1 link_state=NULL attr=l0s_aspm arg=-19
-> 
-> arg=420 is mode 0644. l1_aspm was also exposed on .4 and .6 (seq 161
-> and 179); subsequent l1_aspm reads also reached the NULL lookup. The
-> -19 results above are produced by the added diagnostic guards. In
-> this source, the unguarded show path dereferences link without a check.
-> 
-> The trace shows publication for downstream .0, visibility with link
-> state present, then teardown and pointer clearing when .0 is removed.
-> Both siblings remain with reachable attributes. The first recorded
-> post-teardown NULL lookup on .6 is about 0.59 s after clear-link in
-> dmesg; .4 also reaches the NULL lookup at 297.729199 s.
-> 
-> This establishes teardown followed by NULL lookups. It does not
-> demonstrate a concurrent use-after-free or rule out other lifetime
-> issues. I have preserved the full logs, diagnostic patch, source
-> inputs, configuration and matching-vmlinux symbolization.
-> 
-> Thanks,
-> Louis
-> 
-> 
-> On Thu, 05 Nov 2026 17:46:28 -0600, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > [+cc other members of conversation at
-> > https://lore.kernel.org/all/20260727072915.3954329-1-zhaojinming@uniontech.com]
-> >
-> > On Wed, Nov 04, 2026 at 03:22:51PM -0800, Poulin, Louis wrote:
-> > > Hi,
-> > >
-> > > We observed a cold-boot crash in l0s_aspm_show() that appears to
-> > > contradict the assumption in this thread that the visibility check
-> > > always keeps readers out when the ASPM link is unavailable.
-> > >
-> > > This was on an ASUS TUF GAMING X870-PLUS WIFI, BIOS 1805, running
-> > > Bazzite's 7.2.15-ogc1.1.fc45.x86_64 kernel with InputPlumber 0.83.1.
-> > > The fault occurred about 10 seconds into a cold boot. An earlier boot
-> > > on the same system had the same fault address and symbol offset on
-> > > 7.2.9-ogc3.1.fc44.x86_64 with InputPlumber 0.83.0. Both observations
-> > > were on downstream kernels. The captured 7.2.15 kernel was tainted
-> > > O/E (out-of-tree and unsigned module).
-> > >
-> > > Relevant excerpt from 7.2.15:
-> > >
-> > >   BUG: kernel NULL pointer dereference, address: 0000000000000030
-> > >   Comm: inputplumber
-> > >   RIP: 0010:l0s_aspm_show+0x47/0x80
-> > >   RAX: 0000000000000000
-> > >   CR2: 0000000000000030
-> > >   Call Trace:
-> > >     dev_attr_show+0x1f/0x50
-> > >     sysfs_kf_seq_show+0xa8/0x110
-> > >     seq_read_iter+0x132/0x4c0
-> > >     vfs_read+0x34d/0x490
-> > >
-> > > The faulting instruction accesses offset 0x30 from the NULL register.
-> > > In the corresponding source, aspm_attr_show_common() dereferences the
-> > > result of pcie_aspm_get_link(). The read reached the callback even
-> > > though that lookup had no link to return. The kernel killed the
-> > > InputPlumber main thread and the service stopped answering
-> > > ObjectManager.GetManagedObjects. This blocked the boot-time controller
-> > > setup.
-> > >
-> > > We are building a diagnostic kernel that returns -ENODEV in that
-> > > specific read callback when the link is absent and logs the PCI device
-> > > and upstream bridge. The device and the reason its link state was
-> > > missing are still unknown. We have not reproduced the fault on an
-> > > unmodified upstream kernel.
-> > >
-> > > Would this trace justify a guard in the read callback, or is there a
-> > > preferred way to instrument link-state teardown and sysfs visibility
-> > > on this hardware? We can follow up with the device and bridge once
-> > > captured.
-> >
-> > I don't think we should add a guard in addition to
-> > aspm_ctrl_attrs_are_visible().
-> >
-> > pcie_aspm_get_link() must have returned non-NULL in
-> > aspm_ctrl_attrs_are_visible() for the sysfs file to be visible.
-> >
-> > If it later returned NULL in aspm_attr_show_common(), we must have a
-> > bug, like a lifetime issue or some kind of corruption.  Adding a guard
-> > would just hide the bug.
-> >
-> > Your next message suggests that the device and upstream bridge are
-> > valid, so possibly bridge->link_state was NULL.  I would instrument
-> > pcie_aspm_get_link() to verify that and add a dump_stack() in
-> > free_link_state().
-> >
-> > > Kernel source for the captured build
-> > > https://github.com/OpenGamingCollective/linux/blob/f6857d4bfd614b90302903490796ef376be0a67d/drivers/pci/pcie/aspm.c
-> > >
-> > > Thanks,
-> > > Louis
+  good bring-ups 0.16% (99), bad bring-ups 51% (3, range 45-53)
+
+The first training looks the same: 0.15% (97) against 47% (5). mgmt_dllp_error,
+crc32_error and in_tlp_error stay 0 in all of them. With the mux at 4,
+start_replay, replay timeout and dl_protocol_error stay 0 too.
+
+So in a bad bring-up the RC receives a constant error-free stream of DLLPs.
+I read that as the JMB585 repeating flow control init because it does not
+get what the RC sends, but this bus does not show the DLLP type. It would put
+the fault in the RC to JMB585 direction, on x2 only.
+
+Is there an RC transmitter setting worth trying for that, such as swing or
+de-emphasis? If not, I will stop looking for the cause here.
+
+Igor
