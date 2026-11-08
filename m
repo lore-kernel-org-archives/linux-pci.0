@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794148177;
-	b=2vzOjCiPurJUL9Os0iNqOWbq2uFVbkSwjOZ+gR2qhCOww0TpWlnj5V1my0xMGIuO2PRZ
-	 YGkgEF09g/JWuk03unaahu5T6muOswMPDr6xnNPhsvbMJwNadk9f1ugTCVEN9oPK/HPV/
-	 Rwd+GqVZ/xdqkl3mgMEqxORkQJnFlVj2/2KI9d4Q1MGAUPtzCIlHX1irUpp+Ko2yW+yME
-	 qJ+km1/1GuAPoijEbITaEF4m0kpPjiab9or51I9PpNTli1kpbZVL5R/vLvaJ1O3jaTn2l
-	 oz5MEXRPVEfP9/9Nlhy/LT78epyhqyK/gpIXOK0zCxvB4poqnN7yuqfMmK35EyRISkw==
+	t=1794148239;
+	b=gDe41oNvSdGRQ/YpBWNPDS4lnLREooixdRVflCWN+LCNLJqWkHwJBC6hlmhfGkG/osPc
+	 9G6ap/wircvwP5w6xnWs991UyRH+svQuEsquDFwWt3k6yEmSuv+8CYlN3RyyQ1FwIG410
+	 6AiLpejSmjAEWiGhAI2vTGjBZbb/kvwb2pkhREPXeSiNoyjd1PM/3d34irVavCaO7cnj1
+	 aZfo69kuVF29eIfAtOdKmru9ba52A/dyg/2wmQO/RxllD9rt/BiKs0y3g3Yo1c905iz4T
+	 h6y3nzMMJMN7lZAJISlDH4FI6Q+IEjQSjsrSvZlww1TM30FvK0YuvBMFq8Hnfx3uY4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794148177;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794148239;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=CkrkWtVRWAYfjMr2/KmaUuRw+CjrhoQ3eegXGEoE7+o=;
-	b=lTzWoNf36854/WXScFf35dU+ORbV8i90lv6azZI8UxIIb7Ap8PQZqd7ayPRv343hbFWU
-	 M2/UXryoW2sQcQ6gqECy5kSDqS8a6d1oVeqDTCMv2PKW+zvoyHX3GD0RTN6X/BHb2sAOd
-	 5NYLIQCZ1gA4XsGt9hUBtuDO2ogD/uZQjPoCz9yGod8T4ySV6EkZYkxcXTtTHTQ1bLq4C
-	 pvPG0ML7tPSvBy+DiW+v+G9yZvyR50pQ6wXy7qlkt7ngScvT/NBWVnNm94Mujn3Fo8+O3
-	 RPsk1SIK7i1UPAKCQfzI3p9IxULtQ9BEq1jaNgK/gQpsfR/qP35MVLv1z8/F9T5ykuQ==
+	bh=W9IfBQssGJCwaCyhBTqHkQma6JBkkEiSI+oKw/U+ciQ=;
+	b=CEC4MaGYDPEnEMSvzwTKg0YmZ1/We2GljqTM+1kYyO89SLn2Es8nQKSUNh/lWDO6q38J
+	 jfiYDmzWXMuhLhAyHNj8wI72wV84rHrMz6XY5qaIDFFy1UelVdSz885W1aDJTu5lCzeDq
+	 ywXAeOeQjoNQvoiKpbzziMi+j7lLynpNGqk7214HA6kghbRwN2DJZ5By3dibw+CrX7jbZ
+	 Wdykk6f+Ill7pK7XiEUhA+C9sHOT0iBU72B9a712KOkiyvbscg4ylg5hxzfUc/+A15CQS
+	 u4Xl5B3COEP10x7BU0pyADKj1i8dh6Ve4qDn7T6hSCdVEfkvv/JuXOmu4d40TENmkXQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="gYc/SdCy";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eOQYncZL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BB62606A31C
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 14:29:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD33B606A320
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 14:30:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gYc/SdCy
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B88A11F008A2;
-	Sun,  8 Nov 2026 14:29:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eOQYncZL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 271401F0089F;
+	Sun,  8 Nov 2026 14:30:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794148176;
-	bh=CkrkWtVRWAYfjMr2/KmaUuRw+CjrhoQ3eegXGEoE7+o=;
+	s=k20260515; t=1794148238;
+	bh=W9IfBQssGJCwaCyhBTqHkQma6JBkkEiSI+oKw/U+ciQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gYc/SdCy1meVX1ag/OJeJDovCLArMKbtUaKfecXDJbY61x5p7nQZ0WthtnlMXc15b
-	 irZQeR7nWL8OUNCkyve9hMeKsM0M5njMhzY3fb9oYvZfXgU4msj7zZJaDgvfbkBEQ7
-	 /5R0a2gxbOXc2zzDz0XSwNDKfw43VEfSGA3rm2ATnKK20uokO0hDDKw3EJkoMI71iN
-	 HEjYFjYCff9+yJy8N9YrWX8dPfGSxGUjbgMp1kWFKNb6Z8vaD422mwbIqaYYTiOO4Q
-	 0QYINbV41S9EPiDYKHA5iIrr6QDPoTcVXOLWgadtTgpN65cMowhUjSCswvZCwTVzvB
-	 imRG/AsoeWgHw==
-Message-ID: <sashiko-outbox-203805@kernel.org>
+	b=eOQYncZL6z0BlG1sIJQkL5bYVaDhA7Ulr7prCVMjEw3D2yTTZeNZbQQrpoPy8uaze
+	 7R86I9qkMoQjz9yhz9FEaOnmNfzylUojIMEfpVkjdScGNO3O5j5wYoecCbvOcvAKm6
+	 yNDfd2N9XUyQA85lew9iJVNibR0W9m4nFmCLwY0orobe/AwPgQ36FJHjTTwzDK0iVd
+	 5pUlFFPWMU2wJ9tKxry7NTev6bxp6RDMv2/EkQp9GjkZ3RgO74+3nizrqzmnKPiroZ
+	 8SMYQSgMoaphex9Ulp91jFLizHIhS9/x9mRs2U1IlyFBjuf48LjLh/9bqCo5NAEacV
+	 5VjYmqdlmawNQ==
+Message-ID: <sashiko-outbox-203807@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/7] arm64: dts: apple: t8122: Add PCIe device nodes
+Subject: Re: [PATCH v2 7/7] arm64: dts: apple: t6032-j575d: Add PCIe device
+ nodes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Janne Grunau" <j@jannau.net>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261108-apple-m3-pcie-v2-5-0e5ffec71da4@jannau.net>
+In-Reply-To: <20261108-apple-m3-pcie-v2-7-0e5ffec71da4@jannau.net>
 References: <20261108-apple-m3-pcie-v2-0-0e5ffec71da4@jannau.net>
- <20261108-apple-m3-pcie-v2-5-0e5ffec71da4@jannau.net>
+ <20261108-apple-m3-pcie-v2-7-0e5ffec71da4@jannau.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 08 Nov 2026 14:29:36 +0000
+Date: Sun, 08 Nov 2026 14:30:37 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,24 +61,16 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Alyssa Milburn <amilburn@zall.org>
+> Add WiFi, Bluetooth, SD-Card reader, ethernet NIC and USB xHCI device
+> nodes for M3 Ultra Mac Studio.
+> The bootloader will fill MAC addresses for the network devices, add
+> Wifi and Bluetooth calibration data and set "apple,antenna-sku".
 >=20
-> Add the PCIe controller, its ports, IOMMUs and clock request pins to the
-> base M3 Pro .dtsi file.
->=20
-> Add PCIe devices for WiFi, Bluetooth, Ethernet, SD-Card reader and USB
-> xHCI to device trees and enable their ports and IOMMU if necessary.
-> The bootloader will fill MAC addresses and calibration data properties
-> in their device nodes.
->=20
-> Signed-off-by: Alyssa Milburn <amilburn@zall.org>
-> Co-developed-by: Michael Reeves <michael.reeves077@gmail.com>
-> Signed-off-by: Michael Reeves <michael.reeves077@gmail.com>
 > Signed-off-by: Janne Grunau <j@jannau.net>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108-apple-m3-p=
-cie-v2-0-0e5ffec71da4@jannau.net?part=3D5
+cie-v2-0-0e5ffec71da4@jannau.net?part=3D7
 
