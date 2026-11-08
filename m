@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794148176;
-	b=IxjcZf3apDe4TMF6af9YIBK5PS4Of59nl3qDfIYWW2XxgyA++Siz7WbHbxt/aFa7SkJl
-	 o4a8wMs6bXJQzmH+5B6JZM/7Zhm/r8Mg2fca8p6s+6Al3W4gsJAn0lkv4+g6XvD6ewVRQ
-	 4wnQrXBg/9Uup0Nk6lQgCQNJ8fTbNEMl7/dj/03oRtSXRQg7NgZwN7gd+OmPPhrQHIvXa
-	 ocuI3QlK5751IAvvu+zFdH9QoZTboUTTjQKDgeXDu/1T24bBwQaVHN8aAIpNL1fwI4iF+
-	 7wucAYaJS4F+IO9H7+dn5+NIiHNIWKtNezr8n958wHAYQwDxJrLtYAjjDt4VYnxmCDw==
+	t=1794148177;
+	b=2vzOjCiPurJUL9Os0iNqOWbq2uFVbkSwjOZ+gR2qhCOww0TpWlnj5V1my0xMGIuO2PRZ
+	 YGkgEF09g/JWuk03unaahu5T6muOswMPDr6xnNPhsvbMJwNadk9f1ugTCVEN9oPK/HPV/
+	 Rwd+GqVZ/xdqkl3mgMEqxORkQJnFlVj2/2KI9d4Q1MGAUPtzCIlHX1irUpp+Ko2yW+yME
+	 qJ+km1/1GuAPoijEbITaEF4m0kpPjiab9or51I9PpNTli1kpbZVL5R/vLvaJ1O3jaTn2l
+	 oz5MEXRPVEfP9/9Nlhy/LT78epyhqyK/gpIXOK0zCxvB4poqnN7yuqfMmK35EyRISkw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794148176;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794148177;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ILLrAl+2aYtS7exjPNHsKhe7m+b2eUcYoF/THiX3nRI=;
-	b=T4uuzLsOA4AIxTiU3RZDy+3ccYCaWce1oFRX8vEXMn2w4ouM6mHHfeQ8vW8PSF/pHOs9
-	 EUS/g+ZF/xhYaCaj9LFxTgCok1l4KrryyyJltU1i2jdVGuIextPFuYGBhA/bwKG7RO5Vx
-	 WMxSx+HLp3MW/ywHdUqL21WPbHf8Dy/Lwj0NDfr88vYSgeexIEHSQ4zJkCrzhALUU1cTi
-	 dJ4n3Im7A1wUS79HINpFdreowr89RZC5BcAOTYo9IhEXA1EMEbftjM4i7k2yzcsDMVuc4
-	 9UX2r2+nPlo0CAa62HVc5B9Z12h7VCYxmz4l0PR2aMngiW6CUm0WFOhR38CK7mmUEMw==
+	bh=CkrkWtVRWAYfjMr2/KmaUuRw+CjrhoQ3eegXGEoE7+o=;
+	b=lTzWoNf36854/WXScFf35dU+ORbV8i90lv6azZI8UxIIb7Ap8PQZqd7ayPRv343hbFWU
+	 M2/UXryoW2sQcQ6gqECy5kSDqS8a6d1oVeqDTCMv2PKW+zvoyHX3GD0RTN6X/BHb2sAOd
+	 5NYLIQCZ1gA4XsGt9hUBtuDO2ogD/uZQjPoCz9yGod8T4ySV6EkZYkxcXTtTHTQ1bLq4C
+	 pvPG0ML7tPSvBy+DiW+v+G9yZvyR50pQ6wXy7qlkt7ngScvT/NBWVnNm94Mujn3Fo8+O3
+	 RPsk1SIK7i1UPAKCQfzI3p9IxULtQ9BEq1jaNgK/gQpsfR/qP35MVLv1z8/F9T5ykuQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hSGjUpNR;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="gYc/SdCy";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A3E606A31C
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 14:29:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BB62606A31C
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 14:29:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hSGjUpNR
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E4861F008A1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gYc/SdCy
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B88A11F008A2;
 	Sun,  8 Nov 2026 14:29:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1794148176;
-	bh=ILLrAl+2aYtS7exjPNHsKhe7m+b2eUcYoF/THiX3nRI=;
+	bh=CkrkWtVRWAYfjMr2/KmaUuRw+CjrhoQ3eegXGEoE7+o=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hSGjUpNRp68qvONmt7MfTVgcLb5PhkBKjQo87Pk1rIzTeoHoFgth77UY810Zu6NPI
-	 G2GSt98LoSFInPkqvXaOeCUAbYC6zeIua/o0pAbOLjo5vpmtBovIcyZlvOWi+6ugnH
-	 vX7ySo4zlYkdLkzpbjzO8OodLRpmgAMBRM9RgJJ5IK4yq9d/C3bc8h7GI7aVfsDhZ+
-	 HT7pb3LCI7OKpwoDeJTguHqp5PZTvVgBfjdv2TWfHOjRYN/bhTMxshXZVbapZD0jIq
-	 SY4MPjs0ciLhXWWuGuVz4tN//4lOCE3IMacQPgs1sZvzsJubTniCZlM72h5u6xtK4L
-	 grhnM0YYafWcw==
-Message-ID: <sashiko-outbox-203804@kernel.org>
+	b=gYc/SdCy1meVX1ag/OJeJDovCLArMKbtUaKfecXDJbY61x5p7nQZ0WthtnlMXc15b
+	 irZQeR7nWL8OUNCkyve9hMeKsM0M5njMhzY3fb9oYvZfXgU4msj7zZJaDgvfbkBEQ7
+	 /5R0a2gxbOXc2zzDz0XSwNDKfw43VEfSGA3rm2ATnKK20uokO0hDDKw3EJkoMI71iN
+	 HEjYFjYCff9+yJy8N9YrWX8dPfGSxGUjbgMp1kWFKNb6Z8vaD422mwbIqaYYTiOO4Q
+	 0QYINbV41S9EPiDYKHA5iIrr6QDPoTcVXOLWgadtTgpN65cMowhUjSCswvZCwTVzvB
+	 imRG/AsoeWgHw==
+Message-ID: <sashiko-outbox-203805@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/7] dt-bindings: PCI: apple,pcie: Add M3 generation
- compatibles
+Subject: Re: [PATCH v2 5/7] arm64: dts: apple: t8122: Add PCIe device nodes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Janne Grunau" <j@jannau.net>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261108-apple-m3-pcie-v2-2-0e5ffec71da4@jannau.net>
+In-Reply-To: <20261108-apple-m3-pcie-v2-5-0e5ffec71da4@jannau.net>
 References: <20261108-apple-m3-pcie-v2-0-0e5ffec71da4@jannau.net>
- <20261108-apple-m3-pcie-v2-2-0e5ffec71da4@jannau.net>
+ <20261108-apple-m3-pcie-v2-5-0e5ffec71da4@jannau.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 08 Nov 2026 14:29:35 +0000
+Date: Sun, 08 Nov 2026 14:29:36 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,16 +60,24 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> The PCIe controller on Apple M3, M3 Pro, Max and Ultra SoCs are
-> compatible with the one on M2 Pro and Max. Add their per SoC compatibles
-> "apple,t8122-pcie" (M3), "apple,t6030-pcie" (M3 Pro) and
-> "apple,t6031-pcie" (M3 Max/Ultra) to the bindings.
+> From: Alyssa Milburn <amilburn@zall.org>
 >=20
+> Add the PCIe controller, its ports, IOMMUs and clock request pins to the
+> base M3 Pro .dtsi file.
+>=20
+> Add PCIe devices for WiFi, Bluetooth, Ethernet, SD-Card reader and USB
+> xHCI to device trees and enable their ports and IOMMU if necessary.
+> The bootloader will fill MAC addresses and calibration data properties
+> in their device nodes.
+>=20
+> Signed-off-by: Alyssa Milburn <amilburn@zall.org>
+> Co-developed-by: Michael Reeves <michael.reeves077@gmail.com>
+> Signed-off-by: Michael Reeves <michael.reeves077@gmail.com>
 > Signed-off-by: Janne Grunau <j@jannau.net>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108-apple-m3-p=
-cie-v2-0-0e5ffec71da4@jannau.net?part=3D2
+cie-v2-0-0e5ffec71da4@jannau.net?part=3D5
 
