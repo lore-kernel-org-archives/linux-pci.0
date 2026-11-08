@@ -1,55 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794136490;
-	b=PY/huTC2ecW/kYxXL0XIbC2J/1GP1HAQ8NVpD1yV257n8HS8cHTxw6Y5t23KfMCdqPY1
-	 mRxREHRdr8kNR6xd/ivkGRrQsetgT0BXd7J7zeqRYCiP71CMRyuKKggQcRs93605wHNXk
-	 CbYkMwq6HovouMM7PW0PmZShxgl6BLneiiLKRcr08/COBnVkUWTa7gmTPxTnnpBoMKhyX
-	 VhJ0aUAX4cVznM7c2eFFAXWckgGIrV/abKAv/aYf8C93qbcBvzomCEhdMkkLlQNlRJJUp
-	 1JhashX5K3fLiAysZRq7gE8puR+m0OiwR0H+AYDi32ycpgG5WO6AulCN1hIotfdFVTQ==
+	t=1794139306;
+	b=ZMDuzKkiuo7iLRYfQFlDkzX4zE0pANXblIQ30mbhVq0186zqScyywlgUZCHTXcvge+Go
+	 LJUZewRqKgNs1OT7Ndi/liXRh5v1sQgU8kdQw37wwiIaZYjzoGBNDpByOXZd9OR16BTVz
+	 11aJTYATJx08bwq3FO/Y+6xgrhl4kIIUtU7oWooa/nJId5uKerL359dkUXP38Gfb6L9r4
+	 rhnM/D311jb0UP9prbkduot8NhGc5qCVRQm5DwJFkhYH8wjekAHZnR4t4kV0QLe7uLqIQ
+	 sXy/7EUDmW6Vcxk05qhEM7wmW1KX9TZULqtsGnvPWWa2cP/ndJge18xSQgR3xF1DfXA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794136490;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=YTdcCuB9JWlIyTeyv1TrVOf8M4O/B+x6kvbL17vKCAg=;
-	b=dfbzmWUrlIn5AuMw7MkdGvYXHHsbwOrn9FuTlt1hAD1vQpd5ZfjFNrXJaW50EQQ1RkJ3
-	 p+spQQEGG/1Lcdk6GWSHP7KdD7vDpcD5JWfc8rWycwtYA50YftmIMI/90EowCKV6pj4zD
-	 v9uJRsj0knGpmW1ibM5KOl1tB3SFFFHm2Ktco5xSZVGvo10nqAM/mwBzi0haBw716/ZHA
-	 OOvVlrJX+N2Z7ZGUQOHSzkKGCD5UAHjU8lCGzEiVWRqXb9mMXqEAJf4W9FYPhOp8OE7qx
-	 5zs8zAQY1WaXEUYSHptxyvs5nMCrKwdcQUnW0lJ/+w/UiPWLHKFaO5vtrjUi7a+o9BQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794139306;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:User-Agent;
+	bh=EfOMyun5C5ngEki3e2kaeocfFLaY5krJWL5u47aRsdc=;
+	b=RUC2j59jmpsGc6+ikGcobhBgNWbgzwUo37W9KjuB4X1wlIG6G4fxrmItLJLGsXQldMEh
+	 sKtIHBCtXxu8sVOokFB9dllY8cM4pMCPoUXB8G0406o2yeidh4Q8oROnkB2tjCWTOQTcv
+	 eUonDGQwyy3Snv97kQw7BgUGjTKrOUQARLrzCoRx9dNZccWxAeQ1VeltW+6whXa2gyxPl
+	 LStb3HvhG+PDUFXlR3bXO0UjKK3iJgvVxeXXVY8T3s6EpO0nPaFfuwLl5N1PtINqcRkDH
+	 It3SDmj/lni9+QU8XaB+lyVC1DRQMD1ZClTnroqx7YbqvASwpHcylU5eMwVaqrn3ogg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DLyiyQ2d;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=NEQMOwuI;
+	arc=none smtp.remote-ip=198.175.65.21
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAA68606A31C
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 11:14:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18466606A31C
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 12:01:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 18466606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DLyiyQ2d
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F2C81F0089F;
-	Sun,  8 Nov 2026 11:14:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794136489;
-	bh=YTdcCuB9JWlIyTeyv1TrVOf8M4O/B+x6kvbL17vKCAg=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=DLyiyQ2duDQ6Vnf81WOLexvtsFQcTBVS8ZRpNmkNujiFtDkqxmcYOBunCI41+2zg1
-	 KbNWhRGhRWB9J6g5WhU5uHy7Ft81TiPNVWgc3Ufv4aTbctMtZeX0G6wY3CiDd1jDli
-	 TGerfyP3SdhQNJIYN0/JKTBnaleOf9U/EwrKXw0f6+yEklb4pfIDyloGoAhvLD+e7y
-	 K/LMYg87KgDbizByTt3vR0rat/aXu8oBR6QRC1GAMIgWubrF1ixaagwF9D+ruwDl2a
-	 nn7E0yWgL7dm4Yp7lvfs8krWkWVmqVIRV5DtPwjilPRq/4mv7QEJuD1lajVnwAKsRY
-	 2RI0XV6jT1wJA==
-Message-ID: <sashiko-outbox-203690@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/3] PCI: apple: Fix ECAM config window use-after-free
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hongyan Xu" <getshell@seu.edu.cn>, linux-pci@vger.kernel.org
-In-Reply-To: <20261108105640.875-2-getshell@seu.edu.cn>
-References: <20261108105640.875-1-getshell@seu.edu.cn>
- <20261108105640.875-2-getshell@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 08 Nov 2026 11:14:48 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=NEQMOwuI
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794139305; x=1825675305;
+  h=date:from:to:cc:subject:message-id;
+  bh=je+DM+POvVJJRHKpdaZcwv/Ueacsdw6f5yLxPe4hzWk=;
+  b=NEQMOwuIHgGldUUuWfVlKRdiG6lvAQ6xjZe6WAYtRALta+at9K0KByDa
+   zvbfZTJHe8/GMc6mJBjCWbqzmk41z3s+cqryIs3f/vUYMvzEwOBvk+pVI
+   lBxMY2CmuP7+cWb0Pv4RjDawyO5fPTQPk8Ox7+6TQ79B58AFH8S03bGSy
+   wvtXL51qfa/UMAaPirKvFnUHvZWFgw3svihY+2QM5KvtEYQhPypAy/u2y
+   6OigaH2US/4ODbTBhWxjbwwXT1KOqglQB0SyWWejn7hddbP8icmfLdwqs
+   oWYSwnO+k13UfdW4rAe3ykyQa+1tV1dmrgPyVnqH8X0x/S6gGnDQNWHoA
+   g==;
+X-CSE-ConnectionGUID: TG9F6GM4Sj2xZxtyRwM7xw==
+X-CSE-MsgGUID: tGsXr1DTSd+9OesxviadFA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11959"; a="2980196"
+X-IronPort-AV: E=Sophos;i="6.27,202,1787036400"; 
+   d="scan'208";a="2980196"
+Received: from fmviesa012.fm.intel.com ([10.60.135.152])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Nov 2026 04:01:44 -0800
+X-CSE-ConnectionGUID: pXe+cwqqSAeSTlyG4bqVJg==
+X-CSE-MsgGUID: vI5O7YuJRseN96Eo/8dzPg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,202,1787036400"; 
+   d="scan'208";a="9399450"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa012.fm.intel.com with ESMTP; 08 Nov 2026 04:01:42 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xQ1ad-00000000stf-3vTm;
+	Sun, 08 Nov 2026 12:01:39 +0000
+Date: Sun, 08 Nov 2026 20:01:12 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller:dwc-spacemit] BUILD SUCCESS
+ da2d91bea94439984f3a2876e3e844608b047939
+Message-ID: <20261108200112.hRA5VHOH-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,83 +80,211 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] PCI: apple: incomplete IRQ and domain teardown in
-  pci_host_common_remove()
-It also noticed 1 related pre-existing issue this patch does not
-introduce:
-- [Critical] PCI: apple: MSI irq_domain leak and use-after-free in
-  apple_pcie_probe() [1]
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-spacemit
+branch HEAD: da2d91bea94439984f3a2876e3e844608b047939  PCI: spacemit: Ignore PERST# input in RC mode on K1
+
+elapsed time: 837m
+
+configs tested: 192
+configs skipped: 5
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                              allnoconfig    gcc-16.2.0
+alpha                             allyesconfig    gcc-16.2.0
+alpha                                defconfig    gcc-16.2.0
+arc                               allmodconfig    clang-24
+arc                                allnoconfig    gcc-16.2.0
+arc                               allyesconfig    clang-24
+arc                                  defconfig    gcc-16.2.0
+arc                             hsdk_defconfig    clang-24
+arc                      nsimosci_hs_defconfig    gcc-16.2.0
+arc                   randconfig-1000-20261108    gcc-11.5.0
+arc                   randconfig-1001-20261108    gcc-11.5.0
+arm                                allnoconfig    gcc-16.2.0
+arm                               allyesconfig    clang-24
+arm                                  defconfig    gcc-16.2.0
+arm                             dove_defconfig    gcc-16.2.0
+arm                           ep93xx_defconfig    clang-24
+arm                         multi_v7_defconfig    gcc-16.2.0
+arm                   randconfig-1000-20261108    gcc-11.5.0
+arm                   randconfig-1001-20261108    gcc-11.5.0
+arm                   randconfig-1002-20261108    gcc-11.5.0
+arm                   randconfig-1003-20261108    gcc-11.5.0
+arm                         realview_defconfig    clang-19
+arm                            stm32_defconfig    gcc-16.2.0
+arm64                             allmodconfig    clang-24
+arm64                              allnoconfig    gcc-16.2.0
+arm64                                defconfig    gcc-16.2.0
+arm64                       quartz64_defconfig    clang-24
+arm64                       quartz64_defconfig    gcc-16.2.0
+arm64                 randconfig-1000-20261108    clang-24
+arm64                 randconfig-1001-20261108    clang-24
+arm64                 randconfig-1002-20261108    clang-24
+arm64                 randconfig-1003-20261108    clang-24
+csky                              allmodconfig    gcc-16.2.0
+csky                               allnoconfig    gcc-16.2.0
+csky                                 defconfig    gcc-16.2.0
+csky                  randconfig-1000-20261108    clang-24
+csky                  randconfig-1001-20261108    clang-24
+hexagon                           allmodconfig    gcc-16.2.0
+hexagon                            allnoconfig    gcc-16.2.0
+hexagon                              defconfig    gcc-16.2.0
+hexagon               randconfig-1000-20261108    gcc-16.2.0
+hexagon               randconfig-1001-20261108    gcc-16.2.0
+i386                              allmodconfig    clang-22
+i386                               allnoconfig    gcc-16.2.0
+i386                              allyesconfig    clang-22
+i386        buildonly-randconfig-1000-20261108    clang-22
+i386        buildonly-randconfig-1001-20261108    clang-22
+i386        buildonly-randconfig-1002-20261108    clang-22
+i386        buildonly-randconfig-1003-20261108    clang-22
+i386        buildonly-randconfig-1004-20261108    clang-22
+i386        buildonly-randconfig-1005-20261108    clang-22
+i386                                 defconfig    gcc-16.2.0
+i386                  randconfig-1000-20261108    gcc-14
+i386                  randconfig-1001-20261108    gcc-14
+i386                  randconfig-1002-20261108    gcc-14
+i386                  randconfig-1003-20261108    gcc-14
+i386                  randconfig-1004-20261108    gcc-14
+i386                  randconfig-1005-20261108    gcc-14
+i386                  randconfig-1006-20261108    gcc-14
+i386                  randconfig-1007-20261108    clang-22
+i386                  randconfig-1008-20261108    clang-22
+i386                  randconfig-1009-20261108    clang-22
+i386                  randconfig-1010-20261108    clang-22
+i386                  randconfig-1011-20261108    clang-22
+i386                  randconfig-1012-20261108    clang-22
+i386                  randconfig-1013-20261108    clang-22
+loongarch                         allmodconfig    clang-24
+loongarch                          allnoconfig    gcc-16.2.0
+loongarch                            defconfig    clang-24
+loongarch             randconfig-1000-20261108    gcc-16.2.0
+loongarch             randconfig-1001-20261108    gcc-16.2.0
+m68k                              allmodconfig    gcc-16.2.0
+m68k                               allnoconfig    gcc-16.2.0
+m68k                              allyesconfig    clang-24
+m68k                                 defconfig    clang-24
+m68k                           sun3x_defconfig    clang-24
+microblaze                         allnoconfig    gcc-16.2.0
+microblaze                        allyesconfig    gcc-16.2.0
+microblaze                           defconfig    clang-24
+mips                              allmodconfig    gcc-16.2.0
+mips                               allnoconfig    gcc-16.2.0
+mips                              allyesconfig    gcc-16.2.0
+mips                            gcw0_defconfig    clang-19
+mips                         qi_lb60_defconfig    gcc-16.2.0
+mips                            xway_defconfig    clang-19
+nios2                             allmodconfig    clang-20
+nios2                              allnoconfig    clang-24
+nios2                                defconfig    clang-24
+nios2                 randconfig-1000-20261108    gcc-16.2.0
+nios2                 randconfig-1001-20261108    gcc-16.2.0
+openrisc                          allmodconfig    clang-20
+openrisc                           allnoconfig    clang-24
+openrisc                             defconfig    gcc-16.2.0
+openrisc                     or1ksim_defconfig    gcc-16.2.0
+parisc                            allmodconfig    gcc-16.2.0
+parisc                             allnoconfig    clang-24
+parisc                            allyesconfig    clang-17
+parisc                               defconfig    gcc-16.2.0
+parisc                 generic-32bit_defconfig    clang-24
+parisc                randconfig-1000-20261108    clang-24
+parisc                randconfig-1001-20261108    clang-24
+parisc64                             defconfig    clang-24
+powerpc                     adder875_defconfig    gcc-16.2.0
+powerpc                      akebono_defconfig    clang-19
+powerpc                           allmodconfig    gcc-16.2.0
+powerpc                            allnoconfig    clang-24
+powerpc                       bamboo_defconfig    gcc-16.2.0
+powerpc               randconfig-1000-20261108    clang-24
+powerpc               randconfig-1001-20261108    clang-24
+powerpc                      taishan_defconfig    clang-19
+powerpc                  xes_mpc85xx_defconfig    gcc-16.2.0
+powerpc64                         alldefconfig    gcc-16.2.0
+powerpc64             randconfig-1000-20261108    clang-24
+powerpc64             randconfig-1001-20261108    clang-24
+riscv                             allmodconfig    clang-24
+riscv                              allnoconfig    clang-24
+riscv                             allyesconfig    clang-24
+riscv                                defconfig    gcc-16.2.0
+riscv              nommu_k210_sdcard_defconfig    gcc-16.2.0
+s390                              allmodconfig    clang-17
+s390                               allnoconfig    clang-24
+s390                              allyesconfig    gcc-16.2.0
+s390                                 defconfig    gcc-16.2.0
+sh                                allmodconfig    gcc-16.2.0
+sh                                 allnoconfig    clang-24
+sh                                allyesconfig    clang-17
+sh                         apsh4ad0a_defconfig    clang-19
+sh                                   defconfig    gcc-14
+sh                  kfr2r09-romimage_defconfig    clang-24
+sh                           r7785rp_defconfig    clang-19
+sh                           rsk7269_defconfig    clang-24
+sh                            se7750_defconfig    clang-24
+sh                         sh7763rdp_defconfig    clang-19
+sh                             shmin_defconfig    gcc-16.2.0
+sparc                              allnoconfig    clang-24
+sparc                                defconfig    gcc-16.2.0
+sparc                 randconfig-1000-20261108    gcc-8.5.0
+sparc                 randconfig-1001-20261108    gcc-8.5.0
+sparc                        sparc32_defconfig    gcc-16.2.0
+sparc64                           allmodconfig    clang-20
+sparc64                              defconfig    gcc-14
+sparc64               randconfig-1000-20261108    gcc-8.5.0
+sparc64               randconfig-1001-20261108    gcc-8.5.0
+um                                allmodconfig    clang-17
+um                                 allnoconfig    clang-24
+um                                allyesconfig    gcc-16.2.0
+um                                   defconfig    gcc-14
+um                              i386_defconfig    gcc-14
+um                    randconfig-1000-20261108    gcc-8.5.0
+um                    randconfig-1001-20261108    gcc-8.5.0
+um                            x86_64_defconfig    gcc-14
+x86_64                            allmodconfig    clang-22
+x86_64                             allnoconfig    clang-24
+x86_64                            allyesconfig    clang-22
+x86_64      buildonly-randconfig-1000-20261108    gcc-14
+x86_64      buildonly-randconfig-1001-20261108    gcc-14
+x86_64      buildonly-randconfig-1002-20261108    gcc-14
+x86_64      buildonly-randconfig-1003-20261108    gcc-14
+x86_64      buildonly-randconfig-1004-20261108    gcc-14
+x86_64      buildonly-randconfig-1005-20261108    gcc-14
+x86_64                               defconfig    gcc-14
+x86_64                                   kexec    clang-22
+x86_64                randconfig-1000-20261108    gcc-14
+x86_64                randconfig-1001-20261108    gcc-14
+x86_64                randconfig-1002-20261108    gcc-14
+x86_64                randconfig-1003-20261108    gcc-14
+x86_64                randconfig-1004-20261108    gcc-14
+x86_64                randconfig-1005-20261108    gcc-14
+x86_64                randconfig-1006-20261108    clang-22
+x86_64                randconfig-1007-20261108    clang-22
+x86_64                randconfig-1008-20261108    clang-22
+x86_64                randconfig-1009-20261108    clang-22
+x86_64                randconfig-1010-20261108    clang-22
+x86_64                randconfig-1011-20261108    clang-22
+x86_64                randconfig-1012-20261108    clang-22
+x86_64                randconfig-1013-20261108    clang-22
+x86_64                randconfig-1014-20261108    clang-22
+x86_64                randconfig-1015-20261108    clang-22
+x86_64                randconfig-1016-20261108    clang-22
+x86_64                randconfig-1017-20261108    clang-22
+x86_64                                rhel-9.4    clang-22
+x86_64                            rhel-9.4-bpf    gcc-14
+x86_64                           rhel-9.4-func    clang-22
+x86_64                     rhel-9.4-kselftests    clang-22
+x86_64                          rhel-9.4-kunit    gcc-14
+x86_64                            rhel-9.4-ltp    gcc-14
+x86_64                           rhel-9.4-rust    clang-22
+xtensa                             allnoconfig    clang-24
+xtensa                            allyesconfig    clang-20
+xtensa                 generic_kc705_defconfig    gcc-16.2.0
+xtensa                randconfig-1000-20261108    gcc-8.5.0
+xtensa                randconfig-1001-20261108    gcc-8.5.0
+
 --
-
-commit 6595d3b06ad4c1310264ede81b930782370102fe
-Author: Hongyan Xu <getshell@seu.edu.cn>
-
-PCI: apple: Fix ECAM config window use-after-free
-
-This commit wires pci_host_common_remove() as the platform driver remove
-callback so the PCI root bus is removed before devres frees the ECAM
-configuration window.
-
-> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller=
-/pcie-apple.c
-> index c2cffc0659f44..a1e8a3a0ef1dc 100644
-> --- a/drivers/pci/controller/pcie-apple.c
-> +++ b/drivers/pci/controller/pcie-apple.c
-> @@ -886,6 +886,7 @@ MODULE_DEVICE_TABLE(of, apple_pcie_of_match);
-> =20
->  static struct platform_driver apple_pcie_driver =3D {
->  	.probe	=3D apple_pcie_probe,
-
-[Severity: Critical]
-This problem wasn't introduced by this patch, but does apple_pcie_probe()
-leak the MSI parent irq_domain [1] if pci_host_common_init() fails?
-
-apple_msi_init() creates an unmanaged IRQ domain via
-msi_create_parent_irq_domain() with host_data set to the devm-allocated
-struct apple_pcie before calling pci_host_common_init():
-
-drivers/pci/controller/pcie-apple.c:apple_pcie_probe() {
-	...
-	ret =3D apple_msi_init(pcie);
-	if (ret)
-		return ret;
-
-	return pci_host_common_init(pdev, bridge, &apple_pcie_cfg_ecam_ops);
-}
-
-If pci_host_common_init() fails or defers (for example when
-apple_pcie_setup_port() defers on GPIO or reset acquisition), devres frees
-bridge and pcie->bitmap while the MSI irq_domain stays on irq_domain_list
-with a dangling host_data pointer, causing a use-after-free on subsequent
-domain lookups or probe retries.
-
-> +	.remove	=3D pci_host_common_remove,
-
-[Severity: High]
-Does wiring pci_host_common_remove() alone leave the unmanaged IRQ
-domains, port interrupts, and chained handlers active after rmmod?
-
-During probe, apple_msi_init() registers an unmanaged MSI parent domain
-via msi_create_parent_irq_domain(), and for each port
-apple_pcie_setup_port() takes an OF node reference via of_node_get(),
-creates a linear IRQ domain via irq_domain_create_linear(), sets
-apple_port_irq_handler() via irq_set_chained_handler_and_data(), and
-requests link up/down virqs via request_irq().
-
-pci_host_common_remove() only removes the PCI root bus.  When rmmod
-runs, devres frees struct apple_pcie and struct apple_pcie_port and unmaps
-MMIO, and free_module() unmaps the module text and rodata while those IRQ
-domains and handlers remain registered.  Reading /proc/interrupts or
-receiving a port interrupt then faults on unmapped module memory and
-freed port state.  Should this driver either use builtin_platform_driver()
-(matching .suppress_bind_attrs =3D true) or provide a remove callback that
-masks port interrupts and tears down the requested IRQs, chained handlers,
-IRQ domains, and OF node references?
-
-[1] https://sashiko.dev/#/bug/linux-93248aea-1b69-486f-9e9f-a90f7de2b348
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108105640.875-=
-1-getshell@seu.edu.cn?part=3D1
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
