@@ -1,48 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.3
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794130877;
-	b=hztHaH0FREQmQOQ570MAqXZSCi1UvnLTpGb3OSe/uT7Uf7h4IPp2of8t2PHEa6zVWq2k
-	 J6GNDSzKx93GHhKO4MpP8O0Nu/dFzdM/qhdXrAql5KlDOvG14uSXnbml9vDSFNCzPDwxb
-	 yfI+LRlF/x7q0XiNVkYUScnEJ+k3o6W55RQxsRwBZS8WEAWqAsmWPkv7a46XpQS2QJhJv
-	 RZyeZOnSayC6KZaZDwF7bu6g8c3BpEG50gCl2TOspEE/q36yo3868YP0txVj6FQ600qod
-	 CnyKnQ8iLyHx3zJCBKcgZQTVbwqcMxRmzhT31fQtGDPvjt4h3gWXPsqgN5cfX2vP6ZA==
+	t=1794130882;
+	b=UGloTdDmG2R/Da/AEwOBgldr8coYlpY3F7+6o9VcXcTIi84l3cZss8ui/1mp0iTkgPxt
+	 kZye3kNe65Zi24NqoSn/SExRZmF6LG0Y88QZ6NtTcA2Tmd/mGsx0YnzzeDJhGRk9KosDp
+	 hMWJ92CuMMp3iZQHSKdweNM7qaxD3stSBmPTD+EKfP8ZBTdQmxg7yNpNGrSEIrNIlnKPC
+	 FMccNxFjvRVSPpNgFrMhI3Jw/gs8jHBzFDT3aJVl0PsC5BmsnFD0IXx75hOY3BtoW2Xdg
+	 Td7XziiWukm7FJZwckr8QmftP93K69Iw5lVQCy2ZSGaLlXUL46yjxA67rGzQKzy8MZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794130877;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794130882;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
 	 X-CM-SenderInfo;
-	bh=B75XeCji0Hq4KB2ucqYdo8KpN0Fb8I/YrmcRagsu6Ms=;
-	b=pibP/BAoqes2xLLfP/NaJMoY9GB0kS0aQyMZ2lf4P2GwHzWftooYgewTFQdC8yVpQocf
-	 iQAlZNQCwqtQdQa1H4uQefyaw5BbjJSZY0Fn/56k4+xAquxje4tOzxON1MxTlZXflEgu+
-	 W1/rPqh/A1VRXbReC/zPsP3wrLh08zv8aptaXCWimA9STbGZcTf4IAfvE1YfVn42Gmiql
-	 Hl40S5R+qrNSXlGhSOYKJSeWJTtuPTByQFCoz6uN5b5Kb+eGMNyw371FdKLeLWyohG1kE
-	 jrsmyVRgbghT5CMVOTmdRCCvhOjUcq7ELx0+YNWBeT0ooCWdKFZ11NHfumRLxKICuUw==
+	bh=nqXfJixZkwzDhIMorPPJ0dQ7Iu297y2SeiumQpEkZaA=;
+	b=x7NA2gxT6419Ijwmt3c0TBx+5DujXtDQYjpipdxWm8/LlasOsRNeYj/qbO0OtYyLxpqj
+	 Tyc60ssgC3tH4ocaA6DbfA9V4nM4jBYXg6Gk40GHSXqt5RPnDFvbCqqIieveOrYo9Yc+w
+	 j6h3LH/OG6goe39vvipMp4TZm6wxpVsIcd8MrSIoZB52tVqI12P0mYajfUKgSu/4aXL0d
+	 KHMlHIts580pUlGiGYc8C39+cHCrXwjtW0polpFBBzuiGwSDDv8zdkPRVGE2D7T+P5ZKa
+	 EmpcbSJV+y8XOWesCINktX7pPezbbk/ZrF42p6msfSY+ur+SDKL3VwRo89rjsPo0dlw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=163.com;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=kSPLI+7Y;
-	arc=none smtp.remote-ip=220.197.31.3
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=cBh9bpcG;
+	arc=none smtp.remote-ip=117.135.210.3
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE6CA606A31C;
-	Sun,  8 Nov 2026 09:41:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EE6CA606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1156E606A330;
+	Sun,  8 Nov 2026 09:41:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1156E606A330
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=kSPLI+7Y
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=cBh9bpcG
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=B7
-	5XeCji0Hq4KB2ucqYdo8KpN0Fb8I/YrmcRagsu6Ms=; b=kSPLI+7YOYwBuz6uYY
-	zO6GC48R063o5uemX7MMzmyVWAh8ICOVqZwHeGjFK0ZQk0r+6SSV41cSXPMAjkXf
-	oTkufeiZedFrCOXqKX+FDrqqNJ1pTFrIQ1O2GKC+KGg/3+eDXeMyEgNulmG1lwUr
-	OWj3V9JNBJiEBAHHpgkZbroSw=
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=nq
+	XfJixZkwzDhIMorPPJ0dQ7Iu297y2SeiumQpEkZaA=; b=cBh9bpcGv0ec6LeAZy
+	/wpRbvnAKKF9VHqBenBT4g0HgWXi2a8lSIXp2QWM7/PiwjfUd8mIYLNcsC/dj7hk
+	7P7Trmoyge8faLqopeAMyQ3N3vt0KjBos9tAbTooX7+/PwgRM5UPqQ+zzQBf637w
+	RFOV+mubefa7Q0yes8a5JhQ9o=
 Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wCXz8OTQ_BquUg4GA--.62891S6;
-	Sun, 08 Nov 2026 17:40:41 +0800 (CST)
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wCXz8OTQ_BquUg4GA--.62891S3;
+	Sun, 08 Nov 2026 17:40:39 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	mani@kernel.org,
@@ -57,9 +57,9 @@ Cc: robh@kernel.org,
 	linux-mediatek@lists.infradead.org,
 	linux-tegra@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 4/5] PCI: mediatek: Use pcie_get_link_speed()
-Date: Sun,  8 Nov 2026 17:40:33 +0800
-Message-ID: <20261108094034.679945-5-18255117159@163.com>
+Subject: [PATCH v2 1/5] PCI: Use pcie_get_link_speed() in pci.c
+Date: Sun,  8 Nov 2026 17:40:30 +0800
+Message-ID: <20261108094034.679945-2-18255117159@163.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261108094034.679945-1-18255117159@163.com>
 References: <20261108094034.679945-1-18255117159@163.com>
@@ -73,36 +73,57 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCXz8OTQ_BquUg4GA--.62891S6
-X-Coremail-Antispam: 1Uf129KBjvdXoW7JFWxGF4kKF17urW3uw43GFg_yoWfKFbE9w
-	nrtF4UJr4UGryfGw1YyFyFvr9ava4fWr10vayFqF1aya48u3s5Zr9agFWqqF9rGr4xXFy2
-	yr90kF4xCFyUCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRihL05UUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BrNcWrwQ5r4rAAA3d
+X-CM-TRANSID:_____wCXz8OTQ_BquUg4GA--.62891S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uFyDWF1rAryDXryftFWxtFb_yoW8Ar47pa
+	y7C3W8Ar18Jr1fWF4rJan8Wr15X3Z3ZayxtrySgay8Wr17CrZxJFyFq3y3tr1SkrWDAry5
+	G3ZIyrs8ua1xtF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRv385UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BfMcGrwQ5f4cwAA3C
 
-MediaTek was added after pcie_get_link_speed() was introduced and still
-indexes pcie_link_speed[] directly.  Convert it to the helper so it does
-not depend on the array being exported and cannot go out of bounds on
-invalid speed values.
+Replace the to_pcie_link_speed() wrapper with pcie_get_link_speed() in
+pcie_link_bandwidth_mbps() and pcie_bandwidth_available(), and remove
+the now-unused wrapper.  pcie_get_link_speed() performs the same lookup
+with bounds checking and is already exported.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 3a3e91cd0c21..ffde365c987f 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -888,7 +888,7 @@ static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *host)
- 		speed = lnksta & PCI_EXP_LNKSTA_CLS;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7c6f2aba8144..92ede1768caf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6025,11 +6025,6 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+ }
+ EXPORT_SYMBOL(pcie_set_mps);
  
- 		pci_info(rp, "link retrained, speed %s\n",
--			 pci_speed_string(pcie_link_speed[speed]));
-+			 pci_speed_string(pcie_get_link_speed(speed)));
+-static enum pci_bus_speed to_pcie_link_speed(u16 lnksta)
+-{
+-	return pcie_link_speed[FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta)];
+-}
+-
+ /**
+  * pcie_link_bandwidth_mbps - get the current bandwidth of a single PCIe link
+  * @pdev: PCI device to query
+@@ -6048,7 +6043,7 @@ int pcie_link_bandwidth_mbps(struct pci_dev *pdev)
+ 	if (err)
+ 		return pcibios_err_to_errno(err);
  
- 	}
+-	speed = pcie_dev_speed_mbps(to_pcie_link_speed(lnksta));
++	speed = pcie_dev_speed_mbps(pcie_get_link_speed(FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta)));
+ 	if (speed < 0)
+ 		return speed;
  
+@@ -6089,7 +6084,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 	while (dev) {
+ 		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+ 
+-		next_speed = to_pcie_link_speed(lnksta);
++		next_speed = pcie_get_link_speed(FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta));
+ 		next_width = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+ 
+ 		next_bw = next_width * PCIE_SPEED2MBS_ENC(next_speed);
 -- 
 2.43.0
 
