@@ -1,128 +1,125 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794157159;
-	b=jAXQIgZifyZqio2nlqVMgUigYb9WPwXBufSNJCiDUjAnSxIgKnnfHhMQ6/H5bvXM0iux
-	 CUhl9GhySq03bEsz5iWOWW+aAOBtY9iCsB/vtH3GRyCOeBMLytI31EYpN1QENg28p9yFq
-	 T6LRgU/GFijAeOmVLUMMJZC/CHMkyt4l2C/cad8XV1hOJpfacKAOb7U1kKRWKHdzC7yHt
-	 fP5J4nFXZN8t6T5cIprFk6rQU/dwZeI1+O4xd/Jso5j1NsPsUIKU+NcetLHSAmLQA4NqW
-	 JXE6CoUnHccjyyf/e6xu2SYkjG0hNCn40aTZPPpe85j/NM4njcyriutcmLh3QJrpMug==
+	t=1794164398;
+	b=Qb6PhjJAieNC/zNtGPCFz5V6XW/0xl3Kpd96JmWtDvzUzVtbQDKfxQQhxcNE09KxSG0i
+	 7NSf+rfaR7MSpC1/ElTRgjfs5BOMQfIiTPqnG+MBn0UTxvqIQW8AejJ/KAcLS02jY1i0O
+	 EO0rZu6wRHR5Tut54sEAFPrkWPKwWi8WeGNl1PguD6XxYGCZYm9FmDGdfyH6SSXoIOXds
+	 6ry0Vfz4jlhJPRzSoaT3RC4xl2lh/DnGmNcOkxXGHU4pIjt6wDwLKDcTnw26dRRds4ueQ
+	 IS4alQoW5kNL0X9L7wnnAKuA+dJ4OJByc+35MHdW3wj/ml4XXl5XOW+DHwk5hbQGL3Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794157159;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794164398;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=lmwJQdwiPgvUanu0gwsKytij+Ict3+h8IPwu4vyFkUU=;
-	b=yr5oBcJA5nB/QEHIYAIoeUXMBUoUuWQE/6+8LvkqgwgrYFmT4JCdEmn6FDqZ1YU0hJ2f
-	 ra4tRleZIULMAmwk1IcQB1MkDBJELxB+o1O+U+c6Ig40Fm3yij0sP4x82XxjTehTyXSjh
-	 Dq3LZyEmgSvecSAQDBCkhEXiP64QO9zDyj4uLo8ROKhG7+9mgVCeBUhngpLTRi1p+Uvo6
-	 wAKAdCO4XLcaKElH7cdTJoqWOZM6AssSXpepD5bsfjMgFL0Lee9Rzm2xBVRkHwr4Sj24+
-	 ismcBuX+0JYterpTMqyq0/NHgw9K8JdBvI6mPPAEEbYUsFG68l5vQFaWsALh7UBWf2w==
+	 Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:X-Mailer:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=JLhUwzup1lwefYy8NOOFjthYnrByVfTsqIe79kkV+Lk=;
+	b=EAKT/DfDiOvEJ+lujiA7u2vG2JSsyRs7qhcvgnAzKCUyA8XtC7ZcL+/kWCsS19p+cxFW
+	 sCf70SVpuFUeYgQqvyF004LyuS/kWGkaBMviANRFDHAcGZBW/xbZGF/w405iGDQXJpSFJ
+	 68G/EyQTHCFkN2YS4jL3sRjCzxXaly/G6cLlIAbU8iXXL44lxCANTuHCukme5+Kl2yj1G
+	 hWbVMHF8REWjejOpPLkArwN8m/VrJQp/8t4ahNHLTAserzzxiScrRwxl0OmOZlLeXbcv7
+	 VGqI2wN5fsdT7bVWTGrGLKzRCyiSgFOXhvv/lsOAYYky7vXwkP0mVaLnWxXzRtd26Vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=rowland.harvard.edu;
-	spf=fail smtp.mailfrom=g.harvard.edu;
-	dkim=pass header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.a=rsa-sha256 header.s=google header.b=vVWQLNs+;
-	arc=none smtp.remote-ip=209.85.219.47
-Received: from mail-qv1-f47.google.com (mail-qv1-f47.google.com [209.85.219.47])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XrEUEgHU;
+	arc=none smtp.remote-ip=209.85.128.53
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED1D8606A320
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 16:59:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ED1D8606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 347E7606A332
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 18:59:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 347E7606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.a=rsa-sha256 header.s=google header.b=vVWQLNs+
-Received: by mail-qv1-f47.google.com with SMTP id 6a1803df08f44-91eb57468feso1719816d6.1
-        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2026 08:59:18 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XrEUEgHU
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4b79502c27aso1791375e9.1
+        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2026 10:59:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rowland.harvard.edu; s=google; t=1794157158; x=1794761958; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20260707; t=1794164397; x=1794769197; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=lmwJQdwiPgvUanu0gwsKytij+Ict3+h8IPwu4vyFkUU=;
-        b=vVWQLNs+Rnn6NOsMpjKSpUM9H3gRT4E/HZTt53PMAZ2SXIz+Low080hQm0r2oKAsG+
-         HZ5TLknOMUGXKR3KUCz20FyQXU1Y7n4k67s/O97MTY2HciAv7W5/XWWVJI3wnxiYTpJN
-         gDPuohXn6LbvsrECp0/Ji6cvN5My5wm8EgfEsTmjv66hd/4pZ3HhjPBADrWO+gshRLZX
-         1w4cJtE0RQlZSB1u8qCDumnVcL5w0oR/W9xf8l09re306PAWvYklsReVbujjFSq7ckfb
-         ysHxLPgUuyjzLYLRPYb0BIszOUV4j3JsJcseKz7sg4xVYz+KH4V8tOVQekOfo5kBRIRc
-         SzLQ==
+        bh=JLhUwzup1lwefYy8NOOFjthYnrByVfTsqIe79kkV+Lk=;
+        b=XrEUEgHUwv+lt2Z0T4RzlOQuYT1yMbnY/MJrtF5HY2pc8m0ujKE+1IGJbqc3A1SsPJ
+         Pz+po0Wh7ECcrOl1hyNdZBme+OsO/r11IeCA1lW9KMbstFhlOkC0Hm7Ef+TTavGsfrDk
+         7T2AE8nlcorDhYFpLo0KTCt4xOv09AacMRilfH2h4PS2mZ0iBReAF8XAcgtI3iT+qlRY
+         EJQPYUIUlDRCCjadf1+24R8V0flZyhCZpLCroCVsidoQ510350k4POOaAcSXgGRrBTWF
+         rbpUnz5O6K0TOR8uz/zwLHiObwDAqnCJFWP0+ssCNYCBYnXJwQ2yMfUqdKkv6ro/lp/q
+         XMaA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794157158; x=1794761958;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1794164397; x=1794769197;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=lmwJQdwiPgvUanu0gwsKytij+Ict3+h8IPwu4vyFkUU=;
-        b=F4FhUxm69BySRyChln+7Q7pMIyChhg76VKGOxhGy2x1XKnW6xshw32A3/BshpX2M0A
-         YIr2zmzzI9K+66IUIdYjPS4TkBq8dnios9Io9rTsTmZx17oReUpNbsqd1zaKGzBHIo+D
-         /2dsl9uyJ7yrvYzOrmfQVIm87+YIC7To9ctpFcnrO7Xet3uNlSWF5+Lh4mZqmK/3zx0E
-         AN6f4KA+1tpeXHUR97iQkxzQKoG2xIY69lCWd4O/UWnTLwR72f5jwLeAo243EfgZO5rI
-         EqVhS508SBea3r52iTMloknkZ0e8iJskxcV4gTxvAPpphsq589caVeF8t/Skhm0Pydcl
-         FP5w==
-X-Forwarded-Encrypted: i=1; AL+hErGjTDV/ijCrNYXQHHcWHzvOI2rPsMUujo0m42fQAq5uabxijUJPrJ6gqQFhpXjmyCxubwyHWG2QBi8=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/eyKPP7gT2DzCnoNw9Vb3VCZTViBSv6WditzYNtpdVzG8vbnaP
-	lqkX90GvOZ5osql3f/KWJfxMpwQrpwgiobtjWWq2/msOO6KuBeIlcbJeQxmFAG9S3A==
-X-Gm-Gg: AYBFou3PNaDY/2j1diYXozB/c0xrSxkP/V03TOVlB3XvqA7gJ2go4s44nyLNf+Y4lEB
-	/Wn+GLTPXikNbTxJluFEQ8VWc0h0DbsdZseNShZ+ZKJddjcwuXx5UWHK1NkYL7QZzCJ6lewiDtf
-	XE2C1suKPTE9s7FAUceSVAM2Lm1N84ysvzD74oypuFJLCh+VcxwZGCwGddWEHlOWtrxPOd2JJvR
-	CPt+wbfHZrVxnJwAbSZFQjYYNVuiRjr6mLmMg5MC4lb0mAugRbvGKR/OGIEdP7JHSsofkCe+2u9
-	WQZwv2bdmWXAG4LB5I2duA9e44ab3OdJECEwqtJqNgKX6Qu5iK9Cp43oXke9oHoyToF7IjMbIRW
-	2H6zKtPwBr/ViXYYo8NpF5Rf93EG+vl80unsQyDC3FUHeuyh7VZi2gNqoaACE1El6NSCZ8ctLb+
-	66GoXWNqCrbGX9NAXG624N8QRLiMk43SUoDpegjXKxxf5d8QexgnlPnt8zv8p4G4a0wQzQ9dY+D
-	vi9JwaSgKBdbdrK8Em5y4haCDRbDZJePdDfu3PFVYe+Hazxuj5XKR0XT1fWjRRAMqcbjsT+Ewyb
-	vfM1TvVM95buyqQi5jw6j2AEer2G
-X-Received: by 2002:ad4:5d62:0:b0:91e:9d64:3294 with SMTP id 6a1803df08f44-91ed240d34dmr24616736d6.30.1794157157397;
-        Sun, 08 Nov 2026 08:59:17 -0800 (PST)
-Received: from rowland.harvard.edu ([2601:19b:d01:d210::66b0])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ecedbefb2sm22431036d6.17.2026.11.08.08.59.13
+        bh=JLhUwzup1lwefYy8NOOFjthYnrByVfTsqIe79kkV+Lk=;
+        b=jmQRMFZGnpo0IDHM7w3nHXJ0v3b/pbRscGwnWZCEx0kBgwpbsI96NGIauCyk51JrqN
+         HJPMD14TUy+V7/DsUC/GXhXNFj6b1cccvygcbBmyFJ1TgxrQf4AgtIC8Ta4UK+SEaPPa
+         1BwzNxj21Rg/4OK70LdyX0TcZa+V++1D9Nye5RwUMaiVqB3kt+mXmJ3b/hgr6JWZezJ9
+         TNCnqz2OY4gjNZqH9XrFKGwKY7kfVr4yBYjVZHq3AZgtcKyZkxPRIyZK9mb5vc/5pqlF
+         HqX8wq6WF6rCb83gcCzqCSRTuYDNgeEMOKmVWb6X9Wp6LQiQdnhGdyUetk9gBYlj6MX3
+         4q/A==
+X-Forwarded-Encrypted: i=1; AL+hErG2ErX7IrR1NrCaqtLRU4s06ViA75xRNPLMqqqkXQnoTOy63GV5sEeyLxmPJ9BG46UUilmGZ6o+jiM=@vger.kernel.org
+X-Gm-Message-State: APuU4Z914gnDBVoGcLPAezSd8e41qLVEbZw/NY5Xwlz2gbnASyribLt/
+	YhphIXhO6eDxtnbsRTZzZazr3FOgXNr+jG59fnRd8QQCOOp9lbFMNxnR
+X-Gm-Gg: AYBFou2lQwV3cMFkwqMw93bw+9zP8AHb8gtpKYxorcLhLBI3R3AVnu0F+eNFLa+Wb4X
+	EZ4KVzLqVX60SQ5jdZcZNqvtHlkcqoTm/VTmtrbcwHcVh8//99mnzw+oiau7fdP/SXVSlTEDmRB
+	4hLBGOTCoL9xs3KHEwD5BviOFNM8pLfuw6xF5lJ+svNU7ux6qvuq5JqmV4Mr/m7XgtXhGyK7z3m
+	Ts0OVqtI1duufgFP34nGUIEBraHmKzqNSvZ2vzorIrDDfLxNvKgLbOp8iTA53V7KR8hVqEuLd6H
+	9ZnO3RAcdo6lo6BoaZM2UEsicZVP0l0OWmBg+JGZf7QfLodBG3cL5U2eRvmqPTrIASvep8QHSVc
+	zBVWUOkvZNUsv7B94ycXRGNb8RyPHaFP86XKjNci3wXUMaNVCZ99X7q57QUAQf+au7g6NuRdEip
+	CWHUj5xiLyUr85/YI0j85Y9fSkNJ22J/ijgnrkKpG9Y0w8obiV2ctaV6jutR79KhbOKIpXjILHG
+	JTEkLyrPS41grmxFswRYtC8Wj5vLxJDNA7dGZh9TH7SSy+AXDt6QulQyo1Vltz5YtxQ30w73WIW
+	vw8EAvUxU2lULhPZ8wsC4kHmhQ5wnsf9TqNBlDd0je4ZOm8oIKXkDTnKLE5uHdNL
+X-Received: by 2002:a05:600c:468f:b0:4a1:7e77:c382 with SMTP id 5b1f17b1804b1-4b960d9b170mr35982125e9.5.1794164396406;
+        Sun, 08 Nov 2026 10:59:56 -0800 (PST)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b7efb1f3acsm185228445e9.14.2026.11.08.10.59.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Nov 2026 08:59:16 -0800 (PST)
-Date: Sun, 8 Nov 2026 11:59:11 -0500
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 05/17] USB: Lock registered interfaces during manual
- driver binding
-Message-ID: <647f3199-909d-425f-b485-b598a18844d1@rowland.harvard.edu>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-5-1e536825b4eb@nvidia.com>
- <bb83fe3c-cebb-4bc8-bfc9-24df1cf72b0b@rowland.harvard.edu>
- <20261105184442.GF8298@unreal>
- <bf756e50-c77e-40f2-916d-e88887426806@rowland.harvard.edu>
- <20261108110909.GA8635@unreal>
+        Sun, 08 Nov 2026 10:59:56 -0800 (PST)
+Date: Sun, 8 Nov 2026 18:59:53 +0000
+From: David Laight <david.laight.linux@gmail.com>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+ linux-fsdevel@vger.kernel.org, Linus Torvalds
+ <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik
+ <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, Jeff Layton
+ <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet
+ <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, Al Viro
+ <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph
+ Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados
+ <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara
+ <jack@suse.cz>, Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org,
+ linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-um@lists.infradead.org,
+ linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ netdev@vger.kernel.org, ntfs3@lists.linux.dev,
+ platform-driver-x86@vger.kernel.org, coreteam@netfilter.org,
+ kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
+ jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
+ linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org,
+ linux-mm@kvack.org, linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
+ samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
+ linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
+ linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
+ Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, Chuck Lever
+ <cel@kernel.org>
+Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
+ pinning the entry
+Message-ID: <20261108185953.28054fb3@pumpkin>
+In-Reply-To: <20261107-akteur-gemieden-eckdaten-21304d085e35@brauner>
+References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
+	<CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com>
+	<20261107-akteur-gemieden-eckdaten-21304d085e35@brauner>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -132,48 +129,19 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261108110909.GA8635@unreal>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Sun, Nov 08, 2026 at 01:09:09PM +0200, Leon Romanovsky wrote:
-> On Thu, Nov 05, 2026 at 03:04:18PM -0500, Alan Stern wrote:
-> > >  it ensures that the lock is
-> > > acquired when the driver is bound.
-> > 
-> > That may have been your intention when the patch was created, but if you 
-> > read the patch you'll see that it includes a whole bunch of material 
-> > not related to locking during binding.  Namely, this part:
+On Sat, 7 Nov 2026 10:48:35 +0100
+Christian Brauner <brauner@kernel.org> wrote:
+
+> > While at it, I think it would be good to use this conversion as an
+> > opportunity to replace "char *" by "void *", which will probably let
+> > you drop several casts from users.  
 > 
-> Once I added `device_lock()` to `bind`, I had to add it to `unbind` as well.
+> So I tried that too. The thing is it drops exactly one u8 * cast in
+> ntfs3's label write. 
 
-Obviously I'm not making my points clear.  Let me try again.
+Since char is now unsigned that one isn't even needed...
 
-The entire patch description, as you wrote it, is this:
-
-> Interface claims hold the USB device lock, but device_bind_driver()
-> requires the target interface lock. Without it, trust-policy writes  can
-> race admission.
-
-This says nothing about holding the interface lock during unbinding.  In 
-other words, it isn't a complete description of the patch.  It implies 
-that the patch changes nothing outside the device_bind_driver() 
-function, which isn't true.
-
-Furthermore, the patch does not change any of the code in 
-usb_driver_release_interface(), which is where unbinding takes place, 
-because that routine already takes the interface lock.  So to say that 
-you had to add device_lock() to `unbind` is not accurate.
-
-Instead the patch adds a new usb_driver_release_refused_claim() routine, 
-plus code in usb_set_configuration() to call the new routine.  The patch 
-description says nothing about either of these things.  Not to mention 
-the fact that your other changes make it now possible for the driver 
-core to delete an interface claim when the interface is registered, 
-something which was not possible before.  This is another inadequacy in 
-the patch description.
-
-I'm not saying that any of the code is wrong.  But the description does 
-a very bad job of explaining the new code.
-
-Alan Stern
+David
