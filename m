@@ -1,125 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794164398;
-	b=Qb6PhjJAieNC/zNtGPCFz5V6XW/0xl3Kpd96JmWtDvzUzVtbQDKfxQQhxcNE09KxSG0i
-	 7NSf+rfaR7MSpC1/ElTRgjfs5BOMQfIiTPqnG+MBn0UTxvqIQW8AejJ/KAcLS02jY1i0O
-	 EO0rZu6wRHR5Tut54sEAFPrkWPKwWi8WeGNl1PguD6XxYGCZYm9FmDGdfyH6SSXoIOXds
-	 6ry0Vfz4jlhJPRzSoaT3RC4xl2lh/DnGmNcOkxXGHU4pIjt6wDwLKDcTnw26dRRds4ueQ
-	 IS4alQoW5kNL0X9L7wnnAKuA+dJ4OJByc+35MHdW3wj/ml4XXl5XOW+DHwk5hbQGL3Q==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794164398;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.179
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794170193;
+	b=CyOY8Vka7qdXtdoozf+vsIEdRNgSJKgciZe5d7Tgm1xqzaiopzde7YPDMewSCpkI1vQ6
+	 GaC/M4njHgq7+muEZkhZ3+jjuw9+JdHbnSCUDndJDc9u40MaJjyBNBYRMV98OWSYni9qQ
+	 5diketGI66M5JxURVdUMegqYtMJWL3b2ADhoOEUCnNKJ5eOpqH1XRhiWxQaaodpcGlt2f
+	 QHsn5jC4I6pDYGsiX06c2XqqR9xSuCApiEbUfUpj8Jp2nV3FAn5bLTZc45VwaUzE2i98L
+	 lGXNvSte76W1M+sEfs8kp+w7D7PEs24Q58JwpU/GvnGBPKQVxtyQV+TnPIW2sUPdFbA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794170193;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:X-Mailer:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=JLhUwzup1lwefYy8NOOFjthYnrByVfTsqIe79kkV+Lk=;
-	b=EAKT/DfDiOvEJ+lujiA7u2vG2JSsyRs7qhcvgnAzKCUyA8XtC7ZcL+/kWCsS19p+cxFW
-	 sCf70SVpuFUeYgQqvyF004LyuS/kWGkaBMviANRFDHAcGZBW/xbZGF/w405iGDQXJpSFJ
-	 68G/EyQTHCFkN2YS4jL3sRjCzxXaly/G6cLlIAbU8iXXL44lxCANTuHCukme5+Kl2yj1G
-	 hWbVMHF8REWjejOpPLkArwN8m/VrJQp/8t4ahNHLTAserzzxiScrRwxl0OmOZlLeXbcv7
-	 VGqI2wN5fsdT7bVWTGrGLKzRCyiSgFOXhvv/lsOAYYky7vXwkP0mVaLnWxXzRtd26Vg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XrEUEgHU;
-	arc=none smtp.remote-ip=209.85.128.53
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:MIME-Version:From:
+	 In-Reply-To:References:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type;
+	bh=bGHlSVXJvFtsr7C8iFEwh7HKPCCDzw5AHasDBh0mXPk=;
+	b=VQxnIf2Ro3JnGApN1NQ1WurIsAV15sRn5s0qDxk06JyOhP1N9y7LF1DohdyjFj1xk7GU
+	 vfAPo2o4v1k2ojM4yY5ahhiMHc/AhpP7joTeXyj9l1ubf7KJoH1CKAmveRsWrcb9rzQML
+	 nL7kd3LVMx/7MmBSoZQxuHyhR8YYnujtfypju+jD40vrPdpIYBNDXqV5GftMYXO/XVNDc
+	 xRjzbnZxoxLl/2hjkalP0onk3G/9Kzw4BbUVR6jBqhN+IZjJsGETU+HjBSfA9HrMZaPO8
+	 8xy89FEeya211gj0V28+eM282ZjvoRrzL2gtmxgzTsBiLg/AtNHupu+rCB0ux+vL6/Q==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=student.oaklandcc.edu;
+	spf=pass smtp.mailfrom=student.oaklandcc.edu;
+	dkim=pass header.d=student.oaklandcc.edu header.i=@student.oaklandcc.edu header.a=rsa-sha256 header.s=google header.b=QHIx44vT;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.179
+Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 347E7606A332
-	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 18:59:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 347E7606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE09A606A9C6
+	for <linux-pci@vger.kernel.org>; Sun,  8 Nov 2026 20:36:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE09A606A9C6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=student.oaklandcc.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=student.oaklandcc.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XrEUEgHU
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4b79502c27aso1791375e9.1
-        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2026 10:59:58 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=student.oaklandcc.edu header.i=@student.oaklandcc.edu header.a=rsa-sha256 header.s=google header.b=QHIx44vT
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-8b30cbfa628so2948057b3.0
+        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2026 12:36:32 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794170191; cv=none;
+        d=google.com; s=arc-20260327;
+        b=BmMtU35ahtgQiiQduSJm+vZtWlf1UYF3W+85nzQ+7UxrBm/W3h2IgRzkw1Ug1Vx4ps
+         azVSXxZut4O/0XKh+AfAV9tbUhxsvuSvl9mzS9JhWXrkrAtTELYs4HRGzPkCzHS8BXyd
+         7QJymE1slpBrmfPRGrg05UanCHED87IyJprs6zHX1MZnCQNlN6WgOjU4Nk3IpjYMnFpq
+         bqYeJoLN+NFvx7CpMXnHf+lBfyRDbLJe8YYTb2a7pEoeYlqnGLafu31ZgEm3VopEmle8
+         VGaDxqPGBOxB+o0og02D6P5sguDNDAESAga4/Vym4f9PolD95lfTI4Y6OXfWAtNZ3fyv
+         vubw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:references:in-reply-to:from
+         :mime-version:dkim-signature;
+        bh=bGHlSVXJvFtsr7C8iFEwh7HKPCCDzw5AHasDBh0mXPk=;
+        fh=OHrm3KzC9NPTUliZtkwwZmsiN/esQ4MO8Trl4kwNKH4=;
+        b=KcAy132TooH/vxIPx+Giw0lij8vdVzhoDpxOZ7KNOX5F7lX+3uuIDJ2c3xiReJSC4F
+         u0viQNQSJKEnfolv5jR9yMyr1peLm75IxvGgXjt8jCTGRbGa8CTZ/0Y9yxTQz4oRYoU3
+         sn76AgYxEG3BD2gnbiMqWc+LqnyjGWtU6HvlQiqdhuWv2lbbpbbuRjn1Y431gVez+G68
+         wOUBJvLEDzcr2dqQyhGoVleJckhV0jRS9JnWvZNx5umus3F+dirAY+vC/l3CsZsXOdOb
+         K8RG0461G9mDa1pVOBtN3c4cZt+dNXzMa6PV4vLegQZGcQqxe/lNomSdYoDaQW59O8hL
+         vq9w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794164397; x=1794769197; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=JLhUwzup1lwefYy8NOOFjthYnrByVfTsqIe79kkV+Lk=;
-        b=XrEUEgHUwv+lt2Z0T4RzlOQuYT1yMbnY/MJrtF5HY2pc8m0ujKE+1IGJbqc3A1SsPJ
-         Pz+po0Wh7ECcrOl1hyNdZBme+OsO/r11IeCA1lW9KMbstFhlOkC0Hm7Ef+TTavGsfrDk
-         7T2AE8nlcorDhYFpLo0KTCt4xOv09AacMRilfH2h4PS2mZ0iBReAF8XAcgtI3iT+qlRY
-         EJQPYUIUlDRCCjadf1+24R8V0flZyhCZpLCroCVsidoQ510350k4POOaAcSXgGRrBTWF
-         rbpUnz5O6K0TOR8uz/zwLHiObwDAqnCJFWP0+ssCNYCBYnXJwQ2yMfUqdKkv6ro/lp/q
-         XMaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794164397; x=1794769197;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=student.oaklandcc.edu; s=google; t=1794170191; x=1794774991; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=JLhUwzup1lwefYy8NOOFjthYnrByVfTsqIe79kkV+Lk=;
-        b=jmQRMFZGnpo0IDHM7w3nHXJ0v3b/pbRscGwnWZCEx0kBgwpbsI96NGIauCyk51JrqN
-         HJPMD14TUy+V7/DsUC/GXhXNFj6b1cccvygcbBmyFJ1TgxrQf4AgtIC8Ta4UK+SEaPPa
-         1BwzNxj21Rg/4OK70LdyX0TcZa+V++1D9Nye5RwUMaiVqB3kt+mXmJ3b/hgr6JWZezJ9
-         TNCnqz2OY4gjNZqH9XrFKGwKY7kfVr4yBYjVZHq3AZgtcKyZkxPRIyZK9mb5vc/5pqlF
-         HqX8wq6WF6rCb83gcCzqCSRTuYDNgeEMOKmVWb6X9Wp6LQiQdnhGdyUetk9gBYlj6MX3
-         4q/A==
-X-Forwarded-Encrypted: i=1; AL+hErG2ErX7IrR1NrCaqtLRU4s06ViA75xRNPLMqqqkXQnoTOy63GV5sEeyLxmPJ9BG46UUilmGZ6o+jiM=@vger.kernel.org
-X-Gm-Message-State: APuU4Z914gnDBVoGcLPAezSd8e41qLVEbZw/NY5Xwlz2gbnASyribLt/
-	YhphIXhO6eDxtnbsRTZzZazr3FOgXNr+jG59fnRd8QQCOOp9lbFMNxnR
-X-Gm-Gg: AYBFou2lQwV3cMFkwqMw93bw+9zP8AHb8gtpKYxorcLhLBI3R3AVnu0F+eNFLa+Wb4X
-	EZ4KVzLqVX60SQ5jdZcZNqvtHlkcqoTm/VTmtrbcwHcVh8//99mnzw+oiau7fdP/SXVSlTEDmRB
-	4hLBGOTCoL9xs3KHEwD5BviOFNM8pLfuw6xF5lJ+svNU7ux6qvuq5JqmV4Mr/m7XgtXhGyK7z3m
-	Ts0OVqtI1duufgFP34nGUIEBraHmKzqNSvZ2vzorIrDDfLxNvKgLbOp8iTA53V7KR8hVqEuLd6H
-	9ZnO3RAcdo6lo6BoaZM2UEsicZVP0l0OWmBg+JGZf7QfLodBG3cL5U2eRvmqPTrIASvep8QHSVc
-	zBVWUOkvZNUsv7B94ycXRGNb8RyPHaFP86XKjNci3wXUMaNVCZ99X7q57QUAQf+au7g6NuRdEip
-	CWHUj5xiLyUr85/YI0j85Y9fSkNJ22J/ijgnrkKpG9Y0w8obiV2ctaV6jutR79KhbOKIpXjILHG
-	JTEkLyrPS41grmxFswRYtC8Wj5vLxJDNA7dGZh9TH7SSy+AXDt6QulQyo1Vltz5YtxQ30w73WIW
-	vw8EAvUxU2lULhPZ8wsC4kHmhQ5wnsf9TqNBlDd0je4ZOm8oIKXkDTnKLE5uHdNL
-X-Received: by 2002:a05:600c:468f:b0:4a1:7e77:c382 with SMTP id 5b1f17b1804b1-4b960d9b170mr35982125e9.5.1794164396406;
-        Sun, 08 Nov 2026 10:59:56 -0800 (PST)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b7efb1f3acsm185228445e9.14.2026.11.08.10.59.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Nov 2026 10:59:56 -0800 (PST)
-Date: Sun, 8 Nov 2026 18:59:53 +0000
-From: David Laight <david.laight.linux@gmail.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
- linux-fsdevel@vger.kernel.org, Linus Torvalds
- <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik
- <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, Jeff Layton
- <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet
- <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, Al Viro
- <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph
- Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados
- <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara
- <jack@suse.cz>, Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-um@lists.infradead.org,
- linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- netdev@vger.kernel.org, ntfs3@lists.linux.dev,
- platform-driver-x86@vger.kernel.org, coreteam@netfilter.org,
- kexec@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
- dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
- jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
- linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org,
- linux-mm@kvack.org, linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
- samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
- linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
- linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
- Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, Chuck Lever
- <cel@kernel.org>
-Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
- pinning the entry
-Message-ID: <20261108185953.28054fb3@pumpkin>
-In-Reply-To: <20261107-akteur-gemieden-eckdaten-21304d085e35@brauner>
-References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
-	<CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com>
-	<20261107-akteur-gemieden-eckdaten-21304d085e35@brauner>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+        bh=bGHlSVXJvFtsr7C8iFEwh7HKPCCDzw5AHasDBh0mXPk=;
+        b=QHIx44vTTGZ+uBHe3DWJXMtzahv9gH7cvijmSp/FK9uI5t3FJ7zelq43/Zs8/BhD+p
+         fFDbxk163KqwhgYKNwacR7muhidQEjAnMiOZy2ExzQWJY3KIjRYB26OvMotdPFlu5Rgj
+         gzOzBpvkVbY+UOYNAfXN/pD+NClCqk2vTLFnFIHucQoDTlkBN8jrN5zy9w0U4S0RcbTl
+         x28p6x34ij/cIlk/XQ5zJbYP3Zc1Rls1bO3vRnDUsp8vicHogN/DcakBYEjoDkB7rMVk
+         OWwxTPCUsSOcNQUYr2gKmBipb+eXorQZBbFisTw3zVSEPCyOnL9X3zvpJ98RgaQg4WCc
+         2maw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794170191; x=1794774991;
+        h=content-type:cc:to:subject:message-id:date:references:in-reply-to
+         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=bGHlSVXJvFtsr7C8iFEwh7HKPCCDzw5AHasDBh0mXPk=;
+        b=zkGsrMYRX6b7LfFdlpGuvVvtoNwBocEM9qaByHaeDrnf8QJ+EGxPTvIaB5KO3pJq71
+         uVp3PYhBIWuIySmrKmQAlQFxJ+F4MZhzwpJ5TCR5gVnDsSXn4q2fjKvVNvcGmBKHPp6/
+         ycontwJAtWGgwwP1dfPuFmCm6EklJixpoWNSUcSaMz5ABThRj4jnneHrXIyvlGzBwZGR
+         EIdhBXwUjOMNXm3NoNdycadqWbBv1aIC7VmJqXkuSR2YhYbFGNp1At5R8wKS0i05Xmzu
+         ugnefkpCe52q8QXFThHZahUlRpQQbslBAOoxwVH1oaWn4fvLuu0OsAiyvmyn9D5ZXPmt
+         l+0w==
+X-Gm-Message-State: APuU4Z+74tTX7+Fd948BB5i7dyMd40sR0MT3+9LcJB6wLoVDMdAvJ1i4
+	8P1oXE3pTe0oT25pGkuk0YDipcamdT0QeHjO/djB0F6shH6kI6RfgsCs0WobcFunSl2Hy+/W765
+	RZRpsITubZ147netkdIRIWjLpodFeslWDKPc2APLPLCNR8y6bVjI7
+X-Gm-Gg: AYBFou2K71keIK3DqjwEgpU1eLZoIa0cgUzQzkH9WPL+vtCLsD3DIS04CxxEhHKw3IC
+	0Lt8GqroUfhONzdvxxGovuPkUu+7ZVuAx3qDdKbO2Uq7ZE/+3rk6t1C/6S22Rg7Ut4fjHTX3CpK
+	fS74rOtk494mc5elgD1ecdvx0+tv1Qay4trDGkFHwIigF8aEloq8iLqRY5B3eXMI9W2Jut7L6qc
+	hyzlKNyepo3BC778WNysg25cezhFgbGPFF9PmeaKn+f8seQMINtMdYYm8xQrxTc2HnAcItxcujj
+	UwIR4kMLvEHFrchgW4h+gpwvRylJzQtm3z8Pp5MLFdE02fvbB3eYI8KUxXh4gbvGrkBlXmr7WtI
+	joj5UYyNUEnrS42s4iNeybGJsvqfTFyK5ncQ=
+X-Received: by 2002:a05:690c:e3ed:b0:8a0:76e8:c738 with SMTP id
+ 00721157ae682-8b36c664b7dmr14481487b3.0.1794170191478; Sun, 08 Nov 2026
+ 12:36:31 -0800 (PST)
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Sun, 8 Nov 2026 12:36:31 -0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -129,19 +104,187 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: "Louis H. Poulin II" <poulin.louis@student.oaklandcc.edu>
+In-Reply-To: <20261105234628.GA1576767@bhelgaas>
+References: <20261105234628.GA1576767@bhelgaas>
+Date: Sun, 8 Nov 2026 12:36:30 -0800
+X-Gm-Features: AclHuK8VpHQtQ_YEdNlD7LjRwRZk_EL9REn9QvIJRvz7bm5Twy4pr8DO17ZO5J8
+Message-ID: <CAGQButvJXLyiK2eRvuRmx=rGxN1M334=7vsp1Whq3w0mpeV1yg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ASPM: Add missing NULL check for link in sysfs
+ show/store callbacks
+To: helgaas@kernel.org
+Cc: linux-pci@vger.kernel.org, zhaojinming@uniontech.com, lukas@wunner.de, 
+	linux-kernel@vger.kernel.org, manivannan.sadhasivam@oss.qualcomm.com, 
+	dsimic@manjaro.org, shawn.lin@rock-chips.com, kees@kernel.org, 
+	krishna.chundru@oss.qualcomm.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, 7 Nov 2026 10:48:35 +0100
-Christian Brauner <brauner@kernel.org> wrote:
+Hi Bjorn,
 
-> > While at it, I think it would be good to use this conversion as an
-> > opportunity to replace "char *" by "void *", which will probably let
-> > you drop several casts from users.  
-> 
-> So I tried that too. The thing is it drops exactly one u8 * cast in
-> ntfs3's label write. 
+> Your next message suggests that the device and upstream bridge are
+> valid, so possibly bridge->link_state was NULL. I would instrument
+> pcie_aspm_get_link() to verify that and add a dump_stack() in
+> free_link_state().
 
-Since char is now unsigned that one isn't even needed...
+Yes. The instrumentation shows bridge->link_state becoming NULL after
+function-0 removal. Later lookups for surviving functions 0000:75:00.4
+and 0000:75:00.6 still find upstream bridge 0000:00:08.1, but its
+link_state is NULL.
 
-David
+This was on the ASUS TUF GAMING X870-PLUS WIFI, BIOS 1805, running
+7.2.15-ogc1.1.fc45.aspm453.x86_64 (#453). It was built from Linux
+7.2.15 plus the OpenGamingCollective downstream patch set and local
+diagnostics. This is not a reproduction on unmodified upstream.
+
+The diagnostic patch logs initialization, publication, visibility,
+lookup and teardown, with dump_stack() in free_link_state(). It also
+adds NULL checks returning -ENODEV to the ASPM and clock power-management
+sysfs show/store callbacks so collection can continue. These checks
+are diagnostic containment, not a proposed fix.
+
+The trigger is a local systemd oneshot,
+helix-gaming-disable-igpu.service. Its stated purpose is to keep the
+iGPU display function out of Gamescope DRM enumeration. Its command is:
+
+  /bin/sh -c 'if [ -e /sys/bus/pci/devices/0000:75:00.0/remove ]; then
+echo 1 > /sys/bus/pci/devices/0000:75:00.0/remove; fi'
+
+It targets function .0, not the bridge or siblings. In the same boot,
+systemd retains ExecMainPID=2486, matching the shell PID in the stack.
+Its recorded execution interval is 10.303980-10.348137 s monotonic;
+the journal records exit-free at 10.308186 s, within that interval.
+The dmesg timestamps in the separate excerpt below are left unchanged.
+
+Stack excerpt from the dump_stack() in free_link_state():
+
+  CPU: 1 UID: 0 PID: 2486 Comm: sh Not tainted
+7.2.15-ogc1.1.fc45.aspm453.x86_64 #453 PREEMPT(lazy)
+  dump_stack_lvl+0x5d/0x80
+  pcie_aspm_exit_link_state.cold+0x5/0x14
+  pci_remove_bus_device+0x10b/0x170
+  pci_stop_and_remove_bus_device_locked+0x22/0x30
+  remove_store+0x83/0xa0
+  kernfs_fop_write_iter+0x178/0x200
+  vfs_write+0x281/0x560
+  ksys_write+0x7b/0x110
+
+The matching vmlinux resolves the cold frame to free_link_state(),
+inlined into pcie_aspm_exit_link_state().
+
+Selected dmesg fields (abridged; attr= names the downstream device in
+publish-link, free-link and clear-link records):
+
+  [0.367481] seq=98 event=publish-link dev=0000:00:08.1
+link_state=present attr=0000:75:00.0
+  [0.367583] seq=159 event=visible dev=0000:75:00.4
+bridge=0000:00:08.1 link_state=present attr=l0s_aspm arg=420
+  [0.367609] seq=177 event=visible dev=0000:75:00.6
+bridge=0000:00:08.1 link_state=present attr=l0s_aspm arg=420
+  [10.307508] seq=191 event=exit-free dev=0000:75:00.0
+bridge=0000:00:08.1 link_state=present
+  [10.308089] seq=192 event=free-link dev=0000:00:08.1
+link_state=present attr=0000:75:00.0
+  [10.308728] seq=193 event=clear-link dev=0000:00:08.1
+link_state=NULL attr=0000:75:00.0
+  [10.896953] seq=194 event=get-bridge-link-null dev=0000:75:00.6
+bridge=0000:00:08.1 link_state=NULL
+  [10.896958] seq=195 event=show dev=0000:75:00.6 bridge=0000:00:08.1
+link_state=NULL attr=l0s_aspm
+  [10.896960] seq=196 event=show-result dev=0000:75:00.6
+bridge=0000:00:08.1 link_state=NULL attr=l0s_aspm arg=-19
+  [297.729199] seq=242 event=get-bridge-link-null dev=0000:75:00.4
+bridge=0000:00:08.1 link_state=NULL
+  [297.729204] seq=244 event=show-result dev=0000:75:00.4
+bridge=0000:00:08.1 link_state=NULL attr=l0s_aspm arg=-19
+
+arg=420 is mode 0644. l1_aspm was also exposed on .4 and .6 (seq 161
+and 179); subsequent l1_aspm reads also reached the NULL lookup. The
+-19 results above are produced by the added diagnostic guards. In
+this source, the unguarded show path dereferences link without a check.
+
+The trace shows publication for downstream .0, visibility with link
+state present, then teardown and pointer clearing when .0 is removed.
+Both siblings remain with reachable attributes. The first recorded
+post-teardown NULL lookup on .6 is about 0.59 s after clear-link in
+dmesg; .4 also reaches the NULL lookup at 297.729199 s.
+
+This establishes teardown followed by NULL lookups. It does not
+demonstrate a concurrent use-after-free or rule out other lifetime
+issues. I have preserved the full logs, diagnostic patch, source
+inputs, configuration and matching-vmlinux symbolization.
+
+Thanks,
+Louis
+
+
+On Thu, 05 Nov 2026 17:46:28 -0600, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc other members of conversation at
+> https://lore.kernel.org/all/20260727072915.3954329-1-zhaojinming@uniontech.com]
+>
+> On Wed, Nov 04, 2026 at 03:22:51PM -0800, Poulin, Louis wrote:
+> > Hi,
+> >
+> > We observed a cold-boot crash in l0s_aspm_show() that appears to
+> > contradict the assumption in this thread that the visibility check
+> > always keeps readers out when the ASPM link is unavailable.
+> >
+> > This was on an ASUS TUF GAMING X870-PLUS WIFI, BIOS 1805, running
+> > Bazzite's 7.2.15-ogc1.1.fc45.x86_64 kernel with InputPlumber 0.83.1.
+> > The fault occurred about 10 seconds into a cold boot. An earlier boot
+> > on the same system had the same fault address and symbol offset on
+> > 7.2.9-ogc3.1.fc44.x86_64 with InputPlumber 0.83.0. Both observations
+> > were on downstream kernels. The captured 7.2.15 kernel was tainted
+> > O/E (out-of-tree and unsigned module).
+> >
+> > Relevant excerpt from 7.2.15:
+> >
+> >   BUG: kernel NULL pointer dereference, address: 0000000000000030
+> >   Comm: inputplumber
+> >   RIP: 0010:l0s_aspm_show+0x47/0x80
+> >   RAX: 0000000000000000
+> >   CR2: 0000000000000030
+> >   Call Trace:
+> >     dev_attr_show+0x1f/0x50
+> >     sysfs_kf_seq_show+0xa8/0x110
+> >     seq_read_iter+0x132/0x4c0
+> >     vfs_read+0x34d/0x490
+> >
+> > The faulting instruction accesses offset 0x30 from the NULL register.
+> > In the corresponding source, aspm_attr_show_common() dereferences the
+> > result of pcie_aspm_get_link(). The read reached the callback even
+> > though that lookup had no link to return. The kernel killed the
+> > InputPlumber main thread and the service stopped answering
+> > ObjectManager.GetManagedObjects. This blocked the boot-time controller
+> > setup.
+> >
+> > We are building a diagnostic kernel that returns -ENODEV in that
+> > specific read callback when the link is absent and logs the PCI device
+> > and upstream bridge. The device and the reason its link state was
+> > missing are still unknown. We have not reproduced the fault on an
+> > unmodified upstream kernel.
+> >
+> > Would this trace justify a guard in the read callback, or is there a
+> > preferred way to instrument link-state teardown and sysfs visibility
+> > on this hardware? We can follow up with the device and bridge once
+> > captured.
+>
+> I don't think we should add a guard in addition to
+> aspm_ctrl_attrs_are_visible().
+>
+> pcie_aspm_get_link() must have returned non-NULL in
+> aspm_ctrl_attrs_are_visible() for the sysfs file to be visible.
+>
+> If it later returned NULL in aspm_attr_show_common(), we must have a
+> bug, like a lifetime issue or some kind of corruption.  Adding a guard
+> would just hide the bug.
+>
+> Your next message suggests that the device and upstream bridge are
+> valid, so possibly bridge->link_state was NULL.  I would instrument
+> pcie_aspm_get_link() to verify that and add a dump_stack() in
+> free_link_state().
+>
+> > Kernel source for the captured build
+> > https://github.com/OpenGamingCollective/linux/blob/f6857d4bfd614b90302903490796ef376be0a67d/drivers/pci/pcie/aspm.c
+> >
+> > Thanks,
+> > Louis
