@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794259069;
-	b=NHxb1UkOSUdXUlrpNSBKbtwl/RXBNAnZebl9aHyCgdeYujkpZlOYD2ZR+tQLHWknmrFV
-	 38FT6vojfbicJblJYZzvjfor6ecJSDqxZbQGTB1gVHxz9lGKrPt3Noks7HhDjn4wS3KG4
-	 9fU3uj+6G7IepXYshn+oR110CSnvWxPDI2r2CwR0ns0T0anmZnhi8zCaUN5lAdZmvL0aI
-	 SiO75rL8+7I2LAlYN8nPNjBJ79yWJ4CJsXivKhlXm+HyI3QrwPOjsxKf3K/Bwxm0cyqaS
-	 Ec+VXhXqY769L0t2Bqq300QwdKvRJSMwxDF2XkQRlOx0OouN8R3wslI94BRazgBuJwA==
+	t=1794259596;
+	b=mGuIDRg4OB6fwVJ/bhBrfs3iR8cmdmBsIuF0z/Dg8ShCdw7rg3uoN7Iwr3M28wytnUzl
+	 oCmnfHVRbDTI0bViPMv75rmqBRkCTuXQqomeh5cjNLVKm9SYnB31UnUw5DIFL3rHZ0mXq
+	 4wSwmGwJOOnE7DAdG6SmDudnB3HwVcWsNAYQ/AWIoT1Fdq9n1VNbrmCMRHHJ4zkVG6IVA
+	 MJVllS2Ip9QI3iDbTdm81g9LNRMd9X7y6DdvwqMyS9pj9xkzaqAwuNWXCaaDxxCkP5T3b
+	 wttQxiqgBwCDr2k8zFaRQ0s4YNh9qfp23kZIWg7DWMQIaGVEoMNk5aGIDZa0A8on3yA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794259069;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794259596;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=AR4+XLd6P60pVRRnfwDEYY6wDpGQsQihesXJJzGJHIc=;
-	b=GrYuYarl39H1WO3gwjtj/duBPKCyFHH52W5pOc10DdY9fBEaPRp7iH6/F5ul3CSiles9
-	 FVf2YnHZm0BxFATxWQumCc8xzuPCzV35A0ocFyfphzQiWUQ8G635y78XDpy5OcGGOGqqQ
-	 Oi/Mqvtu41HfrsCPh6OFHFtyO9yv3SYik2ghiKgq1zf/B+r+AqFyuv1wK+0cBIGa+Ce7A
-	 XqQtKSwhsLp/ToeVHob/XNv4kqA8M+akwxl/ZpKq6eehYMArMWncCMjR4dwbuyFdEKARc
-	 hKNbD/pozpJ+w0IzCZKZdlsgYsA+ShW5Hz3n8YZEuOjxlkzH2bw2kuzMs4GtjLDEbmA==
+	bh=RYNa0KD2IdUxVCzOtz4B4CDPv4BOX6XSJ/1cAfs44KY=;
+	b=CJ3DX7TncmzhV87Ty8yL72YTBbM7SSOzF9Kj/jFuLHArI8d62Zu51gAwonuv5jPfRprG
+	 WhLr6uyHgUX7eOIvahbrOWmRypN9iggusycj5SmlDypyE2j7or7VG/lDAyWS+Wc3gg+m+
+	 7PPvn2iHWDx1x7c5e7CrCQrvHZXGKKybJParqWXDs0HnNbljFYlDvXxovag2Rp5tCTLhM
+	 hvSV/ZZM8qJ/PeGJAPnR2jhDfH3HfqLk9b0ABgR95KlajSi2hC+xqD12ds8g+gB54QWcm
+	 qbLkUCYTDBfWQsjTBYoev3ArEz/ksMEstvi2KyEomfGDgGtDcgSSEX/90zu2x2VYKTA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bCRW3yYN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SsGDZAC0;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C44606A321
-	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 21:17:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E9F606A321
+	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 21:26:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bCRW3yYN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F90B1F008A1;
-	Mon,  9 Nov 2026 21:17:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SsGDZAC0
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E3211F0089F;
+	Mon,  9 Nov 2026 21:26:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794259068;
-	bh=AR4+XLd6P60pVRRnfwDEYY6wDpGQsQihesXJJzGJHIc=;
+	s=k20260515; t=1794259596;
+	bh=RYNa0KD2IdUxVCzOtz4B4CDPv4BOX6XSJ/1cAfs44KY=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=bCRW3yYNv9kfXNnMMOGdVDvEEtnNPruuckXtfuwA1pqYk6U5Hh1alFyYvRT7I6x/3
-	 Bc1X02rNJwh7l+aJVQsAubhrXK4mFwSIYUusm7tH4VBNeXuwOX7SKZ3MymFiA7GDQM
-	 yq+9dk5Y3b5VRrAUl+eYGLjTtzpCUyS1nzhikVuDVXg34KHBujEWh6KG7thSgv2woH
-	 hKgJyUgrmsjnk1BXR1q3BJdtBFAI7ZWoHRlJbCDzDxvjNcpyN5T6B3Wm7LFNJWN4VC
-	 bVefhb73eWg4xxI3vr3isKGeG8fuE1BJNqHdOc9e3e3wZj9m1CjVgsvXg5hpeoCnwI
-	 jzbJ6etJYZZjg==
-Message-ID: <sashiko-outbox-205659@kernel.org>
+	b=SsGDZAC08LKR/GjhviryGn6/PZah1ElphhljQ4WPh8vqsitXM2TYIe3XYccfgR3Sr
+	 EJl8pou3LYDrU2a+ylGq9a9WZpewjWy+kqlAv/r3WDXljYnEcRm/ZyWMj8LbA/4aVE
+	 KcQXu38/3N1w0nhAV8qFVpfIB7wk5xrfKU6chk3nu5OrRNylfPj+XhmIG5v3epdnDo
+	 OVilaULRtGvWQg7g5+NqSyUuYzb/26L5oxKZunhiGPFB2VCt0NxaXIDGy/Eiwxy0D6
+	 XTkZ4U9MC1RjnuGO+/C0tU/DgpIy1aIHnX6lWb6KaJXGgWkXxmsRD5sVxWX0P6whwH
+	 +lio0fxCVKawQ==
+Message-ID: <sashiko-outbox-205668@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/11] PCI: Move pci_read_bases() wrapper with
- BUILD_BUG_ON() to pci.h
+Subject: Re: [PATCH 03/11] PCI: Use Header Type to detect CardBus bridges in
+ pci_resource_alignment()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261109210714.3862-6-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <20261109210714.3862-4-ilpo.jarvinen@linux.intel.com>
 References: <20261109210714.3862-1-ilpo.jarvinen@linux.intel.com>
- <20261109210714.3862-6-ilpo.jarvinen@linux.intel.com>
+ <20261109210714.3862-4-ilpo.jarvinen@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 21:17:47 +0000
+Date: Mon, 09 Nov 2026 21:26:35 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,19 +60,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> pci_read_bases() is static in probe.c. An upcoming change moves CardBus
-> device setup into setup-cardbus.c, which needs to read the CardBus
-> BAR from outside probe.c.
+> pci_resource_alignment() detects CardBus bridges by the Class Code while
+> the rest of the PCI core uses the Header Type.
 >=20
-> Move the body of pci_read_bases() into __pci_read_bases() and keep the
-> BUILD_BUG_ON() check in an __always_inline pci_read_bases() wrapper in
-> pci.h so all callers retain the check.
+> When CONFIG_CARDBUS is not set, pci_cardbus_resource_alignment() returns
+> zero. A non-CardBus device that reports the CardBus Class Code then gets
+> zero alignment for all its resources, and pbus_size_mem() calls __ffs()
+> on it, which is undefined behavior. When CARDBUS is set, the device gets
+> CardBus window alignment instead of its own alignment.
 >=20
+> Use pci_is_cardbus_bridge() in pci_resource_alignment() and make it take
+> a const pointer as pci_resource_alignment() has one.
+>=20
+> Fixes: fd29d4ea09ba ("PCI: Separate CardBus setup & build it only with CO=
+NFIG_CARDBUS")
 > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109210714.3862=
--1-ilpo.jarvinen@linux.intel.com?part=3D5
+-1-ilpo.jarvinen@linux.intel.com?part=3D3
 
