@@ -1,88 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794229860;
-	b=WyzAwAUAx1lSw2RUQpTiB9xlZwioNfmyWQOp3QSRV+u91gt4yaT20O4S8Mecze+bqCee
-	 HHoZ8HH6dR1ckYVKneg2yeRkU39j7KXbRsfc3GL66RmPgs5ZkDl8yCg8c9b2Beew6AdLe
-	 sBQCAPltcPnoSbKuNkhw3Pf0+kLO5gb/kThHrqhXdyxa+lUNFUZTXLDu1vL0SWfHgoOSr
-	 QqLZi7zlj8kLRg5HPCnQvB0TyAw7BZJhOB0KSCxby7SZZhImzNmGtepnVlAuBgQFxwKr+
-	 UNMak9eOL69FoCiDXpDfcp8LlL0edhEhIZ8pBqYqcSVCQNUhlcuFPwA+vpzlrJzqvmA==
+	t=1794230134;
+	b=0P+WtQU6/CAS5PSirqgZtMRtnRe21hIdwJ5io0DnbDkk4Grs4uBLcITI3cz5nkKU9+g6
+	 0npYKZIii2MztUp1F5Vfg9So0ctWFBDXvi63dSdPL4ga+0Y1KT8Zry2TMQ7IBt5Wz/nGx
+	 HMMefTq0Wa16cYq8FTpGmKP7DH5CpAU+ycaPDLu+RAHkgUVixCxYt5hx4vI6C/FgycQ48
+	 OUPpIJr+HaXhDuJk/phLft1S3HX30dLPGaJjgRRAHSjZV2LupijDVAVEvcx7eLXgAs6cw
+	 U6bdBWavceO6w3wDTo6NXgnLNSBHtntLV6GLrsiQZp5kZYCxz/ldE6J8mjWgAkyihtw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794229860;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=A7mNXlZUVimdG14ChDRBXqLXI8W0LtI4Z8X2rq1hlx0=;
-	b=0gL5lQKPi22dwJ11JmcGBzSrDM58kAuGfeVhOZUR+KgAQ04qb5WgOdxUKOS44doTDgOs
-	 K1W3/kVOxPQMMRwi8S8ENBF9NDwWM5lNevP1fQaYCUIBkQeLZtYSFOv0Ui0awfFZF7vNi
-	 r5VGr3Pg93SxsyMIE8dscdQ95hgY0E0SA+ldMRmSCTArKURcE+TNgPzwdarg5flDkEt1A
-	 QGdY8322MvVPW4J1jcY1BClLwprkuL/7X3X2VsCLkmKG10iqkPSsM1XaxMh32k1ilNYpZ
-	 235cKHRnLroaAFIyb1kZgTEAlRGJpQON2Vsz3lHgTB4RJB7XDoUJ/GgPddt3zGxBOew==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794230134;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Vv/HtXaxbLl+44e04dB7LflzMcRbN/aXIaNbunMOR30=;
+	b=R8AIS+UPw/O9eAo66omybt0efQmOWBKDRRWvR7sHDMDrI7sCW0DDdI7Tbl2JwebIwjGD
+	 k6MybvhWYJxcnvXEp5mUWfm7FDDU3pzIbjtjwOV8u15ohByj70ZBygLHnBPbCjGHPZVqX
+	 vDlEYBQEE0SBlRa8Vew3p1nv9doNwl6mHnaOPOAPzF36xEqmlwgvBOhnwtzmDH7dX3ogo
+	 kBjRBnRNk0OMWpCc5hetbF4YgiKaLFVkC96GAr+Vzd+M2hPTfFWFY7hAgPrInekVj+ehj
+	 ei8ehhcPTOIVMOC4Vh1mA30jMqCbsqMnNdoCxOlsKjUZQ7W0uCJX5l1Sv0N4XybFoJQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=eD1EhzID;
-	arc=none smtp.remote-ip=198.175.65.14
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FKMq0Ei9;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20062608361C;
-	Mon,  9 Nov 2026 13:10:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20062608361C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF74606A31C
+	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 13:15:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=eD1EhzID
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794229860; x=1825765860;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=KiHN1pxVayKxO5mupz+g4G35Vt9fAcltz04pRwX/fbg=;
-  b=eD1EhzIDSORkpsWPSlE4mxd9u32A6NiQRpTYoJbGpBxO0IEyywSjxVGZ
-   VYCP0R5tV3ulOE6dclP5RKoCxjzafmiittiB3SmWRmFqNa6AggxVDCwHu
-   LhHbedQU9GgdtqdiWXZEQtOuReQbd9bqC9webzTC7vn/o5dHK0eBt2CRd
-   LMOSeLOkwqsZw+Zyzus20wHBRWInoasgQjnAx4yGAJkq9awsCcta/IO9k
-   Q51u3aZ/KPG5wyYPR/5oXKxMyhFqhtLLceN4gHvqyGe/dT1El40EsKpEu
-   dHmjvX7K/ZpJMfw8iRWtMbjoJKiIAOuaH1nMHuKpV2hdK78qGdHzU3t+e
-   A==;
-X-CSE-ConnectionGUID: KcTiHIoOSiKKJcrnkpD2aA==
-X-CSE-MsgGUID: A9O7s9GuS0CotmCfW9gTSQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11960"; a="2843624"
-X-IronPort-AV: E=Sophos;i="6.27,203,1787036400"; 
-   d="scan'208";a="2843624"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 05:11:00 -0800
-X-CSE-ConnectionGUID: pK5ua5WPTUKCTO+ozskMtg==
-X-CSE-MsgGUID: msX1r8hZQGewA2KlQ6L/PQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,203,1787036400"; 
-   d="scan'208";a="7683823"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.139])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 05:10:54 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Matthew Brost <matthew.brost@intel.com>,
-	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	intel-xe@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	intel-gfx@lists.freedesktop.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 3/3] drm/i915: Remove driver side resource assignment after BAR resize
-Date: Mon,  9 Nov 2026 15:10:10 +0200
-Message-ID: <20261109131011.1815-4-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261109131011.1815-1-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FKMq0Ei9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3AEF1F008A1;
+	Mon,  9 Nov 2026 13:15:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794230134;
+	bh=Vv/HtXaxbLl+44e04dB7LflzMcRbN/aXIaNbunMOR30=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=FKMq0Ei9j/jF9bnAmRhXZXTcOIXFIljD9gvraVYwmrxjZLWC5/jbO73VNK0ObrpoH
+	 biE0jQvoUyXs1p+Z4Fov4B3ciQOaW2waAJApuyHnN5lNsLBORII/yV8Cn12FnlfHSR
+	 aQT/1C3e2xqfxeVXakId3HBj+KQelUcX1c+/D6c1H9foJUEa9JHmDt4yAnVgFwQ+TI
+	 4EMAug7w18atpvutoFxY4my0XgZ3XJgKEyFIAOo1hEg5Uxg9O2QxzWAXtTXOROUYQ7
+	 5IzQ9CEz3nkVG1x0EOiiwvVUn5JKBtOd3m7MlAIvYw7od8hDPek8wFGI1yE9HCU/D8
+	 9o0aNHAydhjMA==
+Message-ID: <sashiko-outbox-204993@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/3] drm/xe: Remove driver side resource assignment
+ after BAR resize
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
+In-Reply-To: <20261109131011.1815-3-ilpo.jarvinen@linux.intel.com>
 References: <20261109131011.1815-1-ilpo.jarvinen@linux.intel.com>
+ <20261109131011.1815-3-ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 09 Nov 2026 13:15:33 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -91,36 +59,21 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-pci_resize_resource() assigns the resized BAR and the other BARs it
-released, or restores the original configuration on failure. Calling
-pci_assign_unassigned_bus_resources() after it is redundant. If that
-call manages to assign more resources in some scenario, the problem
-should be fixed inside pci_resize_resource() instead.
+> pci_resize_resource() assigns the resized BAR and the other BARs it
+> released, or restores the original configuration on failure. Calling
+> pci_assign_unassigned_bus_resources() after it is redundant. If that
+> call manages to assign more resources in some scenario, the problem
+> should be fixed inside pci_resize_resource() instead.
+>=20
+> Remove the pci_assign_unassigned_bus_resources() call from
+> xe_pci_rebar_resize().
+>=20
+> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
-Remove the pci_assign_unassigned_bus_resources() call from
-i915_resize_lmem_bar().
+Sashiko has reviewed this patch and found no issues.
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/gpu/drm/i915/gt/intel_region_lmem.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/gpu/drm/i915/gt/intel_region_lmem.c b/drivers/gpu/drm/i915/gt/intel_region_lmem.c
-index b8a39567a334..d6f5e340657c 100644
---- a/drivers/gpu/drm/i915/gt/intel_region_lmem.c
-+++ b/drivers/gpu/drm/i915/gt/intel_region_lmem.c
-@@ -104,7 +104,6 @@ static void i915_resize_lmem_bar(struct drm_i915_private *i915, resource_size_t
- 
- 		_resize_bar(i915, GEN12_LMEM_BAR, rebar_size);
- 
--		pci_assign_unassigned_bus_resources(pdev->bus);
- 		pci_write_config_dword(pdev, PCI_COMMAND, pci_cmd);
- 		intel_uncore_forcewake_put(&i915->uncore, FORCEWAKE_ALL);
- 	}
--- 
-2.47.3
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109131011.1815=
+-1-ilpo.jarvinen@linux.intel.com?part=3D2
 
