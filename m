@@ -1,55 +1,65 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794244747;
-	b=ILMMHZYvbBIeFWOSmsU6WKW7yAuKzHNB046h3wCUWo5GDPDx/q6emUTp2z7Fjk7aQina
-	 8kZqJuS86lfrGWU7WHJGhh3XN08OSkD42KJCJyNNkJweU6PyDK1NoqI/XQG+DbuX0E7cc
-	 BqXgfLjSmBPSWsHJ2oDIT9wvoI9zi3QVZxPyG8bAOkljReG6TwCH9KnwiWfwr4fg+iY3S
-	 D17SpjW3Y9r7JGn7ivJfqHIYr9ZMf2a7f6dWzvNhcsy1ABh388bP1oG490iFEufalBd+g
-	 FW9Hi2QRwqUd19G6BuLSzeFxue8pzAYDTMLicOlN/z6koRtli3Za7gr26pjUeznJIOA==
+	t=1794245611;
+	b=KBPc2x3HHeRhoO+H61ir95IGo/OEy5/nNmrmtZwo22OrWMkXuJg5qyy+DGX1lw2F3TLs
+	 NVuCDerZwnhng7k1lUzGGTEx086VqWFY9toHsg38RSO7dCfg6xhgPOndA+gMlAY3oBQpd
+	 1ZBrXRd4uWCTj5dLB8M5BA1rTIkIPCDlSMonQ0J+AjPVBKAmlKkqbqwqNwln5HyN53VyD
+	 X/UPBoq7tAxgSRlID55CQW8MsZq6c6729dsCnvl+2Po11DxMdRMRkVPLC3S0R2HDlZPu3
+	 WOEo7Ysnr4/XpFOSwwwBpzu1ZJC7k7V1JkTaBJ2SmyYZXLHXFOMpLp1bkTVzq21T0sg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794244747;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794245611;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=9zc9z0VlxaYjrpGQo9tZiPXiqIXZzYu9pB5jlY22bI8=;
-	b=iyMzOaf8du4iSHk6vhG/1TsYUFVAi+emY84WSm1ErE3/S5U+hgMbwIfOoz02griqcVi3
-	 hfMLfL63FY5TNANbVlfndGc8KzDUQA4kKzQmh3YYJQ+6SAMSYApByHeixZon+euuqt4L1
-	 6nFlTHLlcDrhsmPRb4kGhfvzuabKi8+m59K90PsVAW02kcVK7ouKNsr7pjLbGBd+SbMxZ
-	 qUmAkzkS/L8Lx1ielLHeg3nf9lDWbybtCsvUIou6DBqowqPqmTL6Kg/6YE7Johp/9NG71
-	 CC4w6kflLN5BPojAaYm4XCbT4f5AvVvAKdl2iOzrKaXiKThcOygf2IpmRVcxWlM2lfQ==
+	bh=Inir2BaRnVMDhUyUoteKvoszf0OxlCPGv6CRErVG1DA=;
+	b=PvDvYf8TZwCJZopJDe6z0H0pBSnSvamNDbNEeQDc30JZVAehXD5P8D91DiXrRAAHaqZ0
+	 GQ6ER8Qn8ggx9UgwCWDWNBM8S/ZY7/CFlk0MZswOW1TNvnEBpnNbHuhsa42qY2PbySFsH
+	 JuQ/PcbfXZkNjAxft2yuNU+VLl4neIH48nhbsjGobMOVzZBkttsGBzvJ+aTW6A6Hn5XDU
+	 FIIGjqUTLg9k305Jep8WgpPfEEk+fZR7N2x52UZBP1LCJ79qVW7n+YXjgcOPzzoG8xwaY
+	 UArCjhrVRMo44mUujKEKVcydjoXlQKnkTbHa3WnRnWZ/+miaGjCov36RF/0QGiJJ/iw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LbkqZI3G;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=djPySGxs;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C827E606A326;
-	Mon,  9 Nov 2026 17:19:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F7C606A332;
+	Mon,  9 Nov 2026 17:33:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LbkqZI3G
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70BA21F008A1;
-	Mon,  9 Nov 2026 17:19:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=djPySGxs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 974581F0089F;
+	Mon,  9 Nov 2026 17:33:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794244746;
-	bh=9zc9z0VlxaYjrpGQo9tZiPXiqIXZzYu9pB5jlY22bI8=;
+	s=k20260515; t=1794245610;
+	bh=Inir2BaRnVMDhUyUoteKvoszf0OxlCPGv6CRErVG1DA=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=LbkqZI3GEXIML9TEO4qq2+RlToRjwi3Iv0YqJjwc7U84BpU8rndt7PTEPMvHMwCwB
-	 E1WAhdfHZL1WHJ1PV4Mv1sVwusz+9NHfjHiRQfffl2JtvXVm4LiyoEZC04QGyBscm8
-	 3whlLstdPNAlgeIIWRXKVftTQ7qroaaJPMRllo0Sc5mxI/iM0ZC3J/Rr4elBxC3KNN
-	 8HDxlRFa8Sl75d30OoIHmROJMLuBwRS8yHOVo/oFUuWY4Tp95EKk6iWHjwUAi5fK6R
-	 k7VPyA/U2FAHHSjZpAXuQFnARSXOTjsnUjV9+gi0HfKfc/lwXnOPi3NhCOxR76OGpH
-	 Ch4AyY06FjcuA==
-Date: Mon, 9 Nov 2026 11:19:05 -0600
+	b=djPySGxsZ6iEOQmv7jIjsonj7PjIFm4ls4iJ6JGTnv7gdAXiBEifz5ckdtKAk/DVC
+	 KlhALj0Ws8vGo8pJSMxiay/BLWFRS8fkhDwvwfhSsEMH14sCyvtgOQBXqnO1CrxoYq
+	 yrd2mNGvpHZZ2iklTgiBwq6WI/UxPeNteunEDnLMaP/nwIwg183acu1TsA3wg7GTrP
+	 5k4zBmog6niDLxHxVaRTT8nnQ3JbfyTJSamxZklnW5u7LeWf54WWioccQVqn+4U4RF
+	 varZMkequd4efC7MkflJx2hn0+nZaKADE9BNtQr/cyuJG+EuZhsoDRSf7XzulbiH0i
+	 xAEb5sMVY4LCA==
+Date: Mon, 9 Nov 2026 11:33:29 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, robh@kernel.org,
-	thierry.reding@kernel.org, jonathanh@nvidia.com, vidyas@nvidia.com,
-	cassel@kernel.org, linux-kernel@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI: tegra194: Use FIELD_*() for register fields
-Message-ID: <20261109171905.GA211363@bhelgaas>
+To: Sebastian Reichel <sebastian.reichel@collabora.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Mark Brown <broonie@kernel.org>,
+	"Yury Norov (NVIDIA)" <yury.norov@gmail.com>,
+	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+	Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+	kernel@collabora.com
+Subject: Re: [PATCH v9 1/9] PCI: dw-rockchip: Fix LTSSM set functions
+Message-ID: <20261109173329.GA252206@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,30 +71,54 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261102092238.3917883-2-mmaddireddy@nvidia.com>
+In-Reply-To: <20261105-rockchip-pcie-system-suspend-v9-1-a2e55846649e@collabora.com>
 
-On Mon, Nov 02, 2026 at 02:52:37PM +0530, Manikanta Maddireddy wrote:
-> Several Tegra194 APPL and DesignWare register fields are programmed
-> with open-coded shifts, which makes the register programming more
-> verbose than necessary.
+On Thu, Nov 05, 2026 at 02:33:09PM +0100, Sebastian Reichel wrote:
+> Before the Rockchip PCIe driver has been switched over to the
+> FIELD_PREP_WM16 macro, PCIE_CLIENT_ENABLE_LTSSM and
+> PCIE_CLIENT_DISABLE_LTSSM were setting bits with a mask of 0xc = 0b1100,
+> which means BIT 2 and BIT 3. After the conversion it only sets bit 2,
+> with bit 3 being handled by a separate define named
+> PCIE_CLIENT_LD_RQ_RST_GRT. Apparently the conversion missed to make use
+> of this new macros resulting in the third bit not being set.
 > 
-> Use FIELD_PREP(), FIELD_MODIFY() and FIELD_GET() at the Tegra call
-> sites where values are shifted into fields. The LTSSM state constants
-> are converted from pre-shifted register values to unshifted field
-> values for FIELD_GET().
+> Fixes: 30e919570581 ("PCI: dw-rockchip: Switch to FIELD_PREP_WM16 macro")
+
+This commit appeared in v6.18, so this looks like it might be a
+candidate for a stable tag?
+
+> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
 > 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Link: https://lore.kernel.org/r/20260515070753.3852840-2-mmaddireddy@nvidia.com
-
-Thanks for this patch; it's great to get rid of the redundant *_SHIFT
-definitions.
-
-But I'm confused about why this Link: is here.  It points to "[PATCH
-v3 1/2] PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1
-entrance latency", which looks like a functional change.
-
-This patch should be zero functional changes; it should be purely
-mechanical changes from explicit shifts to using FIELD_MODIFY() etc.
-
-This patch doesn't mention aspm-l1-entry-delay-ns, so it doesn't
-*look* like this includes the [PATCH v3 1/2] content.
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index bd86e32cc2b1..c35c5583c797 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -322,14 +322,16 @@ static void rockchip_pcie_ltssm_trace(struct rockchip_pcie *rockchip,
+>  
+>  static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
+>  {
+> -	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
+> -				 PCIE_CLIENT_GENERAL_CON);
+> +	u32 val = PCIE_CLIENT_ENABLE_LTSSM | PCIE_CLIENT_LD_RQ_RST_GRT;
+> +
+> +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_GENERAL_CON);
+>  }
+>  
+>  static void rockchip_pcie_disable_ltssm(struct rockchip_pcie *rockchip)
+>  {
+> -	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DISABLE_LTSSM,
+> -				 PCIE_CLIENT_GENERAL_CON);
+> +	u32 val = PCIE_CLIENT_DISABLE_LTSSM | PCIE_CLIENT_LD_RQ_RST_GRT;
+> +
+> +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_GENERAL_CON);
+>  }
+>  
+>  static bool rockchip_pcie_link_up(struct dw_pcie *pci)
+> 
+> -- 
+> 2.53.0
+> 
