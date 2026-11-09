@@ -1,62 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794250196;
-	b=lkcLBTKlLwP6u7PRWw0XkoNNvb+rmr6TmrdwHDF+coXlzSrSmF39avb4NNtKNIDw6dOn
-	 Z5l2vvKAbIscEmgmojsbNuAQ1DSZIdGNdsXpwL+LnZ16+Npnrgcc/QPW8cMve7cHbM/yn
-	 18sXD4dPRCPMonwBSD7iKbGPX6KUG49Q5963GCGz4IlG9ghiNuNJZvdyTS0wgq6QYDIWB
-	 8VQkKJmIKz7hP8jbLOIaCR1t6Lb6x3KQeBxxa5eZEimp85qP19i/+kKh/x2oGNKbJ00hy
-	 aoHNNtZFiKKExHAz9k5x67xHwlZkTtXfHeXWCkq9lxNf/EKoMbKTayizkP9wrC0NUCw==
+	t=1794250377;
+	b=FtXcm07yWTh/GIea+Q0+biy4a9Y1hKADYzxwp593zMWZhgZSq28hVskLr21Dub0Ix3qF
+	 hyk4U16LSwxiKbEqCeT4cxUJJ6qQ4c3fFzUAtc/xQWyJKX9Q5wnV5gdYx5ReFZkqW0QGn
+	 L6YYCzi+GnmnN3moD6J9cAGOxAFp3e9+TjNjZTJZYCH01cG7Qfd5XmSHcseMXiG28Lxgm
+	 n2b3OOrTO2m2BtCrpMNdNL1TuJsviBBBi8zPw+3omSBKVhoaLClUdIUe+XlbR3o8aNqqm
+	 Gtz0IcK80B03j3bnUT0G2wovyfo26ogEHxFXjx0SH6nGFcc3rYbQkg4booUJ9VWsSRQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794250196;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=THGngqhatlE+u83536ffwHcOrp0mYpAierLo9Jo609U=;
-	b=VJprZ+HgMOAFjJdfwMM9HRK1JhiIBeHY54LyMEnTBpyGNxUmbWnoysXyPCdQupsTlhMV
-	 oOLNCDDPltnCw+gctFS72oNU5xOdysUNnBupwz4z0WrIJauqhNrx/yE1omNGkU5eI9Q9t
-	 P9wZsxnYsxQbBp2GixeOTqJPbrXmPjgiI5wQoGv0XT41I6JBymprRnDCkWo8zpNyfU0xH
-	 JboW+ssfE7kTh72tGvQE3A80pvBg3Yg/+PsMJKYWNb0OUkEhhimxmNK1PWrJNSGSEeO77
-	 OcJn70FsFI98S3Qn5QebEtUKRIi5kL23aTP9Dzk5m4ZZwk2USyOWTXZ+aIJFlZrjtlA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794250377;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Kitrs55PKQfcDWK4mA7O8xqpqXSfWSDH/6XOhCN5x3U=;
+	b=JxPwuGYfKPt+zLFJCPl9ZNsqDZsHEyVT7G7uPCIHJSPFYRc8VOQHO/c24UWWW+BLk12K
+	 lfLBaeBXPXvI5Q+iocTcgWMcIH1djACTop918AJ1yuVIJ5BSWYM7gYVJga2Kys2q0wgSW
+	 lKxuCB6qXEsBs7X7U3qqco0iZ7s41hY/iXU+CMhgMaHxS0OToeylkwsUnB2MVees1YTko
+	 hKxZwAtGBH6+TOFy/DRH2YGLMAR1oSlYMu1njHTkMEeoFsw+rd9VN8ZJfepWeO5uDcV17
+	 gUapYKS/XFZFVuuOzReSWIqcvVT3/dtrawdw8FbhgxRwmo+q0lPNeBaMOgnDFOnXzlg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e9QTvSfJ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W69S19+u;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35D53606A325;
-	Mon,  9 Nov 2026 18:49:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA3B1606A325
+	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 18:52:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e9QTvSfJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C419F1F0089F;
-	Mon,  9 Nov 2026 18:49:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W69S19+u
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C8CC1F0089F;
+	Mon,  9 Nov 2026 18:52:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794250196;
-	bh=THGngqhatlE+u83536ffwHcOrp0mYpAierLo9Jo609U=;
-	h=From:To:Cc:Subject:Date;
-	b=e9QTvSfJ5Hq1C2T0Q320b9VMbgB/lLDPTWchtqYQ/xpzulY47Z6/Nh7c/BEKh/Oxw
-	 xT5MhV4Q+SkJmDowxM1SdUJVilikxjkt9K+HY9KiI6sj77j7OzQm2+O20UZpLmPwtJ
-	 v5OB4pWcmrEmKtwlKApmYj0mctAEJmOM0RnkRSX56QWh8tA78CACUUvO0QydymGvio
-	 z5IWEJeuEyGd0M5vUG78PiIpoPNBMgMRsc7FE47j48HRt9Fv+CrZ6tQ1nJ4c9C/AZL
-	 G8pMjhVoNnYUdHEZV8xdSfbERCZpI146ViQlIAyTx9YgVIWZ/RDZFCqI+WT71Ha3+I
-	 k6GZQDSljZu0A==
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: PCI: rockchip-dw: Allow endpoint supply
-Date: Mon,  9 Nov 2026 12:49:47 -0600
-Message-ID: <20261109184948.477095-1-robh@kernel.org>
-X-Mailer: git-send-email 2.53.0
+	s=k20260515; t=1794250376;
+	bh=Kitrs55PKQfcDWK4mA7O8xqpqXSfWSDH/6XOhCN5x3U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=W69S19+uowxdpotFgwjgXx5kj4YZQ66HC+4nHi++BXggxfgG2PxDlU4ZYYzysOZkO
+	 AuM7sNOeTiDtUrkSz77CTByFywwqKU2Jw8QWBgMIR0j2R7yP2xmEIXIkQ3xO4WtLQX
+	 0+psUP8B6FzWRzQMDQY2lvBKOU3zgtQFlV5qYTm0SpZ5Jz/WNYkUiwQjMh8PpVOdmO
+	 hbX7BOeipPQA/IpSDZy87jEVxZWReCR/NRy81U853ERii1UQcW5uruX6lwtMDFafou
+	 tOAl362zTdkuWK7NTKDCJO2W6W8HisB5+MFsQlJS1kqAA20vupwED+y99u3hoHGirW
+	 14bFQa/mC8/DA==
+Message-ID: <sashiko-outbox-205448@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] dt-bindings: PCI: rockchip-dw: Allow endpoint supply
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?Um9iIEhlcnJpbmcgKEFybSk=?= <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261109184948.477095-1-robh@kernel.org>
+References: <20261109184948.477095-1-robh@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 09 Nov 2026 18:52:52 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,30 +58,15 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Rockchip PCIe endpoint DTs describe the 3.3V PCIe regulator with
-vpcie3v3-supply.
+> Rockchip PCIe endpoint DTs describe the 3.3V PCIe regulator with
+> vpcie3v3-supply.
+>=20
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 
-Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
----
- Documentation/devicetree/bindings/pci/rockchip-dw-pcie-ep.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+Sashiko has reviewed this patch and found no issues.
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-ep.yaml
-index f2d1137aff50..8915ca3b9f0d 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-ep.yaml
-@@ -40,6 +40,8 @@ properties:
-       - const: addr_space
-       - const: atu
- 
-+  vpcie3v3-supply: true
-+
- required:
-   - interrupts
-   - interrupt-names
--- 
-2.53.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109184948.4770=
+95-1-robh@kernel.org?part=3D1
 
