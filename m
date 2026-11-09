@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794209704;
-	b=j1BKs1Nz5oSF5TGb1FNouIbNtwa/wNMUXHlRujkr9Ki/Vyd4ZQjRdK8CrGVD5fvfs8yV
-	 1/rs6a0Zx0OAoftkMfv3qdEjXFUXojKNudji0q1bc6rAWgvxdUdn2C6c1+lkVKZyx/gKM
-	 39Y71fjt+VUnCvo3nM0TWrWD5CqW7afHbbpRjqfuXnorCZDvFGkelTGmBFRpbIJXldFwi
-	 HZKnT8iUHZsjOeK2g7GgmrEhTIaDd0Op9khvONkr7nPGxgxQOad00+2DkinuhNZftTPRN
-	 iIhddaVZwIFwJQiA3N7Saf4VBoNIBgErHlvHJVfzEhDuJhGiqHhAxhECp32O2YTiHcA==
+	t=1794209694;
+	b=rzW+p+QWseT1OfwwB4NddUccrwudJIx8zoYS0UYO9kTmfOazDVqwfeAXWe/eTBwONSbu
+	 hfm+nSmiX4BoeTK1wyUTcWGtcLlQDWffgcdMCkfVrHU9q1XxHCE0XMN8Ziknx0zHa7GMd
+	 aSb8ZO+IGIhoQpWccBGw5bulsVCbctCzRrkQ1nq0RNP5RfLpHknbTZVFhP2uWKfSLFoUo
+	 ESIwzhG64F32DMMEgw1tuXVyWflt/aMi0z+QjvViJLqxUylDXnI6QuKi9Ju6x2Ofyb+Ew
+	 sGz0ELIZKwFgOrwZ9vLN+b4+cLuNNOMkfuwdC3rV45WEoh8ZgaZajzd0Hj3R7Zn39ow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794209704;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794209694;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=WD1tmy3UgSAJW1MhiWtCAh8waBml5qRpMehZ0KPIV5o=;
-	b=GaU4x59ieU8BQH5PrfiHBJ64yN8U992r1mTS9StHwazfdWI2L9AIqpL1x4xDAU/CiLB6
-	 OO7Jpk6mYnQh9pA7vGMiKJ6kfco7jlMqAlkRD/CPcB5Nyqj+RklvPfZfUfxEo59WyUjkf
-	 YFlDjF7VAT+GaGUsGExYznsppgSANJuTRrvcrs1UTQ7vumA9X2p5fdcHx5i6r5/2tyacq
-	 1Wstj0zkLxCx451770HuF1WkoscHiH73iYMPRWJceklhjr+CK3dFlKIUr7edIJrRoXhAd
-	 IiIqIiawAhAjaJ8rHpreJd8q6odUafa0OUk2oI/VltxWMcnabvLtm0NivoAFxnjItZA==
+	bh=QdI/Mo/osmQN2pZQIBgEUwspS0TjXUd5jREwxqrvfk4=;
+	b=XJf3N91UUyAKai8xkE24JBl2RDJ9dwoiPF3P+TBkpUc8SgdTP2r82RTyGrESvEGogMtq
+	 7PFGltsgIhT32RP/b6T1ETWI+dioXFxuOD5xOQpXqNKfntDLD3J85XUTiIhqPOVXJRmfe
+	 aYFPGR4NDVS3RzCxRIk5Akjgepn3b6ARLEbMrgOC9tzkFlXiRs4cmLlWkgiDWN/6QoQOO
+	 8hMf7eGIkm5psAuAFLmcyvX9e5yEStP8C0Hd5AYdrtt2T+rbBTMFHCHEZj34gOcHyz7lE
+	 ix77sX27i7seVLFJPkXkkVKyRQQejEssb97abYvOSXtWmmLEOTwmPs5JyTXqyDcZ+OA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=muA1K0Rl;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GCValGUk;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37312606DF12;
-	Mon,  9 Nov 2026 07:35:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0E71606EEB8;
+	Mon,  9 Nov 2026 07:34:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=muA1K0Rl
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0FFD1F008A1;
-	Mon,  9 Nov 2026 07:35:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GCValGUk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CAFB1F008A3;
+	Mon,  9 Nov 2026 07:34:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794209703;
-	bh=WD1tmy3UgSAJW1MhiWtCAh8waBml5qRpMehZ0KPIV5o=;
+	s=k20260515; t=1794209693;
+	bh=QdI/Mo/osmQN2pZQIBgEUwspS0TjXUd5jREwxqrvfk4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=muA1K0Rl1hNLH9hZK9zvX6xeVB9XyRBJY11GriElP9glBmQnkZN5y14zXotxNdG+s
-	 3WF2QK2GfShfQc9RfCAIlGvPfD78fdmuJPZ2EglInyzEwrG3IwzDlo36pUMP8mr3F/
-	 ct0xxXSZ0P1Lo6/IYgc7q0Y61EUSZaynOq6yAIiB+A1SGcLqT0BHCCd0hYPnLg6Gac
-	 at1+kY5dN418B1oOecRDovYXpBeB5tMJuWjbjXrvOLyaVj+Hky5/m0/2M57KCYLkEr
-	 puz/mmIbl6nKpK4/kytq5cSHUucHQBOhy0/3eAHFWt6Z0rIy237Ph446nkYhaRbo95
-	 RtZPvyzY5dGkw==
+	b=GCValGUk20BxxMyB6oIRLJwO5bOICx3xot3gW4X0cTCHSiHcbe57vwzsCcxOaXZYI
+	 U5aEgcuv+C9b9/sCWmEkxXFtSKc4pVqWMLk3M2IXCvwmH4LuBuzJ2KPMK6SVgXqgCk
+	 Tp2fK+X5Fy+5JU2EK6497j6EnfLH5qgrX9vfWFQktl/L7JhAZjPpLNgQGJcrtzWA2o
+	 GeIVEk2LKkJZtCyqqVqQCkNqe0KmMhvmSzfxxssDllhlIXdnxLsezSkXu8rkNavPVU
+	 TyVb+Vexe8EFyLnzV2soYU3PBIzfyL7vxZRFXVX9o1gdg4ky3GlEN1uShmBBfZRZYc
+	 3j0SWCK3s7f7Q==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -82,9 +82,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v2 19/19] USB: Authorize devices and interfaces through device trust
-Date: Mon,  9 Nov 2026 09:33:49 +0200
-Message-ID: <20261109-device-trust-core-v2-19-3b12d9a9f861@nvidia.com>
+Subject: [PATCH v2 16/19] driver core: Cover trust authorization and binding with KUnit
+Date: Mon,  9 Nov 2026 09:33:46 +0200
+Message-ID: <20261109-device-trust-core-v2-16-3b12d9a9f861@nvidia.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
 References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
@@ -103,393 +103,1772 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-USB authorization is a second gate next to device trust. An unauthorized
-device still binds the generic driver, so trust admission never sees it,
-and boot policy cannot authorize USB devices or interfaces.
+Requested policy, admission history and active trust have different
+lifetimes. Failed setup must preserve commitment while clearing active
+trust, and manual attachment must reject unsupported policy before probe.
 
-Make the authorized_default and interface_authorized_default settings the
-initial trust policy, so held devices and interfaces start disabled and do
-not bind. Writing 1 to authorized requests full trust; for a device it
-also binds the generic driver, which configures it. Writing 0 still stops
-it and leaves the committed trust level in place.
+Exercise authorization, deferred and asynchronous binding, supplier
+cleanup, resolver errors and boot-rule precedence. Cover full-only manual
+attachment under subsystem serialization, frozen runtime policy, boot
+exceptions, failure cleanup and committed trust across retries.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- Documentation/ABI/testing/sysfs-bus-usb | 11 +++++++++++
- Documentation/usb/authorization.rst     | 20 ++++++++++++++++++++
- drivers/usb/core/driver.c               | 10 +++-------
- drivers/usb/core/generic.c              |  2 +-
- drivers/usb/core/hub.c                  | 17 ++++++++++++++++-
- drivers/usb/core/message.c              | 24 +++++++++++++++++++-----
- drivers/usb/core/sysfs.c                |  9 ++++++---
- drivers/usb/core/trace.h                |  2 +-
- drivers/usb/core/usb.c                  |  5 ++++-
- drivers/usb/core/usb.h                  |  2 +-
- include/linux/usb.h                     | 29 ++++++++++++++++++++++-------
- 11 files changed, 104 insertions(+), 27 deletions(-)
+ drivers/base/test/Makefile            |    1 +
+ drivers/base/test/device-trust-test.c | 1720 +++++++++++++++++++++++++++++++++
+ drivers/base/trust.c                  |    1 +
+ 3 files changed, 1722 insertions(+)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-usb b/Documentation/ABI/testing/sysfs-bus-usb
-index 5213117fd957e..ca66b6a10c054 100644
---- a/Documentation/ABI/testing/sysfs-bus-usb
-+++ b/Documentation/ABI/testing/sysfs-bus-usb
-@@ -12,6 +12,11 @@ Description:
+diff --git a/drivers/base/test/Makefile b/drivers/base/test/Makefile
+index 9ced7bbd569fc..dfff5e1d83f7c 100644
+--- a/drivers/base/test/Makefile
++++ b/drivers/base/test/Makefile
+@@ -3,6 +3,7 @@ obj-$(CONFIG_TEST_ASYNC_DRIVER_PROBE)	+= test_async_driver_probe.o
  
- 		A deauthorized interface cannot be probed or claimed.
+ obj-$(CONFIG_DM_KUNIT_TEST)	+= root-device-test.o
+ obj-$(CONFIG_DM_KUNIT_TEST)	+= platform-device-test.o
++obj-$(CONFIG_DM_KUNIT_TEST)	+= device-trust-test.o
  
-+		An interface that is not authorized by default starts with
-+		the "disabled" trust policy (see sysfs-devices-trust).
-+		Writing 1 then requests the "full" policy. Deauthorizing
-+		does not change the committed trust level.
+ obj-$(CONFIG_DRIVER_PE_KUNIT_TEST) += property-entry-test.o
+ CFLAGS_property-entry-test.o += $(DISABLE_STRUCTLEAK_PLUGIN)
+diff --git a/drivers/base/test/device-trust-test.c b/drivers/base/test/device-trust-test.c
+new file mode 100644
+index 0000000000000..b6ad3b0c1b536
+--- /dev/null
++++ b/drivers/base/test/device-trust-test.c
+@@ -0,0 +1,1720 @@
++// SPDX-License-Identifier: GPL-2.0
 +
- What:		/sys/bus/usb/devices/usbX/interface_authorized_default
- Date:		August 2015
- Description:
-@@ -28,6 +33,12 @@ Description:
- 		drivers, non-authorized one are not.  By default, wired
- 		USB devices are authorized.
- 
-+		A device that is not authorized by default starts with the
-+		"disabled" trust policy (see sysfs-devices-trust). Writing 1
-+		requests the "full" policy if the policy is disabled, then
-+		binds and configures the device. Writing 0 deconfigures the
-+		device without changing its committed trust level.
++#include <kunit/platform_device.h>
++#include <kunit/resource.h>
++#include <kunit/test.h>
 +
- What:		/sys/bus/usb/drivers/.../new_id
- Date:		October 2011
- Contact:	linux-usb@vger.kernel.org
-diff --git a/Documentation/usb/authorization.rst b/Documentation/usb/authorization.rst
-index 150a14970e951..2e07831876fed 100644
---- a/Documentation/usb/authorization.rst
-+++ b/Documentation/usb/authorization.rst
-@@ -92,6 +92,22 @@ can fake descriptors and device info. Don't trust that. You are
- welcome.
- 
- 
-+Device trust
-+------------
++#include <linux/completion.h>
++#include <linux/device.h>
++#include <linux/err.h>
++#include <linux/errno.h>
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++#include <linux/string.h>
 +
-+Authorization is expressed through device trust, see
-+Documentation/driver-api/driver-model/device-trust.rst. A device that the
-+authorized_default setting does not authorize starts with the "disabled"
-+trust policy and reads 0 in "authorized". Boot options such as
-+``device_trust=usb:1-2=full`` replace this initial policy.
++#include "../base.h"
 +
-+Writing 1 to "authorized" for such a device requests the "full" policy and
-+binds the device, which configures it. To operate it as an adversary,
-+write "adversary" to its "trust_policy" attribute before writing 1. The
-+choice is fixed for the life of the device: writing 0 deconfigures it, and
-+a later 1 configures it again at the same trust level.
++struct device_trust_test_context {
++	struct device dev;
++	struct device_driver drv;
 +
++	enum device_trust_level resolve_level;
++	enum device_trust_policy resolve_policy;
++	enum device_trust_level configure_level;
++	enum device_trust_level probe_level;
++	enum device_trust_level remove_level;
++	enum device_trust_level cleanup_level;
++	const struct device_driver *resolve_driver;
++	const struct device_driver *reject_driver;
++	struct completion *released;
 +
- Interface authorization
- -----------------------
- 
-@@ -120,6 +136,10 @@ Deny interfaces per default::
- Per default the interface_authorized_default bit is 1.
- So all interfaces would authorized per default.
- 
-+As with devices, an interface that is not authorized by default starts
-+with the "disabled" trust policy, and writing 1 to its "authorized"
-+attribute requests the "full" policy.
++	int match_ret;
++	int resolve_ret;
++	int configure_ret;
++	int probe_ret;
++	unsigned int resolve_count;
++	unsigned int configure_count;
++	unsigned int probe_count;
++	unsigned int remove_count;
++	unsigned int cleanup_count;
++	unsigned int release_count;
++	bool probe_adversarial;
++	bool device_initialized;
++	bool device_registered;
++	bool driver_registered;
++};
 +
- Note:
-   If a deauthorized interface will be authorized so the driver probing must
-   be triggered manually by writing INTERFACE to /sys/bus/usb/drivers_probe
-diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
-index 04b77691fbd7d..2ebd05d3855f4 100644
---- a/drivers/usb/core/driver.c
-+++ b/drivers/usb/core/driver.c
-@@ -334,10 +334,10 @@ static int usb_probe_interface(struct device *dev)
- 	if (usb_device_is_owned(udev))
- 		return error;
- 
--	if (udev->authorized == 0) {
-+	if (!usb_device_authorized(udev)) {
- 		dev_info(&intf->dev, "Device is not authorized for usage\n");
- 		return error;
--	} else if (intf->authorized == 0) {
-+	} else if (!usb_interface_authorized(intf)) {
- 		dev_info(&intf->dev, "Interface %d is not authorized for usage\n",
- 				intf->altsetting->desc.bInterfaceNumber);
- 		return error;
-@@ -560,13 +560,9 @@ int usb_driver_claim_interface(struct usb_driver *driver,
- 		return -EBUSY;
- 
- 	/* reject claim if interface is not authorized */
--	if (!iface->authorized)
-+	if (!usb_interface_authorized(iface))
- 		return -ENODEV;
- 
--	if (!device_is_registered(dev) &&
--	    dev->trust_policy == DEVICE_TRUST_POLICY_DISABLED)
--		return -EPERM;
--
- 	dev->driver = &driver->driver;
- 	usb_set_intfdata(iface, data);
- 	iface->needs_binding = 0;
-diff --git a/drivers/usb/core/generic.c b/drivers/usb/core/generic.c
-index a48994e11ef3d..bcfc01eefd09c 100644
---- a/drivers/usb/core/generic.c
-+++ b/drivers/usb/core/generic.c
-@@ -242,7 +242,7 @@ int usb_generic_driver_probe(struct usb_device *udev)
- 	/* Choose and set the configuration.  This registers the interfaces
- 	 * with the driver core and lets interface drivers bind to them.
- 	 */
--	if (udev->authorized == 0)
-+	if (!usb_device_authorized(udev))
- 		dev_info(&udev->dev, "Device is not authorized for usage\n");
- 	else {
- 		c = usb_choose_configuration(udev);
-diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
-index 199d3f535a891..086b8db36f51a 100644
---- a/drivers/usb/core/hub.c
-+++ b/drivers/usb/core/hub.c
-@@ -2770,7 +2770,7 @@ int usb_new_device(struct usb_device *udev)
- int usb_deauthorize_device(struct usb_device *usb_dev)
- {
- 	usb_lock_device(usb_dev);
--	if (usb_dev->authorized == 0)
-+	if (!usb_device_authorized(usb_dev))
- 		goto out_unauthorized;
- 
- 	usb_dev->authorized = 0;
-@@ -2786,7 +2786,22 @@ int usb_authorize_device(struct usb_device *usb_dev)
- {
- 	int result = 0, c;
- 
-+	/* Authorizing a device that its trust policy holds back admits it */
-+	if (device_policy_is_disabled(&usb_dev->dev)) {
-+		result = device_trust_set_policy(&usb_dev->dev,
-+						 DEVICE_TRUST_POLICY_FULL);
-+		if (result)
-+			return result;
-+	}
++static struct device_trust_test_context *
++to_device_trust_test_context(struct device *dev)
++{
++	return container_of(dev, struct device_trust_test_context, dev);
++}
 +
- 	usb_lock_device(usb_dev);
-+	if (!usb_dev->dev.driver) {
-+		/* Binding the generic driver configures the device */
-+		usb_dev->authorized = 1;
-+		usb_unlock_device(usb_dev);
-+		result = device_attach(&usb_dev->dev);
-+		return result < 0 ? result : 0;
-+	}
- 	if (usb_dev->authorized == 1)
- 		goto out_authorized;
- 
-diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-index 2d75b85b2d139..ddede900dace8 100644
---- a/drivers/usb/core/message.c
-+++ b/drivers/usb/core/message.c
-@@ -1857,7 +1857,7 @@ void usb_deauthorize_interface(struct usb_interface *intf)
- 
- 	device_lock(dev->parent);
- 
--	if (intf->authorized) {
-+	if (usb_interface_authorized(intf)) {
- 		device_lock(dev);
- 		intf->authorized = 0;
- 		device_unlock(dev);
-@@ -1872,16 +1872,27 @@ void usb_deauthorize_interface(struct usb_interface *intf)
-  * usb_authorize_interface - authorize an USB interface
-  *
-  * @intf: USB interface structure
-+ *
-+ * Return: 0 on success, or the error of the trust policy request.
-  */
--void usb_authorize_interface(struct usb_interface *intf)
-+int usb_authorize_interface(struct usb_interface *intf)
- {
- 	struct device *dev = &intf->dev;
-+	int ret;
++static int device_trust_test_match(struct device *dev,
++				   const struct device_driver *drv)
++{
++	struct device_trust_test_context *ctx =
++		to_device_trust_test_context(dev);
 +
-+	/* Authorizing an interface that its trust policy holds back admits it */
-+	if (device_policy_is_disabled(dev)) {
-+		ret = device_trust_set_policy(dev, DEVICE_TRUST_POLICY_FULL);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	if (!intf->authorized) {
- 		device_lock(dev);
- 		intf->authorized = 1; /* authorize interface */
- 		device_unlock(dev);
- 	}
++	return READ_ONCE(ctx->match_ret);
++}
++
++static int device_trust_test_resolve(struct device *dev,
++				     const struct device_driver *drv,
++				     enum device_trust_policy policy,
++				     enum device_trust_level *level)
++{
++	struct device_trust_test_context *ctx =
++		to_device_trust_test_context(dev);
++
++	ctx->resolve_count++;
++	ctx->resolve_policy = policy;
++	ctx->resolve_driver = drv;
++	if (ctx->reject_driver && drv == ctx->reject_driver)
++		return -EPERM;
++	if (ctx->resolve_ret)
++		return ctx->resolve_ret;
++
++	*level = ctx->resolve_level;
 +	return 0;
- }
- 
- static int usb_if_uevent(const struct device *dev, struct kobj_uevent_env *env)
-@@ -2043,7 +2054,7 @@ EXPORT_SYMBOL_GPL(usb_set_wireless_status);
-  * channels are available independently; and choosing between open
-  * standard device protocols (like CDC) or proprietary ones.
-  *
-- * Note that a non-authorized device (dev->authorized == 0) will only
-+ * Note that a non-authorized device (see usb_device_authorized()) will only
-  * be put in unconfigured mode.
-  *
-  * Note that USB has an additional level of device configurability,
-@@ -2068,7 +2079,7 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
- 	struct usb_hcd *hcd = bus_to_hcd(dev->bus);
- 	int n, nintf;
- 
--	if (dev->authorized == 0 || configuration == -1)
-+	if (!usb_device_authorized(dev) || configuration == -1)
- 		configuration = 0;
- 	else {
- 		for (i = 0; i < dev->descriptor.bNumConfigurations; i++) {
-@@ -2173,7 +2184,10 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
- 		intfc = cp->intf_cache[i];
- 		intf->altsetting = intfc->altsetting;
- 		intf->num_altsetting = intfc->num_altsetting;
--		intf->authorized = !!HCD_INTF_AUTHORIZED(hcd);
-+		/* The authorization default is the interface's initial trust policy */
-+		if (!HCD_INTF_AUTHORIZED(hcd))
-+			intf->dev.trust_policy = DEVICE_TRUST_POLICY_DISABLED;
-+		intf->authorized = 1;
- 		kref_get(&intfc->ref);
- 
- 		alt = usb_altnum_to_altsetting(intf, 0);
-diff --git a/drivers/usb/core/sysfs.c b/drivers/usb/core/sysfs.c
-index d22dc78457d79..189fb917b81ee 100644
---- a/drivers/usb/core/sysfs.c
-+++ b/drivers/usb/core/sysfs.c
-@@ -728,7 +728,7 @@ static ssize_t authorized_show(struct device *dev,
- 			       struct device_attribute *attr, char *buf)
- {
- 	struct usb_device *usb_dev = to_usb_device(dev);
--	return sysfs_emit(buf, "%u\n", usb_dev->authorized);
-+	return sysfs_emit(buf, "%u\n", usb_device_authorized(usb_dev));
- }
- 
- /*
-@@ -1213,7 +1213,7 @@ static ssize_t interface_authorized_show(struct device *dev,
- {
- 	struct usb_interface *intf = to_usb_interface(dev);
- 
--	return sysfs_emit(buf, "%u\n", intf->authorized);
-+	return sysfs_emit(buf, "%u\n", usb_interface_authorized(intf));
- }
- 
- /*
-@@ -1225,12 +1225,15 @@ static ssize_t interface_authorized_store(struct device *dev,
- 	struct usb_interface *intf = to_usb_interface(dev);
- 	bool val;
- 	struct kernfs_node *kn;
++}
++
++static int device_trust_test_dma_configure(struct device *dev)
++{
++	struct device_trust_test_context *ctx =
++		to_device_trust_test_context(dev);
++
++	ctx->configure_count++;
++	ctx->configure_level = device_get_trust_level(dev);
++	return ctx->configure_ret;
++}
++
++static void device_trust_test_dma_cleanup(struct device *dev)
++{
++	struct device_trust_test_context *ctx =
++		to_device_trust_test_context(dev);
++
++	ctx->cleanup_count++;
++	ctx->cleanup_level = device_get_trust_level(dev);
++}
++
++static int device_trust_test_probe(struct device *dev)
++{
++	struct device_trust_test_context *ctx =
++		to_device_trust_test_context(dev);
++
++	ctx->probe_count++;
++	ctx->probe_level = device_get_trust_level(dev);
++	ctx->probe_adversarial = device_is_adversarial(dev);
++	return ctx->probe_ret;
++}
++
++static int device_trust_test_remove(struct device *dev)
++{
++	struct device_trust_test_context *ctx =
++		to_device_trust_test_context(dev);
++
++	ctx->remove_count++;
++	ctx->remove_level = device_get_trust_level(dev);
++	return 0;
++}
++
++static const struct bus_type device_trust_test_plain_bus = {
++	.name = "device-trust-test-plain",
++	.match = device_trust_test_match,
++	.dma_configure = device_trust_test_dma_configure,
++	.dma_cleanup = device_trust_test_dma_cleanup,
++};
++
++static const struct bus_type device_trust_test_resolving_bus = {
++	.name = "device-trust-test-resolving",
++	.match = device_trust_test_match,
++	.trust_resolve = device_trust_test_resolve,
++	.dma_configure = device_trust_test_dma_configure,
++	.dma_cleanup = device_trust_test_dma_cleanup,
++};
++
++static const struct device_type device_trust_test_child_type = {
++	.need_parent_lock = true,
++};
++
++static bool device_trust_test_plain_bus_registered;
++static bool device_trust_test_resolving_bus_registered;
++
++static void device_trust_test_release(struct device *dev)
++{
++	struct device_trust_test_context *ctx =
++		to_device_trust_test_context(dev);
++	struct completion *released = ctx->released;
++
++	kfree(ctx);
++	complete(released);
++}
++
++/*
++ * The fixture is freed when the last reference to its device is dropped,
++ * which deferred probing, device links and delayed kobject release may do
++ * after the test. Wait for that so the release callback never outlives it.
++ */
++static void device_trust_test_device_unregister(void *data)
++{
++	struct device_trust_test_context *ctx = data;
++	struct completion *released = ctx->released;
++
++	if (!ctx->device_initialized)
++		return;
++
++	ctx->device_initialized = false;
++	if (ctx->device_registered) {
++		ctx->device_registered = false;
++		device_unregister(&ctx->dev);
++	} else {
++		put_device(&ctx->dev);
++	}
++	if (!wait_for_completion_timeout(released, 10 * HZ)) {
++		WARN(1, "device-trust test fixture is still referenced\n");
++		wait_for_completion(released);
++	}
++}
++
++static void device_trust_test_driver_unregister(void *data)
++{
++	struct device_trust_test_context *ctx = data;
++
++	if (!ctx->driver_registered)
++		return;
++
++	ctx->driver_registered = false;
++	driver_unregister(&ctx->drv);
++}
++
++static struct device_trust_test_context *
++device_trust_test_device_register_parent(struct kunit *test,
++					 const struct bus_type *bus,
++					 enum device_trust_policy policy,
++					 enum device_trust_policy boot_policy,
++					 struct device *parent)
++{
++	struct device_trust_test_context *ctx;
++	struct completion *released;
 +	int ret;
- 
- 	if (kstrtobool(buf, &val) != 0)
- 		return -EINVAL;
- 
- 	if (val) {
--		usb_authorize_interface(intf);
-+		ret = usb_authorize_interface(intf);
-+		if (ret)
-+			return ret;
- 	} else {
- 		/*
- 		 * Prevent deadlock if another process is concurrently
-diff --git a/drivers/usb/core/trace.h b/drivers/usb/core/trace.h
-index 903e57dc273af..42f9cfcd8b0f2 100644
---- a/drivers/usb/core/trace.h
-+++ b/drivers/usb/core/trace.h
-@@ -27,7 +27,7 @@ DECLARE_EVENT_CLASS(usb_core_log_usb_device,
- 		__entry->speed = udev->speed;
- 		__entry->state = udev->state;
- 		__entry->bus_mA = udev->bus_mA;
--		__entry->authorized = udev->authorized;
-+		__entry->authorized = usb_device_authorized(udev);
- 	),
- 	TP_printk("usb %s speed %s state %s %dmA [%s]",
- 		__get_str(name),
-diff --git a/drivers/usb/core/usb.c b/drivers/usb/core/usb.c
-index 2559a180fdeec..8b427209bcc02 100644
---- a/drivers/usb/core/usb.c
-+++ b/drivers/usb/core/usb.c
-@@ -747,7 +747,10 @@ struct usb_device *usb_alloc_dev(struct usb_device *parent,
- 	dev->active_duration = -jiffies;
- #endif
- 
--	dev->authorized = usb_dev_authorized(dev, usb_hcd);
-+	/* The authorization default is the device's initial trust policy */
-+	if (!usb_dev_authorized(dev, usb_hcd))
-+		dev->dev.trust_policy = DEVICE_TRUST_POLICY_DISABLED;
-+	dev->authorized = 1;
- 	trace_usb_alloc_dev(dev);
- 	return dev;
++
++	released = kunit_kzalloc(test, sizeof(*released), GFP_KERNEL);
++	if (!released)
++		return ERR_PTR(-ENOMEM);
++	init_completion(released);
++
++	ctx = kzalloc_obj(*ctx);
++	if (!ctx)
++		return ERR_PTR(-ENOMEM);
++
++	ctx->released = released;
++	ctx->match_ret = 1;
++	ctx->resolve_level = DEVICE_TRUST_FULL;
++	ctx->drv.probe_type = PROBE_FORCE_SYNCHRONOUS;
++	ctx->drv.suppress_bind_attrs = true;
++	device_initialize(&ctx->dev);
++	ctx->dev.bus = bus;
++	ctx->dev.parent = parent;
++	if (parent && bus == &device_trust_test_plain_bus)
++		ctx->dev.type = &device_trust_test_child_type;
++	ctx->dev.release = device_trust_test_release;
++	ctx->dev.trust_policy = policy;
++	ctx->device_initialized = true;
++
++	ret = kunit_add_action_or_reset(test,
++					device_trust_test_device_unregister, ctx);
++	if (ret)
++		return ERR_PTR(ret);
++
++	ret = dev_set_name(&ctx->dev, "%s-%s",
++			   bus ? bus->name : "device-trust-test-busless",
++			   test->name);
++	if (ret)
++		return ERR_PTR(ret);
++
++	device_trust_apply_boot_policy(&ctx->dev, boot_policy, NULL);
++	ret = device_add(&ctx->dev);
++	if (ret)
++		return ERR_PTR(ret);
++	ctx->device_registered = true;
++
++	return ctx;
++}
++
++static struct device_trust_test_context *
++device_trust_test_device_register(struct kunit *test,
++				  const struct bus_type *bus,
++				  enum device_trust_policy policy)
++{
++	return device_trust_test_device_register_parent(test, bus, policy,
++						       DEVICE_TRUST_POLICY_DEFAULT, NULL);
++}
++
++static int device_trust_test_driver_register(struct kunit *test,
++					     struct device_trust_test_context *ctx)
++{
++	int ret;
++
++	ctx->drv.name = test->name;
++	ctx->drv.bus = ctx->dev.bus ?: &device_trust_test_plain_bus;
++	ctx->drv.probe = device_trust_test_probe;
++	ctx->drv.remove = device_trust_test_remove;
++
++	ret = kunit_add_action_or_reset(test,
++					device_trust_test_driver_unregister, ctx);
++	if (ret)
++		return ret;
++
++	ret = driver_register(&ctx->drv);
++	if (ret)
++		return ret;
++	ctx->driver_registered = true;
++
++	return 0;
++}
++
++static void device_trust_expect_policy_locked(struct kunit *test,
++					      struct device *dev)
++{
++	enum device_trust_policy original = dev->trust_policy;
++	enum device_trust_level active = device_get_trust_level(dev);
++	enum device_trust_policy policy;
++
++	for (policy = DEVICE_TRUST_POLICY_DEFAULT;
++	     policy <= DEVICE_TRUST_POLICY_FULL; policy++) {
++		KUNIT_EXPECT_EQ(test, device_trust_set_policy(dev, policy),
++				policy == original ? 0 : -EBUSY);
++		KUNIT_EXPECT_EQ(test, dev->trust_policy, original);
++		KUNIT_EXPECT_EQ(test, device_get_trust_level(dev), active);
++	}
++}
++
++static void device_trust_default_bind_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_plain_bus, DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->configure_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_FALSE(test, ctx->probe_adversarial);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_FULL);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++			DEVICE_TRUST_FULL);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++}
++
++static void device_trust_bus_adversary_bind_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_resolving_bus,
++		DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->resolve_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->resolve_policy,
++			DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_EXPECT_PTR_EQ(test, ctx->resolve_driver, &ctx->drv);
++	KUNIT_EXPECT_EQ(test, ctx->configure_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_TRUE(test, ctx->probe_adversarial);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++}
++
++static void device_trust_test_other_driver_unregister(void *data)
++{
++	driver_unregister(data);
++}
++
++static void device_trust_default_pinned_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	struct device_driver *other;
++	int ret;
++
++	ctx = device_trust_test_device_register(test, &device_trust_test_resolving_bus,
++						DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, ctx), 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	device_release_driver(&ctx->dev);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++
++	other = kunit_kzalloc(test, sizeof(*other), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, other);
++	other->name = "device-trust-pinned-other";
++	other->bus = ctx->dev.bus;
++	other->probe = device_trust_test_probe;
++	other->remove = device_trust_test_remove;
++	other->probe_type = PROBE_FORCE_SYNCHRONOUS;
++	other->suppress_bind_attrs = true;
++	ctx->resolve_level = DEVICE_TRUST_FULL;
++	KUNIT_ASSERT_EQ(test, driver_register(other), 0);
++	ret = kunit_add_action_or_reset(test,
++					device_trust_test_other_driver_unregister, other);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_EXPECT_EQ(test, device_driver_attach(other, &ctx->dev), -EINVAL);
++	KUNIT_EXPECT_PTR_EQ(test, ctx->resolve_driver, other);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, DEVICE_TRUST_POLICY_DEFAULT);
++
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++	KUNIT_ASSERT_EQ(test, device_driver_attach(other, &ctx->dev), 0);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_PTR_EQ(test, ctx->dev.driver, other);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++}
++
++static void device_trust_authorize_test(struct kunit *test,
++					enum device_trust_policy initial_policy,
++					enum device_trust_policy boot_policy,
++					enum device_trust_policy policy,
++					enum device_trust_level level)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register_parent(
++		test, &device_trust_test_plain_bus, initial_policy, boot_policy, NULL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	KUNIT_ASSERT_EQ(test, ctx->dev.trust_policy, DEVICE_TRUST_POLICY_DISABLED);
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	ret = device_driver_attach(&ctx->drv, &ctx->dev);
++	KUNIT_EXPECT_EQ(test, ret, -EPERM);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_TRUE(test, dev_can_match(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DISABLED), 0);
++	KUNIT_EXPECT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DEFAULT), -EBUSY);
++
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev, policy), 0);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, policy);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++
++	KUNIT_ASSERT_EQ(test, device_driver_attach(&ctx->drv, &ctx->dev), 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->configure_level, level);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, level);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, level);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, policy);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++			level);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++}
++
++static void device_trust_disabled_bind_test(struct kunit *test)
++{
++	device_trust_authorize_test(test, DEVICE_TRUST_POLICY_DISABLED,
++				    DEVICE_TRUST_POLICY_DEFAULT, DEVICE_TRUST_POLICY_ADVERSARY,
++				    DEVICE_TRUST_ADVERSARY);
++}
++
++static void device_trust_disabled_full_bind_test(struct kunit *test)
++{
++	device_trust_authorize_test(test, DEVICE_TRUST_POLICY_DISABLED,
++				    DEVICE_TRUST_POLICY_DEFAULT, DEVICE_TRUST_POLICY_FULL,
++				    DEVICE_TRUST_FULL);
++}
++
++static void device_trust_global_disabled_adversary_test(struct kunit *test)
++{
++	device_trust_authorize_test(test, DEVICE_TRUST_POLICY_ADVERSARY,
++				    DEVICE_TRUST_POLICY_DISABLED, DEVICE_TRUST_POLICY_ADVERSARY,
++				    DEVICE_TRUST_ADVERSARY);
++}
++
++static void device_trust_global_disabled_full_test(struct kunit *test)
++{
++	device_trust_authorize_test(test, DEVICE_TRUST_POLICY_FULL,
++				    DEVICE_TRUST_POLICY_DISABLED, DEVICE_TRUST_POLICY_FULL,
++				    DEVICE_TRUST_FULL);
++}
++
++static void device_trust_test_link_wait(void *data)
++{
++	device_link_wait_removal();
++}
++
++static void device_trust_supplier_retry_test(struct kunit *test)
++{
++	struct device_trust_test_context *supplier, *consumer;
++	struct device_link *link;
++	int ret;
++
++	supplier = device_trust_test_device_register(test, &device_trust_test_plain_bus,
++						     DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, supplier);
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, supplier), 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&supplier->dev));
++	/* Runs after the consumer is gone and before the supplier goes. */
++	ret = kunit_add_action_or_reset(test, device_trust_test_link_wait, NULL);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	consumer = device_trust_test_device_register(test, &device_trust_test_resolving_bus,
++						     DEVICE_TRUST_POLICY_DISABLED);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, consumer);
++	consumer->resolve_level = DEVICE_TRUST_ADVERSARY;
++	link = device_link_add(&consumer->dev, &supplier->dev, 0);
++	KUNIT_ASSERT_NOT_NULL(test, link);
++
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, consumer), 0);
++	KUNIT_ASSERT_EQ(test, link->status, DL_STATE_AVAILABLE);
++	KUNIT_EXPECT_EQ(test, consumer->dev.links.status, DL_DEV_NO_DRIVER);
++	KUNIT_EXPECT_EQ(test, consumer->configure_count, 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&consumer->dev,
++						      DEVICE_TRUST_POLICY_ADVERSARY), 0);
++	consumer->resolve_ret = -EAGAIN;
++	KUNIT_EXPECT_EQ(test, device_driver_attach(&consumer->drv, &consumer->dev), -EAGAIN);
++	KUNIT_ASSERT_EQ(test, link->status, DL_STATE_AVAILABLE);
++	KUNIT_EXPECT_EQ(test, consumer->dev.links.status, DL_DEV_NO_DRIVER);
++
++	consumer->resolve_ret = 0;
++	KUNIT_ASSERT_EQ(test, device_driver_attach(&consumer->drv, &consumer->dev), 0);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&consumer->dev));
++	KUNIT_EXPECT_EQ(test, link->status, DL_STATE_ACTIVE);
++	device_release_driver(&consumer->dev);
++	KUNIT_ASSERT_EQ(test, link->status, DL_STATE_AVAILABLE);
++	device_release_driver(&supplier->dev);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&supplier->dev));
++}
++
++static void device_trust_match_defer_authorize_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++
++	ctx = device_trust_test_device_register(test, &device_trust_test_plain_bus,
++						DEVICE_TRUST_POLICY_DISABLED);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->match_ret = -EPROBE_DEFER;
++
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, ctx), 0);
++	KUNIT_EXPECT_TRUE(test, dev_can_match(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_ADVERSARY), 0);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++
++	WRITE_ONCE(ctx->match_ret, 1);
++	KUNIT_ASSERT_EQ(test, device_attach(&ctx->dev), 1);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++}
++
++static void device_trust_test_parent_unregister(void *data)
++{
++	root_device_unregister(data);
++}
++
++static void device_trust_async_policy_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	struct device *parent;
++	int ret;
++
++	parent = root_device_register(test->name);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, parent);
++	ret = kunit_add_action_or_reset(test,
++					device_trust_test_parent_unregister, parent);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	ctx = device_trust_test_device_register_parent(test, &device_trust_test_plain_bus,
++						       DEVICE_TRUST_POLICY_DEFAULT,
++						       DEVICE_TRUST_POLICY_DEFAULT, parent);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->drv.probe_type = PROBE_PREFER_ASYNCHRONOUS;
++
++	/* The queued probe cannot acquire the parent until policy is disabled. */
++	device_lock(parent);
++	ret = device_trust_test_driver_register(test, ctx);
++	if (!ret)
++		ret = device_trust_set_policy(&ctx->dev,
++					      DEVICE_TRUST_POLICY_DISABLED);
++	device_unlock(parent);
++	wait_for_device_probe();
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_TRUE(test, dev_can_match(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DEFAULT), -EBUSY);
++
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_ADVERSARY), 0);
++	KUNIT_ASSERT_EQ(test, device_driver_attach(&ctx->drv, &ctx->dev), 0);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++}
++
++static void device_trust_generic_adversary_bind_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_plain_bus,
++		DEVICE_TRUST_POLICY_ADVERSARY);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->configure_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_TRUE(test, ctx->probe_adversarial);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++}
++
++static int device_trust_platform_probe(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static void device_trust_no_iommu_bind_test(struct kunit *test)
++{
++	struct platform_device *pdev;
++	struct platform_driver *drv;
++
++	drv = kunit_kzalloc(test, sizeof(*drv), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, drv);
++	drv->driver.name = test->name;
++	drv->driver.probe_type = PROBE_FORCE_SYNCHRONOUS;
++	drv->driver.suppress_bind_attrs = true;
++	drv->probe = device_trust_platform_probe;
++	pdev = kunit_platform_device_alloc(test, test->name, PLATFORM_DEVID_NONE);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, pdev);
++	pdev->dev.trust_policy = DEVICE_TRUST_POLICY_DISABLED;
++	KUNIT_ASSERT_EQ(test, kunit_platform_device_add(test, pdev), 0);
++	KUNIT_ASSERT_PTR_EQ(test, pdev->dev.iommu_group, NULL);
++	KUNIT_ASSERT_EQ(test, kunit_platform_driver_register(test, drv), 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&pdev->dev));
++
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&pdev->dev,
++						      DEVICE_TRUST_POLICY_ADVERSARY), 0);
++	KUNIT_ASSERT_EQ(test, device_driver_attach(&drv->driver, &pdev->dev), 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&pdev->dev));
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&pdev->dev), DEVICE_TRUST_ADVERSARY);
++
++	device_release_driver(&pdev->dev);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&pdev->dev), DEVICE_TRUST_DISABLED);
++	KUNIT_ASSERT_EQ(test, device_driver_attach(&drv->driver, &pdev->dev), 0);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&pdev->dev));
++}
++
++static void device_trust_resolver_retry_test(struct kunit *test, int error,
++					     enum device_trust_level level)
++{
++	struct device_trust_test_context *ctx;
++
++	ctx = device_trust_test_device_register(test, &device_trust_test_resolving_bus,
++						DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->resolve_ret = error;
++	ctx->resolve_level = level;
++
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, ctx), 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_GT(test, ctx->resolve_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_FULL), 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_ADVERSARY), 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DEFAULT), 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DISABLED), 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_ADVERSARY), 0);
++	KUNIT_EXPECT_EQ(test, device_driver_attach(&ctx->drv, &ctx->dev), error ?: -EPERM);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++
++	ctx->resolve_ret = 0;
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++	KUNIT_ASSERT_EQ(test, device_driver_attach(&ctx->drv, &ctx->dev), 0);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++}
++
++static void device_trust_resolver_failure_test(struct kunit *test)
++{
++	device_trust_resolver_retry_test(test, -EAGAIN, DEVICE_TRUST_FULL);
++}
++
++static void device_trust_resolver_disabled_test(struct kunit *test)
++{
++	device_trust_resolver_retry_test(test, 0, DEVICE_TRUST_DISABLED);
++}
++
++static void device_trust_probe_failure_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_resolving_bus,
++		DEVICE_TRUST_POLICY_ADVERSARY);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++	ctx->probe_ret = -EINVAL;
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->configure_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++}
++
++static void device_trust_probe_defer_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_resolving_bus,
++		DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++	ctx->probe_ret = -EPROBE_DEFER;
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->resolve_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++
++	ctx->probe_ret = 0;
++	ret = device_driver_attach(&ctx->drv, &ctx->dev);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->resolve_count, 2);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 2);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 2);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_ADVERSARY);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 2);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++}
++
++static void device_trust_dma_failure_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_resolving_bus,
++		DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++	ctx->configure_ret = -EIO;
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->configure_level, DEVICE_TRUST_ADVERSARY);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 0);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++			DEVICE_TRUST_ADVERSARY);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++
++	ctx->configure_ret = 0;
++	ctx->resolve_level = DEVICE_TRUST_FULL;
++	KUNIT_EXPECT_EQ(test, device_driver_attach(&ctx->drv, &ctx->dev), -EINVAL);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++	ctx->resolve_level = DEVICE_TRUST_ADVERSARY;
++	KUNIT_ASSERT_EQ(test, device_driver_attach(&ctx->drv, &ctx->dev), 0);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 2);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++}
++
++static void device_trust_force_bind_guard_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	unsigned int resolve_count;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_resolving_bus,
++		DEVICE_TRUST_POLICY_DISABLED);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	resolve_count = ctx->resolve_count;
++
++	device_lock(&ctx->dev);
++	ctx->dev.driver = &ctx->drv;
++	ret = device_bind_driver(&ctx->dev);
++	ctx->dev.driver = NULL;
++	device_unlock(&ctx->dev);
++
++	KUNIT_EXPECT_EQ(test, ret, -EOPNOTSUPP);
++	KUNIT_EXPECT_EQ(test, ctx->resolve_count, resolve_count);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++}
++
++static void device_trust_legacy_force_bind_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_plain_bus,
++		DEVICE_TRUST_POLICY_DISABLED);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_FULL), 0);
++
++	device_lock(&ctx->dev);
++	ctx->dev.driver = &ctx->drv;
++	ret = device_bind_driver(&ctx->dev);
++	if (ret)
++		ctx->dev.driver = NULL;
++	device_unlock(&ctx->dev);
++
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_FULL);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++}
++
++static void device_trust_busless_force_bind_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, NULL, DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++
++	ret = device_trust_test_driver_register(test, ctx);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++
++	device_lock(&ctx->dev);
++	ctx->dev.driver = &ctx->drv;
++	ret = device_bind_driver(&ctx->dev);
++	if (ret)
++		ctx->dev.driver = NULL;
++	device_unlock(&ctx->dev);
++
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_FULL);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 0);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			DEVICE_TRUST_DISABLED);
++}
++
++static const struct bus_type device_trust_test_pci_bus = { .name = "pci" };
++static const struct bus_type device_trust_test_usb_bus = { .name = "usb" };
++static const struct bus_type device_trust_test_platform_bus = { .name = "platform" };
++
++struct device_trust_test_stub {
++	struct device_driver drv;
++	struct device_private private;
++	struct device dev;
++};
++
++/* Stack instances of these objects overflow the frame limit under KASAN. */
++static struct device_trust_test_stub *
++device_trust_test_stub_alloc(struct kunit *test)
++{
++	struct device_trust_test_stub *stub;
++
++	stub = kunit_kzalloc(test, sizeof(*stub), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, stub);
++
++	return stub;
++}
++
++static struct device *
++device_trust_test_stub_reset(struct device_trust_test_stub *stub,
++			     const struct bus_type *bus, const char *name,
++			     enum device_trust_policy policy)
++{
++	memset(stub, 0, sizeof(*stub));
++	stub->drv.bus = bus;
++	stub->drv.name = "test";
++	stub->dev.bus = bus;
++	stub->dev.init_name = name;
++	stub->dev.trust_policy = policy;
++	mutex_init(&stub->dev.mutex);
++
++	return &stub->dev;
++}
++
++static struct device *
++device_trust_test_pci_stub(struct device_trust_test_stub *stub, const char *name,
++			   enum device_trust_policy policy)
++{
++	return device_trust_test_stub_reset(stub, &device_trust_test_pci_bus, name,
++					    policy);
++}
++
++static void device_trust_cmdline_policies_test(struct kunit *test)
++{
++	static const char options[] =
++		"pci:0000:01:00.0=adversary,usb:1-1=full,usb:1-2=disabled,platform:i8042=default";
++	static const struct {
++		const struct bus_type *bus;
++		const char *name;
++		enum device_trust_policy policy;
++	} cases[] = {
++		{ &device_trust_test_pci_bus, "0000:01:00.0", DEVICE_TRUST_POLICY_ADVERSARY },
++		{ &device_trust_test_usb_bus, "1-1", DEVICE_TRUST_POLICY_FULL },
++		{ &device_trust_test_usb_bus, "1-2", DEVICE_TRUST_POLICY_DISABLED },
++		{ &device_trust_test_platform_bus, "i8042", DEVICE_TRUST_POLICY_DEFAULT },
++	};
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(cases); i++) {
++		enum device_trust_policy policy = DEVICE_TRUST_POLICY_DISABLED;
++		struct device *dev = device_trust_test_stub_reset(stub, cases[i].bus,
++								  cases[i].name,
++								  DEVICE_TRUST_POLICY_DEFAULT);
++		int ret;
++
++		ret = device_trust_parse_cmdline(options, dev, &policy);
++		KUNIT_EXPECT_EQ_MSG(test, ret, 1, "case %u", i);
++		KUNIT_EXPECT_EQ_MSG(test, policy, cases[i].policy, "case %u", i);
++	}
++}
++
++static void device_trust_cmdline_exact_match_test(struct kunit *test)
++{
++	static const char * const options[] = {
++		"pcie:0000:01:00.0=full",
++		"pc:0000:01:00.0=full",
++		"usb:0000:01:00.0=full",
++		"pci:0000:01:00.01=full",
++		"pci:0000:01:00=full",
++		"pci:0000:01:00.1=full",
++	};
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, "0000:01:00.0",
++							DEVICE_TRUST_POLICY_DEFAULT);
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(options); i++) {
++		enum device_trust_policy policy = DEVICE_TRUST_POLICY_ADVERSARY;
++		int ret;
++
++		ret = device_trust_parse_cmdline(options[i], dev, &policy);
++		KUNIT_EXPECT_EQ_MSG(test, ret, 0, "%s", options[i]);
++		KUNIT_EXPECT_EQ_MSG(test, policy, DEVICE_TRUST_POLICY_ADVERSARY,
++				    "%s", options[i]);
++	}
++}
++
++static void device_trust_cmdline_last_match_test(struct kunit *test)
++{
++	static const char options[] =
++		"pci:0000:01:00.0=disabled,usb:1-1=full,pci:0000:01:00.0=full,usb:1-2=disabled";
++	static const char defaults[] =
++		"pci:0000:01:00.0=disabled,pci:0000:01:00.0=default";
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, "0000:01:00.0",
++							DEVICE_TRUST_POLICY_DEFAULT);
++	enum device_trust_policy policy = DEVICE_TRUST_POLICY_ADVERSARY;
++	int ret;
++
++	ret = device_trust_parse_cmdline(options, dev, &policy);
++	KUNIT_ASSERT_EQ(test, ret, 1);
++	KUNIT_EXPECT_EQ(test, policy, DEVICE_TRUST_POLICY_FULL);
++
++	ret = device_trust_parse_cmdline(defaults, dev, &policy);
++	KUNIT_ASSERT_EQ(test, ret, 1);
++	KUNIT_EXPECT_EQ(test, policy, DEVICE_TRUST_POLICY_DEFAULT);
++}
++
++static void device_trust_cmdline_nameless_test(struct kunit *test)
++{
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, NULL,
++							DEVICE_TRUST_POLICY_DEFAULT);
++	enum device_trust_policy policy = DEVICE_TRUST_POLICY_ADVERSARY;
++	int ret;
++
++	ret = device_trust_parse_cmdline("pci:0000:01:00.0=full", dev, &policy);
++	KUNIT_EXPECT_EQ(test, ret, 0);
++	KUNIT_EXPECT_EQ(test, policy, DEVICE_TRUST_POLICY_ADVERSARY);
++}
++
++static void device_trust_cmdline_validate_test(struct kunit *test)
++{
++	static const char valid[] = "pci:0000:01:00.0=adversary,usb:1-2=disabled";
++	static const char invalid[] = "pci:0000:01:00.0=adversary,usb:1-2=invalid";
++
++	KUNIT_EXPECT_EQ(test, device_trust_parse_cmdline(valid, NULL, NULL), 0);
++	KUNIT_EXPECT_EQ(test, device_trust_parse_cmdline(invalid, NULL, NULL), -EINVAL);
++}
++
++static void device_trust_cmdline_invalid_test(struct kunit *test)
++{
++	static const char * const options[] = {
++		"",
++		",pci:0000:01:00.0=full",
++		"pci:0000:01:00.0=full,",
++		"pci:0000:01:00.0=full,,usb:1-2=disabled",
++		":0000:01:00.0=full",
++		"pci:=full",
++		"pci:0000:01:00.0=",
++		"pci=full",
++		"pci=bad:0000:01:00.0=full",
++		"pci:0000:01:00.0",
++		"pci:0000:01:00.0=unknown",
++		"pci:0000:01:00.0=full=disabled",
++		"pc i:0000:01:00.0=full",
++		"pci:0000:01:00.0 =full",
++		"pci:0000:01:00.0= full",
++		"pci:0000:01:00.0=full\n",
++		"pci:0000:01:00.0\t=full",
++		"pci:0000:01:00.0\001=full",
++		"p\"ci:0000:01:00.0=full",
++		"pci:0000:01:00.0=\"full\"",
++		"pci:0000:01:00.0=full,usb:1-2=unknown",
++	};
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, "0000:01:00.0",
++							DEVICE_TRUST_POLICY_DEFAULT);
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(options); i++) {
++		enum device_trust_policy policy = DEVICE_TRUST_POLICY_ADVERSARY;
++		int ret;
++
++		ret = device_trust_parse_cmdline(options[i], dev, &policy);
++		KUNIT_EXPECT_EQ_MSG(test, ret, -EINVAL, "case %u", i);
++		KUNIT_EXPECT_EQ_MSG(test, policy, DEVICE_TRUST_POLICY_ADVERSARY,
++				    "case %u", i);
++	}
++}
++
++static void device_trust_boot_precedence_test(struct kunit *test)
++{
++	static const char * const overrides[] = {
++		[DEVICE_TRUST_POLICY_DEFAULT] = "pci:0000:01:00.0=default",
++		[DEVICE_TRUST_POLICY_DISABLED] = "pci:0000:01:00.0=disabled",
++		[DEVICE_TRUST_POLICY_ADVERSARY] = "pci:0000:01:00.0=adversary",
++		[DEVICE_TRUST_POLICY_FULL] = "pci:0000:01:00.0=full",
++	};
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	unsigned int initial, global, override;
++
++	for (initial = DEVICE_TRUST_POLICY_DEFAULT;
++	     initial <= DEVICE_TRUST_POLICY_FULL; initial++) {
++		for (global = DEVICE_TRUST_POLICY_DEFAULT;
++		     global <= DEVICE_TRUST_POLICY_FULL; global++) {
++			struct device *dev = device_trust_test_pci_stub(stub, "0000:01:00.0",
++									initial);
++			enum device_trust_policy expected = global ?: initial;
++
++			device_trust_apply_boot_policy(dev, global, NULL);
++			KUNIT_EXPECT_EQ(test, dev->trust_policy, expected);
++			device_trust_apply_boot_policy(dev, global,
++						       "pci:0000:02:00.0=full");
++			KUNIT_EXPECT_EQ(test, dev->trust_policy, expected);
++			for (override = 0; override < ARRAY_SIZE(overrides); override++) {
++				dev->trust_policy = initial;
++				device_trust_apply_boot_policy(dev, global,
++							       overrides[override]);
++				KUNIT_EXPECT_EQ(test, dev->trust_policy, override);
++				device_trust_apply_boot_policy(dev, global,
++							       overrides[override]);
++				KUNIT_EXPECT_EQ(test, dev->trust_policy, override);
++			}
++		}
++	}
++}
++
++static void device_trust_global_busless_test(struct kunit *test)
++{
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_stub_reset(stub, NULL, NULL,
++							  DEVICE_TRUST_POLICY_FULL);
++
++	device_trust_apply_boot_policy(dev, DEVICE_TRUST_POLICY_DISABLED,
++				       "pci:0000:01:00.0=full");
++	KUNIT_EXPECT_EQ(test, dev->trust_policy, DEVICE_TRUST_POLICY_DISABLED);
++}
++
++static void device_trust_driver_precedence_test(struct kunit *test)
++{
++	static const char * const driver_rules[] = {
++		"pci:test=default", "pci:test=disabled",
++		"pci:test=adversary", "pci:test=full",
++	};
++	static const char * const device_rules[] = {
++		NULL, "pci:0000:01:00.0=default", "pci:0000:01:00.0=disabled",
++		"pci:0000:01:00.0=adversary", "pci:0000:01:00.0=full",
++	};
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	unsigned int initial, global, driver, device;
++	struct device *dev;
++
++	for (initial = DEVICE_TRUST_POLICY_DEFAULT;
++	     initial <= DEVICE_TRUST_POLICY_FULL; initial++) {
++		for (global = DEVICE_TRUST_POLICY_DEFAULT;
++		     global <= DEVICE_TRUST_POLICY_FULL; global++) {
++			for (driver = 0; driver < ARRAY_SIZE(driver_rules); driver++) {
++				for (device = 0; device < ARRAY_SIZE(device_rules); device++) {
++					dev = device_trust_test_pci_stub(stub, "0000:01:00.0",
++									 initial);
++
++					device_trust_apply_boot_policy(dev, global,
++								       device_rules[device]);
++					dev->p = &stub->private;
++					device_trust_apply_boot_policy(dev, global,
++								       device_rules[device]);
++					device_trust_init_state(dev);
++					device_lock(dev);
++					device_trust_apply_driver_policy(dev, &stub->drv,
++									 driver_rules[driver]);
++					device_unlock(dev);
++					KUNIT_EXPECT_EQ(test, dev->trust_policy,
++							device ? device - 1 : driver);
++				}
++			}
++		}
++	}
++}
++
++static void device_trust_driver_matching_test(struct kunit *test)
++{
++	static const char * const unmatched[] = {
++		NULL, "usb:test=disabled", "pc:test=disabled", "pcie:test=disabled",
++		"pci:tes=disabled", "pci:test1=disabled", "pci:te*=disabled",
++		"pci:test=disabled,pci:other=invalid", "pci:test=disabled,",
++	};
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, NULL,
++							DEVICE_TRUST_POLICY_DEFAULT);
++	unsigned int i;
++
++	dev->p = &stub->private;
++	device_trust_init_state(dev);
++	for (i = 0; i < ARRAY_SIZE(unmatched); i++) {
++		device_lock(dev);
++		device_trust_apply_driver_policy(dev, &stub->drv, unmatched[i]);
++		device_unlock(dev);
++		KUNIT_EXPECT_EQ(test, dev->trust_policy, DEVICE_TRUST_POLICY_DEFAULT);
++	}
++	device_lock(dev);
++	device_trust_apply_driver_policy(dev, &stub->drv,
++					 "pci:test=disabled,pci:test=adversary");
++	device_unlock(dev);
++	KUNIT_EXPECT_EQ(test, dev->trust_policy, DEVICE_TRUST_POLICY_ADVERSARY);
++}
++
++static void device_trust_driver_user_precedence_test(struct kunit *test)
++{
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	enum device_trust_policy policy;
++
++	for (policy = DEVICE_TRUST_POLICY_DEFAULT;
++	     policy <= DEVICE_TRUST_POLICY_FULL; policy++) {
++		struct device *dev = device_trust_test_pci_stub(stub, NULL,
++								policy);
++
++		dev->p = &stub->private;
++		device_trust_init_state(dev);
++		KUNIT_ASSERT_EQ(test, device_trust_set_policy(dev, policy), 0);
++		device_lock(dev);
++		device_trust_apply_driver_policy(dev, &stub->drv, "pci:test=disabled");
++		device_trust_apply_driver_policy(dev, &stub->drv, "pci:test=full");
++		device_unlock(dev);
++		KUNIT_EXPECT_EQ(test, dev->trust_policy, policy);
++	}
++}
++
++static void device_trust_driver_rejected_write_test(struct kunit *test)
++{
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, NULL,
++							DEVICE_TRUST_POLICY_DISABLED);
++
++	dev->p = &stub->private;
++	device_trust_init_state(dev);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(dev, DEVICE_TRUST_POLICY_DEFAULT),
++			-EBUSY);
++	device_lock(dev);
++	device_trust_apply_driver_policy(dev, &stub->drv, "pci:test=full");
++	device_unlock(dev);
++	KUNIT_EXPECT_EQ(test, dev->trust_policy, DEVICE_TRUST_POLICY_FULL);
++}
++
++static void device_trust_driver_authorize_test(struct kunit *test)
++{
++	const struct device_driver drv = {
++		.bus = &device_trust_test_plain_bus,
++		.name = "test",
++	};
++	struct device_trust_test_context *ctx;
++	const struct device_driver other = {
++		.bus = &device_trust_test_plain_bus,
++		.name = "other",
++	};
++	int ret;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_plain_bus, DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	device_lock(&ctx->dev);
++	device_trust_apply_driver_policy(&ctx->dev, &drv,
++					 "device-trust-test-plain:test=disabled");
++	device_unlock(&ctx->dev);
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, ctx), 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++
++	device_lock(&ctx->dev);
++	device_trust_apply_driver_policy(&ctx->dev, &other,
++					 "device-trust-test-plain:other=full");
++	device_unlock(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, DEVICE_TRUST_POLICY_DISABLED);
++	KUNIT_ASSERT_EQ(test, device_trust_set_policy(&ctx->dev,
++						     DEVICE_TRUST_POLICY_ADVERSARY), 0);
++	device_lock(&ctx->dev);
++	device_trust_apply_driver_policy(&ctx->dev, &drv,
++					 "device-trust-test-plain:test=full");
++	device_unlock(&ctx->dev);
++	ret = device_attach(&ctx->dev);
++	KUNIT_ASSERT_EQ(test, ret, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_ADVERSARY);
++
++	device_release_driver(&ctx->dev);
++	device_lock(&ctx->dev);
++	device_trust_apply_driver_policy(&ctx->dev, &drv,
++					 "device-trust-test-plain:test=full");
++	device_unlock(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, DEVICE_TRUST_POLICY_ADVERSARY);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++}
++
++static void device_trust_driver_resolver_failure_test(struct kunit *test)
++{
++	const struct device_driver drv = {
++		.bus = &device_trust_test_resolving_bus,
++		.name = "test",
++	};
++	struct device_trust_test_context *ctx;
++
++	ctx = device_trust_test_device_register(
++		test, &device_trust_test_resolving_bus, DEVICE_TRUST_POLICY_DISABLED);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	device_lock(&ctx->dev);
++	device_trust_apply_driver_policy(&ctx->dev, &drv,
++					 "device-trust-test-resolving:test=full");
++	device_unlock(&ctx->dev);
++	ctx->resolve_ret = -EIO;
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, ctx), 0);
++	KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_EQ(test, ctx->resolve_policy, DEVICE_TRUST_POLICY_FULL);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++
++	device_lock(&ctx->dev);
++	device_trust_apply_driver_policy(&ctx->dev, &drv,
++					 "device-trust-test-resolving:test=disabled");
++	device_unlock(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, DEVICE_TRUST_POLICY_FULL);
++	KUNIT_EXPECT_EQ(test, device_trust_set_policy(&ctx->dev,
++						     DEVICE_TRUST_POLICY_ADVERSARY), 0);
++}
++
++static void device_trust_claimed_policy_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++
++	ctx = device_trust_test_device_register(test, &device_trust_test_plain_bus,
++						DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++
++	/* A driver that claimed the device before registration skipped admission. */
++	device_lock(&ctx->dev);
++	ctx->dev.driver = &ctx->drv;
++	device_unlock(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DISABLED), -EBUSY);
++	KUNIT_EXPECT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DEFAULT), 0);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, DEVICE_TRUST_POLICY_DEFAULT);
++
++	device_lock(&ctx->dev);
++	ctx->dev.driver = NULL;
++	device_unlock(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, device_trust_set_policy(&ctx->dev,
++						      DEVICE_TRUST_POLICY_DISABLED), 0);
++}
++
++static void device_trust_scan_continues_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	struct device_driver *other;
++	int ret;
++
++	ctx = device_trust_test_device_register(test, &device_trust_test_resolving_bus,
++						DEVICE_TRUST_POLICY_DEFAULT);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->match_ret = 0;
++	KUNIT_ASSERT_EQ(test, device_trust_test_driver_register(test, ctx), 0);
++
++	other = kunit_kzalloc(test, sizeof(*other), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, other);
++	other->name = "device-trust-scan-other";
++	other->bus = ctx->dev.bus;
++	other->probe = device_trust_test_probe;
++	other->remove = device_trust_test_remove;
++	other->probe_type = PROBE_FORCE_SYNCHRONOUS;
++	other->suppress_bind_attrs = true;
++	KUNIT_ASSERT_EQ(test, driver_register(other), 0);
++	ret = kunit_add_action_or_reset(test,
++					device_trust_test_other_driver_unregister, other);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++
++	/* The first candidate is rejected; the scan must reach the second. */
++	ctx->reject_driver = &ctx->drv;
++	WRITE_ONCE(ctx->match_ret, 1);
++	KUNIT_EXPECT_EQ(test, device_attach(&ctx->dev), 1);
++	KUNIT_EXPECT_PTR_EQ(test, ctx->dev.driver, other);
++	KUNIT_EXPECT_EQ(test, ctx->resolve_count, 2);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++}
++
++static struct kunit_case device_trust_test_cases[] = {
++	KUNIT_CASE(device_trust_default_bind_test),
++	KUNIT_CASE(device_trust_bus_adversary_bind_test),
++	KUNIT_CASE(device_trust_default_pinned_test),
++	KUNIT_CASE(device_trust_disabled_bind_test),
++	KUNIT_CASE(device_trust_disabled_full_bind_test),
++	KUNIT_CASE(device_trust_global_disabled_adversary_test),
++	KUNIT_CASE(device_trust_global_disabled_full_test),
++	KUNIT_CASE(device_trust_supplier_retry_test),
++	KUNIT_CASE(device_trust_match_defer_authorize_test),
++	KUNIT_CASE(device_trust_async_policy_test),
++	KUNIT_CASE(device_trust_generic_adversary_bind_test),
++	KUNIT_CASE(device_trust_no_iommu_bind_test),
++	KUNIT_CASE(device_trust_resolver_failure_test),
++	KUNIT_CASE(device_trust_resolver_disabled_test),
++	KUNIT_CASE(device_trust_probe_failure_test),
++	KUNIT_CASE(device_trust_probe_defer_test),
++	KUNIT_CASE(device_trust_dma_failure_test),
++	KUNIT_CASE(device_trust_force_bind_guard_test),
++	KUNIT_CASE(device_trust_legacy_force_bind_test),
++	KUNIT_CASE(device_trust_busless_force_bind_test),
++	KUNIT_CASE(device_trust_cmdline_policies_test),
++	KUNIT_CASE(device_trust_cmdline_exact_match_test),
++	KUNIT_CASE(device_trust_cmdline_last_match_test),
++	KUNIT_CASE(device_trust_cmdline_nameless_test),
++	KUNIT_CASE(device_trust_cmdline_validate_test),
++	KUNIT_CASE(device_trust_cmdline_invalid_test),
++	KUNIT_CASE(device_trust_boot_precedence_test),
++	KUNIT_CASE(device_trust_global_busless_test),
++	KUNIT_CASE(device_trust_driver_precedence_test),
++	KUNIT_CASE(device_trust_driver_matching_test),
++	KUNIT_CASE(device_trust_driver_user_precedence_test),
++	KUNIT_CASE(device_trust_driver_rejected_write_test),
++	KUNIT_CASE(device_trust_driver_authorize_test),
++	KUNIT_CASE(device_trust_driver_resolver_failure_test),
++	KUNIT_CASE(device_trust_claimed_policy_test),
++	KUNIT_CASE(device_trust_scan_continues_test),
++	{}
++};
++
++static bool device_trust_test_global_full(struct kunit *test)
++{
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, "device-trust-test",
++							DEVICE_TRUST_POLICY_DEFAULT);
++
++	device_trust_init(dev);
++	return dev->trust_policy == DEVICE_TRUST_POLICY_FULL;
++}
++
++static struct device_trust_test_context *
++device_trust_full_test_register(struct kunit *test, const struct bus_type *bus,
++				struct device *parent)
++{
++	struct device_trust_test_context *ctx;
++	int ret;
++
++	ctx = device_trust_test_device_register_parent(test, bus,
++						       DEVICE_TRUST_POLICY_DEFAULT,
++						       DEVICE_TRUST_POLICY_DEFAULT, parent);
++	if (IS_ERR(ctx))
++		return ctx;
++	ctx->match_ret = 0;
++	ret = device_trust_test_driver_register(test, ctx);
++	if (ret)
++		return ERR_PTR(ret);
++	return ctx;
++}
++
++#if IS_BUILTIN(CONFIG_DM_KUNIT_TEST)
++static bool device_trust_full_test_driver_rules(struct kunit *test)
++{
++	char *args, *param, *value;
++	bool present = false;
++
++	args = kunit_kstrdup(test, saved_command_line, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, args);
++	while (*args) {
++		args = next_arg(args, &param, &value);
++		if (!strcmp(param, "device_trust.driver") && value &&
++		    device_trust_parse_cmdline(value, NULL, NULL) >= 0)
++			present = true;
++	}
++	return present;
++}
++#endif
++
++static void device_trust_full_boot_policy_test(struct kunit *test)
++{
++#if IS_BUILTIN(CONFIG_DM_KUNIT_TEST)
++	struct device_trust_test_context *ctx;
++	enum device_trust_policy policy;
++	bool allowed;
++	int ret;
++
++	ctx = device_trust_full_test_register(test, &device_trust_test_plain_bus, NULL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	policy = ctx->dev.trust_policy;
++	allowed = device_trust_test_global_full(test) &&
++		(policy == DEVICE_TRUST_POLICY_DEFAULT || policy == DEVICE_TRUST_POLICY_FULL) &&
++		(!device_trust_full_test_driver_rules(test) ||
++		 ctx->dev.p->trust_policy_override);
++
++	ret = device_driver_attach_full(&ctx->drv, &ctx->dev);
++	KUNIT_ASSERT_EQ(test, ret, allowed ? 0 : -EPERM);
++	KUNIT_EXPECT_EQ(test, device_is_bound(&ctx->dev), allowed);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, allowed ? 1 : 0);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, policy);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++			allowed ? DEVICE_TRUST_FULL : DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++			allowed ? DEVICE_TRUST_FULL : DEVICE_TRUST_DISABLED);
++	if (!allowed)
++		KUNIT_EXPECT_PTR_EQ(test, ctx->dev.driver, NULL);
++#else
++	kunit_skip(test, "boot policy coverage requires built-in tests");
++#endif
++}
++
++static void device_trust_full_attach_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	struct device *parent;
++	int ret;
++
++	if (!device_trust_test_global_full(test))
++		kunit_skip(test, "requires device_trust.default=full");
++	parent = root_device_register(test->name);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, parent);
++	ret = kunit_add_action_or_reset(test,
++					device_trust_test_parent_unregister, parent);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	ctx = device_trust_full_test_register(test, &device_trust_test_plain_bus, parent);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++
++	device_lock(parent);
++	device_lock(&ctx->dev);
++	ret = device_driver_attach_full(&ctx->drv, &ctx->dev);
++	device_unlock(&ctx->dev);
++	device_unlock(parent);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_EXPECT_TRUE(test, device_is_bound(&ctx->dev));
++	KUNIT_EXPECT_PTR_EQ(test, ctx->dev.driver, &ctx->drv);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, device_driver_attach_full(&ctx->drv, &ctx->dev), -EBUSY);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 1);
++
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_level, DEVICE_TRUST_FULL);
++	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev), DEVICE_TRUST_DISABLED);
++	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev), DEVICE_TRUST_FULL);
++	KUNIT_ASSERT_EQ(test, device_driver_attach_full(&ctx->drv, &ctx->dev), 0);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 2);
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++}
++
++static void device_trust_full_test_release_resource(void *data)
++{
++	struct device_trust_test_context *ctx = data;
++
++	ctx->release_count++;
++}
++
++static int device_trust_full_test_probe(struct device *dev)
++{
++	struct device_trust_test_context *ctx = to_device_trust_test_context(dev);
++	int ret;
++
++	ret = devm_add_action(dev, device_trust_full_test_release_resource, ctx);
++	if (ret)
++		return ret;
++	dev_set_drvdata(dev, ctx);
++	return device_trust_test_probe(dev);
++}
++
++static void device_trust_full_probe_failure_test(struct kunit *test)
++{
++	static const int errors[] = { -EIO, -EPROBE_DEFER };
++	static const int expected[] = { -EIO, -EAGAIN };
++	struct device_trust_test_context *ctx;
++	int i;
++
++	if (!device_trust_test_global_full(test))
++		kunit_skip(test, "requires device_trust.default=full");
++	ctx = device_trust_full_test_register(test, &device_trust_test_plain_bus, NULL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	ctx->drv.probe = device_trust_full_test_probe;
++
++	for (i = 0; i < ARRAY_SIZE(errors); i++) {
++		ctx->probe_ret = errors[i];
++		KUNIT_ASSERT_EQ(test, device_driver_attach_full(&ctx->drv, &ctx->dev),
++				expected[i]);
++		KUNIT_EXPECT_FALSE(test, device_is_bound(&ctx->dev));
++		KUNIT_EXPECT_PTR_EQ(test, ctx->dev.driver, NULL);
++		KUNIT_EXPECT_PTR_EQ(test, dev_get_drvdata(&ctx->dev), NULL);
++		KUNIT_EXPECT_EQ(test, ctx->probe_level, DEVICE_TRUST_FULL);
++		KUNIT_EXPECT_EQ(test, ctx->probe_count, i + 1);
++		KUNIT_EXPECT_EQ(test, ctx->release_count, i + 1);
++		KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
++				DEVICE_TRUST_DISABLED);
++		KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
++				DEVICE_TRUST_FULL);
++	}
++	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->cleanup_count, 0);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 0);
++	ctx->probe_ret = 0;
++	KUNIT_ASSERT_EQ(test, device_driver_attach_full(&ctx->drv, &ctx->dev), 0);
++	KUNIT_EXPECT_PTR_EQ(test, dev_get_drvdata(&ctx->dev), ctx);
++	device_release_driver(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->release_count, ARRAY_SIZE(errors) + 1);
++	KUNIT_EXPECT_EQ(test, ctx->remove_count, 1);
++	KUNIT_EXPECT_EQ(test, ctx->remove_level, DEVICE_TRUST_FULL);
++}
++
++static void device_trust_full_policy_test(struct kunit *test)
++{
++	struct device_trust_test_context *ctx;
++	enum device_trust_state state;
++	bool override;
++
++	if (!device_trust_test_global_full(test))
++		kunit_skip(test, "requires device_trust.default=full");
++	ctx = device_trust_full_test_register(test, &device_trust_test_plain_bus, NULL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
++	state = ctx->dev.p->trust_state;
++	override = ctx->dev.p->trust_policy_override;
++	device_lock(&ctx->dev);
++	device_trust_expect_policy_locked(test, &ctx->dev);
++	device_unlock(&ctx->dev);
++	KUNIT_EXPECT_EQ(test, ctx->dev.p->trust_state, state);
++	KUNIT_EXPECT_EQ(test, (bool)ctx->dev.p->trust_policy_override, override);
++	KUNIT_EXPECT_EQ(test, ctx->probe_count, 0);
++}
++
++static struct kunit_case device_trust_full_test_cases[] = {
++	KUNIT_CASE(device_trust_full_boot_policy_test),
++	KUNIT_CASE(device_trust_full_attach_test),
++	KUNIT_CASE(device_trust_full_probe_failure_test),
++	KUNIT_CASE(device_trust_full_policy_test),
++	{}
++};
++
++/* The fixtures set their own policy, which a live boot default would replace. */
++static int device_trust_test_init(struct kunit *test)
++{
++	struct device_trust_test_stub *stub = device_trust_test_stub_alloc(test);
++	struct device *dev = device_trust_test_pci_stub(stub, "device-trust-test",
++							DEVICE_TRUST_POLICY_DEFAULT);
++
++	device_trust_init(dev);
++	if (dev->trust_policy != DEVICE_TRUST_POLICY_DEFAULT)
++		kunit_skip(test, "device_trust.default= replaces the fixture policy");
++
++	return 0;
++}
++
++static int device_trust_test_suite_init(struct kunit_suite *suite)
++{
++	int ret;
++
++	ret = bus_register(&device_trust_test_plain_bus);
++	if (ret)
++		return ret;
++	device_trust_test_plain_bus_registered = true;
++
++	ret = bus_register(&device_trust_test_resolving_bus);
++	if (ret) {
++		device_trust_test_plain_bus_registered = false;
++		bus_unregister(&device_trust_test_plain_bus);
++		return ret;
++	}
++	device_trust_test_resolving_bus_registered = true;
++
++	return 0;
++}
++
++static void device_trust_test_suite_exit(struct kunit_suite *suite)
++{
++	if (device_trust_test_resolving_bus_registered) {
++		device_trust_test_resolving_bus_registered = false;
++		bus_unregister(&device_trust_test_resolving_bus);
++	}
++	if (device_trust_test_plain_bus_registered) {
++		device_trust_test_plain_bus_registered = false;
++		bus_unregister(&device_trust_test_plain_bus);
++	}
++}
++
++static struct kunit_suite device_trust_test_suite = {
++	.name = "device-trust",
++	.init = device_trust_test_init,
++	.suite_init = device_trust_test_suite_init,
++	.suite_exit = device_trust_test_suite_exit,
++	.test_cases = device_trust_test_cases,
++};
++
++static struct kunit_suite device_trust_full_test_suite = {
++	.name = "device-trust-full",
++	.suite_init = device_trust_test_suite_init,
++	.suite_exit = device_trust_test_suite_exit,
++	.test_cases = device_trust_full_test_cases,
++};
++
++kunit_test_suites(&device_trust_test_suite, &device_trust_full_test_suite);
++
++MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
++MODULE_DESCRIPTION("KUnit tests for device trust");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/base/trust.c b/drivers/base/trust.c
+index f79762e201178..755e5a9fc5b00 100644
+--- a/drivers/base/trust.c
++++ b/drivers/base/trust.c
+@@ -23,6 +23,7 @@ void device_trust_init_state(struct device *dev)
+ 	dev->p->trust_state = dev->trust_policy == DEVICE_TRUST_POLICY_DISABLED ?
+ 		DEVICE_TRUST_WAITING : DEVICE_TRUST_SELECTABLE;
  }
-diff --git a/drivers/usb/core/usb.h b/drivers/usb/core/usb.h
-index 293340a48b6c5..00771270db523 100644
---- a/drivers/usb/core/usb.h
-+++ b/drivers/usb/core/usb.h
-@@ -34,7 +34,7 @@ extern void usb_disable_device(struct usb_device *dev, int skip_ep0);
- extern int usb_deauthorize_device(struct usb_device *);
- extern int usb_authorize_device(struct usb_device *);
- extern void usb_deauthorize_interface(struct usb_interface *);
--extern void usb_authorize_interface(struct usb_interface *);
-+int usb_authorize_interface(struct usb_interface *intf);
- extern void usb_detect_quirks(struct usb_device *udev);
- extern void usb_detect_interface_quirks(struct usb_device *udev);
- extern void usb_release_quirk_list(void);
-diff --git a/include/linux/usb.h b/include/linux/usb.h
-index 825f03b290670..2ead3234b1301 100644
---- a/include/linux/usb.h
-+++ b/include/linux/usb.h
-@@ -204,8 +204,8 @@ enum usb_wireless_status {
-  *	has been deferred.
-  * @needs_binding: flag set when the driver should be re-probed or unbound
-  *	following a reset or suspend operation it doesn't support.
-- * @authorized: This allows to (de)authorize individual interfaces instead
-- *	a whole device in contrast to the device authorization.
-+ * @authorized: user space has not deauthorized the interface. Whether it may
-+ *	be used also depends on its trust policy, see usb_interface_authorized().
-  * @wireless_status: if the USB device uses a receiver/emitter combo, whether
-  *	the emitter is connected.
-  * @wireless_status_work: Used for scheduling wireless status changes
-@@ -276,6 +276,15 @@ struct usb_interface {
++EXPORT_SYMBOL_IF_KUNIT(device_trust_init_state);
  
- #define to_usb_interface(__dev)	container_of_const(__dev, struct usb_interface, dev)
- 
-+/*
-+ * An interface is authorized when its trust policy lets it bind and user space
-+ * has not deauthorized it since.
-+ */
-+static inline bool usb_interface_authorized(const struct usb_interface *intf)
-+{
-+	return intf->authorized && !device_policy_is_disabled(&intf->dev);
-+}
-+
- static inline void *usb_get_intfdata(struct usb_interface *intf)
- {
- 	return dev_get_drvdata(&intf->dev);
-@@ -609,11 +618,8 @@ struct usb3_lpm_parameters {
-  * @persist_enabled:  USB_PERSIST enabled for this device
-  * @reset_in_progress: the device is being reset
-  * @have_langid: whether string_langid is valid
-- * @authorized: policy has said we can use it;
-- *	(user space) policy determines if we authorize this device to be
-- *	used or not. By default, wired USB devices are authorized.
-- *	WUSB devices are not, until we authorize them from user space.
-- *	FIXME -- complete doc
-+ * @authorized: user space has not deauthorized the device. Whether the device
-+ *	may be used also depends on its trust policy, see usb_device_authorized().
-  * @authenticated: Crypto authentication passed
-  * @tunnel_mode: Connection native or tunneled over USB4
-  * @usb4_link: device link to the USB4 host interface
-@@ -747,6 +753,15 @@ struct usb_device {
- 
- #define to_usb_device(__dev)	container_of_const(__dev, struct usb_device, dev)
- 
-+/*
-+ * A device is authorized when its trust policy lets it bind and user space has
-+ * not deauthorized it since.
-+ */
-+static inline bool usb_device_authorized(const struct usb_device *udev)
-+{
-+	return udev->authorized && !device_policy_is_disabled(&udev->dev);
-+}
-+
- static inline struct usb_device *__intf_to_usbdev(struct usb_interface *intf)
- {
- 	return to_usb_device(intf->dev.parent);
+ static int __device_trust_prepare(struct device *dev,
+ 				  const struct device_driver *drv, bool full_only)
 
 -- 
 2.56.0
