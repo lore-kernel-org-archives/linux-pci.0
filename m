@@ -1,52 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794265388;
-	b=5eMtX3RUjK7kxApc+r2bU/FrH/lcGAO68hl7OMXj0+z2Zjk63X6FW7xpwALF0tBiDrH1
-	 2vVMEBKdILmIB5POzHfIMOCJTFDmfibVbekhMngBF2lVIlgQdIyJgmmeS077PeBUmXBaj
-	 8o5K8UzwvpgeAmo4ByojTYyqCAyDOauqEntEf1y1DKgr5+illh+dlxR/a9q2EsR0Kg3KQ
-	 UmG8gDATlB+9me3szQPgoToOFugIQLZ5tK3w8n2Wder9qbyyx+NhAxOOXJaTFBrpNAxhp
-	 U1Yno2TLAKc+7aoq0KOo+zVyMd57+Z3gWUF2E2c+vjgthDtvA9geKcI5RCuNRJsiTKQ==
+	t=1794265535;
+	b=uvxupN2rqN0Pw/FtfoJAm1a4rKT3OR4oPeS2QK5Iup0G98KHhNxGjS8+2bg4CVQI+MKp
+	 i/tA5VVrM0S01DFlcsULRVfVefmldz3Mmmpks0kB6JWye3HV6m8ia1cp4VHo45X9tjbGG
+	 6l69+O0uQKW6hhf3kp26k5IyIIluH3zMqtwma9sPD0ROYuo/tBjzF1Bn6aAmglT4TUfqt
+	 fre1EV/2xKxrh/OBUKptLlvONz2XPjSdPE8raOeDy6AHcWwWG1XUKy7ApVrixoA68o3CO
+	 8YnyeXa64aKrgGGOnk/n2lV228bn7/tDmI7ipBeNv+X3gyerh8BxqALzKdhECaCKFPQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794265388;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794265535;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=1UKK/To0jM4MQHkafo2SrDtvaNxDgEoLg2sNhgA3Yik=;
-	b=Ua0VIUUQ1EIsrW0jGCDQSA92+yo9KAKmY2mEgZbEDVGn8eviAnTKA1Gznwo8kX4oN0CW
-	 3/fBKcShjqV/HwmF8Nyug980Ix7SMO7DhBtlu6usrsCxe8eKW6U8DboqP3Q+8TEW8dmeR
-	 zWz9dwwjYje/48pMVtSHiRlUbf6vIzG8fZTvR/iLBdLnWxu90hYt8KjVR/0ju/nMMldXT
-	 1AbrigdJ01zQPXzijtPyFq1OZRIdTtj/k9XYW3Jks4uaUl8LMxxZ/69uOxIp4WdmYTRC7
-	 TWOdPWRz6Qeit3eG/la9UgMnn3lBxgtch2tLFAOqezhB8nzi4Mz8o1fRsM8Y+7tgu8Q==
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=sqZz5022BuGXrLZn6kfW85u+7j3yauL8vru0yVC1DQs=;
+	b=h8OTMcyXE9O0cfepEyawPckPL8tDSL1q3cIR9FwbEq48mF9yeja6K1DrHEnf6kOCLH0z
+	 CWbYlMJ7Ht6UT/n1pYdrCZFTYrqKnySZNmz1dx1Mkzv1M+ZavYZj0VnRX4v3+zGDwkYcq
+	 z5dHIoiralOMlpvJp+sRGYig385maHxaoaPd/HiaSPhcqhINDEs6NUI0c4PFuGMvmjUHJ
+	 l9wwbevchquJR0F2s8nWK2Kr+rVVGEnWRB5tL0NvN+kXgJtUxPadTbmAjJURG2SvZsib3
+	 FICqOZu7lYEKgkB73EQ+qbQKDrHCzHHBob/fa14RcJEyev5sfQhL/C/R1jh40erNDAg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Q+6CMvPt;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JBxmVcDu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C913606A31C;
-	Mon,  9 Nov 2026 23:03:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9872606A325;
+	Mon,  9 Nov 2026 23:05:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Q+6CMvPt
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FF1C1F0089F;
-	Mon,  9 Nov 2026 23:03:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JBxmVcDu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3798E1F008A2;
+	Mon,  9 Nov 2026 23:05:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794265387;
-	bh=1UKK/To0jM4MQHkafo2SrDtvaNxDgEoLg2sNhgA3Yik=;
+	s=k20260515; t=1794265534;
+	bh=sqZz5022BuGXrLZn6kfW85u+7j3yauL8vru0yVC1DQs=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Q+6CMvPtTEa5ooGZ0LRTuFm7iZpknWqErWir64A1nMY4IYMfb7/uEwJWXvkPIs7sG
-	 663kZF7grqmS0QdIIiKqrx8cULyjw53Mfa30yBU863nL8/g1yvjA5gXzTP7v70fr5t
-	 C46b5Mu5VPKzC4FczI8dbse+IVZ9nVoKKNhsJuO9URGBo1wgxnL9KTYlh4s6D2XYXT
-	 jrobO3ddWxbJPC/IP2sHrcE3gMjivU/wyHN91HFZ/Fzao1y4vJbLDe4xNTRE6SJ9Zh
-	 cf1MugsqIniq5H8Zuxx97viV3kvYpoMeLUQKOQMwmm7SkuoEa+2vU4aYdielV3J0cQ
-	 dqzuIKOmT21WA==
-Date: Mon, 9 Nov 2026 17:03:06 -0600
+	b=JBxmVcDuLQ7CRPW3g6+CkaVxzKGgPDjpgmViVGunMtwm13kWtTATtUuLVREV6cTxE
+	 UlttN50GzLUtxGNEIcDmbi41lYyB4pgudPS72On4s2pVnuW148OzTIDXb5O+hCggJ+
+	 fJokS+4iUayNJ4eyBdi+Z9RdgTQOqh8dDa31IBD6K4nNudpZbP/0oBMI4BrqrjXpjh
+	 nuiGTffd3KROsVZpuLoBSa81sy0pHB4Zcil0ucYFKVaLTZp2wkoZ+oKXOHZrbOTeX0
+	 3+8ZWKFaul+DoKk6XJ/iCQYzYZTTSBX7HDS0CZr46dmd/iEtn1H42IFMfKIRgrwUzo
+	 zy0CTAb7aaPpQ==
+Date: Mon, 9 Nov 2026 17:05:33 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: shao.mingyin@zte.com.cn
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	ilpo.jarvinen@linux.intel.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Reject negative resource alignment order
-Message-ID: <20261109230306.GA339915@bhelgaas>
+To: Li Yifan <yifan2.li@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Wentao Liang <vulab@iscas.ac.cn>, Li Lili <lili.li@intel.com>,
+	Wang Jie <jie.wang@intel.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/PTM: Keep ptm_enable_cnt balanced when
+ pci_enable_ptm() fails
+Message-ID: <20261109230533.GA341229@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -56,107 +58,136 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261109185515838mOfBTIYMU1_4vygdxd-Gg@zte.com.cn>
+In-Reply-To: <20261104121457.2108515-1-yifan2.li@intel.com>
 
-On Mon, Nov 09, 2026 at 06:55:15PM +0800, shao.mingyin@zte.com.cn wrote:
-> From: Shao Mingyin <shao.mingyin@zte.com.cn>
+On Wed, Nov 04, 2026 at 08:14:57PM +0800, Li Yifan wrote:
+> Since commit e1092d5e15e6 ("PCI/PTM: Do not enable PTM automatically
+> for Root and Switch Upstream Ports"), pci_enable_ptm() takes a
+> reference on the device and on each port of the upstream path, and
+> pci_disable_ptm() releases them. If pci_enable_ptm() fails, the counts
+> can become incorrect in two ways:
 > 
-> pci_specified_resource_alignment() parses the pci=resource_alignment=
-> boot parameter and rejects only orders above 63.  A negative order, such
-> as "pci=resource_alignment=-5@...", passes that check and later reaches
-> "align = 1ULL << align_order" with a negative shift count, which is
-> undefined behavior; on x86 the 64-bit shift count is masked to six bits,
-> silently producing a 2^59-byte alignment that mis-aligns (or fails to
-> align) the affected IOV resources.
+> 1. pci_disable_ptm() decrements dev->ptm_enable_cnt without a check.
+>    Many drivers ignore the return value of pci_enable_ptm() and call
+>    pci_disable_ptm() unconditionally, for example mlx5 and bnxt. If
+>    pci_enable_ptm() failed, for example because the upstream port does
+>    not support PTM, the count becomes -1 and stays negative after the
+>    driver unbinds. Then pcie_ptm_enabled() returns true, and
+>    pci_resume_ptm() can enable PTM on the device after a resume,
+>    although the upstream path does not support PTM. Before
+>    e1092d5e15e6, pci_disable_ptm() did nothing if PTM was not enabled.
 > 
-> align_order is a bit order, so parse it with %u.  vsscanf() does not
-> accept a sign for %u, so a negative order no longer converts: the
-> parameter is reported as invalid and no alignment is applied.  Orders
-> above 63 are still rejected and fall back to the page-size alignment.
+> 2. If __pci_enable_ptm() fails for the device after the upstream path
+>    is enabled, pci_enable_ptm() drops the reference on the device, but
+>    it keeps the references on the upstream ports. For example, this
+>    occurs if the device has no PTM Capability and its upstream port
+>    has one. Callers that check pcie_ptm_enabled() before
+>    pci_disable_ptm() never release these references, so the upstream
+>    ports keep PTM enabled with no user. Callers that call
+>    pci_disable_ptm() unconditionally release them only through the
+>    underflow in 1.
 > 
-> Fixes: 6534aac198b5 ("PCI: Bounds-check command-line resource alignment requests")
+> Fix both problems in one change, because a fix for only one of them
+> makes the other one worse. Release the upstream references when
+> __pci_enable_ptm() fails. Make pci_disable_ptm() do nothing if PTM is
+> not enabled for the device, and use atomic_dec_if_positive() so that
+> the check and the decrement are one atomic operation.
+> 
+> The fix for 2 is based on a patch from Wentao Liang [1].
+> 
+> Fixes: e1092d5e15e6 ("PCI/PTM: Do not enable PTM automatically for Root and Switch Upstream Ports")
 > Cc: stable@vger.kernel.org
-> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Link: https://lore.kernel.org/r/20261102222817.GA983941@bhelgaas
+> Link: https://lore.kernel.org/r/20260616141733.1688264-1-vulab@iscas.ac.cn # [1]
+> Signed-off-by: Li Yifan <yifan2.li@intel.com>
 
-Applied to pci/resource for v7.5, thank you!
-
-I included this diff based on Ilpo's comment:
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b603d5c5596b..f8968f3be0f5 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6511,10 +6511,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 							bool *resize)
- {
- 	unsigned int align_order;
--	int count;
- 	resource_size_t align = pcibios_default_alignment();
- 	const char *p;
--	int ret;
-+	int ret, count;
- 
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
+Applied to pci/ptm for v7.5, thank you!
 
 > ---
-> This supersedes 1/5 of the v1 series; 2/5-5/5 are unchanged.
+> Wentao's patch [1] fixes only problem 2, and it is not applied. It
+> does not build on v7.4-rc1 ("parent" is declared inside the
+> "if (!dev->ptm_root)" block), and with only that fix, callers that
+> call pci_disable_ptm() unconditionally release the upstream
+> references twice. This patch includes his fix with the build fix.
+> Wentao, if you agree, please reply with your Signed-off-by, and I will
+> add you as Co-developed-by.
 > 
-> v2:
->   - parse the order with %u instead of %d, as Ilpo Järvinen suggested; a
->     bit order is unsigned, and this also removes the explicit < 0 test
->     added by v1
->   - pr_err() prints the order with %u as well
->   - note the resulting behaviour: vsscanf() does not accept a sign for
->     %u, so a negative order fails to parse instead of being clamped
-> v1: https://lore.kernel.org/all/20261107002311316z2o2PFtFGoXh-VbqXtTGg@zte.com.cn/
+> Tested on v7.2.7 with this patch (it applies without change), on a Nova
+> Lake-S system with an I226-LM (81:00.0, no driver bound) behind Root
+> Port 80:1d.0. A test module calls pci_enable_ptm() and
+> pci_disable_ptm() three times and reads ptm_enable_cnt of both devices.
+> It makes pci_enable_ptm() fail in two ways: it hides the PTM Capability
+> of the Root Port (no upstream PTM), or it clears ptm_requester of the
+> I226 (the device fails after the upstream path is enabled). "Guarded"
+> means that pci_disable_ptm() is called only if pcie_ptm_enabled().
 > 
-> Tested on 7.3.0-next-20261030 (QEMU/TCG guest) with the
-> pci=resource_alignment= boot parameter and a QEMU e1000 NIC; no extra
-> hardware is needed.
+>                                   without patch        with patch
+>   enable succeeds                 dev 1/0, RP 1/0      same
+>   no upstream PTM, unconditional  dev -1, -2, -3       dev 0
+>   no upstream PTM, guarded        dev 0                dev 0
+>   device fails, unconditional     dev -1, -2, -3       dev 0, RP 0
+>   device fails, guarded           RP 1, 2, 3 (PTM on)  dev 0, RP 0
 > 
-> Booting with pci=resource_alignment=-5@pci:8086:100e, the unpatched
-> kernel parses -5 and "align = 1ULL << align_order" shifts by -5 (masked
-> to 2^59 on x86-64); the e1000 BAR is resized to 2^59 bytes, which cannot
-> be assigned, and the e1000 fails to probe.  With this patch "-5" does not
-> convert and the parameter is rejected:
+>  drivers/pci/pcie/ptm.c | 15 +++++++++++----
+>  1 file changed, 11 insertions(+), 4 deletions(-)
 > 
->   unpatched                            patched
->   requesting alignment to              PCI: Can't parse resource_alignment
->   0x800000000000000                    parameter: -5@pci:8086:100e
->   e1000 probe failed, no eth0          e1000 eth0 probes
-> 
->  drivers/pci/pci.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index bca3a5d84cd9..e3f701ff9881 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -6585,7 +6585,8 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
->  static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->  							bool *resize)
+> diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+> index bd3bd39f6372..522975c87bd9 100644
+> --- a/drivers/pci/pcie/ptm.c
+> +++ b/drivers/pci/pcie/ptm.c
+> @@ -171,6 +171,7 @@ static int __pci_enable_ptm(struct pci_dev *dev)
+>   */
+>  int pci_enable_ptm(struct pci_dev *dev)
 >  {
-> -	int align_order, count;
-> +	unsigned int align_order;
-> +	int count;
->  	resource_size_t align = pcibios_default_alignment();
->  	const char *p;
->  	int ret;
-> @@ -6602,11 +6603,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+> +	struct pci_dev *parent = NULL;
+>  	int rc;
+>  	char clock_desc[8];
 >  
->  	while (*p) {
->  		count = 0;
-> -		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
-> +		if (sscanf(p, "%u%n", &align_order, &count) == 1 &&
->  		    p[count] == '@') {
->  			p += count + 1;
->  			if (align_order > 63) {
-> -				pr_err("PCI: Invalid requested alignment (order %d)\n",
-> +				pr_err("PCI: Invalid requested alignment (order %u)\n",
->  				       align_order);
->  				align_order = PAGE_SHIFT;
->  			}
+> @@ -183,8 +184,6 @@ int pci_enable_ptm(struct pci_dev *dev)
+>  	 * we can enable PTM.
+>  	 */
+>  	if (!dev->ptm_root) {
+> -		struct pci_dev *parent;
+> -
+>  		parent = pci_upstream_ptm(dev);
+>  		if (!parent)
+>  			return -EINVAL;
+> @@ -201,6 +200,9 @@ int pci_enable_ptm(struct pci_dev *dev)
+>  	rc = __pci_enable_ptm(dev);
+>  	if (rc) {
+>  		atomic_dec(&dev->ptm_enable_cnt);
+> +		/* Release the references taken on the upstream path above */
+> +		if (parent)
+> +			pci_disable_ptm(parent);
+>  		return rc;
+>  	}
+>  
+> @@ -240,13 +242,18 @@ static void __pci_disable_ptm(struct pci_dev *dev)
+>   * pci_disable_ptm() - Disable Precision Time Measurement
+>   * @dev: PCI device
+>   *
+> - * Disable Precision Time Measurement for @dev.
+> + * Disable Precision Time Measurement for @dev.  Do nothing if PTM is not
+> + * enabled for @dev, for example because pci_enable_ptm() failed.
+>   */
+>  void pci_disable_ptm(struct pci_dev *dev)
+>  {
+>  	struct pci_dev *parent;
+> +	int cnt;
+>  
+> -	if (atomic_dec_and_test(&dev->ptm_enable_cnt))
+> +	cnt = atomic_dec_if_positive(&dev->ptm_enable_cnt);
+> +	if (cnt < 0)
+> +		return;
+> +	if (cnt == 0)
+>  		__pci_disable_ptm(dev);
+>  
+>  	parent = pci_upstream_ptm(dev);
+> 
+> base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+> -- 
+> 2.43.0
+> 
