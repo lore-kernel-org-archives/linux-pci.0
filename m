@@ -1,57 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794246524;
-	b=4bpF02fTi7a0Iqrx++epm16HJ3MPe1Mvo3j2eP+yeTdLtQ35JKWGov5NejX8JM2zjAAT
-	 cZMxpFoW7rWy6v1bYo+l7YTOYYLyXfaTKLcpP+PLip+vdqjUEzwlzaE5l66Y6Z0hvdgP4
-	 VoAbApXgZDXAu6b3GcQx2QgkHHK6Ufy5occZVBefQJ+5aLnegDJM6kQnxEACB1TKOaprm
-	 9OBe/2jSlJpBafw2VlT6abMO3g4HRxpPNekeDtufeWhvElQCCnNrMtUcfWXXHiHnlkWFf
-	 oIwLBLJaDHhh1tSsr/ajFVPXIhMHtmjCXeThkXpmhoVKGo1TpbSC4c2mSG+pD6TwCvg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794246524;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=upFR4SkgBoh4fWlRxpP3s3RvH08xGmmO6ga5U+SKogk=;
-	b=jGhU4JWMXoLJgZbQe3OFd3mXDyoPwoko5F0pSiy+wIWcutPzG/xid1DQoIgVEfgcPr3V
-	 jOqA+h1lDBYk6WpH3nox/yIxabMzaAdvfaNyqgZ4XR1j4cbUpuy+ziWScEuiOkeUOE/Ut
-	 NX1F6UxoEWFyvp9DIw+lOpsREXdzqy4si/ZhYNaDjToiRVBJ3lFozi0Py3c8RS8pvBnv5
-	 V/gc+wtN+im3CIFvZiPlxo6pt0weAoEvqlnB6oSOX7kdbTkNkpL08EpV4kBOciuyufa49
-	 agxgrOGiO5odJsXAeAMnTHqn/q256DKx/r7NUcYnDEBV5gI3pE6/nhDzIavSyMa/vkQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JTQo0pCz;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.11
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794247449;
+	b=XRneDcH/fdUqiO/mB6q6v31ThTEY43nOI0SO4RzHvQKBqgrLl09WFABdmW+CxdM5XpPO
+	 /Re08bjE/v9AgCPG9y23amhy7zErESXNoAeYPqnLA/IiVcyRjXq39xnCn6QcC98mCAoKx
+	 +xssYVE8C8Q0uu2MdBvjPzijJKYcnhQYA3NoGyZZjpbw3y56zQ4vAgb3tzXKWWuhqPyDv
+	 2v6LsGizpPr6jvJeud82/F261In5sj2rNhHZvOLhI+6stl7jDLyhD3XY88Tvxu01NkhBI
+	 EIfJhR8Jdx6GIng1uCS0NGfcB2Tz27BIYiAbqH0vqLSHImgXLIiwixsYKKWxTkDPtGA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794247449;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-Zoho-Virus-Status:X-Zoho-AV-Stamp:
+	 X-ZohoMailClient;
+	bh=GEK25Zy3sFFqw428awFqsQCshEU6Oj5m/3/9wtN089s=;
+	b=PXXaqvhorQYCDxWMGYTtHQYbXrgg4wk9Ftte/T5yM/8xpaUPGeoiSgemH7+MBLtA0LUl
+	 ZkVClyBedhmPPTCAOFYXZoX0JcezY3b0QLOxgRu7cJVJrX/z+56XwHmpaGHvuZqT4dNRQ
+	 B7udMXZYj0Q3DhqRbFszITPrbLZUeo5XvDI9V/LvqHic7AVNoXE9qkYmg7NvwZWNToaR+
+	 qB4KmDEV88YrjrG6r7acvTO9KqqL8X7Evofne1f+/qDI5LuDUUMDYHUscyC2jitZqfJD+
+	 Xf/jNe34yDW0HIDR94947urVgljilLNq5EPpbxIykE5dpDnNB5nHIw/Lq1hpOXIiU5w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=collabora.com;
+	spf=pass smtp.mailfrom=collabora.com;
+	dkim=pass header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=zohomail header.b="E2/LHiXz";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.180.11
+Received: from sender6-op-o11.zoho.com (sender6-op-o11.zoho.com [165.173.180.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7B7660A2601
-	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 17:48:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6007606A31C;
+	Mon,  9 Nov 2026 18:04:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B6007606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JTQo0pCz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 178941F008A6;
-	Mon,  9 Nov 2026 17:48:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794246523;
-	bh=upFR4SkgBoh4fWlRxpP3s3RvH08xGmmO6ga5U+SKogk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JTQo0pCzz1a8cxRtKhRfcrZKCORWdrmCZl5u4jHoI+6ZNHL0tjK1MwRpdCT7slTXU
-	 KMY3V57xJcnUPgcMinozFLYdqxcgLDuiUdpBJtMYMz8cQlyvcv46b/CwnBQ5xZMYTz
-	 SQJ9lA7EfubVNugKdPDnGB03Hu/JJKNP2EUNmVl03W+Lp8cgpgDTcLmpKwsDTbNSaD
-	 Qq5Lv+nIj9b7frZuYK5LNxN3mto8pYFc/PJXjVKcRjd1W5PGfndKC3uy5Em+rLimQE
-	 KcCbAN1nFltTLN9yPgzO0OMdnW8wKkd3GBSNsaW42eHoaZpkYted+TsvuLbuu56kj4
-	 5DQx+lBWVHKEg==
-Message-ID: <sashiko-outbox-205342@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: liveupdate: Factor out pci_dev_ser allocation and
- release
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Matlack" <dmatlack@google.com>, kexec@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Mike Rapoport" <rppt@kernel.org>, "Pasha
- Tatashin" <pasha.tatashin@soleen.com>, "Pratyush Yadav" <pratyush@kernel.org>
-In-Reply-To: <20261109174009.735309-1-dmatlack@google.com>
-References: <20261109174009.735309-1-dmatlack@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 17:48:42 +0000
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=zohomail header.b=E2/LHiXz
+ARC-Seal: i=1; a=rsa-sha256; t=1794247409; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=LGXErlNc2MViOsg+sBbACIsfieOYbD6JAOs4hpGhyln8li2sF6cR8/yQ3WxjVdSVfoutIl0dYrrQHQSsxCF69mD9p6smkbFgh8sg1KnXevDHZY59WzA5pvmQEG5TgL455fiXdMuaWNgUtlwfoSPMK88R4HKwR1RmIIZkLA/3PK0=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1794247409; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=GEK25Zy3sFFqw428awFqsQCshEU6Oj5m/3/9wtN089s=; 
+	b=WTHobyn4+/b60WlNVuyJV+PSJaYi7JYwz2i8Q2XoSr012E+23nezqXHdoEECVcP0aFRQFmso8eUIf0zMefu7ihtDAc523LWOAhQ7PrZlvBdTg6laqyFwMNGFMETsoB9Ix6UFEq6pBxo29KWMQ8fPa0I04moV4eJlF5v1i8dG0qo=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=sebastian.reichel@collabora.com;
+	dmarc=pass header.from=<sebastian.reichel@collabora.com>
+DKIM-Signature: a=rsa-sha256; b=E2/LHiXzQPa2l/fMj7c24x/7Ro5+6yGnkj6ucD8Ls63q69MFmjBOPafYwZ9AOLMLa27Ew22yZrw99ZwYbNy2GkNh7mVm8WXXhcvofz8id5lHnMNMiBPdLJHPKwEykhnk/svxT60SeC48X8DBKiOTRdAR9AXsHH/9SxRfC2ZfGx4=; c=relaxed/relaxed; s=zohomail; d=collabora.com; v=1; bh=GEK25Zy3sFFqw428awFqsQCshEU6Oj5m/3/9wtN089s=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: by smtp.zohomail.com with SMTPS id 1794247406959126.89806918353611;
+	Mon, 9 Nov 2026 10:03:26 -0800 (PST)
+Received: by venus (Postfix, from userid 1000)
+	id B0DA8180317; Mon, 09 Nov 2026 19:03:21 +0100 (CET)
+Date: Mon, 9 Nov 2026 19:03:21 +0100
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	Jingoo Han <jingoohan1@gmail.com>, Shawn Lin <shawn.lin@rock-chips.com>, 
+	Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
+	"Yury Norov (NVIDIA)" <yury.norov@gmail.com>, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+	Alexey Charkov <alchark@flipper.net>, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, kernel@collabora.com
+Subject: Re: [PATCH v9 1/9] PCI: dw-rockchip: Fix LTSSM set functions
+Message-ID: <avIIMccXQyJiGiH6@venus>
+References: <20261105-rockchip-pcie-system-suspend-v9-1-a2e55846649e@collabora.com>
+ <20261109173329.GA252206@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,31 +74,109 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="paljnoslhkxoag7v"
+Content-Disposition: inline
+In-Reply-To: <20261109173329.GA252206@bhelgaas>
+X-Zoho-Virus-Status: 1
+X-Zoho-AV-Stamp: zmail-av-0.7.7.1.5.4/291.452.71
+X-ZohoMailClient: External
 
-> Move the code that starts and stops preserving a device into
-> pci_liveupdate_alloc_dev_ser() and pci_liveupdate_free_dev_ser(), and
-> split pci_liveupdate_preserve_device() into separate paths for devices
-> that are already preserved and devices being preserved for the first
-> time. Leave a single refcount increment shared by both paths.
+
+--paljnoslhkxoag7v
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v9 1/9] PCI: dw-rockchip: Fix LTSSM set functions
+MIME-Version: 1.0
+
+Hi,
+
+On Mon, Nov 09, 2026 at 11:33:29AM -0600, Bjorn Helgaas wrote:
+> On Thu, Nov 05, 2026 at 02:33:09PM +0100, Sebastian Reichel wrote:
+> > Before the Rockchip PCIe driver has been switched over to the
+> > FIELD_PREP_WM16 macro, PCIE_CLIENT_ENABLE_LTSSM and
+> > PCIE_CLIENT_DISABLE_LTSSM were setting bits with a mask of 0xc =3D 0b11=
+00,
+> > which means BIT 2 and BIT 3. After the conversion it only sets bit 2,
+> > with bit 3 being handled by a separate define named
+> > PCIE_CLIENT_LD_RQ_RST_GRT. Apparently the conversion missed to make use
+> > of this new macros resulting in the third bit not being set.
+> >=20
+> > Fixes: 30e919570581 ("PCI: dw-rockchip: Switch to FIELD_PREP_WM16 macro=
+")
 >=20
-> Since upstream bridges are preserved once for every preserved device
-> below them, nr_devices is only incremented when a device's struct
-> pci_dev_ser is allocated and only decremented when it is released, not
-> on every preserve and unpreserve. Keeping that accounting in a pair of
-> helpers makes the relationship explicit.
+> This commit appeared in v6.18, so this looks like it might be a
+> candidate for a stable tag?
+
+IDK if its worth backporting. I mainly did not add the tag, since I
+found this by chance while rebasing code around it. For my basic
+tests I didn't notice any problems even without the bit. Also nobody
+reported anything since v6.18. The bit was originally set since the
+driver had been introduced. Maybe Shawn can say if its worth backporting?
+
+Greetings,
+
+-- Sebastian
+
 >=20
-> A side-effect of the refactor to pci_liveupdate_preserve_device() is
-> that preserving an already-preserved endpoint after it is frozen now
-> fails with -EINVAL instead of -EBUSY, since the frozen check now happens
-> first.
->=20
-> Link: https://lore.kernel.org/linux-pci/20261106173427.GA1633106@bhelgaas/
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: David Matlack <dmatlack@google.com>
+> > Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> > Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 10 ++++++----
+> >  1 file changed, 6 insertions(+), 4 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pc=
+i/controller/dwc/pcie-dw-rockchip.c
+> > index bd86e32cc2b1..c35c5583c797 100644
+> > --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> > +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> > @@ -322,14 +322,16 @@ static void rockchip_pcie_ltssm_trace(struct rock=
+chip_pcie *rockchip,
+> > =20
+> >  static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
+> >  {
+> > -	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
+> > -				 PCIE_CLIENT_GENERAL_CON);
+> > +	u32 val =3D PCIE_CLIENT_ENABLE_LTSSM | PCIE_CLIENT_LD_RQ_RST_GRT;
+> > +
+> > +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_GENERAL_CON);
+> >  }
+> > =20
+> >  static void rockchip_pcie_disable_ltssm(struct rockchip_pcie *rockchip)
+> >  {
+> > -	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DISABLE_LTSSM,
+> > -				 PCIE_CLIENT_GENERAL_CON);
+> > +	u32 val =3D PCIE_CLIENT_DISABLE_LTSSM | PCIE_CLIENT_LD_RQ_RST_GRT;
+> > +
+> > +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_GENERAL_CON);
+> >  }
+> > =20
+> >  static bool rockchip_pcie_link_up(struct dw_pcie *pci)
+> >=20
+> > --=20
+> > 2.53.0
+> >=20
 
-Sashiko has reviewed this patch and found no issues.
+--paljnoslhkxoag7v
+Content-Type: application/pgp-signature; name="signature.asc"
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109174009.7353=
-09-1-dmatlack@google.com?part=3D1
+-----BEGIN PGP SIGNATURE-----
 
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAmryCuYACgkQ2O7X88g7
++pogbxAAp7uNHMud1soRc7aXKsYq8Hhj71CnA/0igLKhPz2fe9QBAQVtTB89jIcU
+brCPZy3/1yY4VdnZkFZWxaCip+XoK2JzI5QKdzoT9YK5KQ5o28Qi0JeJEgi5BdPm
+CMTLEg6ctaPRBpKllRV3Bn+2WiYatx+CnDSsRyWvnE+4oXg2mqsIHpJaUTVfN+Tp
+JdAr1mSvTZVUw6MfOqk6Of8MFngTOB294cqYq7a65l27Snz+xG6kIGkGcYn04ffa
+saelnMsjj70mS+h3qYtLVo2MOiUMYqEabJXlN++qnt3eTIdfT0zRItDztDKEdE/x
+qsQ/Vo4hpfvBH2YjwCPPwt30iZwmCs8zOifkQz+Hb7FzyzRg39G7sMw69aO7qVit
+Y8U4b6GiAXGZC9+bQ7hcURgdpH3Aq+qJtsb2tPs2MGmPCWYlMMMcHdxYHLG9l1yd
+VVg1eSWEruxled/h6TU79ZuUWC5qO0asV6aookwlekGo2hgMrdLpIvTUr+3XygGI
+SGaPsuLhSAveEXkoqGGFO0gXWN3aY3aDnSxvksZEjiTygaw9pmF1bBvfeo4tso9V
+VCAVzrmkDsab86TF1qy89KOuaWAzXXNJ6lGMuGHCeEXPssT/cdA8vEIpbErYPaFi
+oZIXu8VaDL1jTPN3YxbyTPnLw15ijtb2W/Dhv2NGJx/y2PBXnGQ=
+=ATM0
+-----END PGP SIGNATURE-----
+
+--paljnoslhkxoag7v--
