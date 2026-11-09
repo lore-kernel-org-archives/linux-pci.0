@@ -1,83 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794258519;
-	b=ISBL30VZ4sjwBVbISxtWQ4/G73y3f+ClKccIMLNG82sDa3TSZk3eiawFSMywzhY7oxj2
-	 NPg5qk4+5j8H81Q0AwFQtdEdvhwGHH5dCXB3T4LX9gFrSty+BQCFGXDz9R8eTwQ71x+b0
-	 VA2bIb7B38/RdMEKoAThJImH4OKdYVk9WMBQ6pTFsd4/k8M27QqMLkYxGcLYGiWDP51l1
-	 Ytit8dYLbRje9CjI4Q6T29eGlhiwQmCuzWGam0MvYp/cXOXVlCzOXnZDR0bJP1MtJfAQD
-	 KO0H+3QnF2sI+eSlAyxcbsZRsMjLKSfT9s0LLiT4BV975Ntg4Wn8yWRmnYew2hPNzOg==
+	t=1794258527;
+	b=KcabkVXKG1gGTIyhOi7ZSvErMDzvqFUjT4lQwBQi3yJO34AaVsYFA21gxJ/QVLPVf8br
+	 EIIf7YtbTpFbvuf3PfwDTFSDy3f/nZ2yzbCU//zeJxwzgxffS7l+dBnE7FcSJV6vKOuYt
+	 ScxLV9V35BJgJw9M4UzVB88R2mGkzaQi34Oa9PEsyHKW6aswMkTRb3JzudyiaJAYe/E3O
+	 +eNFP1fF83rzSGsrtTm6yxB7X/t7iuhw/9a4go0SznxUvNogDwLdiguFeKtPHYDDRN3N3
+	 RiTPr9MQWEwes11JWr3FTmGazXNIw8QP/57ziIfDy3OVjVpz6XsCvDqtY0Z+Naedzew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794258519;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794258527;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=Pq+rUe2h6lwne59EbimzJsOTsSFWdwJecoD7SnDlf28=;
-	b=ekG5WRtqrZfmRs9Gc1xfiIlfJBJLzGoKFcM2N3vbVm5vy+FzVBHl949PISn2h41HX00F
-	 weaTEmYkvCE+IDkjuSr03l8Xc6JaDUUdeI5/DH+3HYb9pxL3ItcPlfguQelyhFGOMwIBM
-	 g6NJ2msKUCqll72jJgkQanrmGs/xpbpFJPQnRpDS10BHmztuf4ittVws3eofhoX5VsDDV
-	 kmpumV2olgyVKOyA9sNTCj7FcGq3gwFY+4woovOBMiYh12UcrzIQnK+iHJX/sCgoFoF1H
-	 q+UFOiqpJNUaoW2N8IbIqxPZXJET3ZVAjEg6ngNM1iS+F2JLBbYJCZL9Xq3yfhhVJhQ==
+	bh=k7Uod4cn46FqgZz9VTSa/JbWa6ohQqRfe87QBFy7cuw=;
+	b=p3R6oG7IpeJyBK/dZm3HvkKwZJum8Kga6etbNMfWdOuaQFAndbsjJjLiy3482l2qqCC/
+	 7r3zhkI8iGiZGbfh35JsU6KvHezw/WK0845i6J0zOpgXyf7eUzwrxFMkW/AULJ/4JaLtT
+	 adoyapHFqUAevfKTU19rXGhjwZr7QreOIhzqiHJUxdl0fvvpZIBUyBi1TLaa6EB61Pru9
+	 bOGgIeQGTOlS7pwMzL/bG7nPMeXeKVDQZAb4VWdLMzmh95qlFov2X5m6on4xCoeUqjmv2
+	 Iu4VqEemkh7873YFXkfjJUJ2hiTjoe9fxdoY1uZH/dQ/so2ygxI+XHE1zSHY8VTJScg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Kk0vqNR9;
-	arc=none smtp.remote-ip=192.198.163.9
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SMTYeiXi;
+	arc=none smtp.remote-ip=198.175.65.18
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA37C606A334;
-	Mon,  9 Nov 2026 21:08:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA37C606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB36560A261F;
+	Mon,  9 Nov 2026 21:08:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB36560A261F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Kk0vqNR9
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SMTYeiXi
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794258519; x=1825794519;
+  t=1794258526; x=1825794526;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=BuusNMbZxO+ErFUdpf9Ul1RNEs8Z0V6p6exb7dpC0MQ=;
-  b=Kk0vqNR9GGeSqZFtaTxSSg1FcWAPsjSl8epug+dR+ALYI8v+lA0PAtso
-   qdG67cnKxfHloL8W4gm8Svq7GlD9uBatiPwmqkUkNKMuwEC613O5C5Qb7
-   NegrAu4v2HlILP0cJU8EFgjzONX2xr7KoNlFvlKt5PAP3qypqWuquUQyc
-   v1EgmlzmGrZyglAv4gDIspXAjk7Nu2ixsCc5OhSqbTBTgouDM6hgk6hqf
-   gz/C4IOCvd7n6vT7C0lCap1oPxP8aimYHc8eIsv5aAKsjArEZQweGPJbj
-   sEbzGPDRxvSgBJTtixwSAIdABA4oRxrKJjQz7Ra0rogj+j8otveYbPopp
-   A==;
-X-CSE-ConnectionGUID: +ZW4pc4eSL+Er5hON+ZB+A==
-X-CSE-MsgGUID: /H6Fz6epSWeP2iWlJ+yKQw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="2874579"
+  bh=4TrGuO5kxp3e94UG0jegPIT7BsFPldAxp1qeNSG5tiA=;
+  b=SMTYeiXi+TQh2HPxSx0Obegg8+gm1tyeCIglVPVAoIm5C5NAD9WuAncx
+   SUTkvVHQFVw6qnRnZ2jxIZGFf+55mKjQqeSqYJHHiIFUYlMtXkUdo1kSq
+   pCPLss5cLScKnrhdrQONn1BrDvPx8mHcxfDyVwereIDNUkgCO/YYH0rT3
+   rsWe8h2/4nduAUd/UiJRSxDEfGUGesxNLZw7GD2JbgD9n+jEnPbMwfHsY
+   FCqz8wW/CaaiauB0GrwBq3K2NtZRDZYJo/OjWNhBSsId3c7e3tbj69joY
+   SLQeEcsxbldMAZ0aWOhRrAmnn+QFD3qWlI/aNMoq3rwzQ1F+e271gb1bC
+   w==;
+X-CSE-ConnectionGUID: tG9eWdPYSAurOW7qXlsZ6A==
+X-CSE-MsgGUID: IFtotMhNRAWBVVEmrVALkA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="3004795"
 X-IronPort-AV: E=Sophos;i="6.27,204,1787036400"; 
-   d="scan'208";a="2874579"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 13:08:38 -0800
-X-CSE-ConnectionGUID: dLo04yZBReOn+4Azaw0BTg==
-X-CSE-MsgGUID: /9SIhAK9SgGKVVAJpyu1yQ==
+   d="scan'208";a="3004795"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 13:08:46 -0800
+X-CSE-ConnectionGUID: v8ORlNCGRQaFl95JGnje2w==
+X-CSE-MsgGUID: IH8R4BIxRyqzd+CbuMw16w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,204,1787036400"; 
-   d="scan'208";a="7838187"
+   d="scan'208";a="9746909"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.139])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 13:08:34 -0800
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 13:08:43 -0800
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	"Maciej W. Rozycki" <macro@orcam.me.uk>,
 	linux-kernel@vger.kernel.org
 Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Ulf Hansson <ulfh@kernel.org>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Takashi Sakamoto <o-takashi@sakamocchi.jp>,
-	Alex Dubov <oakad@yahoo.com>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	linux-mmc@vger.kernel.org,
-	linux1394-devel@lists.sourceforge.net
-Subject: [RFC PATCH 08/11] PCI: Move CardBus device setup to setup-cardbus.c
-Date: Mon,  9 Nov 2026 23:07:08 +0200
-Message-ID: <20261109210714.3862-9-ilpo.jarvinen@linux.intel.com>
+	Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: [PATCH 09/11] PCI: Move CardBus legacy mode quirk to setup-cardbus.c
+Date: Mon,  9 Nov 2026 23:07:09 +0200
+Message-ID: <20261109210714.3862-10-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261109210714.3862-1-ilpo.jarvinen@linux.intel.com>
 References: <20261109210714.3862-1-ilpo.jarvinen@linux.intel.com>
@@ -93,137 +86,71 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-CardBus support can be disabled with CONFIG_CARDBUS, but
-pci_setup_device() still sets up CardBus bridges regardless of it. This
-inconsistency leads to a few corner cases in the resource sizing and
-assignment algorithm where CardBus bridges are treated like normal PCI
-devices.
+quirk_cardbus_legacy() disables the legacy i82365 mode of CardBus
+bridges. It was originally applied even without CardBus support to keep
+the i82365 driver away from CardBus bridges, but that driver was removed
+by commit b3c26ea81ccc ("pcmcia: remove obsolete host controller
+drivers").
 
-Move the CardBus-specific part of pci_setup_device() into
-pci_setup_cardbus_device() in setup-cardbus.c and ignore CardBus bridges
-when CARDBUS is not set.
-
-If a CardBus bridge that is Function 0 of a Multi-Function Device is
-ignored, pci_scan_slot() does not enumerate the other Functions either.
-Without CARDBUS, this makes the other Functions of CardBus combo chips
-unusable, e.g., the SD controller of the Ricoh RL5C476 (sdhci-pci), and
-the FireWire (firewire-ohci), Flash Media (tifm_7xx1), and SD
-(sdhci-pci) controllers of the TI PCIxx21. Making those drivers depend
-on CARDBUS would force CardBus also on users of chips without CardBus,
-e.g., the SD controller of the Ricoh R5C832 family, where Function 0 is
-a FireWire controller.
-
-CARDBUS defaults to y if CONFIG_PCCARD is enabled and the yenta_socket
-driver (CONFIG_YENTA) selects it, so CARDBUS=n on hardware with a
-CardBus slot is most likely an intentional choice. It seems reasonable
-to require users with such an exceptional config to enable CARDBUS to
-keep using the drivers above with this legacy hardware.
+CardBus bridges are no longer set up when CONFIG_CARDBUS is not set, so
+the quirk only matters with CARDBUS. Move it to setup-cardbus.c.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
 
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>
 Cc: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: Ulf Hansson <ulfh@kernel.org>
-Cc: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Takashi Sakamoto <o-takashi@sakamocchi.jp>
-Cc: Alex Dubov <oakad@yahoo.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-mmc@vger.kernel.org
-Cc: linux1394-devel@lists.sourceforge.net
 
- drivers/pci/pci.h           |  6 ++++++
- drivers/pci/probe.c         | 13 +++++++------
- drivers/pci/setup-cardbus.c | 13 +++++++++++++
- 3 files changed, 26 insertions(+), 6 deletions(-)
+ drivers/pci/quirks.c        | 13 -------------
+ drivers/pci/setup-cardbus.c | 15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 798b31c31ae4..057c8a2c7ee7 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -425,6 +425,7 @@ static inline bool pci_is_cardbus_bridge(const struct pci_dev *dev)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7f1f47ea2ee4..78f6df5d4d19 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1286,19 +1286,6 @@ static void quirk_vt82c598_id(struct pci_dev *dev)
  }
- #ifdef CONFIG_CARDBUS
- unsigned long pci_cardbus_resource_alignment(const struct resource *res);
-+int pci_setup_cardbus_device(struct pci_dev *dev);
- int pci_bus_size_cardbus_bridge(struct pci_bus *bus,
- 				struct list_head *realloc_head);
- int pci_cardbus_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-@@ -437,6 +438,10 @@ static inline unsigned long pci_cardbus_resource_alignment(const struct resource
- {
- 	return 0;
- }
-+static inline int pci_setup_cardbus_device(struct pci_dev *dev)
-+{
-+	return -EOPNOTSUPP;
-+}
- static inline int pci_bus_size_cardbus_bridge(struct pci_bus *bus,
- 					      struct list_head *realloc_head)
- {
-@@ -528,6 +533,7 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- 					int rrs_timeout);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C597_0,	quirk_vt82c598_id);
  
- int pci_setup_device(struct pci_dev *dev);
-+void pci_read_irq(struct pci_dev *dev);
- void __pci_size_stdbars(struct pci_dev *dev, int count,
- 			unsigned int pos, u32 *sizes);
- int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index a20ceaf7307a..f7afbaac723d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1599,7 +1599,7 @@ EXPORT_SYMBOL(pci_scan_bridge);
-  * Read interrupt line and base address registers.
-  * The architecture-dependent code can tweak these, of course.
-  */
--static void pci_read_irq(struct pci_dev *dev)
-+void pci_read_irq(struct pci_dev *dev)
- {
- 	unsigned char irq;
- 
-@@ -2180,12 +2180,13 @@ int pci_setup_device(struct pci_dev *dev)
- 		break;
- 
- 	case PCI_HEADER_TYPE_CARDBUS:		    /* CardBus bridge header */
--		if (class != PCI_CLASS_BRIDGE_CARDBUS)
-+		err = pci_setup_cardbus_device(dev);
-+		if (err == -EOPNOTSUPP) {
-+			pci_err(dev, "CONFIG_CARDBUS not set, ignoring CardBus bridge\n");
-+			goto free_name;
-+		}
-+		if (err)
- 			goto bad;
--		pci_read_irq(dev);
--		pci_read_bases(dev, 1, 0);
--		pci_read_config_word(dev, PCI_CB_SUBSYSTEM_VENDOR_ID, &dev->subsystem_vendor);
--		pci_read_config_word(dev, PCI_CB_SUBSYSTEM_ID, &dev->subsystem_device);
- 		break;
- 
- 	default:				    /* unknown header */
+-/*
+- * CardBus controllers have a legacy base address that enables them to
+- * respond as i82365 PCMCIA controllers.  We don't want them to do this.
+- */
+-static void quirk_cardbus_legacy(struct pci_dev *dev)
+-{
+-	pci_write_config_dword(dev, PCI_CB_LEGACY_MODE_BASE, 0);
+-}
+-DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+-			PCI_CLASS_BRIDGE_CARDBUS, 8, quirk_cardbus_legacy);
+-DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+-			PCI_CLASS_BRIDGE_CARDBUS, 8, quirk_cardbus_legacy);
+-
+ /*
+  * Following the PCI ordering rules is optional on the AMD762. I'm not sure
+  * what the designers were smoking but let's not inhale...
 diff --git a/drivers/pci/setup-cardbus.c b/drivers/pci/setup-cardbus.c
-index dcb8e2b3f73b..0de82d7fde68 100644
+index 0de82d7fde68..ef35393aca1b 100644
 --- a/drivers/pci/setup-cardbus.c
 +++ b/drivers/pci/setup-cardbus.c
-@@ -31,6 +31,19 @@ unsigned long pci_cardbus_resource_alignment(const struct resource *res)
- 	return 0;
- }
+@@ -316,3 +316,18 @@ int pci_cardbus_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
  
-+int pci_setup_cardbus_device(struct pci_dev *dev)
+ 	return max;
+ }
++
++#ifdef CONFIG_PCI_QUIRKS
++/*
++ * CardBus controllers have a legacy base address that enables them to
++ * respond as i82365 PCMCIA controllers.  We don't want them to do this.
++ */
++static void quirk_cardbus_legacy(struct pci_dev *dev)
 +{
-+	if (dev->class >> 8 != PCI_CLASS_BRIDGE_CARDBUS)
-+		return -EIO;
-+
-+	pci_read_irq(dev);
-+	pci_read_bases(dev, 1, 0);
-+	pci_read_config_word(dev, PCI_CB_SUBSYSTEM_VENDOR_ID, &dev->subsystem_vendor);
-+	pci_read_config_word(dev, PCI_CB_SUBSYSTEM_ID, &dev->subsystem_device);
-+
-+	return 0;
++	pci_write_config_dword(dev, PCI_CB_LEGACY_MODE_BASE, 0);
 +}
-+
- int pci_bus_size_cardbus_bridge(struct pci_bus *bus,
- 				struct list_head *realloc_head)
- {
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
++			PCI_CLASS_BRIDGE_CARDBUS, 8, quirk_cardbus_legacy);
++DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_ANY_ID, PCI_ANY_ID,
++			PCI_CLASS_BRIDGE_CARDBUS, 8, quirk_cardbus_legacy);
++#endif /* CONFIG_PCI_QUIRKS */
 -- 
 2.47.3
 
