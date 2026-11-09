@@ -1,127 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794260763;
-	b=x1+ggp7xj2jUWTJcP+3aS8GtxEPB33zWtLYospdhJ8T3V3ZfjwAgMEW+hK17uXOtsZVx
-	 J+DNzl0447wcasaNpuMs3j8spDwnMhK1t4zAZ99SlQm9UlhcFngNKIOk+2XLPTx1pUPen
-	 GSgCOlex8zT559WBnO8d4ODadB3S3Vs2tvnJAODkuHYRuNTz1ulT0+F4I+gB8kq/YL/KZ
-	 e34Uy+N4B2/wFG6pE+qKaFMS/vAlXGuHTdTTAo7p39xrFrM1HEJ8lOAjTRkK/nCSR2a3j
-	 Kt50xi3Bayk2Yg2ZgFsZC24VnxjU+Xi2O6OH2aoouVYRw4m9kDignEic7c9UCBjE9Jw==
+	t=1794261221;
+	b=PdBxku3jd5B7fHRk9YLEpANEfmjsSUzpIzGelW4pk+T0mJihEyBqOWzI0YZ0n5oabyk6
+	 cfWDvTo0nqX5is/5fyMDmgXDcip9JSQBz9gaxxwY5vtUyeAsoWl0rfAVFl5xhNP4T0NGl
+	 RceFPjBdWpee0hixGgAhB8flFRlU/YILmDOX6HCkEoQSuoV7yTZ+nrXjU3kNZ+I+6J00J
+	 Zfy6ITupg1oXiq4986HzLXqFhtFzZKgi5IIzbFcwH73lSxPaG2ttias9tMu9YRS9bt8Dv
+	 4pK1lqBFJC4Zw1BHiQlDgzJZ47d6ljaYCW4N/bTSL8gIPhOrwDx7vPMRtNdI6e1TFrw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794260763;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794261221;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:X-Mailer:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=874yjmK9ypxK94+nKOJ/uR1d6HpqK0owgIThZQA8ZUA=;
-	b=4T8IcQWSfkogegUiksfzgay2e2OA57N0ZNC4Jc3QWtR+ZMkt0r5/oemJwAQMhA2sGa+m
-	 DXk/weZUUmhUHfo4vf8+rC5mwY6s0bipDav93+I7LDSX4V3E2Z8/dqVLqvWR6/78SoGj/
-	 J8FfZzCDJhHaRZZ7z4sfSGtirAhwjWgG3DMRvOkTeZ86TJWOITmk+C6BXpnSrwUMZmcVV
-	 CVEGF9X67HjzwbdWsyq19W/eWWq7YM+eCpTtxJ+31H6dGZF6AHVTZwEgFOzXENGIDTxjR
-	 T+DQxI4yLhruFyiQn/TgQwb6V54hfDDtYe2f0717JTJA4WANKlPAZHrJ3Bex04CwlpQ==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=rxNh3ezBlJBDubzQ4HVqSLZQeSKGPHcJoMnCtAFhXGQ=;
+	b=kZ/JcIhByx+AM+9+J1yYo4Oy19RyJbeX1wnzIyEShMmVoivrjRo0sNQnAkjbGLBGj1TL
+	 vVzjk+4TmQt2FXZiPLQbf5avkUUy5gMkVY7GYLV8PlOVqYkGDSQTQnhGeof7jH9Ud4CyJ
+	 dwlpawb6y24p+9XBppJXQLvwreYDNt2hLcyjM4um9QN/trIsyXed711HHnDImVP2DRISD
+	 imCBHc599dktAR87lweIQgDxJJTDzbYc9XUGHolKHGjiw2czkM7Oq1h3hdvO9MCJGOi2/
+	 f1Yf69kSQpcZE61KS3cuk2T4yeODOycoRZRBHg0LgOu2/OV7dMhyveo/JjotiipLMPg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LaZ0qPv5;
-	arc=none smtp.remote-ip=209.85.221.54
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="bW/KbGOi";
+	arc=none smtp.remote-ip=209.85.216.72
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F30606A336
-	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 21:46:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 96F30606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD217606A31C
+	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 21:53:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD217606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LaZ0qPv5
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-490a0e72588so737605f8f.3
-        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 13:46:02 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=bW/KbGOi
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3b0a528ca65so1303476a91.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 13:53:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794260761; x=1794865561; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=874yjmK9ypxK94+nKOJ/uR1d6HpqK0owgIThZQA8ZUA=;
-        b=LaZ0qPv5+whTFQHjIA7oYo021SUS2QeXnWN8ii9Y4im7Ue68o46nz2xh/hHMwIUfQ/
-         ICad5fyoXePYl6/8nNVhZk6UxBKiDwJbHcHq6QklDSJskt7Ox2MaUqpcgklbAASOb1WD
-         7U13gt1MK2zXHTSuMFiAfjmE40I4QhfpTIR2Mc6nMOBQW6Dg/mqe6U/h69Hyf/QnrKae
-         CyKIviPRPYc2tnG0IM8qOylYYY2PKnrUJzf833wY0ZcFYDbyZdAS7ekVESO+FaUUNtdA
-         WzN6sPDUCv7pE3hPSGmxzNcqgZM1jmpktE+mpPCXGo9ukB9qCsiBySNit7DIM51G+Ivt
-         K68Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794260761; x=1794865561;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20260707; t=1794261220; x=1794866020; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=874yjmK9ypxK94+nKOJ/uR1d6HpqK0owgIThZQA8ZUA=;
-        b=ovjd91gvf81oWbaVLle+wSMxGgWirs+d3JZ0VSqo/BAKWpzQW0Fk6CC91fWFy8MZHx
-         imlHypToyL3Uib/WzXu91yuKf2+tsbYiKR22T0ZRHUGMFF3tarOkBFJDNjmDqXwP3Hbs
-         QpWS10Azuw9hl6OFzgMnHwf5G3ENwmsWjZvHffElBXqQEGflhtgayVO7DwE3ylS53C3D
-         GU/69Y9ijJz/wElGqx8j9lnbf5AEZJZnarOS1QJXcpjZGRXPcrV0pf05GtVmDgaOx6cz
-         jjOJF2QCXtuSSJOcWkxWa1CtqPqpM17ySemc9Kp/fmSRfJ26mY8S/U5tzGwnKKibEoC4
-         39aA==
-X-Forwarded-Encrypted: i=1; AL+hErEKdVKkiqI22tv5T52NqbHuCeSQtsCll6JLm8xbfgp7s4y2bXmGLUnwAsp0pR7p5Bpl4sxT9bpcZNY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/brbPvSmA32+4dmXgoIfdKNvYIED27LHUBPXkkWq5a3QcIKB/+
-	MLYZ4SVpNDfcXUb2SkIiz80/YeCxEtojCS6v23E4dBSgOI7Nayk9xW+s
-X-Gm-Gg: AYBFou1u+gaYZTCeBCCtrQ9fytpI391iQ4loKsJHLnhxNfLA4IbxPn9o5+Fbqmf8EP9
-	GhUizlM04CpJbSZyZLjACoQj3YB+t9KklYD7VAiqeyNETzGYQdO9a9W2/BEhrTnLb+nZ5OKu/ks
-	K4AgL04Gb57RUj3R3K09fpzwbZ1/Bpt99qyrqmfOA0lkACljjojNF98pAzIwvK4oe6VeE+83U2D
-	ADcwEYIpPQYdznPm7zW5DiPair31lOmqUncVBaYAtqZSixb73H3/YNgATDFF14jfxjga2cQZHaB
-	HWSsvvLCO3/fNF9UtH0nXOBEDC4SnezYU0w4FkSSdX4fkYyaHX+kcdsWgkRnzLp+2QZAiYJshuF
-	BlBvOeN2oJ5IueIkrSV7Vfu9WI/6eKEGO4I9ltV5hkLeRwj4LFJFM+fj0Ycv09Fel6zdDFJbGOR
-	kXBgHECc1xoXaFovE8lgMCW0MbsE00bW15vT7THsOGsEMJlaZB3SlXo5I4tkwbRzHXBfEkIE3Sa
-	vSlJIDbz88wP0RUaRJ9kq5C178DIEIa3Z2Any6vF5ChIJrEmBZlNsoNTWFSCcr96s9JBaHshLQ5
-	hFplVQxSXPeB9RVBbjAo/t45EVbEjYTsjteXJa7hiKRziC7yNzALgcxyyHZl4+3K7w==
-X-Received: by 2002:a05:6000:288d:b0:48e:25e1:5eb8 with SMTP id ffacd0b85a97d-4982b28aa42mr1487213f8f.3.1794260760763;
-        Mon, 09 Nov 2026 13:46:00 -0800 (PST)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4983585c4fdsm1213644f8f.10.2026.11.09.13.45.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 13:46:00 -0800 (PST)
-Date: Mon, 9 Nov 2026 21:45:58 +0000
-From: David Laight <david.laight.linux@gmail.com>
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Christian Brauner <brauner@kernel.org>, Geert Uytterhoeven
- <geert@linux-m68k.org>, linux-fsdevel@vger.kernel.org, Linus Torvalds
- <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik
- <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, Jeff Layton
- <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet
- <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, Al Viro
- <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph
- Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados
- <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara
- <jack@suse.cz>, Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-um@lists.infradead.org,
- linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- netdev@vger.kernel.org, ntfs3@lists.linux.dev,
- platform-driver-x86@vger.kernel.org, coreteam@netfilter.org,
- kexec@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
- dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
- jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
- linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org,
- linux-mm@kvack.org, linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
- samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
- linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
- linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
- Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, Chuck Lever
- <cel@kernel.org>
-Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
- pinning the entry
-Message-ID: <20261109214558.0d9d5228@pumpkin>
-In-Reply-To: <alpine.DEB.2.21.2611090504170.17804@angie.orcam.me.uk>
-References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
-	<CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com>
-	<20261107-akteur-gemieden-eckdaten-21304d085e35@brauner>
-	<20261108185953.28054fb3@pumpkin>
-	<alpine.DEB.2.21.2611090504170.17804@angie.orcam.me.uk>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+        bh=rxNh3ezBlJBDubzQ4HVqSLZQeSKGPHcJoMnCtAFhXGQ=;
+        b=bW/KbGOinaXs2YkmP5nmcEDXKol7Ua3Zre6o0EHDN57H8jyUrItYmj3RoeYL+uOC82
+         1vpPYTnbYFFyHJ9rAUeaNZ3+GhkvzlCiyb/tcsskL/WqQDjkZ79HhqcIwJD6kf1MBgln
+         55Dp685/SX6dP+3HRAyw6lKCrAOXWJHG8hGgFVXoPXHcM7acGl/AQ1YlJCOXomUDF5IY
+         sFROaw+1/iG93roJuNb2SRnxXSFbjah6HWvBRrrCQ67xTAnNY66Mv7PNXeK8YO1DQi5D
+         3g/gHcNFNku5FElfgYhKDJPK130+ADdUY+psgL+iqWqu03oVISrHFwvf9Tl0S4conRUr
+         ru5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794261220; x=1794866020;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=rxNh3ezBlJBDubzQ4HVqSLZQeSKGPHcJoMnCtAFhXGQ=;
+        b=XmSeQAKWJpInPi73n+h+fp/zJrxQo8uaq7QaEL8Pqf1iPXmM2XdjY/ZYp76tkKBaP4
+         St6eJV+Su0LyqUPySB5xg4S0UgarwgJtDhscGto9cqbob/HRrymp5cGkFKX+G2RXR76s
+         BEb0ECebJGNHkwYasP5T21RfD++lf/w4X+XzZlo025dbRA7HqdX9ai5xsob3F2MsQF0R
+         jId8n44Z1o7I0IFerIObh8LGVW4EJAZXuAoIL98KxVb3Zx/lOl0n/qdGzMaw5vUUoXgN
+         nyerOqvtfIHbVELGKOXx77Fy40NpDOPJ83PwuCoZveVRvbKC7TkL9sBViY3s0kCVx1KU
+         KE5g==
+X-Forwarded-Encrypted: i=1; AL+hErEJdkLvCSxjp9EvBtWiRHnJsxkCpPvJT+UQSvR30QjTeBPh5/27RBF6HSOZOua/jAoYClPXhf+eBcM=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9uQ5LoU3v3JF5mM3wdYzMKxu6uhbK1doxhBj7PYU3CX9i/jmEw
+	jPbMOVL7J6cyTDdPvD5OHJZ7nEVRHePO8LLgK6u0kDE3ZHXJQVgQ3mSHTZzvdHIQugjw89yFF8E
+	mKc0nQSANMNI8hB3wmLYj02i0slN0duhcoA==
+X-Received: from pgfd22-n2.prod.google.com ([2002:a05:6a02:6556:20b0:cc9:f7f0:57fc])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:4cce:b0:396:41d1:cbc7 with SMTP id 98e67ed59e1d1-3b166aef2b6mr990801a91.3.1794261219882;
+ Mon, 09 Nov 2026 13:53:39 -0800 (PST)
+Date: Mon,  9 Nov 2026 21:53:38 +0000
+In-Reply-To: <sashiko-outbox-168676@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -130,35 +78,47 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+References: <20261012-pcie-hotplug-nullref-v1-1-6e21c2e89ea4@google.com> <sashiko-outbox-168676@kernel.org>
+X-Mailer: git-send-email 2.56.0.567.gdb80ae8cd5-goog
+Message-ID: <20261109215339.1841223-1-rathodpriyank@google.com>
+Subject: Re: [PATCH] PCI: pciehp: Fix NULL pointer dereference in pciehp_configure_device()
+From: Priyank Rathod <rathodpriyank@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>
+Cc: Niklas Schnelle <schnelle@linux.ibm.com>, Ricky Wu <ricky_wu@realtek.com>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, 9 Nov 2026 05:05:57 +0000 (GMT)
-"Maciej W. Rozycki" <macro@orcam.me.uk> wrote:
+On Mon, Oct 12, 2026 at 10:16:29PM +0000, sashiko-bot@kernel.org wrote:
+> While this allows devices without Function 0 to be successfully hot-added,
+> will it lead to spurious teardowns upon system resume?
+...
+> Could this spurious teardown issue be avoided by modifying
+> pciehp_device_replaced() to handle missing Function 0 devices correctly?
 
-> On Sun, 8 Nov 2026, David Laight wrote:
-> 
-> > > > While at it, I think it would be good to use this conversion as an
-> > > > opportunity to replace "char *" by "void *", which will probably let
-> > > > you drop several casts from users.    
-> > > 
-> > > So I tried that too. The thing is it drops exactly one u8 * cast in
-> > > ntfs3's label write.   
-> > 
-> > Since char is now unsigned that one isn't even needed...  
-> 
->  Please excuse me missing the context, but what circumstances does your 
-> claim refer to?
+Hi Bjorn, Lukas,
 
-Just that the cast would have to be:
-	u8 *foo = (u8 *)bar;
-where 'bar' is 'char *', and I don't think you need a cast there when
-char is unsigned.
+Gentle ping on this fix now that v7.4-rc1 is out (the patch still
+applies cleanly to v7.4-rc1 and pci/next).
 
-David
- 
-> 
->   Maciej
-> 
+Regarding the bot's question above: pciehp assumes Function 0
+(PCI_DEVFN(0, 0)) represents an occupied slot across all four of its
+lookup sites -- the -EEXIST check at the top of
+pciehp_configure_device(), pcie_init(), pciehp_device_replaced(), and
+the DSN read at the end of pciehp_configure_device() (consistent with
+PCIe r6.3 sec 7.9.3 requiring Multi-Function Devices implementing DSN to
+expose it on Function 0).
 
+I intentionally kept this patch scoped strictly to the missing NULL
+check in pciehp_configure_device() -- the only unchecked pci_get_slot()
+call in pciehp -- rather than mixing a broader change to pciehp's
+pre-existing Function 0 behavior into a minimal NULL-dereference fix.
+
+Please let me know which direction you prefer: taking this minimal NULL
+check fix standalone as-is, and whether you think handling isolated
+non-zero functions in pciehp_device_replaced() (and the other
+PCI_DEVFN(0, 0) sites) is worth pursuing as a separate follow-up or best
+left anchored to Function 0.
+
+Thanks,
+Priyank
