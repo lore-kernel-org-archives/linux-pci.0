@@ -1,78 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794216289;
-	b=3+RElFHuLwyf6+36zTbKC8Mnk9iSgqkK632o/lHhC6zMIc33t7icL95XVSjGuCqlPlEo
-	 3vt79+n5vxlg+DdZ1nWWdpf876sXOqpsvEI4R+BShE1dZ7MxT+vHO1/Dl/ncRs90URT1P
-	 zCq1DDvq1x9QXFV/zsVLSiFj84/B74KBFnyGwcnLummeIfiHuG6VTNRrZdSFUusc4d4sx
-	 kvUXju9NSbdYL/MuXhiwr3VGsywDKDdX03f/ISSdfMd+WmHQknm1ff9sxPKT+RTPJVb9E
-	 p2UDnoR3PvEILIm6Qzx/nbIERHv71hngsFUKrz3z3u4PGNowlebo9eDcg3+lM59eGZg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794216289;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=Xu12zpNi8g3Ww+jQlbS2EOpBtBf4+Qt+Ls/JoZ5WG78=;
-	b=UZA4IBttwT9UlFm9MjgSnY4qjMz/M7/wMBtbT0fEev4NPFodRJKMT6lUlVhf/R6Y5D0M
-	 XgVYCdmRUVdzkXrVACPzYhJx5YBajf5cXR46Qr01d/msg/+N9K/ljKzNYFcR6asBTFpMa
-	 U1TK0wWTkEiQPEVmX2kb01hVVj61mEortBLENwTvG/A5cfvfj0g8kQVas4+2uljNcgs3D
-	 TQJVlbKHP7FsrTgJKqct6LqEJw3wm/pam9s0NSx6ow/gi6CKS7Dj56bg7v25vsj8EZH9T
-	 OUjxpgxCDsvuVsGKMqleHBHpEYjspBoyix9ZvikW3bZX+heCAADMLsZzKsNTTBPvcYQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nhu7iR0C;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794218514;
+	b=SFTLUyLSLTUV3A17G8gX9ThO81W/nGFnp22q5bpJuzSbQNGWTMfyjjtoEPu7eAtfJDZb
+	 xQAsUPYeuCwC5fHhn/SJ19rWkE4Hqr1nuvjwQnVm39KWvDhVTe2KC3vm16n8H156ZIZ/y
+	 nGatvhASkHuQ6lkiqISqItCMyD/yTqjqOxMHM6AAKKOrYBP6MMteU8TLhtDkW3LpIQwMz
+	 QELvuLzu3ik/d4vN6L4biWQYEVBR+gQWVVxh3dCd9TzZOVHD4BZi8L4N7dqDvxIW+8pqx
+	 EbLJQJqQirSJG3GhS40VVry829t1SbipDRmEC1d6Ogf3WSRIB9Y2JDjqjgEpi+ZYLmQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794218514;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=Vrn55JPvAQ0yT0p3BRkIJljL3kQLPzmvbjeJapNiYxg=;
+	b=qJJKUKUD8FDgPhrI4uLrYee1f172pBsW0qsatJ4z28F00BsbC/yh9B8pUkknvIM4ZU8r
+	 JP0YGf46kvnYlnox8zREUMeEzU04YtjENHZsc+vtIAXbHy5k5j58HdIaO7WtJjcqt0u6u
+	 csnmt9qPYKRwndUnQtwQp4pTqvm+sg+lroXfHfPuU4A8POoDTaBQLxgM3eTfeg/BqMZIK
+	 nLXRsMJlR7I7BxdA5XnFHiLbwsw2m03R+1tJMs975P4jcSw7jLmLApbVf8OxEo4erFEom
+	 lUFVZ2V3620MvIx0VMPxM+T8XPUKdGtOOAGQoDb5034ibk4eEJYgGoWxHrI8oX8IJJA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CbYyXbN1;
+	arc=none smtp.remote-ip=198.175.65.16
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB57606A325;
-	Mon,  9 Nov 2026 09:24:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86830606A321;
+	Mon,  9 Nov 2026 10:01:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86830606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nhu7iR0C
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1794216289;
-	b=X2fXWHuataOfVkuBDCJwTK5UTbptMU+YpMwufHE+sz1sC5mToAjKG7XDj1rDMkbEaDyT
-	 pO4IqvbdSoWfmS7K+FFZFITyyqPXZB8ZpUZVYIo+1QBIY1UwwHNwKRhM2HK5eg5fB4Wga
-	 6pZuaRZBNMIAGAqKDxNetYwhICUvXobPLfGuSXrAAM2WoDGdzjr3yj46kxnTO+oHfVcWz
-	 BPJO6qDIY7mdJE54jffd12AFDfDCWzoGTUGZwGA+iihb5VOmV4IXzA9ipFxDE/Dak1W1q
-	 lqYK3is+vWLxKSyqXA9WGGHpgmFeFtnAb7JRx3j5WeYM2rh75zHoY+Jfi1CedOrBcOQ==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1794216289;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=Xu12zpNi8g3Ww+jQlbS2EOpBtBf4+Qt+Ls/JoZ5WG78=;
-	b=feoDFSqcGSeYk7un5rCFo6FJ+WlDw5ZakFEsP1jG0j9g/fDizMtbm71m+jopCY/0olXV
-	 udx48UAxgoH5sazpOEhLfWp85+0IyGQ9Iapjr4rjJoiWJU70u985wwXCtkhbr0sfL8gIT
-	 IDWgKtzCGcff+HbTOheM+YLqwWoKoVOI0Emvbk6HHvEVi7+FWlJQfb5WIpwfkamc2PqLG
-	 qzfZrmuTox7lOkKsf5IUuVzSNczZtF+FYWCDO5AXF5F2xIrFq/uI/xmhVqZg2bJyzxbkx
-	 vo/F7aJfEKqaaD32/WdOi7mzStd7Yn0XItxAqPyQrV7xTNyI3/hcxaNbpV4ZYBz8AIw==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 8D8AF1F0089F;
-	Mon,  9 Nov 2026 09:24:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794216289;
-	bh=Xu12zpNi8g3Ww+jQlbS2EOpBtBf4+Qt+Ls/JoZ5WG78=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=Nhu7iR0Cn+DE1zuBqUTTEqK1YvQ/Q5sZwBlDYwkAqA/cKamoLgYe7gg4jm0R0gZa5
-	 oYzZVrf1x2YSq89Wrst1QvaGXyOUz8bwXNnrdhUY+rTzjeQj+YXOK1KRgFcyux76r5
-	 DDH7UQsFo1XjRXDDcOsnqvHllTmndmnlQb7ZCdYv5jSY1AvyYmUKJ9jicXln4YAaTv
-	 JhA7HvuI/4Es29H/uqBccchSCeOglFiFTz7vG0c2PcvlX/k03nj0fA0R9SeFlRxOGk
-	 U8Fj2rzDFNwz3D9uTEM1dW6LO3YwZlxrQ4goev4fCVBAQfSjsIahBl9BqUVITtDWG2
-	 YkhFAgte4CEAw==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 1A1344836E;
-	Mon,  9 Nov 2026 09:24:48 +0000 (UTC)
-From: Yu Yang via B4 Relay <devnull+yuyang.kylinos.cn@kernel.org>
-Date: Mon, 09 Nov 2026 17:24:28 +0800
-Subject: [PATCH] PCI/MSI: Skip address mask check for MSI-X entries
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CbYyXbN1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794218514; x=1825754514;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=lwL7Q+nPXqUW0WAtjO+yEB0WR5ea1mPrNXeXX7OmoYI=;
+  b=CbYyXbN1rLQU3ONzAFoos8Lxg0sWREJsPKi24HueXC88lShZ8AXUMmUn
+   QyzRfS/767+I/F4lnSV1mpB+75OA8yIAtRdhAYrb8NdmqWoBwu5TxQqLS
+   fuZNfpx6qFwWjyjxEMtjlA745HHw6SM9hj0NssB30+YnFrp7H1NxghaMp
+   F31EnkvcEG7zjyhWn4wDDBmJQ2twgMdGVhXCsArhRNN+Za+2G4WowX/UY
+   dvb43gkFMYyIN/ed3tt6lnKa8wyTvim5b1nQdLPbi1NL7gj0poOaHwhv4
+   XjxbSzf6uUuUBMnmST7wMWBeKTnIx1Z9NmQ67e6QmL8dZVQarG41YCUpk
+   A==;
+X-CSE-ConnectionGUID: TtFQpuS9SEKhnH3vT6yt4w==
+X-CSE-MsgGUID: XnxrCl3ESieTXD9348BG9Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11960"; a="2925933"
+X-IronPort-AV: E=Sophos;i="6.27,203,1787036400"; 
+   d="scan'208";a="2925933"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 02:01:53 -0800
+X-CSE-ConnectionGUID: 3sqQDv2kQFGXyMHcpt5QnA==
+X-CSE-MsgGUID: fKuBgBPZTWq/3OYn5bBY/A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,203,1787036400"; 
+   d="scan'208";a="7956135"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa005.fm.intel.com with ESMTP; 09 Nov 2026 02:01:51 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 1C6CD99; Mon, 09 Nov 2026 11:01:50 +0100 (CET)
+Date: Mon, 9 Nov 2026 11:01:50 +0100
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Li Yifan <yifan2.li@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Wentao Liang <vulab@iscas.ac.cn>, Li Lili <lili.li@intel.com>,
+	Wang Jie <jie.wang@intel.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/PTM: Keep ptm_enable_cnt balanced when
+ pci_enable_ptm() fails
+Message-ID: <20261109100150.GI176724@black.igk.intel.com>
+References: <20261104121457.2108515-1-yifan2.li@intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -82,88 +82,50 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261109-pci-fix-msix-alloc-failure-v1-1-6370c0b84354@kylinos.cn>
-X-B4-Tracking: v=1; b=H4sIAEuR8WoC/x2MSQqAMAwAvyI5G7A9uH1FPJQ20UBdaFGE4t8NX
- gYGhimQKQllGKsCiW7Jcuwqpq7Ar25fCCWog21sa0wz4OkFWR7cssLFeHhkJ/FKhD4wU+Cho96
- CDs5EWv7zaX7fDxH2mldsAAAA
-X-Change-ID: 20261109-pci-fix-msix-alloc-failure-cdffedf97e82
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Thomas Gleixner <tglx@kernel.org>, 
- Michael Ellerman <mpe@ellerman.id.au>, 
- Brett Creeley <brett.creeley@amd.com>, Shannon Nelson <sln@onemain.com>, 
- linux-kernel@vger.kernel.org, Yu Yang <yuyang@kylinos.cn>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794216287; l=2146;
- i=yuyang@kylinos.cn; s=20261109; h=from:subject:message-id;
- bh=fq57q40/5O4bXqj13wzHAYXlVx1mOt/jNhP7ggzzvwU=;
- b=HmUWeekm6t09OjI/k6Xpy3e41nbV6rOobI0E6lAx7TjPCaJo+xung/OaZDLhu3v8VVnLnWEs4
- 9y7toDvn/GbC1cDslIZz2I/OGVc06h4NcnugXpxwzH14DUZ6oz8TcZj
-X-Developer-Key: i=yuyang@kylinos.cn; a=ed25519;
- pk=LQAY8k9sUwvjwxS9P2CQE0GbrKw/MJPJbDHlapWOZ8A=
-X-Endpoint-Received: by B4 Relay for yuyang@kylinos.cn/20261109 with
- auth_id=1458
-X-Original-From: Yu Yang <yuyang@kylinos.cn>
-Reply-To: yuyang@kylinos.cn
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20261104121457.2108515-1-yifan2.li@intel.com>
 
-From: Yu Yang <yuyang@kylinos.cn>
+On Wed, Nov 04, 2026 at 08:14:57PM +0800, Li Yifan wrote:
+> Since commit e1092d5e15e6 ("PCI/PTM: Do not enable PTM automatically
+> for Root and Switch Upstream Ports"), pci_enable_ptm() takes a
+> reference on the device and on each port of the upstream path, and
+> pci_disable_ptm() releases them. If pci_enable_ptm() fails, the counts
+> can become incorrect in two ways:
+> 
+> 1. pci_disable_ptm() decrements dev->ptm_enable_cnt without a check.
+>    Many drivers ignore the return value of pci_enable_ptm() and call
+>    pci_disable_ptm() unconditionally, for example mlx5 and bnxt. If
+>    pci_enable_ptm() failed, for example because the upstream port does
+>    not support PTM, the count becomes -1 and stays negative after the
+>    driver unbinds. Then pcie_ptm_enabled() returns true, and
+>    pci_resume_ptm() can enable PTM on the device after a resume,
+>    although the upstream path does not support PTM. Before
+>    e1092d5e15e6, pci_disable_ptm() did nothing if PTM was not enabled.
+> 
+> 2. If __pci_enable_ptm() fails for the device after the upstream path
+>    is enabled, pci_enable_ptm() drops the reference on the device, but
+>    it keeps the references on the upstream ports. For example, this
+>    occurs if the device has no PTM Capability and its upstream port
+>    has one. Callers that check pcie_ptm_enabled() before
+>    pci_disable_ptm() never release these references, so the upstream
+>    ports keep PTM enabled with no user. Callers that call
+>    pci_disable_ptm() unconditionally release them only through the
+>    underflow in 1.
+> 
+> Fix both problems in one change, because a fix for only one of them
+> makes the other one worse. Release the upstream references when
+> __pci_enable_ptm() fails. Make pci_disable_ptm() do nothing if PTM is
+> not enabled for the device, and use atomic_dec_if_positive() so that
+> the check and the decrement are one atomic operation.
+> 
+> The fix for 2 is based on a patch from Wentao Liang [1].
+> 
+> Fixes: e1092d5e15e6 ("PCI/PTM: Do not enable PTM automatically for Root and Switch Upstream Ports")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Link: https://lore.kernel.org/r/20261102222817.GA983941@bhelgaas
+> Link: https://lore.kernel.org/r/20260616141733.1688264-1-vulab@iscas.ac.cn # [1]
+> Signed-off-by: Li Yifan <yifan2.li@intel.com>
 
-The AHCI controller on Zhaoxin ZX-200 platforms supports only 32-bit
-MSI addresses, but its MSI-X capability uses 64-bit message addresses.
-pci_msi_init() therefore sets dev->msi_addr_mask to DMA_BIT_MASK(32)
-based on the MSI capability.
-
-msi_verify_entries() is shared between the MSI and MSI-X setup paths.
-When the irq domain assigns an MSI-X message address above 4GB, the
-32-bit mask inherited from the MSI capability causes MSI-X setup to
-fail with -EIO:
-
-  ahci 0000:09:0f.0: arch assigned 64-bit MSI address 0x8002a030040
-  above device MSI address mask 0xffffffff.
-  ...
-  ahci: probe of 0000:09:0f.0 failed with error -22.
-
-MSI-X table entries have a 64-bit message address field, so the 32-bit
-limit derived from the MSI capability does not apply to them.
-Platforms that use msi_addr_mask to constrain MSI-X allocation, e.g.
-powerpc pseries/powernv and ionic on PPC64, already allocate addresses
-that satisfy the mask, so the verification is redundant for MSI-X.
-
-Skip the address mask check for MSI-X descriptors.
-
-Fixes: f144d1496b47 ("PCI/MSI: Add device flag indicating that 64-bit MSIs don't work")
-
-Signed-off-by: Yu Yang <yuyang@kylinos.cn>
----
- drivers/pci/msi/msi.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-index 8a0133a6a286..7f34bccc8248 100644
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -338,6 +338,13 @@ static int msi_verify_entries(struct pci_dev *dev)
- 		return 0;
- 
- 	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
-+		/*
-+		 * MSI-X entries always use a 64-bit address, so the address
-+		 * limit for MSI capability does not apply for MSI-X.
-+		 */
-+		if (entry->pci.msi_attrib.is_msix)
-+			continue;
-+
- 		address = (u64)entry->msg.address_hi << 32 | entry->msg.address_lo;
- 		if (address & ~dev->msi_addr_mask) {
- 			pci_err(dev, "arch assigned 64-bit MSI address %#llx above device MSI address mask %#llx\n",
-
----
-base-commit: 996a59519af2ef3d8f47479685616bb2278c6cfa
-change-id: 20261109-pci-fix-msix-alloc-failure-cdffedf97e82
-
-Best regards,
--- 
-Yu Yang <yuyang@kylinos.cn>
-
-
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
