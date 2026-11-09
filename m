@@ -1,101 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.42
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794189793;
-	b=3fxVyQGnBjPDZztWV7EM59tyBkWa9xc6WmjpidMTtShsObG4so6TkyB1M3nIpZzOvI0Y
-	 VRiiXugGPNUUBzn9ZIbptnnHyKuXnuxQeUSoZHjRpwzpy+WzGmsy3RQZ4yBykBg9pucdO
-	 mHoQQc+yiZXSsaX2c5W7Sl4xwc4HMTrgz621tF/L2KU/BTz5iLW4yGqWUfYaiLTPpw5Nr
-	 eEEn1RpIY/nHHTYIRM1ovfjsRPp2oUisHbHGH1ZMn2sMDxShHMMQgcSYZuqd3Vo3ueq88
-	 h9wEIDFtwzTsBUBN85qCNmwxyPtUDXCWnbwk0S1w9fQiVeH8uNVfUsIm8Qe/O4ye9dQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794189793;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=JHVLOFSLCv9GVsq054d9bMCs6jEJnblXl1piTel5GUI=;
-	b=WIj9Qc5F5fS9SISSPIeuJ3TeGi/PosYC287x2TJ/efYNikQ/eJpw3VKiPhzwfQZi7wMW
-	 584GQKmXvNlliC1onGlPd2Dc6uKvV/42rxq+W/+3556+PhoQF822DS0m37o7TcdotJum/
-	 vvqJaG+MqxLSbXTt3SIbY7X0cByhDNS/oJUlfPkJ1Ov5JPR9U3Nc27z1xIauqU9bmjz2P
-	 1aztjbTA5tl3uO7O14qkUyX3+uZDStrFx+X5CJ+FKZ009vvdmBcElrx35AhnhJ4ZlxXQV
-	 eAyTi3HaiKuc0+R05jZSEA9hJ72UWp4Ra4nfvDvKyjyj28jcp4ErpEPJ9Mi84f0IS1g==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gU7tzgd7;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.42
-Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.129.254.83
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794190031;
+	b=MiiK+N5D8dss91/kq05L2SUrUTFtsgyI/7M0aw/OZ2c5esY6Ks7tv+GtH0CKNRHiFpfP
+	 vcKgH6K7a3cShir2JksEMffUreYTpEG95ilPiRvlvO3NfscLxCuUw0PXG4Eblhv2js5Gu
+	 k9N5C1XXgNFPBzRD3EQG1A2LWS+rpnJo8mNhmXZQBqfGC8HqRzWT+idKsSEj/S3sCq6W8
+	 dtilLY707ctesXtFbgq1F5zdpfteooS7/h3Dt8UZw5cShlNwdYVTkL1zVNbgTSO620tLY
+	 zKjh9rqOPjhsC5HptcPmKxEhPq7B2/IE64mI6Mjp2tOmnGlc4x45vxfv4znRSryxtxA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794190031;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
+	 Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=We4ESE2til4bSkM1vEMn0soL7vZrg8WY8DZ2Y26nFnk=;
+	b=rPQkEgdtjFKsKzxFpkv+7WgoJlAJsEdMZKoZc41b9H/X7d9NI+Rx4YoTYSJlpBKNRi1E
+	 XZP6ndJwii86agpuM+aVgZ7rKXPrXHM0dEpUb9svD2QhF2hmOcxlTI3Mxk288oh4qTKAO
+	 dCXIYELelYs4pt1IysKcX0hAh0ehjBBcQB60OCeyYhAGdrHzcHO15GWm/ql0ieru4OOOc
+	 bCp6EXQrgnwqkDR2n2mqgHudpnVxtheWmmfTVKc0gX/KCk7znvUuN1RL3UE3W9tlH98/9
+	 DYXySzZoFod6JmuPIDORku/m6OdtoB8b27Ql0lfgHMig8XPH2HMN3Mzg/aXeiXrT0Hw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=RSzMaBpz;
+	arc=none smtp.remote-ip=103.129.254.83
+Received: from mail-m25483.xmail.ntesmail.com (mail-m25483.xmail.ntesmail.com [103.129.254.83])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B36C606A31C
-	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 02:03:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1B36C606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C230606A322;
+	Mon,  9 Nov 2026 02:07:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5C230606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gU7tzgd7
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5c10dc41270so283463e87.2
-        for <linux-pci@vger.kernel.org>; Sun, 08 Nov 2026 18:03:12 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794189791; cv=none;
-        d=google.com; s=arc-20260327;
-        b=SeqZZh+96wKcsEcNA8Y8iqCv18uZA4LrGG/akc6oIanIoy018Ux1OQdIJtT9Qgy7HG
-         0iSXuE5v25a8LzkdioJnyvpmWtD87OKVh8TgcYCdciU3HPHAhjsepA1Sa5qYkTpwA0Pw
-         /lhLiL4PnXHAFueTtv0YKpdVjFHeInJplx4vy3Wm6QRJzIGZhbWUX75yuz/zQ/lbLQYV
-         Z9fQDM2FvRKga57JQBJH5+tTPYVmqBGaFIBHHiR27oLKZ0N0hw20d10wT5Nx4mFrYuMk
-         XHsiQu5g08To88MbTuaXUqtpZNeafaLu5PAB2rST4NlKJ4P235AioeDIpThLqgbNf2Ps
-         VdWg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=JHVLOFSLCv9GVsq054d9bMCs6jEJnblXl1piTel5GUI=;
-        fh=I08A8X3XL2YfAhi6PTzwZAmBgVurAup1SFQDjQRaNww=;
-        b=pBRs5oRqS6d4KkTD9Q1bCRPOwkCPsRTWGhKUVFSi7aJIWZvTgdXkz7ngcLqOJRH9tE
-         HUtbWG3YUKkq7Id808j3RG1cpGMhLfz6LC+BvaGFTWZl2c8cG1yEL8XQaRFrfom5/BDc
-         v2K8+L63DhTtgNDZM7fUDeL8xZe6mhME0/ErxQsYJsul6/HyVVO5u0CBhY75JCdkUS/x
-         4kNivE9Zx+ybAqVZhVtXgtOne7IaJ1mbqzQqavXINTpsM1anhKWtqTezQ4CmNY65fJfR
-         ctwve1Dyz4Qr50kw3fbQoQlyAPVMht72xVGWksaWqSy2IdKQfFf6wKqJhSI6o1HW5RgX
-         BGcg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794189791; x=1794794591; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=JHVLOFSLCv9GVsq054d9bMCs6jEJnblXl1piTel5GUI=;
-        b=gU7tzgd7MExahHiRbCCINPw5gun+4aXU1RjNEpt8Ppsbkxat0Yvq9blzj1LZyk91Yo
-         v2GvsProReBVRBMqbOtskIRTtpmIml8qt9GbxKw9ivXfFXJgr4sG/RJ3Gkc1EDx1UpV1
-         WIhdtbeRwOKtoz3wz6/n2N/Nw57+Jt0GWBSsInBIqwgA2q14XWc2JV85gyQSDLn5AwSw
-         JOW9KBrBouqJfL0Lq5HKHvQaeZf1Uk9wbq0Iry/CIjE8RLu0PapRJ++n/SvUuI2LV4cb
-         /dgXLi/EvjD6dHgznH6UtPMd5/2BFfZ9zYn1Jl3zD+X2P+TL7pNZbIB7a9XrE7opbNgu
-         8IFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794189791; x=1794794591;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JHVLOFSLCv9GVsq054d9bMCs6jEJnblXl1piTel5GUI=;
-        b=KW6sEJsQRHZvovS2ALwTtPi3WXjPwyluNxTSBXGKJvuNHXxH9SbKwbf/hSC8V6ttAl
-         mhPkyJ8JfWkVgCaqIwevX3DVbyxtSteldBh3plJE4AaN+TUqbrPzhiHYhVFQUuzT0s+0
-         EIgSwi4a/IBwp9FlzQOD+/hmCclDaZHYgwqv2x8G0T8EfFQp/9uJw11OJFX5+yxyfnE8
-         8CqWafe0kyB360gDolx/Mojs7hO/1L6enEQIe1OrclZvj+3wg4E0JPGDHE+vaykZ+SoJ
-         Lae10be5TMfIcqKcYRNE5MC3TOEVZMuKqvY0D9UFSRpndKmTrOoRkgnM+MP9qaREayZT
-         +zdQ==
-X-Forwarded-Encrypted: i=1; AL+hErETwwlP9AGhdWZfgu76YmsybfeSBkCU371+ZRcOI7dm8dxed49i1p9yXB3CnJebtUWzVetn8KV0yco=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/W7xhvvbSjCIugIH3Lg8a2NbBhxalYdAcKJhX+iyXSEEl0Cv+0
-	ln2GMiXZDuFWOOpRX3Pk38OKPWQtByUPcD18bfuA5d4uo/ckt2g8qjvcVeROybyWyPxbniQ3vFB
-	wVnByk3z3l+2qWVo4+E47C1koLsFmfE4=
-X-Gm-Gg: AYBFou1jKfJ+4hROtTsvG1AYZ7Or0RTCDwXxbVzZgHNnPZjH6GKyfhjM1+k+fBsWeqW
-	ZGItDvyIGFPrBUAF7rQFqk4ig+nG9o4w98IMFAc1DZEoKA6qrcOzG6VUWQXNzGPCsRi3dEi2U8h
-	Oe93gFDDYSD0Bf3ShNLZYj3vsc1bJeDOAlAS4+ONXhTB9C/Np7BapFDgocljc5iaVXKzUGaeBBb
-	beIBanAGpCmyePaWB0eBzMfwlm8P3TyAS0MSJwawE4yrvZzqtub+Qjm17bNXqksnyzgUhpCMuRE
-	yadSOouu8/m0u5vU9IjgrJEq9MC+ujoJ5KsFyIDXI8WCd9zI5BW/oyNUCHy0lDTC0xXg26KS5nP
-	fw8oYKHsCv17krrsiLF8G+Kd7Nd1UkmPDdw6uwFhuadhNhXTgIRurOVnR65Q1KM5rNlGFa/zSRl
-	TFL9JXebE99J6gK7YNqOkNXa0qCz4=
-X-Received: by 2002:a05:6512:220e:b0:5bf:bbcb:509f with SMTP id
- 2adb3069b0e04-5c14c02e15emr627836e87.37.1794189790992; Sun, 08 Nov 2026
- 18:03:10 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=RSzMaBpz
+Received: from [172.16.12.48] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 53eeadfd9;
+	Mon, 9 Nov 2026 10:06:57 +0800 (GMT+08:00)
+Message-ID: <60fbb95c-63cc-4d22-9e2b-51332a50054d@rock-chips.com>
+Date: Mon, 9 Nov 2026 10:06:55 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,34 +48,72 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261106090342.2601665-1-hongxing.zhu@oss.nxp.com>
- <CAOMZO5CQtcpb04Vp49Rg_+DHoozRpQthW3_YNAYQHqi=VOmpEg@mail.gmail.com> <GV2PR04MB120197A63428B4142714A8F148C732@GV2PR04MB12019.eurprd04.prod.outlook.com>
-In-Reply-To: <GV2PR04MB120197A63428B4142714A8F148C732@GV2PR04MB12019.eurprd04.prod.outlook.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Sun, 8 Nov 2026 23:02:59 -0300
-X-Gm-Features: AclHuK-L3h5gzP6mZBeJdIsXpM-rka8mrZeT_p3Ww2YWyi1VobDmgIX4-64aPE0
-Message-ID: <CAOMZO5BLAnXVRMQLz2pJuJfcGgDWiQcoZ+APfYkBd4UainfJrg@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: imx6: Enable L1SS support when supports_clkreq is true
-To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>
-Cc: "Frank Li (OSS)" <frank.li@oss.nxp.com>, "jingoohan1@gmail.com" <jingoohan1@gmail.com>, 
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, 
-	"imx@lists.linux.dev" <imx@lists.linux.dev>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hongxing Zhu <hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, =?UTF-8?Q?Enrique_Hern=C3=A1ndez_Bello?=
+ <ehbello@gmail.com>, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, bhelgaas@google.com, robh@kernel.org, heiko@sntech.de,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC 0/2] PCI: rockchip-host: Retry training and hot-reset
+ a JMB585 on RK3399
+To: Igor Velkov <iav@iav.lv>
+References: <20261024-rockchip-pcie-resume-v1-0-58e54a5cf5f1@iav.lv>
+ <20261106-rockchip-pcie-ltssm-trace-1@iav.lv>
+ <6c9adabe-d632-471e-8fc1-aafe62115167@rock-chips.com>
+ <20261109-rockchip-pcie-deskew-result-1@iav.lv>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20261109-rockchip-pcie-deskew-result-1@iav.lv>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa1be0f01f703a4kunm84dec09857da6c
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1kYFggdWUFKV1ktWUFJV1kPCRoVCBIfWUFZQ0hKGlZIH01CGUNDTk
+	5MQk9WFRQJFhoXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0
+	tIVUJCSU5LVUpLS1VKQktCWQY+
+DKIM-Signature: a=rsa-sha256;
+	b=RSzMaBpzKBX5tqLpuWQ15ZQyFDH114v8q2IeBzHG+Vp+GQV3bxrhL7Kcukqj4D585i+sB7hqCNAmmV5+6/8cW1TRIEKMKs7Cvk18QPkUaOOQk3gusQTpcjDlblAIqw8/pktunXi45CRaK61wjrAV/kL9AvGg/8sY2nt5fnKVZUg=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=We4ESE2til4bSkM1vEMn0soL7vZrg8WY8DZ2Y26nFnk=;
+	h=date:mime-version:subject:message-id:from;
 
-Hi Richard,
+在 2026/11/09 星期一 7:05, Igor Velkov 写道:
+> Hi Shawn,
+> 
+> Thanks. Deskew makes no difference. Helios64, x2, bind/unbind, variants
+> alternating every cycle, bad link bring-ups:
+> 
+>    defaults 6/104, auto deskew off + trim 0xf: 5/104
+>    defaults 6/104, magnitude off: 6/104
+> 
+> Your mail has the magnitude at 0xb, but TRM V1.3 part 2, 17.6.10.1 has
+> TX_TERMINATION_TRIM there and DESKEW_MAGNITUDE at 0xc, so I wrote 0xc.
 
-On Sun, Nov 8, 2026 at 11:00=E2=80=AFPM Hongxing Zhu (OSS)
-<hongxing.zhu@oss.nxp.com> wrote:
+Sorry, my typo.
 
-> How about to update the commit as below?
+> 
+> DEBUG_DATA_OUT did show something. With Debug Mux Control (0x208) = 5,
+> share of samples with in_dllp0_data_valid set, 100 ms window after hot reset:
+> 
+>    good bring-ups 0.16% (99), bad bring-ups 51% (3, range 45-53)
+> 
+> The first training looks the same: 0.15% (97) against 47% (5). mgmt_dllp_error,
+> crc32_error and in_tlp_error stay 0 in all of them. With the mux at 4,
+> start_replay, replay timeout and dl_protocol_error stay 0 too.
+> 
+> So in a bad bring-up the RC receives a constant error-free stream of DLLPs.
+> I read that as the JMB585 repeating flow control init because it does not
+> get what the RC sends, but this bus does not show the DLLP type. It would put
+> the fault in the RC to JMB585 direction, on x2 only.
+> 
+> Is there an RC transmitter setting worth trying for that, such as swing or
+> de-emphasis? If not, I will stop looking for the cause here.
+> 
 
-Yes, it looks much better. Please send a v2 with this explanation.
+Reg 0xa is for swing, it says: "This value should be set to (64-56*0 .9/
+VDD09) depending on actual voltage of VDD09"
 
-Thanks
+But de-emphasis is fixed in each kind of bus speed.
+
+> Igor
+> 
+
