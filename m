@@ -1,75 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=180.76.5.236
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794223657;
-	b=spEtiLHs1vykCb7mu18k+fj5gS7BEkKaMdlKxXuZJw3m5VVuJjpOfkW4LAMFYy+Mly6E
-	 VZKQbyZF2edVcC2p8IWqFFLV1YOlSllKdKV/KNi86+yQ9vWNWc9G9wgPMVVGLrMpuOU3s
-	 g01geXp53SmaWi3iH5M0YLchwGkOSqRtXngI8Gy+F8sRhrqFmOTJr1/xm7/7x8/Zn/SS+
-	 T+y62K9SOKsPGV5pY8CNL3u2US196cooTgHmR6ypd+jSSRn/H5IN5QHvbvg4V3ubmStst
-	 PYejedaFY/tIGx9zQ5yBtUVV0s8UZkV9Lp0tO+as/awA/wK8fpPtrRtwfN7L4q+M7yQ==
+	t=1794223925;
+	b=1Dj2JJfGg2WaWDNlTuyRRdXW5fEDay5Tr4WmDFsmGbwtZbG8StY7mBPsbo1JCYqb7w3O
+	 uCOR1y0FLXKitLLlnKbY0IOSeUclRSPUmlgomAsgOymOjYM2bT8sKcSGZIY/s4zeJSZdY
+	 lplB97tx5t7/noT++UsEOpB3B4plGTstLAr6qSfRj4jIcGLzGgkyF5FZMRA7ZxoV3sdME
+	 /mtLXDuBu37S2begj4LW5yg7In8vxWLNg7Evq2Mo6ht0ZVNIrQSILXEMryewNS8ObrASJ
+	 UlSn/vzUCLkQpeBv5K6g/qqPtmJTh3aE1NbVzREmua2cr1JNbSGfS5jqDt+wQnU8slQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794223657;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=GTe3rVqqBFubJwfvXPNDDRZX+sidHXepwnZzWomDy5A=;
-	b=NfU9kT2bZiORXw5zCXCda/QL8aJYOgH2BUdYtc79k8w+H+He5VhdNu9Cnf2/2IcxBuZu
-	 whoIpQKrD35eFow0FLSeMsppAHs7T/JowXmdaEvnahhYKBHCrBHaeXZYVCvXSKNKTWszk
-	 Bu8qi6oDSgI1VXT2Gz0/7R+qYdNY941e6XcKfGF8hCMO9ChGo+afDYbgil6zPxFQW8Ini
-	 zhqGLTzGo1Higv2QnpkZm+THa5sLuSQ314SC+lkWoKCvQA7uNE01oHPo+7+uf7W7pI2vb
-	 YaXO+uRyI3C57qCB2gf8wMWl5rPrj/0D0L6RxC02HaZZJotqm2D1dRWZD7LMkPwW/AA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794223925;
+	h=DMARC-Filter:X-MD-Sfrom:X-MD-SrcIP:From:To:CC:Subject:Date:
+	 Message-ID:X-Mailer:MIME-Version:Content-Type:X-Originating-IP:
+	 X-ClientProxiedBy:DKIM-Signature;
+	bh=jJvrqdQZADrckzsrAbFU3gv/4+MKLvtOfmIfshWTwuU=;
+	b=w1BdgRMPGKyn/1woQHcb/qvYXNt/+bcqtKHRTD0BRBo3j7S7YI+A796ednm44xFJMVO6
+	 iKS9bRds7cXOwEt7spLpdB5PR4w5qfMYcdn2vn7ppkIzXfTa4ZxdhjSfTaeaa0wY137lv
+	 BrcpKDsAZtKdGcZDnISplSjxIWwxB1hndQ21/u3V8V7RLbr0uQhRnuHiHLKQe9WxjaCAI
+	 N5y6VPmLu1+P9Ud2ta4lR5ZiV/Jdy/159Y1tuSZhKnufxSdjnNrfCeOeOUGM6wTvhJGGY
+	 3+b77MxUX3PUhDuMINjfJ6rttunLqZ3kjOqiHKOGadPa9ULv3KrhMxgXhIA1IdGaXiw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iU5O51DC;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54B7606A31C;
-	Mon,  9 Nov 2026 11:27:36 +0000 (UTC)
+	dmarc=pass header.from=baidu.com;
+	spf=pass smtp.mailfrom=baidu.com;
+	dkim=pass header.d=baidu.com header.i=@baidu.com header.a=rsa-sha256 header.s=selector1 header.b="QLiwKn/c";
+	arc=none smtp.remote-ip=180.76.5.236
+Received: from outbound.baidu.com (outbound.baidu.com [180.76.5.236])
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 94B2B606A31C;
+	Mon,  9 Nov 2026 11:32:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 94B2B606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baidu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iU5O51DC
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96EA41F0089F;
-	Mon,  9 Nov 2026 11:27:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794223656;
-	bh=GTe3rVqqBFubJwfvXPNDDRZX+sidHXepwnZzWomDy5A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=iU5O51DC6zVVQKzDHuys9tIxjfbSOhYw8z0UcE86pb//wkXavh32S2N8S2PUurU2A
-	 o1E3RopKG7W94xtmWo25LA834OkIsoplK5Zc5sWRxNqoMBKXFQxzncUeAVAHVqzYUN
-	 x0xzl99BebTVjgItzYyFM18S+rvSgi3xMyTZJ/jJZ69X0Gf56Vq2vszIAP9EEsAUq5
-	 YP1A5SHoyPmQVAQUq/DaV61yYmuj4yVaaeC+HIcZMJhadQiWUxN4AW86j7fp4xdZK/
-	 SKtdAofdOgM6AVAC0cEZ3+8Z/6By8LpM/kvwzBv9E4RtCHAt3TdDxZIlKuxADBPb0I
-	 863RWmyUQ6DWA==
-Date: Mon, 9 Nov 2026 12:27:22 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Kees Cook <kees@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, 
-	linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-um@lists.infradead.org, 
-	linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
-	ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-	netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	Chuck Lever <cel@kernel.org>
-Subject: Re: [PATCH RESEND v2 07/23] proc: let procfs own the seq_file of
- seq_file entries
-Message-ID: <20261109-atemberaubend-begabung-bedienen-85aade0f99b4@brauner>
-References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-7-76ace653a773@kernel.org>
- <8A21EE2A-F392-40B7-9152-CBC440FDDA70@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=baidu.com header.i=@baidu.com header.a=rsa-sha256 header.s=selector1 header.b=QLiwKn/c
+X-MD-Sfrom: lirongqing@baidu.com
+X-MD-SrcIP: 172.31.50.47
+From: lirongqing <lirongqing@baidu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Philipp Stanner
+	<pstanner@redhat.com>, =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
+	<kwilczynski@kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Li RongQing <lirongqing@baidu.com>
+Subject: [PATCH] PCI: Fix pcim_iomap_regions() error path rollback and leak
+Date: Mon, 9 Nov 2026 19:31:36 +0800
+Message-ID: <20261109113136.2295-1-lirongqing@baidu.com>
+X-Mailer: git-send-email 2.17.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,37 +51,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <8A21EE2A-F392-40B7-9152-CBC440FDDA70@kernel.org>
+Content-Type: text/plain
+X-ClientProxiedBy: bjhj-exc3.internal.baidu.com (172.31.3.13) To
+ bjkjy-exc3.internal.baidu.com (172.31.50.47)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=baidu.com;
+	s=selector1; t=1794223918;
+	bh=jJvrqdQZADrckzsrAbFU3gv/4+MKLvtOfmIfshWTwuU=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type;
+	b=QLiwKn/cUH2/YZRuA09QrYcSCSEz0NQ25xm5+SZw9k8+HdE1Mdn5JXgrBv8M04Di+
+	 l+gLeHJ9fPRupbmPP/t8ZolAzldUVBcXi6F5V6DZRwMrc/fd5IOS4BItCt0N6iji1c
+	 xx0EvznP9lsBCo7qXl5ea6vXlxQRSXf1tV+74lfIoxMBLQq2xRIonThtFsAdeQHNCI
+	 2D6qRSRLxuojKZ+buHdznrQRXttOQeo4GgqLb43AGpprrW3PbqwuwYi3Dpq1zhMlp0
+	 Cp6P8TnCD/z61QCkdKC94GNbf5bDnbvUW1w3YvK0tQ8XpN6C8LXgMXla/YxFGsMoQM
+	 Cmvf/UswuexrQ==
 
-On Sat, Nov 07, 2026 at 08:10:28AM -0800, Kees Cook wrote:
-> Please use the new style typed allocation calls for objects:
-> 
-> ops = kmalloc_obj(*ops);
-> 
-> (This happened to jump out at me, but please check the other patches for this pattern.)
+From: Li RongQing <lirongqing@baidu.com>
 
-Done, there are 5 of them in total:
+pcim_iomap_regions() has two problems in its error path.
 
-proc: resume readdir after the last name it returned
--		cursor = kmalloc(sizeof(*cursor), GFP_KERNEL_ACCOUNT);
-+		cursor = kmalloc_obj(*cursor, GFP_KERNEL_ACCOUNT);
+First, the rollback loop walks every bar index below the failing one
+and unmaps it, regardless of whether that bar is in the mask this call
+was asked to map. pcim_iounmap_region() matches devres entries by
+(type, bar) only, so it can release a mapping that an earlier
+pcim_iomap_region()/pcim_iomap_regions() call made. The driver is then
+left with an __iomem pointer that has been unmapped and a legacy table
+entry cleared. Restrict the rollback to bars in mask.
 
-proc: sysctl: resume readdir after the last name it returned
--		cursor = kmalloc(sizeof(*cursor), GFP_KERNEL_ACCOUNT);
-+		cursor = kmalloc_obj(*cursor, GFP_KERNEL_ACCOUNT);
+Second, when pcim_add_mapping_to_legacy_table() fails, the current
+bar's mapping is not released: the rollback loop starts at --bar, so
+the failing bar itself is skipped, and the mapping stays registered
+until the driver detaches. Release it on this path as well.
 
-proc: keep the open files of an entry in an open node
--		dp->open = kzalloc(sizeof(*dp->open), GFP_KERNEL);
-+		dp->open = kzalloc_obj(*dp->open);
+Fixes: bbaff68bf4a4 ("PCI: Add managed partial-BAR request and map infrastructure")
+Signed-off-by: Li RongQing <lirongqing@baidu.com>
+---
+ drivers/pci/devres.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-proc: own the wait queue of an entry with a ->proc_poll()
--	on = kzalloc(sizeof(*on), GFP_KERNEL);
-+	on = kzalloc_obj(*on);
-
-proc: let procfs own the seq_file of seq_file entries
--	ops = kmalloc(sizeof(*ops), GFP_KERNEL);
-+	ops = kmalloc_obj(*ops);
-
+diff --git a/drivers/pci/devres.c b/drivers/pci/devres.c
+index f075e78..9bdb4de 100644
+--- a/drivers/pci/devres.c
++++ b/drivers/pci/devres.c
+@@ -689,14 +689,18 @@ int pcim_iomap_regions(struct pci_dev *pdev, int mask, const char *name)
+ 			goto err;
+ 		}
+ 		ret = pcim_add_mapping_to_legacy_table(pdev, mapping, bar);
+-		if (ret != 0)
++		if (ret != 0) {
++			pcim_iounmap_region(pdev, bar);
+ 			goto err;
++		}
+ 	}
+ 
+ 	return 0;
+ 
+ err:
+ 	while (--bar >= 0) {
++		if (!mask_contains_bar(mask, bar))
++			continue;
+ 		pcim_iounmap_region(pdev, bar);
+ 		pcim_remove_bar_from_legacy_table(pdev, bar);
+ 	}
 -- 
+2.9.4
+
