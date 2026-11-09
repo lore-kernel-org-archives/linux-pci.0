@@ -1,54 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794267220;
-	b=Y26kQ895AZWPwualVYPjs1/vyH9M3Nz781ubsjeCd9DgesDYcenilbWcwyFG3bKZl3dD
-	 JzwPLlJMKmY7A4ne7GOuXEBkd6rI971UIPdx1YMg7bltfFZeL+XAhB1mmYgJdAxFDlQY6
-	 Q9iuN+DEkMJQRD0tGXU3nlBddviz/iN8q4iBYqPBQIrz5VbTWmnlxtA3xZOp/9ECzP4+Z
-	 NRrqbQezeBHtQncfebtEVL9DVJPn0dvw3n7aognitQOR9aAPei+9kJHpWYEwPrM1AcMPX
-	 YBH5L2KD48gARs5Y+91Yez8pziE1lPb2oXW0MLS31U9JhB1ZhgtBsl86JvRtxWi/xhw==
+	t=1794267415;
+	b=SIH+5uf/aSHCetaT0O9B175SsG53C3u4Z+dm+V9BxAKMy/VwZhK8yR2JbyhUE1fHLOwD
+	 aiMJy/8BNcHjaI1x1oqKpSNCJ6yNPYakvk+6DWgOIWR0OtAoYrSL/5d1UXlkjdbJxZThz
+	 aktmVhlVM0Y6WylgdeQRla0wyxLt8saePNviqAe3gcjm7tJKaRCNTPkBpZrSBaUm/Lo5o
+	 +E3IK4jgFWY/kbG9bBtSsBN+cXasFhQXPsoNU4uA23S8oLX7eIsR44F+SFRdLHmW1Wldx
+	 akSPi7PWYqloODgigcL9B2m4nCs/D/gbTCO3lNVJNVivnynvS3VMojjNxi7B2ZVtfww==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794267220;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794267415;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Hz8e4WryqgQOGcpyR3Tt5FcQfkJAOeVGtP6iTBx8Cpo=;
-	b=ttrgjXwOqgy644M/MytRv9286P/20+CwTQnFic7+eM0O/nb9KPrOoh9Gyk4u7AvESNCm
-	 65klcTtsn8nJzTsxlUfFbhUUBsjSO3oD0mmo5u6MhU725tOW344A/0qiJ8LGhAJPb+4mU
-	 jCdR09/d6tZ8HXxwTOAeqSaa+QBnW1SytTqOgC+ZQ2dvYyclE8pV4hAMz/IAc/JepBw6g
-	 JzfRjGp5jTo6kpsVJexwd1/jzTNT9v5oaunTta64oOrXPburIYs4kuMO3v38SYfC8VV+2
-	 oRHyrBbPJPuctvorMY601fmAgVl4ub+YDkFGNfc1dSCy+/0HcuB8EMNnr/h9HuLrKvQ==
+	bh=PV3NgAozrqWqxEQMaX8OxVWRTrAfPuHUQuyLRIB/awY=;
+	b=DTBTb+asaDQ18dVFsXqiXS/k2I2AKeH5JxyGC/sCz2fUpJ0b/UKQcllM0b6v/Fm0u7LB
+	 LuofETf/WwVr+g/0/nf7wfed9Ruj2njL2zf2gR77Iy745CZD6V2WisIPl6orUCwqjzXrP
+	 IqSy9PVvJvfLn1XJf5rAyMX1VDXg2sRQ2TCQq2mMP3nL6UOhqqzkUwrmjqfW+oqVnY5gy
+	 M73SsHogS+WfWb+qwpCnESt1zXcPJ4+XMjJKTYQUJMFR8vgEwP+yT/0fZrLVF37aIdr1g
+	 R7L4ALG7u4D1g7pX3w61RsgBb4vYBtv6da7Clws5wxjIEx0ZRGIi/ZZRPJdFlHnEIQw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Fc/tfL4J";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iB6bYnhx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3449606A321;
-	Mon,  9 Nov 2026 23:33:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9185F606A31C
+	for <linux-pci@vger.kernel.org>; Mon,  9 Nov 2026 23:36:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fc/tfL4J
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22E2E1F0089F;
-	Mon,  9 Nov 2026 23:33:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iB6bYnhx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E04571F0089F;
+	Mon,  9 Nov 2026 23:36:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794267219;
-	bh=Hz8e4WryqgQOGcpyR3Tt5FcQfkJAOeVGtP6iTBx8Cpo=;
+	s=k20260515; t=1794267415;
+	bh=PV3NgAozrqWqxEQMaX8OxVWRTrAfPuHUQuyLRIB/awY=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Fc/tfL4J0xrgTzp5GBoebWdQEAeMt53mzTZCtylGdEm3yGjUW5c+tn6u6ofIhbLVo
-	 W0KnFkTc6gz6e7l31fbF5BhZmPTrMre3uEUc7DHHDOEOI0LHhPy3I9q3ndtwo+AIFa
-	 CVFB1Y1x+NO+kzfj2q992UCAkLBQdGUkd2pVXh0u8pG9tigX8WZypS2KNExDkvp5Th
-	 hj1laTj7XQ5cfPa+xOWsyqDHTeJcR8XlwHa+nwJDxHSEvB4YssT3SbAncW9iAyJalw
-	 pdLb2fo7YpHX3yKZgCRz+W8oaG0UH8T2KA3xtGUy1gUGTVOlR7PuN97uIrnhSO7x0o
-	 tR8eO/AlfA2xA==
-Date: Mon, 9 Nov 2026 17:33:37 -0600
+	b=iB6bYnhx6g6QEs7lsu1UTZqFL75zvpk1qGfm79ao77Hqt7va+eT8Q66FpHlIfYcEU
+	 OpEui55VyqIAT8xuu5i0bo153L82kfvP9GYeHBy6ZFR0IAZJeUwlweKqw6NcVQ0fWm
+	 eRAVCH28/gQ4zFjCnM7dxwEm5JjwsJuvdNlY+bJjsqY2zqepdXe6/acRq6iq9Atpjf
+	 AiCB++lHxqdbmD02KPmNlbcCAvAw4YzhY0aRUtDoFTpuQ8UoHSfaAbIJ0TvCe3gHaP
+	 LsrzxWZRQ84RapPwXp/G44uw+LUhjOamcTTXF/eGMgT8jGiM3S0SDRbL6uO1ByH0Tu
+	 m1kau6/jNpKfA==
+Date: Mon, 9 Nov 2026 17:36:53 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: lirongqing <lirongqing@baidu.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Philipp Stanner <pstanner@redhat.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix pcim_iomap_regions() error path rollback and
- leak
-Message-ID: <20261109233337.GA347778@bhelgaas>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Sourabh Jain <sourabhjain@linux.ibm.com>,
+	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Maciej Grochowski <Maciej.Grochowski@sony.com>,
+	Ilpo Jaervinen <ilpo.jarvinen@linux.intel.com>,
+	Yazen Ghannam <yazen.ghannam@amd.com>
+Subject: Re: [PATCH v2 0/2] PCI/AER: Improve Error Source handling
+Message-ID: <20261109233653.GA349541@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,62 +63,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261109113136.2295-1-lirongqing@baidu.com>
+In-Reply-To: <cover.1793982724.git.lukas@wunner.de>
 
-On Mon, Nov 09, 2026 at 07:31:36PM +0800, lirongqing wrote:
-> From: Li RongQing <lirongqing@baidu.com>
+On Fri, Nov 06, 2026 at 05:38:00PM +0100, Lukas Wunner wrote:
+> While analyzing log output provided by Alex, I noticed that the AER driver
+> fails to find the error-signaling device if the Error Source ID register
+> contains an invalid, non-zero value.  Fix it (patch [2/2]).
 > 
-> pcim_iomap_regions() has two problems in its error path.
+> While at it, fix a potential NULL pointer deref in that portion of the code
+> (patch [1/2]).
 > 
-> First, the rollback loop walks every bar index below the failing one
-> and unmaps it, regardless of whether that bar is in the mask this call
-> was asked to map. pcim_iounmap_region() matches devres entries by
-> (type, bar) only, so it can release a mapping that an earlier
-> pcim_iomap_region()/pcim_iomap_regions() call made. The driver is then
-> left with an __iomem pointer that has been unmapped and a legacy table
-> entry cleared. Restrict the rollback to bars in mask.
+> Changes versus v1 in patch [2/2]:
+>   Reorder a < b && b < c comparisons (Ilpo, Bjorn)
+>   Amend kernel-doc of find_source_device() (Sathya)
+>   s/subordinate/secondary/ in commit message (Bjorn)
+>   Document behavioral change in commit message (sashiko)
 > 
-> Second, when pcim_add_mapping_to_legacy_table() fails, the current
-> bar's mapping is not released: the rollback loop starts at --bar, so
-> the failing bar itself is skipped, and the mapping stays registered
-> until the driver detaches. Release it on this path as well.
+> Link to v1:
+>   https://lore.kernel.org/r/cover.1793697480.git.lukas@wunner.de
 > 
-> Fixes: bbaff68bf4a4 ("PCI: Add managed partial-BAR request and map infrastructure")
-> Signed-off-by: Li RongQing <lirongqing@baidu.com>
+> Lukas Wunner (2):
+>   PCI/AER: Avoid NULL pointer deref on search for Error Source
+>   PCI/AER: Check validity of Error Source ID register
+> 
+>  drivers/pci/pci.h       |  7 ++++++-
+>  drivers/pci/pcie/aer.c  | 37 +++++++++++++++++++++++++++----------
+>  drivers/pci/pcie/rcec.c | 14 ++++++++++++++
+>  3 files changed, 47 insertions(+), 11 deletions(-)
 
-Hoping for a Reviewed-by from Philipp.
-
-If there's a v2, s/bar/BAR/ above to match other usage.  If no v2,
-I'll tweak that when applying.
-
-> ---
->  drivers/pci/devres.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/devres.c b/drivers/pci/devres.c
-> index f075e78..9bdb4de 100644
-> --- a/drivers/pci/devres.c
-> +++ b/drivers/pci/devres.c
-> @@ -689,14 +689,18 @@ int pcim_iomap_regions(struct pci_dev *pdev, int mask, const char *name)
->  			goto err;
->  		}
->  		ret = pcim_add_mapping_to_legacy_table(pdev, mapping, bar);
-> -		if (ret != 0)
-> +		if (ret != 0) {
-> +			pcim_iounmap_region(pdev, bar);
->  			goto err;
-> +		}
->  	}
->  
->  	return 0;
->  
->  err:
->  	while (--bar >= 0) {
-> +		if (!mask_contains_bar(mask, bar))
-> +			continue;
->  		pcim_iounmap_region(pdev, bar);
->  		pcim_remove_bar_from_legacy_table(pdev, bar);
->  	}
-> -- 
-> 2.9.4
-> 
+Applied to pci/aer for v7.5, thank you!
