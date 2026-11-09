@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794209652;
-	b=ueRJ3rd8jdospcvnu3pvWUcmbE7L6IMIyOvYsSQnFyjXy7uMcvtyvDBIb+luJDPpgEkI
-	 VLy/vaqKDNtoxIglpj9oh8z4Xvnc3C4/JKAkA/MP97CqMUvJcaebqI1Eit8tEXajM/w99
-	 reFO1/Rly7H+MqGV8ZGjiTJWIjBKTjJUP27q+7FFUjJfW+t5V1XfkstwWEQxjlJJymoHJ
-	 URCSSB48SncW90hXM1ViCdorzH2nPJV9l9Gi2b4ehHsIGpGS+BJFazKnKieoT0HDZn2DI
-	 kcRMtx4GfpwXjuY848+m+wyoOzT6oyH5NB7bOLJCKLptGKzGZSlY6LV7igTG+xHZCrw==
+	t=1794209659;
+	b=VesPRVtoyKYUbMhD59R7OdN8j70wCxrd6YjuB+NyIT1+TXyR2bFrLvLAoAzpTFGALAwt
+	 qFBt1Q6UAteU5kvLj/jgWM13DDIlKn2pbeo1s5ogR1EeRyKKXPXTbwDCbhRc5WGWXuKg/
+	 M2BjxEVtkif38+QLiHSDeQf4NF8WsCyZfucgleT+3zyHzK7UlI3+YdEqF5QCM8WxtAAOG
+	 hlA7W9qLLCFx/X80dHkspqtdLv6Eme+fdZ96kdv7Bajk1jjunC99FbTT1EGo6Gfehhxdz
+	 r0ZQN52LpDRSkkVFtgFjm2STTgjUry356cA9jd3Ibh/ZNQzNB/O26RYYWw8JGTBBJPw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794209652;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794209659;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=5KpZyXTyDaeCpFL09xfcSddfcVQz8Z2BLa6aTzaRrnw=;
-	b=kIrpUDg7h4QzTP+CD/Lnd48zHcPGiFoqWCqL5t+ztsfJ6Y1KCPhZBgZWcE5QNouGiTVx
-	 YmKkGkqxtkLpog7RUX3zYCyEDD6nCmBiuBcaGaKmzFiqIi8ZyNeFG90EiGsY4D5q5q+Yw
-	 5jt12kvfHl8KRJNRGWdE1cxiF9QaGWZB9egZG5jXSUSMSK8dxx7a3Zzf8ps/KpYZW1pGj
-	 mlv4YeD3A1tKClMeNv+n9zg5T6J5DxdPAnLmElEZyYo+qvTxfr4d3WeYlV1t34Gu7SjxJ
-	 nSLUzxSU00zRpbt1jafZMkwZ+KXyBo9+rfjB+geKyE9bzBmy3B8/gPOAjFT4nz9yVWQ==
+	bh=Y/diz28OtqaYX4DdZb+JhCSN/xAyOePemSvH2IVI+oI=;
+	b=dvqVGHgPtgvNjjetmY6ADqT2djzeP4VTYZnGnmlVhwzI9wM+OE8HKYxBJHzBvgtZ3M1c
+	 TGGlvjNwKROPPQmJki1AT9BMogv0Tz/llpWtVRfnpfrO41Mdq4S1+xsnGm/V5eYhMCJ7Z
+	 nzO6EkVkjbY/I9274z++BS3zJvxFPF7mZoj1rJn/892sanNES03rZFEx87Pay1ogd56FC
+	 5it5AhJKqgIcG6ZnP9K4wfu9emnGX3ozHEAomcYxaHUMm+Yre6ox0Ghwm3i+hhwHLTa4W
+	 quJQnAuIIJtw3+aXL8RVNIdcjUw6RteyrXmlIzMbU+lx38dRAK3a6eYdi897TogWKvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lwKBHRrg;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UHZLHWOH;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DDA1606D827;
-	Mon,  9 Nov 2026 07:34:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9C5606D809;
+	Mon,  9 Nov 2026 07:34:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lwKBHRrg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 410D21F0089F;
-	Mon,  9 Nov 2026 07:34:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UHZLHWOH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8D021F0089F;
+	Mon,  9 Nov 2026 07:34:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794209652;
-	bh=5KpZyXTyDaeCpFL09xfcSddfcVQz8Z2BLa6aTzaRrnw=;
+	s=k20260515; t=1794209655;
+	bh=Y/diz28OtqaYX4DdZb+JhCSN/xAyOePemSvH2IVI+oI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=lwKBHRrgtLlHdfSIgSshSm3e0EGD/FzxILn/oHZ/MBhIlxI92zK1vyP/KinI0O+dq
-	 N1lkFUZ1d1LxsJFXpKksY6sxA+asTaTHkZoul7zy9272bic517JX89oNFsIZ1y5Xpo
-	 lpJVehQ2mPpV8DtjN9VWns0x+h74ukvpSJnGqPF3qV7WMyHiEty6/9IUL4NqOH9sbO
-	 N4Xg0BfHVzBLU8JKOsEAtqqFC/KoByvzJTCTdkwPkrln1oXePe+/4LOBk5b6PTvakB
-	 qGWrjTRcTvelnyEbe0ToJwLbaTKoeQR0FT/RT6LxYj1L0gDGKgW+DHEKRPmlndd15f
-	 1L7qwcpsIsz/A==
+	b=UHZLHWOHp1FvXUffp1GHRLkENcwBo2yr76PCtrtRtDk1L6zyKdYK7pe45DxDIKhrN
+	 hjdFVbHl7ZSqgKGaAY/r7F7iVP0OEmf4aDbyF6QWnisUryfaon11MfZMitLN41ssuQ
+	 xiTZ237mPQjj5AApZ10s9DwIPHs/VYb3PHjsSC6BWnS/arV8S+SiVSNjair+Xrpwz4
+	 mC2zHujuvXMUg7howtzEEwIZVAIr/ZfHrzT4c6TjPu/X5SWamy1PW7nCkJYfsZQ/dx
+	 vxZlM0krZBNvBtYzJxdAfP1froSzwdqd0jF7P7eGNSH024gvRgux6Tmmx2f4UY+DH2
+	 6lK7yuJzaWfxQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -82,9 +82,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v2 04/19] USB: Release interface claims refused during registration
-Date: Mon,  9 Nov 2026 09:33:34 +0200
-Message-ID: <20261109-device-trust-core-v2-4-3b12d9a9f861@nvidia.com>
+Subject: [PATCH v2 05/19] PNP: Attach card devices through the driver core
+Date: Mon,  9 Nov 2026 09:33:35 +0200
+Message-ID: <20261109-device-trust-core-v2-5-3b12d9a9f861@nvidia.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
 References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
@@ -103,91 +103,60 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-An interface can be claimed by a sibling's probe before registration.
-If its later binding fails, driver core clears the driver pointer while
-USB retains the bound state and claimant data. Device registration still
-succeeds, leaving the claimant unaware that its binding was refused.
+Card device requests probe the selected link driver before driver core can
+perform admission and setup.
 
-Remember the claimant across device_add() and invoke USB unbinding when
-driver core drops the claim. Hold the claimant's module while running its
-disconnect callback, and clear the retained interface state.
+Use device_driver_attach() for the normal binding transaction. Keep the
+card link owned by the enclosing card probe until the device is bound, so
+probe cleanup and debug removal cannot free a link still in use by that
+transaction.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/usb/core/driver.c  | 18 ++++++++++++++++++
- drivers/usb/core/message.c |  8 ++++++++
- drivers/usb/core/usb.h     |  2 ++
- 3 files changed, 28 insertions(+)
+ drivers/pnp/card.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
-index ad5d9d5fc7598..ee36eae34bdcc 100644
---- a/drivers/usb/core/driver.c
-+++ b/drivers/usb/core/driver.c
-@@ -652,6 +652,24 @@ void usb_driver_release_interface(struct usb_driver *driver,
- }
- EXPORT_SYMBOL_GPL(usb_driver_release_interface);
+diff --git a/drivers/pnp/card.c b/drivers/pnp/card.c
+index df5e3d3cbf6c0..9aaaa03d5ffa9 100644
+--- a/drivers/pnp/card.c
++++ b/drivers/pnp/card.c
+@@ -52,13 +52,17 @@ static const struct pnp_card_device_id *match_card(struct pnp_card_driver *drv,
  
-+/*
-+ * The driver core refused to bind an interface that a sibling claimed before
-+ * it was registered, and dropped the claim. Let the claimant release the
-+ * interface instead of operating it with a bound interface but no driver.
-+ */
-+void usb_driver_release_refused_claim(struct usb_interface *iface,
-+				      struct device_driver *claimant)
-+{
-+	struct device *dev = &iface->dev;
-+
-+	device_lock(dev);
-+	dev->driver = claimant;
-+	usb_unbind_interface(dev);
-+	dev_set_drvdata(dev, NULL);
-+	dev->driver = NULL;
-+	device_unlock(dev);
-+}
-+
- /* returns 0 if no match, 1 if match */
- int usb_match_device(struct usb_device *dev, const struct usb_device_id *id)
+ static void card_remove(struct pnp_dev *dev)
  {
-diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-index a738d03c23eac..d35a7710c8ef4 100644
---- a/drivers/usb/core/message.c
-+++ b/drivers/usb/core/message.c
-@@ -2264,6 +2264,7 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
- 	 */
- 	for (i = 0; i < nintf; ++i) {
- 		struct usb_interface *intf = cp->interface[i];
-+		struct device_driver *claimant;
+-	dev->card_link = NULL;
++	if (device_is_bound(&dev->dev))
++		dev->card_link = NULL;
+ }
  
- 		if (intf->dev.of_node &&
- 		    !of_device_is_available(intf->dev.of_node)) {
-@@ -2277,7 +2278,14 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
- 			dev_name(&intf->dev), configuration,
- 			intf->cur_altsetting->desc.bInterfaceNumber);
- 		device_enable_async_suspend(&intf->dev);
-+		claimant = intf->dev.driver;
-+		if (claimant && !try_module_get(claimant->owner))
-+			claimant = NULL;
- 		ret = device_add(&intf->dev);
-+		if (!ret && claimant && !intf->dev.driver)
-+			usb_driver_release_refused_claim(intf, claimant);
-+		if (claimant)
-+			module_put(claimant->owner);
- 		if (ret != 0) {
- 			dev_err(&dev->dev, "device_add(%s) --> %d\n",
- 				dev_name(&intf->dev), ret);
-diff --git a/drivers/usb/core/usb.h b/drivers/usb/core/usb.h
-index a9b37aeb515be..293340a48b6c5 100644
---- a/drivers/usb/core/usb.h
-+++ b/drivers/usb/core/usb.h
-@@ -49,6 +49,8 @@ extern int usb_set_isoch_delay(struct usb_device *dev);
- extern int usb_get_bos_descriptor(struct usb_device *dev);
- extern void usb_release_bos_descriptor(struct usb_device *dev);
- extern int usb_set_configuration(struct usb_device *dev, int configuration);
-+void usb_driver_release_refused_claim(struct usb_interface *iface,
-+				      struct device_driver *claimant);
- extern int usb_choose_configuration(struct usb_device *udev);
- extern int usb_generic_driver_probe(struct usb_device *udev);
- extern void usb_generic_driver_disconnect(struct usb_device *udev);
+ static void card_remove_first(struct pnp_dev *dev)
+ {
+ 	struct pnp_card_driver *drv = to_pnp_card_driver(dev->driver);
+ 
++	/* The card probe still owns its link until this device is bound. */
++	if (!device_is_bound(&dev->dev))
++		return;
+ 	if (!dev->card || !drv)
+ 		return;
+ 	if (drv->remove)
+@@ -331,16 +335,12 @@ struct pnp_dev *pnp_request_card_device(struct pnp_card_link *clink,
+ 
+ found:
+ 	dev->card_link = clink;
+-	dev->dev.driver = &drv->link.driver;
+-	if (pnp_bus_type.probe(&dev->dev))
+-		goto err_out;
+-	if (device_bind_driver(&dev->dev))
++	if (device_driver_attach(&drv->link.driver, &dev->dev))
+ 		goto err_out;
+ 
+ 	return dev;
+ 
+ err_out:
+-	dev->dev.driver = NULL;
+ 	dev->card_link = NULL;
+ 	return NULL;
+ }
 
 -- 
 2.56.0
