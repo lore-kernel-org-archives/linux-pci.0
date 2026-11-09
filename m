@@ -1,71 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=136.143.169.17
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1794258467;
-	b=gZkiXcXilitjHsxRutoyRj8FCnl1i+Ky2Lnk1kNbI/kiwDk4XFhezgkJyyaTZvQE6jtl
-	 8j4Ha3jSWoqUBkV5VXj1YYDRy3XkeXVGP77tJG9QhWCgxf29B67FX31u2Kpcd4/3i8qze
-	 uLPXAl09360krSoE45Rl7Yfln2PHJtRDjVA2OctQmN5OMKGCY0nAbuSGAPNdCGcuvAyZI
-	 +Cv9kxRZiIemd0ZsPtSl51/JnfFWdosnQEEdctDzwL8wNtUGNd4nmkpaykm3wYXFJTvPq
-	 fp2HSVwQvOKXRNxpLcYgmn+LmygcfotdTv0oIhziTA4/J32p3q/eMyBMAogB7ZGrghg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794258467;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=b9nkg0bUgrEInPraZfEB6T4z0np0Vi/eCDyRJD4LyDU=;
-	b=WaA78P4+nd8mv5OnjKeW1PpfnFbCj/rnf/zaFsP0WN/snDjIqfg/Tl09feulSbLwJkOd
-	 zRfNx1tmV8lVb7c1UD+YsphPK5fVhhAz0RFAGg2cPnL5fQ55ire/9GOAolp7iAs3/G5+2
-	 AqKZGoOJOxgtRPZNHbAwcfwFsphO06cxRghHc0gk1wNg1cXehbWVdzQI7uPH6FUimidjh
-	 xJAR6GvygeoTy95gasxvGN9IJicGtEqdCzDqSuY17QxQm63UemIbM5OiNVeZSpmZRGZNw
-	 +3deATWk4d89cpmTATWRym9CfEKJyijtaPWOK8PRK+HiAnHNJQ8ZCxJk4H3r+tgv68Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=none header.from=iav.lv;
-	spf=pass smtp.mailfrom=iav.lv;
-	dkim=pass header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=Fu4LFQih;
-	arc=fail smtp.remote-ip=136.143.169.17
-Received: from sender-op-o17.zoho.eu (sender-op-o17.zoho.eu [136.143.169.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.21
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794258491;
+	b=wJ36tmA2MnVLwjZIgiObrosgAcV2whQKJ5BH26zjQTVrBR/TwZk27+wOq6/j/Qnnx+Hf
+	 nC+aFjEWKc+uqrEB7UKf7XRX5193ziVvsjCviX6F3WbOvVBullwUu2gcj/DrOpmvEO/yY
+	 LcfwiqDh6CTK6z6is9TZLMhXlAb9fjXU0Jyc4rGSE9YG8Yy2mOKMTYCVUA5ZlJuj3aR4d
+	 o32x2E4TuLdfHJXLJ4Ri9pUubJYIug4Vp73Y3YNwe+ncjttOuqSbz2Ae+89gcklMoLz0Z
+	 SpukDAoyD/ezYQRlNamo7iPOxGDtvddHeNvy23H8CpYnMHX0FPsfJSr0sGlU5V7oqWA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794258491;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=9yCHzkOqdVPAaAY7IFFzPbPj4b4bDVr2rAPVKfOvK/U=;
+	b=LpaoOa2FNR7IxGVlxBrniQRi9U6W4ZRgwQMKHoRtUTDP49c1LUQN4EH2T1BaFmDkZDkX
+	 uKP75cU0PyF/SIScyJDXEMtP4qzf/uDN8boZv4JA1NJE5GexcP8BNbqjxxTyoAenZF7tx
+	 Sixsj6JrpXKYZ3NNDrVdPqq6AP3bpuFYXD3IO7q8qjq87xjJcCv46HFEEfhcXXpfGl5K8
+	 o/gUanRf/4VPrbCG9XQXsmVC/tiaRPrwcUrX40JRLeY133Hg/7AUK/5W+2qKWngMDtl/B
+	 ZDS4DcOyIYG5RcEHslKjw4Ukvf5Bp7rlZaNqM4jo6rSwXrshy1zrbyxu12rPuI3wIvQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=YSXQvkWA;
+	arc=none smtp.remote-ip=198.175.65.21
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36444606A321;
-	Mon,  9 Nov 2026 21:07:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 36444606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iav.lv
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0595606A326;
+	Mon,  9 Nov 2026 21:08:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0595606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=Fu4LFQih
-ARC-Seal: i=1; a=rsa-sha256; t=1794258449; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=jz2EsnWewn02NaUWxMIIzv828qC5NmQF/a2pqF9dSuaxddqeIKD/4RwjQk1/dM4/VC0lJnVWV13dIoUXcnt3l5w7dSWKjJ0O0AsMFmXuw7IQoHl7RE8RkYK+FzuBRejjkX6hKR3Ho2UN4bPKKPVy411FJRJHZNnVcKJ/pyOBEtM=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1794258449; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=b9nkg0bUgrEInPraZfEB6T4z0np0Vi/eCDyRJD4LyDU=; 
-	b=G9aE4h3l/2wbrIFodBIzxz2en43ztWTrsGsATJTLYJfStp9Eb+yVqztWXk0X6M1RL2eaImEUXszjnHCjT25CCUsRv3zRwniR2nuLRBS8UqgSO4ZLewdROsXJMs7dCYKlslBcNTRAOpFG9VOyW2TueyFF54IJFJNfptKKc6QL6lA=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	dkim=pass  header.i=iav.lv;
-	spf=pass  smtp.mailfrom=iav@iav.lv;
-	dmarc=pass header.from=<iav@iav.lv>
-DKIM-Signature: a=rsa-sha256; b=Fu4LFQihBYem2cDlZ7W70Wp7j+nPLzwfZ/1NsdCJZtStypacGZSEjrXauIIvlMpdmXQax/DbjmAsokRpC2SPkDBpmn6hWmp9xWQXD32+DCxav/lVABVjXTaLar3ojHTNzndmPh091NJB1P2I5AE4+JXZPWcDE5X8xT2eriAKMHc=; c=relaxed/relaxed; s=zoho; d=iav.lv; v=1; bh=b9nkg0bUgrEInPraZfEB6T4z0np0Vi/eCDyRJD4LyDU=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
-Received: by smtp.zoho.eu with SMTPS id 1794258448226804.6244202787284;
-	Mon, 9 Nov 2026 22:07:28 +0100 (CET)
-Date: Mon, 09 Nov 2026 23:07:27 +0200
-From: Igor Velkov <iav@iav.lv>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=YSXQvkWA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794258491; x=1825794491;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=nqwAo52ijPgtPxhG6+9NCXI0eoCF2RzU5HasFGnT5j4=;
+  b=YSXQvkWAs/LBaknYKgRFmJ5vOJSiX86HQeVI0bUzDOXOjp6UmTI78fxy
+   GNs5o429iLKEKxB1WWe/pUfoniSJQFpoe9On8BM2M9Qci3hF77qV37831
+   Lgar0wV+c7SbA7VdGUH4Bu3oK0xgapkovIPem1zjpI2zHruofdyJFYQRx
+   cx6iL2TH2aWXb91ibvu/tXCEGGmP/CnagPyZ+e77o5FvU+zDqXomXPvb9
+   GG0c9qkWj3qN4ywHkkmE5QjikeWhsQ+7JWt7fPqc2w5F5aU2cnToPA+Fd
+   CktsNpUMMaCxCu7OQCJN28Igy/PnDhL9iCTw5MqBHc+OEc6wX3kNi2nBT
+   A==;
+X-CSE-ConnectionGUID: yzEc2LmiSPG7FXNu8EypIA==
+X-CSE-MsgGUID: QAW3joENTQ6xw7t8f46GUw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="3079426"
+X-IronPort-AV: E=Sophos;i="6.27,204,1787036400"; 
+   d="scan'208";a="3079426"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 13:08:11 -0800
+X-CSE-ConnectionGUID: j1OR4YS4SSumIC0AJ8ZtWg==
+X-CSE-MsgGUID: bLrn/ElNQSyhs0XpmGEZnA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,204,1787036400"; 
+   d="scan'208";a="8016891"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.139])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 13:08:09 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>, Rob Herring <robh@kernel.org>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Igor Velkov <iav@iav.lv>
-Subject: Re: [PATCH] PCI: rockchip-host: Enable async probe by default
-Message-ID: <20261109210800.async-probe-reply-2@iav.lv>
-In-Reply-To: <20261109205911.GA292554@bhelgaas>
-References: <20261103-rockchip-pcie-async-v1-1-4dcadb94af64@iav.lv>
- <20261109202202.GA265423@bhelgaas>
- <20261109204122.async-probe-reply@iav.lv>
- <20261109205911.GA292554@bhelgaas>
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 05/11] PCI: Move pci_read_bases() wrapper with BUILD_BUG_ON() to pci.h
+Date: Mon,  9 Nov 2026 23:07:05 +0200
+Message-ID: <20261109210714.3862-6-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261109210714.3862-1-ilpo.jarvinen@linux.intel.com>
+References: <20261109210714.3862-1-ilpo.jarvinen@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -78,16 +85,62 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 09, 2026 at 02:59:11PM -0600, Bjorn Helgaas wrote:
-> Mani's already applied it, so I think it's fine.  I'm just trying to
-> understand the commit message and figure out what the merge commit log
-> and the eventual pull request should say.  It sounds like "this makes
-> SD cards work better" is somehow part of it, but it just feels kind of
-> hand-wavey.
+pci_read_bases() is static in probe.c. An upcoming change moves CardBus
+device setup into setup-cardbus.c, which needs to read the CardBus
+BAR from outside probe.c.
 
-For the merge log, maybe: "Probe rockchip-host asynchronously so link
-training on an empty slot doesn't stall other drivers' probes for
-~0.7 s". The SD card is just where we noticed the stall.
+Move the body of pci_read_bases() into __pci_read_bases() and keep the
+BUILD_BUG_ON() check in an __always_inline pci_read_bases() wrapper in
+pci.h so all callers retain the check.
 
---
-Igor Velkov
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/pci/pci.h   | 10 ++++++++++
+ drivers/pci/probe.c |  5 +----
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 519918e24cc5..798b31c31ae4 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -532,6 +532,16 @@ void __pci_size_stdbars(struct pci_dev *dev, int count,
+ 			unsigned int pos, u32 *sizes);
+ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg, u32 *sizes);
++void __pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom);
++
++static __always_inline void pci_read_bases(struct pci_dev *dev,
++					   unsigned int howmany, int rom)
++{
++	BUILD_BUG_ON(statically_true(howmany > PCI_STD_NUM_BARS));
++
++	__pci_read_bases(dev, howmany, rom);
++}
++
+ void pci_configure_ari(struct pci_dev *dev);
+ 
+ int pci_dev_res_add_to_list(struct list_head *head, struct pci_dev *dev,
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1c2caf3ce664..a20ceaf7307a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -322,15 +322,12 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	return (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
+ }
+ 
+-static __always_inline void pci_read_bases(struct pci_dev *dev,
+-					   unsigned int howmany, int rom)
++void __pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+ {
+ 	u32 rombar, stdbars[PCI_STD_NUM_BARS];
+ 	unsigned int pos, reg;
+ 	u16 orig_cmd;
+ 
+-	BUILD_BUG_ON(statically_true(howmany > PCI_STD_NUM_BARS));
+-
+ 	if (dev->non_compliant_bars)
+ 		return;
+ 
+-- 
+2.47.3
+
