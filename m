@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794209659;
-	b=VesPRVtoyKYUbMhD59R7OdN8j70wCxrd6YjuB+NyIT1+TXyR2bFrLvLAoAzpTFGALAwt
-	 qFBt1Q6UAteU5kvLj/jgWM13DDIlKn2pbeo1s5ogR1EeRyKKXPXTbwDCbhRc5WGWXuKg/
-	 M2BjxEVtkif38+QLiHSDeQf4NF8WsCyZfucgleT+3zyHzK7UlI3+YdEqF5QCM8WxtAAOG
-	 hlA7W9qLLCFx/X80dHkspqtdLv6Eme+fdZ96kdv7Bajk1jjunC99FbTT1EGo6Gfehhxdz
-	 r0ZQN52LpDRSkkVFtgFjm2STTgjUry356cA9jd3Ibh/ZNQzNB/O26RYYWw8JGTBBJPw==
+	t=1794209648;
+	b=FDq0JNYrpocfic1MC/ftVPrFbpnxc4sXPZZVdKqu1GaME/N3KryexzXZw84jnZY8PKlc
+	 k/ZYsqfIZt/O2cCX9eXTp+Z5TtduIyViQkPySI6qErPgbVPVu+BOli4RCYqidQ46uGsxp
+	 ctJlxPxyayL4Y6fwOgdRSYBSuVzsR1Y6GQCQfDckun4K0411mWm3sekxK4KvnT9qhQqqu
+	 j5UQQkCgm+ZsaNtzWV0qmWErNHNJw8chNwZPArfPrJFHHFR4ZxS/unIlAAQiTlO9+6THq
+	 XJb4CyQOrUvGX+juACsagWfurvioZ7hmEiY8hfxfvxL39WdKNsOBwutLkJNFch1yoZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794209659;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794209648;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=Y/diz28OtqaYX4DdZb+JhCSN/xAyOePemSvH2IVI+oI=;
-	b=dvqVGHgPtgvNjjetmY6ADqT2djzeP4VTYZnGnmlVhwzI9wM+OE8HKYxBJHzBvgtZ3M1c
-	 TGGlvjNwKROPPQmJki1AT9BMogv0Tz/llpWtVRfnpfrO41Mdq4S1+xsnGm/V5eYhMCJ7Z
-	 nzO6EkVkjbY/I9274z++BS3zJvxFPF7mZoj1rJn/892sanNES03rZFEx87Pay1ogd56FC
-	 5it5AhJKqgIcG6ZnP9K4wfu9emnGX3ozHEAomcYxaHUMm+Yre6ox0Ghwm3i+hhwHLTa4W
-	 quJQnAuIIJtw3+aXL8RVNIdcjUw6RteyrXmlIzMbU+lx38dRAK3a6eYdi897TogWKvg==
+	bh=cqZgEa3fWaSRKdNA/kRQddW5Yao1N6EqxQ4vC2mu8po=;
+	b=ua2oawBeX1PguVFrrUFbXwCTiN2S9B91/FE3ZFxGKF2BQvUuyA/jysdhLFX9CgvB42Gf
+	 yJDN/KA2GvTiV1gTfFQ7nWuVmExTg0+whhNrgFBSK4u5DXJTSHhy9Cu5JKu2IPkoBCeFT
+	 Bs19KcB8AbJTlWSM1x9TRxU4kmnEiqAH5VQj363r1cENsh7Gf37RuIvrmT/kWWC8OWY4H
+	 pLqKpPZeDPMK8CsT3E3DzOMoxEelcyMcqwxCPmS6tc6WZe7736fcN5ec5t2PDRDqzsML3
+	 3KDcH1Yw2KUhyx00YL2DSItQR7TrELQwuBdUI84bG/RqINhH6VnBRCosGTfVpA6y2OA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UHZLHWOH;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bLu0vKUr;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9C5606D809;
-	Mon,  9 Nov 2026 07:34:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9737F606A333;
+	Mon,  9 Nov 2026 07:34:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UHZLHWOH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8D021F0089F;
-	Mon,  9 Nov 2026 07:34:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bLu0vKUr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BFA61F0089F;
+	Mon,  9 Nov 2026 07:34:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794209655;
-	bh=Y/diz28OtqaYX4DdZb+JhCSN/xAyOePemSvH2IVI+oI=;
+	s=k20260515; t=1794209648;
+	bh=cqZgEa3fWaSRKdNA/kRQddW5Yao1N6EqxQ4vC2mu8po=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=UHZLHWOHp1FvXUffp1GHRLkENcwBo2yr76PCtrtRtDk1L6zyKdYK7pe45DxDIKhrN
-	 hjdFVbHl7ZSqgKGaAY/r7F7iVP0OEmf4aDbyF6QWnisUryfaon11MfZMitLN41ssuQ
-	 xiTZ237mPQjj5AApZ10s9DwIPHs/VYb3PHjsSC6BWnS/arV8S+SiVSNjair+Xrpwz4
-	 mC2zHujuvXMUg7howtzEEwIZVAIr/ZfHrzT4c6TjPu/X5SWamy1PW7nCkJYfsZQ/dx
-	 vxZlM0krZBNvBtYzJxdAfP1froSzwdqd0jF7P7eGNSH024gvRgux6Tmmx2f4UY+DH2
-	 6lK7yuJzaWfxQ==
+	b=bLu0vKUrD3cDT/qaervg2di3zkERF6/cciAIK43BD4nhYvNKlNRXF4/vR9Y3epDi4
+	 v4assoGxsYd0G5fydaLEx8x8iK5roW4wU1FQy4KKQWvkc3AeIb7ajmex84xb5flKI3
+	 rCNcF/qttoswbs6SoPV23aFq6/JYZLO80XEkTGDBprWn7EvCx9ufP0XGt8Xa2Nga6f
+	 rirYuOB3FFNySftsLHqVme+mdjZc87nyj1Uv3bNDIJX13HEInMsNljVbQVYADHfl9f
+	 IS1F3HjqKPZO9HyyH0gRW2zcUD+SJtiJrBe7QA8xxR4DfB/PcFTonxQJ88Mg3LTCBh
+	 rWEn9O4bWGNVw==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -82,9 +82,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	iommu@lists.linux.dev,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v2 05/19] PNP: Attach card devices through the driver core
-Date: Mon,  9 Nov 2026 09:33:35 +0200
-Message-ID: <20261109-device-trust-core-v2-5-3b12d9a9f861@nvidia.com>
+Subject: [PATCH v2 01/19] Input: gameport - attach manual drivers through the driver core
+Date: Mon,  9 Nov 2026 09:33:31 +0200
+Message-ID: <20261109-device-trust-core-v2-1-3b12d9a9f861@nvidia.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
 References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
@@ -103,60 +103,50 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-Card device requests probe the selected link driver before driver core can
-perform admission and setup.
+Manual gameport binding calls connect before publishing the binding, so
+driver-core admission cannot reject a device before functional setup.
 
-Use device_driver_attach() for the normal binding transaction. Keep the
-card link owned by the enclosing card probe until the device is bound, so
-probe cleanup and debug removal cannot free a link still in use by that
-transaction.
+Use device_driver_attach() to run the existing bus probe and removal
+callbacks under the device lock. This gives manual attachment the same
+admission, setup and failure cleanup as automatic probing.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/pnp/card.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/input/gameport/gameport.c | 21 +--------------------
+ 1 file changed, 1 insertion(+), 20 deletions(-)
 
-diff --git a/drivers/pnp/card.c b/drivers/pnp/card.c
-index df5e3d3cbf6c0..9aaaa03d5ffa9 100644
---- a/drivers/pnp/card.c
-+++ b/drivers/pnp/card.c
-@@ -52,13 +52,17 @@ static const struct pnp_card_device_id *match_card(struct pnp_card_driver *drv,
+diff --git a/drivers/input/gameport/gameport.c b/drivers/input/gameport/gameport.c
+index 9707b155bc947..c9efec2dc55da 100644
+--- a/drivers/input/gameport/gameport.c
++++ b/drivers/input/gameport/gameport.c
+@@ -214,26 +214,7 @@ static void gameport_run_poll_handler(struct timer_list *t)
  
- static void card_remove(struct pnp_dev *dev)
+ static int gameport_bind_driver(struct gameport *gameport, struct gameport_driver *drv)
  {
--	dev->card_link = NULL;
-+	if (device_is_bound(&dev->dev))
-+		dev->card_link = NULL;
+-	int error;
+-
+-	gameport->dev.driver = &drv->driver;
+-	if (drv->connect(gameport, drv)) {
+-		gameport->dev.driver = NULL;
+-		return -ENODEV;
+-	}
+-
+-	error = device_bind_driver(&gameport->dev);
+-	if (error) {
+-		dev_warn(&gameport->dev,
+-			 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
+-			gameport->phys, gameport->name,
+-			drv->description, error);
+-		drv->disconnect(gameport);
+-		gameport->dev.driver = NULL;
+-		return error;
+-	}
+-
+-	return 0;
++	return device_driver_attach(&drv->driver, &gameport->dev);
  }
  
- static void card_remove_first(struct pnp_dev *dev)
- {
- 	struct pnp_card_driver *drv = to_pnp_card_driver(dev->driver);
- 
-+	/* The card probe still owns its link until this device is bound. */
-+	if (!device_is_bound(&dev->dev))
-+		return;
- 	if (!dev->card || !drv)
- 		return;
- 	if (drv->remove)
-@@ -331,16 +335,12 @@ struct pnp_dev *pnp_request_card_device(struct pnp_card_link *clink,
- 
- found:
- 	dev->card_link = clink;
--	dev->dev.driver = &drv->link.driver;
--	if (pnp_bus_type.probe(&dev->dev))
--		goto err_out;
--	if (device_bind_driver(&dev->dev))
-+	if (device_driver_attach(&drv->link.driver, &dev->dev))
- 		goto err_out;
- 
- 	return dev;
- 
- err_out:
--	dev->dev.driver = NULL;
- 	dev->card_link = NULL;
- 	return NULL;
- }
+ static void gameport_find_driver(struct gameport *gameport)
 
 -- 
 2.56.0
