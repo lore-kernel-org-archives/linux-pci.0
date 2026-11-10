@@ -1,55 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.139
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794290165;
-	b=rmtHz/d+1v78BqhH5z3E92+mu+Gsl1Jt/Oxj11mkfmVDRncSmywR592pu2c61envbWM4
-	 kmXVbpFTBw4E9WCSvfvKcHNYBWtEFznpvR+2mwE2YDtwmjI5UiQs0jDLwWXru+lMNsOtK
-	 FcimPlcOFW1esALedjjmhAEHsr0rl93xqbK1tSb3THS1gwFEARVBJRvvfOJwHHG+9+BvZ
-	 VBB7d0yOwSW/puklML9KGVGSWhgIiP3Wthkyn1yp0SJuomf9eKmXIoLny6ZHLoD1hfSLx
-	 yLshXDI8b+CsDA5jBQaUrvKJbVrNn8BwmYDoY1K3XsOKL4sPkUNxwFZzRSFOWzCh1Tg==
+	t=1794294589;
+	b=nZXfUcB/DZyXko0IfB3KVMM6EpD31RMFqc9H8N7yqxg7RIa8uwNpByDo2eyJYfO5cR75
+	 vvkdVGb5d872tltOZUPwFyJb5mmkV21ArvxIo7z9JDvSgRbGulFFxXDv/jCm5zLHcoWUk
+	 hjYOVb/TGZYmdu+eiOk2ykFZ5lVNyyzlO7H7WL1g6gSPNsZWSyW7XO+MaqdivNnjFmGgo
+	 GnLMHLfWNyzZ3vJ6v//Mx2DyiFcognOyq3R9GYWEVyQczsqj0oi2+G+PL6unQiJRtW96a
+	 /Eogne+NMya0yescuDKYjxMBXirZDcG2vyJInhRWq7Qi9aa7PpXLTXAojlhft6NfrXQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794290165;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=InU34aQHl2Y1/PYvcti4YCFewZ5eYohHaIfKHTk063g=;
-	b=FdDO6EXIiuSctvOsRocrg5UpA1JdD/hoX5MeesV50kbkWmX5MgjOxaHT9kyNt6tC2gem
-	 0jDkPrpvs2YzNGLftLe/Oou5D7mt09m311x8Bb6nU8ICFLM7gPxbiaHGvTSyeHS6ZCO1M
-	 nzI8Z11RIR+Zer2JLn3xjxpftvDyaPtjtNoHv/xy2MeYaHRmI7v8kdNK8ojA7DsjejVMQ
-	 KxNuQcAW7cE3AeQUWCrQlWXSEJCEBE7+oc7WPYoK9TfsH9FcjF1+oge5MBfNEc2gy/hUc
-	 iQSpmFnPNMUXXRE3G1bjmNZMHQWgHw5u7r926u77SKnQwpQoLwk44AqZfmu7QHU7K1g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794294589;
+	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
+	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
+	 To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=rx0/LH5qhAA2LG3lvtKGfFdTSz5VzXRoPpDdNhgNQgM=;
+	b=L3A68mnSucmfjmG5MIVZTqLtTD/GEHtiVKV0wgOGEJ11/o2/jlgAJae6R97N9JizZfAu
+	 nwi8hPvz4zQkxhQ2W226d/RK/wfQpyN3BgAdNhfXCZWu2+m+iMyuN1OqhiaHX4YtgEJnS
+	 /T4YptDL7v0KthZqkCxicY/9NhtvDYvfYWCDiFKBaP2T46O4N1oRMYanuneDeB3a97Kk1
+	 vfS152PR/A1Fv58bOxpyZk2ayKMqXrC21VmQ81O7qA6D4epaB+bVlnoR9rljvzF8jMwbB
+	 sjizKp8qsmL9Yz739ZaJYANXXod/4OU9zW5SMnx9j08UmfTzNWnzzWYtZZAafbTxGzw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Va39L7/I";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A152606A321
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:56:05 +0000 (UTC)
+	dmarc=pass header.from=cmss.chinamobile.com;
+	spf=pass smtp.mailfrom=cmss.chinamobile.com;
+	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=elYXt2+P;
+	arc=none smtp.remote-ip=111.22.67.139
+Received: from cmccmta6.chinamobile.com (cmccmta6.chinamobile.com [111.22.67.139])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id EA598606A325;
+	Tue, 10 Nov 2026 07:09:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EA598606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Va39L7/I
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB77E1F0089F;
-	Tue, 10 Nov 2026 05:56:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794290164;
-	bh=InU34aQHl2Y1/PYvcti4YCFewZ5eYohHaIfKHTk063g=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=Va39L7/I8Er7CPaFTRbCU0gDU8WJFnvz/NfcgY9NvLAB6xUiaMXoU+mp4ehIvV/Gu
-	 5xXeaM9NxSqYGnqWneBhpwNWl1iuMfuqRcssSraMSacxFeiCaLF1ce/Ea8xRHWhmtM
-	 MQpIk5AyE3C2/c53Yd2TFfsDXRG0JbxGp025mkw8pZeU+se5hVqHEbAVIu0IDMsxM5
-	 RbgkwVbnaikf1Lvqzdv/fq7iNOMPrTgeJFN5BYS+mJhUrtITs7BIJzSi0Sdip4lzX+
-	 YRRDJZnB2nBBu5dtT70umikn8yeUy9Fl59Kg+4yYez9eUt1EJYzOw7v76JX2mCMo9A
-	 SjQ4txQUXnL/A==
-Message-ID: <sashiko-outbox-206355@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: Clear the bridge's subordinate pointer when child
- bus registration fails
-Reply-To: sashiko-reviews@lists.linux.dev
-To: lirongqing <lirongqing@baidu.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261110053410.2469-1-lirongqing@baidu.com>
-References: <20261110053410.2469-1-lirongqing@baidu.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 05:56:04 +0000
+	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=elYXt2+P
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=cmss.chinamobile.com; s=default; l=0;
+	h=from:subject:message-id:to:cc:mime-version;
+	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+	b=elYXt2+PVZu4mteSl0xDz+UMnjiGWcATpmBNLR1cftuzGMG0NwV/QUP/U1TP3S3OOn6tF/nFw+r8V
+	 QiyYTmxlgyV15t9FEMlaYqweoDw5tWk4VklpfyGAIJI7LpzmGn05R96EhM9X8G7LJF5IrCnFCVsfbo
+	 EPIK0gGR0G1R4Yhs=
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
+	by rmmx-syy-dmz-app05-12005 (RichMail) with SMTP id 2ee56af2c339260-c97d0;
+	Tue, 10 Nov 2026 15:09:46 +0800 (CST)
+X-RM-TRANSID:2ee56af2c339260-c97d0
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from  (unknown[10.55.1.71])
+	by rmsmtp-syy-appsvr09-12009 (RichMail) with SMTP id 2ee96af2c3377a6-ab661;
+	Tue, 10 Nov 2026 15:09:46 +0800 (CST)
+X-RM-TRANSID:2ee96af2c3377a6-ab661
+From: zhaofeng2 <zhaofeng2@cmss.chinamobile.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Vignesh Raghavendra <vigneshr@ti.com>
+Cc: Zhao Feng <zhaofeng2@cmss.chinamobile.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 1/2] PCI: j721e: Fix OF node reference leak in j721e_pcie_ctrl_init()
+Date: Tue, 10 Nov 2026 15:09:42 +0800
+Message-ID: <20261110070944.996-2-zhaofeng2@cmss.chinamobile.com>
+X-Mailer: git-send-email 2.55.0.windows.5
+In-Reply-To: <20261110070944.996-1-zhaofeng2@cmss.chinamobile.com>
+References: <20261110070944.996-1-zhaofeng2@cmss.chinamobile.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,96 +72,41 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] PCI: missing Fixes trailer for pci_alloc_child_bus() error
-  cleanup
-It also noticed 1 related pre-existing issue this patch does not
-introduce:
-- [Critical] PCI: double put of bridge->dev in
-  pci_register_host_bridge() [1]
---
+From: Zhao Feng <zhaofeng2@cmss.chinamobile.com>
 
-commit 145a85e5894672f4949013776fe03b0bdc6734a5
-Author: Li RongQing <lirongqing@baidu.com>
+j721e_pcie_ctrl_init() resolves the "ti,syscon-pcie-ctrl" phandle
+with of_parse_phandle_with_fixed_args(), which takes a reference on
+the resolved device node, but the reference is never dropped.  Since
+j721e_pcie_resume_noirq() re-invokes j721e_pcie_ctrl_init() on every
+resume, the device node is leaked not only at probe but again on
+every suspend/resume cycle.
 
-> PCI: Clear the bridge's subordinate pointer when child bus registration f=
-ails
->
-> pci_alloc_child_bus() stores the new bus in bridge->subordinate before
-> device_register(&child->dev). If registration fails,
-> put_device(&child->dev) runs release_pcibus_dev() and frees the bus, but
-> bridge->subordinate still points at it.
->
-> The caller returns without scanning the new bus, yet the rest of the resc=
-an
-> or removal path still follows dev->subordinate:
-> pci_assign_unassigned_bridge_resources() and pci_stop_bus_device() walk
-> bus->devices of the freed bus.
->
-> Clear the pointer before dropping the reference.
->
-> Signed-off-by: Li RongQing <lirongqing@baidu.com>
+Drop the reference with of_node_put() once the offset argument has
+been consumed.
 
-[Severity: Low]
-Since 1f2768b6a3ee ("PCI: Fix reference leak in pci_alloc_child_bus()")
-added the put_device(&child->dev) call that frees child on registration
-failure without clearing bridge->subordinate, should this include:
+Fixes: 7aa256234c4c ("PCI: j721e: Get offset within "syscon" from "ti,syscon-pcie-ctrl" phandle arg")
+Signed-off-by: Zhao Feng <zhaofeng2@cmss.chinamobile.com>
+---
+ drivers/pci/controller/cadence/pci-j721e.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-  Fixes: 1f2768b6a3ee ("PCI: Fix reference leak in pci_alloc_child_bus()")
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -274,8 +274,10 @@
+ 	/* Do not error out to maintain old DT compatibility */
+ 	ret = of_parse_phandle_with_fixed_args(node, "ti,syscon-pcie-ctrl", 1,
+ 					       0, &args);
+-	if (!ret)
++	if (!ret) {
+ 		offset = args.args[0];
++		of_node_put(args.np);
++	}
+ 
+ 	/*
+ 	 * The PCIe Controller's registers have different "reset-values"
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 222ad696a1581..efa85ae052106 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1271,6 +1271,8 @@ static struct pci_bus *pci_alloc_child_bus(struct p=
-ci_bus *parent,
->  	pci_set_bus_msi_domain(child);
->  	ret =3D device_register(&child->dev);
->  	if (WARN_ON(ret < 0)) {
-> +		if (bridge)
-> +			bridge->subordinate =3D NULL;
->  		put_device(&child->dev);
->  		return NULL;
->  	}
 
-[Severity: Critical]
-This problem wasn't introduced by this patch, but does
-pci_register_host_bridge() [1] drop bridge->dev twice when
-device_register(&bus->dev) fails?
-
-pci_register_host_bridge() takes a second reference to bridge->dev via
-bus->bridge =3D get_device(&bridge->dev).  When device_register(&bus->dev)
-fails, the error path jumps to unregister, which calls
-put_device(&bridge->dev) and then put_device(&bus->dev):
-
-drivers/pci/probe.c:pci_register_host_bridge() {
-	...
-	bus->bridge =3D get_device(&bridge->dev);
-	...
-	err =3D device_register(&bus->dev);
-	bus_registered =3D true;
-	if (err)
-		goto unregister;
-	...
-unregister:
-	put_device(&bridge->dev);
-	device_del(&bridge->dev);
-free:
-	...
-	if (bus_registered)
-		put_device(&bus->dev);
-}
-
-Because put_device(&bus->dev) invokes release_pcibus_dev(), which calls
-put_device(pci_bus->bridge), both references to bridge->dev are dropped
-and the host bridge is freed before returning to the caller.  When a
-caller such as pci_create_root_bus() then calls put_device(&bridge->dev)
-on its own error path, it triggers a use-after-free and double put.
-
-[1] https://sashiko.dev/#/bug/linux-274884f5-d0c4-48cf-95bc-82c1e0b3753d
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110053410.2469=
--1-lirongqing@baidu.com?part=3D1
