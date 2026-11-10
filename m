@@ -1,84 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794330446;
-	b=h1CkiUYYmZkJnNYAxS4GLv+c7vH3m8ChJiwD8hIPa//w+U6mgEyyPY/+b3ffTkmYg6PM
-	 /2saWt/L7b9BW/VTgtPCFSJtWg25BnFuvmztfxToWEBVc4fuvKf2RA5ECbysfYwjLzAxX
-	 NYH7d+d60pOsT3YNCTB4EAC+KnQjyi/B4CFu16ZhbFpw0fiI7kTVcFs8wzakeY9GQjlGn
-	 GOHbKcozigieVnzR5/zUekl33M5/cbgfbnhu3We/Urm0FLzWxlQRfsLwHgnbTwhkcYWc9
-	 /22CJHcLb3ScB9ma+ZoympHzq1A0NjpDtB6qyF7+h6rxEQhEY387UDiWITN9LRHVYbg==
+	t=1794331387;
+	b=2mcYBVCBYpYSk1ChHnYG6uvgun1XDgjxndPXj3u3MvMsLcMKE9i+DvZbil7bGqQwUMPL
+	 BtOiRcisOvrBcT/nlGLsf+xLIUZLTdtm38oaKZSQ6JoLyLD8cAJRu5LiZKBjEI4NjH6Of
+	 Ec31xLlK3tGLnmtD9v/TLa9xkKmQeZlHOw8cPyI5iqOAJvtSqpPMv1YCHvGNb8STM4iSb
+	 EYYh63MrJ3eNmlC3ltaZ9j5fM1YwNDI2Jlfa/hMRopo+TyyD5wVqj0JunJ7z/bVU7nzW4
+	 a7YS+ekCefLpMueZd88Z2LvzUuxWUoNw4dLZeUq90tB56zfFGi8VBulAXZeN0Ujz7Ow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794330446;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
-	bh=FNcC9m18UoMJxRcJEPoSUxoKZdU2fxVY/XU8PXnrjcA=;
-	b=ciNWR4HFuz3BblE8/H/AcMApCSjbwJKqjAEP+6PTKdT0n6B45Q7wioUY4p9qNqIr0A4I
-	 5EUvBFbqDRJbXekL0rx0jQ9bqD79PvPB5izMhIH/2Dh0U14z1TtPMiU4avvfMqUwHnZW4
-	 lpeVuYJ4PT51EMDMe5esuz96p0c31E/w2+6D4RxrE+/Jz+MSPCQBt2UrPxoPb72Di3OZx
-	 sse3eRTbZRNyU2UbobDdDcQMmYZ8GlPd+0qNZfIXBck00znVi0Ti1NYRHxN5k8HSE2DWD
-	 PlrgsqlMqIkaOnJ0fzXGJOAoYsgF1Br5skgwUCLtXoP4k5e3EDbcOGO3sxoTWNh+05g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794331387;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=58+5W24TEkZL4yyEJ0XD+8BOXeOxVo1XZoPC+dOeuTw=;
+	b=KpYxel/Md9/80wHv3TWdpq7oWFAdVNNZx/nogDnL7/B2EZFGlGw2p9tqXghkiQ4J79yW
+	 jaP1pEuGikqTcbrgaQZG4TC3d1SJ+vZz7vGx6m21EkLV5zIVFbLTrj/ouVMGE+MrK1BKn
+	 XyI6NRFHSpUDDgKzR64ODvn3CgJuZy4iUYX8zof7kLxEa7Ak9NelDHSwi3Dsy4O2ZP05M
+	 o5Uwwgdt8zJnxxXqyxfQNLYXrjWePOqn3vL0Y0VE36qjZskKjliR66Wq3wp9H9d29bgxT
+	 CYBlvCfBA467zDM021FmJD2GpstSmyxDARX7D56Q7HQwyAkVhEsMoG/LBCIrG07b7Zg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=UVKcRwO3;
-	arc=none smtp.remote-ip=209.85.216.46
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TyUbh0bv;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21BCD606A325
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 17:07:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21BCD606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD9C0606A327
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 17:23:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=UVKcRwO3
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-3b08cf16decso1501598a91.0
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 09:07:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794330445; x=1794935245; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=FNcC9m18UoMJxRcJEPoSUxoKZdU2fxVY/XU8PXnrjcA=;
-        b=UVKcRwO3ejBDMk8klGa0pwyOX8V3E2o9Z5FDLbNmULmLkseoQWo3Lqy0OuNTv0i92Q
-         ZjjYVo9KXE2zdYV53r0tp3tj121+8xjU74d8CsPd7T/ezb0GS32Oj0pnMKjoXKzmgYz1
-         O+RYemVJ0UhckajWqJT6SbFntkibstlz/QpbrXg/A4Q20wwQ7hX+udbRjaT+kVWhERei
-         LVTIfg/qTgjrELa088mLnh8eLDqBIePCWGGCjuCCKFA4k1sI0K7OyO7Ju718M6mBSoNU
-         6TYqsOoIMH6yBuYtZwE0TFkjVgzg3JMY1p5vlkSwdwLpdJ4u9Z3VALtaIzkru9F3/ruI
-         xrMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794330445; x=1794935245;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FNcC9m18UoMJxRcJEPoSUxoKZdU2fxVY/XU8PXnrjcA=;
-        b=dTUfJeNQpFEg0vc9PtkR3dUHSg18MCGXq4z8iJVYHUX91BbEw7CDqEDMtXUao4GV+/
-         ih9lwuCcY6GyC20Bjr35qYkkzXIaw07RthMs3UhfjcQoV+/u6fZ5twB6HEjqub1Lz9PM
-         b0lAwbitfGM5/Ad+AO4LKiDwPMnohK2SiuZiuD5ua5ZqfiHBHkJc/uGRTDAEqKA1Y9fJ
-         XCt9Fnkr1i/rcAbEhmXSU0GHcGGzRl5CzTVvZ8iRqds1GWzgUpvcc9n42+9hkXEvCFwF
-         RmCoDnI5oLL4ZruaAQaR2WpSyDFoy+DNB/cKn9Ri5Ep92I/kT9HNVQuptSX1iPHMhULh
-         c0vA==
-X-Forwarded-Encrypted: i=1; AL+hErGQDKOwJnhyTc4wt9kDf7OfA2mZGozY3kF9/Q+RC8feL2kauN7bnPVKYuhmJNcpucvDqBddUzQy/eY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9xOgXjp/VzT1lffrxYPdV11ekmWHJd7X8B0kGJ9NNCCRmSKc/b
-	IYHfewxvikELYgHFwSyG+l3ALHRvY6pwLIr+AHbsMaQ0H98e40JGCmrWAV7jc3mU7w==
-X-Gm-Gg: AYBFou2P/6ZqZdM1r02LiCBepu+stI0s8v3qy0zMDBIX/h2lMxJsOe4YIBwsJPGfpdO
-	kFl06cyCTgC4yEM2rcpHSPs/LJtokfaryd1OUIjDPTi5dV3pPjj+V/XtY8qZwH7BfveHLiUEirA
-	TE2lyzNfnbsTOiXb2FL43ualeuGc6l0xLqlNbkh9IITH+pCbOZbUAgq0GCDzDHfNI/xOHg0ubpd
-	LwoJ+WvCHuk42Is6zTJrsMDlGSj/vVYNmBJc6F7txssJ1INfYgvUhQwGO68U0Cjosp29Vb1/GG5
-	BguZZKl4RhbUWZepItnVZwXOT44g8XfK0XwjJ1C/QdRrIkcV3UAR3MR640a32k2dzUVVnDCSiAw
-	afcpxQOZlhyKzkEZvo83h/rzKlWIoy+atw5AKMe5M0mfvEcXln/eYgjt2dHU+GenSutd/jCluph
-	enNvpBYd9/mfP28ZE3Dg35PW0OviHMz5yNs1BSn73JOxy2hetvFtFsRcR9u0JuyNkttRQMseiJI
-	Se8/T3CSe9f/5JKQ3V9eCJuYDpAcUhCjCdyaKpwRsKtVoBF17pVMCK7bNmfVxbiPtzlHqTQlU3D
-	jrzw6sc/gXnZxneIcJTSg5foJxUcDI0WhknamYxsghAGqmJcj+rIG8xfExWugqbn
-X-Received: by 2002:a17:90a:e7c1:b0:3a5:133:ca5f with SMTP id 98e67ed59e1d1-3b166cdb54amr3659496a91.46.1794330444574;
-        Tue, 10 Nov 2026 09:07:24 -0800 (PST)
-Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b17db56c7esm499973a91.8.2026.11.10.09.07.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2026 09:07:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TyUbh0bv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5176F1F008A2
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 17:23:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794331386;
+	bh=58+5W24TEkZL4yyEJ0XD+8BOXeOxVo1XZoPC+dOeuTw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=TyUbh0bvnMOuR4VhbkSZNObcwkVZSea2JMUlyOl3AVINgwZ527x/jTHquQj3psbQ7
+	 CASNe1Kvtz5VFY9Ml+FYmKzT61urywvIPDzv0HJjP8qAoGKA6HhTzUstkQpobJnQfb
+	 jNquPR1Qaqj4OxzuyDpUYObRG5ezGE+LSitoW1whg4t4zXkjhibADnZ1zh71uy9fKl
+	 /1APe7P1CxRos81etD1DOA6W2uArqrq8BT4JaHvH4ghHDcXKBL5RkYUpZSBnACMD43
+	 +4Khn1i2kBBVswNGnFTVC4xW0lTI3mWpTQ/OdnvLLjZc4mLTrNmoF6DiLjhSgE4fKO
+	 rjfZYkoqJA0Hw==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5c0a520df2eso1753239e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 09:23:06 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AL+hErEAK+0bErqiYCzH1e08IWzR1nSyOI9Zm6ihoZ041EiwRHzVPzclsXxha/7+vT6IS4csW0P7mCiveDY=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9IFi08bZx29pk1yvvl4qxN76q3tEsPDxbokk3BF0w82lCjAnk6
+	QYrWvJhJl6BBmjWHxPF0NKWu8V0f4mzjIMgawFkAhXce7mBeQ9KjGq//Qn5ugHBdmQmG7W/gwsN
+	0z7VBpGE4Xo3mqnjMwNsneTjq77iIOvo=
+X-Received: by 2002:a05:6512:3d1a:b0:5bf:f76f:b5ff with SMTP id
+ 2adb3069b0e04-5c156ed6238mr1053807e87.52.1794331384727; Tue, 10 Nov 2026
+ 09:23:04 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,61 +58,113 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
+MIME-Version: 1.0
+References: <20261103114112.74527-1-k.chen@smail.nju.edu.cn>
+In-Reply-To: <20261103114112.74527-1-k.chen@smail.nju.edu.cn>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Tue, 10 Nov 2026 18:22:51 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0gr0QiNJb7QGL_7NDyAKObDnSmzBrcv2ax+AgTV53oEVQ@mail.gmail.com>
+X-Gm-Features: AclHuK9kHKKxQ7CLRz11_FBi1uSmkd0AJNzNDMwSQ9tx4V8LhEsjPNpkvbza4aM
+Message-ID: <CAJZ5v0gr0QiNJb7QGL_7NDyAKObDnSmzBrcv2ax+AgTV53oEVQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ACPI: validate _HPX type 3 record lengths
+To: Kang Chen <k.chen@smail.nju.edu.cn>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>, linux-acpi@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 10 Nov 2026 17:07:22 +0000
-Message-Id: <DMRP21FATCC0.ARAURXWV85JP@google.com>
-Cc: <kvmarm@lists.linux.dev>, <linux-pci@vger.kernel.org>, "Pratyush Yadav"
- <pratyush@kernel.org>, <kexec@lists.infradead.org>, <kvm@vger.kernel.org>,
- <iommu@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
- <skhawaja@google.com>, <sagis@google.com>, <linux-arch@vger.kernel.org>,
- <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 08/19] kho: block: Add the feature header to blocks
-From: "David Matlack" <dmatlack@google.com>
-To: "Tarun Sahu" <tarunsahu@google.com>, "Pasha Tatashin"
- <pasha.tatashin@soleen.com>, "Mike Rapoport" <rppt@kernel.org>,
- <robin.murphy@arm.com>, <maz@kernel.org>, <will@kernel.org>, "David
- Matlack" <dmatlack@google.com>, "Alexander Graf" <graf@amazon.com>,
- <seanjc@google.com>, <jgg@nvidia.com>, <loganodell@google.com>,
- <arnd@arndb.de>, <dwmw2@infradead.org>, <baolu.lu@linux.intel.com>, "Bjorn
- Helgaas" <bhelgaas@google.com>, <oupton@kernel.org>, <alex@shazbot.org>,
- <gle.com@google.com>, <pbonzini@redhat.com>, "Andrew Morton"
- <akpm@linux-foundation.org>, <kevin.tian@intel.com>, <joro@8bytes.org>
-X-Mailer: aerc 0.21.0
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-9-tarunsahu@google.com>
-In-Reply-To: <20261110050202.529473-9-tarunsahu@google.com>
 
-On Tue Nov 10, 2026 at 5:01 AM UTC, Tarun Sahu wrote:
-> Precede struct kho_block_header_ser with struct kho_ser_hdr using
-> DECLARE_KHO_SER. Each block in a block set starts with struct
-> kho_ser_hdr followed by struct kho_block_header_ser. Serialized entries
-> start immediately after the header payload at offset fhdr->size.
+On Tue, Nov 3, 2026 at 12:41=E2=80=AFPM Kang Chen <k.chen@smail.nju.edu.cn>=
+ wrote:
+>
+> program_type3_hpx_record() computes the expected record length as
+> 3 + desc_count * 14 in 32 bits.  A firmware-provided desc_count of
+> 0x80000000 makes this wrap to 3, so the package count check passes for
+> a three-element record and the loop then walks far beyond the elements
+> array, feeding out-of-bounds data into PCI config space writes.  The
+> record is also indexed at fields[1] and fields[2] before its length has
+> been checked.
+>
+> Reject records with fewer than three elements, verify that fields[1]
+> and fields[2] are integers, and reject desc_count values for which the
+> expected length would overflow.  Reject revision or descriptor count
+> values that do not fit in 32 bits instead of silently truncating them.
+> Use an unsigned loop index and advance the register pointer explicitly
+> so the walk cannot overflow either.  In acpi_run_hpx(), reject records
+> that do not have at least the two elements needed to read the type and
+> revision.
+>
+> Fixes: f873c51a155a ("PCI/ACPI: Implement _HPX Type 3 Setting Record")
+> Signed-off-by: Kang Chen <k.chen@smail.nju.edu.cn>
 
-This adds a feature header to every block in the set, but the layout it
-describes is a property of the whole set: all blocks are written by the
-same kernel with the same header.
+From the ACPI support perspective
 
-Blocks are only ever added and removed at the tail, so the head block
-is stable for the lifetime of the set. I'd put a single set-wide
-header in the first block only, e.g. a struct kho_block_set_ser with
-its own feature header, and keep the per-block header to next and
-count.
+Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
 
-entry_size (added in patch 2) is another set-wide property that belongs
-there. All blocks in a set have the same entry size, so recording it in
-every block is redundant, and restore has to check that the copies
-agree.
-
-[...]
-
->  		entry_size =3D ser->entry_size;
->  		bs->entry_size =3D entry_size;
-> -		capacity =3D (KHO_BLOCK_SIZE - sizeof(*ser)) / bs->entry_size;
-> +		capacity =3D (KHO_BLOCK_SIZE - fhdr->size) / bs->entry_size;
->  		bs->count_per_block =3D capacity;
-
-Nothing checks that the blocks agree. Each block's entries start at its
-own fhdr->size, and count_per_block ends up being whatever the last
-block implies. With a single set-wide header this can't happen.
+> ---
+>  drivers/pci/pci-acpi.c | 24 +++++++++++++++++++++---
+>  1 file changed, 21 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 1150f2fbabf4..b15700523810 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -607,12 +607,28 @@ static acpi_status program_type3_hpx_record(struct =
+pci_dev *dev,
+>         u32 desc_count, expected_length, revision;
+>         union acpi_object *reg_fields;
+>         struct hpx_type3 hpx3;
+> -       int i;
+> +       u32 i;
+> +
+> +       if (record->package.count < 3)
+> +               return AE_ERROR;
+> +
+> +       if (fields[1].type !=3D ACPI_TYPE_INTEGER ||
+> +           fields[2].type !=3D ACPI_TYPE_INTEGER)
+> +               return AE_ERROR;
+> +
+> +       if (fields[1].integer.value > U32_MAX)
+> +               return AE_ERROR;
+>
+>         revision =3D fields[1].integer.value;
+>         switch (revision) {
+>         case 1:
+> +               if (fields[2].integer.value > U32_MAX)
+> +                       return AE_ERROR;
+> +
+>                 desc_count =3D fields[2].integer.value;
+> +               if (desc_count > (UINT_MAX - 3) / 14)
+> +                       return AE_ERROR;
+> +
+>                 expected_length =3D 3 + desc_count * 14;
+>
+>                 if (record->package.count !=3D expected_length)
+> @@ -622,10 +638,11 @@ static acpi_status program_type3_hpx_record(struct =
+pci_dev *dev,
+>                         if (fields[i].type !=3D ACPI_TYPE_INTEGER)
+>                                 return AE_ERROR;
+>
+> +               reg_fields =3D fields + 3;
+>                 for (i =3D 0; i < desc_count; i++) {
+> -                       reg_fields =3D fields + 3 + i * 14;
+>                         parse_hpx3_register(&hpx3, reg_fields);
+>                         program_hpx_type3(dev, &hpx3);
+> +                       reg_fields +=3D 14;
+>                 }
+>
+>                 break;
+> @@ -661,7 +678,8 @@ static acpi_status acpi_run_hpx(struct pci_dev *dev, =
+acpi_handle handle)
+>
+>         for (i =3D 0; i < package->package.count; i++) {
+>                 record =3D &package->package.elements[i];
+> -               if (record->type !=3D ACPI_TYPE_PACKAGE) {
+> +               if (record->type !=3D ACPI_TYPE_PACKAGE ||
+> +                   record->package.count < 2) {
+>                         status =3D AE_ERROR;
+>                         goto exit;
+>                 }
+> --
+> 2.34.1
+>
