@@ -1,47 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=180.76.5.236
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794288854;
-	b=FDD8cdcs9+yWbajuK1i+3M/BX2BwmLH9A9gKaY78uckhicoza96nj/4krRMXHTxPY7pC
-	 A/91YMfl9kAMOh1eRLcdv1e8M7CyiTw5q45iayzpoCgNcAu5eRPFGS/CCt++Ls1Vx15gT
-	 AIOi292ybw/6ymCq5GP4d1cIue81pyfLkEWebZm6y9ciKNt9b5v0+NKOTlw4mHQJDs0tN
-	 NA01jjs3xBWkxK91Bym7eNza/YGBhoGxdc4rCPmMijX8f2fhl7FHQq0PU85T03/v3FqsB
-	 EyTOKOGC4aq2221W/JtmffpurxPxBhy7ZyYVWmDnvUDap82Ouy5/AhDFdHDIH1HwRcA==
+	t=1794288861;
+	b=AKCTXcyNkj7cxSWwcrXawHAXZYe+S64AgpdYsY4oCoqr2VLo/dx0tCzgvUi7riq/0Dnr
+	 SYipUGccVW8k3cZAFa4oYp1ifS1p8bCMMnYM1BjI5zFzN+REulfwdA2LiH8g4mE8dJBex
+	 PhMSe+42y8yq9FdBmrojrq1ZqcPwpYuNKS72TdYIP0nPW1ASgpojv7XoII9i/Dbaiap7l
+	 J4EFVhAK/8UNODHX1rWeBw8Wx0gb3JLgwDvaAXcqrjB8o7417ou0UNDod7gdTA4OpO0+T
+	 iHZMa9NEp9skkGEpiB9yjk1/+OiLWgMfKqHwAlw5RR0IrEZaYOZ3ti92Nk8f6FUyAqg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794288854;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794288861;
 	h=DMARC-Filter:X-MD-Sfrom:X-MD-SrcIP:From:To:CC:Subject:Date:
 	 Message-ID:X-Mailer:MIME-Version:Content-Type:X-Originating-IP:
 	 X-ClientProxiedBy:DKIM-Signature;
-	bh=CKdq3KVUX5IawGO3TabSH77SERmgWRGQiF/Gn51KHMQ=;
-	b=IVOzXN82BMtPqRkZX5YSysDI9yvVjNyS8Q0WIJzPjHTuStnwhaG5pisgKESKUTtg/gFa
-	 BT1phBfq9DvofzWfbukL78sQ7vy/Nt89kIEJxjeld44BLyuNB0TVge/8yAWyCDL+WA6Ai
-	 EJAZH+lyXk1qmyNjbcSz27oJk9yM1fsrW9gJUWBhCUI46vzQ8MnwpB71dW0E2kF3nMa5R
-	 w/fSM0gqE+eIFHNbvYPG47dJQ29rlKHhf44sYV1/zwqABYuR19g99s3JBMDozrTKYM1Gc
-	 hiYsWWHVUCTV8YekYgyokk7LDjjawOmzWDU1e3gGZ32tmqUUmxmEgM6O+87f8Dlb+OQ==
+	bh=jm0xTK3bL4vKhMSB7eI2wu0qqQoBZSMsEg35f0cjP0s=;
+	b=swgKO2bB+V48oiOqTLN8phH0qaowA0tqGUlqpBCJeiSuYefT7oRXAJmxct6h4NUy7AUD
+	 ujMCBnWgW1SEln0aHHGgte6iWgcqZWYcmxpGE6LOTmjydcSFrgV2zFb88omWLvufvFQUK
+	 n3v7Jxk04j7/j7gfm/DmVJrVbKRSQFf48CzPLI5wlV+Jh889GpiVKOEe0QQdgWZhhbug4
+	 LU8bdNak3+iziWXwxGSUA6bRccvb5E7yblkGZoxpHHdSvHrtPyXHmt6PbIXwxKiU0lPun
+	 Uc0AKPTVYVlq+lnNeqRvRMpBpbFVWjpIDF5bj0EfGye73bA8zURNsQHhB3q4vbiBtuQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=baidu.com;
 	spf=pass smtp.mailfrom=baidu.com;
-	dkim=pass header.d=baidu.com header.i=@baidu.com header.a=rsa-sha256 header.s=selector1 header.b=QsKgoz5L;
+	dkim=pass header.d=baidu.com header.i=@baidu.com header.a=rsa-sha256 header.s=selector1 header.b=bLhwTbLf;
 	arc=none smtp.remote-ip=180.76.5.236
 Received: from outbound.baidu.com (outbound.baidu.com [180.76.5.236])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 9D7A6606A338;
-	Tue, 10 Nov 2026 05:34:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D7A6606A338
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 261A460A2601;
+	Tue, 10 Nov 2026 05:34:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 261A460A2601
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baidu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=baidu.com header.i=@baidu.com header.a=rsa-sha256 header.s=selector1 header.b=QsKgoz5L
+	dkim=pass (2048-bit key, unprotected) header.d=baidu.com header.i=@baidu.com header.a=rsa-sha256 header.s=selector1 header.b=bLhwTbLf
 X-MD-Sfrom: lirongqing@baidu.com
 X-MD-SrcIP: 172.31.50.47
 From: lirongqing <lirongqing@baidu.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Niklas Schnelle
-	<schnelle@linux.ibm.com>, Farhan Ali <alifm@linux.ibm.com>, Manivannan
- Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, Frank Li
-	<Frank.Li@nxp.com>, <linux-pci@vger.kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
 CC: Li RongQing <lirongqing@baidu.com>
-Subject: [PATCH] PCI: Only restore state that was successfully saved around a reset
-Date: Tue, 10 Nov 2026 13:33:47 +0800
-Message-ID: <20261110053348.2419-1-lirongqing@baidu.com>
+Subject: [PATCH] PCI: Clear the bridge's subordinate pointer when child bus registration fails
+Date: Tue, 10 Nov 2026 13:34:10 +0800
+Message-ID: <20261110053410.2469-1-lirongqing@baidu.com>
 X-Mailer: git-send-email 2.17.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,60 +53,48 @@ Content-Type: text/plain
 X-ClientProxiedBy: bjhj-exc6.internal.baidu.com (172.31.3.16) To
  bjkjy-exc3.internal.baidu.com (172.31.50.47)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=baidu.com;
-	s=selector1; t=1794288842;
-	bh=CKdq3KVUX5IawGO3TabSH77SERmgWRGQiF/Gn51KHMQ=;
+	s=selector1; t=1794288859;
+	bh=jm0xTK3bL4vKhMSB7eI2wu0qqQoBZSMsEg35f0cjP0s=;
 	h=From:To:CC:Subject:Date:Message-ID:Content-Type;
-	b=QsKgoz5LTAF9cKU6wcoJdDhl5nXCsX+IdvGthMzmFh/zc7dd3GuHaVPE1RN709WWB
-	 let+nts8uCzpBPC9Y7HSoBhSSkCGqy7bryQxPrEUChNXQlsbUvvD6eXBaBAdhHtXtj
-	 hMhbg1CdLFLpRNYsKfHb+0i6xP9AtozQfJzUbwroNSrzqBRZtrFAYx2m/11+cWMeaq
-	 azd9dhwmuGaU1L61kbx8VTG/hDAJZL6i35B08ksVWSsjst/B00xPOyBt5WLSWfHWLr
-	 /Kd4Wz2rfFz/rHcdBIwUK+EcswCn5OYk+zIiaQ+owUDxjNcD7KCUGGekPuxu+QGTig
-	 Q1HEVOVHrLrmg==
+	b=bLhwTbLfRzaPJuesz8xJIPq2mPfixfs6arBFjEei6DWzYEeTNf3QY//5LxVYZCXUC
+	 3rkERDZm0IImVFML+HJEYv0shUzUMMPsig7kv3EO89EJVWURqEc59ODuhAPspjDgNQ
+	 S1Pn3F4Tvrg6zDBApBEeZBJFDac/YERl24/XiVI07HxprmnMuN/k7H18JBQiHJ+Ng9
+	 jGsFiEusHm9fxozlht1nLsp5Gpz37At/WPyPnZEW2p0LCR6aC9YpT9cujSg2XOxkaY
+	 oTJL//w+eGsLo9rk2ChsQVY2XVUAbrQnuoTnM9E9zIyOZYWZr+vez0Ui+nxKOzmlJP
+	 Q+MrFhW/OegDQ==
 
 From: Li RongQing <lirongqing@baidu.com>
 
-pci_dev_save_and_disable() returns early when config space is inaccessible,
-without saving anything, but pci_dev_restore() calls pci_restore_state()
-unconditionally and pci_restore_state() does not look at state_saved. After
-the reset makes config space accessible again, the all-zero or stale
-saved_config_space[] array is written back to the device, clearing Command,
-BARs and, for bridges, the bus number registers.
+pci_alloc_child_bus() stores the new bus in bridge->subordinate before
+device_register(&child->dev). If registration fails,
+put_device(&child->dev) runs release_pcibus_dev() and frees the bus, but
+bridge->subordinate still points at it.
 
-Clear state_saved when the save is skipped and only restore when a state
-was saved.
+The caller returns without scanning the new bus, yet the rest of the rescan
+or removal path still follows dev->subordinate:
+pci_assign_unassigned_bridge_resources() and pci_stop_bus_device() walk
+bus->devices of the freed bus.
 
-Fixes: e18d1abc3bff ("PCI: Avoid saving config space state if inaccessible")
+Clear the pointer before dropping the reference.
+
 Signed-off-by: Li RongQing <lirongqing@baidu.com>
 ---
- drivers/pci/pci.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 67fe565..ddb86dd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5156,8 +5156,10 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
- 	 */
- 	pci_set_power_state(dev, PCI_D0);
- 
--	if (!pci_dev_config_accessible(dev, "save state"))
-+	if (!pci_dev_config_accessible(dev, "save state")) {
-+		dev->state_saved = false;
- 		return;
-+	}
- 
- 	pci_save_state(dev);
- 	/*
-@@ -5175,7 +5177,8 @@ static void pci_dev_restore(struct pci_dev *dev)
- 	const struct pci_error_handlers *err_handler =
- 			dev->driver ? dev->driver->err_handler : NULL;
- 
--	pci_restore_state(dev);
-+	if (dev->state_saved)
-+		pci_restore_state(dev);
- 
- 	/*
- 	 * dev->driver->err_handler->reset_done() is protected against
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 86dbfd4..e07e189 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1269,6 +1269,8 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	pci_set_bus_msi_domain(child);
+ 	ret = device_register(&child->dev);
+ 	if (WARN_ON(ret < 0)) {
++		if (bridge)
++			bridge->subordinate = NULL;
+ 		put_device(&child->dev);
+ 		return NULL;
+ 	}
 -- 
 2.9.4
 
