@@ -1,86 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794321256;
-	b=ZMjl/w75Maj0Aap6alSRIKyLTCQiyIBx2zj9OCN+5HuZUtrINEAl7s7Ro6FmdXqXC5hu
-	 xHTQcQJIw7SZYh1vHQSEOsT8LC0rMWzT5r+XMHijAHKMbEYQqS3XM9t24DxfHi13AWlnc
-	 3sYCnvyNxUaiB92vZMwF+wJ5cX0QgEkEXOJBszHcMVvNO8LyzV+lzYHUIAUslDNKHyBCy
-	 NEw1Oxt558httenbSqPwdTPCrNrMRreSdvcAVPWjxvMbu9lYZa42hnB/HFtIy2Ntxy7do
-	 HVnElDdHUMPFIDsZ2psyKlWKSiGkLHl2y8pijazp8CKSHBdVFd1SQj1rSl8uY7tEnRw==
+	t=1794321263;
+	b=VcTKC/M2UMPSrKA+Z0eL5c/eQr8utlMsfvDz0HB6EOFOZJN5OiwG8RBQuNMeoMQeqMV2
+	 OHdvuy3KOSo3+j2j/6ilE+osz8v5qOQVfpC4ons2ltK43uVg/ZFfRgkK2drU4nb8P6ZXe
+	 lGtzoTH08a6kqDjmpBdgTKd4skFgctJc2oR1Ouiu98xfrLkAIr1264J7/Ii7/QZFiyuPH
+	 V8gGmF/KLFtxKBNrio/SDSDD8p4nHLAEOgVomO+cgpRRClSRPb/yQPAjk/xnafU4hWn0Q
+	 1iu3CxMnAh455fgDLr3QUpGYMEDsm3MGU/+beVU5IBy8LUDaZrhTBD0onhXtxbBnykg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794321256;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=ccSP2Ociu4QAcyUTCUNH6oNmUf4FH1to2v9ab2rDQQk=;
-	b=lD4/FLWtYDu3jTJ9rsF2RIP3p/xn49U+fzajYTKp0ZiMwLpyUtc3qYGFmUCTCgtNwj41
-	 4hLB8nbFtc6llrqyfc0ISmqSyUcQRy9cRJxIw6wdecWGq4sgfcDPjea44MVcNSpemrr5l
-	 sXsAVLYnyWj3TtFp3qmZiMhhuHttjIOSl3d6Yvk9rJ+63YFdbMTdeJNy73CkfgPFN5Bjn
-	 cIiOQqb7bKaHIkSLt/lcG0PWcWsDJGreaXOOCjtx5FWsGvpXN3oBJf0Qqw4pkn68bCs/s
-	 6QYoPOlQAvKdnMqET7eHfJciQ4FB91pTNFhp+XsMODtS4wanudQ+Gfa9IekPIi8vlkA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794321263;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:Autocrypt:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding:X-Spamd-Result:
+	 X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:X-Spam-Score:X-Spam-Level:
+	 X-Rspamd-Queue-Id;
+	bh=zhlfAbU+RkEaMeHpJ5g5gZDOhJEWeCavfCtrrHQ9BPY=;
+	b=YeT14AwL+mD2xxV+K/aIet/U2hUT0qiqqUwlWqISdIysJUpFNnI/3NFIz9iBiFFCT6Za
+	 gVNSxNNYQWRH4r9ZZK3QCCwLc0PLWhowgw2j7zD4lkwuopMcwrvEClrfvhZFM5V+S+eWB
+	 bb/VxI0jg7XANlj67AzfVwrPe2T4lthSiSzy35BM0WLAJY9VJMpGJOKH36VFufsaZPBwa
+	 LV/GR2Qg5ApkzBqDCdyCWFEMNi9siQbof3aPIcreqD9EzO1SGjj3FagD/5aoOLBb7NPNs
+	 VxVto08e474OsiEK/sauWKLjLFeQKbvAvSzv11j32JYS/gyssLdwisRlPdX3o/Sm+zw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UA7IKNme;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=ZTh445E5;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=VahZZXHk;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=ZTh445E5;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=VahZZXHk;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB066606A31C;
-	Tue, 10 Nov 2026 14:34:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B5A0606A33C;
+	Tue, 10 Nov 2026 14:34:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B5A0606A33C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UA7IKNme
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C0A21F0089F;
-	Tue, 10 Nov 2026 14:34:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794321255;
-	bh=ccSP2Ociu4QAcyUTCUNH6oNmUf4FH1to2v9ab2rDQQk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=UA7IKNmeMdq4AGiOXXbP0S8RenlNotzKAYBkZujRRKHdkUZctCRJUbthJxMArG4Sg
-	 oEu1oqN+FMyj+A+ekpz9IHqwCL71CsYThUpyfai9h2VtevcrPfmkfOW1ByDNWm6OK8
-	 rSMVWXZzAf/mOJwI7XlQm5H3xlzJXjsZ0MjtV9xCJv7LkMIlorUjyFvOciU/oMlkov
-	 9Pt8XUJkzK4xF+xk0AGn0ZU/crr1gEpC+cww9R/p9E9cD+OqWDA6omLSy1D5ro3Mcl
-	 tQ0XdOWnneFP6dNOiKUhrk2ERgQx0ch3ayJbnrH17BH9SbVey/MdZQ46sLiwJTT5cm
-	 mgnqGmunGm83w==
-Date: Tue, 10 Nov 2026 16:34:11 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev
-Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
-Message-ID: <20261110143411.GK8635@unreal>
-References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
- <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
- <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
- <20261110122237.GG8635@unreal>
- <20261110142534.GY663069@ziepe.ca>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=ZTh445E5;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=VahZZXHk;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=ZTh445E5;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=VahZZXHk
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 8F8C11F7E9;
+	Tue, 10 Nov 2026 14:34:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794321260; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=zhlfAbU+RkEaMeHpJ5g5gZDOhJEWeCavfCtrrHQ9BPY=;
+	b=ZTh445E5L8KNoOq+Qvu1Aisct4dn10+ORt/gcCxSxPobkymCZc6RldE0RkDkyNhqD6g2iW
+	Ukv+o4aAzW9aoHEIzDZVa+TjS+/urb7FM2OJSj/1KKmofcUqvXgjQBc0uzqHgzRYOm7y8r
+	dbDkG/ZXHvuiSkbuivgyuVbEbogSsXI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794321260;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=zhlfAbU+RkEaMeHpJ5g5gZDOhJEWeCavfCtrrHQ9BPY=;
+	b=VahZZXHk35FogwG7kQFefrHnrVzAqos3dckwYxXUAUfKLYoJRnIf+FpkquPbWofZScNfIN
+	wVDt6/SlAWj+d+DQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=ZTh445E5;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=VahZZXHk
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794321260; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=zhlfAbU+RkEaMeHpJ5g5gZDOhJEWeCavfCtrrHQ9BPY=;
+	b=ZTh445E5L8KNoOq+Qvu1Aisct4dn10+ORt/gcCxSxPobkymCZc6RldE0RkDkyNhqD6g2iW
+	Ukv+o4aAzW9aoHEIzDZVa+TjS+/urb7FM2OJSj/1KKmofcUqvXgjQBc0uzqHgzRYOm7y8r
+	dbDkG/ZXHvuiSkbuivgyuVbEbogSsXI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794321260;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=zhlfAbU+RkEaMeHpJ5g5gZDOhJEWeCavfCtrrHQ9BPY=;
+	b=VahZZXHk35FogwG7kQFefrHnrVzAqos3dckwYxXUAUfKLYoJRnIf+FpkquPbWofZScNfIN
+	wVDt6/SlAWj+d+DQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 62FF91339F;
+	Tue, 10 Nov 2026 14:34:19 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id PicADmsr82qQKgAAD6G6ig
+	(envelope-from <tzimmermann@suse.de>); Tue, 10 Nov 2026 14:34:19 +0000
+Message-ID: <9667af1e-4ad1-4d98-bd8d-38a548899a0a@suse.de>
+Date: Tue, 10 Nov 2026 15:34:18 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -90,110 +108,158 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261110142534.GY663069@ziepe.ca>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/6] LoongArch: efi: Provide sysfb_primary_display for
+ screen_info users
+To: wuqianhai@loongson.cn, chenhuacai@kernel.org, kernel@xen0n.name,
+ deller@gmx.de, bhelgaas@google.com
+Cc: ardb@kernel.org, ilias.apalodimas@linaro.org, javierm@redhat.com,
+ loongarch@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-efi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-fbdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261029033440.973077-1-wuqianhai@loongson.cn>
+ <20261110085617.2626835-1-wuqianhai@loongson.cn>
+ <20261110085617.2626835-2-wuqianhai@loongson.cn>
+Content-Language: en-US
+From: Thomas Zimmermann <tzimmermann@suse.de>
+Autocrypt: addr=tzimmermann@suse.de; keydata=
+ xsBNBFs50uABCADEHPidWt974CaxBVbrIBwqcq/WURinJ3+2WlIrKWspiP83vfZKaXhFYsdg
+ XH47fDVbPPj+d6tQrw5lPQCyqjwrCPYnq3WlIBnGPJ4/jreTL6V+qfKRDlGLWFjZcsrPJGE0
+ BeB5BbqP5erN1qylK9i3gPoQjXGhpBpQYwRrEyQyjuvk+Ev0K1Jc5tVDeJAuau3TGNgah4Yc
+ hdHm3bkPjz9EErV85RwvImQ1dptvx6s7xzwXTgGAsaYZsL8WCwDaTuqFa1d1jjlaxg6+tZsB
+ 9GluwvIhSezPgnEmimZDkGnZRRSFiGP8yjqTjjWuf0bSj5rUnTGiyLyRZRNGcXmu6hjlABEB
+ AAHNJ1Rob21hcyBaaW1tZXJtYW5uIDx0emltbWVybWFubkBzdXNlLmRlPsLAjgQTAQgAOAIb
+ AwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftODH
+ AAoJEGgNwR1TC3ojx1wH/0hKGWugiqDgLNXLRD/4TfHBEKmxIrmfu9Z5t7vwUKfwhFL6hqvo
+ lXPJJKQpQ2z8+X2vZm/slsLn7J1yjrOsoJhKABDi+3QWWSGkaGwRJAdPVVyJMfJRNNNIKwVb
+ U6B1BkX2XDKDGffF4TxlOpSQzdtNI/9gleOoUA8+jy8knnDYzjBNOZqLG2FuTdicBXblz0Mf
+ vg41gd9kCwYXDnD91rJU8tzylXv03E75NCaTxTM+FBXPmsAVYQ4GYhhgFt8S2UWMoaaABLDe
+ 7l5FdnLdDEcbmd8uLU2CaG4W2cLrUaI4jz2XbkcPQkqTQ3EB67hYkjiEE6Zy3ggOitiQGcqp
+ j//OwE0EWznS4AEIAMYmP4M/V+T5RY5at/g7rUdNsLhWv1APYrh9RQefODYHrNRHUE9eosYb
+ T6XMryR9hT8XlGOYRwKWwiQBoWSDiTMo/Xi29jUnn4BXfI2px2DTXwc22LKtLAgTRjP+qbU6
+ 3Y0xnQN29UGDbYgyyK51DW3H0If2a3JNsheAAK+Xc9baj0LGIc8T9uiEWHBnCH+RdhgATnWW
+ GKdDegUR5BkDfDg5O/FISymJBHx2Dyoklv5g4BzkgqTqwmaYzsl8UxZKvbaxq0zbehDda8lv
+ hFXodNFMAgTLJlLuDYOGLK2AwbrS3Sp0AEbkpdJBb44qVlGm5bApZouHeJ/+n+7r12+lqdsA
+ EQEAAcLAdgQYAQgAIAIbDBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftOH6AAoJEGgNwR1T
+ C3ojVSkIALpAPkIJPQoURPb1VWjh34l0HlglmYHvZszJWTXYwavHR8+k6Baa6H7ufXNQtThR
+ yIxJrQLW6rV5lm7TjhffEhxVCn37+cg0zZ3j7zIsSS0rx/aMwi6VhFJA5hfn3T0TtrijKP4A
+ SAQO9xD1Zk9/61JWk8OysuIh7MXkl0fxbRKWE93XeQBhIJHQfnc+YBLprdnxR446Sh8Wn/2D
+ Ya8cavuWf2zrB6cZurs048xe0UbSW5AOSo4V9M0jzYI4nZqTmPxYyXbm30Kvmz0rYVRaitYJ
+ 4kyYYMhuULvrJDMjZRvaNe52tkKAvMevcGdt38H4KSVXAylqyQOW5zvPc4/sq9c=
+In-Reply-To: <20261110085617.2626835-2-wuqianhai@loongson.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-13.50 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FREEMAIL_TO(0.00)[loongson.cn,kernel.org,xen0n.name,gmx.de,google.com];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FREEMAIL_ENVRCPT(0.00)[gmx.de];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_NONE(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:url,suse.de:dkim]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -13.50
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 8F8C11F7E9
 
-On Tue, Nov 10, 2026 at 10:25:34AM -0400, Jason Gunthorpe wrote:
-> On Tue, Nov 10, 2026 at 02:22:37PM +0200, Leon Romanovsky wrote:
-> > On Mon, Nov 09, 2026 at 01:53:02PM +0000, Robin Murphy wrote:
-> > > On 09/11/2026 7:33 am, Leon Romanovsky wrote:
-> > > [...]
-> > > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > > > index b486b8bbd1fcd..8be2a246d4903 100644
-> > > > --- a/drivers/iommu/iommu.c
-> > > > +++ b/drivers/iommu/iommu.c
-> > > > @@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
-> > > >   static int iommu_get_default_domain_type(struct iommu_group *group,
-> > > >   					 int target_type)
-> > > >   {
-> > > > -	struct device *untrusted = NULL;
-> > > > +	struct device *restricted = NULL;
-> > > >   	struct group_device *gdev;
-> > > >   	int driver_type = 0;
-> > > > @@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
-> > > >   		driver_type = iommu_get_def_domain_type(group, gdev->dev,
-> > > >   							driver_type);
-> > > > -		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
-> > > > +		if (dev_is_pci(gdev->dev) &&
-> > > > +		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
-> > > 
-> > > I think this should be the generic device_is_adversarial(gdev->dev) now - in
-> > > fact probably all the dev_is_pci()/to_pci_dev() stanzas aren't conceptually
-> > > PCI-specific, just an artefact of the current "untrusted" flag being so.
-> > 
-> > I wanted to do the same, but iommu_get_default_domain_type() may be called
-> > before the PCI device's trust level has been set. At that point, we are
-> > still in "disabled" mode, whereas device_is_adversarial() checks for
-> > "adversarial" mode.
-> > 
-> > The below is from AI, I asked to present me the path for that:
-> > --------------------------------------------------------------------------------
-> > For a newly discovered PCI device with an available IOMMU and a new IOMMU group:
-> > pci_scan_single_device()
-> >   pci_device_add()
-> >     device_add()
-> >       bus_notify(dev, BUS_NOTIFY_ADD_DEVICE)
-> >         blocking_notifier_call_chain()
-> >           notifier_call_chain()
-> >             iommu_bus_notifier()
-> >               iommu_probe_device(dev)
-> >                 __iommu_probe_device(dev, NULL)
-> >                   iommu_setup_default_domain(group, 0)
-> >                     iommu_get_default_domain_type(group, 0)
-> > 
-> > For a device whose initial policy is adversary, its state during that call is:
-> > dev->trust_policy          = DEVICE_TRUST_POLICY_ADVERSARY
-> > dev->trust_level           = DEVICE_TRUST_DISABLED
-> > dev->trust_committed_level = DEVICE_TRUST_DISABLED
-> > dev->driver               = NULL
-> > 
-> > device_is_adversarial(dev) = false
-> > 
-> > The active level changes later, during binding:
-> > really_probe()
-> >   device_trust_prepare()
-> >     __device_trust_prepare()
-> >       WRITE_ONCE(dev->trust_level, DEVICE_TRUST_ADVERSARY)
-> >   dev->bus->dma_configure()
-> >   call_driver_probe()
-> 
-> The ordering here is wrong, this is a consequence of splitting this
-> into different series. I don't think we need to fix it in this series,
-> but as a followup. For now I would aim to make 'no functional change'
-> and still follow the ACPI selection during default domain creation.
-> 
-> The long term goal is to detect that the trust level is disabled
-> during iommu_probe_device() (ie we are running in a secure booting
-> mode), attach the device to BLOCKED (which should be a NOP) and defer
-> allocating the default domain.
-> 
-> This would preserve the DRTM iommu & ATS blocked behavior through
-> until driver binding, giving userspace a chance to do an attestation,
-> turn on link ide and so on before exposing the system to DMA from the
-> device.
-> 
-> Once userspace sets the trust level and binds a driver then we can
-> allocate a default domain using the user set trust level and avoid the
-> above problem.
-> 
-> For the CC VM use case today there won't be a vIOMMU, and there is an
-> indepenent control for DMA ENABLE in the TSM driver so this doesn't
-> matter right now for CC.
-> 
-> Probably put this detail in the commit message
+Hi
 
-To battle ATS and IOMMU comments from sashiko, I wanted to add the
-following lines into cover letter:
+Am 10.11.26 um 09:56 schrieb wuqianhai@loongson.cn:
+> From: wuqianhai <wuqianhai@loongson.cn>
+>
+> LoongArch defines and initializes sysfb_primary_display only when
+> CONFIG_SYSFB or CONFIG_EFI_EARLYCON is enabled.  The PCI VGA arbiter and
+> the framebuffer console need the firmware framebuffer information through
+> screen_info whenever CONFIG_SCREEN_INFO is enabled, even if neither of
+> those options is set.
+>
+> Drop the guards so sysfb_primary_display is always defined and
+> initialized, and its EFI stub alias is always provided, mirroring x86.
+> This avoids selecting SYSFB just to obtain the symbol.
+>
+> Signed-off-by: wuqianhai <wuqianhai@loongson.cn>
+> ---
+>   arch/loongarch/kernel/efi.c        | 5 +----
+>   arch/loongarch/kernel/image-vars.h | 2 --
+>   2 files changed, 1 insertion(+), 6 deletions(-)
+>
+> diff --git a/arch/loongarch/kernel/efi.c b/arch/loongarch/kernel/efi.c
+> index 69dd83f8082f..e491a82b2e0d 100644
+> --- a/arch/loongarch/kernel/efi.c
+> +++ b/arch/loongarch/kernel/efi.c
+> @@ -74,10 +74,8 @@ bool efi_poweroff_required(void)
+>   
+>   unsigned long __initdata primary_display_table = EFI_INVALID_TABLE_ADDR;
+>   
+> -#if defined(CONFIG_SYSFB) || defined(CONFIG_EFI_EARLYCON)
+>   struct sysfb_display_info sysfb_primary_display __section(".data");
+>   EXPORT_SYMBOL_GPL(sysfb_primary_display);
+> -#endif
 
-  This series introduces device trust policy, authorization, and lifetime
-  commitment. Authorization does not reconfigure ATS capabilities or replace
-  IOMMU domains selected during discovery. Further ATS and IOMMU integration
-  will follow in a separate series.
+I never understood how linking works. I would assume that this symbol 
+interferes with the shared one at [1]. Can't loongarch use that as well?
 
-This appears to be a less detailed version of your explanation.
+[1] 
+https://elixir.bootlin.com/linux/v7.3.1/source/drivers/firmware/efi/efi-init.c#L64
 
-Thanks
+Best regards
+Thomas
 
-> 
-> Jason
+>   
+>   static void __init init_primary_display(void)
+>   {
+> @@ -129,8 +127,7 @@ void __init efi_init(void)
+>   
+>   	set_bit(EFI_CONFIG_TABLES, &efi.flags);
+>   
+> -	if (IS_ENABLED(CONFIG_EFI_EARLYCON) || IS_ENABLED(CONFIG_SYSFB))
+> -		init_primary_display();
+> +	init_primary_display();
+>   
+>   	if (boot_memmap == EFI_INVALID_TABLE_ADDR)
+>   		return;
+> diff --git a/arch/loongarch/kernel/image-vars.h b/arch/loongarch/kernel/image-vars.h
+> index e557ebd46c2b..4d1d7978553a 100644
+> --- a/arch/loongarch/kernel/image-vars.h
+> +++ b/arch/loongarch/kernel/image-vars.h
+> @@ -11,9 +11,7 @@ __efistub_strcmp		= strcmp;
+>   __efistub_kernel_entry		= kernel_entry;
+>   __efistub_kernel_asize		= kernel_asize;
+>   __efistub_kernel_fsize		= kernel_fsize;
+> -#if defined(CONFIG_EFI_EARLYCON) || defined(CONFIG_SYSFB)
+>   __efistub_sysfb_primary_display	= sysfb_primary_display;
+> -#endif
+>   
+>   #endif
+>   
+
+-- 
+--
+Thomas Zimmermann
+Graphics Driver Developer
+SUSE Software Solutions Germany GmbH
+Frankenstr. 146, 90461 Nürnberg, Germany, www.suse.com
+GF: Stefan Gaiser, Jochen Jaser, Abhinav Puri, (HRB 36809, AG Nürnberg)
+
+
