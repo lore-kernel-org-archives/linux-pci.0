@@ -1,76 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794309532;
-	b=3JpJM//XYfudsn731fEMlfXLSWvZqRiAq5ozjdVFT766Hmb+88abswzCd66c86y0fX0/
-	 LqQBtqPAamNxHNCML8zrod9aJa56/6lzmlwQI+M8LNFr8AyxdKMqoqID9ulBZz0CjsHpm
-	 DT1ydGUDm+DuuP9/iwHCElA/fNi6SzccXXsXcqW5vOxBc6ln2qj/sC4VUadj47AWd/tON
-	 /AVUyLtM9gAI/un9SCf8RRRD/wVQujG+pQHvl1x+VW5jhlkf4c9ZiEz5lusfZ4vC9EXnP
-	 8YiGliYPHuL+DeQcz+EJwwdPPfNtyfcBpWyf0Pnv2KXnlxJx6dcloRLknSooDJwYhHg==
+	t=1794309773;
+	b=r7kokIDxJ5TYzcE1HZt+rAKtj2l2nT68IHiSWbnUn/6N3i9FPolVCgR/Lzg5KuvL66s8
+	 fHWfwdc1nGd50YVuzy4/Bb8sMLR9Emu8XEHfbhbO9NTPAqmqdC3lvGw244emljXEFWq0Y
+	 1nBXX9Iiau9BQHTmK+hUsTab82GJ+zL2FD9irzMgu3S/eZyltU/nDNJ8/3wBqhyDVqsyU
+	 kLZtEHjg/dkuyFRP8+VY9m3qtmsU0QJJEAQZJr4P6yRRUT5zdK4OwtKxwoyBbZB7ku0aC
+	 ++yFu5OJT8xH+hCTmb0omCsleQsDwiOwie0gTI4mt3/Rucn9zIo0bWKNc3D6RCYdyuA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794309532;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794309773;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:User-Agent;
-	bh=xEbd/pb+bNc0bXJyilmOZXmCsj8ZyLWTiS7RVtM3qgs=;
-	b=KF/hetA5Dw/FBS6ARbL9QoWArw2oRy/sPf8Lgcgiykw2PLWlPSEtrRgliFIXueJluxV3
-	 XGjqwvel7NJ4JIsHnckrPorT46BO0/D9Ern1rcyR0698JKqO8/dphQWZ57gLpe9NNs6CT
-	 6OyDKxRT76CsYjv1v2969TtkoltylMlusNzVGJ5FN06jIk2taUZp4pVrTNm0ScuVmXTdK
-	 ZMft0XGFP1BoFfZS2YZb1Q1xKDl5tincSw0zuGqLr2SZdtTEnlVbWVpEVBU8cf3DYViMa
-	 Ixaf17YtTCe8FdttHb6kEXZgxUWw41y1gpNeZK8xnr3IrKRUA375hScidphB7IRhBNw==
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
+	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
+	bh=r5BObBbZgUS5+tPHOoP4WnX3Q1F+kMLyB8Eo871CKgM=;
+	b=wAjxw8nAotPF6GHai0oW7cC+UC/bm0yeTpo23BpNnv+KzAndZqm7LL+n9RSMOtW5iQL2
+	 Fs3AhulN+WvUjprRUAjJn3A20x+0jmdp3PE+nV5trUoQwFtHt6TVmOf2s8egTzZrKkLSu
+	 pIO0EUTyFIHBpc9FmEZs7mF/k5w0eRyR2po68DcBbvX5jO9jlgZtYw3lT/aD1Id8D285l
+	 BcHd6pKmA6JJQD7O+st/YANAEzaucW0Ly/bWwYEZeANKN00GU3xc+UNHe2Yk0Cl5nB+hU
+	 bYJflKBcTkj1UkDmg8F/Xw6gxIC353turgGtRDebyB4x44LmhGkhOrgsq9q6/sJyVqA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CKrNJW4T;
-	arc=none smtp.remote-ip=198.175.65.17
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=XmQ0Cx0W;
+	arc=none smtp.remote-ip=198.175.65.16
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D69A0606A31C
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 11:18:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D69A0606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7CBC606A32A;
+	Tue, 10 Nov 2026 11:22:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7CBC606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CKrNJW4T
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=XmQ0Cx0W
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794309532; x=1825845532;
-  h=date:from:to:cc:subject:message-id;
-  bh=PLuJAEML15g2ph23RgQU1VdtHn6U5SMI/4jFBUEzQUE=;
-  b=CKrNJW4Ta0xy3NZBpUUlc1GEi/nsdszHaJfeCPnbmSRiUEij9rFYWb3h
-   YVcOzzrU5VZuGBl2lcFUGPJmwpS18tAPLcHRy6EcGh7Eqlg7uMZEEy8d6
-   xoIfN8gGiHYoAeq9/3ifBM4/rMjjsW9OF76xPtbWhaogSnAzIGZmRkQHu
-   tf6HYFkirlQ3V/QItglHMNK9ekg7SLKHF1vGmwTc/+THVnxY1wvkjIxCh
-   bMv7u58rIUwTeu93ClBnvz75eC2xfe+nzXicvsA2xhzBuqnZ9DqftPwkf
-   ze1AJNxIbmd0mjvNU/jWx5RCD0kdK8q6bqNQff/3JIbiNZnxNUBMdbWJ2
-   w==;
-X-CSE-ConnectionGUID: oiCwPoK0SUe3kVFi/mCBaw==
-X-CSE-MsgGUID: kynJxHhhTFWyylt0I7P4UQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="3077002"
+  t=1794309773; x=1825845773;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=zUxil3M4apIBoPLoUunAgoPPqe4wYpmHDM6G4Iocbn4=;
+  b=XmQ0Cx0W3o+4ZDTsTbu7clndXaHBqN2kD5qGq800gnD8ldHmDQZbXLO2
+   lOSKhla5g9uK4dzf+nxBiK18mHieTrUEGWXmfkTLnguLJOWQK5XznGzTZ
+   9zDsTFGK4bwxmhUcEuiYgmpcJ4TZw+A9E+MzYXdQTel7aAp/qkugF2Q4R
+   zySS489dBgVAvVbDkairmmkbXasecXHWc1QBTV2squvc47oWFZkDyiuGR
+   /Yf+zLnVRmDV5I/eTJ/ODIChfDK3I5xVQqilXgvpKx9TU8H9fxcL0dveG
+   UtZgp8vz6lloJxGZ5tUOQAq9sL/PJsMFL44l2cN7ASM1CwCiNRy8D6HvZ
+   g==;
+X-CSE-ConnectionGUID: x+lvQnRlTdSP6jT2oshg9Q==
+X-CSE-MsgGUID: K5tCfXnZRk23kCdzF1BdMw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="3041816"
 X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
-   d="scan'208";a="3077002"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2026 03:18:51 -0800
-X-CSE-ConnectionGUID: GsBVP3SSQa6yEu9VDwDjVg==
-X-CSE-MsgGUID: jS6Wy4qYR++VdeDHscJW6w==
+   d="scan'208";a="3041816"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2026 03:22:51 -0800
+X-CSE-ConnectionGUID: lo2+23a8T+elsMMG2QX3dQ==
+X-CSE-MsgGUID: HONsXu23Tf2Cvc1+NLVxuw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
-   d="scan'208";a="7994124"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 10 Nov 2026 03:18:50 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xQjsF-00000000whr-3jfc;
-	Tue, 10 Nov 2026 11:18:47 +0000
-Date: Tue, 10 Nov 2026 19:18:05 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- 6633c535abc356ff868e72025ecd65aa0106630d
-Message-ID: <20261110191805.8u3ApNvo-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+   d="scan'208";a="8453251"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.34])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2026 03:22:48 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 10 Nov 2026 13:22:44 +0200 (EET)
+To: kameron.markham@gmail.com
+cc: Bjorn Helgaas <bhelgaas@google.com>, LKML <linux-kernel@vger.kernel.org>, 
+    linux-pci@vger.kernel.org, regressions@lists.linux.dev
+Subject: Re: [PATCH] PCI: Don't add failed disabled ROM BARs to fail_head
+In-Reply-To: <20261109-r730-disabled-rom-fail-head-v1-1-88ef813d125e@gmail.com>
+Message-ID: <7b7f0266-693d-7a9e-88f6-e3c60ec5c3fa@linux.intel.com>
+References: <20261109-r730-disabled-rom-fail-head-v1-1-88ef813d125e@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,204 +77,191 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: 6633c535abc356ff868e72025ecd65aa0106630d  Merge branch 'pci/controller/vmd'
+On Mon, 9 Nov 2026, Kameron Markham via B4 Relay wrote:
 
-elapsed time: 782m
+> From: Kameron Markham <kameron.markham@gmail.com>
+> 
+> On Dell PowerEdge R730 servers with "SR-IOV Global Enable" disabled in
+> the BIOS setup, kernels since v6.15 hard-reset while igb probes the
+> on-board Intel I350 NIC. The iDRAC logs PWR2262 ("The Intel Management
+> Engine has reported an internal system error"), CPU0000 (IERR) and a
+> CPU machine check, and the BIOS sometimes halts in POST afterwards
+> (PST0208). v6.14 boots fine on the same machine.
+> 
+> With SR-IOV Global Enable disabled, the firmware does not assign the VF
+> BARs of the on-board 82599 NIC, so pci_realloc_detect() enables
+> resource reallocation automatically. On the first assignment pass the
+> disabled Expansion ROM BARs of three devices cannot be assigned:
+> 
+>   pci 0000:02:00.0: ROM [mem size 0x00100000 pref]: can't assign; no space
+>   pci 0000:01:00.1: ROM [mem size 0x00080000 pref]: can't assign; no space
+>   pci 0000:07:00.1: ROM [mem size 0x00080000 pref]: can't assign; no space
+>
+> Before commit 96336ec70264 ("PCI: Perform reset_resource() and build
+> fail list in sync"), __assign_resources_sorted() did not put a failed
+> disabled ROM BAR on fail_head ("If the failed resource is a ROM BAR and
+> it will be enabled later, don't add it to the list."). That commit moved
+> the check into the new loop at the end of the function, but passes an
+> idx that is not computed for the resource being checked, so the check
+> no longer recognizes ROM BARs. Commit 2499f5348431 ("PCI: Rewor  
+> optional resource handling") then removed the check.
 
-configs tested: 184
-configs skipped: 2
+As you can see, it was very much an intentional change.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Please don't justify changes with what is required for keeping things 
+bisectable through a series (which I apparently failed to do by not 
+recalculating the idx variable properly but that code is gone by now, so 
+that omission is largely irrelevant at this point).
 
-tested configs:
-alpha                              allnoconfig    gcc-16.2.0
-alpha                             allyesconfig    gcc-16.2.0
-alpha                                defconfig    gcc-16.2.0
-arc                               allmodconfig    clang-24
-arc                                allnoconfig    gcc-16.2.0
-arc                               allyesconfig    clang-24
-arc                                  defconfig    gcc-16.2.0
-arc                   randconfig-1000-20261110    gcc-10.5.0
-arc                   randconfig-1001-20261110    gcc-10.5.0
-arm                                allnoconfig    gcc-16.2.0
-arm                               allyesconfig    clang-24
-arm                      am200epdkit_defconfig    clang-24
-arm                                  defconfig    gcc-16.2.0
-arm                       jornada720_defconfig    clang-24
-arm                          mv78xx0_defconfig    clang-24
-arm                   randconfig-1000-20261110    gcc-10.5.0
-arm                   randconfig-1001-20261110    gcc-10.5.0
-arm                   randconfig-1002-20261110    gcc-10.5.0
-arm                   randconfig-1003-20261110    gcc-10.5.0
-arm                         shmobile_defconfig    clang-24
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.2.0
-arm64                                defconfig    gcc-16.2.0
-arm64                 randconfig-1000-20261110    gcc-12.5.0
-arm64                 randconfig-1001-20261110    gcc-12.5.0
-arm64                 randconfig-1002-20261110    gcc-12.5.0
-arm64                 randconfig-1003-20261110    gcc-12.5.0
-csky                              allmodconfig    gcc-16.2.0
-csky                               allnoconfig    gcc-16.2.0
-csky                                 defconfig    gcc-16.2.0
-csky                  randconfig-1000-20261110    gcc-12.5.0
-csky                  randconfig-1001-20261110    gcc-12.5.0
-hexagon                           allmodconfig    gcc-16.2.0
-hexagon                            allnoconfig    gcc-16.2.0
-hexagon                              defconfig    gcc-16.2.0
-hexagon               randconfig-1000-20261110    clang-17
-hexagon               randconfig-1001-20261110    clang-17
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-16.2.0
-i386                              allyesconfig    clang-22
-i386        buildonly-randconfig-1000-20261110    clang-22
-i386        buildonly-randconfig-1001-20261110    clang-22
-i386        buildonly-randconfig-1002-20261110    clang-22
-i386        buildonly-randconfig-1003-20261110    clang-22
-i386        buildonly-randconfig-1004-20261110    clang-22
-i386        buildonly-randconfig-1005-20261110    clang-22
-i386                                 defconfig    gcc-16.2.0
-i386                  randconfig-1007-20261110    clang-22
-i386                  randconfig-1008-20261110    clang-22
-i386                  randconfig-1009-20261110    clang-22
-i386                  randconfig-1010-20261110    clang-22
-i386                  randconfig-1011-20261110    clang-22
-i386                  randconfig-1012-20261110    clang-22
-i386                  randconfig-1013-20261110    clang-22
-loongarch                         alldefconfig    clang-24
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    gcc-16.2.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20261110    clang-17
-loongarch             randconfig-1001-20261110    clang-17
-m68k                              allmodconfig    gcc-16.2.0
-m68k                               allnoconfig    gcc-16.2.0
-m68k                              allyesconfig    clang-24
-m68k                                 defconfig    clang-24
-m68k                         m5307c3_defconfig    clang-24
-m68k                         stmark2_defconfig    clang-24
-microblaze                         allnoconfig    gcc-16.2.0
-microblaze                        allyesconfig    gcc-16.2.0
-microblaze                           defconfig    clang-24
-mips                              allmodconfig    gcc-16.2.0
-mips                               allnoconfig    gcc-16.2.0
-mips                              allyesconfig    gcc-16.2.0
-mips                           ath79_defconfig    clang-24
-mips                            ci20_defconfig    clang-24
-mips                      eyeq6lplus_defconfig    clang-24
-mips                             gpr_defconfig    clang-24
-mips                            jazz_defconfig    clang-24
-nios2                             allmodconfig    clang-20
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20261110    clang-17
-nios2                 randconfig-1001-20261110    clang-17
-openrisc                          allmodconfig    clang-20
-openrisc                           allnoconfig    clang-24
-openrisc          de0_nano_multicore_defconfig    clang-24
-openrisc                             defconfig    gcc-16.2.0
-parisc                            allmodconfig    gcc-16.2.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.2.0
-parisc                randconfig-1000-20261110    gcc-14.4.0
-parisc                randconfig-1001-20261110    gcc-14.4.0
-parisc64                             defconfig    clang-24
-powerpc                           allmodconfig    gcc-16.2.0
-powerpc                            allnoconfig    clang-24
-powerpc                         cell_defconfig    clang-24
-powerpc                       mgcoge_defconfig    clang-24
-powerpc                      mpc5200_defconfig    clang-24
-powerpc                  mpc836x_rdk_defconfig    clang-24
-powerpc               randconfig-1000-20261110    gcc-14.4.0
-powerpc               randconfig-1001-20261110    gcc-14.4.0
-powerpc                   storcenter_defconfig    clang-24
-powerpc                         warp_defconfig    clang-24
-powerpc64             randconfig-1000-20261110    gcc-14.4.0
-powerpc64             randconfig-1001-20261110    gcc-14.4.0
-riscv                             alldefconfig    clang-24
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.2.0
-riscv                     nommu_k210_defconfig    clang-24
-riscv                 randconfig-1000-20261110    clang-24
-riscv                 randconfig-1001-20261110    clang-24
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.2.0
-s390                                 defconfig    gcc-16.2.0
-s390                  randconfig-1000-20261110    clang-24
-s390                  randconfig-1001-20261110    clang-24
-sh                                allmodconfig    gcc-16.2.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                                   defconfig    gcc-14
-sh                    randconfig-1000-20261110    clang-24
-sh                    randconfig-1001-20261110    clang-24
-sh                   sh7785lcr_32bit_defconfig    clang-24
-sh                             shmin_defconfig    clang-24
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.2.0
-sparc                 randconfig-1000-20261110    gcc-12.5.0
-sparc                 randconfig-1001-20261110    gcc-12.5.0
-sparc                        sparc64_defconfig    clang-24
-sparc64                           allmodconfig    clang-20
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20261110    gcc-12.5.0
-sparc64               randconfig-1001-20261110    gcc-12.5.0
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.2.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                    randconfig-1000-20261110    gcc-12.5.0
-um                    randconfig-1001-20261110    gcc-12.5.0
-um                            x86_64_defconfig    gcc-14
-x86_64                            allmodconfig    clang-22
-x86_64                             allnoconfig    clang-24
-x86_64                            allyesconfig    clang-22
-x86_64      buildonly-randconfig-1000-20261110    gcc-14
-x86_64      buildonly-randconfig-1001-20261110    gcc-14
-x86_64      buildonly-randconfig-1002-20261110    gcc-14
-x86_64      buildonly-randconfig-1003-20261110    gcc-14
-x86_64      buildonly-randconfig-1004-20261110    gcc-14
-x86_64      buildonly-randconfig-1005-20261110    gcc-14
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20261110    gcc-14
-x86_64                randconfig-1001-20261110    gcc-14
-x86_64                randconfig-1002-20261110    gcc-14
-x86_64                randconfig-1003-20261110    gcc-14
-x86_64                randconfig-1004-20261110    gcc-14
-x86_64                randconfig-1005-20261110    gcc-14
-x86_64                randconfig-1006-20261110    gcc-14
-x86_64                randconfig-1007-20261110    gcc-14
-x86_64                randconfig-1008-20261110    gcc-14
-x86_64                randconfig-1009-20261110    gcc-14
-x86_64                randconfig-1010-20261110    gcc-14
-x86_64                randconfig-1011-20261110    gcc-14
-x86_64                randconfig-1012-20261110    gcc-14
-x86_64                randconfig-1013-20261110    gcc-14
-x86_64                randconfig-1014-20261110    gcc-14
-x86_64                randconfig-1015-20261110    gcc-14
-x86_64                randconfig-1016-20261110    gcc-14
-x86_64                randconfig-1017-20261110    gcc-14
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                             allnoconfig    clang-24
-xtensa                            allyesconfig    clang-20
-xtensa                randconfig-1000-20261110    gcc-12.5.0
-xtensa                randconfig-1001-20261110    gcc-12.5.0
+> The failed disabled ROM BARs therefore end up on fail_head, and
+> pci_assign_unassigned_root_bus_resources() starts another round that
+> releases and reassigns bridge windows the firmware set up, including
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+This is the intended behavior!
+
+> the window of the PCH root port 00:1c.4 and the I350 behind it:
+> 
+>   PCI: No. 2 try to assign unassigned res
+>   pci 0000:00:1c.4: resource 14 [mem 0x91a00000-0x91bfffff] released
+>   pci 0000:00:1c.4: bridge window [mem 0x92200000-0x924fffff]: assigned
+>   pci 0000:07:00.0: BAR 0 [mem 0x92200000-0x9227ffff]: assigned
+> 
+> The machine resets when igb then accesses the I350 at the new address.
+> Why the platform does not tolerate the move is not known.
+
+So all resources that were assigned prior to starting were assigned 
+succesfully? Which would mean there was nothing wrong with the fail_list & 
+ROM resource handling.
+
+So far, all looks to be working as intended so the changelog surely needs 
+a major revision to actually explain what the real problem here is if it 
+comes down to the resource assignment algorithm having a problem. You only 
+describe intermediate state related errors, and those are very much 
+expected even when the algorithm works as intended.
+
+
+This might be more a quirk territory if the resources were assigned just 
+fine but some device fails / crashes when given a valid address for its 
+BAR(s).
+
+> Restore the old behavior: add pci_resource_is_disabled_rom(), the
+> helper the first of these commits already called, and don't put a
+> failed disabled ROM BAR on fail_head. Such a BAR is still reset as before.
+> Other failed resources, including optional SR-IOV BARs, are still added
+> to fail_head, so reallocation can still make room for them.
+> 
+> Tested on a Dell PowerEdge R730 (BIOS 2.19.0, SR-IOV Global Enable
+> disabled): v6.17 and v7.4-rc2 hard-reset on every boot without this
+> patch and boot normally with it; no second assignment round happens and
+> the I350 keeps its firmware-assigned window. Enabling SR-IOV Global
+> Enable in the BIOS, or booting with pci=realloc=off, also avoids the
+> problem.
+> 
+> The bisection, the analysis, this patch and this changelog were done
+> with the help of an AI coding assistant (Claude, by Anthropic). All
+> testing was done on the hardware described above.
+
+This kind of paragraph belongs below --- line.
+
+> Fixes: 96336ec70264 ("PCI: Perform reset_resource() and build fail list in sync")
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=222253
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Kameron Markham <kameron.markham@gmail.com>
+> ---
+> Notes for reviewers (not part of the changelog):
+> 
+> - Bisected between v6.14 (good) and v6.17 (bad) on the affected machine
+>   with test kernels booted from RAM over PXE. 96336ec70264 does not
+>   build on its own (pci_resource_is_disabled_rom() is not defined by any
+>   commit), so for the bisect it was built with a one-line definition
+>   identical to the open-coded check it replaced. Its parent e89df6d2beae
+>   boots; 96336ec70264 resets.
+> 
+> - Only the SR-IOV Global Enable BIOS switch matters: stock v6.17 boots
+>   with only that switch enabled, and still resets with X2APIC and I/OAT
+>   enabled but SR-IOV disabled. (User reports often recommend all three.)
+> 
+> - Alternative considered: make pci_assign_unassigned_root_bus_resources()
+>   retry only when a required resource failed. That would also change how
+>   failed optional SR-IOV BARs drive reallocation, so this patch restores
+>   the pre-v6.15 behavior for disabled ROM BARs only.
+
+...So the LLM says but I don't take it for granted. ;-)
+
+There's also another level which actual does categorize the failures 
+below pci_assign_unassigned_root_bus_resources().
+
+If you think there's something wrong with SR-IOV behavior, fix that also 
+but don't justify wrong level change with it.
+
+But you need to explain what is wrong with the end state of the resource 
+assignment algorithm, not the intermediate problems it shows while it's 
+still running because those are expected and are there to help issue 
+diagnosis (we could print just the end result but then who would be able 
+to debug that?).
+
+> - Serial console logs of good and bad boots, the bisect log, the BIOS
+>   switch matrix and the test scripts are attached to the bugzilla entry
+>   in the Closes: tag.
+
+Sadly bugzilla is not working at the moment so I cannot check these but 
+I'll get back to them later.
+
+> - Tool use, per Documentation/process/generated-content.rst: Claude
+>   (Anthropic) running in Claude Code, driven by the submitter, ran the
+>   automated bisection on the hardware, read the PCI resource assignment
+>   code, proposed this change and drafted this message. The submitter
+>   reviewed the change and the analysis.
+> ---
+>  drivers/pci/setup-bus.c | 18 +++++++++++++++++-
+>  1 file changed, 17 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index ed16ef7c26..6506e44866 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -377,6 +377,17 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+>  	}
+>  }
+>  
+> +/*
+> + * A disabled Expansion ROM BAR is only enabled later if it is needed, so
+> + * failing to assign it does not leave the device unusable.
+> + */
+> +static bool pci_resource_is_disabled_rom(const struct pci_dev *dev,
+> +					 const struct resource *res)
+> +{
+> +	return pci_resource_num(dev, res) == PCI_ROM_RESOURCE &&
+> +	       !(res->flags & IORESOURCE_ROM_ENABLE);
+> +}
+> +
+>  bool pci_resource_is_optional(const struct pci_dev *dev, int resno)
+>  {
+>  	const struct resource *res = pci_resource_n(dev, resno);
+> @@ -743,7 +754,12 @@ static void __assign_resources_sorted(struct list_head *head,
+>  		if (resource_assigned(res))
+>  			continue;
+>  
+> -		if (fail_head) {
+> +		/*
+> +		 * Don't put a disabled ROM BAR on fail_head: failing to
+> +		 * assign it must not trigger the release and reassignment
+> +		 * of bridge windows that are already in use.
+> +		 */
+> +		if (fail_head && !pci_resource_is_disabled_rom(dev, res)) {
+
+This isn't the right place for this. All failed resources should be 
+returned for the algorithm retry / window resizing to work properly. 
+Period.
+
+This has been proposed earlier and it hasn't turned correct approach 
+since then:
+
+https://lore.kernel.org/linux-pci/20260717180029.1829888-1-anthony.pighin@nokia.com/
+
+-- 
+ i.
+
