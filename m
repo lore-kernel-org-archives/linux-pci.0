@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794296122;
-	b=PQI3cNE4rhG33CEcJUCPj9sQUs4sS3mTbYL00DLUTtUyHU8CWah5INGMK48fkY+qWGin
-	 5lFo7QBNH49WfQ7Poio0nGcJlSdSyGyIB8aYof2Bc+xz/TVjX7SgypoOybuCLLEozshwZ
-	 h6jwjgMU0jvM57saNhejmTHJyFNJL0q8uOi92dfRrCVIEgrJ6nQOzaPZmwgVlovufI5DT
-	 8KupwraXtV6rQDDzIuaMhfYH1rUOU1FUTNI+o/i4yFSHrV51NCSQ5gr6grvTUB5HrTlrr
-	 MOdc/IF/jpeb892SxbnV+540o2lG/xMbKOoHwKtpBaQYex46qY4ar4WNo7HFo5iBKZg==
+	t=1794296125;
+	b=sdzDrOEFVWn8M2n00hcYR65rAc3x78p1WbbqswItlddSFk2aQWUfwJg4rUX9fMokF5T6
+	 SWTcfCzoIrq64fKG0nJHl3FCQ+8Kokt4UsqliuTaBMfBrStpARmfcuRfx6tIsu3GE7qUo
+	 YMmu3Y3OWrVoLAT+VN3KNJtD6+WYF9S7peFLo/G9owVuThpPJrtvxxbmNjc/CNs3M/CUy
+	 9tkYOBrUKA3KGx5eN1Tm55dd5DR8PZDk+LJbUi3KwXovwPrWpa99eeTgFy4FBl4srqRnb
+	 z43EqacDg9nI6xN/ENhsKCz7It6K8XRuCXwRyjcbLiHI8nJPyr22kaIRXqPP8AqRdyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794296122;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794296125;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=5puLh0Jvdg/9w3mwE9m1JpUr77HCGYNVbZHo7OLDlo0=;
-	b=MWdA07/2+Zk5c5V1AM3Pel0ZMCe3tUAzLE9A3p2lMMYKO1KB8uhZzNkzq976BetCxpI5
-	 rG7AJZ+h4ZXeq8IfdZOeeGEa++7Bi7ZeFBcVsBusOm339AmA4kp4SQucVKTGmB2SUE1rH
-	 Pc4k34KPecTVgIoPijubr7micwJK9TfCYTxLHyx0iUgP1rq9j+9OOu9bBSYbQliIALCfl
-	 tYIqCszWbhcJ79HZ6FQLcIOAEhTgQrPxxIaFjVwkresxeuc3MUFRwkS0ta4FBFd3O0FWi
-	 fShAOmobuC7DjJkUKj/a6sKuD59W9leo1j22giYn33elX6nsrhK9beYZxjD6AEIikgQ==
+	bh=EtudwXeX/jnHK+VqfMNs78uykQjRvCRX9VZ4FlgDiuQ=;
+	b=iVk+vfke6FjZybfGE+BkWxEQs3i+X8Nerx7q6u7ft3ts+ZWhkS7yiHJysXuhiZltCOo7
+	 4iypyAAzgts8Zb1Wq4m6n5n3BBa5Y7AB1MIrvQZPE2VKI3nFylXpDewVAI+uSmEpQcMtb
+	 8OPk9RpGicKSk/r6l+e64Chzg2QTK+PDiYRHFu5aYHLfdRpooTeILEWlD8KepVsky4u6+
+	 kVs2K7rC2/yzFN+hqAqDFgHOuEpcfLiIL96hmDk6yc8Pxih8cZSFJrUCNj65jQSi9VPXF
+	 /KzsbdEi9Bx8zk6wM0ruLgo0B69w96QMVf4ZRUklf+O0wvLdNepO2Gu7Jkz+dQULf0w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="GWdAoaS/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EM0pAkjL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0BB960A263A;
-	Tue, 10 Nov 2026 07:35:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E9D060A5BC2;
+	Tue, 10 Nov 2026 07:35:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GWdAoaS/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A5D21F00904;
-	Tue, 10 Nov 2026 07:35:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EM0pAkjL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9774C1F008A2;
+	Tue, 10 Nov 2026 07:35:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794296121;
-	bh=5puLh0Jvdg/9w3mwE9m1JpUr77HCGYNVbZHo7OLDlo0=;
+	s=k20260515; t=1794296124;
+	bh=EtudwXeX/jnHK+VqfMNs78uykQjRvCRX9VZ4FlgDiuQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GWdAoaS/6v39+qLF41g2EV7WEQj+TN5y7THs9hkRl5ZRD89Mna9+uSU9aRFBZGLgX
-	 dkFJ5ddC91GYEYii/Qv38NQrosFF3sP7ZW90LWl2cQ5whtv7L4Nmjy3Kx08hvjNENY
-	 vnetj5MQpWh8JcJP023oFlj/nMlnZr6T6aoa6p7isNK6csRhcmkZSIBpPSciYkWpGo
-	 ryQO6wL9NQItbKLQOgOfT50mWJndRBrRVoyolEfik7eqjWKUDT/zzAp6i4qYZXNGmc
-	 aFPTYa3+x3cgEVs0FU+uGBhfidRLDwZHs2YYXoG+r3anh7eMqqQJivUnkhR66OybCI
-	 VhGM71I6l7GNQ==
-Message-ID: <sashiko-outbox-206512@kernel.org>
+	b=EM0pAkjLOd1/mnJM1Yj/CuqkJ+PynbKhMTF4VvKklLxBCWsUdmOCuRFZ34w2Q6mjs
+	 cLn6a7H9yUiW2o8g+pT4sPAqMquLapkPgsSgvZiy8dvQZy/RuZ0c/mpw0+2fxXe05N
+	 YUR79iq9Pk0N7erAJyXuLdrAMxkDElvGIwSdxG641kyaKP/3CfGne0DyE8+99CMm6n
+	 uvHloJfmHpT9fSytCKVSF9qI7sSRP9MFH3snNPPIrc1+LxmnVMzzqhVOJm1qJhRE3C
+	 yhr2XpuvYchdnAo68hdJarAY5M6D/odOec62po9lOOC5PBzrfDaOAKv6/nFtsZKym2
+	 NI8Q3rwDwIL9A==
+Message-ID: <sashiko-outbox-206516@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 12/19] driver core: Expose device trust authorization
- interfaces
+Subject: Re: [PATCH v2 16/19] driver core: Cover trust authorization and
+ binding with KUnit
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
-Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261109-device-trust-core-v2-12-3b12d9a9f861@nvidia.com>
+Cc: linux-input@vger.kernel.org, linux-usb@vger.kernel.org, linux-pci@vger.kernel.org, dmitry.torokhov@gmail.com
+In-Reply-To: <20261109-device-trust-core-v2-16-3b12d9a9f861@nvidia.com>
 References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
- <20261109-device-trust-core-v2-12-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-16-3b12d9a9f861@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 07:35:21 +0000
+Date: Tue, 10 Nov 2026 07:35:24 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,25 +61,123 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Leon Romanovsky <leonro@nvidia.com>
->=20
-> An initrd must authorize a disabled device after attestation even if a
-> built-in driver already attempted to probe it. Buses with their own
-> authorization interface need to apply the same policy rules.
->=20
-> Expose requested policy and active trust through sysfs, and export
-> device_trust_set_policy() for bus authorization. Fix explicit authorizati=
-on
-> or commitment for the device lifetime and serialize writes with probing.
-> Under the global full policy, reject changes and leave same-value writes
-> as no-ops so manual attachment needs no additional lock. Include the
-> attributes in device ownership changes.
->=20
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Low] driver core: unskipped driver boot rules in device-trust-full
+  KUnit tests
+--
 
-Sashiko has reviewed this patch and found no issues.
+commit 8b5fffad66e1e6c0223d2943cea1b5d209f585ac
+Author: Leon Romanovsky <leon@kernel.org>
+
+driver core: Cover trust authorization and binding with KUnit
+
+This commit adds KUnit test suites covering device trust policy parsing,
+authorization, driver binding, and full-only manual attachment.
+
+> diff --git a/drivers/base/test/device-trust-test.c b/drivers/base/test/de=
+vice-trust-test.c
+> new file mode 100644
+> index 0000000000000..b6ad3b0c1b536
+> --- /dev/null
+> +++ b/drivers/base/test/device-trust-test.c
+
+[ ... ]
+
+> +static void device_trust_full_boot_policy_test(struct kunit *test)
+> +{
+> +#if IS_BUILTIN(CONFIG_DM_KUNIT_TEST)
+> +	struct device_trust_test_context *ctx;
+> +	enum device_trust_policy policy;
+> +	bool allowed;
+> +	int ret;
+> +
+> +	ctx =3D device_trust_full_test_register(test, &device_trust_test_plain_=
+bus, NULL);
+> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
+> +	policy =3D ctx->dev.trust_policy;
+> +	allowed =3D device_trust_test_global_full(test) &&
+> +		(policy =3D=3D DEVICE_TRUST_POLICY_DEFAULT || policy =3D=3D DEVICE_TRU=
+ST_POLICY_FULL) &&
+> +		(!device_trust_full_test_driver_rules(test) ||
+> +		 ctx->dev.p->trust_policy_override);
+> +
+> +	ret =3D device_driver_attach_full(&ctx->drv, &ctx->dev);
+> +	KUNIT_ASSERT_EQ(test, ret, allowed ? 0 : -EPERM);
+> +	KUNIT_EXPECT_EQ(test, device_is_bound(&ctx->dev), allowed);
+> +	KUNIT_EXPECT_EQ(test, ctx->probe_count, allowed ? 1 : 0);
+> +	KUNIT_EXPECT_EQ(test, ctx->configure_count, 0);
+> +	KUNIT_EXPECT_EQ(test, ctx->dev.trust_policy, policy);
+> +	KUNIT_EXPECT_EQ(test, device_get_trust_level(&ctx->dev),
+> +			allowed ? DEVICE_TRUST_FULL : DEVICE_TRUST_DISABLED);
+> +	KUNIT_EXPECT_EQ(test, device_get_committed_trust_level(&ctx->dev),
+> +			allowed ? DEVICE_TRUST_FULL : DEVICE_TRUST_DISABLED);
+> +	if (!allowed)
+> +		KUNIT_EXPECT_PTR_EQ(test, ctx->dev.driver, NULL);
+> +#else
+> +	kunit_skip(test, "boot policy coverage requires built-in tests");
+> +#endif
+> +}
+> +
+> +static void device_trust_full_attach_test(struct kunit *test)
+> +{
+> +	struct device_trust_test_context *ctx;
+> +	struct device *parent;
+> +	int ret;
+> +
+> +	if (!device_trust_test_global_full(test))
+> +		kunit_skip(test, "requires device_trust.default=3Dfull");
+> +	parent =3D root_device_register(test->name);
+> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, parent);
+> +	ret =3D kunit_add_action_or_reset(test,
+> +					device_trust_test_parent_unregister, parent);
+> +	KUNIT_ASSERT_EQ(test, ret, 0);
+> +	ctx =3D device_trust_full_test_register(test, &device_trust_test_plain_=
+bus, parent);
+> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
+> +
+> +	device_lock(parent);
+> +	device_lock(&ctx->dev);
+> +	ret =3D device_driver_attach_full(&ctx->drv, &ctx->dev);
+> +	device_unlock(&ctx->dev);
+> +	device_unlock(parent);
+> +	KUNIT_ASSERT_EQ(test, ret, 0);
+
+[ ... ]
+
+> +static void device_trust_full_probe_failure_test(struct kunit *test)
+> +{
+> +	static const int errors[] =3D { -EIO, -EPROBE_DEFER };
+> +	static const int expected[] =3D { -EIO, -EAGAIN };
+> +	struct device_trust_test_context *ctx;
+> +	int i;
+> +
+> +	if (!device_trust_test_global_full(test))
+> +		kunit_skip(test, "requires device_trust.default=3Dfull");
+> +	ctx =3D device_trust_full_test_register(test, &device_trust_test_plain_=
+bus, NULL);
+> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
+> +	ctx->drv.probe =3D device_trust_full_test_probe;
+> +
+> +	for (i =3D 0; i < ARRAY_SIZE(errors); i++) {
+> +		ctx->probe_ret =3D errors[i];
+> +		KUNIT_ASSERT_EQ(test, device_driver_attach_full(&ctx->drv, &ctx->dev),
+> +				expected[i]);
+
+[Severity: Low]
+Should device_trust_full_attach_test() and
+device_trust_full_probe_failure_test() also skip when device_trust.driver=3D
+boot rules disallow full attachment?
+
+Unlike device_trust_full_boot_policy_test(), both tests only check
+device_trust_test_global_full(), which inspects device_trust_init() on a
+stub device.  When the kernel is booted with both device_trust.default=3Dfu=
+ll
+and a device_trust.driver=3D rule, device_trust_prepare_full() rejects the
+unoverridden test device with -EPERM, causing the device_driver_attach_full=
+()
+assertions in both tests to fail instead of skipping.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109-device-tru=
-st-core-v2-0-3b12d9a9f861@nvidia.com?part=3D12
-
+st-core-v2-0-3b12d9a9f861@nvidia.com?part=3D16
