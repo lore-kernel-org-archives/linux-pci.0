@@ -1,70 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.139
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=144.76.133.104
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794305410;
-	b=fGfpV/SfxrG901CL1mkLCINm0AJhiiN+20UucDXS7SUIDkROzV5cBs5q1NQoYctZO6PQ
-	 PihCS7O5C9WA+blI0VlOyHUa5WE5WfD7+SG/zxp3zkNsZ9IDIgMCcLOkcoyw0TWz1GgJ+
-	 3wkRX6uacfgvCe87uXwajYq+bGa2u0uA/bWbBP1qHyiS80daawsUrDhLdfXHJi7kt3WRe
-	 iIMLCNaeoyQ0/90Nhg3DfWwTd+7qdYGOhEyVVoTafKNSlRQ3PWehb9hnxiiR4rG8lbuQ5
-	 /q87QsmbdfLvL9utOF/2az445d8s6rszV3MZPJvST5hQXK5ptIOdlVIsrXK6iuRoiYA==
+	t=1794305635;
+	b=xNzXsS6SU5cRqNKEBiAwiAAkdNUe0bkWnaYF1sX8Td5o4l96UPgQbr6bh8D1J+IJ1Ab5
+	 JvxNo21tHKKWHwdb8UndZoodwEcumi29Q9D2IEudgL+kLAH2IxINB8yft4EnLbOAsf3rt
+	 9p9LlPmfo6HfDWxovJN1uoLUL+fnVmljKGp4xXTC7FizNft87kjOh7yp8NRMZiFn2T6/S
+	 7rs0SLZj1/6hrlKizyl1Gnil2dJ5nD74leVBwrT/aNs4BATNW83lY2mWhDeRN8s5mW3nB
+	 bCJnzzInbA9u3eCB8bFwIcggnj6lBt2MA+XFflBm6DNuvNjL1TOg+Iuxb/CWo2W6NzA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794305410;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=p0b4HYMjqgMZb222DZNYKa+IKVop6pKB2asojuDpXTg=;
-	b=CiiSoQXsu+ZXv2FzLuUwoHJtSuLYqH3yFkMZB8iVtsmPFhd0EeQPfMia7g4bQUyWdWNM
-	 ipVWQGR+epDR35JJIB8dXhnXcWzaS3dwhdJhjEw4k5wByXCYtS/OjBXiwt2pkXmArmQuu
-	 RQI6+9NiTeJAikPUIozmckefhSbjteM6TsRvnzyS8nmfzbKiOe4ktTkpcEdPh56oj/nLm
-	 Kt3PncZ8cBNV0nxQoWV+6kaCKOQ27+NeBw5vYyCYUzsxI0UjlDguv3ps3C3CrrLnLFlRX
-	 jfLC+kS7wB4F3Ima+94lhjfdnxWJzPxI1AU2JtPYd00oiEKgycdm2wz9Bs+cVhLp3hw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794305635;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=mFUKZRWYjr06nKYVPuobClmRvFrDal/7C5W1Q6Oof58=;
+	b=CQp5iKSFoU1vM9ti7c4tNrGhKBwzKsXNN4tUp6dcxNIlHj0Ib1duQUTyKdpsz24W3XbK
+	 I+ynZ8RDFrK1kGQVwINPFjpWZTb8Q6IvsUyUnLNjGcYNhZouQbLywoprtVmsxfBtZ0fKu
+	 PzdktS/e3NVb2WXGNgPEpseYhEa1J7BLjRTQq3Si/bLruDxXA5TfovrJ2B+lPE6NcI/mI
+	 jGEffD7VSiXSkmZ2FJ3dDYA67AIPD7NN5v6Kn1qd3a3xe0APoC1WMHARQJLBFHHzaAlVg
+	 Q8ViyEOrwsOoV2zMz8pku9UhdOgFto8jrNypfR22rMwpoqF5v89FGNsceqVvEXBLT9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=LK8zMZr0;
-	arc=none smtp.remote-ip=111.22.67.139
-Received: from cmccmta6.chinamobile.com (cmccmta6.chinamobile.com [111.22.67.139])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id AF5D2606A335;
-	Tue, 10 Nov 2026 10:10:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF5D2606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=LK8zMZr0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=LK8zMZr0XH3fzL01T74alwSck9G456YEc/RkYQ8QaHpilcTzVi66bOHmb3yWrhRmWsHMpTAnmIKIz
-	 Zd1uQqP17pnAM4AaeLWKFDgoPZqZlR4hDGbRoKt/0jiyX0ehQZVnlIbZHMthGLj6Tbc2qGEb/Yijuh
-	 57eMwoM2oJxpPL5U=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app05-12005 (RichMail) with SMTP id 2ee56af2ed778fb-cbe74;
-	Tue, 10 Nov 2026 18:09:59 +0800 (CST)
-X-RM-TRANSID:2ee56af2ed778fb-cbe74
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from  (unknown[10.55.1.71])
-	by rmsmtp-syy-appsvr04-12004 (RichMail) with SMTP id 2ee46af2ed74c04-b1a93;
-	Tue, 10 Nov 2026 18:09:59 +0800 (CST)
-X-RM-TRANSID:2ee46af2ed74c04-b1a93
-From: zhaofeng2 <zhaofeng2@cmss.chinamobile.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Zhao Feng <zhaofeng2@cmss.chinamobile.com>,
-	linux-pci@vger.kernel.org,
-	Nishanth Menon <nm@ti.com>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	linux-arm-kernel@lists.infradead.org,
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=144.76.133.104
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 899C9606A337;
+	Tue, 10 Nov 2026 10:13:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 899C9606A337
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id BB7BB296F;
+	Tue, 10 Nov 2026 11:13:45 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 8983C60FC73F; Tue, 10 Nov 2026 11:13:45 +0100 (CET)
+Date: Tue, 10 Nov 2026 11:13:45 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: lirongqing <lirongqing@baidu.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Farhan Ali <alifm@linux.ibm.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Frank Li <Frank.Li@nxp.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] PCI: keystone: Fix device node leak in ks_pcie_am654_set_mode()
-Date: Tue, 10 Nov 2026 18:09:54 +0800
-Message-ID: <20261110100955.1046-4-zhaofeng2@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.55.0.windows.5
-In-Reply-To: <20261110100955.1046-1-zhaofeng2@cmss.chinamobile.com>
-References: <20261110100955.1046-1-zhaofeng2@cmss.chinamobile.com>
+Subject: Re: [PATCH] PCI: Only restore state that was successfully saved
+ around a reset
+Message-ID: <avLuWagPGyPhLYvl@wunner.de>
+References: <20261110053348.2419-1-lirongqing@baidu.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -74,39 +60,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261110053348.2419-1-lirongqing@baidu.com>
 
-From: Zhao Feng <zhaofeng2@cmss.chinamobile.com>
+On Tue, Nov 10, 2026 at 01:33:47PM +0800, lirongqing wrote:
+> pci_dev_save_and_disable() returns early when config space is inaccessible,
+> without saving anything, but pci_dev_restore() calls pci_restore_state()
+> unconditionally and pci_restore_state() does not look at state_saved. After
+> the reset makes config space accessible again, the all-zero or stale
+> saved_config_space[] array is written back to the device, clearing Command,
+> BARs and, for bridges, the bus number registers.
+> 
+> Clear state_saved when the save is skipped and only restore when a state
+> was saved.
 
-ks_pcie_am654_set_mode() resolves the "ti,syscon-pcie-mode" phandle
-with of_parse_phandle_with_fixed_args() to obtain the mode register
-offset, which takes a reference on the syscon device node, but the
-reference is never dropped after the offset has been read from
-args.args[0], so the syscon node is leaked on every probe.
+The state_saved flag is used internally by the PCI core for
+suspend/resume.  If a driver calls pci_save_state() on suspend,
+the flag is set and that tells the PCI core that the driver already
+put the device into a lower power state, obviating the need for the
+PCI core to do that.
 
-Drop the reference with of_node_put() once the offset argument has
-been consumed.
+Please do not use the flag for a completely different purpose.
 
-Fixes: 7dcf07ac8867 ("PCI: keystone: Use phandle argument from "ti,syscon-pcie-id"/"ti,syscon-pcie-mode"")
-Signed-off-by: Zhao Feng <zhaofeng2@cmss.chinamobile.com>
----
- drivers/pci/controller/dwc/pci-keystone.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletions(-)
+Thanks,
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -1059,8 +1059,10 @@
- 
- 	/* Do not error out to maintain old DT compatibility */
- 	ret = of_parse_phandle_with_fixed_args(np, "ti,syscon-pcie-mode", 1, 0, &args);
--	if (!ret)
-+	if (!ret) {
- 		offset = args.args[0];
-+		of_node_put(args.np);
-+	}
- 
- 	mask = AM654_PCIE_DEV_TYPE_MASK;
- 
-
-
+Lukas
