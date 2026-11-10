@@ -1,104 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794336338;
-	b=IElQIHMQRc28Er3opSdfUuSoWYc7MVAKCDM/6+QTkYnGxwzfL+byZhNZGv1i58KDIrjs
-	 NJu7AQ2gNKFPDpvNYdqvpNjGurL7C5zCyHt1e94WRjnSJiQvfI7l1I52nyY4/px513PGQ
-	 uJ4oAgo7iKdHL6piVKw9jTx70ninuyXLvkD9jUJ9dhkNbPhAItNSKO3XTo8UjC54TKHSU
-	 nsRmX1/1Igfhgvxl6lFdbd3FqfC6HSzRiaURoAuzcf+drg5dyrqPg0Iny93PzVL2m1bN5
-	 8ORYKP9R5RXCOtviFsWtZfVNivruxri5MkPT/H/zuTPWCzizF/vMEMgGV6XRtXsssKQ==
+	t=1794336671;
+	b=yWzweht0RYheDWL64wFMqrRMcvYEtzQXMEx50r97f3B+dzgu0BrnIqLCKoAr7/x6/b0X
+	 lTRMbY1RAgSZiTZlMO6mnTSC7YMRBs+Q5oIc7Foj38Em61lX2qYYM55O758NbQsFjJSfp
+	 wKb8OyLYVvUzM8UYp/Kkwwu5nD9itW4ZnOJ971m5Puh3izoKsMFaUFPir+xs+Rda1NDJt
+	 1MG6ruEkusMMrLpCiCUUaeilbLr3COwRcxtCIcJmgiQ2Qk8pEUjbEyKAhfp7+G/vUR+lk
+	 U3qlu4oGtkde82LVDyZ2S0ZbUoOgabq7AJC5TWz6By30r+TQDdv3ynbLmoOWZlVsasg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794336338;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=j6HenvetdiqKK5Mv1KKa157Ln9/E8xXqIQ72cYSu+2Y=;
-	b=CpkD0KxIKzoHjmk+fsfKSjU57mvM6zfDhEBzXgsSzdvc5B5+mlHM305vX9nKBxSMuy79
-	 8cHdJRy3VuOj0PW6UT//6FMlokVtvXFDwuFRIyEclmx9kjaonn3K5bFHzIJIsKkblQY6V
-	 2kKpczKo333P8Xy7jbojRNRVM5i43LLdHbYhPYsNz57iFIDqBuNQZkdp0ereg0NgnOfkS
-	 aSaJrIjj/b+i81NqW6fX3GuIpxme7I8r9oinJTiJmria7qetNqUd4x8wD97530XkFJyQp
-	 YShcxttExAYUMXEuITmxRxqzYQGcjXcZGoO4Cg7fwPFJD9PoWFuY7CXuEdW5neTrRlw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794336671;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Type:X-Change-ID:X-Mailer:
+	 Content-Transfer-Encoding;
+	bh=1vfm4ZZaCnjKq2IqAi4z4l1jQumIZPUQ3s9gJu6Lb5Y=;
+	b=PISxFRq5os2VpczNZDJ5IidNQcXUIOP4ZlzHiKMLt0dJYwG4fZ0SeOm0ybnSBx84B8Dr
+	 HJZZxL6V7etmR22Pkf2rQrXR3ZVZ839LKfBC6U1PtdGl5f4ayhq1zpdWOeILkhBTIICN2
+	 S70dnUen3TzvYruS6QseB0xviNgBgOaC1bA0UkNxbCcVaC8JLn1OGxlD/GGYoP+dtbnCb
+	 gE7wSz2C6qQFMRsRYU9iu8WBhwlmGmNVPhiUH0xrJKPFLvqk4myLwetu44ZGD7ihGLYD1
+	 2+n07N9N+Qg+7VHcPiDzHBgHfl1yTg5pOZ/JYZ3nSst25wTpJkn24Ze4p1pfBlRgl8w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=fqYza+qT;
-	arc=none smtp.remote-ip=209.85.214.177
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KfJszO94;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DC84606A333
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 18:45:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8DC84606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC918606A32A;
+	Tue, 10 Nov 2026 18:51:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=fqYza+qT
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2eb0a52d605so6555ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 10:45:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794336338; x=1794941138; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=j6HenvetdiqKK5Mv1KKa157Ln9/E8xXqIQ72cYSu+2Y=;
-        b=fqYza+qTmu263ZJR6IQbgcfkkw9jmBae56WVI+o3f6yE+Kb1eAns8SLyCefyix05sI
-         yNFEQKraXZrzlgeP0EDS4+8DlSYhhDPuNHBvo9HtQkvkE80biYpP/AWmMZMb4N/avCqc
-         tiBIiao8l8HKCuoG0Mts/I6lvZxkuP9qJfXB7Cyhx7J46AAPju6wNkwpIXeVimtsE/cG
-         GqmB+KwHAwkczSt+6neTbRmWUTaNZHyZbOq/lWaPoci+yXV25lxstqc4zN1oce/Vkxwn
-         mLCQsVZ9HPbXapT6AxcKUs02u2n1Y2y/FccJnECWdMdOU1ViJg38CiOwYx0X1JHRx/0Z
-         HWgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794336338; x=1794941138;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=j6HenvetdiqKK5Mv1KKa157Ln9/E8xXqIQ72cYSu+2Y=;
-        b=oV8gEW+W/lAceUjWUgI4n/3x/Ao4SX6PmN4572tNhdNJQNR/HrLBTMBLSXebsukikz
-         9M0G74uG0D4TFjcvhH84/C3BTU/3TX629xEOc/7ryfFK9m8/XVhh5k7/EHlITlFrW632
-         L4o0xKW4Nb/GtFeNEZcdHnRE7RqWvqKlcFtu4gU6GHO6droyD5RlUNrZqwc90dYqZXY5
-         kJppZ16HosCbmWWESlZa2thgq7mHY0c5VOfwsaV0VOzZblERSwgFyGyTewc09ikKvwRj
-         As80QOH50Gcv6Uta10EDGI9siGooRbORJo0eWZgyCZBkju41XaZtwQtG56AZKiVj0cDg
-         G6OA==
-X-Forwarded-Encrypted: i=1; AL+hErGLuooyOnV8Tu7KrwaFS3r9/Imr5ucItl+E9JPzsI2aAYS7CP7Ev9GrNXKsc3aFMhxGykGTtOscdPI=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/0AedkGY2X3Fbjpay29c1Fsncaqpr/j5diuSCoYS3dialqT641
-	U9I3oKef0CAwjdk7SpzqjW2Pkfd8CRQH0j35irqj42jR4+I66HoQm9fBQsEZkhppMg==
-X-Gm-Gg: AYBFou2EetfOlRPTEXgUeiviPlPUSdBi5Sad2O8xlEkJY+JpjXoBT8lFGILjUlqg3FR
-	1Yc5lLqT5wEJo8EqmN8N7FphJk69oRTaJ9tNDz3iR5IdO60XmEDiX3I67kqezxebQH+x/aMUPp+
-	O8gsKR26I8OSYGhULZ387OFLCepAMh16wXBuXmmf0WL8438w87fQRnJ7LvPh2e8bqbZqtHKbJ30
-	bvtfJ5QzRUvXw/Or9NScWoDHGfeTLWDfvm/fWqIjBqQMEiwjzAqfyQ7hiXWPTRonZHq0qqG9lZf
-	xyVX7nhKK4w9O+cz2cNCiVtlH/uvrpfz3lVZtcAuvTVde/ba09pG9bVX+4DQuIZ16mTnfgws1Ti
-	z+lJPD4sGDbIifVQY+WcPyoKuleLxV99DK+A6/PnOWWxsFn3TAs8TAZYDdgE5rkEdntjDca+4qd
-	qIArMA6ttVrdGvgx0bnX+rtOAV1/CF/exqCaxsJFbKQVb6r2Tc6JSJ3Q9dNXw29IYBGbnOECytZ
-	sOQMgrHQYGFhMdm7HV0jEV0/Hm9RKpOBtePMmtm8iEh3YTLb7bSPQvoT+Hm3KH74xnITDZODTjr
-	aLSTFeZwnO3HJjjJayR6Ou6PJXUbIs0ApxBuLtShorGoKGKkF80wz/X1eATqkyHu
-X-Received: by 2002:a17:903:2a86:b0:2bd:3bfd:74f1 with SMTP id d9443c01a7336-2edd7110fa8mr255665ad.2.1794336337416;
-        Tue, 10 Nov 2026 10:45:37 -0800 (PST)
-Received: from google.com (60.89.247.35.bc.googleusercontent.com. [35.247.89.60])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8baaa86ce5fsm1317128b3a.21.2026.11.10.10.45.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 10:45:36 -0800 (PST)
-Date: Tue, 10 Nov 2026 10:45:32 -0800
-From: Vipin Sharma <vipinsh@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org, ajayachandra@nvidia.com, 
-	alex@shazbot.org, amastro@fb.com, ankita@nvidia.com, apopple@nvidia.com, 
-	bhelgaas@google.com, chrisl@kernel.org, christian.koenig@amd.com, corbet@lwn.net, 
-	graf@amazon.com, jacob.pan@linux.microsoft.com, jgg@nvidia.com, jgg@ziepe.ca, 
-	jrhilke@google.com, julianr@linux.ibm.com, kees@kernel.org, kevin.tian@intel.com, 
-	leon@kernel.org, leonro@nvidia.com, lukas@wunner.de, mattev@meta.com, 
-	michal.winiarski@intel.com, parav@nvidia.com, pasha.tatashin@soleen.com, praan@google.com, 
-	pratyush@kernel.org, rananta@google.com, rdunlap@infradead.org, rientjes@google.com, 
-	rodrigo.vivi@intel.com, rppt@kernel.org, saeedm@nvidia.com, schnelle@linux.ibm.com, 
-	skhan@linuxfoundation.org, skhawaja@google.com, vivek.kasireddy@intel.com, witu@nvidia.com, 
-	yanjun.zhu@linux.dev, yi.l.liu@intel.com
-Subject: Re: [PATCH v6 00/27] VFIO PCI Live Update (noiommu mode)
-Message-ID: <20261110184339.GB519525.vipinsh@google.com>
-References: <20261102153656.1431701-1-vipinsh@google.com>
- <DMOH7D1PZUM4.1X82LVQK7E54Q@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KfJszO94
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 843861F0089F;
+	Tue, 10 Nov 2026 18:51:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794336670;
+	bh=1vfm4ZZaCnjKq2IqAi4z4l1jQumIZPUQ3s9gJu6Lb5Y=;
+	h=From:To:Cc:Subject:Date;
+	b=KfJszO94/qOIAMY9WRy5Oo6VZG6yFbceM2cOpNaPWLXDRoBWG6Lsm/imBu6xX7fOr
+	 CcVy3akt6xk0+FJhPDIGg20aT+9eJISW59VFDruFocZJNOHs6hhVce4DBrFK016PMt
+	 Id/J40wbaTdyaMcJu+6o9YRhBAgrWS2h05WWuJm41qrW2WHhMagc77Si+FmA12Thjf
+	 a/jdWlWjjr0OJfuR3BYSsXQLbvDfdmtSLC8TWe8UJMlRlt1F47FH1QfW6ILfEoQfAz
+	 XJcheTlWLMTxr+I0dc3lP3JRZwf9rv5gJFD5j33zIt6bnpocwMKXgAa69GQ4Vfuyt7
+	 D6Uao3CQMBCkg==
+From: "Mario Limonciello (AMD)" <superm1@kernel.org>
+To: mario.limonciello@amd.com,
+	Florent DELAHAYE <kernelorg@undead.fr>,
+	Michel-Ekimia <contact@ekimia.fr>,
+	Konrad J Hambrick <kjhambrick@gmail.com>,
+	Werner Sembach <wse@tuxedocomputers.com>,
+	=?utf-8?q?Benoit_Gr=C3=A9goire?= <benoitg@coeus.ca>,
+	mumblingdrunkard <mumblingdrunkard@protonmail.com>,
+	Matt Hansen <2lprbe78@duck.com>,
+	Tilman Vaeth <tilman-vaeth@web.de>,
+	Christian Homberg <Christianhomberg@gmail.com>,
+	mccricardo <mcc.ricardo@gmail.com>,
+	bnewell <bnewell@fullaware.com>,
+	=?utf-8?q?Bernhard_=C3=9Cbelacker?= <bernhardu@mailbox.org>,
+	Ton Gur <kvantorrr@mail.ru>,
+	Alessandro <sandro.it@gmail.com>,
+	Pedro Rodrigues <pedro.pfxr@gmail.com>,
+	Amaury TC <amaurytc@gmail.com>,
+	crysman <crysman@seznam.cz>,
+	Moataz <Moataz.zakaria@gmail.com>,
+	wilk <j.cubizolles@free.fr>,
+	=?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Bradley Morgan <brads@mainlining.org>,
+	Nikolas Joshua Britton <nbritton@exabit.io>,
+	Doug Calobrisi <doug@calobrisi.com>,
+	Helge Deller <deller@gmx.de>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Alexey Fomenko <alexey.fomenko@intel.com>,
+	Eric Auger <eric.auger@redhat.com>,
+	Maciej Grochowski <Maciej.Grochowski@sony.com>
+Cc: "Mario Limonciello (AMD)" <superm1@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-efi@vger.kernel.org
+Subject: [RFT] Change E820 memory map handling
+Date: Tue, 10 Nov 2026 12:50:54 -0600
+Message-ID: <20261110-superm1-genoa-mess-v1-0-bdcb3a6f2463@kernel.org>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -108,53 +87,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DMOH7D1PZUM4.1X82LVQK7E54Q@google.com>
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20261110-superm1-genoa-mess-2195512e39e7
+X-Mailer: b4 0.16.0
+Content-Transfer-Encoding: 8bit
 
-On Fri, Nov 06, 2026 at 10:20:10PM +0000, David Matlack wrote:
-> On Mon Nov 2, 2026 at 3:36 PM UTC, Vipin Sharma wrote:
-> 
-> > David Matlack (4):
-> >   vfio: Enforce preserved devices are retrieved via
-> >     LIVEUPDATE_SESSION_RETRIEVE_FD
-> >   docs: liveupdate: Add documentation for VFIO PCI
-> >   vfio: selftests: Add vfio_pci_liveupdate_uapi_test
-> >   vfio: selftests: Add Makefile support for TEST_GEN_PROGS_EXTENDED
-> >
-> > Vipin Sharma (23):
-> >   vfio/pci: Factor out the reset logic in VFIO PCI device close path
-> >   vfio: Export various helpers from VFIO
-> >   liveupdate: Export symbols needed by modules
-> >   vfio/pci: Register a file handler with Live Update Orchestrator
-> >   PCI: liveupdate: Add helpers to preserve struct pci_saved_state
-> >   vfio: Add helpers to identify device files that can be preserved
-> >   vfio/pci: Preserve vfio-pci device files across Live Update
-> >   vfio: Introduce vfio_find_device() helper
-> >   vfio: Refactor vfio_device_fops_cdev_open()
-> >   vfio: Add API to open cdev device for Live Update restore
-> >   vfio/pci: Retrieve preserved device files after Live Update
-> >   vfio/pci: Protect incoming preserved devices until they finish Live
-> >     Update
-> >   vfio/pci: Take over preserved devices without resetting them
-> >   vfio: selftests: Build liveupdate library in VFIO selftests
-> >   vfio: selftests: Initialize vfio_pci_device using a VFIO cdev FD
-> >   vfio: selftests: Add iommufd noiommu mode
-> >   vfio: selftests: Add helpers to map DMA memory at IOVA == PA in
-> >     noiommu mode
-> >   vfio: selftests: Add helpers for Live Update DMA memory and sysfs
-> >     state
-> >   vfio: selftests: Add an attach() driver op
-> >   vfio: selftests: Test preserving noiommu devices in
-> >     vfio_pci_liveupdate_uapi_test
-> >   vfio: selftests: Add vfio_pci_liveupdate_kexec_test
-> >   vfio: selftests: Verify that opening VFIO device fails during Live
-> >     Update
-> >   vfio: selftests: Add continuous DMA to vfio_pci_liveupdate_kexec_test
-> 
-> This series is getting quite long. I would consider splitting out the
-> selftests into its own series and we can iterate on each separately.
+Commit 07eab0901ede ("efi/x86: Remove EfiMemoryMappedIO from E820 map")
+removes every EFI MMIO descriptor of at least 256KB from E820.  This
+makes host bridge space covered by those descriptors available for PCI
+BAR allocation and avoids maintaining quirks for every affected system.
 
-I think it is a good idea. In next version, v7,  I will send two series,
-kernel and selftests patches.
+This helped a number of systems, but caused a regression on AMD Genoa
+which has a hole that is intentionally in this list and shouldn't be
+reassigned.
+
+Ilpo has produced a patch series[1] that changes the policy for reservations
+that may actually help this issue.  To validate whether it works we need
+to test removing the E820 reservation, which has a risk at causing problems
+with systems.
+
+On this RFT I've CCed everyone that I could find a public address for that
+commented on the original issue that lead to commit 07eab0901ede ("efi/x86:
+Remove EfiMemoryMappedIO from E820 map").
+
+I would like to ask that this branch be tested.
+
+https://git.kernel.org/pub/scm/linux/kernel/git/superm1/linux.git/log/?h=superm1/genoa-mess
+
+Here is the flow I would like to see:
+ 1. Test 7.4-rc2 (vanilla - no changes please)
+ 2. Test this branch (superm1/genoa-mess)
+ 3. If this branch fails, please revert this commit from the branch and test again.
+    commit 35c9c60ea8c1c ("Revert "x86/PCI: Add E820 quirks for Clevo NL4XLU and Lenovo Yoga C940"")
+
+In all cases please check whether your original issue exists and comment if it does.
+
+I would like to know BOTH positive and negative testing with this series so we can have an idea
+if this approach is viable.
+
+Link: https://lore.kernel.org/linux-pci/20261106134341.39493-1-ilpo.jarvinen@linux.intel.com/ [1]
+Cc: Florent DELAHAYE <kernelorg@undead.fr> # Clevo NL4XLU
+Cc: Michel-Ekimia <contact@ekimia.fr> # Clevo NL51CU2 (not currently quirked)
+Cc: Konrad J Hambrick <kjhambrick@gmail.com> # Clevo X170KM-G
+Cc: Werner Sembach <wse@tuxedocomputers.com> # Clevo X170KM-G
+Cc: Benoit Grégoire <benoitg@coeus.ca> # Lenovo Yoga C940-14IIL
+Cc: mumblingdrunkard <mumblingdrunkard@protonmail.com> # Lenovo Yoga C940-14IIL
+Cc: Matt Hansen <2lprbe78@duck.com> # Lenovo IdeaPad 3 15IIL05
+Cc: Tilman Vaeth <tilman-vaeth@web.de> # Lenovo IdeaPad 5 14IIL05
+Cc: Christian Homberg <Christianhomberg@gmail.com> # Lenovo IdeaPad 5 14IIL05 (81YH)
+Cc: mccricardo <mcc.ricardo@gmail.com> # Lenovo IdeaPad 5 14IIL05
+Cc: bnewell <bnewell@fullaware.com> # Lenovo IdeaPad Slim 7 14IIL05 (82A4)
+Cc: Bernhard Übelacker <bernhardu@mailbox.org> # Lenovo V15-IIL (82C500JUGE)
+Cc: Ton Gur <kvantorrr@mail.ru> # Lenovo IdeaPad 3 15IIL05
+Cc: Alessandro <sandro.it@gmail.com> # Lenovo IdeaPad 3 (exact model not posted)
+Cc: Pedro Rodrigues <pedro.pfxr@gmail.com> # Lenovo IdeaPad (exact model not posted)
+Cc: Amaury TC <amaurytc@gmail.com> # Lenovo BS145-15IIL (82HB)
+Cc: crysman <crysman@seznam.cz> # Acer Spin 5 SP513-54N
+Cc: Moataz <Moataz.zakaria@gmail.com> # Acer Spin 5 SP513-54N
+Cc: wilk <j.cubizolles@free.fr> # Acer Spin 5 SP513-54N
+
+These are the patches to be tested by checking that branch.
+---
+Ilpo Järvinen (14):
+      resource: Mark free space assigned
+      parisc/PCI: Clean up resource debug print & use dynamic debug
+      PCI: Don't size or assign disabled BARs
+      PCI: Use __ffs64() for resource_size_t typed align
+      PCI: Prevent zero align from reaching __ffs64()
+      linux/log2.h: Add 64-bit roundup/down_pow_of_two_u64() variants
+      PCI: Derive aligns[] array size in a define
+      PCI: Honor alignment overrides
+      PCI: Place resources to either edge of the window
+      PCI: Separate align/raw size calculation from pbus_size_mem()
+      PCI: Calculate bridge window with optional sizes from scratch
+      PCI: Move size/align calculation fully into __pbus_size_mem()
+      PCI: Fix composite resource sizing
+      PCI: Add debug printing to window sizing
+
+Mario Limonciello (3):
+      x86/PCI: Add E820 quirks for Clevo NL4XLU and Lenovo Yoga C940
+      Revert "efi/x86: Remove EfiMemoryMappedIO from E820 map"
+      Revert "x86/PCI: Add E820 quirks for Clevo NL4XLU and Lenovo Yoga C940"
+
+ arch/alpha/kernel/pci.c          |   3 +-
+ arch/arm/kernel/bios32.c         |   5 +-
+ arch/m68k/kernel/pcibios.c       |   4 +-
+ arch/mips/pci/pci-generic.c      |   5 +-
+ arch/mips/pci/pci-legacy.c       |   5 +-
+ arch/parisc/kernel/pci.c         |  20 +--
+ arch/powerpc/kernel/pci-common.c |   5 +-
+ arch/sh/drivers/pci/pci.c        |   5 +-
+ arch/x86/pci/i386.c              |   5 +-
+ arch/x86/platform/efi/efi.c      |  45 -------
+ arch/xtensa/kernel/pci.c         |   5 +-
+ drivers/char/agp/intel-gtt.c     |   5 +-
+ drivers/gpu/drm/i915/i915_gmch.c |   5 +-
+ drivers/pci/pci.c                |   4 +-
+ drivers/pci/pci.h                |   6 +
+ drivers/pci/setup-bus.c          | 263 +++++++++++++++++++++++++--------------
+ drivers/pci/setup-res.c          | 246 ++++++++++++++++++++++++++++++++----
+ include/linux/log2.h             |  52 ++++++++
+ include/linux/pci.h              |  15 ++-
+ kernel/resource.c                |   3 +-
+ 20 files changed, 510 insertions(+), 196 deletions(-)
+---
+base-commit: 7475ea8b58616b33c04afb976cf0fbaad9dd63fb
+change-id: 20261110-superm1-genoa-mess-2195512e39e7
 
