@@ -1,84 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794327836;
-	b=S7OG/oBoLT24Q9xIy+pHo5Ngw2hZy3pwUmiatqL0a0buqdzwbzCP8FSuYBkBlavdW25z
-	 NC4Q9XI3d28Tl6U2DFeMGPeWFg5KqMCvA+Swby8UlmUzyZvHY6mwcKtGvDsBU9Dsy10JR
-	 TtkY+bDOLLLALHa9lseugboSNPJtchWgyo64iH6MmZ+3IAtnusUVVKyfG0uC4PdZIDx8d
-	 ha1JtE2Vmx/GLKIV7hxVv9Hj8cedbkTOTUxC878cczY/5VJy1HK/B4RAj4tMX6OEKAout
-	 T05IEfMWi7WVlucNDQ2MrQ0e7F9rBxOcU9U41RJh7Et7+ym8IXmf4hQE6pJyaw5cO9A==
+	t=1794327958;
+	b=wQq8mQ803FJ4VtDAGiZmFzS2k0FkKcBMQaqMv2fOJ5i5je5qSNJ7n9fApF7rOsnSQD0F
+	 jmxX6l/PHqueBn/J7eJ+7Gty8uiYRK2zmFoaSAXSBheR/yAWsqJ5gyR5c7OuL9uhY/2wJ
+	 RekryWbdSLd0z9Hs1OqH/x+7oTjGTJTsuprG3rzxYjYW5FVsF9yh+dlsO0MpxJKGXweKx
+	 ULYXqQQD7nUpxdEvdPqsLCf0MjOHOlTYKQ7KFJpyd0IZYhNiHCXvLmuWZ0HOy1PL2BioO
+	 eyRocji2wzXXSV5bW6yIL9Vl9IdOB/XvuIPNvsOv53ydlHDLkq7eC/5yDIoSc6w98sA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794327836;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
-	bh=Mw9iOCkEBWkvxdLSgoJVCB6jT3T4ThA8jIPRTFH0lnY=;
-	b=GVyLibGf/j1a7BGW/0O+cib9sWvz8Y9z3J6wbYehWuIP3D0OxE1HIYcfRD5Jy/wDmB/f
-	 22j0WMse/UQFPgpIArDfCl5RhKpx7BnIzU//Ez1zeJLwtlNKp4y+fjmRBIPXYieGh5RCx
-	 9Q4da3/6GBKxOFtWUNW5kQme+VqueGQfXrj7zxwAOyM/UVg/GyA2zIgTSfNG6j/cGP53r
-	 zG2R/ZJr7gWG8EtrDIc436CU44iogPoTZyVuErDhJ5VCLAYUdYFLzaBN0fRb9LgAtJvoz
-	 x9LRY+fQ3Cv+EaeVi8WSsINhosQ+2IQV4HY6XMzqh6s2HLvehePmRpx2iH5yQyM0Cfg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794327958;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:Autocrypt:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding:X-Spamd-Result:
+	 X-Spam-Score:X-Spam-Level:X-Spam-Flag;
+	bh=ATK+YqeQgXY50uB6ssooNlAaHRhaH0LqEgi3TMhGkNQ=;
+	b=jSgMHy5lg9sJH+/oVYMwlgRvkwkSGa1sxCIXEonlf0r4YXLErmAF0OLhlX3/qzVxrL37
+	 ZUwfrJy1Hh59rzDjjMhDdbthjb6vmZ/oypk1bU3vrb6jBVSBgOMxylmUKASXub7Ii8By/
+	 JDuzZKqfEPCUYTYvtU/8gduqA16TiGL+FTnJUt91QqjCrw9IT5ChVX0mdhDaatY+AgeDe
+	 kRY8WD0ka4GyP/9ZjJyTIeTWCdTqxWUhPeqkTrYaqdWlLQLqKW+bZBVffkzwEwUwylu/2
+	 fFSaAIcgGhOqMUKfaIxIsPVzwXHIsSvsloRmGUf2rZ6K/pTLEwOaNCXalXIfJTv1fGA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=VSPzJL76;
-	arc=none smtp.remote-ip=209.85.214.172
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=iYWrj5Xr;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=bHAcxfGF;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=MpfyAsz2;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=hRXH0l7P;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DBEE606A325
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 16:23:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4DBEE606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61B52606A320;
+	Tue, 10 Nov 2026 16:25:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61B52606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=VSPzJL76
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2ea138a3497so14295385ad.2
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 08:23:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794327836; x=1794932636; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=Mw9iOCkEBWkvxdLSgoJVCB6jT3T4ThA8jIPRTFH0lnY=;
-        b=VSPzJL76+wTF7+tRHaTvgknu/rdXasZus90UA5dew9kegykwMMzKH/F1V6GxO7RQBH
-         4/OoTFVOHyB4E03Dq2sjac2puiHJm+c4fvoFKJLJ6EEpCLTW90+KxQKP8Xk4x1JCosEq
-         Qn1NC6kr4qdwt4JzE8ObsRxCsUeZmKjtT2SBeeizeKBMIl7bOARS8kw8yLezlhGZJVv0
-         o52jzOWxsMkIIBT3ThUaLCPi/QAmSZxKSqqb6hMrak99PMeAxD3u0dk/TP7xs21D2Iw/
-         Ez/eieBRGPY5ouf/XdRZ3e00nlnuno9Ot9UU0ZRzVZtwWy7hL9Ca1MHSbWRqNGS8EsIb
-         6SQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794327836; x=1794932636;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Mw9iOCkEBWkvxdLSgoJVCB6jT3T4ThA8jIPRTFH0lnY=;
-        b=Ob0uTQE33biRmo7oB18/I7UBgWB5jlsLuD0iI3irXHxBxqAD1SbXpEjIQJ1uFz8tHk
-         KEw26d7iiiV6XVp36xsIwgxfPIsP9TRPfRV3TnWPkcPgGySD4H5vSzASDuxHYVAyRPre
-         G9O4NeaFpf4UcXTp7NtOcpTcxLpQ6l+q5yQBWAsM51nfK6bnbHDpKXvfTnWbFPS9z+yw
-         1kZXQmtKSZEGgeA3xItbJjr31t578CRCf80JnQFm95URtRWiAuL0yjHgueaIK7VMM0dK
-         hMAT9Yy09j9nEZ6shslwOH1HPZzLmQgTfGrgoBeZt1X2Dcmb6EL644ekrFesqM3VrMbZ
-         bRaw==
-X-Forwarded-Encrypted: i=1; AL+hErFJ7jAfJE7Qdng+4IXh513ROFbS+WmRjRRSoHPLAg0U2CmJ/XQvwOwAWU3eh+kd8m5itVxJeDmJqJc=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8aGbVgvEnxLbrI88ugFfFk2mvqB+v2pmr85hd5f82l5p6eIbJ3
-	EhjW30A8IXLLRg1yCbI3eU30xFVz6HEC0p4Y9gob5yeZ6yMZgM/U6wVvoRlQgQvT8w==
-X-Gm-Gg: AYBFou3reh0n4HLrYvqGcx4dNfxDs8Mu1TKCS0RFp7CT7I2Uwy3HFdUaxlrLko6mRQt
-	7e1UuMHOtDpJG9wLHeQDKLq5hx/wfLBzZMSrfx0zpm7R+3U5nI4U2ELGhMu8yzkz50eminoeybi
-	M2Xm7UPAjMAX8eU8EQPEDSDUE8Sc4J+MRq/fZvY4/Fjg9ArrIDzBMhwTr+gtbYOSn+RFwXOzrpU
-	zXsOR8hB8S6EBWefi8GGZWAB65CjRqL+BDbXx6Vzm+XKJqgtmBfYljblNAUYeoJaUUSjqTah20N
-	xOS1JAz526b4tSNakNnmLTACZuYzC0ymQ69uwAh80vilQU6+5SMBva1LH1uVJWVlmzETJYLDPqQ
-	eqqfBk9q17IN0N+lkbzanuZDo7QAwZ09YTkmeRohLJf5OHAGW/jXDSLUBvQaMVL+KOZKWOs7hb0
-	V9kXDnPvfJJVwmRL2B2mScq4sA2TAjjnnXbZO3JcsmeLUa1ek/miNO9iLoGut7v62Tc+Jsx75KI
-	EJRwvbZaFaDpLrIRDbVf+cqEJ6uxbTnLhcS2Oskje7meEyvIEMS/EUUV3aaMFTsFDLCMLazb2xa
-	1lpwv4VGSIF365ZHS+2+SzOCGhZvWswml0C7SzUOKaF4Wjlw/7gFI1IlX5J8wUmU
-X-Received: by 2002:a17:902:d4cc:b0:2e8:18ca:5f46 with SMTP id d9443c01a7336-2edb9146ba8mr28990585ad.14.1794327834955;
-        Tue, 10 Nov 2026 08:23:54 -0800 (PST)
-Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2edb6d7d964sm11306915ad.32.2026.11.10.08.23.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2026 08:23:54 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=iYWrj5Xr;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=bHAcxfGF;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=MpfyAsz2;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=hRXH0l7P
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 6B30321F57;
+	Tue, 10 Nov 2026 16:25:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794327955; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=ATK+YqeQgXY50uB6ssooNlAaHRhaH0LqEgi3TMhGkNQ=;
+	b=iYWrj5XrAZn5FDOjN9EYYVDFi6U9zlAiFRm+ThPRCq0Si49LXXuhxSISDFBor4JTEC1R6Q
+	hKRDSYyJPEL0ABEAnDBTSmgqjlMbnkTDduS13Ds1s7/G8Ek8XcyVZ4lrW2Wsc4pBz6WgBk
+	ezg3wU4NMEmU6VVZK0NEwORWH5hdAMI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794327955;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=ATK+YqeQgXY50uB6ssooNlAaHRhaH0LqEgi3TMhGkNQ=;
+	b=bHAcxfGFcv+p7zPtJdGDOlmOrVt89AeKhU5HhhuOgphJpP5qxPAl+6LT+K/Y0qp5EzS6PU
+	FVbbuGMPZXzWePAg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794327954; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=ATK+YqeQgXY50uB6ssooNlAaHRhaH0LqEgi3TMhGkNQ=;
+	b=MpfyAsz2fWr84UvXpemBvDAiJkBwJHEc9ZEjOK4QVPB9ROzkZUl2WfYFMxokTNOiSSqPxN
+	mtRXBYs90YmC6Oi2X8SY7sEsZklxsIJGyjut4jPHkwmMNHlZ4FmWyRW0qIYPOjEhLQZmrU
+	kdb0lplI7J8Ma9kuBay17Krw2BcB1jQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794327954;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=ATK+YqeQgXY50uB6ssooNlAaHRhaH0LqEgi3TMhGkNQ=;
+	b=hRXH0l7PQ1ia9RofC4xrbyWiC116wTXqMd+xdjjGaL5ysK8oho1oZCDEFEVvnbZALiYbp4
+	dM711rXViNwzLeAQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E34D413479;
+	Tue, 10 Nov 2026 16:25:53 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id uM4yLZFF82o0HwAAD6G6ig
+	(envelope-from <tzimmermann@suse.de>); Tue, 10 Nov 2026 16:25:53 +0000
+Message-ID: <31fdcc5a-c944-43cf-9390-60e8cdd964ed@suse.de>
+Date: Tue, 10 Nov 2026 17:25:53 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,91 +105,150 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 10 Nov 2026 16:23:53 +0000
-Message-Id: <DMRO4QXXB8H4.127C1CPT3RZ18@google.com>
-Cc: <kvmarm@lists.linux.dev>, <linux-pci@vger.kernel.org>, "Pratyush Yadav"
- <pratyush@kernel.org>, <kexec@lists.infradead.org>, <kvm@vger.kernel.org>,
- <iommu@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
- <skhawaja@google.com>, <sagis@google.com>, <linux-arch@vger.kernel.org>,
- <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 16/19] PCI: liveupdate: Add feature header to struct
- pci_dev_ser
-From: "David Matlack" <dmatlack@google.com>
-To: "Tarun Sahu" <tarunsahu@google.com>, "Pasha Tatashin"
- <pasha.tatashin@soleen.com>, "Mike Rapoport" <rppt@kernel.org>,
- <robin.murphy@arm.com>, <maz@kernel.org>, <will@kernel.org>, "David
- Matlack" <dmatlack@google.com>, "Alexander Graf" <graf@amazon.com>,
- <seanjc@google.com>, <jgg@nvidia.com>, <loganodell@google.com>,
- <arnd@arndb.de>, <dwmw2@infradead.org>, <baolu.lu@linux.intel.com>, "Bjorn
- Helgaas" <bhelgaas@google.com>, <oupton@kernel.org>, <alex@shazbot.org>,
- <gle.com@google.com>, <pbonzini@redhat.com>, "Andrew Morton"
- <akpm@linux-foundation.org>, <kevin.tian@intel.com>, <joro@8bytes.org>
-X-Mailer: aerc 0.21.0
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-17-tarunsahu@google.com>
-In-Reply-To: <20261110050202.529473-17-tarunsahu@google.com>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/6] LoongArch: efi: Provide sysfb_primary_display for
+ screen_info users
+To: wuqianhai@loongson.cn, chenhuacai@kernel.org, kernel@xen0n.name,
+ deller@gmx.de, bhelgaas@google.com
+Cc: ardb@kernel.org, ilias.apalodimas@linaro.org, javierm@redhat.com,
+ loongarch@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-efi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-fbdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261029033440.973077-1-wuqianhai@loongson.cn>
+ <20261110085617.2626835-1-wuqianhai@loongson.cn>
+ <20261110085617.2626835-2-wuqianhai@loongson.cn>
+Content-Language: en-US
+From: Thomas Zimmermann <tzimmermann@suse.de>
+Autocrypt: addr=tzimmermann@suse.de; keydata=
+ xsBNBFs50uABCADEHPidWt974CaxBVbrIBwqcq/WURinJ3+2WlIrKWspiP83vfZKaXhFYsdg
+ XH47fDVbPPj+d6tQrw5lPQCyqjwrCPYnq3WlIBnGPJ4/jreTL6V+qfKRDlGLWFjZcsrPJGE0
+ BeB5BbqP5erN1qylK9i3gPoQjXGhpBpQYwRrEyQyjuvk+Ev0K1Jc5tVDeJAuau3TGNgah4Yc
+ hdHm3bkPjz9EErV85RwvImQ1dptvx6s7xzwXTgGAsaYZsL8WCwDaTuqFa1d1jjlaxg6+tZsB
+ 9GluwvIhSezPgnEmimZDkGnZRRSFiGP8yjqTjjWuf0bSj5rUnTGiyLyRZRNGcXmu6hjlABEB
+ AAHNJ1Rob21hcyBaaW1tZXJtYW5uIDx0emltbWVybWFubkBzdXNlLmRlPsLAjgQTAQgAOAIb
+ AwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftODH
+ AAoJEGgNwR1TC3ojx1wH/0hKGWugiqDgLNXLRD/4TfHBEKmxIrmfu9Z5t7vwUKfwhFL6hqvo
+ lXPJJKQpQ2z8+X2vZm/slsLn7J1yjrOsoJhKABDi+3QWWSGkaGwRJAdPVVyJMfJRNNNIKwVb
+ U6B1BkX2XDKDGffF4TxlOpSQzdtNI/9gleOoUA8+jy8knnDYzjBNOZqLG2FuTdicBXblz0Mf
+ vg41gd9kCwYXDnD91rJU8tzylXv03E75NCaTxTM+FBXPmsAVYQ4GYhhgFt8S2UWMoaaABLDe
+ 7l5FdnLdDEcbmd8uLU2CaG4W2cLrUaI4jz2XbkcPQkqTQ3EB67hYkjiEE6Zy3ggOitiQGcqp
+ j//OwE0EWznS4AEIAMYmP4M/V+T5RY5at/g7rUdNsLhWv1APYrh9RQefODYHrNRHUE9eosYb
+ T6XMryR9hT8XlGOYRwKWwiQBoWSDiTMo/Xi29jUnn4BXfI2px2DTXwc22LKtLAgTRjP+qbU6
+ 3Y0xnQN29UGDbYgyyK51DW3H0If2a3JNsheAAK+Xc9baj0LGIc8T9uiEWHBnCH+RdhgATnWW
+ GKdDegUR5BkDfDg5O/FISymJBHx2Dyoklv5g4BzkgqTqwmaYzsl8UxZKvbaxq0zbehDda8lv
+ hFXodNFMAgTLJlLuDYOGLK2AwbrS3Sp0AEbkpdJBb44qVlGm5bApZouHeJ/+n+7r12+lqdsA
+ EQEAAcLAdgQYAQgAIAIbDBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftOH6AAoJEGgNwR1T
+ C3ojVSkIALpAPkIJPQoURPb1VWjh34l0HlglmYHvZszJWTXYwavHR8+k6Baa6H7ufXNQtThR
+ yIxJrQLW6rV5lm7TjhffEhxVCn37+cg0zZ3j7zIsSS0rx/aMwi6VhFJA5hfn3T0TtrijKP4A
+ SAQO9xD1Zk9/61JWk8OysuIh7MXkl0fxbRKWE93XeQBhIJHQfnc+YBLprdnxR446Sh8Wn/2D
+ Ya8cavuWf2zrB6cZurs048xe0UbSW5AOSo4V9M0jzYI4nZqTmPxYyXbm30Kvmz0rYVRaitYJ
+ 4kyYYMhuULvrJDMjZRvaNe52tkKAvMevcGdt38H4KSVXAylqyQOW5zvPc4/sq9c=
+In-Reply-To: <20261110085617.2626835-2-wuqianhai@loongson.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-13.29 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	FREEMAIL_TO(0.00)[loongson.cn,kernel.org,xen0n.name,gmx.de,google.com];
+	ARC_NA(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmx.de];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:url,loongson.cn:email];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_NONE(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:url,loongson.cn:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -13.29
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-On Tue Nov 10, 2026 at 5:01 AM UTC, Tarun Sahu wrote:
-> Precede each serialized PCI device entry in the PCI Live Update KHO block
-> set with struct kho_ser_hdr via DECLARE_KHO_SER so future per-device PCI
-> Live Update features can append fields to struct pci_dev_ser without
-> breaking compatibility between adjacent kernels.
+Hi
 
-Elements of a collection should not have their own feature headers. This
-applies to patches 10, 12, 14, 16 and 18. I raised this during the v2
-discussion [1][2], but I don't think it was addressed.
+Am 10.11.26 um 09:56 schrieb wuqianhai@loongson.cn:
+> From: wuqianhai <wuqianhai@loongson.cn>
+>
+> LoongArch defines and initializes sysfb_primary_display only when
+> CONFIG_SYSFB or CONFIG_EFI_EARLYCON is enabled.  The PCI VGA arbiter and
+> the framebuffer console need the firmware framebuffer information through
+> screen_info whenever CONFIG_SCREEN_INFO is enabled, even if neither of
+> those options is set.
+>
+> Drop the guards so sysfb_primary_display is always defined and
+> initialized, and its EFI stub alias is always provided, mirroring x86.
+> This avoids selecting SYSFB just to obtain the symbol.
 
-All entries in a KHO block set are written by the same kernel using the
-same struct, and the block set has a single entry_size, so every entry
-header is necessarily identical. They don't convey anything that the
-header of the struct that owns the collection can't. In this case,
-struct pci_ser's header can define features that describe fields in
-struct pci_dev_ser, and the PCI core checks them once before iterating.
-If a feature only applies to some devices, the field's value in each
-entry says whether that device uses it.
+The idea is that you select SYSFB is you're interested in that 
+information.  I guess we could make sysfb_primary_display available if 
+CONFIG_VGA_ARB=y.
 
-Per-entry headers also cost a lot for small entries. struct pci_dev_ser
-goes from 8 to 16 bytes, and to 24 bytes once the first feature is
-added. Patch 18 does the same for every preserved memfd folio, which for
-a large guest backed by 4K pages adds gigabytes of preserved metadata.
+Best regards
+Thomas
 
-They also add new ways to read out of bounds. kho_ser_payload() trusts
-nr_required/nr_optional in each entry, and nothing checks that the entry
-header plus payload fit within entry_size. In patches 14 and 18 the walk
-uses each entry's fhdr->size to find the next entry, so one bad header
-throws off every entry after it.
+>
+> Signed-off-by: wuqianhai <wuqianhai@loongson.cn>
+> ---
+>   arch/loongarch/kernel/efi.c        | 5 +----
+>   arch/loongarch/kernel/image-vars.h | 2 --
+>   2 files changed, 1 insertion(+), 6 deletions(-)
+>
+> diff --git a/arch/loongarch/kernel/efi.c b/arch/loongarch/kernel/efi.c
+> index 69dd83f8082f..e491a82b2e0d 100644
+> --- a/arch/loongarch/kernel/efi.c
+> +++ b/arch/loongarch/kernel/efi.c
+> @@ -74,10 +74,8 @@ bool efi_poweroff_required(void)
+>   
+>   unsigned long __initdata primary_display_table = EFI_INVALID_TABLE_ADDR;
+>   
+> -#if defined(CONFIG_SYSFB) || defined(CONFIG_EFI_EARLYCON)
+>   struct sysfb_display_info sysfb_primary_display __section(".data");
+>   EXPORT_SYMBOL_GPL(sysfb_primary_display);
+> -#endif
+>   
+>   static void __init init_primary_display(void)
+>   {
+> @@ -129,8 +127,7 @@ void __init efi_init(void)
+>   
+>   	set_bit(EFI_CONFIG_TABLES, &efi.flags);
+>   
+> -	if (IS_ENABLED(CONFIG_EFI_EARLYCON) || IS_ENABLED(CONFIG_SYSFB))
+> -		init_primary_display();
+> +	init_primary_display();
+>   
+>   	if (boot_memmap == EFI_INVALID_TABLE_ADDR)
+>   		return;
+> diff --git a/arch/loongarch/kernel/image-vars.h b/arch/loongarch/kernel/image-vars.h
+> index e557ebd46c2b..4d1d7978553a 100644
+> --- a/arch/loongarch/kernel/image-vars.h
+> +++ b/arch/loongarch/kernel/image-vars.h
+> @@ -11,9 +11,7 @@ __efistub_strcmp		= strcmp;
+>   __efistub_kernel_entry		= kernel_entry;
+>   __efistub_kernel_asize		= kernel_asize;
+>   __efistub_kernel_fsize		= kernel_fsize;
+> -#if defined(CONFIG_EFI_EARLYCON) || defined(CONFIG_SYSFB)
+>   __efistub_sysfb_primary_display	= sysfb_primary_display;
+> -#endif
+>   
+>   #endif
+>   
 
-Instead I would keep struct pci_dev_ser as a plain struct, take the
-entry size from the KHO block header (patch 2), and in pci_flb_retrieve()
-check once that the entry size covers the base fields, plus the fields
-of any features set in struct pci_ser's header, e.g.:
+-- 
+--
+Thomas Zimmermann
+Graphics Driver Developer
+SUSE Software Solutions Germany GmbH
+Frankenstr. 146, 90461 Nürnberg, Germany, www.suse.com
+GF: Stefan Gaiser, Jochen Jaser, Abhinav Puri, (HRB 36809, AG Nürnberg)
 
-	entry_size =3D kho_block_set_entry_size(&incoming->block_set);
-	if (entry_size < offsetofend(struct pci_dev_ser, refcount))
-		panic(...);
-
-That also restores the minimum entry size check that the v10 PCI series
-had with PCI_DEV_SER_MIN_SIZE, which this version drops.
-
-[...]
-
-> -	kho_block_set_init(&incoming->block_set, sizeof(struct pci_dev_ser));
-> +	kho_block_set_init(&incoming->block_set, kho_ser_size(pci_dev_ser));
-
-This size is never used. kho_block_set_restore() overwrites it with the
-entry size recorded by the previous kernel. Passing this kernel's size
-here is misleading: pci_flb_retrieve() (and the LUO session/file restore
-paths) read as if they iterate incoming entries with the outgoing entry
-size, which would be a bug.
-
-Incoming block sets should not take an entry size at all.
-kho_block_set_restore() should initialize the block set itself from the
-incoming block headers, and the incoming paths should drop the
-kho_block_set_init() call.
-
-[1] https://lore.kernel.org/kexec/atl6K2Juy6Bh29lh@google.com/
-[2] https://lore.kernel.org/kexec/at-8vkVpN2SF3XgB@google.com/
 
