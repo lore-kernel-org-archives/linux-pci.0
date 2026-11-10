@@ -1,54 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794267544;
-	b=PEfOF208MO7cwEchqpuySgH5sdqgtlPGkNMT2cN3RxZyYc0nLWoCv6B3nWxuXtwZMPVI
-	 XhbUj3xLMdtFu0sWmW5tNppHzndvsxLJfKuPB1XlM/jjH/OhaOmUPnJd9HoT0GXFr21yw
-	 u2mcfvwMleymZ7XQIAotTgxTbcZwttvzsy3Z65ZojQil9cZcnpLJVFBkpzSqx8MzZjjQ2
-	 bxAsoiR+M6EyS1c2hHHO2XluXf2BhI936ED0hpjB9v7mHOng719A4yUebY6W8VqWkf0wA
-	 G6edF0pg3AD+FqJE+Ng/tmgPCU/AJrBhI5GnBmBCpyCB7lBQ2JtinKLSPTLYw+7t95w==
+	t=1794269425;
+	b=aVsGzPqb492Iy9PICnwRej89Ibl8nWir+YN/GHqBfAaih3suDyaVfMM6e49y1gCEnCch
+	 zdI4XoGZnoGl0Jx06c5QzKveeJgyciVg1C7HwXDbpJeSZwghZROjGEj6PdxFxz9zGxEmv
+	 XvnzyxBhzdSD54qvduX8yNI9RE+bMVIbJ0kxy/trpJrUTiPk6IvVNmVanTiXyHnJnjW1Q
+	 wF7CInjdFugY16jj1nHMxWgLF5h9XnxnvE19S6AX/tZd+LGvIHD+PLRzQDZth55NzEaC3
+	 CUbDRpQiGO8C58SqOYbp4cbOAujNCAARPBcnpzbokomHI9YyGa2eaodG01u704hwoYg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794267544;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=KgfMPxb7rVdtQa59yCe2pt/Wfceuew9w8NNWE5ct7iA=;
-	b=j1rGu1pW5fxieEIePwYZfNg0akHOhdZ1shAHm9xeAgMLCUGt50+oj2rB1Vk+sZ6nmb2a
-	 Dd1SaJ2GyCTNfS7TmpYcar4Oaj3Paec5cJqhEsASUHR25tQylXv26NkTQloI+00xW+fg5
-	 RVBFd2NIJ0eOmiNCaOQGtTQOaI0Faez1jOBEZArwvokSzftl3O2ACSXyLOkg7t5XOD+N0
-	 0peUDarMsGyPEPr/tjVbsCh7Kx/4ZDuZNUmi3Qp7+4/SPaui9KN1koDsYZ783d4rCpHMn
-	 PLUiOBekze0naAMYrt0CQ14g4Yo4y9AeYhujk2O2oDOGxp1BQ1LMx2EGiHe69bfou7Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794269425;
+	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
+	 Content-Type:Date:Message-Id:Subject:Cc:To:From:References:
+	 In-Reply-To;
+	bh=dz2fvkSwnZplQkX1U9pzrU7rFR3GRdiaB6bhtOf/H60=;
+	b=M+1cEN/cQBJSaELCHfZ/mD8TzpMtIv13v55vcPrbLXSE9/kQKM50wM1sYaSlJEE26ryV
+	 u4T1TnmgaSxkgmZN+XYRsDyDwS4ZJL4rtiqXtQACrnr0oDFd8krcv7Bho/eIjMzR/AjfO
+	 obPu1bAXUU5zwAJh7gLwG9/Chs5iN8yHOKQO+g82+7MQ3IjwRX+Jg645CZlYZJo0OAjyd
+	 uB0V0N8WO/omk6KNRauGBRbNwA+PVEjrNMysj0hd0+6IlgggP/EouI7qAtwiSmFd84yvH
+	 Hq37c9ocAxcnMVfiwP93KLU+RDnOGXTmfB717Kb/4ghtjhDQTxSGImZdEFFP0UtPEKA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UNxQv6xE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fCj5FFRq;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11103606A334;
-	Mon,  9 Nov 2026 23:39:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615CF606A321;
+	Tue, 10 Nov 2026 00:10:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UNxQv6xE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D4661F008A4;
-	Mon,  9 Nov 2026 23:39:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fCj5FFRq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7F9A1F0089F;
+	Tue, 10 Nov 2026 00:10:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794267543;
-	bh=KgfMPxb7rVdtQa59yCe2pt/Wfceuew9w8NNWE5ct7iA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=UNxQv6xEtOI/4uAlnX6zyUuMYJkpUVIxmZaIig3x+cMqWMHXg9eer9YhNkDX3T5P0
-	 NTGkHVg4gsFIMEIqKVDVtaLQpEsjs7nvPVBbCqKZHRNNJjOm5RoLJ0NEhCeTYiFU9R
-	 ijawJX5HAWKZttJua7QmbCDLWNiHMIdIrE9lK1iGaB/jkJGT48nfpjCpnP0YcS6Cg0
-	 wt916YI9aMMK+v/Ag+qQeo2E2OUYSp+xEXKBzMpknP3Wlm6BlKcrvWrPNnCbvBYrV3
-	 nf9lFVb5OgCpyYbDSxP4eazjWBgW2kJrjZFCvsEBWl1ZzMMu6C+ZQt6FnuSpbMz3BF
-	 rdpKy1IuhbBHw==
-Date: Mon, 9 Nov 2026 17:39:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: xujiahao <xujiahao@cmss.chinamobile.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Shijith Thotton <sthotton@marvell.com>,
-	Vamsi Attunuru <vattunuru@marvell.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH v2] PCI: octep: Size the interrupt name buffer for the
- full format range
-Message-ID: <20261109233902.GA350331@bhelgaas>
+	s=k20260515; t=1794269425;
+	bh=dz2fvkSwnZplQkX1U9pzrU7rFR3GRdiaB6bhtOf/H60=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=fCj5FFRqRM5NX6wqVhMfGWJhXWGI7k4HNPP5SYpZXp6fIJhbYuBhGZKgm1VP/hYUx
+	 X7pD03O7uixBW0BaNJND7Bid20cISEoxJZKHTeonSfF2sT0j9AeQBu/5YoeeymcnCX
+	 LSiPs/fChguo2+aRIj3pwETTiHs8H007sRY4/6XgYpJFi5tAKCKADUSjxZFIXquoI6
+	 C8CTEFVTVb1vZpgDfBIBvwf0R3fS8wUvLVWW7NYCzivSwM+cCoP5TmPssSeFD5zO+O
+	 ShBEsE7tgGUR0AXBmBb+GQiZMRtQXA1eXAntv/bny6a5v1fR5quH6iyfGteoEmSUxU
+	 DftRxsHV17FjA==
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,56 +48,100 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261106012126.3385789-1-xujiahao@cmss.chinamobile.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 10 Nov 2026 01:10:16 +0100
+Message-Id: <DMR3FALTBPDB.15ASJDTIC5GXS@kernel.org>
+Subject: Re: [PATCH v2 06/12] rust: pci: add a bind callback after
+ installing driver data
+Cc: <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <alex@shazbot.org>, <jgg@nvidia.com>,
+ <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
+ <airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <aliceryhl@google.com>, <tmgross@umich.edu>, <jhubbard@nvidia.com>,
+ <ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <kjaju@nvidia.com>, <alkumar@nvidia.com>, <ankita@nvidia.com>,
+ <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
+ <boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+ <work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
+ <peter@colberg.org>, <beata.michalska@arm.com>
+To: "Simon Song" <xinmengs@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20261023154009.2246627-1-xinmengs@nvidia.com>
+ <20261023154009.2246627-7-xinmengs@nvidia.com>
+In-Reply-To: <20261023154009.2246627-7-xinmengs@nvidia.com>
 
-On Fri, Nov 06, 2026 at 09:21:26AM +0800, xujiahao wrote:
-> octep_hp_request_irq() formats the interrupt name with "octep_hp_%d"
-> into a 16-byte array.  The prefix is 9 bytes and a full-range %d
-> argument can add up to 11 more, so the worst case needs 21 bytes
-> including the terminator and 0-day reports:
-> 
->   drivers/pci/hotplug/octep_hp.c:312:53: warning: '%d' directive output may be truncated writing between 1 and 10 bytes into a region of size 7 [-Wformat-truncation=]
->   note: 'snprintf' output between 11 and 20 bytes into a destination of size 16
-> 
-> The values passed today are OCTEP_HP_INTR_ENA (0) and OCTEP_HP_INTR_DIS (1),
-> so no truncation actually happens, but the buffer carries no margin over the
-> format's worst case.  Give it the room so the warning stops coming back from
-> builds that cannot narrow the argument.
-> 
-> Reported-by: kernel test robot <lkp@intel.com>
-> Closes: https://lore.kernel.org/oe-kbuild-all/202507261457.SXXHOjUk-lkp@intel.com/
-> Signed-off-by: xujiahao <xujiahao@cmss.chinamobile.com>
+On Fri Oct 23, 2026 at 5:40 PM CEST, Simon Song wrote:
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index adc7e92d44e..1951b3c8a5c 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
+> @@ -154,6 +154,13 @@ extern "C" fn probe_callback(
+>              let data =3D T::probe(pdev, info);
+> =20
+>              pdev.as_ref().set_drvdata(data)?;
+> +            // SAFETY: `set_drvdata` installed the pinned `T::Data` abov=
+e.
+> +            let data =3D unsafe { pdev.as_ref().drvdata_borrow::<T::Data=
+<'_>>() };
+> +            if let Err(error) =3D T::bind(pdev, data) {
+> +                // SAFETY: Failed bind leaves no callbacks borrowing the=
+ installed data.
+> +                drop(unsafe { pdev.as_ref().drvdata_obtain::<T::Data<'_>=
+>() });
+> +                return Err(error);
+> +            }
+>              Ok(0)
+>          })
+>      }
+> @@ -416,6 +423,15 @@ fn probe<'bound>(
+>          id_info: Option<&'bound Self::IdInfo>,
+>      ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound;
+> =20
+> +    /// Complete probe after the pinned driver data has been installed.
+> +    ///
+> +    /// Called with the PCI device lock held. On error, the data is drop=
+ped without calling
+> +    /// [`Self::unbind`]. Any callbacks started here must be stopped bef=
+ore returning an error.
+> +    fn bind<'bound>(dev: &Device<device::Core<'_>>, this: Pin<&Self::Dat=
+a<'bound>>) -> Result {
+> +        let _ =3D (dev, this);
+> +        Ok(())
+> +    }
 
-Applied to pci/hotplug for v7.5, thank you!
+No, please don't introduce a new bus callback for the sake of ordering
+registrations against each other, it does not scale.
 
-> ---
-> Changes in v2:
-> - Keep the compiler warning text on single lines so it stays greppable in
->   the git log (Bjorn Helgaas)
-> - Capitalize the subject to match drivers/pci/hotplug/ style (Bjorn Helgaas)
-> - Spell out the enum values passed to the format (Bjorn Helgaas)
-> ---
->  drivers/pci/hotplug/octep_hp.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/octep_hp.c b/drivers/pci/hotplug/octep_hp.c
-> index a0a7f9ccb..801c080e6 100644
-> --- a/drivers/pci/hotplug/octep_hp.c
-> +++ b/drivers/pci/hotplug/octep_hp.c
-> @@ -52,7 +52,7 @@ struct octep_hp_slot {
->  struct octep_hp_intr_info {
->  	enum octep_hp_intr_type type;
->  	int number;
-> -	char name[16];
-> +	char name[24];
->  };
->  
->  struct octep_hp_controller {
-> -- 
-> 2.43.0
-> 
-> 
-> 
+The answer is almost always to use a new registration data container and, w=
+here
+needed, self-referential pin-init in order to represent ordering dependenci=
+es.
+
+Fixed ordering imposed by bus callbacks falls apart with different driver n=
+eeds,
+whereas separate registration data containers and self-referential pin-init=
+ are
+flexible and represent data dependencies and lifetimes directly.
+
+IIUC, this comes down to the runtime PM implementation in this series, so p=
+lease
+base your code on the generic runtime PM work [1] from Beata (Cc) instead.
+
+If you respin this series before Beata respins the runtime PM work, please =
+take
+my latest feedback on her series into account, since it may affect how this
+series integrates with it.
+
+I'd also suggest splitting out the runtime PM support as separate patches a=
+t the
+end of this series, so we can start landing the rest independently.
+
+[1] https://lore.kernel.org/all/20261026120523.526942-2-beata.michalska@arm=
+.com/
