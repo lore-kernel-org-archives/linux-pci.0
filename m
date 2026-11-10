@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794296117;
-	b=OTd5n4h+KdmiolaR3hnVnqTmcigB/hBtSJVHuXz+G60wPb5nuAt9uUwPgpCUmsLA+2jn
-	 9DxDvxiZv/mPye8ikQAUd+6oCZ3KNvuzEspopRdWeCy194OXncJq7HLekt3FRX2l0x7I/
-	 yVwQIgmevp2GjHrt51OmAtGLex/c+NMhsGJgDPxdW2BDevesVItRNCwEc5h1wfy7yHglC
-	 7A7i96i8qrdmQM12U6/1Seak5CtEkywfR9yxusSiuPOS2jPdGIBvocpKxd6A433RpxoeP
-	 moy37U+trVcQbAyfavezhe32DZSKbG81QcFf2xWQ795I3eDnd3KS4wFCwJL+D1xcgaQ==
+	t=1794296118;
+	b=1ZEW/8rAoC9iDFfni96jDkLdgsFZmpovKlovaaJl6KzG2EkUdllX9RNoX1/aiJI2smlC
+	 UXyts0kohQ9hL3YjyKAjvgPaDI3AJN9WL3ZqBbpEoF+0nT9Q1q2Fvs9AkGR+aqPiMDLK1
+	 Lh1ye+Fn8Ii6al4puvQqODydQQd9jYsA9MHMQsbCXFEhrYu2xEKQ5SkFi5eNxJr6MTlfW
+	 iHeD78LVaQxJr3/DZVk7Jh2gGII/S3gwxr+emoOtaJ0PvEMe6qXfmARsdBOr6zcl7V6J4
+	 xrF56FUiLjdx4QLuoRr4VIcTiERZKYXm9zds7A0WEChm+y7qDiHO6LC1aUrPQfiJReg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794296117;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794296118;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=AzbLQeik4XRSh52cjTUxS4MacBULADZNlQYpHP9gwQo=;
-	b=4eEJ2n2vcan9YoCFw7x6owg0RfF7PUyP1BWLldvNtVmC9c/9LMNdAgd7muizRvuUa6Nc
-	 6LFQrvjzT4VPXCdoPEyl2OqCjCLEv+Z19hd7O6+2JzVTWLAnx/5K+gzNBG29tWY1lWzwS
-	 BaezKeoNbDa6/6tkHgD4RkdIEc5//kfckL1pmuUdvx84l7pVrl5ycG6KvJJ1aLLjgcttI
-	 alOgtyO6C4BzwQucOqF18pqy4be5GiVpI2ayY2KfwNQCe7QItD6qtuTRbzkjzDVYttza1
-	 UP7wjlLbRbKSOP/5023cga/awcRZTvINCgh9GvjJWGJTnb8/RqyQmAUbzJKIE68AQ2A==
+	bh=oiKoF2LmFxTv+wqYb/SncLxOqeiZk1hiI0B7Miq0yb8=;
+	b=5oXJgNtNQr9VjI5PN39R33t4yj0ElOjlmcvSai+lsobYCFIDznSumWY0G5Ems6cOLJRu
+	 AiVDDeZtsIOKi9Ud7Dmuq2LM6OO4a1N0oWQQURTmr+AKaUh0HA2H0rWfdycXqzKdT5jyT
+	 TurdC2nqMkRkbcfzmqQE9SfKaHvVdZjFJGy1Hdxny0fn16dtxqNn6zO22RezZJ5TAXwvg
+	 06sCfWmeYWFtL6CjoPoL8+yldvsNw8fHlveY6q+iZe0VBSmCKCU4/oltqAh+g7q0siEeV
+	 AyIGoDbSduJQk1Edle3K/XFYOJyglnQmlWWZHVniEFImr0rvV4iRJB4Pa6X/wvo8+HA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GimoIzhE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HFZyhtzl;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2E9C60A260E;
-	Tue, 10 Nov 2026 07:35:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EFA460A261E;
+	Tue, 10 Nov 2026 07:35:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GimoIzhE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82BE41F008A1;
-	Tue, 10 Nov 2026 07:35:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HFZyhtzl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 052FF1F008A3;
+	Tue, 10 Nov 2026 07:35:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794296116;
-	bh=AzbLQeik4XRSh52cjTUxS4MacBULADZNlQYpHP9gwQo=;
+	s=k20260515; t=1794296118;
+	bh=oiKoF2LmFxTv+wqYb/SncLxOqeiZk1hiI0B7Miq0yb8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GimoIzhEZ30EfQNUjQ9Tw4DuzXSGd3o/SSFmhI6tTF3bxKWLOGnrPG/BRWWxjEVaM
-	 rIN5NdoQhThkAUk8tSvBbC0hNLaQDGOTGIuPsOcSnmfd2oz8Lo5DWRd742Na3VaXrJ
-	 wnWlFfS3zfyRM7ZUy1fFpKQPwFvuEdkuEZG9ErgkSr7gKM1yxFYK0cNaodqsi7x9nh
-	 /YjBZ34XdaW/Mf2sOTuY/V2SPRciSiKIqwf5VVvN3jRaFxlRAAfAucusv2VQc2IK/i
-	 yhh5iWdkCKBhNC9vfzdF2VVrpFJYT5sxBiclr88nZ5ElHke1r2LFaCAzSxAfeGaGzf
-	 C8Ls3Xeyw2ElA==
-Message-ID: <sashiko-outbox-206506@kernel.org>
+	b=HFZyhtzldsuJwrgaRd9feyqweiGrXLq8Vsxan2enEIAS1aGNcqKCOgqfZMIjzPwJa
+	 aYXc2jOUeJ198SVsI86Ana4vYXukOlHIMbXStessefWHMiYIMVdHmbyAIZSSf+eI66
+	 wIF0BwDOF5go7uoL++9CVC5togcK3Qknb0xlRn8ShaSLLYoRgC2XqpZst56YALQV4m
+	 DDY/4SxShyFBnKl8eoaNFSe4B028Z31rYMaPj4KSTqdRsl8H6AhhujUPS0OfzaI0A3
+	 0paNC6ljRBLk5h9UNnXrf3WEm5qEBVAlYhZ/FFYYstKZDx6boDRZAhjfWlfpzYvJsJ
+	 fxs+yaF3Kdtgw==
+Message-ID: <sashiko-outbox-206508@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 06/19] cdx: Propagate DMA configuration errors
+Subject: Re: [PATCH v2 08/19] driver core: Add a compatibility API for
+ manual driver attachment
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
 Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261109-device-trust-core-v2-6-3b12d9a9f861@nvidia.com>
+In-Reply-To: <20261109-device-trust-core-v2-8-3b12d9a9f861@nvidia.com>
 References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
- <20261109-device-trust-core-v2-6-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-8-3b12d9a9f861@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 07:35:16 +0000
+Date: Tue, 10 Nov 2026 07:35:17 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,19 +63,20 @@ Precedence: list
 
 > From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> CDX reports successful DMA configuration when firmware setup defers or
-> default-domain acquisition fails. Driver probing can then proceed without
-> the required DMA setup or IOMMU ownership.
+> Existing manual binding paths probe drivers under subsystem locks before
+> publishing their bindings. Normal attachment would add device locking to
+> these paths.
 >=20
-> Return the configuration result so driver core stops or defers probing
-> instead of allowing a driver to use a rejected domain.
+> Add device_driver_attach_full() to preserve their serialization while
+> centralizing probe and binding cleanup. This compatibility API must not
+> be used in any new code: it prevents devices from using the device trust
+> authorization infrastructure. New code must use device_driver_attach().
 >=20
-> Fixes: 2959ab247061 ("cdx: add the cdx bus driver")
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109-device-tru=
-st-core-v2-0-3b12d9a9f861@nvidia.com?part=3D6
+st-core-v2-0-3b12d9a9f861@nvidia.com?part=3D8
 
