@@ -1,72 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.69
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794286927;
-	b=TgjZI9imgov0A7pFPX4fpcpMaqu6yWNbOJ1I8KyhfN4wgJlcmsKr8aeLEkrfv1WOLDEs
-	 Mg/MgnRISNzLm1i+SyLKOggPSCVmDgxQUVvskg17e+bXDiNM0i0YVRgFwfsmZBNFBUCQz
-	 Kfk8r5GcYEkURtBRiM5YH5n7qQQRqZcw7VlZJLpQI2BaeBXy7lMiepApN5I2UljRbJooI
-	 SukVxhoNjX0JTlKThq0r+HV6VrShDYIP4RUxQL0KQP0o9BGW8690lXlmhAqMY3RCgtwHd
-	 0G43TzV0cpooQ04fBBDcTLL2YCU5F6zwvhuQY6/Ju8jDk9S06xB3xZ2Lo4y1pWBridQ==
+	t=1794286928;
+	b=OaC4sIqE01IFCqNChdxzTMBiOOj1igzWEhVcZ0aTc/LIJgH5VUGxcxcu1Hg5I+qCJPFQ
+	 ctUUkR5OMQGs78A99vLP3iMmmvRe0XYrrFMUq0XVzsu0VLMghCbJYMdd51EoXl7ssrNmw
+	 w2BlFoPCtAuoCNc+/Ea9huHJu2kOhxiVk1uyRj+JmHHyxi+uyyyAdrXNB6/iB/2M0Nu0v
+	 4XOOsF5cD8kGsGaL697OC10YbxooeDQvdkY+4zDXoZ9XCNtwG3FqwVN/cswDds/ygG7tY
+	 F9Ggpz6HdVBnsgQk6wfREOFJ/byN9PULfGZcw1VcZh0ZIPP+XK7EIc67ItvLEYJoHUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794286927;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794286928;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=c0rc/quhwxN60DpjROoJEjycH9qA4Mz3L7opctQFNIY=;
-	b=Udfm/ZaJPhCvMpxki9zeSp/9eQmceizVEitCOWvhTeK3mZ+nM72ulaJyP5J7we554Ijp
-	 DudAqPpI8dlwoPSuhzUeYBIR+4hWmOLOWEMh6LLFnWnIbg5bVJhnyqPLbBbc/RMkLBQuK
-	 5jzrunXHOwNL4IUOlLawzyLXmGpgEClpHB+6lxY3gyM13GKIr17Wp9kLHThKJUmT9keoy
-	 MXh91mt5U3CGHhsa7xlbbFCrxRr//naB/A1oqyDZ+G9h2ofcd41ct8IyhTBvK3kMiYwZo
-	 UZfxpv8kcaP4A6rA6vt6PNC2nHlKnlN+j8wOtKarqWPs9EX6JDmeE/C5tEcVa5TtTlg==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=3vxLVeArTOU555NjIGXbAokcuidpkXwhlCffjRLrr3o=;
+	b=qEKvgztwse4FYV3XTDBs8FaIDsAne9ZTWcftN4zGtuXuRacn2a6LdkvVbKFW1VW/qR96
+	 5WgyOTe6r9gQog4ySXgVXZOTJjhvgrqb5sCjmAFhh8+lKmy1rXJh+EMWC3JTy/MQaMiai
+	 DolbrgD3Odm19PP6iI+LVTcfVjzoOFnR1jWQ+TIA56p3JPOFYEfKBpT/bszHLNDTpMh7F
+	 mj5XnyOAKcFhWn+9Brc65UqIzYJi8lcKk+SEl6Ru8eiCYfn5dfizW9Nrpl1OeGdNTmhdA
+	 wU9iLFK/QGETPSnXWMbgq4gmK2YVgZkjZ9ee8H9cx/QIvJnwkgUHcYJc6HmaoXEahGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Lo5RQaja;
-	arc=none smtp.remote-ip=209.85.218.69
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com [209.85.218.69])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=DAEo2dMx;
+	arc=none smtp.remote-ip=209.85.218.72
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E501606A325
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3E501606A325
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2507C606A339
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2507C606A339
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Lo5RQaja
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c293e604f0eso149010066b.3
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=DAEo2dMx
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-c40aa03ded8so181915166b.2
         for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 21:02:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20260707; t=1794286926; x=1794891726; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=c0rc/quhwxN60DpjROoJEjycH9qA4Mz3L7opctQFNIY=;
-        b=Lo5RQajanaZzCwFw+ugi1v4hF3SsUSUSyPljbM0tBCuFtCD24CD85Uiktm9lYLuxES
-         6F2l6XBBIDy0+XfgD9KAPFQ70G6Dlc+9rREcl6t8anWasK4hLgjWLHVQJPCyJ8OH5kfR
-         g7/lMsrVFFIk/qjB5/6Q07A2pJvGZX8dmMTM09S2880zC9Xc6UKzW/b+q9ww6bpgDczY
-         imGCZCS5Lr2nguxLBGsU7K+UFH+RHDIcC+JO6sC73VQ5GFLJu470gQBxjcua2dZ2Gliu
-         x46s7DxJtCwD5DkqlRGlEzU5Wb2uQ9a4bbsn7kWRddGEAK6vwj/DwkDt5OBC19gWSp42
-         b+Fg==
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=3vxLVeArTOU555NjIGXbAokcuidpkXwhlCffjRLrr3o=;
+        b=DAEo2dMxobhuiy+BPkZF78KBY8AZ3oG6vG1FJ0FSRekwxR92kAiVOHr8toAvgzqrPg
+         9seh1cIoK/EUOBiYwAqphF52K+OaWWcHy9U0OmiD2/pxWGLF97msZ9+ohaFlKABy7suR
+         CrzvVla47LRVqPLw0uLBX/OUXdisY2cclo29hk/vRQLpxcWCvdAEKR4E8t1o5vD+ZO7u
+         OsoLTt2HhKL2VqBsFkqw/CUcRiVqIil+kpdtGCXL/2npw4DXy8c1gzFohJBZoXuJKrat
+         hwF8FaYMniFneqTcmuTpTo3f7+K791eyhYrEzbV1Ha+N33LMtS/irMZjBEYmKw5EgwK4
+         uNIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20260707; t=1794286926; x=1794891726;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=c0rc/quhwxN60DpjROoJEjycH9qA4Mz3L7opctQFNIY=;
-        b=y7JuQJIA1Ak6OXznDFsy6ZiQ9JbXj5tvqiFmNRXANkVSceyVkpPqkSBuDCXXfkbuls
-         y7iJxN7DHfK/Cv6+SbGFGuixlhhvTwO51ZJls87B2dUVyZvcG/XZWfq1IMeYEJ9EtXw8
-         NNuxx+uZHkSfd2elITqkKHyeuMr15UYpiUBlm4HZ5DeyA31wqhmPRWsFlasohnPGRDaZ
-         qfzJjTZtbRykDTYIoou+ayjhsa7ykIJpUgvs2JZL5h6hyEZ4Zi924u7VmD7ypZoSCY6x
-         pD5jH3fTUtDAdmSujTOMxinB2omFn9QWMRdEs+5mnEMvtRi8w1q4RlLNEHj0RjpqL2cT
-         A73g==
-X-Forwarded-Encrypted: i=1; AL+hErFxPykQ4uztDRTPg7nKWKWU11XwIvCqoks3Y8c+HrdN+NX/HXTrTEBjmWeHP0DOCoOgQ4C//QzzgUM=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9bHNxCSxoZGQxj+skW5XauOS78wqAhfWzpxvPmLRnVYck0QgAy
-	3Nhy/SlX6lr9XsF+Twfjw1+EJAuFK3695i5jKJmemS0SbTIkvAFoeInuTJ2vfbWklGJVXXxwlY4
-	IHFE09d2a2+Zr3VBMcQ==
-X-Received: from ejai3.prod.google.com ([2002:a17:906:1143:b0:c3f:6b4b:bcf8])
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=3vxLVeArTOU555NjIGXbAokcuidpkXwhlCffjRLrr3o=;
+        b=wKnPcMtd9+d5+3aJWGadlxwGFDnYQxy1NAl1faGOP36I6tpwDYMMVscfH7Aro5QdnF
+         AJVLUdDP7XGr2XMlBDP3d3xFgBAtGatLc2zulvwp/OqJvjrbLMOJ5C1w3zkb2PkX40aN
+         CsKQP1Q7FD35GOPahOp2et5goT4ThCORj519aTvM9Lg7Orw0bxod/4QjOuwr12bbELvm
+         GTdhVNVRi8zteo5PVP7ghXWkr/c9vfj1gl276EYzfU55cqqRNTcXtHVL7WAT/R8Z/CeY
+         t/vtqp2D5eayD5B2qE6OJhF68KuQCn5qZ71hccWBwWVu1J8Blq5+JpEVC5/5TfQH23JI
+         RQgQ==
+X-Forwarded-Encrypted: i=1; AL+hErGwRU8O8+MQUXh2W1IJ7J4f3+VEgN3Ygiey2u9SsO7NsB6UDcGt35WCj2XC4eJWJe6JwmTAdppZ11A=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+wlR3Vm1+FXt0qkcwGAh41sldVSAYLS7aN5V405PRlwFAwd8Xh
+	u8255bATjJncDhzO79zXwYpUEQTU/vgMTvcWrvXM8pgINCOr2Fgt5hrqSIbSfYYOn9uwuSemZWc
+	ReqeRTFKRs9wh+0J9kg==
+X-Received: from ejcuu11-n1.prod.google.com ([2002:a17:907:c60b:10b0:c3f:fb8f:67f3])
  (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:906:f58d:b0:c41:7e99:c6c2 with SMTP id a640c23a62f3a-c5049656cbamr129203766b.44.1794286925434;
- Mon, 09 Nov 2026 21:02:05 -0800 (PST)
-Date: Tue, 10 Nov 2026 05:01:43 +0000
+ 2002:a17:907:9694:b0:c31:fb29:a137 with SMTP id a640c23a62f3a-c5049525569mr113201966b.21.1794286926296;
+ Mon, 09 Nov 2026 21:02:06 -0800 (PST)
+Date: Tue, 10 Nov 2026 05:01:44 +0000
+In-Reply-To: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,10 +79,11 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
+References: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailer: git-send-email 2.56.0.506.g506a7eabc5-goog
-Message-ID: <20261110050202.529473-1-tarunsahu@google.com>
-Subject: [PATCH v4 00/19] kho, liveupdate: Add feature header for fine-grained
- ABI compatibility
+Message-ID: <20261110050202.529473-2-tarunsahu@google.com>
+Subject: [PATCH v4 01/19] liveupdate, kho: Remove __packed from KHO, LUO and
+ memfd ABI structures
 From: Tarun Sahu <tarunsahu@google.com>
 To: Pasha Tatashin <pasha.tatashin@soleen.com>, Mike Rapoport <rppt@kernel.org>, robin.murphy@arm.com, 
 	maz@kernel.org, will@kernel.org, David Matlack <dmatlack@google.com>, 
@@ -96,187 +100,197 @@ Cc: kvmarm@lists.linux.dev, linux-pci@vger.kernel.org,
 	Tarun Sahu <tarunsahu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-This v4 of feature flags support for LUO and KHO is no longer an RFC.
-This has gone through multiple design changes over the past few months,
-and I thank everyone for providing their suggestions and reviewing it
-promptly. Below I talk briefly about the evolution of this series to set
-context and try to make it easy for everyone to review.
+All structures in include/linux/kho/abi/block.h (struct
+kho_block_header_ser), include/linux/kho/abi/luo.h (struct luo_ser,
+struct luo_file_ser, struct luo_file_set_ser, struct luo_session_ser,
+struct luo_flb_header_ser, struct luo_flb_ser) and
+include/linux/kho/abi/memfd.h (struct memfd_luo_folio_ser, struct
+memfd_luo_ser) have naturally aligned fields on 64-bit architectures,
+with no padding holes between fields or tail padding. Assert both the
+structure size and 8-byte alignment under CONFIG_64BIT at compile time.
+Any future unaligned field addition should come with reserved field to
+keep the structure aligned.
 
-Initially, Logan proposed the feature flags in RFC v1 [1], which tried
-to solve the problem of dependency on the compatible string. Feature
-flags introduced finer-grained compatibility. This series had three
-fields: active, supported, and required. The number of flags was limited
-and didn't have flexibility, which reduced the complexity of the patch,
-but put a limitation on the extensibility of the features.
+Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+---
+ include/linux/kho/abi/block.h | 10 +++++++--
+ include/linux/kho/abi/luo.h   | 38 +++++++++++++++++++++++++++++------
+ include/linux/kho/abi/memfd.h | 16 ++++++++++++---
+ 3 files changed, 53 insertions(+), 11 deletions(-)
 
-After LPC and a few design discussions, I proposed RFC v2 [2], which
-changed the flags to optional and required and converted the encoding to
-2 bits per feature instead of having two separate variables. But This still
-has the number of flags limited and fixed the feature header size to
-128 bytes. Though each serialized structure is being allocated in
-multiples of PAGE_SIZE (folio order = 0, 1, 2...), where 128 bytes is
-not a problem, it still carries two fundamental issues: limited feature
-flags, and a fixed 128-byte memory overhead for each preserved file. In
-the future, as there are plans for moving to KHO slab, the allocation
-for serialized structures can be significantly reduced and this 128-byte
-size will be a problem again.
-
-Based on the RFC v2 discussion, this v4 (v3 [3] was intentionally ignored)
-moves to extensible feature flags with a variable-length flags[] array,
-avoiding the fixed 128-byte overhead and feature-count limit.
-
-Along with this, as discussed on RFC v2, v4 uses separate bit ranges for
-required and optional flags (1 bit per feature). It builds on the
-consideration that a feature in its lifetime will either be required or
-optional; it can't be toggled into the other. In the future, if such a
-need arises, a new feature flag can be introduced to replicate the
-feature as optional or required, opposite to its ancestor flag.
-
-This new layout and encoding in memory is as follows:
-
-struct kho_ser_hdr {
-	u32 size;
-	u16 nr_required;
-	u16 nr_optional;
-	u64 flags[];
-}
-
-where,
-	flags[i] = (BIT_MAP(optional_features) << nr_required) |
-		   BIT_MAP(required_features)
-
-This series introduces the feature header in the KHO subsystem, and it
-is used by serialized structures across KHO and LUO. A few of the
-serialized structures embed other serialized structures directly. To
-keep the relative offsets of fields to be same across kernels, we cannot
-have an embedded serialized structure's size changed; otherwise, direct
-casting will not be possible. To solve this, this series converts those
-embedded structures to KHOSER_PTR, which points to the memory just after
-the parent serialized structure, and allocation and preservation happen
-for the total memory (parent_ser_size + embedded_ser_size).
-
-<Iamparent>_ser {
-	u64 a;
-	u64 b;
-	struct <Iamembedded>_ser e_ser;
-	u64 d;
-}
-	CONVERTS TO ===>
-
-<Iamparent>_ser {
-	u64 a;
-	u64 b;
-	DECLARE_KHOSER_PTR(e_ser, <Iamembedded>_ser);
-	u64 d;
-}
-
-There are only two such instances: kho_vmalloc and luo_file_set_ser.
-
-This series introduces kho_ser_hdr for the following structures:
-
-  - struct kho_kexec_metadata
-  - struct kho_vmalloc
-  - struct kho_block_header_ser
-  - struct luo_ser
-  - struct luo_session_ser
-  - struct luo_file_set_ser
-  - struct luo_file_ser
-  - struct luo_flb_header_ser
-  - struct luo_flb_ser
-  - struct pci_ser
-  - struct pci_dev_ser
-  - struct memfd_luo_ser
-  - struct memfd_luo_folio_ser
-
-If you notice, this also includes the PCI ser structures. PCI LUO
-support is merged in liveupdate/next, and this series is developed on
-top of it.
-
-Each serialized structure is preceded in memory by struct kho_ser_hdr
-and registered via DECLARE_KHO_SER(name, payload_size, nr_required,
-nr_optional). Both struct kho_kexec_metadata and struct pci_dev_ser are
-explicitly marked with __aligned(8) because their largest member is a
-32-bit integer, and 8-byte alignment is required by DECLARE_KHO_SER() so
-trailing feature payloads remain 8-byte aligned across 32-bit and 64-bit
-kernels.
-
-Also, Introduce DECLARE_KHO_SER_HDR(ser_name, fhdr) which is just the
-wrapper for struct kho_ser_hdr fhdr, This makes it clear
-To which ser_name, this fhdr belongs to.
-
-
-Series structure:
-  - Patch 1 removes __packed from KHO, LUO, and memfd ABI structures and
-    asserts their natural size and 8-byte alignment under CONFIG_64BIT.
-  - Patch 2 records entry_size in struct kho_block_header_ser so the
-    incoming kernel derives the entry stride from the block header.
-  - Patch 3 converts callers that embedded struct kho_vmalloc by value
-    (memfd_luo and test_kho) to reference it via DECLARE_KHOSER_PTR so
-    struct kho_vmalloc can grow independently.
-  - Patch 4 converts struct luo_session_ser to reference
-    struct luo_file_set_ser via DECLARE_KHOSER_PTR instead of embedding
-    it by value so both structures can grow independently.
-  - Patch 5 introduces struct kho_ser_hdr, DECLARE_KHO_SER(),
-    DECLARE_KHO_SER_HDR(), and the serialization/validation helpers in
-    include/linux/kho/abi/feature.h.
-  - Patches 6-18 add the feature header to each of the 13 KHO, LUO, PCI,
-    and memfd serialized structures in independent patches.
-  - Patch 19 adds a KUnit test suite (kho_feature) covering the feature
-    header helpers.
-
-[1] https://lore.kernel.org/all/20260903023452.721732-1-loganodell@google.com/
-[2] https://lore.kernel.org/all/20261021152527.375070-1-tarunsahu@google.com/
-[3] https://lore.kernel.org/all/20261026174217.603114-1-tarunsahu@google.com/
-
-Tarun Sahu (19):
-  liveupdate, kho: Remove __packed from KHO, LUO and memfd ABI
-    structures
-  kho: block: Record the entry size in the block header
-  kho, memfd_luo: Reference struct kho_vmalloc via serialized pointer
-  liveupdate: Reference struct luo_file_set_ser via serialized pointer
-  kho: Add feature header for fine-grained ABI compatibility
-  kho: kexec_metadata: Add the feature header
-  kho: vmalloc: Add the feature header
-  kho: block: Add the feature header to blocks
-  liveupdate: Add feature header to struct luo_ser
-  liveupdate: Add feature header to struct luo_session_ser
-  liveupdate: Add feature header to struct luo_file_set_ser
-  liveupdate: Add feature header to struct luo_file_ser
-  liveupdate: Add feature header to struct luo_flb_header_ser
-  liveupdate: Add feature header to struct luo_flb_ser
-  PCI: liveupdate: Add feature header to struct pci_ser
-  PCI: liveupdate: Add feature header to struct pci_dev_ser
-  mm: memfd_luo: Add feature header to struct memfd_luo_ser
-  mm: memfd_luo: Add feature header to struct memfd_luo_folio_ser
-  kho: Add KUnit test for the feature header helpers
-
- MAINTAINERS                            |   1 +
- drivers/pci/liveupdate.c               |  99 +++----
- include/linux/kexec_handover.h         |  15 +-
- include/linux/kho/abi/block.h          |  21 +-
- include/linux/kho/abi/feature.h        | 372 +++++++++++++++++++++++++
- include/linux/kho/abi/kexec_handover.h |  11 +-
- include/linux/kho/abi/kexec_metadata.h |  17 +-
- include/linux/kho/abi/luo.h            | 102 ++++---
- include/linux/kho/abi/memfd.h          |  27 +-
- include/linux/kho/abi/pci.h            |  66 ++---
- include/linux/kho_block.h              |   8 +-
- kernel/liveupdate/kexec_handover.c     |  98 ++++---
- kernel/liveupdate/kho_block.c          | 172 +++++++++---
- kernel/liveupdate/luo_core.c           |  43 +--
- kernel/liveupdate/luo_file.c           |  58 ++--
- kernel/liveupdate/luo_flb.c            |  69 +++--
- kernel/liveupdate/luo_internal.h       |   9 +-
- kernel/liveupdate/luo_session.c        |  55 +++-
- lib/Kconfig.debug                      |  13 +
- lib/test_kho.c                         |  38 ++-
- lib/tests/Makefile                     |   1 +
- lib/tests/kho_feature_kunit.c          | 184 ++++++++++++
- mm/memfd_luo.c                         | 183 ++++++++----
- 23 files changed, 1271 insertions(+), 391 deletions(-)
- create mode 100644 include/linux/kho/abi/feature.h
- create mode 100644 lib/tests/kho_feature_kunit.c
-
+diff --git a/include/linux/kho/abi/block.h b/include/linux/kho/abi/block.h
+index d06d64b963be..36bdbaf9b3b8 100644
+--- a/include/linux/kho/abi/block.h
++++ b/include/linux/kho/abi/block.h
+@@ -12,7 +12,7 @@
+  * pre-update kernel to a post-update kernel.
+  *
+  * This interface is a contract. Any modification to the structure fields,
+- * compatible strings, or the layout of the `__packed` serialization
++ * compatible strings, or the layout of the serialization
+  * structures defined here constitutes a breaking change. Such changes require
+  * incrementing the version number in the `KHO_FDT_COMPATIBLE` string to
+  * prevent a new kernel from misinterpreting data from an old kernel.
+@@ -26,6 +26,8 @@
+ #define _LINUX_KHO_ABI_BLOCK_H
+ 
+ #include <asm/page.h>
++#include <linux/build_bug.h>
++#include <linux/kconfig.h>
+ #include <linux/types.h>
+ 
+ /**
+@@ -49,6 +51,10 @@
+ struct kho_block_header_ser {
+ 	u64 next;
+ 	u64 count;
+-} __packed;
++};
++
++static_assert(sizeof(struct kho_block_header_ser) == 16);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct kho_block_header_ser) == 8);
+ 
+ #endif /* _LINUX_KHO_ABI_BLOCK_H */
+diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
+index 288076de6d4a..721949374fa1 100644
+--- a/include/linux/kho/abi/luo.h
++++ b/include/linux/kho/abi/luo.h
+@@ -58,6 +58,8 @@
+ #define _LINUX_KHO_ABI_LUO_H
+ 
+ #include <linux/align.h>
++#include <linux/build_bug.h>
++#include <linux/kconfig.h>
+ #include <linux/kho/abi/block.h>
+ #include <uapi/linux/liveupdate.h>
+ 
+@@ -82,7 +84,11 @@ struct luo_ser {
+ 	u64 liveupdate_num;
+ 	u64 sessions_pa;
+ 	u64 flbs_pa;
+-} __packed;
++};
++
++static_assert(sizeof(struct luo_ser) == 32);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct luo_ser) == 8);
+ 
+ #define LIVEUPDATE_HNDL_COMPAT_LENGTH	48
+ 
+@@ -98,7 +104,11 @@ struct luo_file_ser {
+ 	char compatible[LIVEUPDATE_HNDL_COMPAT_LENGTH];
+ 	u64 data;
+ 	u64 token;
+-} __packed;
++};
++
++static_assert(sizeof(struct luo_file_ser) == 64);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct luo_file_ser) == 8);
+ 
+ /**
+  * struct luo_file_set_ser - Represents the serialized metadata for file set
+@@ -113,7 +123,11 @@ struct luo_file_ser {
+ struct luo_file_set_ser {
+ 	u64 files;
+ 	u64 count;
+-} __packed;
++};
++
++static_assert(sizeof(struct luo_file_set_ser) == 16);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct luo_file_set_ser) == 8);
+ 
+ /**
+  * struct luo_session_ser - Represents the serialized metadata for a LUO session.
+@@ -131,7 +145,11 @@ struct luo_file_set_ser {
+ struct luo_session_ser {
+ 	char name[LIVEUPDATE_SESSION_NAME_LENGTH];
+ 	struct luo_file_set_ser file_set_ser;
+-} __packed;
++};
++
++static_assert(sizeof(struct luo_session_ser) == 80);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct luo_session_ser) == 8);
+ 
+ /* The max size is set so it can be reliably used during in serialization */
+ #define LIVEUPDATE_FLB_COMPAT_LENGTH	48
+@@ -152,7 +170,11 @@ struct luo_session_ser {
+ struct luo_flb_header_ser {
+ 	u64 pgcnt;
+ 	u64 count;
+-} __packed;
++};
++
++static_assert(sizeof(struct luo_flb_header_ser) == 16);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct luo_flb_header_ser) == 8);
+ 
+ /**
+  * struct luo_flb_ser - Represents the serialized state of a single FLB object.
+@@ -175,7 +197,11 @@ struct luo_flb_ser {
+ 	char name[LIVEUPDATE_FLB_COMPAT_LENGTH];
+ 	u64 data;
+ 	u64 count;
+-} __packed;
++};
++
++static_assert(sizeof(struct luo_flb_ser) == 64);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct luo_flb_ser) == 8);
+ 
+ /* Kernel Live Update Test ABI */
+ #ifdef CONFIG_LIVEUPDATE_TEST
+diff --git a/include/linux/kho/abi/memfd.h b/include/linux/kho/abi/memfd.h
+index 08b10fea2afc..376a724a1d8c 100644
+--- a/include/linux/kho/abi/memfd.h
++++ b/include/linux/kho/abi/memfd.h
+@@ -11,6 +11,8 @@
+ #ifndef _LINUX_KHO_ABI_MEMFD_H
+ #define _LINUX_KHO_ABI_MEMFD_H
+ 
++#include <linux/build_bug.h>
++#include <linux/kconfig.h>
+ #include <linux/types.h>
+ #include <linux/kho/abi/kexec_handover.h>
+ 
+@@ -20,7 +22,7 @@
+  * memfd uses the ABI defined below for preserving its state across a kexec
+  * reboot using the LUO.
+  *
+- * The state is serialized into a packed structure `struct memfd_luo_ser`
++ * The state is serialized into `struct memfd_luo_ser`
+  * which is handed over to the next kernel via the KHO mechanism.
+  *
+  * This interface is a contract. Any modification to the structure layout
+@@ -54,7 +56,11 @@ struct memfd_luo_folio_ser {
+ 	u64 pfn:52;
+ 	u64 flags:12;
+ 	u64 index;
+-} __packed;
++};
++
++static_assert(sizeof(struct memfd_luo_folio_ser) == 16);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct memfd_luo_folio_ser) == 8);
+ 
+ /*
+  * The set of seals this version supports preserving. If support for any new
+@@ -85,7 +91,11 @@ struct memfd_luo_ser {
+ 	u32 flags;
+ 	u64 nr_folios;
+ 	struct kho_vmalloc folios;
+-} __packed;
++};
++
++static_assert(sizeof(struct memfd_luo_ser) == 48);
++static_assert(!IS_ENABLED(CONFIG_64BIT) ||
++	      __alignof__(struct memfd_luo_ser) == 8);
+ 
+ /* The compatibility string for memfd file handler */
+ #define MEMFD_LUO_FH_COMPATIBLE	"memfd-v2"
 -- 
 2.56.0.506.g506a7eabc5-goog
 
