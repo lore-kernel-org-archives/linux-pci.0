@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.71
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.70
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794286930;
-	b=dtzQXFCigOp+CD8jbWXzzIU6VN9nB4K6gmtPo8SMkkwzWKOrRSBSrO97qj72OHgZzwzE
-	 aeD0AjjVgR0KQW3k9+dC5O581hJN6QrLizKBw8CcSiKBwBF/CFXVhBtt+WcEjEeQByweL
-	 7X6HAaaeOOiW3O1NZaj+K3gPdys9HOTD5NVcu9fstOOgTO7UBThUBHuHx4/vyxmCvXUZt
-	 P3BtUNf1dYEtWLNWLTcLWPq4xw0WYynPgKSV9GuqOOTHePN+m1yggqKDQ33lFzfc90W26
-	 9JHeevHogSzjCVmG3+EhzRt+/Wci2w3xwrb8CSifec1XXj14x/e9LT0dBxrKJJ9qBqg==
+	t=1794286931;
+	b=cFI0mNwYcIFSSMvDGqzqWhFNxcP93tQpXrSce0VmmunxhtDvH5O1td2g59wUvx8P9Bvm
+	 zXLrn2dJT1OLNxEQVwQ0e64aoE4FiS+SXQxxJDNAr+qzK1pTT6fmId1ct5ZmQzC3WrNV4
+	 6MIq80XgQGi8Tnd/+4DDSxLRfQrqoq2pnmNchdwOHs6w5JtHjYl1H04eTcECQxXQaQXdX
+	 d1zdEof7B6a1qmcPlMcKokRwJB/IYQ8AYEQKP1K+Hu2U6KXFt5gr2I/eYU3AudRrBamut
+	 /Pz/dtjm++qYlZRi2b6R9i1eklKgoHL5HPBM3+zsnsGov5ZK4LEE4Zd/d3o8l42BJmw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794286930;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794286931;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=Sj2aHvE/30fRUSODl4VGY86EHM+govAz/p3nvPD2KF0=;
-	b=nmopEXKl1v8c3yQ9Eedh6fYdAeaXQLha0RMRGpDs1iOSYBuNw3LFWTFbgUN0KGX+lC++
-	 r+cOEA8jNTrsgF11lRX97aW+/THf+vFvIU++Fe7QYCtbhEJgLNdkTwlQcnvtONYOwN5kc
-	 ico1ralK0tGFimEW+SyQ1i3kit/fxD0MQlaZb+XgjTVt+OWZIwcwyR1xNHZJINnlvuUo6
-	 0fY4o4w4t+WuDRU6sL/Sj7GrlQmry3b/mcavAsmJsL8BKdFfTMGTTrMNNQlm050GEMCtS
-	 v7b9Ab0WGjliBbb00roDXQL0iTGGffzA65KkWHcAW9sR/QHbbEzmnwetlXYqo5R30vA==
+	bh=daK/IkDIXVqnfjYl8/M+M9VjkzPIwCe5yl4tay+gSqg=;
+	b=dFNLiwO0TxqbIhpdQ38gf1tfG6ZMoR/wQj5y08Cg1pAshQZUusycLXXbGVHD3WmtixwP
+	 SHj8Qh991clnWPRjvwUtYWmTjEnLTabh3TJslZt1g88qUSMPoLTiDEwxMuqgWhsYMjikR
+	 IOrBbN9TowS5RqGcga5YWhUkFGxTBlPHzVvMv6LY5s2n3HOxLJGXGX/FdlyQLkrMwe6cM
+	 FJ4tYFkdDOVmPt/CTJSeySbWW9427Db8gwqs+eF28f/4PbfE0ffLm3Vxk7eQrfrH1mCI/
+	 +2fSop0exK2Bff6HmHQeG8P0HHCdqD++47syAr3XOwc1y6RL4FvIYwRQ8jjxsEZ43LQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Cgg8+hEJ;
-	arc=none smtp.remote-ip=209.85.208.71
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com [209.85.208.71])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GlCWC2+R;
+	arc=none smtp.remote-ip=209.85.208.70
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EFC560A263B
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3EFC560A263B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E42D60A3823
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4E42D60A3823
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Cgg8+hEJ
-Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-6b706aec65bso1580343a12.3
-        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 21:02:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GlCWC2+R
+Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-6b564783d3fso1757100a12.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 21:02:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794286929; x=1794891729; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1794286930; x=1794891730; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Sj2aHvE/30fRUSODl4VGY86EHM+govAz/p3nvPD2KF0=;
-        b=Cgg8+hEJHtrduALRlDiOuRmoz9daznQJncUd/jI6D1C0a0P78gfVMq1qYSSUBIxntu
-         uzXynVIrtpVGqCarHL1/1aoU94CADB9J10XDrxnovtEKs0Jdqz/K3PlePHwjS8mWM3Zz
-         cid57aUvJKRjdygiNpoDC4iNrsWhp8zzvvMg7mbwJhxh8YtCrKP6yZCrIdqwK/vLZWt8
-         UGvFori/1IDbq7YClAL+WVkGTfOQKxdw23JdG+hhmLLaaDVj4iv/HXYVp4e1+tikXLYj
-         Xdwjzs0SaTkQjTR59vbrWznYw651/XxcelWfMcwICWnh7LbKTSEqQgqMgm+8s1dsg6ou
-         7bEg==
+        bh=daK/IkDIXVqnfjYl8/M+M9VjkzPIwCe5yl4tay+gSqg=;
+        b=GlCWC2+RC5q1ClN77z+xE3by57ImYKSiNQVz5gr2i5P6WrbxARZOD0uo0ct/PtIfPa
+         NPF05kpP2ahSDaXy+hHnnRu5RCZPs9tP8Ah9mdlfaaVz7r8Y/1n6B9O6Jxx67u8nylUx
+         +s53rQJJIHGNE8/+ZlfmgZmJ0prd1sfoS4qDUs4y4hteiBRf0LIsLhAeTkEZEBPLmgZn
+         PPwSJeV3hehHNGcRWL6Jm2X+h3+Wa1n0MrJrRVms95lULToe810DST10ypyyItqsnnnw
+         NRhDxOpmsQJJenfiSHxXEBITRubiif/4w54uWjeW2bTCfh6Mg/LOQ9TGTXqNSQ3VtYXX
+         CQ3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794286929; x=1794891729;
+        d=1e100.net; s=20260707; t=1794286930; x=1794891730;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Sj2aHvE/30fRUSODl4VGY86EHM+govAz/p3nvPD2KF0=;
-        b=blRg8g0fHvK9QtFbiDTQ+YgHg0WVw7p57OFUedhEREronn02AzlGXdXKPY3ISYetU0
-         CBDJzIBeWJMv9ofC3nONvbFjpHbNpwdRxv/HEFjaN65Fr3eAYmp4wqwCZl/wvNuELKjx
-         Orqe1xbkqrisP/k/JGAgnF+IIgLfJqYUfy4HYvAhnMGs5bGXepSAdzkWuqyNK8p9u/5z
-         +6x/J4vW+ADaOsU8qswBACUw2b9NBWYaawI2lSyJ9t9EHzrEqgi+1rkOe5/8d6CJ2f84
-         CFRumNHvR3OO0NK3nz8HjNZGaG153UB0Nppdr8YGChyV33h9FeHUea5s0OIYPAXLTN1b
-         B48A==
-X-Forwarded-Encrypted: i=1; AL+hErFSn1+EUWHnX9+aW8nNxuEoCmD0qFfYlKef2GjYpNXkpxvtw96Vhq8u+Yc8UQJFPP3PrqwRVOpYycM=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8KHVXG7fryYz9xcqc1mjIyRW3YcxF1kStFDuzICHgz+7YBwFL+
-	7sTISN14goQvZTKeYF2pX6OLxGRFYh+JnKRlrL/sJhinb6DU/ISHGacCijqqPOPtOsjlG4tSpYd
-	/zxsHhzUQkk7sjoHAvQ==
-X-Received: from ejczh1.prod.google.com ([2002:a17:907:e901:b0:c42:9eb:1d43])
+        bh=daK/IkDIXVqnfjYl8/M+M9VjkzPIwCe5yl4tay+gSqg=;
+        b=jj8Ayub3yJl9bi3PkXzFDPGpix7IcyFc7Bx/k7emqyuRIUlOF9NJevGdoxH6OPCKrZ
+         SWikwGJyGi0zv/pvl1jPkeHi92pcaDs0GBhZyKST2F4d1nqaGdnfg+iHs/i4BMrwPmo0
+         RiYQZWB4gh34ehUrtuPnwVFhYboln0/jSPLo8cAdwXpXQ23+21Q45aFT/QePECVO5dTR
+         h8XSN0qVZSlBXybvpRVzBbz1GGV5NeaPXYwJRvPbwfgH23aik1EHdyjvAB4o0wQ8wpf6
+         IwDI8X6HiqTTV31+5gy8kWCISB0tnP0vDsM5k7IHyzmT6ojSZlSIdvriNQrgR0aZ7UaG
+         R64Q==
+X-Forwarded-Encrypted: i=1; AL+hErGiPQrHomn9RRx6fHl1JhP8Je9XnvEHEpgn3V0u5QXSX2jlGk6pJp9/J4YU+yhc3YkETCL8ZgeYXmk=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/LxZsqDka/v0oB5mqQZXDF/cAv7ausr91mGKClVSqph8KZl5LW
+	ueZOUYUXKGpasE/PKLDtn4TEr3TJf0hPFfF0u1hsI1ZbGLw1eqtHsEHl9zPdRkv4cXdlhB5SyrA
+	LxnDH0sV0sr7Fi9LkiQ==
+X-Received: from edwl2.prod.google.com ([2002:a05:6402:1242:b0:6b3:bbb1:9405])
  (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:907:3f03:b0:c50:475d:9804 with SMTP id a640c23a62f3a-c5049583bf0mr103443266b.13.1794286928328;
- Mon, 09 Nov 2026 21:02:08 -0800 (PST)
-Date: Tue, 10 Nov 2026 05:01:46 +0000
+ 2002:a05:6402:a6c3:10b0:6b4:8ba2:83ba with SMTP id 4fb4d7f45d1cf-6b756addabfmr786498a12.43.1794286929585;
+ Mon, 09 Nov 2026 21:02:09 -0800 (PST)
+Date: Tue, 10 Nov 2026 05:01:47 +0000
 In-Reply-To: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailer: git-send-email 2.56.0.506.g506a7eabc5-goog
-Message-ID: <20261110050202.529473-4-tarunsahu@google.com>
-Subject: [PATCH v4 03/19] kho, memfd_luo: Reference struct kho_vmalloc via
+Message-ID: <20261110050202.529473-5-tarunsahu@google.com>
+Subject: [PATCH v4 04/19] liveupdate: Reference struct luo_file_set_ser via
  serialized pointer
 From: Tarun Sahu <tarunsahu@google.com>
 To: Pasha Tatashin <pasha.tatashin@soleen.com>, Mike Rapoport <rppt@kernel.org>, robin.murphy@arm.com, 
@@ -100,340 +100,147 @@ Cc: kvmarm@lists.linux.dev, linux-pci@vger.kernel.org,
 	Tarun Sahu <tarunsahu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Subsystems preserving vmalloc allocations currently embed struct
-kho_vmalloc directly by value in their serialized structures or device
-tree properties. For example, struct memfd_luo_ser embeds struct
-kho_vmalloc folios, and test_kho writes the structure directly into the
-folios_info FDT property.
+struct luo_session_ser currently embeds struct luo_file_set_ser directly
+by value. Embedding struct luo_file_set_ser couples the session layout's
+size and field offsets to struct luo_file_set_ser, preventing either
+structure from appending fields independently across kexec.
 
-Embedding struct kho_vmalloc directly couples the containing layout's
-field offsets and size to struct kho_vmalloc. Any modification to struct
-kho_vmalloc shifts subsequent fields in the containing structure and
-breaks the handover ABI across kexec.
-
-Convert callers to hold a DECLARE_KHOSER_PTR pointer to struct
-kho_vmalloc instead of embedding it by value. In memfd_luo, allocate the
-main structure and struct kho_vmalloc in the same preserved folio, placing
-struct kho_vmalloc in the remaining 8-byte-aligned space, and bump the
-compatibility string to memfd-v3. In test_kho, place struct kho_vmalloc
-in the remaining space of the FDT folio, store the serialized pointer in
-the folios_info property, and bump the compatibility string to
-kho-test-v2.
+Convert struct luo_session_ser to hold a DECLARE_KHOSER_PTR pointer to
+struct luo_file_set_ser instead of embedding it by value. Reserve space
+for both structures in each session block-set entry, placing struct
+luo_file_set_ser immediately after struct luo_session_ser, and bump
+LUO_ABI_COMPATIBLE from luo-v5 to luo-v6.
 
 Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 ---
- include/linux/kho/abi/kexec_handover.h |  6 +++
- include/linux/kho/abi/memfd.h          |  8 ++--
- lib/test_kho.c                         | 29 ++++++++----
- mm/memfd_luo.c                         | 63 ++++++++++++++++----------
- 4 files changed, 68 insertions(+), 38 deletions(-)
+ include/linux/kho/abi/luo.h     |  9 +++++----
+ kernel/liveupdate/luo_session.c | 27 ++++++++++++++++++++++-----
+ 2 files changed, 27 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/kho/abi/kexec_handover.h b/include/linux/kho/abi/kexec_handover.h
-index 6f12f5037ea5..bee75a7006e8 100644
---- a/include/linux/kho/abi/kexec_handover.h
-+++ b/include/linux/kho/abi/kexec_handover.h
-@@ -11,6 +11,8 @@
- #define _LINUX_KHO_ABI_KEXEC_HANDOVER_H
+diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
+index 721949374fa1..f1152470f71a 100644
+--- a/include/linux/kho/abi/luo.h
++++ b/include/linux/kho/abi/luo.h
+@@ -61,13 +61,14 @@
+ #include <linux/build_bug.h>
+ #include <linux/kconfig.h>
+ #include <linux/kho/abi/block.h>
++#include <linux/kho/abi/kexec_handover.h>
+ #include <uapi/linux/liveupdate.h>
  
- #include <linux/bits.h>
-+#include <linux/build_bug.h>
-+#include <linux/kconfig.h>
- #include <linux/log2.h>
- #include <linux/math.h>
- #include <linux/types.h>
-@@ -177,6 +179,10 @@ struct kho_vmalloc {
- 	unsigned short order;
- };
- 
-+static_assert(sizeof(struct kho_vmalloc) == 16);
-+static_assert(!IS_ENABLED(CONFIG_64BIT) ||
-+	      __alignof__(struct kho_vmalloc) == 8);
-+
- /**
-  * DOC: KHO persistent memory tracker
-  *
-diff --git a/include/linux/kho/abi/memfd.h b/include/linux/kho/abi/memfd.h
-index 376a724a1d8c..7b49dd6d7e2a 100644
---- a/include/linux/kho/abi/memfd.h
-+++ b/include/linux/kho/abi/memfd.h
-@@ -81,7 +81,7 @@ static_assert(!IS_ENABLED(CONFIG_64BIT) ||
-  *             to directly use them in the ABI.
-  * @flags:     Flags for the file. Unused flag bits must be set to 0.
-  * @nr_folios: Number of folios in the folios array.
-- * @folios:    KHO vmalloc descriptor pointing to the array of
-+ * @folios:    Pointer to KHO vmalloc descriptor for the array of
-  *             struct memfd_luo_folio_ser.
+ /*
+  * The LUO state is registered under this KHO entry name.
   */
- struct memfd_luo_ser {
-@@ -90,14 +90,14 @@ struct memfd_luo_ser {
- 	u32 seals;
- 	u32 flags;
- 	u64 nr_folios;
--	struct kho_vmalloc folios;
-+	DECLARE_KHOSER_PTR(folios, struct kho_vmalloc *);
+ #define LUO_KHO_ENTRY_NAME	"LUO"
+-#define LUO_ABI_COMPATIBLE	"luo-v5"
++#define LUO_ABI_COMPATIBLE	"luo-v6"
+ #define LUO_ABI_COMPAT_LEN	ALIGN(sizeof(LUO_ABI_COMPATIBLE), 8)
+ 
+ /**
+@@ -133,7 +134,7 @@ static_assert(!IS_ENABLED(CONFIG_64BIT) ||
+  * struct luo_session_ser - Represents the serialized metadata for a LUO session.
+  * @name:         The unique name of the session, provided by the userspace at
+  *                the time of session creation.
+- * @file_set_ser: Serialized files belonging to this session,
++ * @file_set_ser: Serialized pointer to the files belonging to this session.
+  *
+  * This structure is used to package session-specific metadata for transfer
+  * between kernels via Kexec Handover. An array of these structures (one per
+@@ -144,10 +145,10 @@ static_assert(!IS_ENABLED(CONFIG_64BIT) ||
+  */
+ struct luo_session_ser {
+ 	char name[LIVEUPDATE_SESSION_NAME_LENGTH];
+-	struct luo_file_set_ser file_set_ser;
++	DECLARE_KHOSER_PTR(file_set_ser, struct luo_file_set_ser *);
  };
  
--static_assert(sizeof(struct memfd_luo_ser) == 48);
-+static_assert(sizeof(struct memfd_luo_ser) == 40);
+-static_assert(sizeof(struct luo_session_ser) == 80);
++static_assert(sizeof(struct luo_session_ser) == 72);
  static_assert(!IS_ENABLED(CONFIG_64BIT) ||
- 	      __alignof__(struct memfd_luo_ser) == 8);
+ 	      __alignof__(struct luo_session_ser) == 8);
  
- /* The compatibility string for memfd file handler */
--#define MEMFD_LUO_FH_COMPATIBLE	"memfd-v2"
-+#define MEMFD_LUO_FH_COMPATIBLE	"memfd-v3"
+diff --git a/kernel/liveupdate/luo_session.c b/kernel/liveupdate/luo_session.c
+index 74bc66929f4b..df667fe15fb2 100644
+--- a/kernel/liveupdate/luo_session.c
++++ b/kernel/liveupdate/luo_session.c
+@@ -131,18 +131,21 @@ struct luo_session_global {
+ 	struct luo_session_header outgoing;
+ };
  
- #endif /* _LINUX_KHO_ABI_MEMFD_H */
-diff --git a/lib/test_kho.c b/lib/test_kho.c
-index aa6a0956bb8b..cd0f183ff68e 100644
---- a/lib/test_kho.c
-+++ b/lib/test_kho.c
-@@ -25,7 +25,7 @@
++#define LUO_SESSION_SER_SIZE (sizeof(struct luo_session_ser) + \
++			      sizeof(struct luo_file_set_ser))
++
+ static struct luo_session_global luo_session_global = {
+ 	.incoming = {
+ 		.list = LIST_HEAD_INIT(luo_session_global.incoming.list),
+ 		.rwsem = __RWSEM_INITIALIZER(luo_session_global.incoming.rwsem),
+ 		.block_set = KHO_BLOCK_SET_INIT(luo_session_global.incoming.block_set,
+-						sizeof(struct luo_session_ser)),
++						LUO_SESSION_SER_SIZE),
+ 	},
+ 	.outgoing = {
+ 		.list = LIST_HEAD_INIT(luo_session_global.outgoing.list),
+ 		.rwsem = __RWSEM_INITIALIZER(luo_session_global.outgoing.rwsem),
+ 		.block_set = KHO_BLOCK_SET_INIT(luo_session_global.outgoing.block_set,
+-						sizeof(struct luo_session_ser)),
++						LUO_SESSION_SER_SIZE),
+ 	},
+ };
  
- #define KHO_TEST_MAGIC	0x4b484f21	/* KHO! */
- #define KHO_TEST_FDT	"kho_test"
--#define KHO_TEST_COMPAT "kho-test-v1"
-+#define KHO_TEST_COMPAT "kho-test-v2"
- 
- static long max_mem = (PAGE_SIZE << MAX_PAGE_ORDER) * 2;
- module_param(max_mem, long, 0644);
-@@ -34,7 +34,7 @@ struct kho_test_state {
- 	unsigned int nr_folios;
- 	struct folio **folios;
- 	phys_addr_t *folios_info;
--	struct kho_vmalloc folios_info_phys;
-+	DECLARE_KHOSER_PTR(folios_info_phys, struct kho_vmalloc *);
- 	int nr_folios_preserved;
- 	struct folio *fdt;
- 	__wsum csum;
-@@ -47,13 +47,13 @@ static void kho_test_unpreserve_data(struct kho_test_state *state)
- 	for (int i = 0; i < state->nr_folios_preserved; i++)
- 		kho_unpreserve_folio(state->folios[i]);
- 
--	kho_unpreserve_vmalloc(&state->folios_info_phys);
-+	if (KHOSER_LOAD_PTR(state->folios_info_phys))
-+		kho_unpreserve_vmalloc(KHOSER_LOAD_PTR(state->folios_info_phys));
- 	vfree(state->folios_info);
+@@ -223,14 +226,16 @@ static void luo_session_unfreeze_one(struct luo_session *session,
+ 				     struct luo_session_ser *ser)
+ {
+ 	guard(mutex)(&session->mutex);
+-	luo_file_unfreeze(&session->file_set, &ser->file_set_ser);
++	luo_file_unfreeze(&session->file_set,
++			  KHOSER_LOAD_PTR(ser->file_set_ser));
  }
  
- static int kho_test_preserve_data(struct kho_test_state *state)
+ static int luo_session_freeze_one(struct luo_session *session,
+ 				  struct luo_session_ser *ser)
  {
--	struct kho_vmalloc folios_info_phys;
- 	phys_addr_t *folios_info;
- 	int err;
- 
-@@ -61,11 +61,10 @@ static int kho_test_preserve_data(struct kho_test_state *state)
- 	if (!folios_info)
- 		return -ENOMEM;
- 
--	err = kho_preserve_vmalloc(folios_info, &folios_info_phys);
-+	err = kho_preserve_vmalloc(folios_info, KHOSER_LOAD_PTR(state->folios_info_phys));
- 	if (err)
- 		goto err_free_info;
- 
--	state->folios_info_phys = folios_info_phys;
- 	state->folios_info = folios_info;
- 
- 	for (int i = 0; i < state->nr_folios; i++) {
-@@ -123,14 +122,19 @@ static int kho_test_prepare_fdt(struct kho_test_state *state, ssize_t fdt_size)
- 
- static int kho_test_preserve(struct kho_test_state *state)
- {
--	ssize_t fdt_size;
-+	struct kho_vmalloc *folios_vmalloc;
-+	ssize_t fdt_size, alloc_size;
- 	int err;
- 
- 	fdt_size = state->nr_folios * sizeof(phys_addr_t) + PAGE_SIZE;
--	state->fdt = folio_alloc(GFP_KERNEL, get_order(fdt_size));
-+	alloc_size = fdt_size + sizeof(struct kho_vmalloc);
-+	state->fdt = folio_alloc(GFP_KERNEL, get_order(alloc_size));
- 	if (!state->fdt)
- 		return -ENOMEM;
- 
-+	folios_vmalloc = folio_address(state->fdt) + fdt_size;
-+	KHOSER_STORE_PTR(state->folios_info_phys, folios_vmalloc);
-+
- 	err = kho_preserve_folio(state->fdt);
- 	if (err)
- 		goto err_free_fdt;
-@@ -234,7 +238,8 @@ static int kho_test_save(void)
- 
- static int kho_test_restore_data(const void *fdt, int node)
- {
--	const struct kho_vmalloc *folios_info_phys;
-+	const DECLARE_KHOSER_PTR(*folios_info_phys, struct kho_vmalloc *);
-+	const struct kho_vmalloc *folios_vmalloc;
- 	const unsigned int *nr_folios;
- 	phys_addr_t *folios_info;
- 	const __wsum *old_csum;
-@@ -255,7 +260,11 @@ static int kho_test_restore_data(const void *fdt, int node)
- 	if (!folios_info_phys || len != sizeof(*folios_info_phys))
- 		return -EINVAL;
- 
--	folios_info = kho_restore_vmalloc(folios_info_phys);
-+	folios_vmalloc = KHOSER_LOAD_PTR(*folios_info_phys);
-+	if (!folios_vmalloc)
-+		return -EINVAL;
-+
-+	folios_info = kho_restore_vmalloc(folios_vmalloc);
- 	if (!folios_info)
- 		return -EINVAL;
- 
-diff --git a/mm/memfd_luo.c b/mm/memfd_luo.c
-index 6b68220275eb..4471cced57db 100644
---- a/mm/memfd_luo.c
-+++ b/mm/memfd_luo.c
-@@ -85,9 +85,8 @@
- #include "internal.h"
- 
- static int memfd_luo_preserve_folios(struct file *file,
--				     struct kho_vmalloc *kho_vmalloc,
--				     struct memfd_luo_folio_ser **out_folios_ser,
--				     u64 *nr_foliosp)
-+				     struct memfd_luo_ser *ser,
-+				     struct memfd_luo_folio_ser **out_folios_ser)
- {
- 	struct inode *inode = file_inode(file);
- 	struct memfd_luo_folio_ser *folios_ser;
-@@ -104,7 +103,8 @@ static int memfd_luo_preserve_folios(struct file *file,
- 	 * are not set.
- 	 */
- 	if (!size) {
--		*nr_foliosp = 0;
-+		ser->folios.phys = 0;
-+		ser->nr_folios = 0;
- 		*out_folios_ser = NULL;
- 		return 0;
- 	}
-@@ -200,12 +200,12 @@ static int memfd_luo_preserve_folios(struct file *file,
- 		pfolio->index = folio->index;
- 	}
- 
--	err = kho_preserve_vmalloc(folios_ser, kho_vmalloc);
-+	err = kho_preserve_vmalloc(folios_ser, KHOSER_LOAD_PTR(ser->folios));
- 	if (err)
- 		goto err_unpreserve;
- 
- 	kvfree(folios);
--	*nr_foliosp = nr_folios;
-+	ser->nr_folios = nr_folios;
- 	*out_folios_ser = folios_ser;
- 
- 	/*
-@@ -254,37 +254,43 @@ static void memfd_luo_unpreserve_folios(struct kho_vmalloc *kho_vmalloc,
- 	vfree(folios_ser);
+ 	guard(mutex)(&session->mutex);
+-	return luo_file_freeze(&session->file_set, &ser->file_set_ser);
++	return luo_file_freeze(&session->file_set,
++			       KHOSER_LOAD_PTR(ser->file_set_ser));
  }
  
-+static size_t memfd_luo_ser_size(void)
+ static int luo_session_release(struct inode *inodep, struct file *filep)
+@@ -552,6 +557,17 @@ int __init luo_session_setup_incoming(u64 sessions_pa)
+ 	return 0;
+ }
+ 
++static struct luo_session_ser *luo_session_ser_init(void *mem)
 +{
-+	return sizeof(struct memfd_luo_ser) + sizeof(struct kho_vmalloc);
-+}
++	struct luo_file_set_ser *file_set_ser;
++	struct luo_session_ser *ser = mem;
 +
-+static struct memfd_luo_ser *memfd_luo_ser_init(void *mem)
-+{
-+	struct kho_vmalloc *kho_vmalloc = mem + sizeof(struct memfd_luo_ser);
-+	struct memfd_luo_ser *ser = mem;
++	file_set_ser = mem + sizeof(struct luo_session_ser);
++	KHOSER_STORE_PTR(ser->file_set_ser, file_set_ser);
 +
-+	KHOSER_STORE_PTR(ser->folios, kho_vmalloc);
 +	return ser;
 +}
 +
- static int memfd_luo_preserve(struct liveupdate_file_op_args *args)
+ static int luo_session_deserialize_one(struct luo_session_header *sh,
+ 				       struct luo_session_ser *ser)
  {
- 	struct inode *inode = file_inode(args->file);
- 	struct memfd_luo_folio_ser *folios_ser;
- 	struct memfd_luo_ser *ser;
--	u64 nr_folios, inode_size;
- 	int err = 0, seals;
-+	u64 inode_size;
+@@ -575,7 +591,7 @@ static int luo_session_deserialize_one(struct luo_session_header *sh,
  
- 	inode_lock(inode);
- 	shmem_freeze(inode, true);
- 
--	/* Allocate the main serialization structure in preserved memory */
--	ser = kho_alloc_preserve(sizeof(*ser));
--	if (IS_ERR(ser)) {
--		err = PTR_ERR(ser);
--		goto err_unlock;
--	}
--
- 	seals = memfd_get_seals(args->file);
- 	if (seals < 0) {
- 		err = seals;
--		goto err_free_ser;
-+		goto err_unlock;
+ 	scoped_guard(mutex, &session->mutex) {
+ 		err = luo_file_deserialize(&session->file_set,
+-					   &ser->file_set_ser);
++					   KHOSER_LOAD_PTR(ser->file_set_ser));
  	}
+ 	if (err) {
+ 		pr_warn("Failed to deserialize files for session [%s] %pe\n",
+@@ -657,6 +673,7 @@ int luo_session_serialize(void)
+ 			goto err_undo;
+ 		}
  
- 	/* Make sure the file only has the seals supported by this version. */
- 	if (seals & ~MEMFD_LUO_ALL_SEALS) {
- 		err = -EOPNOTSUPP;
--		goto err_free_ser;
-+		goto err_unlock;
- 	}
- 
--	ser->pos = args->file->f_pos;
- 	inode_size = i_size_read(inode);
- 
- 	/*
-@@ -293,18 +299,26 @@ static int memfd_luo_preserve(struct liveupdate_file_op_args *args)
- 	 */
- 	if (DIV_ROUND_UP_ULL(inode_size, PAGE_SIZE) > UINT_MAX) {
- 		err = -EFBIG;
--		goto err_free_ser;
-+		goto err_unlock;
-+	}
-+
-+	/* Allocate the main serialization structure in preserved memory */
-+	ser = kho_alloc_preserve(memfd_luo_ser_size());
-+	if (IS_ERR(ser)) {
-+		err = PTR_ERR(ser);
-+		goto err_unlock;
- 	}
-+	ser = memfd_luo_ser_init(ser);
- 
-+	ser->pos = args->file->f_pos;
- 	ser->size = inode_size;
- 	ser->seals = seals;
-+	ser->flags = 0;
- 
--	err = memfd_luo_preserve_folios(args->file, &ser->folios,
--					&folios_ser, &nr_folios);
-+	err = memfd_luo_preserve_folios(args->file, ser, &folios_ser);
- 	if (err)
- 		goto err_free_ser;
- 
--	ser->nr_folios = nr_folios;
- 	inode_unlock(inode);
- 
- 	args->private_data = folios_ser;
-@@ -351,7 +365,8 @@ static void memfd_luo_unpreserve(struct liveupdate_file_op_args *args)
- 
- 	ser = phys_to_virt(args->serialized_data);
- 
--	memfd_luo_unpreserve_folios(&ser->folios, args->private_data,
-+	memfd_luo_unpreserve_folios(KHOSER_LOAD_PTR(ser->folios),
-+				    args->private_data,
- 				    ser->nr_folios);
- 
- 	kho_unpreserve_free(ser);
-@@ -401,7 +416,7 @@ static void memfd_luo_finish(struct liveupdate_file_op_args *args)
- 		return;
- 
- 	if (ser->nr_folios) {
--		folios_ser = kho_restore_vmalloc(&ser->folios);
-+		folios_ser = kho_restore_vmalloc(KHOSER_LOAD_PTR(ser->folios));
- 		if (!folios_ser)
- 			goto out;
- 
-@@ -552,7 +567,7 @@ static int memfd_luo_retrieve(struct liveupdate_file_op_args *args)
- 	i_size_write(file_inode(file), ser->size);
- 
- 	if (ser->nr_folios) {
--		folios_ser = kho_restore_vmalloc(&ser->folios);
-+		folios_ser = kho_restore_vmalloc(KHOSER_LOAD_PTR(ser->folios));
- 		if (!folios_ser) {
- 			err = -EINVAL;
- 			goto put_file;
++		ser = luo_session_ser_init(ser);
+ 		err = luo_session_freeze_one(session, ser);
+ 		if (err) {
+ 			kho_block_set_it_prev(&it);
 -- 
 2.56.0.506.g506a7eabc5-goog
 
