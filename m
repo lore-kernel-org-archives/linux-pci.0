@@ -1,61 +1,121 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=114.242.206.163
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794301449;
-	b=FI8aO3MjS7WutJtn7fLsYxDBWIOA7v/YnBN82xMSb5Cl4DGTIqrYLBI2nNjtTfnxX4gY
-	 g4Rzdyj6pkTAWUX1QhlnNmd1NjL/jLcS8ZNuCgKmkGC/EZHPvT4SQSsMcX538Q9C0g9C5
-	 Qzk2ceci8jVdFumNgw0TwA6dS5m0tcXrBS0mgKmI3eZiBPGR0vCBlBn8d9LgOGKf9XgyL
-	 tb5E8RF6UmgpCF8LGShrtgYetfh3TOzLXaHBMq/rU+Sxwaf8KyKCnvBlahkE9XtCu6KWx
-	 fvnpWYsw9CyKOmys3mD+p5l3nJcJCqleSq1wKS6Nxy395aPXl2uJKOVdRkWqQWKmBbA==
+	t=1794302551;
+	b=Ao+HQQaT/X/Ts6FDHfXh/YwH1pujbmgTk3MOYOITVEtKzZtl6IeOsxEiK+Zxa5PMqb1g
+	 veWehPbzOGHLX3CQP44SWkQXi0K+iMW83UQBQYcfFAtujXEJnjKN7H54/4CJNpPw8eD39
+	 a1CmIoJR5E1/EaoI75oj04BHN1bURbp/F+k+YFPWaIL3L2NnuswAEqrSgri0N2phZawCh
+	 bnMcuJ/6eLZsNthW5IKdUzz1yQmTvKj0w51MsxvtlAjj99Zkfjc9HvVJxIAk2cajV/u7c
+	 bhtuKkJOVtmKl1WTCJ97KPdy/lMLLh86uBufI2LXR4qGFT5c9N8bNLPQIB14zFzTxPw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794301449;
-	h=DMARC-Filter:Received:Received:From:To:Cc:Subject:Date:Message-Id:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-CM-SenderInfo:
-	 X-Coremail-Antispam;
-	bh=/BerbQ1LqYXVXHKPiWMSxnG91S54BmhY5Kon5U7NqOY=;
-	b=IYtCpq2sNwHG/2wrKUOJB7F+hJXjGVXQq1hvZJzhyAykH8vnSXG7iba2BjlDpVp2E3MK
-	 xr/YsUpWnnw5PoktDH/QbOxz/K5ovN9OFUDLGuqIihltQVIy2jyOP+dBnA7H5X0XAkvqm
-	 7PyQzUeHPGtHVlVR5mkttu3qAxi1trQgk8WR/z6thVEpl5KWFPzMUPOHkIwhOa60O1Pgn
-	 f+Yk+BMmiqMajsLIlkNNqTDnKGGKozk/oX8+IEqx1lmpynU7X8hPQAMMtp88T0W/UEP9c
-	 DNwFTFMWTu+OvYtKMV6LXQ+VECF5W7CwwLubv8DsGZK4aUKxULUu9HGh+2J437PQK6w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794302551;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:To:Cc:
+	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-Proofpoint-GUID:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=dyJLGnAN0Zs8RZGOGLmLqiW3HvWV8l2pKhgf9B011Ec=;
+	b=qYbrziOWXrkE2BEa1fP7eYDoFqL/q9qNgOKyp4zsxq5L7K6lgwW6LEVlHIbt0AOLJvAf
+	 wbcIAvs1/jTVt0RCljNU5J7/uRvxbF+92bhVBOHfWR9idXoZCfUBXmpcx/y/xM+HTLv88
+	 dwXE8tHLNRhY0mQ3SMmnUOr8ErVP8dj6d+Wg+Vk3rXoh+b7sC0ZbmT6kfbh866TC56eWH
+	 V79aMSDZGgXZzx5ptq5L1DDRw9U4Z1SnbUMe0jIgTxOeIFmmzl5iL3VVxhLqzgiL23akN
+	 aLIQUT9rBR3zMxRnhLwCBEkKpnZ9HZbKNY/0nLYFg8X5K45jvXMU6VKu9PQFFwPXmFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=loongson.cn;
-	spf=pass smtp.mailfrom=loongson.cn;
-	arc=none smtp.remote-ip=114.242.206.163
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D13FF60A2602;
-	Tue, 10 Nov 2026 09:04:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D13FF60A2602
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=loongson.cn
-Received: from loongson.cn (unknown [10.20.42.172])
-	by gateway (Coremail) with SMTP id _____8Cx+9EE3vJqYSEeAA--.21477S3;
-	Tue, 10 Nov 2026 17:04:04 +0800 (CST)
-Received: from ubuntu.loongson.cn (unknown [127.0.0.1])
-	by front1 (Coremail) with SMTP id qMiowJCxe84A3vJqYXQzAA--.22085S2;
-	Tue, 10 Nov 2026 17:04:00 +0800 (CST)
-From: wuqianhai@loongson.cn
-To: chenhuacai@kernel.org,
-	kernel@xen0n.name,
-	tzimmermann@suse.de,
-	deller@gmx.de,
-	bhelgaas@google.com
-Cc: ardb@kernel.org,
-	ilias.apalodimas@linaro.org,
-	javierm@redhat.com,
-	loongarch@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linux-fbdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	wuqianhai <wuqianhai@loongson.cn>
-Subject: [PATCH v3 0/6] LoongArch: Identify the firmware/boot display device
-Date: Tue, 10 Nov 2026 17:01:57 +0800
-Message-Id: <20261110090203.2631481-1-wuqianhai@loongson.cn>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261029033440.973077-1-wuqianhai@loongson.cn>
-References: <20261029033440.973077-1-wuqianhai@loongson.cn>
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b="TEH/lf6z";
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Icz1UF0o;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129AA606EEC6
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 09:22:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 129AA606EEC6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=TEH/lf6z;
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Icz1UF0o
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AA8ZKbv3850028
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 09:22:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	dyJLGnAN0Zs8RZGOGLmLqiW3HvWV8l2pKhgf9B011Ec=; b=TEH/lf6ziK/UgIYd
+	uc0AeWExH4ap+dhJha48zpFanrmUVquEziATbcTJvfSUXNvCTmGNORHwNU6BQEZR
+	gq7Mw0UyQgIVlK3VIKAR9mCt5g7ay5aeJydPgyieZ3o2KzvXKDYbU/cwGfXtw2lc
+	tODvs+qdhJ7XxoXfKAgBJcZCwZrlv8phRtO1/n5lSbvRDL06sUKUIPYKcavx1J9E
+	mL41DhnIjwpXgrSTvkdHj3r1vWeXIW1jLgbY8s/cfE3H7dou+yb+k2rHLpwFEQ3q
+	f263ZN8J3UJ4OZK3MSqsyYa5TOcLlFnYqwAwzumqX1v1r7GAcTp/LTdLflbndjsP
+	YfAHiQ==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4huyvwg5vx-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 09:22:30 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-934963b2bc0so375293985a.3
+        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 01:22:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1794302549; x=1794907349; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=dyJLGnAN0Zs8RZGOGLmLqiW3HvWV8l2pKhgf9B011Ec=;
+        b=Icz1UF0oRH3yKlXDYLA4Jjllfgq8a4kz+nRwPkVVcQVE+rnFYEFPDPOkBXaOkoWd1m
+         GfdtjYbVJjGlzytbPG793LOVIdw9HLoHAXQBeExxR9hJWMuGc8fnO7b9wbJO8HNtxqMN
+         XQ3S6RsqWq+TeWwly8paPEzfPn8GcSniBUmbxTQFvnqI+P4SmqNebUonfE33CmThTSCT
+         mUk9E4gYbhmkRRRhGB8uLtGZuG/wjWObJD9/JptvYC9Wy2fV4Nkjy/4DFEwDzEUz3E7B
+         AGJZNPh2rsTnWwpGQ2ULqvF5cvwxJraMeQ5OWBGkaF9U/vVZP9lDwIdmjlFvGkA3sgIi
+         mj/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794302549; x=1794907349;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=dyJLGnAN0Zs8RZGOGLmLqiW3HvWV8l2pKhgf9B011Ec=;
+        b=0CZeyaKAgjZKVAq3412QSh5wYy0Kqp1OjfC/2C7urKg0Cv3c6Y3+/js+A1anv5lN+/
+         HK326Ly/v8E+dKqaND5RxX+t6AMaGNYAc1vvZPIXnvqwSxmErk/8ItDndCzUEuPU/jor
+         WhIiDoiRqQVMogU5zN0TzTGFQwWfWlXcsbPODGhBJRmV7K7jX69yPwY90wjYE3GEIAsm
+         s6S9NP1gBLZwskhqQ0EwQmv5itdAzZhi/y/qNKQNwSUd858noo99P2KowW4lVleKNCOS
+         Ww9/+wPK+MxwyyjislE0wJZLRPwQcmTy5BvGT4FzwICpvKr55877xZrthH5NuO3bnG97
+         4GSA==
+X-Forwarded-Encrypted: i=1; AL+hErEVu1uHcQC76lp9/f7tH26UeuTYFPUaLENbBWlT2ht6EnfeTmcoNDfKJbTdkuz7o+w02MVniTCx/Ts=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9VLvNOiJYWjf4U6C0BLfIhNRA8ULgLsFGxTS+vdpx7Iznbf6PK
+	WCjevdd6PIHc5LrM//SSpqjveEWNjVDwxCApeKRaC6wvxhK+TA/9D5zhQGUnt6GGkQN+hdJM0OR
+	Fi6m7WDr7Lq9MTnR8rNS+prTZio2Bxb7Rs9Y5DpfC59UK930sXYK3uHjQ9ffyBMQ=
+X-Gm-Gg: AYBFou1Ft4k9vNWaXhb7KE0AJ1ZH27ilxSaC+RIXRHs7snO38CmFDanKj4nGiFIe5LX
+	Lo0QaW1ZzGipyfO1TZZDbT9O9DdisowHiYwpTZ8nMza0WsEDQ0Tyli4feLgVI6mjH3SCeW01Ex2
+	+GsU67WhBHkRfpQxgxiUVVQ8sTtMoNCvNubET1nMYnzUROSeH4q/Os4cPsas4O9gKCre9Fdmnrg
+	4nQb1bGE/MPZOVfBuKhewGODYaFaZcowzQOX6p4X74y3AjXzyzq460JuMbYOBGQR54FroI4Q9EW
+	VGLSvaJWanjhXWSS0XGIgarFTqYt/YCX8KB14NoN+P4cHnFG9crdQH7jfVArydOZl3/2CDJosUL
+	GRZwQrqNDb2ig1LUAPfmhO7tL6x3m0VXU0nUnIDLky4uSubcWNni1d30nmwgVet80DrZif47Fod
+	nLTkf8Yi4DzVu+hGLbeCdMoFVVmzcCFAsk6gnpOGidcLSKJrAylPtJSTXG1n+4ew==
+X-Received: by 2002:a05:620a:4514:b0:947:1d0a:c89c with SMTP id af79cd13be357-9479f326c22mr318964385a.56.1794302549330;
+        Tue, 10 Nov 2026 01:22:29 -0800 (PST)
+X-Received: by 2002:a05:620a:4514:b0:947:1d0a:c89c with SMTP id af79cd13be357-9479f326c22mr318962485a.56.1794302548873;
+        Tue, 10 Nov 2026 01:22:28 -0800 (PST)
+Received: from brgl-qcom.home (2a01cb1d00dc7e0089167b9b97a26c96.ipv6.abo.wanadoo.fr. [2a01:cb1d:dc:7e00:8916:7b9b:97a2:6c96])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ba01ff3428sm60703515e9.15.2026.11.10.01.22.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Nov 2026 01:22:27 -0800 (PST)
+From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] power: sequencing: fix use-after-free in pwrseq-pcie-m2
+Date: Tue, 10 Nov 2026 10:22:25 +0100
+Message-ID: <179430254421.7208.10083406967609133170.b4-ty@oss.qualcomm.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20261105-pwrseq-pcie-m2-uaf-v2-0-3e1dd415af9a@oss.qualcomm.com>
+References: <20261105-pwrseq-pcie-m2-uaf-v2-0-3e1dd415af9a@oss.qualcomm.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,121 +125,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qMiowJCxe84A3vJqYXQzAA--.22085S2
-X-CM-SenderInfo: 5zxtxtpqkdxqxorr0wxvrqhubq/
-X-Coremail-Antispam: 1Uk129KBj93XoWxGw17XFy8uF1kWrW7Zw15ZFc_yoWruFWUpF
-	4a9a9xJr4kWr4xGryIy34UXFn8Arn7G3yagFWakw18C345Jr18WF93t3yDXa4UJ393J3WF
-	qF15Jw1xWF4DuagCm3ZEXasCq-sJn29KB7ZKAUJUUUjr529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUUPmb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r126r13M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26r4UJVWxJr1ln4kS14v26r4a6rW5M2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6x
-	kI12xvs2x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v2
-	6Fy26r45twAv7VC2z280aVAFwI0_Cr0_Gr1UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0x
-	vY0x0EwIxGrwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1l4IxYO2xFxVAFwI0_GFv_Wrylx2IqxVAqx4xG67
-	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
-	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_tr0E3s1lIxAIcVC0I7IYx2IY6xkF7I0E14
-	v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26F4j
-	6r4UJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7IU5
-	rb1UUUUUU==
+X-Proofpoint-GUID: l_sDIBXQcUvo2blulpzJ0aYeV2FSDlAI
+X-Proofpoint-ORIG-GUID: l_sDIBXQcUvo2blulpzJ0aYeV2FSDlAI
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEwMDAzNyBTYWx0ZWRfXyUWZebjqRM+v
+ Mo+ZzdYrOC92cyGKKUlosdpX2auk5x00Ifxt5QFhxymsK1h2RLEh5MjQCIIGMVv6MWBi6AIOKrL
+ hO095E3uzKyss1uTt7IBNM9ywx/DLnA=
+X-Authority-Analysis: v=2.4 cv=NNpAaE6g c=1 sm=1 tr=0 ts=6af2e256 cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=VwQbUJbxAAAA:8
+ a=EUspDBNiAAAA:8 a=mVFbF14yMUIBM6kXvQ4A:9 a=QEXdDO2ut3YA:10
+ a=bTQJ7kPSJx9SKPbeHEYW:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEwMDAzNyBTYWx0ZWRfX6mr4jC7IRILD
+ xvFSrHriQFARB+MksvsHcewLO5C+rDELSLQAXQsTp1ZIIlhCvbIVup+ehpM5Rm2Xh3oqPe4BrQR
+ 6j4LrUmHvyl8a/xwP1YhThoZ+YEeh82cFBmRaPpIXwCjU5cD1yPHm/J8pi6gYoNYcfqFVocv5di
+ +Tm9g54WT9w4cp07ivqCDhuse8WTx7LvOb+oPmbgHhFV2F0bam6xQjz2eyb5oF8OZNICMS3P/IB
+ 8xtZGGoXGgt6XWr0eQof/bRr8fX0XeJXISzrqtBlMhJtjIfhhsfed4q/VRKHfzTdBFZ8WJJJCBp
+ 6OkIUpcacqpOo6mSTp/WfuFr+u0m6h+8PVNSz1zWodV+8EtM6ncJ0gR43MVOUhQ9laXo5IqSjuF
+ QWuiufGR9JqSgG+XXYuk8Gtbe4Ia78r2nSTagTZpHm1Uyl3gVD2Te8uInlbBpZikLN6FvQ7df14
+ 5TOW5UWRDuOVxbjnXAw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-10_03,2026-11-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 lowpriorityscore=0 adultscore=0 phishscore=0 priorityscore=1501
+ bulkscore=0 clxscore=1015 impostorscore=0 malwarescore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611100037
 
-From: wuqianhai <wuqianhai@loongson.cn>
 
-On LoongArch the kernel cannot reliably identify the display device that
-was set up by the firmware and used for the boot console.  Two code paths
-need this information and currently get it wrong:
+On Thu, 05 Nov 2026 09:28:34 +0100, Bartosz Golaszewski wrote:
+> This fixes a use-after-free bug reported by sashiko and then cleans up
+> the error path in probe() by switching to using devm_mutex_init() and
+> dropping the remaining goto labels.
+> 
+> 
 
-  * The PCI VGA arbiter: vga_is_firmware_default() is compiled only on
-    x86, so on LoongArch vga_default_device() may select the wrong GPU
-    when several are present (for example an integrated display
-    controller and a discrete card).
+Applied, thanks!
 
-  * The framebuffer console: LoongArch does not implement
-    video_is_primary_device(), so with
-    CONFIG_FRAMEBUFFER_CONSOLE_DETECT_PRIMARY=y the console falls back to
-    the generic stub that always returns false and binds to the first
-    registered framebuffer instead of the boot display.
+[1/2] power: sequencing: pcie-m2: fix use-after-free in pwrseq_pcie_m2_vregs_enable()
+      https://git.kernel.org/brgl/c/cd5f26ed96604b18e4235052525abe6b4ba505d6
+[2/2] power: sequencing: pcie-m2: use devm_mutex_init()
+      https://git.kernel.org/brgl/c/e551848a3a80aa2e2aab5bcd8f022c594b14eac9
 
-This series fixes both by publishing the firmware framebuffer information
-through screen_info on LoongArch and consuming it the same way x86 does.
-
-Patch 1 always defines and initializes sysfb_primary_display, and always
-provides its EFI stub alias, instead of guarding them behind
-SYSFB/EFI_EARLYCON.
-
-Patch 2 refreshes screen_info from the PCI resource-assignment path after
-the root-bus resources are assigned, so the framebuffer address is final
-before the VGA arbiter and sysfb_init() consume it.  The call is placed
-in the LoongArch PCI scan path because only LoongArch has this ordering:
-acpi_init() relocates the BAR before vga_arb_device_init() runs.  On x86
-the screen_info address is still accurate at that point.  If you would
-rather have the helper called from the generic
-pci_assign_unassigned_root_bus_resources() path so that all architectures
-share it, that can be done instead.
-
-Patch 3 removes pci_fixup_vgadev(), which overrides the VGA default
-device to a discrete card after the arbiter has already selected the
-firmware framebuffer device, so vga_default_device() consistently
-reflects the boot display.
-
-Patch 4 implements video_is_primary_device() for LoongArch by reusing the
-VGA default device selected by the arbiter.
-
-Patch 5 lets the EFI stub link directly to sysfb_primary_display on
-LoongArch, so the firmware framebuffer information is always populated.
-
-Patch 6 lets the VGA arbiter use CONFIG_SCREEN_INFO instead of an
-architecture check and makes VGA_ARB select SCREEN_INFO on LoongArch.
-
-Patches 1-4 are LoongArch-specific.  Patches 5 and 6 touch generic code
-(the EFI stub and the PCI VGA arbiter) and are placed last so they can be
-reviewed and merged separately.  Patches 3 and 4 depend on patch 6 taking
-effect, but are ordered ahead of it only to group the LoongArch changes
-together.
-
-Changes since v2:
-  - Split the screen_info refresh out of vga_arb_device_init() into the
-    LoongArch PCI resource-assignment path (patch 2), following Thomas'
-    suggestion to decouple it from sysfb_init().
-  - Drop the per-architecture check in vgaarb.c and the select of SYSFB
-    in favour of CONFIG_SCREEN_INFO and select SCREEN_INFO (patch 6).
-  - Always define and initialize sysfb_primary_display, and let the EFI
-    stub link to it directly (patches 1 and 5), instead of guarding them
-    behind SYSFB/EFI_EARLYCON.
-  - Remove the vga_default_device() override (patch 3) so the arbiter's
-    firmware-framebuffer selection takes effect.
-  - Implement video_is_primary_device() (patch 4) by reusing the arbiter's
-    default device, so FRAMEBUFFER_CONSOLE_DETECT_PRIMARY works.
-
-Build-tested on loongarch64 with GCC 8.3.0.
-
-wuqianhai (6):
-  LoongArch: efi: Provide sysfb_primary_display for screen_info users
-  LoongArch/PCI: Refresh screen_info after resource assignment
-  LoongArch/PCI: Remove vga default device override
-  LoongArch: video: Implement primary framebuffer device detection
-  efi/libstub: Enable direct sysfb_primary_display access on LoongArch
-  PCI/VGA: Enable firmware default device detection on LoongArch
-
- arch/loongarch/Makefile                       |  3 ++
- arch/loongarch/include/asm/video.h            |  7 +++++
- arch/loongarch/kernel/efi.c                   |  5 +---
- arch/loongarch/kernel/image-vars.h            |  2 --
- arch/loongarch/pci/acpi.c                     |  4 +++
- arch/loongarch/pci/pci.c                      | 18 ------------
- arch/loongarch/video/Makefile                 |  3 ++
- arch/loongarch/video/video-common.c           | 29 +++++++++++++++++++
- drivers/firmware/efi/libstub/efi-stub-entry.c |  1 +
- drivers/pci/Kconfig                           |  2 +-
- drivers/pci/vgaarb.c                          |  2 +-
- 11 files changed, 50 insertions(+), 26 deletions(-)
- create mode 100644 arch/loongarch/video/Makefile
- create mode 100644 arch/loongarch/video/video-common.c
-
+Best regards,
 -- 
-2.34.1
-
+Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
