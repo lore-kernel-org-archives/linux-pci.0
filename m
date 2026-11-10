@@ -1,55 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.137
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.139
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794305408;
-	b=ErLcUaDxzWyY138vQZERYbg/JQr5v0lLm3kLvqaQjJ3WIabWrcKVSG+3eDJ6vzHqKFdG
-	 E1Y/r9Xc53WIsg9eeqvelbeByhHkP7f4oMRWTxkyZRm/mFM6uoJMlccRNaGbr6lGQ3VOv
-	 vVUWC10ym5leQdlK/Y2+4h2ZjFossoP/Y7iuCG2sYsT9IAYwgYIV267zKE1IbaRjIt6f7
-	 VVnu+qv3v03ni1G8Wk5cFColuek24oDKVLE7Vn5l9mfEdQRysyJL0DJVpVlZAMzd8ZpNe
-	 8rE0R8ZUWmS0ua0/VeS9fvGWKfU85G3lF4U8XxNHh1j1s2sGZnfNaAvrwJijJ5RqT7w==
+	b=ZChXKNyJcYGK7wb+pUVZ0Dmf66nVNr7L4yRUKdMINcG+GvXqrJg59sa/zwio/Ntlcx3X
+	 SjrvJR+RAUA7rSyRzy18/XJCE7FcbkYaKTKsUICvcO5ag/v7RhLuAEvFK6lHDJRodG2wn
+	 IzwcSrWmrXX7N+BgoYhwaC5x6641+SjkIMI+JesipxkLkYaseU3tCibKHhhxQ7ziuP4zq
+	 xWE+VCPgGFkvIuGQbP4FtAvrsSru/JO2GqBq/2S+J9t5IwgyTT5rsQTx0g3eI3z1oDcRj
+	 ZSktNQjcNIhQZ+nPhuAI2XNjHJ7bz2OqIJc7Mtn44M5Lqyb5DaMap1zZO1i21pZzhrw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794305408;
 	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
 	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=T6mSc4xP4/GI3fNHx41iiNfcLoi2dRiPvJIIFv07GyM=;
-	b=jvANotpmC1m+7Sxv5pYb4PFz3TBX+QG5doTShcFd1ur6il7ICjOK85QMNTUYGTnobuvb
-	 GvzWd2nzGmBjasDEi80roFk4ATS7B4cnLduTjuVktAX5l30LrVUnUxX5fhC4gBps7ayb3
-	 0XsNWtgcPAiMqRnZftKQuhC8x7TD07F3iHqmfynL3JjRbo0fIccTbFjnrMB4Gka1EiveO
-	 Pu5Zno494xpIB22Tf3RM99jMfYWglJTHvZHxw8fMx2Ldi7eHhdkiuPu9rVdAIjQ/gt/QC
-	 g8bsVt7kNidKyi5TjW+4ilfIXdwL3MzHCgh1opIw2EtuumJiJmEGlnm6SUUnfVqn5wQ==
+	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=xjtSKY+SmWPwxrp+IkseqPFtAqPIeZiD8ojI/qHqMgI=;
+	b=aFBN0wYA96bDmXNYV5nQw2vOnjrh9IEnZKaF9W41NaG2wxSyRVzPBvbqFc8i5jR1hMoL
+	 ilogXlMJ/0qpTXmdSs0SytREQUs3s9B5dECE+oHywz4LfXvLR9QIzRyo07QMhoAwTO4hf
+	 gbpV1ViQsRoRXAWcE6CmSV0b+ENlFsF/boPiNQkXfFPapCUDb/NXVyq4zsFK+va3w3doT
+	 FGhw0m1IMX7wwulQ6m5NW6D30XZUCHwiFPjK5V3C8KREuYlwuewalnPOs4oOcxpu9KzGg
+	 OtFeAvTE0Dd3Lpw6d31IKphyI9ci6O7MypSraTluVRbntAWeDnlJ2sB+Y0RdPZQ6u3A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=cmss.chinamobile.com;
 	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=EIujV3JT;
-	arc=none smtp.remote-ip=111.22.67.137
-Received: from cmccmta4.chinamobile.com (cmccmta4.chinamobile.com [111.22.67.137])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9CDCC606A333;
-	Tue, 10 Nov 2026 10:10:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9CDCC606A333
+	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=glRdxrF8;
+	arc=none smtp.remote-ip=111.22.67.139
+Received: from cmccmta6.chinamobile.com (cmccmta6.chinamobile.com [111.22.67.139])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 78BC2606A331;
+	Tue, 10 Nov 2026 10:10:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 78BC2606A331
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=EIujV3JT
+	dkim=pass (1024-bit key, unprotected) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=glRdxrF8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=cmss.chinamobile.com; s=default; l=0;
 	h=from:subject:message-id:to:cc:mime-version;
 	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=EIujV3JTkca10Ug3aUmNCInR8qh8vlz4eK+fbYepe2BPsz0e4eaYoDJBE6gsF5tLtILsR5QpVbdpC
-	 6o3Asfh/N/V5BKDePctZXnVWOb7KD3Z8VgIBR9lJWBK/mK17YclTW3vQEfI1KPqC5uLLF2CygyYyY/
-	 YN5q2gdHb0n4zTFM=
+	b=glRdxrF8fefh3i3zaQG1U+cLe7B2zAr8I4HsKFQr2GTY0MbOw4GfGGi2xeaguk5MD1nQ2bHIU6+XH
+	 8tVvz0CZIuttp4EWfr5lMZIpuYU+/GImNViwp4HbUNevl4gfHofwNK0Rb88HAyMmCLaUD8rAjmM4xE
+	 bopypUj84EcNrM+g=
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
 Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app08-12008 (RichMail) with SMTP id 2ee86af2ed6e518-6e616;
+	by rmmx-syy-dmz-app01-12001 (RichMail) with SMTP id 2ee16af2ed73ee7-aa2e6;
 	Tue, 10 Nov 2026 18:09:58 +0800 (CST)
-X-RM-TRANSID:2ee86af2ed6e518-6e616
+X-RM-TRANSID:2ee16af2ed73ee7-aa2e6
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
-Received:from  (unknown[10.55.1.71])
-	by rmsmtp-syy-appsvr04-12004 (RichMail) with SMTP id 2ee46af2ed74c04-b1a8e;
+Received:from Z04181456177947 (unknown[10.55.1.71])
+	by rmsmtp-syy-appsvr04-12004 (RichMail) with SMTP id 2ee46af2ed74c04-b1a88;
 	Tue, 10 Nov 2026 18:09:58 +0800 (CST)
-X-RM-TRANSID:2ee46af2ed74c04-b1a8e
+X-RM-TRANSID:2ee46af2ed74c04-b1a88
 From: zhaofeng2 <zhaofeng2@cmss.chinamobile.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Zhao Feng <zhaofeng2@cmss.chinamobile.com>,
@@ -59,12 +59,10 @@ Cc: Zhao Feng <zhaofeng2@cmss.chinamobile.com>,
 	Vignesh Raghavendra <vigneshr@ti.com>,
 	linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI: keystone: Fix device node leak in ks_pcie_init_id()
-Date: Tue, 10 Nov 2026 18:09:52 +0800
-Message-ID: <20261110100955.1046-2-zhaofeng2@cmss.chinamobile.com>
+Subject: [PATCH 0/3] PCI: keystone: Fix device node leaks in syscon phandle parsing
+Date: Tue, 10 Nov 2026 18:09:51 +0800
+Message-ID: <20261110100955.1046-1-zhaofeng2@cmss.chinamobile.com>
 X-Mailer: git-send-email 2.55.0.windows.5
-In-Reply-To: <20261110100955.1046-1-zhaofeng2@cmss.chinamobile.com>
-References: <20261110100955.1046-1-zhaofeng2@cmss.chinamobile.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -78,35 +76,16 @@ Content-Transfer-Encoding: 8bit
 
 From: Zhao Feng <zhaofeng2@cmss.chinamobile.com>
 
-ks_pcie_init_id() resolves the "ti,syscon-pcie-id" phandle with
-of_parse_phandle_with_fixed_args() to obtain the device-id register
-offset, which takes a reference on the syscon device node, but the
-reference is never dropped after the offset has been read from
-args.args[0], so the syscon node is leaked on every probe.
+ks_pcie_init_id(), ks_pcie_set_mode() and ks_pcie_am654_set_mode()
+resolve the "ti,syscon-pcie-id" / "ti,syscon-pcie-mode" phandles with
+of_parse_phandle_with_fixed_args(), which takes a reference on the
+syscon device node, but none of them drops that reference after the
+register offset has been read from args.args[0], so the syscon node
+is leaked on every probe.
 
-Drop the reference with of_node_put() once the offset argument has
-been consumed.
-
-Fixes: 7dcf07ac8867 ("PCI: keystone: Use phandle argument from "ti,syscon-pcie-id"/"ti,syscon-pcie-mode"")
-Signed-off-by: Zhao Feng <zhaofeng2@cmss.chinamobile.com>
----
- drivers/pci/controller/dwc/pci-keystone.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -795,8 +795,10 @@
- 
- 	/* Do not error out to maintain old DT compatibility */
- 	ret = of_parse_phandle_with_fixed_args(np, "ti,syscon-pcie-id", 1, 0, &args);
--	if (!ret)
-+	if (!ret) {
- 		offset = args.args[0];
-+		of_node_put(args.np);
-+	}
- 
- 	ret = regmap_read(devctrl_regs, offset, &id);
- 	if (ret)
+All three call sites were introduced by the same commit, which
+switched the driver from syscon_regmap_lookup_by_phandle() to
+of_parse_phandle_with_fixed_args() in order to obtain the register
+offset from the phandle argument.
 
 
