@@ -1,83 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794313362;
-	b=Zi6sJdV+RPeq9ZpXLd7plq0v0gAOLZqj/Px69Rx8CFX3wnw9xiWNq0DPXEpIdP8VYMig
-	 EvWxiB2+4qIXbq33APJGOJnnoo/UDLmmxHjsWGoOzp8dFXQ67U0AjUKLT0SWNjgTyG+sT
-	 97j3AUMdlp9SwHHHrjtRr5HFFG+rXfqPNyJxQ4FMYVL13kTMy1BNpYw5BsAbNns47ka2s
-	 I/sw9aBbF+WSwB7oXPOcgHbMgjiwkYgNJEHSvppOBQUenqKgLNInt1xwLNWKxKQWcHAgL
-	 g7W4I9uGDDV34ZSFiVFTYqp+y+7gyXoD1rnFZFyEPunJHbT0NERibt0J1MUyql6rQpA==
+	t=1794314103;
+	b=lC8TjQyQ6ZA7JCWSp9+Ejro0HO4yT36Jk5w8/n7PBav8eWNmznUzcVc2AcItt9n2Cc02
+	 kBP5Rk6Ui//chhTyLC0IBKyxzjXEVRYQ09C53VypktimN50r3C0mSarYtz0EhWKM3yAep
+	 hDeFhXVBH3p+/NzKe3AIwNyBiki/eRhYy6uv5jROf7Z1EWyLQsq/5LMcAdalo0cmzVAFV
+	 OHpfDU724FTye55e0cVIGNoMtNlkDbsS2ys3CUdmH3FEh6YIAyuhbYJeNRJrRqdLl1ct4
+	 LIhmiGjk5+D9a44JQPTMMIGKlU4AVHQZ+e1ZwLrqtptyDEPFlue7nhZraNrHXwvzK9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794313362;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=hGl7nmxQkT5vba1RqxCfKXkqe6DTt+rPNJp2pMu6m5k=;
-	b=EM0v49TgYhp9txmwtx9N2pjgEVJHiIk8hEnfHUBCHafLyS1TnVH1HCslXkPnV4aRqI+A
-	 DsP1fp/J8l0YlQJMYet5CzYMHZmI+lMTtK8y1C/xrbOALyuDSc4JFWJsRM1NKTuIJbKaT
-	 SFzSAT35JDhrcbS92Ntk8hL+MQ3cv6L+cMK34MOPvE28JvXPPESTPD8s/vUzOvAHMYPni
-	 7D3P/jw4Ky46O645609ESN0JFqVbDfZXycsuyGQ7G8qVwZb0T2PZ7GXm5zfYmpHOLfGgj
-	 4M0yA19Hkf4P9FPQ395YCOWTyGiDlBxSbQNKtmd1ZceEjV+hfBo2WmMejC73wJ2o8mw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794314103;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:User-Agent;
+	bh=JVVOODamFPF/UdshlM/D3eNvv7DV5pVML86fBzrkxAU=;
+	b=oyEkN78Cr0vK8peHGl3f8k9ktCTQJde/Sn/zi9XtbpeCXrD4po+7fXEiNHAdTYK8fX0d
+	 pgA5LQUeZOZQWV3w8saFgTVQffJWMjHYnwuBrP6ZRMRNoJPkROJv4GZkryV+2w4AFXN0s
+	 kAU/sXXe/4esJIeW19oFcpanw61q8/YysU2omkpX7DsYNglhVzB2n6i/8LvGz0Utp5exr
+	 XVaIPLFzj2zLRh5CX6JbgmcDVoHNZxfo5g0H3jK0qYcwzOQV9lD/yE8H/Xg+wxcdsVyme
+	 ZgDGFJmxyu3eqwyG6e9NHOhXx0jelVMy5TAJVvpLNNg9+MQflx/KSeBOIIkDnUaOOYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="k/co0YoI";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="CAVQWHO/";
+	arc=none smtp.remote-ip=198.175.65.16
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CE6F606A330;
-	Tue, 10 Nov 2026 12:22:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98A29606A330
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 12:34:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 98A29606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k/co0YoI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F06431F008A3;
-	Tue, 10 Nov 2026 12:22:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794313361;
-	bh=hGl7nmxQkT5vba1RqxCfKXkqe6DTt+rPNJp2pMu6m5k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=k/co0YoIuiKLXr7WyXUtAA3pWaow2/ThCpywVER/G9aHTuINfpPRlsNOpNeL6eA3/
-	 D5sZv/XI4weWMAEFMkPnaDXkHY2UHv8Cdj7T/MIPQB22hzafVwXl2t+9X4IMEyPgpr
-	 F0ULBbRJhBETzW0sC9499EvstL1a01e1JBff+474UeAj3qIpzZreFtMDiNmPvYB/v0
-	 DQ6uDL9B11Sn02jp3cV2DD6qnO+2jQITqeM+wfh8YW38tXvXhBbJX3qjL6QtqUpij7
-	 siAlaQEibl/CLeXTc5YbwPyy9yrA2KiEY8qTX0k5buBizyNTN0MjlMDpBRy18qmjhy
-	 RbXwSrQ5cyugw==
-Date: Tue, 10 Nov 2026 14:22:37 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
-Message-ID: <20261110122237.GG8635@unreal>
-References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
- <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
- <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=CAVQWHO/
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794314099; x=1825850099;
+  h=date:from:to:cc:subject:message-id;
+  bh=j2LsvHdfrlhJHj8QVc1a7JnCEzV/0NxWMmg/pmCVKz4=;
+  b=CAVQWHO/+ZOgvwxUQGp5hJ43RyGUEAy0a3bY2kNJ7erhHYncRt/1phix
+   AZXG0SXumeKEsw7BvtBnvCvGnPErwB8g9dXtGnFinaoA977YU4yV6qw5/
+   DFqBrOqfqtN8CrrqwCPx/8AYLsMaXXopZfLScU0uO7SC0B7KMbfEeiQtf
+   yqoaXIGZkeN2ptXR/HjKbVVDghxxR5uSrEPv8g1+gzm5ZU5UqbEGRL1nH
+   g1L8VjNJuvyZhfVYT7Ee1ffbP91shlKJ16HfvoKZs+ebrrIFeDSGL6p8O
+   ddzk5HOZCb58cNv9OMh6rAjJCbqqiFnwpSkbm6/T08Heq1dD3XdpyNrIl
+   g==;
+X-CSE-ConnectionGUID: 4sl0mGsJQzCx7MrTNX1cqg==
+X-CSE-MsgGUID: yhrhAnPoRzm68FSvPFz9Yw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="3048775"
+X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
+   d="scan'208";a="3048775"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2026 04:34:59 -0800
+X-CSE-ConnectionGUID: +VDNzJ7dQ1mQBRBqXmVJaw==
+X-CSE-MsgGUID: 5jbiuaBBTU+5xED0ovPxGg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
+   d="scan'208";a="8310591"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 10 Nov 2026 04:34:57 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xQl3v-00000000woX-1rFW;
+	Tue, 10 Nov 2026 12:34:55 +0000
+Date: Tue, 10 Nov 2026 20:34:25 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:hotplug] BUILD SUCCESS
+ ef61a25b3d7f586dcc7834445260cf6522312127
+Message-ID: <20261110203425.D2qYkICR-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,140 +79,190 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
 
-On Mon, Nov 09, 2026 at 01:53:02PM +0000, Robin Murphy wrote:
-> On 09/11/2026 7:33 am, Leon Romanovsky wrote:
-> [...]
-> > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > index b486b8bbd1fcd..8be2a246d4903 100644
-> > --- a/drivers/iommu/iommu.c
-> > +++ b/drivers/iommu/iommu.c
-> > @@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
-> >   static int iommu_get_default_domain_type(struct iommu_group *group,
-> >   					 int target_type)
-> >   {
-> > -	struct device *untrusted = NULL;
-> > +	struct device *restricted = NULL;
-> >   	struct group_device *gdev;
-> >   	int driver_type = 0;
-> > @@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
-> >   		driver_type = iommu_get_def_domain_type(group, gdev->dev,
-> >   							driver_type);
-> > -		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
-> > +		if (dev_is_pci(gdev->dev) &&
-> > +		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
-> 
-> I think this should be the generic device_is_adversarial(gdev->dev) now - in
-> fact probably all the dev_is_pci()/to_pci_dev() stanzas aren't conceptually
-> PCI-specific, just an artefact of the current "untrusted" flag being so.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git hotplug
+branch HEAD: ef61a25b3d7f586dcc7834445260cf6522312127  PCI: octep: Size the interrupt name buffer for the full format range
 
-I wanted to do the same, but iommu_get_default_domain_type() may be called
-before the PCI device's trust level has been set. At that point, we are
-still in "disabled" mode, whereas device_is_adversarial() checks for
-"adversarial" mode.
+elapsed time: 749m
 
-The below is from AI, I asked to present me the path for that:
---------------------------------------------------------------------------------
-For a newly discovered PCI device with an available IOMMU and a new IOMMU group:
-pci_scan_single_device()
-  pci_device_add()
-    device_add()
-      bus_notify(dev, BUS_NOTIFY_ADD_DEVICE)
-        blocking_notifier_call_chain()
-          notifier_call_chain()
-            iommu_bus_notifier()
-              iommu_probe_device(dev)
-                __iommu_probe_device(dev, NULL)
-                  iommu_setup_default_domain(group, 0)
-                    iommu_get_default_domain_type(group, 0)
+configs tested: 170
+configs skipped: 2
 
-For a device whose initial policy is adversary, its state during that call is:
-dev->trust_policy          = DEVICE_TRUST_POLICY_ADVERSARY
-dev->trust_level           = DEVICE_TRUST_DISABLED
-dev->trust_committed_level = DEVICE_TRUST_DISABLED
-dev->driver               = NULL
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-device_is_adversarial(dev) = false
+tested configs:
+alpha                              allnoconfig    gcc-16.2.0
+alpha                             allyesconfig    gcc-16.2.0
+alpha                                defconfig    gcc-16.2.0
+arc                               allmodconfig    clang-24
+arc                                allnoconfig    gcc-16.2.0
+arc                               allyesconfig    clang-24
+arc                                  defconfig    gcc-16.2.0
+arc                   randconfig-1000-20261110    gcc-10.5.0
+arc                   randconfig-1001-20261110    gcc-10.5.0
+arm                                allnoconfig    gcc-16.2.0
+arm                               allyesconfig    clang-24
+arm                      am200epdkit_defconfig    clang-24
+arm                                  defconfig    gcc-16.2.0
+arm                       jornada720_defconfig    clang-24
+arm                   randconfig-1000-20261110    gcc-10.5.0
+arm                   randconfig-1001-20261110    gcc-10.5.0
+arm                   randconfig-1002-20261110    gcc-10.5.0
+arm                   randconfig-1003-20261110    gcc-10.5.0
+arm                         shmobile_defconfig    clang-24
+arm64                             allmodconfig    clang-24
+arm64                              allnoconfig    gcc-16.2.0
+arm64                                defconfig    gcc-16.2.0
+arm64                 randconfig-1000-20261110    gcc-12.5.0
+arm64                 randconfig-1001-20261110    gcc-12.5.0
+arm64                 randconfig-1002-20261110    gcc-12.5.0
+arm64                 randconfig-1003-20261110    gcc-12.5.0
+csky                              allmodconfig    gcc-16.2.0
+csky                               allnoconfig    gcc-16.2.0
+csky                                 defconfig    gcc-16.2.0
+csky                  randconfig-1000-20261110    gcc-12.5.0
+csky                  randconfig-1001-20261110    gcc-12.5.0
+hexagon                           allmodconfig    gcc-16.2.0
+hexagon                            allnoconfig    gcc-16.2.0
+hexagon                              defconfig    gcc-16.2.0
+hexagon               randconfig-1000-20261110    clang-17
+hexagon               randconfig-1001-20261110    clang-17
+i386                              allmodconfig    clang-22
+i386                               allnoconfig    gcc-16.2.0
+i386                              allyesconfig    clang-22
+i386        buildonly-randconfig-1000-20261110    clang-22
+i386        buildonly-randconfig-1001-20261110    clang-22
+i386        buildonly-randconfig-1002-20261110    clang-22
+i386        buildonly-randconfig-1003-20261110    clang-22
+i386        buildonly-randconfig-1004-20261110    clang-22
+i386        buildonly-randconfig-1005-20261110    clang-22
+i386                                 defconfig    gcc-16.2.0
+i386                  randconfig-1007-20261110    clang-22
+i386                  randconfig-1008-20261110    clang-22
+i386                  randconfig-1009-20261110    clang-22
+i386                  randconfig-1010-20261110    clang-22
+i386                  randconfig-1011-20261110    clang-22
+i386                  randconfig-1012-20261110    clang-22
+i386                  randconfig-1013-20261110    clang-22
+loongarch                         allmodconfig    clang-24
+loongarch                          allnoconfig    gcc-16.2.0
+loongarch                            defconfig    clang-24
+loongarch             randconfig-1000-20261110    clang-17
+loongarch             randconfig-1001-20261110    clang-17
+m68k                              allmodconfig    gcc-16.2.0
+m68k                               allnoconfig    gcc-16.2.0
+m68k                              allyesconfig    clang-24
+m68k                                 defconfig    clang-24
+microblaze                         allnoconfig    gcc-16.2.0
+microblaze                        allyesconfig    gcc-16.2.0
+microblaze                           defconfig    clang-24
+mips                              allmodconfig    gcc-16.2.0
+mips                               allnoconfig    gcc-16.2.0
+mips                              allyesconfig    gcc-16.2.0
+mips                           ath79_defconfig    clang-24
+mips                            ci20_defconfig    clang-24
+mips                      eyeq6lplus_defconfig    clang-24
+mips                            jazz_defconfig    clang-24
+nios2                             allmodconfig    clang-20
+nios2                              allnoconfig    clang-24
+nios2                                defconfig    clang-24
+nios2                 randconfig-1000-20261110    clang-17
+nios2                 randconfig-1001-20261110    clang-17
+openrisc                          allmodconfig    clang-20
+openrisc                           allnoconfig    clang-24
+openrisc          de0_nano_multicore_defconfig    clang-24
+openrisc                             defconfig    gcc-16.2.0
+parisc                            allmodconfig    gcc-16.2.0
+parisc                             allnoconfig    clang-24
+parisc                            allyesconfig    clang-17
+parisc                               defconfig    gcc-16.2.0
+parisc                randconfig-1000-20261110    gcc-14.4.0
+parisc                randconfig-1001-20261110    gcc-14.4.0
+parisc64                             defconfig    clang-24
+powerpc                           allmodconfig    gcc-16.2.0
+powerpc                            allnoconfig    clang-24
+powerpc                       mgcoge_defconfig    clang-24
+powerpc                      mpc5200_defconfig    clang-24
+powerpc                  mpc836x_rdk_defconfig    clang-24
+powerpc               randconfig-1000-20261110    gcc-14.4.0
+powerpc               randconfig-1001-20261110    gcc-14.4.0
+powerpc64             randconfig-1000-20261110    gcc-14.4.0
+powerpc64             randconfig-1001-20261110    gcc-14.4.0
+riscv                             alldefconfig    clang-24
+riscv                             allmodconfig    clang-24
+riscv                              allnoconfig    clang-24
+riscv                             allyesconfig    clang-24
+riscv                                defconfig    gcc-16.2.0
+riscv                     nommu_k210_defconfig    clang-24
+riscv                 randconfig-1000-20261110    clang-24
+riscv                 randconfig-1001-20261110    clang-24
+s390                              allmodconfig    clang-17
+s390                               allnoconfig    clang-24
+s390                              allyesconfig    gcc-16.2.0
+s390                                 defconfig    gcc-16.2.0
+s390                  randconfig-1000-20261110    clang-24
+s390                  randconfig-1001-20261110    clang-24
+sh                                allmodconfig    gcc-16.2.0
+sh                                 allnoconfig    clang-24
+sh                                allyesconfig    clang-17
+sh                                   defconfig    gcc-14
+sh                    randconfig-1000-20261110    clang-24
+sh                    randconfig-1001-20261110    clang-24
+sh                   sh7785lcr_32bit_defconfig    clang-24
+sh                             shmin_defconfig    clang-24
+sparc                              allnoconfig    clang-24
+sparc                                defconfig    gcc-16.2.0
+sparc                 randconfig-1000-20261110    gcc-12.5.0
+sparc                 randconfig-1001-20261110    gcc-12.5.0
+sparc                        sparc64_defconfig    clang-24
+sparc64                           allmodconfig    clang-20
+sparc64                              defconfig    gcc-14
+sparc64               randconfig-1000-20261110    gcc-12.5.0
+sparc64               randconfig-1001-20261110    gcc-12.5.0
+um                                allmodconfig    clang-17
+um                                 allnoconfig    clang-24
+um                                allyesconfig    gcc-16.2.0
+um                                   defconfig    gcc-14
+um                              i386_defconfig    gcc-14
+um                    randconfig-1000-20261110    gcc-12.5.0
+um                    randconfig-1001-20261110    gcc-12.5.0
+um                            x86_64_defconfig    gcc-14
+x86_64                            allmodconfig    clang-22
+x86_64                             allnoconfig    clang-24
+x86_64                            allyesconfig    clang-22
+x86_64      buildonly-randconfig-1000-20261110    gcc-14
+x86_64      buildonly-randconfig-1001-20261110    gcc-14
+x86_64      buildonly-randconfig-1002-20261110    gcc-14
+x86_64      buildonly-randconfig-1003-20261110    gcc-14
+x86_64      buildonly-randconfig-1004-20261110    gcc-14
+x86_64      buildonly-randconfig-1005-20261110    gcc-14
+x86_64                               defconfig    gcc-14
+x86_64                                   kexec    clang-22
+x86_64                randconfig-1000-20261110    gcc-14
+x86_64                randconfig-1001-20261110    gcc-14
+x86_64                randconfig-1002-20261110    gcc-14
+x86_64                randconfig-1003-20261110    gcc-14
+x86_64                randconfig-1004-20261110    gcc-14
+x86_64                randconfig-1005-20261110    gcc-14
+x86_64                randconfig-1006-20261110    gcc-14
+x86_64                randconfig-1007-20261110    gcc-14
+x86_64                randconfig-1008-20261110    gcc-14
+x86_64                randconfig-1009-20261110    gcc-14
+x86_64                randconfig-1010-20261110    gcc-14
+x86_64                randconfig-1011-20261110    gcc-14
+x86_64                                rhel-9.4    clang-22
+x86_64                            rhel-9.4-bpf    gcc-14
+x86_64                           rhel-9.4-func    clang-22
+x86_64                     rhel-9.4-kselftests    clang-22
+x86_64                          rhel-9.4-kunit    gcc-14
+x86_64                            rhel-9.4-ltp    gcc-14
+x86_64                           rhel-9.4-rust    clang-22
+xtensa                             allnoconfig    clang-24
+xtensa                            allyesconfig    clang-20
+xtensa                randconfig-1000-20261110    gcc-12.5.0
+xtensa                randconfig-1001-20261110    gcc-12.5.0
 
-The active level changes later, during binding:
-really_probe()
-  device_trust_prepare()
-    __device_trust_prepare()
-      WRITE_ONCE(dev->trust_level, DEVICE_TRUST_ADVERSARY)
-  dev->bus->dma_configure()
-  call_driver_probe()
-
-> 
-> >   			/*
-> > -			 * No ARM32 using systems will set untrusted, it cannot
-> > -			 * work.
-> > +			 * No ARM32 using systems select a restricted trust
-> > +			 * policy; it cannot work.
-> >   			 */
-> >   			if (WARN_ON(IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU)))
-> >   				return -1;
-> > -			untrusted = gdev->dev;
-> > +			restricted = gdev->dev;
-> >   		}
-> >   	}
-> [...]
-> > @@ -616,6 +608,28 @@ static inline struct pci_dev *to_pci_dev(const struct device *dev)
-> >   {
-> >   	return container_of(dev, struct pci_dev, dev);
-> >   }
-> > +
-> > +static inline bool
-> > +pci_dev_default_is_restricted(const struct pci_dev *pdev)
-> > +{
-> > +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
-> > +
-> > +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
-> > +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
-> > +}
-> 
-> Unless I've wildly misunderstood, I'm not sure this is right - if the user
-> has set DEVICE_TRUST_POLICY_DISABLED to explicitly override the bus-default
-> behaviour, but that leads to the IOMMU layer special-casing all PCI devices
-> as adversarial and thus force-*enabling* all their trust-model restrictions,
-> isn't that pretty much the complete opposite of what was asked for?
-
-We have two levels: policy - that describes the default of all devices
-for that bus. level - actual decision on how that device is going to be
-operated.
-
-"Disabled" prevents driver probing until the device is authorized,
-"Adversary" permits probing and requests the available protections
-for operating an untrusted device.
-
-Both need conservative initial IOMMU setup: a disabled device may later
-be authorized as adversary, and authorization does not rebuild its IOMMU
-domain.
-
-Thanks
-
-> 
-> Thanks,
-> Robin.
-> 
-> > +
-> > +static inline bool pci_dev_ats_permitted(const struct pci_dev *pdev)
-> > +{
-> > +	enum device_trust_level level = device_get_trust_level(&pdev->dev);
-> > +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
-> > +
-> > +	if (level == DEVICE_TRUST_DISABLED)
-> > +		return policy != DEVICE_TRUST_POLICY_ADVERSARY &&
-> > +		       policy != DEVICE_TRUST_POLICY_DISABLED;
-> > +
-> > +	return level == DEVICE_TRUST_FULL;
-> > +}
-> > +
-> >   #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
-> >   #define for_each_pci_dev_reverse(d) \
-> >   	while ((d = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
-> > 
-> 
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
