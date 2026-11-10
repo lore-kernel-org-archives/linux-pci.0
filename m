@@ -1,45 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794325847;
-	b=ttJXwFWMZXQOirHkkkSm/YCHXiN9TyCWc3ylS+PNIlNxhW4fbbQTi83k3nCsFOQJkmIa
-	 glgYyfAjNNYANe+RtiA7D1maqFvt9TxZTB+yoA/kFo+WygT/VT5AGFIqudyLSsX6W7BFZ
-	 yisM/yzbBxt6IOZpabulNHkCMbfSev1o6BsuE4zhZMbRB0BdotdJeGk8SYeXPlAFc8jwx
-	 +AjBj4qCyxxlzduU+1l6pLsIMEJqRCxqALEgxJyFb9sCIGvpw+oIOqG5JXVhZwXcLAD2C
-	 r9y+HIGAQhSrnq9nwAwDsjBmkaATObzr8BX5wIrDnTgibz0Drgi/AHW5L5QkJ22L8xQ==
+	t=1794326931;
+	b=YFFHxyB2dfj0TpoQoeFAWWOSnYJF467Dqc/qi1tLOO5Ep9i88tadJppasnD5e1faf2Dq
+	 RgiGY6hbdaz7liIIKUNssykgkNt+mYOlyNgEBH/l0caD5TE5rCrI7KWw76PsX3MqqTbTr
+	 kaThgxW3rfXQU9imQQGmjZNr44MnANzdd80KN6zcAuDw6Ypyk96xb2zJHNT/Yre/Ekzr7
+	 URxMAYLa5Rp3uXsVOFwqfVF0XgX3gMI1N2EfvkkaYCcT9Vp8mIQveQbB0SPHC/qOfmZ7q
+	 6Rftup54uyWGbK5RuXRsjvE/Qor3bMZwGRumby2xYEAyY2drXHxE1KQ5M5vs/y4kgmA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794325847;
-	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
-	 Content-Type:Date:Message-Id:Subject:Cc:To:From:References:
-	 In-Reply-To;
-	bh=ZUw5z1eM2NFz4khMwpmWruXLJlm01GUhS15bXvEkmbo=;
-	b=bY8PO1BNUacYUkCbbgQILFQDeUPdn2GkQtEUK93IB081bjTCYI3QRKaAj55PGfg7bavh
-	 arPnTMLYG6tZVJVyyFwawO28wGhhQVkMjTjTYXENkfrbJTnNR5olSEjw7+NkSKLF6/Qa0
-	 6CiasWjJsh1gI/wxwczx+Sow+W3+53dd3JlRPkNIE45J9g44lPbQwp7xCRboaNzNnZB8I
-	 OyuLJzGGiyzWB9uDazhhL4W2Ke3GqD/JTpC9Qwo6jY1sqPnUkYsRvOySscXM45VWO/n7r
-	 50zxELRgLDBJ1zbyjvQLcPIqFYfAbNPvqLgdXmejnFPmstrpMjTKYldu67qV8psms7Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794326931;
+	h=Received:DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=QwFLOKzj3m6lhxcvsldXWAnm3jMrJWBTgKsC5EVfo04=;
+	b=AL7yRxw+MoPSAaPDv1aq3tCGgN1hFkSS1+lnUsj2vnSKGk1Zeeh8EqQJH0QVSSfL0opD
+	 ou7ner7HgC1fqts74QfejEvEIJNTdYGelZEVrOJ0gi9TpCJOMGzsl1DicGAQUFZeDS1hc
+	 oCJtNrkKnqhvTqOVePl+Hs0fjxssJMACL9T0seJXbXzJuxgoR3ig8qAySkImGEOYp7kkL
+	 0PfETfbzUVTER/UVTtmKsqfr1XvUQ7tMStsTGtr2sUnJ1z+hLWJXhUivoPMH0+wN2NyjQ
+	 Sa+6rEUBYSB+Qx3izWQfbzjNiwRsOqfPKhGPXWMmQ5IJOzKDPFzrLwoPrl0r7OW2QWQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nQ2rz7zB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R9sV6YwZ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFEB606A31C;
-	Tue, 10 Nov 2026 15:50:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0B1606A321
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 16:08:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nQ2rz7zB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8415B1F0089F;
-	Tue, 10 Nov 2026 15:50:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R9sV6YwZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2154F1F0089F;
+	Tue, 10 Nov 2026 16:08:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794325842;
-	bh=ZUw5z1eM2NFz4khMwpmWruXLJlm01GUhS15bXvEkmbo=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=nQ2rz7zB4Y2lnwHdGpoFBI2xx+VUgVa9x2d6GcUxdt0hXimnKhgOUKkngq6GMMTzr
-	 PP3dEryfLHyVApZGqRbnfZ3uymSIr5eGTzvBWbukshagJPyXejDNrdOPHlzIGx7YV7
-	 OgurmVm9QE6xPP3UKwI4tf5974MX/9Q9C7TLhXVtBl0MdEbW2GxqBYFzrcPPQ6Sn1L
-	 I5OUWbnEMjodgQOItGQ8fD5KFPsvHktQw8ypOPTF8sSrdUkUWS+63KKX6TWuEIck0s
-	 c3QX+fT5jkTA1FnhYnjEPnZI26Zc137tm2EX1Xo8xINBwYzqxbV3PRt++95VlLWggF
-	 sJkNE57DfdnOQ==
+	s=k20260515; t=1794326930;
+	bh=QwFLOKzj3m6lhxcvsldXWAnm3jMrJWBTgKsC5EVfo04=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=R9sV6YwZWmDEXpbpg6V6U+I5uaJzv1V+wqTvxMJ3RsohUkHNcPMvIDh/LB6911BcQ
+	 AI11lg2ftSeUvomNFMXUYd7641wQck0VU0pgUmcjoky4rI0KQpCm/Pnpo2dKFmhRPF
+	 gXyAtdScoUuuKuFsjwuf8p9OQVZ0H/M7Vw82lgTrwcrvNyCfi7Zst+1unCbvpCuYKF
+	 f2jMOkNFswF1xjDWBW+ERe7f3UpdpYZa8BwU2rA+hIg+9kV1HK7u4jl2Wq1Q5/n/4x
+	 UfZlfXgTBZcdKOoPyQAr3l7QkUo7zaTjwBKEeYCxikblpx480OEJ7yGQgf9QeLM6jA
+	 ZPo/CBJiHyR7A==
+Received: by pali.im (Postfix)
+	id 45EDB5E0; Tue, 10 Nov 2026 17:08:47 +0100 (CET)
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To: =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>
+Cc: =?UTF-8?q?Filip=20=C5=A0t=C4=9Bdronsk=C3=BD?= <p@regnarg.cz>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] libpci: Add new direct HW access method intel-conf1-ext
+Date: Tue, 10 Nov 2026 17:08:06 +0100
+Message-Id: <20261110160806.10142-1-pali@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <mj+md-20261110.152044.70145.albireo@ucw.cz>
+References: <mj+md-20261110.152044.70145.albireo@ucw.cz>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -48,481 +60,532 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 10 Nov 2026 16:50:31 +0100
-Message-Id: <DMRNF7IZQ1YI.1MRPH47QJC9XC@kernel.org>
-Subject: Re: [PATCH v2 11/12] gpu: nova-core: publish typed SR-IOV PF APIs
-Cc: <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
- <linux-pci@vger.kernel.org>, <alex@shazbot.org>, <jgg@nvidia.com>,
- <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
- <airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
- <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
- <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
- <aliceryhl@google.com>, <tmgross@umich.edu>, <jhubbard@nvidia.com>,
- <ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <kjaju@nvidia.com>, <alkumar@nvidia.com>, <ankita@nvidia.com>,
- <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
- <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
- <boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
- <work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
- <peter@colberg.org>
-To: "Simon Song" <xinmengs@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20261023154009.2246627-1-xinmengs@nvidia.com>
- <20261023154009.2246627-12-xinmengs@nvidia.com>
-In-Reply-To: <20261023154009.2246627-12-xinmengs@nvidia.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Fri Oct 23, 2026 at 5:40 PM CEST, Simon Song wrote:
-> diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driv=
-er.rs
-> index dc6febeee65..99beab18987 100644
-> --- a/drivers/gpu/nova-core/driver.rs
-> +++ b/drivers/gpu/nova-core/driver.rs
-> @@ -35,6 +35,12 @@
->      }, //
->  };
-> =20
-> +#[cfg(CONFIG_PCI_IOV)]
-> +use kernel::types::ForLt;
-> +
-> +#[cfg(CONFIG_PCI_IOV)]
-> +use crate::vgpu::vgpu_api::NovaCoreVfApi;
-> +
->  /// Counter for generating unique auxiliary device IDs.
->  static AUXILIARY_ID_COUNTER: Atomic<u32> =3D Atomic::new(0);
-> =20
-> @@ -42,6 +48,10 @@
->  pub(crate) struct NovaCore<'bound> {
->      /// Firmware-control registration.
->      _fwctl: fwctl::Registration<'bound, NovaCoreFwCtl>,
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    #[allow(clippy::type_complexity)]
-> +    #[pin]
-> +    _vf_registration: pci::VfRegistration<'bound, ForLt!(NovaCoreVfApi<'=
-_>)>,
->      #[pin]
->      pub(crate) gpu: Gpu<'bound>,
->      bar: pci::Bar<'bound, BAR0_SIZE>,
-> @@ -114,6 +124,11 @@ fn probe<'bound>(
->          pin_init::pin_init_scope(move || {
->              dev_dbg!(pdev, "Probe Nova Core GPU driver.\n");
-> =20
-> +            #[cfg(CONFIG_PCI_IOV)]
-> +            if pdev.is_virtfn() {
-> +                return Err(ENODEV);
-> +            }
+Introduce the intel-conf1-ext method, an extension of intel-conf1 that
+allows access to all PCIe registers, including the extended PCIe space
+starting at offset 0x100. This method utilizes four reserved bits above
+the bus bits to represent the extended PCIe registers.
 
-There's a lot of config guards, but we should actually stub the correspondi=
-ng
-functions, so they work regardless.
+Currently, on x86 architectures, this method is supported exclusively
+by AMD Family 10h-18h CPUs. Newer AMD CPUs require a setup that has not yet
+been documented by AMD and remains unknown. Intel CPUs do not support this
+method yet.
+---
+ lib/i386-cpuid.h | 108 +++++++++++++++++++++
+ lib/i386-ports.c | 245 +++++++++++++++++++++++++++++++++++++++++++++--
+ lib/init.c       |   6 ++
+ lib/internal.h   |   2 +-
+ lib/pci.h        |   1 +
+ pcilib.man       |   4 +
+ 6 files changed, 357 insertions(+), 9 deletions(-)
+ create mode 100644 lib/i386-cpuid.h
 
-I suggest something like the diff in [2], that should be worked into the IO=
-V
-series.
-
-> +
->              pdev.enable_device_mem()?;
->              pdev.set_master();
-> =20
-> @@ -144,6 +159,18 @@ fn probe<'bound>(
->                  // Run optional GPU selftests.
->                  #[cfg(CONFIG_NOVA_CORE_SELFTESTS)]
->                  _: { gpu.run_selftests(pdev) },
-> +                #[cfg(CONFIG_PCI_IOV)]
-> +                _vf_registration <- {
-> +                    // SAFETY: `gpu` is initialized at its pinned addres=
-s and
-> +                    // outlives the registration and its borrowed API da=
-ta.
-> +                    let gpu =3D unsafe { &(*this.as_ptr()).gpu };
-
-You can use pin-init self-reference for this, see also [1].
-
-> +                    let api =3D NovaCoreVfApi::new(gpu, pdev);
-> +                    // SAFETY: Probe has exclusive access to the registr=
-ation
-> +                    // slot and no VFs are enabled before successful pro=
-be. The
-> +                    // registration keeps PF services available until VF=
- removal
-> +                    // completes and is dropped before its borrowed GPU =
-resources.
-
-VFs not being enabled before successful probe is not a safety requirement, =
-the
-API does ensure this.
-
-The only requirement is to store it in the driver's bus device private data=
-.
-
-> +                    unsafe { pci::VfRegistration::new(pdev, Ok(api)) }
-> +                },
->                  _reg: auxiliary::Registration::new(
->                      pdev.as_ref(),
->                      c"nova-drm",
-> @@ -176,4 +203,24 @@ fn probe<'bound>(
->              }))
->          })
->      }
-> +
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    fn sriov_enable<'bound, 'callback>(
-> +        _dev: &'bound pci::Device<Core<'_>>,
-> +        _this: Pin<&Self::Data<'bound>>,
-> +        token: pci::SriovEnable<'callback>,
-> +    ) -> Result<pci::SriovEnabled<'callback>> {
-> +        let num_vfs =3D token.num_vfs();
-> +        token.enable(num_vfs)
-
-NIT: Maybe provide a pci::SriovEnable::enable_all() helper for this in the =
-core code.
-
-> +    }
-> +
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    fn sriov_disable<'bound>(
-> +        _dev: &'bound pci::Device<Core<'_>>,
-> +        _this: Pin<&Self::Data<'bound>>,
-> +        token: pci::SriovDisable<'_>,
-> +    ) -> Result {
-> +        token.disable();
-> +        Ok(())
-> +    }
->  }
-
-[1] https://lore.kernel.org/nova-gpu/20261110152746.140351-1-dakr@kernel.or=
-g/
-
-[2] Diff for IOV series
-
-diff --git a/rust/helpers/pci.c b/rust/helpers/pci.c
-index a8540f90b13c..0185baa7aacc 100644
---- a/rust/helpers/pci.c
-+++ b/rust/helpers/pci.c
-@@ -41,6 +41,27 @@ __rust_helper u32 rust_helper_pci_ext_cap_next(u32 heade=
-r)
- }
-
- #ifndef CONFIG_PCI_IOV
-+__rust_helper int rust_helper_pci_iov_vf_id(struct pci_dev *pdev)
-+{
-+	return pci_iov_vf_id(pdev);
-+}
+diff --git a/lib/i386-cpuid.h b/lib/i386-cpuid.h
+new file mode 100644
+index 000000000000..783e9159b5ae
+--- /dev/null
++++ b/lib/i386-cpuid.h
+@@ -0,0 +1,108 @@
++#if defined(__GNUC__) && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 4))
 +
-+__rust_helper int rust_helper_pci_enable_sriov(struct pci_dev *pdev,
-+					    int nr_virtfn)
-+{
-+	return pci_enable_sriov(pdev, nr_virtfn);
-+}
++/*
++ * GCC's cpuid.h header file is buggy and cannot be included more times.
++ * MinGW's intrin.h header file in some versions includes cpuid.h and
++ * therefore intrin.h and cpuid.h cannot be mixed in one source unit.
++ * libpci's i386-io-windows.h in some cases include intrin.h and therefore
++ * in some configurations it is not possible to include cpuid.h here again.
++ * GCC's cpuid.h since beginning define __cpuid macro, so it could be used
++ * as a include guard. But unfortunately MinGW-w64 since version 10.0.0
++ * automatically undefine macro __cpuid in intrin.h.
++ */
++#if defined(__MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR >= 10
++#include <intrin.h>
++#elif !defined(__cpuid)
++#include <cpuid.h>
++#endif
++#ifndef __get_cpuid
++#define __get_cpuid __get_cpuid
++#endif
 +
-+__rust_helper void rust_helper_pci_disable_sriov(struct pci_dev *pdev)
-+{
-+	pci_disable_sriov(pdev);
-+}
++#elif defined (__GNUC__)
 +
-+__rust_helper int rust_helper_pci_num_vf(struct pci_dev *pdev)
++static inline int
++__get_cpuid(unsigned int level, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 +{
-+	return pci_num_vf(pdev);
-+}
++#ifndef __x86_64__
++  /* cpuid does not have to be supported on 32-bit x86, check for it. */
++  unsigned int eflags_orig, eflags_mod;
++  asm (
++    "pushfl\n\t"
++    "pushfl\n\t"
++    "popl\t%0\n\t"
++    "movl\t%0, %1\n\t"
++    "xorl\t%2, %0\n\t"
++    "pushl\t%0\n\t"
++    "popfl\n\t"
++    "pushfl\n\t"
++    "popl\t%0\n\t"
++    "popfl\n\t"
++      : "=&r" (eflags_mod), "=&r" (eflags_orig)
++      : "i" (0x00200000)
++  );
++  if (!((eflags_mod ^ eflags_orig) & 0x00200000))
++    return 0;
++#endif
 +
- __rust_helper unsigned int
- rust_helper_pci_sriov_get_totalvfs(struct pci_dev *pdev)
++  asm ("cpuid\n\t" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx) : "0" (level));
++  return 1;
++}
++#define __get_cpuid __get_cpuid
++
++#elif defined(_MSC_VER)
++
++/* MSVC provides intrinsic __cpuid since version 14.00 included in VS2005. */
++#if _MSC_VER >= 1400
++#pragma intrinsic(__cpuid)
++#else
++static void
++__cpuid(int CPUInfo[4], int InfoType)
++{
++  __asm {
++    mov esi, CPUInfo
++    mov eax, InfoType
++    xor ecx, ecx
++    _emit 0x0F __asm _emit 0xA2 /* cpuid */
++    mov dword ptr [esi +  0], eax
++    mov dword ptr [esi +  4], ebx
++    mov dword ptr [esi +  8], ecx
++    mov dword ptr [esi + 12], edx
++  }
++}
++#endif
++static inline int
++__get_cpuid(unsigned int level, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
++{
++  int regs[4];
++
++#ifndef _M_AMD64
++  /* cpuid does not have to be supported on 32-bit x86, check for it. */
++  unsigned int eflags_orig, eflags_mod;
++  __asm {
++    pushfd
++    pushfd
++    pop eflags_orig
++    push eflags_orig
++    pop eflags_mod
++    xor eflags_mod, 0x00200000
++    push eflags_mod
++    popfd
++    pushfd
++    pop eflags_mod
++    popfd
++  }
++  if (!((eflags_mod ^ eflags_orig) & 0x00200000))
++    return 0;
++#endif
++
++  __cpuid(regs, level);
++  *eax = regs[0];
++  *ebx = regs[1];
++  *ecx = regs[2];
++  *edx = regs[3];
++  return 1;
++}
++#define __get_cpuid __get_cpuid
++
++#endif
+diff --git a/lib/i386-ports.c b/lib/i386-ports.c
+index b9d863c0762a..952e74e9688d 100644
+--- a/lib/i386-ports.c
++++ b/lib/i386-ports.c
+@@ -36,6 +36,8 @@
+ #error Do not know how to access I/O ports on this OS.
+ #endif
+ 
++#include "i386-cpuid.h"
++
+ static int conf12_io_enabled = -1;		/* -1=haven't tried, 0=failed, 1=succeeded */
+ 
+ static int
+@@ -50,7 +52,10 @@ static void
+ conf12_init(struct pci_access *a)
  {
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 0bcbf73bb363..dcdef0eb1ae2 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -36,7 +36,6 @@
- mod cap;
- mod id;
- mod io;
--#[cfg(CONFIG_PCI_IOV)]
- mod iov;
- mod irq;
-
-@@ -60,7 +59,6 @@
-     Extended,
-     Normal, //
- };
--#[cfg(CONFIG_PCI_IOV)]
- pub use self::iov::{
-     SriovDisable,
-     SriovEnable,
-@@ -96,7 +94,6 @@ unsafe fn register(
-         name: &'static CStr,
-         module: &'static ThisModule,
-     ) -> Result {
--        #[cfg(CONFIG_PCI_IOV)]
-         build_assert!(
-             T::HAS_SRIOV_ENABLE =3D=3D T::HAS_SRIOV_DISABLE,
-             "PCI drivers must implement both sriov_enable and sriov_disabl=
-e"
-@@ -116,7 +113,6 @@ unsafe fn register(
-             if let Some(ops) =3D T::PM_OPS {
-                 (*pdrv.get()).driver.pm =3D ops.raw;
-             }
--            #[cfg(CONFIG_PCI_IOV)]
-             if T::HAS_SRIOV_ENABLE {
-                 (*pdrv.get()).sriov_configure =3D Some(Self::sriov_configu=
-re_callback);
-             }
-@@ -592,6 +588,8 @@ fn runtime_resume<'bound>(dev: &Device<device::Bound>, =
-this: Pin<&Self::Data<'bo
-
-     /// Enables Single Root I/O Virtualization (SR-IOV) for a PF.
-     ///
-+    /// This callback is only invoked when `CONFIG_PCI_IOV` is enabled.
-+    ///
-     /// Called when userspace writes a nonzero VF count to `sriov_numvfs`.=
- The token carries the
-     /// requested count and permission to enable VFs on this PF. Return th=
-e guard obtained from
-     /// [`SriovEnable::enable()`] after completing setup; dropping it roll=
-s back the enable.
-@@ -624,7 +622,6 @@ fn runtime_resume<'bound>(dev: &Device<device::Bound>, =
-this: Pin<&Self::Data<'bo
-     ///     Ok(enabled)
-     /// }
-     /// ```
--    #[cfg(CONFIG_PCI_IOV)]
-     fn sriov_enable<'a>(
-         dev: &'a Device<device::Core<'_>>,
-         data: Pin<&Self::Data<'a>>,
-@@ -636,6 +633,8 @@ fn sriov_enable<'a>(
-
-     /// Disables all VFs of a PF in response to a userspace request.
-     ///
-+    /// This callback is only invoked when `CONFIG_PCI_IOV` is enabled.
-+    ///
-     /// Called when userspace writes zero to `sriov_numvfs`. Call [`SriovD=
-isable::disable()`]
-     /// while resources used by VF drivers are still available. Returning =
-an error before calling
-     /// it leaves the VFs enabled. Returning success requires that all VFs=
- have been disabled.
-@@ -661,7 +660,6 @@ fn sriov_enable<'a>(
-     ///     Ok(())
-     /// }
-     /// ```
--    #[cfg(CONFIG_PCI_IOV)]
-     fn sriov_disable<'a>(
-         dev: &'a Device<device::Core<'_>>,
-         data: Pin<&Self::Data<'a>>,
-diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
-index c5b6fd31d1e4..abba5eeaa49b 100644
---- a/rust/kernel/pci/iov.rs
-+++ b/rust/kernel/pci/iov.rs
-@@ -23,12 +23,50 @@
- };
- use core::{
-     any::TypeId,
-+    ffi::c_void,
-     marker::PhantomPinned,
-     mem::ManuallyDrop, //
- };
-
-+/// Returns the PF's registration pointer, or null when SR-IOV is disabled=
-.
-+///
-+/// # Safety
-+///
-+/// `pdev` must point to a live PCI device. The caller must exclude concur=
-rent changes to its
-+/// registration pointer.
-+unsafe fn vf_registration_data_ptr(pdev: *mut bindings::pci_dev) -> *mut c=
-_void {
-+    #[cfg(CONFIG_PCI_IOV)]
-+    {
-+        // SAFETY: The caller guarantees the device's validity and exclude=
-s concurrent changes.
-+        unsafe { (*pdev).vf_registration_data_rust }
-+    }
-+    #[cfg(not(CONFIG_PCI_IOV))]
-+    {
-+        let _ =3D pdev;
-+        core::ptr::null_mut()
-+    }
-+}
-+
-+/// Updates the PF's registration pointer, doing nothing when SR-IOV is di=
-sabled.
-+///
-+/// # Safety
-+///
-+/// `pdev` must point to a live PCI device. The caller must exclude concur=
-rent access to its
-+/// registration pointer and uphold the invariants of any published regist=
-ration data.
-+unsafe fn set_vf_registration_data_ptr(pdev: *mut bindings::pci_dev, data:=
- *mut c_void) {
-+    #[cfg(CONFIG_PCI_IOV)]
-+    // SAFETY: The caller guarantees the device's validity and exclusive a=
-ccess to its slot.
-+    unsafe {
-+        (*pdev).vf_registration_data_rust =3D data;
-+    }
-+    #[cfg(not(CONFIG_PCI_IOV))]
-+    let _ =3D (pdev, data);
-+}
-+
- impl Device<device::Core<'_>> {
-     /// Returns the number of Virtual Functions (VF) enabled for a Physica=
-l Function (PF).
-+    ///
-+    /// Returns zero when `CONFIG_PCI_IOV` is disabled.
-     #[inline]
-     pub fn num_vf(&self) -> u16 {
-         // SAFETY: `self.as_raw()` is valid and this call runs in the PCI =
-core callback context.
-@@ -110,7 +148,7 @@ pub fn enable(self, num_vfs: u16) -> Result<SriovEnable=
-d<'a>> {
-
-         // SAFETY: The PF's driver data and registration remain installed =
-throughout this callback.
-         // The registration owns final VF teardown after the enable guard =
-is disarmed.
--        if unsafe { (*self.pdev.as_raw()).vf_registration_data_rust }.is_n=
-ull() {
-+        if unsafe { vf_registration_data_ptr(self.pdev.as_raw()) }.is_null=
-() {
-             return Err(ENODEV);
-         }
-
-@@ -225,6 +263,9 @@ fn new<E>(data: impl PinInit<F::Of<'a>, E>) -> impl Pin=
-Init<Self, E> {
- /// [`Device::vf_registration_data_with()`] and [`Device::vf_registration_=
-data()`].
- ///
- /// Drop disables SR-IOV before clearing the registration pointer and rele=
-asing the data.
-+///
-+/// When `CONFIG_PCI_IOV` is disabled, the registration still initializes,=
- pins and owns its data,
-+/// but does not publish it to VF drivers.
- #[pin_data(PinnedDrop)]
- pub struct VfRegistration<'a, F: ForLt + 'static> {
-     pdev: &'a Device<device::Bound>,
-@@ -262,7 +303,7 @@ pub unsafe fn new<'core, I>(
-                     return Err(EBUSY);
-                 }
-                 // SAFETY: The core callback serializes changes to this de=
-vice's registration.
--                if !unsafe { (*pdev.as_raw()).vf_registration_data_rust }.=
-is_null() {
-+                if !unsafe { vf_registration_data_ptr(pdev.as_raw()) }.is_=
-null() {
-                     return Err(EBUSY);
-                 }
-             },
-@@ -272,15 +313,17 @@ pub unsafe fn new<'core, I>(
-             _: {
-                 // The data initializer may have registered another object=
- on this device.
-                 // SAFETY: The captured core context still serializes regi=
-stration changes.
--                if !unsafe { (*pdev.as_raw()).vf_registration_data_rust }.=
-is_null() {
-+                if !unsafe { vf_registration_data_ptr(pdev.as_raw()) }.is_=
-null() {
-                     return Err(EBUSY);
-                 }
-
-                 // SAFETY: The data is initialized and pinned, the slot is=
- unoccupied, and
-                 // no VF can access it yet. No fallible work follows publi=
-cation.
-                 unsafe {
--                    (*pdev.as_raw()).vf_registration_data_rust =3D
--                        core::ptr::from_ref(inner.as_ref().get_ref()).cast=
-_mut().cast();
-+                    set_vf_registration_data_ptr(
-+                        pdev.as_raw(),
-+                        core::ptr::from_ref(inner.as_ref().get_ref()).cast=
-_mut().cast(),
-+                    );
-                 }
-             },
-         })
-@@ -297,7 +340,7 @@ fn drop(self: Pin<&mut Self>) {
-
-         // SAFETY: The device is valid and all VF remove callbacks have co=
-mpleted, so no VF
-         // can access the registration pointer. The data remains alive unt=
-il this returns.
--        unsafe { (*self.pdev.as_raw()).vf_registration_data_rust =3D core:=
-:ptr::null_mut() };
-+        unsafe { set_vf_registration_data_ptr(self.pdev.as_raw(), core::pt=
-r::null_mut()) };
-     }
+   if (!conf12_setup_io(a))
++  {
++    a->debug("\n");
+     a->error("No permission to access I/O ports (you probably have to be root).");
++  }
  }
-
-@@ -310,6 +353,8 @@ unsafe impl<F: ForLt> Sync for VfRegistration<'_, F> wh=
-ere for<'a> F::Of<'a>: Se
-
- impl Device<device::Bound> {
-     /// Return the zero-based VF index within its PF, or an error for a no=
-n-VF device.
-+    ///
-+    /// Returns [`ENOSYS`] when `CONFIG_PCI_IOV` is disabled.
-     pub fn vf_id(&self) -> Result<u32> {
-         // SAFETY: `self.as_raw()` points to a live PCI device; the helper=
- checks VF membership.
-         let id =3D unsafe { bindings::pci_iov_vf_id(self.as_raw()) };
-@@ -324,6 +369,7 @@ pub fn vf_id(&self) -> Result<u32> {
-     ///
-     /// The data lifetime must be hidden behind a higher-ranked closure in=
-dependently of the
-     /// reference lifetime, or `F` must be covariant in its encoded lifeti=
-me.
-+    #[cfg(CONFIG_PCI_IOV)]
-     unsafe fn vf_registration_data_pinned<F: ForLt + 'static>(&self) -> Re=
-sult<Pin<&F::Of<'_>>> {
-         if !self.is_virtfn() {
-             return Err(ENODEV);
-@@ -333,7 +379,7 @@ unsafe fn vf_registration_data_pinned<F: ForLt + 'stati=
-c>(&self) -> Result<Pin<&
-         // VF removal completes, and the PF keeps the registration install=
-ed until then.
-         let ptr =3D unsafe {
-             let pf =3D (*self.as_raw()).__bindgen_anon_1.physfn;
--            (*pf).vf_registration_data_rust
-+            vf_registration_data_ptr(pf)
-         };
-
-         if ptr.is_null() {
-@@ -360,11 +406,23 @@ unsafe fn vf_registration_data_pinned<F: ForLt + 'sta=
-tic>(&self) -> Result<Pin<&
-         Ok(unsafe { Pin::new_unchecked(&*data_ptr) })
-     }
-
-+    /// Returns [`ENODEV`] because no VF registration can be published.
-+    ///
-+    /// # Safety
-+    ///
-+    /// The data lifetime must be hidden behind a higher-ranked closure in=
-dependently of the
-+    /// reference lifetime, or `F` must be covariant in its encoded lifeti=
-me.
-+    #[cfg(not(CONFIG_PCI_IOV))]
-+    unsafe fn vf_registration_data_pinned<F: ForLt + 'static>(&self) -> Re=
-sult<Pin<&F::Of<'_>>> {
-+        Err(ENODEV)
+ 
+ static void
+@@ -103,8 +108,6 @@ intel_sanity_check(struct pci_access *a, struct pci_methods *m)
+  *	Configuration type 1
+  */
+ 
+-#define CONFIG_CMD(bus, device_fn, where)   (0x80000000 | (bus << 16) | (device_fn << 8) | (where & ~3))
+-
+ static int
+ conf1_detect(struct pci_access *a)
+ {
+@@ -132,19 +135,19 @@ conf1_detect(struct pci_access *a)
+ }
+ 
+ static int
+-conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
++conf1_ext_read(struct pci_dev *d, int pos, byte *buf, int len)
+ {
+   int addr = 0xcfc + (pos&3);
+   int res = 1;
+ 
+-  if (d->domain || pos >= 256)
++  if (d->domain || pos >= 4096)
+     return 0;
+ 
+   if (len != 1 && len != 2 && len != 4)
+     return pci_generic_block_read(d, pos, buf, len);
+ 
+   intel_io_lock();
+-  intel_outl(0x80000000 | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos&~3), 0xcf8);
++  intel_outl(0x80000000 | ((pos & 0xf00) << 16) | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos & 0xfc), 0xcf8);
+ 
+   switch (len)
+     {
+@@ -164,19 +167,28 @@ conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
+ }
+ 
+ static int
+-conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
++conf1_read(struct pci_dev *d, int pos, byte *buf, int len)
++{
++  if (pos >= 256)
++    return 0;
++
++  return conf1_ext_read(d, pos, buf, len);
++}
++
++static int
++conf1_ext_write(struct pci_dev *d, int pos, byte *buf, int len)
+ {
+   int addr = 0xcfc + (pos&3);
+   int res = 1;
+ 
+-  if (d->domain || pos >= 256)
++  if (d->domain || pos >= 4096)
+     return 0;
+ 
+   if (len != 1 && len != 2 && len != 4)
+     return pci_generic_block_write(d, pos, buf, len);
+ 
+   intel_io_lock();
+-  intel_outl(0x80000000 | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos&~3), 0xcf8);
++  intel_outl(0x80000000 | ((pos & 0xf00) << 16) | ((d->bus & 0xff) << 16) | (PCI_DEVFN(d->dev, d->func) << 8) | (pos & 0xfc), 0xcf8);
+ 
+   switch (len)
+     {
+@@ -194,6 +206,15 @@ conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
+   return res;
+ }
+ 
++static int
++conf1_write(struct pci_dev *d, int pos, byte *buf, int len)
++{
++  if (pos >= 256)
++    return 0;
++
++  return conf1_ext_write(d, pos, buf, len);
++}
++
+ /*
+  *	Configuration type 2. Obsolete and brain-damaged, but existing.
+  */
+@@ -294,6 +315,202 @@ conf2_write(struct pci_dev *d, int pos, byte *buf, int len)
+   return res;
+ }
+ 
++static int cpu_detected = -1;
++static int
++conf1_ext_detect_cpu(struct pci_access *a)
++{
++#ifdef __get_cpuid
++  unsigned int eax, ebx, ecx, edx;
++  unsigned int family;
++#endif
++
++  if (cpu_detected >= 0)
++    goto out;
++
++#ifndef __get_cpuid
++  a->debug("...cannot determinate CPU model");
++  cpu_detected = 0;
++  goto out;
++#else
++  if (!__get_cpuid(0, &eax, &ebx, &ecx, &edx))
++    {
++      a->debug("...detected unsupported CPU without cpuid instruction");
++      cpu_detected = 0;
++      goto out;
 +    }
 +
-     /// Access the VF registration data through a closure with an HRTB lif=
-etime.
-     ///
-     /// `F` is the [`ForLt`](trait@ForLt) encoding of the data type. Retur=
-ns
-     /// [`ENODEV`] if this is not a VF or no data was registered,
-     /// or [`EINVAL`] if `F` does not match the type registered by the PF.
-+    /// Returns [`ENODEV`] when `CONFIG_PCI_IOV` is disabled.
-     ///
-     /// The reference is borrowed from this VF, while the registration dat=
-a's lifetime remains
-     /// abstract so the closure cannot store shorter-lived references in i=
-nvariant data.
++  /* Check for AuthenticAMD or HygonGenuine signature. */
++  if ((ebx != 0x68747541 || edx != 0x69746E65 || ecx != 0x444D4163) &&
++      (ebx != 0x6f677948 || edx != 0x6e65476e || ecx != 0x656e6975))
++    {
++      a->debug("...detected unsupported CPU %.4s%.4s%.4s", (char *)&ebx, (char *)&edx, (char *)&ecx);
++      cpu_detected = 0;
++      goto out;
++    }
++
++  /* Get the CPU family number. */
++  if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx))
++    {
++      a->debug("...detected unsupported CPU AMD/Hygon");
++      cpu_detected = 0;
++      goto out;
++    }
++  family = (eax >> 8) & 0xf;
++  if (family == 0xf)
++    family += (eax >> 20) & 0xff;
++
++  /* For now only AMD Family 10h-18h CPUs are supported (see conf1_ext_setup). */
++  if (family < 0x10 || family > 0x18)
++    {
++      a->debug("...detected unsupported CPU AMD Family %xh", family);
++      cpu_detected = 0;
++      goto out;
++    }
++
++  a->debug("...detected supported CPU AMD Family %xh", family);
++  cpu_detected = family;
++  goto out;
++#endif
++
++out:
++  return cpu_detected;
++}
++
++static int
++conf1_ext_setup(struct pci_access *a)
++{
++  const char *reg_name;
++  struct pci_dev d;
++  int off;
++  int bit;
++  u32 val;
++  u32 tmp;
++
++  /*
++   * AMD Family 10h-16h:
++   * EnableCf8ExtCfg bit [46] in NB Configuration 1 [NB_CFG1] register controls
++   * whether CF8 extended configuration cycles are enabled or not. This 64-bit
++   * register is mapped to MSR register [MSRC001_001F] and its upper 32 bits
++   * also to PCI register [D18F3x8C]. That PCI register is in config space of
++   * bus 0x00 device 0x18 function 0x3 offset 0x8c.
++   * AMD Family 17h-18h:
++   * EnableCf8ExtCfg bit [0] in Core Coherent Master Configuration Access
++   * Control register mapped to PCI register [D18F4x044] controls whether CF8
++   * extended configuration cycles are enabled or not. That PCI register is in
++   * config space of bus 0x00 device 0x18 function 0x4 offset 0x44.
++   * AMD Family 19h+:
++   * Not supported for now, seems that EnableCf8ExtCfg bit is by default not
++   * enabled and documentation does not specify where is this register located.
++   * Public references:
++   * BIOS and Kernel Developer's Guide (BKDG) For AMD Family 10h-16h Processors
++   * Non-public/NDA references:
++   * Processor Programming Reference (PPR) for AMD Family 17h Processors
++   */
++
++  memset(&d, 0, sizeof(d));
++  d.bus = 0;
++  d.dev = 0x18;
++  d.func = cpu_detected < 0x17 ? 0x3 : 0x4;
++  off = cpu_detected < 0x17 ? 0x8c : 0x44;
++  bit = cpu_detected < 0x17 ? (46-32) : 0;
++  reg_name = cpu_detected < 0x17 ? "NB_CFG1" : "CCMCAC";
++
++  a->debug("...reading %s", reg_name);
++  if (!conf1_read(&d, off, (byte *)&val, sizeof(val)))
++    {
++      a->debug("...failed");
++      return 0;
++    }
++
++  if (!(val & (1 << bit)))
++    {
++      a->debug("...EnableCf8ExtCfg unset");
++      val |= (1 << bit);
++      a->debug("...setting EnableCf8ExtCfg in %s", reg_name);
++      if (!conf1_write(&d, off, (byte *)&val, sizeof(val)))
++        {
++          a->debug("...failed");
++          return 0;
++        }
++      a->debug("...reading %s", reg_name);
++      if (!conf1_read(&d, off, (byte *)&val, sizeof(val)))
++        {
++          a->debug("...failed");
++          return 0;
++        }
++      a->debug("...verifying EnableCf8ExtCfg");
++      if (!(val & (1 << bit)))
++        {
++          a->debug("...failed");
++          return 0;
++        }
++      a->debug("...passed");
++    }
++  else
++    a->debug("...EnableCf8ExtCfg already set");
++
++  /*
++   * Set CF8 address to the first register from extended config space (0x100)
++   * and verify that address was set the correct value. When Cf8ExtCfg access
++   * is unsupported or not enabled then CF8 address bits for extended config
++   * space cannot be set and are hardwired to zeros.
++   */
++  a->debug("...verifying Cf8ExtCfg access");
++  intel_io_lock();
++  tmp = intel_inl(0xcf8);
++  intel_outl(0x81000000, 0xcf8);
++  val = intel_inl(0xcf8);
++  intel_outl(tmp, 0xcf8);
++  intel_io_unlock();
++  if (val != 0x81000000)
++    {
++      a->debug("...failed");
++      return 0;
++    }
++  a->debug("...passed");
++
++  return 1;
++}
++
++static void
++conf1_ext_init(struct pci_access *a)
++{
++  if (cpu_detected < 0)
++    {
++      a->debug("detecting CPU");
++      conf1_ext_detect_cpu(a);
++    }
++  if (!cpu_detected)
++    {
++      a->debug("\n");
++      a->error("Unsupported CPU for Intel conf1 extended interface (requires AMD Family 10h-18h).");
++    }
++
++  conf12_init(a);
++
++  if (!conf1_ext_setup(a))
++    {
++      a->debug("\n");
++      a->error("Cannot setup Intel conf1 extended interface (probably not supported).");
++    }
++}
++
++static int
++conf1_ext_detect(struct pci_access *a)
++{
++  if (!conf1_ext_detect_cpu(a))
++    return 0;
++
++  if (!conf1_detect(a))
++    return 0;
++
++  if (!conf1_ext_setup(a))
++    return 0;
++
++  a->debug("\n");
++  return 1;
++}
++
+ struct pci_methods pm_intel_conf1 = {
+   .name = "intel-conf1",
+   .help = "Raw I/O port access using Intel conf1 interface",
+@@ -306,6 +523,18 @@ struct pci_methods pm_intel_conf1 = {
+   .write = conf1_write,
+ };
+ 
++struct pci_methods pm_intel_conf1_ext = {
++  .name = "intel-conf1-ext",
++  .help = "Raw I/O port access using Intel conf1 extended interface",
++  .detect = conf1_ext_detect,
++  .init = conf1_ext_init,
++  .cleanup = conf12_cleanup,
++  .scan = pci_generic_scan,
++  .fill_info = pci_generic_fill_info,
++  .read = conf1_ext_read,
++  .write = conf1_ext_write,
++};
++
+ struct pci_methods pm_intel_conf2 = {
+   .name = "intel-conf2",
+   .help = "Raw I/O port access using Intel conf2 interface",
+diff --git a/lib/init.c b/lib/init.c
+index 10b39e48c821..1702d3fb64e7 100644
+--- a/lib/init.c
++++ b/lib/init.c
+@@ -173,6 +173,11 @@ static struct pci_methods *pci_methods[PCI_ACCESS_MAX] = {
+ #else
+   NULL,
+ #endif
++#ifdef PCI_HAVE_PM_INTEL_CONF
++  &pm_intel_conf1_ext,
++#else
++  NULL,
++#endif
+ };
+ 
+ // If PCI_ACCESS_AUTO is selected, we probe the access methods in this order
+@@ -195,6 +200,7 @@ static int probe_sequence[] = {
+   PCI_ACCESS_MINIOS,
+   // Low-level methods poking the hardware directly
+   PCI_ACCESS_ECAM,
++  PCI_ACCESS_I386_TYPE1_EXT,
+   PCI_ACCESS_I386_TYPE1,
+   PCI_ACCESS_I386_TYPE2,
+   PCI_ACCESS_MMIO_TYPE1_EXT,
+diff --git a/lib/internal.h b/lib/internal.h
+index feb3ad377e17..a784ecfb5567 100644
+--- a/lib/internal.h
++++ b/lib/internal.h
+@@ -141,7 +141,7 @@ void pci_free_params(struct pci_access *acc);
+ void pci_scan_caps(struct pci_dev *, unsigned int want_fields);
+ void pci_free_caps(struct pci_dev *);
+ 
+-extern struct pci_methods pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
++extern struct pci_methods pm_intel_conf1_ext, pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
+ 	pm_fbsd_device, pm_aix_device, pm_nbsd_libpci, pm_obsd_device,
+ 	pm_dump, pm_linux_sysfs, pm_darwin, pm_sylixos_device, pm_hurd,
+ 	pm_mmio_conf1, pm_mmio_conf1_ext, pm_ecam,
+diff --git a/lib/pci.h b/lib/pci.h
+index 8d66f1d5ee2a..4f7b64b3e69f 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -58,6 +58,7 @@ enum pci_access_type {
+   PCI_ACCESS_AOS_EXPANSION,		/* AmigaOS Expansion library */
+   PCI_ACCESS_RT_THREAD_SMART_DM,	/* RT-Thread Smart pci */
+   PCI_ACCESS_MINIOS,			/* Xen MiniOS */
++  PCI_ACCESS_I386_TYPE1_EXT,		/* i386 ports, type 1 extended */
+   PCI_ACCESS_MAX
+ };
+ 
+diff --git a/pcilib.man b/pcilib.man
+index 286651623fe7..b2b5950bf49f 100644
+--- a/pcilib.man
++++ b/pcilib.man
+@@ -35,6 +35,10 @@ to all users, the rest only to root.
+ Direct hardware access via Intel configuration mechanism 1. Available on i386 and compatibles
+ on Linux, Solaris/x86, GNU Hurd, Windows, BeOS and Haiku. Requires root privileges.
+ .TP
++.B intel-conf1-ext
++Direct hardware access via Extended PCIe Intel configuration mechanism 1. Available on
++AMD Family 10h-18h CPUs. Requires root privileges.
++.TP
+ .B intel-conf2
+ Direct hardware access via Intel configuration mechanism 2. Available on i386 and compatibles
+ on Linux, Solaris/x86, GNU Hurd, Windows, BeOS and Haiku. Requires root privileges. Warning: This method
+-- 
+2.20.1
+
