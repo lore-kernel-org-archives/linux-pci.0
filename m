@@ -1,151 +1,45 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794325516;
-	b=Lur8lYadiCzC9taTM37bmKb+yIxW+eoK5TzR7/f+pXApLfRw7Vc65Ho/5Jz0iCIsb/yw
-	 gh7VL9N1lgqXUA/+kvy5hg+Me/ZAWd+5xyX645M//F5F5NGwodAy4KQmDlSjvWSqUxPm8
-	 kMR7LMnycH4YQHskPvd8eGIfXNSYkpluH7c98g+F3PTufrc+VQrWPtkR8OJQiYgxkYc3v
-	 ecdAv52wysfs0lnk+WW1TZDxJigfjJSCAFl2Y051HL1MnPWCPqfWXNVFOq0rw4iRODGSd
-	 MfEOfpyG/WUxafnhSQdisqqC0h2SD+FWsRFRzcCPxY23laMFAAC22S28v2dch9owK5w==
+	t=1794325847;
+	b=ttJXwFWMZXQOirHkkkSm/YCHXiN9TyCWc3ylS+PNIlNxhW4fbbQTi83k3nCsFOQJkmIa
+	 glgYyfAjNNYANe+RtiA7D1maqFvt9TxZTB+yoA/kFo+WygT/VT5AGFIqudyLSsX6W7BFZ
+	 yisM/yzbBxt6IOZpabulNHkCMbfSev1o6BsuE4zhZMbRB0BdotdJeGk8SYeXPlAFc8jwx
+	 +AjBj4qCyxxlzduU+1l6pLsIMEJqRCxqALEgxJyFb9sCIGvpw+oIOqG5JXVhZwXcLAD2C
+	 r9y+HIGAQhSrnq9nwAwDsjBmkaATObzr8BX5wIrDnTgibz0Drgi/AHW5L5QkJ22L8xQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794325516;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:Message-ID:Subject:From:To:Cc:
-	 In-Reply-To:References:Autocrypt:Content-Type:
-	 Content-Transfer-Encoding:Date:MIME-Version:User-Agent:X-TM-AS-GCONF:
-	 X-Proofpoint-Reinject:X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
-	 X-Proofpoint-GUID:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=ur06BcCoPVFOLLgbWWBjmYM6+1B0Y/FtOISCDS4o+nQ=;
-	b=kKB549MmRH1zJ1nC9hmD/mqOQn/0szLwlGB7T1pYoxUh4jqrbwk0fr+eOB0RUO5LQIVX
-	 x2biXUgdG8bsNoCgUEklUwvrRyaKRc+QCxn6AIqJsF01H3j5c03Cp2loX1uHeNO5X5Okc
-	 YcXJOdXzC1qfNH/ePBuwFtFL0ZUr00Sj+wNF6NMc+w0ROs9QA7BGjkELelgr2gFxDh7/j
-	 mHxuiOFmoLyCy/Dlpje1zcsCMPc88ReQF3ERYLt3lu2/osQqk/ma3HHprvpSnGvi8HCLU
-	 T18RUwv3tBIOsZSkRxioLb8ozUSXhUopf0vAuQcb4o21Sz0sItup66RHwF2et38tjSA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794325847;
+	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
+	 Content-Type:Date:Message-Id:Subject:Cc:To:From:References:
+	 In-Reply-To;
+	bh=ZUw5z1eM2NFz4khMwpmWruXLJlm01GUhS15bXvEkmbo=;
+	b=bY8PO1BNUacYUkCbbgQILFQDeUPdn2GkQtEUK93IB081bjTCYI3QRKaAj55PGfg7bavh
+	 arPnTMLYG6tZVJVyyFwawO28wGhhQVkMjTjTYXENkfrbJTnNR5olSEjw7+NkSKLF6/Qa0
+	 6CiasWjJsh1gI/wxwczx+Sow+W3+53dd3JlRPkNIE45J9g44lPbQwp7xCRboaNzNnZB8I
+	 OyuLJzGGiyzWB9uDazhhL4W2Ke3GqD/JTpC9Qwo6jY1sqPnUkYsRvOySscXM45VWO/n7r
+	 50zxELRgLDBJ1zbyjvQLcPIqFYfAbNPvqLgdXmejnFPmstrpMjTKYldu67qV8psms7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=Nb9BYZvc;
-	arc=none smtp.remote-ip=148.163.156.1
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nQ2rz7zB;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34AAB606A338;
-	Tue, 10 Nov 2026 15:45:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 34AAB606A338
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFEB606A31C;
+	Tue, 10 Nov 2026 15:50:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=Nb9BYZvc
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AAFERNe2865033;
-	Tue, 10 Nov 2026 15:44:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=ur06Bc
-	CoPVFOLLgbWWBjmYM6+1B0Y/FtOISCDS4o+nQ=; b=Nb9BYZvcDmIF++N47KyGQ6
-	sV6OXVOFSzByu10U9mrAyJCsnBmQoPd8nBl7TCjB/OvVR6iQ9lalHJaMyTGdXJVI
-	6PEaP9QAMADVWE1Y9dK3TF88PSj8on0OzMQcmit08o05EMI9MuQALgZLn/iXviFu
-	2YhH8pxnKoPtA8uvVSHCQ0Bni+0S5g0JGWzlCFL9t8CNXlmPU/k4ExDShf8JsM07
-	AjuphtviU/o9ja+oEa4vuEn+GKCBGZ6Sh7buJ/q/4s2fqLTtYbeodYjgGOI1huaR
-	wfXz4dVAicdK5nsjUJk7OSb+Dr7ksZjLEXr2JGQiQRqBfK6C4Pk8MDru/JdUF6/Q
-	==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hsug65qyw-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 10 Nov 2026 15:44:56 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6AAF4ukE1880658;
-	Tue, 10 Nov 2026 15:44:55 GMT
-Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hv3320nkq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 10 Nov 2026 15:44:55 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6AAFisKm21103336
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 10 Nov 2026 15:44:54 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5B8FC58061;
-	Tue, 10 Nov 2026 15:44:54 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 3308F58058;
-	Tue, 10 Nov 2026 15:44:53 +0000 (GMT)
-Received: from [9.111.22.168] (unknown [9.111.22.168])
-	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 10 Nov 2026 15:44:52 +0000 (GMT)
-Message-ID: <81a1fed9c86e3954b1807f7425f98d210503a28f.camel@linux.ibm.com>
-Subject: Re: [PATCH] PCI: pciehp: Fix NULL pointer dereference in
- pciehp_configure_device()
-From: Niklas Schnelle <schnelle@linux.ibm.com>
-To: Lukas Wunner <lukas@wunner.de>, Priyank Rathod
- <rathodpriyank@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ricky Wu <ricky_wu@realtek.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <avLsH4a-l_uxlWfU@wunner.de>
-References: <20261012-pcie-hotplug-nullref-v1-1-6e21c2e89ea4@google.com>
-	 <sashiko-outbox-168676@kernel.org>
-	 <20261109215339.1841223-1-rathodpriyank@google.com>
-	 <avLsH4a-l_uxlWfU@wunner.de>
-Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 16:43:52 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nQ2rz7zB
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8415B1F0089F;
+	Tue, 10 Nov 2026 15:50:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794325842;
+	bh=ZUw5z1eM2NFz4khMwpmWruXLJlm01GUhS15bXvEkmbo=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=nQ2rz7zB4Y2lnwHdGpoFBI2xx+VUgVa9x2d6GcUxdt0hXimnKhgOUKkngq6GMMTzr
+	 PP3dEryfLHyVApZGqRbnfZ3uymSIr5eGTzvBWbukshagJPyXejDNrdOPHlzIGx7YV7
+	 OgurmVm9QE6xPP3UKwI4tf5974MX/9Q9C7TLhXVtBl0MdEbW2GxqBYFzrcPPQ6Sn1L
+	 I5OUWbnEMjodgQOItGQ8fD5KFPsvHktQw8ypOPTF8sSrdUkUWS+63KKX6TWuEIck0s
+	 c3QX+fT5jkTA1FnhYnjEPnZI26Zc137tm2EX1Xo8xINBwYzqxbV3PRt++95VlLWggF
+	 sJkNE57DfdnOQ==
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -154,78 +48,481 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: _xJ1m2a1Svgy2rQpS3gtq5qcrweH-1MM
-X-Authority-Analysis: v=2.4 cv=PeVqFShd c=1 sm=1 tr=0 ts=6af33bf8 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8
- a=zd2uoN0lAAAA:8 a=AhZ-bqvTIkWdB_Qqr3QA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: 5qnxxBCVhhvRX37NEybGtZxpNOlEjox1
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEwMDA2MiBTYWx0ZWRfX82Los6COhTQB
- vpuPlQLuQVZ803DmSRs7ASKbHYoYJM7KbYmGWJ7Hwmrsg6rw+Ifek5+e96BNNN8uEuUkqgyGaxi
- 7T8q1pNYt4rz73PKR1vpixgcA+T726DxY8xx0Fjt/RxhhwbeE1mJnNO//JASlvL4r7rxoNCAkmO
- MVMQWZCc7zcHTrDWyaIUpuv9K4U0D0PHXaGExfRq7ZQDj1MKG5eI2RXUjdyM2qLYrgWVIvD6Ygy
- QZXBhptuBRxqgUtDwZYtu6ulxEgnfs79x5pYb+qBXc/7BFzI6l3tjo6NBMLm7EkBTPml29/4sM1
- 718OzpaVN9+fa0Ev/WHlnRVNK4woUYOCx3I1Gig9WGo/HrGgqeDl3d8L8jWihhZzv/iGP2rPHJy
- HORfiK2Uqy64C9+VguPfgvDFbZfKJO2jOP6NgNpq21zphTRJ+XolfQyyoU+8ty5vx5ZyZGWBhPV
- /hupKDOAL8IhxbDCg1Q==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEwMDA2MiBTYWx0ZWRfX09NMx5N0fJ5v
- pK2NCx5KU0eaZaJFLvdFfn9TEUKhiIy9h1qfzS4OVmqtdXMqZ+Geok2ME4FPz15ubDjh++6E+K+
- wPM0ltcUI1/XW1PNrvp9M34DSwZVwPM=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-10_05,2026-11-06_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 phishscore=0 suspectscore=0 impostorscore=0 priorityscore=1501
- lowpriorityscore=0 spamscore=0 malwarescore=0 clxscore=1011 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611100062
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 10 Nov 2026 16:50:31 +0100
+Message-Id: <DMRNF7IZQ1YI.1MRPH47QJC9XC@kernel.org>
+Subject: Re: [PATCH v2 11/12] gpu: nova-core: publish typed SR-IOV PF APIs
+Cc: <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <alex@shazbot.org>, <jgg@nvidia.com>,
+ <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
+ <airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <aliceryhl@google.com>, <tmgross@umich.edu>, <jhubbard@nvidia.com>,
+ <ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <kjaju@nvidia.com>, <alkumar@nvidia.com>, <ankita@nvidia.com>,
+ <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
+ <boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+ <work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
+ <peter@colberg.org>
+To: "Simon Song" <xinmengs@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20261023154009.2246627-1-xinmengs@nvidia.com>
+ <20261023154009.2246627-12-xinmengs@nvidia.com>
+In-Reply-To: <20261023154009.2246627-12-xinmengs@nvidia.com>
 
-On Tue, 2026-11-10 at 11:04 +0100, Lukas Wunner wrote:
-> On Mon, Nov 09, 2026 at 09:53:38PM +0000, Priyank Rathod wrote:
-> > On Mon, Oct 12, 2026 at 10:16:29PM +0000, sashiko-bot@kernel.org wrote:
-> > > While this allows devices without Function 0 to be successfully hot-a=
-dded,
-> > > will it lead to spurious teardowns upon system resume?
-> > ...
-> > > Could this spurious teardown issue be avoided by modifying
-> > > pciehp_device_replaced() to handle missing Function 0 devices correct=
-ly?
-> [...]
-> > Regarding the bot's question above: pciehp assumes Function 0
-> > (PCI_DEVFN(0, 0)) represents an occupied slot across all four of its
-> > lookup sites -- the -EEXIST check at the top of
-> > pciehp_configure_device(), pcie_init(), pciehp_device_replaced(), and
-> > the DSN read at the end of pciehp_configure_device() (consistent with
-> > PCIe r6.3 sec 7.9.3 requiring Multi-Function Devices implementing DSN t=
-o
-> > expose it on Function 0).
->=20
-> I'm not even sure whether pciehp is actually used with jailhouse,
-> s390 or loongarch.  pciehp assumes in multiple places that function 0
-> is present, so guarding against a missing function 0 in a single place
-> doesn't really make sense.
->=20
-> Note that there's a patch pending which moves the cached dsn from
-> pciehp's struct controller to struct pci_dev, so the days are numbered
-> for the lines you're changing:
->=20
-> https://lore.kernel.org/r/20260902133933.2992457-7-terry.bowman@amd.com/
->=20
-> Are you actually observing a crash in practice because of a missing NULL
-> pointer check?
->=20
-> Thanks,
->=20
-> Lukas
+On Fri Oct 23, 2026 at 5:40 PM CEST, Simon Song wrote:
+> diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driv=
+er.rs
+> index dc6febeee65..99beab18987 100644
+> --- a/drivers/gpu/nova-core/driver.rs
+> +++ b/drivers/gpu/nova-core/driver.rs
+> @@ -35,6 +35,12 @@
+>      }, //
+>  };
+> =20
+> +#[cfg(CONFIG_PCI_IOV)]
+> +use kernel::types::ForLt;
+> +
+> +#[cfg(CONFIG_PCI_IOV)]
+> +use crate::vgpu::vgpu_api::NovaCoreVfApi;
+> +
+>  /// Counter for generating unique auxiliary device IDs.
+>  static AUXILIARY_ID_COUNTER: Atomic<u32> =3D Atomic::new(0);
+> =20
+> @@ -42,6 +48,10 @@
+>  pub(crate) struct NovaCore<'bound> {
+>      /// Firmware-control registration.
+>      _fwctl: fwctl::Registration<'bound, NovaCoreFwCtl>,
+> +    #[cfg(CONFIG_PCI_IOV)]
+> +    #[allow(clippy::type_complexity)]
+> +    #[pin]
+> +    _vf_registration: pci::VfRegistration<'bound, ForLt!(NovaCoreVfApi<'=
+_>)>,
+>      #[pin]
+>      pub(crate) gpu: Gpu<'bound>,
+>      bar: pci::Bar<'bound, BAR0_SIZE>,
+> @@ -114,6 +124,11 @@ fn probe<'bound>(
+>          pin_init::pin_init_scope(move || {
+>              dev_dbg!(pdev, "Probe Nova Core GPU driver.\n");
+> =20
+> +            #[cfg(CONFIG_PCI_IOV)]
+> +            if pdev.is_virtfn() {
+> +                return Err(ENODEV);
+> +            }
 
-FWIW we (s390) do not use pciehp we use our own s390_pci_hpc for
-hotplug. I'd be interested if this comes out of a real issue or just an
-LLM worry too though.
+There's a lot of config guards, but we should actually stub the correspondi=
+ng
+functions, so they work regardless.
 
-Thanks,
-Niklas
+I suggest something like the diff in [2], that should be worked into the IO=
+V
+series.
+
+> +
+>              pdev.enable_device_mem()?;
+>              pdev.set_master();
+> =20
+> @@ -144,6 +159,18 @@ fn probe<'bound>(
+>                  // Run optional GPU selftests.
+>                  #[cfg(CONFIG_NOVA_CORE_SELFTESTS)]
+>                  _: { gpu.run_selftests(pdev) },
+> +                #[cfg(CONFIG_PCI_IOV)]
+> +                _vf_registration <- {
+> +                    // SAFETY: `gpu` is initialized at its pinned addres=
+s and
+> +                    // outlives the registration and its borrowed API da=
+ta.
+> +                    let gpu =3D unsafe { &(*this.as_ptr()).gpu };
+
+You can use pin-init self-reference for this, see also [1].
+
+> +                    let api =3D NovaCoreVfApi::new(gpu, pdev);
+> +                    // SAFETY: Probe has exclusive access to the registr=
+ation
+> +                    // slot and no VFs are enabled before successful pro=
+be. The
+> +                    // registration keeps PF services available until VF=
+ removal
+> +                    // completes and is dropped before its borrowed GPU =
+resources.
+
+VFs not being enabled before successful probe is not a safety requirement, =
+the
+API does ensure this.
+
+The only requirement is to store it in the driver's bus device private data=
+.
+
+> +                    unsafe { pci::VfRegistration::new(pdev, Ok(api)) }
+> +                },
+>                  _reg: auxiliary::Registration::new(
+>                      pdev.as_ref(),
+>                      c"nova-drm",
+> @@ -176,4 +203,24 @@ fn probe<'bound>(
+>              }))
+>          })
+>      }
+> +
+> +    #[cfg(CONFIG_PCI_IOV)]
+> +    fn sriov_enable<'bound, 'callback>(
+> +        _dev: &'bound pci::Device<Core<'_>>,
+> +        _this: Pin<&Self::Data<'bound>>,
+> +        token: pci::SriovEnable<'callback>,
+> +    ) -> Result<pci::SriovEnabled<'callback>> {
+> +        let num_vfs =3D token.num_vfs();
+> +        token.enable(num_vfs)
+
+NIT: Maybe provide a pci::SriovEnable::enable_all() helper for this in the =
+core code.
+
+> +    }
+> +
+> +    #[cfg(CONFIG_PCI_IOV)]
+> +    fn sriov_disable<'bound>(
+> +        _dev: &'bound pci::Device<Core<'_>>,
+> +        _this: Pin<&Self::Data<'bound>>,
+> +        token: pci::SriovDisable<'_>,
+> +    ) -> Result {
+> +        token.disable();
+> +        Ok(())
+> +    }
+>  }
+
+[1] https://lore.kernel.org/nova-gpu/20261110152746.140351-1-dakr@kernel.or=
+g/
+
+[2] Diff for IOV series
+
+diff --git a/rust/helpers/pci.c b/rust/helpers/pci.c
+index a8540f90b13c..0185baa7aacc 100644
+--- a/rust/helpers/pci.c
++++ b/rust/helpers/pci.c
+@@ -41,6 +41,27 @@ __rust_helper u32 rust_helper_pci_ext_cap_next(u32 heade=
+r)
+ }
+
+ #ifndef CONFIG_PCI_IOV
++__rust_helper int rust_helper_pci_iov_vf_id(struct pci_dev *pdev)
++{
++	return pci_iov_vf_id(pdev);
++}
++
++__rust_helper int rust_helper_pci_enable_sriov(struct pci_dev *pdev,
++					    int nr_virtfn)
++{
++	return pci_enable_sriov(pdev, nr_virtfn);
++}
++
++__rust_helper void rust_helper_pci_disable_sriov(struct pci_dev *pdev)
++{
++	pci_disable_sriov(pdev);
++}
++
++__rust_helper int rust_helper_pci_num_vf(struct pci_dev *pdev)
++{
++	return pci_num_vf(pdev);
++}
++
+ __rust_helper unsigned int
+ rust_helper_pci_sriov_get_totalvfs(struct pci_dev *pdev)
+ {
+diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+index 0bcbf73bb363..dcdef0eb1ae2 100644
+--- a/rust/kernel/pci.rs
++++ b/rust/kernel/pci.rs
+@@ -36,7 +36,6 @@
+ mod cap;
+ mod id;
+ mod io;
+-#[cfg(CONFIG_PCI_IOV)]
+ mod iov;
+ mod irq;
+
+@@ -60,7 +59,6 @@
+     Extended,
+     Normal, //
+ };
+-#[cfg(CONFIG_PCI_IOV)]
+ pub use self::iov::{
+     SriovDisable,
+     SriovEnable,
+@@ -96,7 +94,6 @@ unsafe fn register(
+         name: &'static CStr,
+         module: &'static ThisModule,
+     ) -> Result {
+-        #[cfg(CONFIG_PCI_IOV)]
+         build_assert!(
+             T::HAS_SRIOV_ENABLE =3D=3D T::HAS_SRIOV_DISABLE,
+             "PCI drivers must implement both sriov_enable and sriov_disabl=
+e"
+@@ -116,7 +113,6 @@ unsafe fn register(
+             if let Some(ops) =3D T::PM_OPS {
+                 (*pdrv.get()).driver.pm =3D ops.raw;
+             }
+-            #[cfg(CONFIG_PCI_IOV)]
+             if T::HAS_SRIOV_ENABLE {
+                 (*pdrv.get()).sriov_configure =3D Some(Self::sriov_configu=
+re_callback);
+             }
+@@ -592,6 +588,8 @@ fn runtime_resume<'bound>(dev: &Device<device::Bound>, =
+this: Pin<&Self::Data<'bo
+
+     /// Enables Single Root I/O Virtualization (SR-IOV) for a PF.
+     ///
++    /// This callback is only invoked when `CONFIG_PCI_IOV` is enabled.
++    ///
+     /// Called when userspace writes a nonzero VF count to `sriov_numvfs`.=
+ The token carries the
+     /// requested count and permission to enable VFs on this PF. Return th=
+e guard obtained from
+     /// [`SriovEnable::enable()`] after completing setup; dropping it roll=
+s back the enable.
+@@ -624,7 +622,6 @@ fn runtime_resume<'bound>(dev: &Device<device::Bound>, =
+this: Pin<&Self::Data<'bo
+     ///     Ok(enabled)
+     /// }
+     /// ```
+-    #[cfg(CONFIG_PCI_IOV)]
+     fn sriov_enable<'a>(
+         dev: &'a Device<device::Core<'_>>,
+         data: Pin<&Self::Data<'a>>,
+@@ -636,6 +633,8 @@ fn sriov_enable<'a>(
+
+     /// Disables all VFs of a PF in response to a userspace request.
+     ///
++    /// This callback is only invoked when `CONFIG_PCI_IOV` is enabled.
++    ///
+     /// Called when userspace writes zero to `sriov_numvfs`. Call [`SriovD=
+isable::disable()`]
+     /// while resources used by VF drivers are still available. Returning =
+an error before calling
+     /// it leaves the VFs enabled. Returning success requires that all VFs=
+ have been disabled.
+@@ -661,7 +660,6 @@ fn sriov_enable<'a>(
+     ///     Ok(())
+     /// }
+     /// ```
+-    #[cfg(CONFIG_PCI_IOV)]
+     fn sriov_disable<'a>(
+         dev: &'a Device<device::Core<'_>>,
+         data: Pin<&Self::Data<'a>>,
+diff --git a/rust/kernel/pci/iov.rs b/rust/kernel/pci/iov.rs
+index c5b6fd31d1e4..abba5eeaa49b 100644
+--- a/rust/kernel/pci/iov.rs
++++ b/rust/kernel/pci/iov.rs
+@@ -23,12 +23,50 @@
+ };
+ use core::{
+     any::TypeId,
++    ffi::c_void,
+     marker::PhantomPinned,
+     mem::ManuallyDrop, //
+ };
+
++/// Returns the PF's registration pointer, or null when SR-IOV is disabled=
+.
++///
++/// # Safety
++///
++/// `pdev` must point to a live PCI device. The caller must exclude concur=
+rent changes to its
++/// registration pointer.
++unsafe fn vf_registration_data_ptr(pdev: *mut bindings::pci_dev) -> *mut c=
+_void {
++    #[cfg(CONFIG_PCI_IOV)]
++    {
++        // SAFETY: The caller guarantees the device's validity and exclude=
+s concurrent changes.
++        unsafe { (*pdev).vf_registration_data_rust }
++    }
++    #[cfg(not(CONFIG_PCI_IOV))]
++    {
++        let _ =3D pdev;
++        core::ptr::null_mut()
++    }
++}
++
++/// Updates the PF's registration pointer, doing nothing when SR-IOV is di=
+sabled.
++///
++/// # Safety
++///
++/// `pdev` must point to a live PCI device. The caller must exclude concur=
+rent access to its
++/// registration pointer and uphold the invariants of any published regist=
+ration data.
++unsafe fn set_vf_registration_data_ptr(pdev: *mut bindings::pci_dev, data:=
+ *mut c_void) {
++    #[cfg(CONFIG_PCI_IOV)]
++    // SAFETY: The caller guarantees the device's validity and exclusive a=
+ccess to its slot.
++    unsafe {
++        (*pdev).vf_registration_data_rust =3D data;
++    }
++    #[cfg(not(CONFIG_PCI_IOV))]
++    let _ =3D (pdev, data);
++}
++
+ impl Device<device::Core<'_>> {
+     /// Returns the number of Virtual Functions (VF) enabled for a Physica=
+l Function (PF).
++    ///
++    /// Returns zero when `CONFIG_PCI_IOV` is disabled.
+     #[inline]
+     pub fn num_vf(&self) -> u16 {
+         // SAFETY: `self.as_raw()` is valid and this call runs in the PCI =
+core callback context.
+@@ -110,7 +148,7 @@ pub fn enable(self, num_vfs: u16) -> Result<SriovEnable=
+d<'a>> {
+
+         // SAFETY: The PF's driver data and registration remain installed =
+throughout this callback.
+         // The registration owns final VF teardown after the enable guard =
+is disarmed.
+-        if unsafe { (*self.pdev.as_raw()).vf_registration_data_rust }.is_n=
+ull() {
++        if unsafe { vf_registration_data_ptr(self.pdev.as_raw()) }.is_null=
+() {
+             return Err(ENODEV);
+         }
+
+@@ -225,6 +263,9 @@ fn new<E>(data: impl PinInit<F::Of<'a>, E>) -> impl Pin=
+Init<Self, E> {
+ /// [`Device::vf_registration_data_with()`] and [`Device::vf_registration_=
+data()`].
+ ///
+ /// Drop disables SR-IOV before clearing the registration pointer and rele=
+asing the data.
++///
++/// When `CONFIG_PCI_IOV` is disabled, the registration still initializes,=
+ pins and owns its data,
++/// but does not publish it to VF drivers.
+ #[pin_data(PinnedDrop)]
+ pub struct VfRegistration<'a, F: ForLt + 'static> {
+     pdev: &'a Device<device::Bound>,
+@@ -262,7 +303,7 @@ pub unsafe fn new<'core, I>(
+                     return Err(EBUSY);
+                 }
+                 // SAFETY: The core callback serializes changes to this de=
+vice's registration.
+-                if !unsafe { (*pdev.as_raw()).vf_registration_data_rust }.=
+is_null() {
++                if !unsafe { vf_registration_data_ptr(pdev.as_raw()) }.is_=
+null() {
+                     return Err(EBUSY);
+                 }
+             },
+@@ -272,15 +313,17 @@ pub unsafe fn new<'core, I>(
+             _: {
+                 // The data initializer may have registered another object=
+ on this device.
+                 // SAFETY: The captured core context still serializes regi=
+stration changes.
+-                if !unsafe { (*pdev.as_raw()).vf_registration_data_rust }.=
+is_null() {
++                if !unsafe { vf_registration_data_ptr(pdev.as_raw()) }.is_=
+null() {
+                     return Err(EBUSY);
+                 }
+
+                 // SAFETY: The data is initialized and pinned, the slot is=
+ unoccupied, and
+                 // no VF can access it yet. No fallible work follows publi=
+cation.
+                 unsafe {
+-                    (*pdev.as_raw()).vf_registration_data_rust =3D
+-                        core::ptr::from_ref(inner.as_ref().get_ref()).cast=
+_mut().cast();
++                    set_vf_registration_data_ptr(
++                        pdev.as_raw(),
++                        core::ptr::from_ref(inner.as_ref().get_ref()).cast=
+_mut().cast(),
++                    );
+                 }
+             },
+         })
+@@ -297,7 +340,7 @@ fn drop(self: Pin<&mut Self>) {
+
+         // SAFETY: The device is valid and all VF remove callbacks have co=
+mpleted, so no VF
+         // can access the registration pointer. The data remains alive unt=
+il this returns.
+-        unsafe { (*self.pdev.as_raw()).vf_registration_data_rust =3D core:=
+:ptr::null_mut() };
++        unsafe { set_vf_registration_data_ptr(self.pdev.as_raw(), core::pt=
+r::null_mut()) };
+     }
+ }
+
+@@ -310,6 +353,8 @@ unsafe impl<F: ForLt> Sync for VfRegistration<'_, F> wh=
+ere for<'a> F::Of<'a>: Se
+
+ impl Device<device::Bound> {
+     /// Return the zero-based VF index within its PF, or an error for a no=
+n-VF device.
++    ///
++    /// Returns [`ENOSYS`] when `CONFIG_PCI_IOV` is disabled.
+     pub fn vf_id(&self) -> Result<u32> {
+         // SAFETY: `self.as_raw()` points to a live PCI device; the helper=
+ checks VF membership.
+         let id =3D unsafe { bindings::pci_iov_vf_id(self.as_raw()) };
+@@ -324,6 +369,7 @@ pub fn vf_id(&self) -> Result<u32> {
+     ///
+     /// The data lifetime must be hidden behind a higher-ranked closure in=
+dependently of the
+     /// reference lifetime, or `F` must be covariant in its encoded lifeti=
+me.
++    #[cfg(CONFIG_PCI_IOV)]
+     unsafe fn vf_registration_data_pinned<F: ForLt + 'static>(&self) -> Re=
+sult<Pin<&F::Of<'_>>> {
+         if !self.is_virtfn() {
+             return Err(ENODEV);
+@@ -333,7 +379,7 @@ unsafe fn vf_registration_data_pinned<F: ForLt + 'stati=
+c>(&self) -> Result<Pin<&
+         // VF removal completes, and the PF keeps the registration install=
+ed until then.
+         let ptr =3D unsafe {
+             let pf =3D (*self.as_raw()).__bindgen_anon_1.physfn;
+-            (*pf).vf_registration_data_rust
++            vf_registration_data_ptr(pf)
+         };
+
+         if ptr.is_null() {
+@@ -360,11 +406,23 @@ unsafe fn vf_registration_data_pinned<F: ForLt + 'sta=
+tic>(&self) -> Result<Pin<&
+         Ok(unsafe { Pin::new_unchecked(&*data_ptr) })
+     }
+
++    /// Returns [`ENODEV`] because no VF registration can be published.
++    ///
++    /// # Safety
++    ///
++    /// The data lifetime must be hidden behind a higher-ranked closure in=
+dependently of the
++    /// reference lifetime, or `F` must be covariant in its encoded lifeti=
+me.
++    #[cfg(not(CONFIG_PCI_IOV))]
++    unsafe fn vf_registration_data_pinned<F: ForLt + 'static>(&self) -> Re=
+sult<Pin<&F::Of<'_>>> {
++        Err(ENODEV)
++    }
++
+     /// Access the VF registration data through a closure with an HRTB lif=
+etime.
+     ///
+     /// `F` is the [`ForLt`](trait@ForLt) encoding of the data type. Retur=
+ns
+     /// [`ENODEV`] if this is not a VF or no data was registered,
+     /// or [`EINVAL`] if `F` does not match the type registered by the PF.
++    /// Returns [`ENODEV`] when `CONFIG_PCI_IOV` is disabled.
+     ///
+     /// The reference is borrowed from this VF, while the registration dat=
+a's lifetime remains
+     /// abstract so the closure cannot store shorter-lived references in i=
+nvariant data.
