@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794286938;
-	b=jSExCESvcW+DRv8kJkxOAtW5vXKccceKFa8EeB1ZdPH+iOoqT3s0RX8AVz9UI1kVeuZM
-	 b+9RQ0YVnXqIOkkkeI+z/VBTSuw4OUkDByXjPzkuKjRTCHVwHV/BnneQ5TE/dt1ZqnMCV
-	 RE2B1WRx9Rll81SkbdXTIJqBXxrcXyHPULIhblLrBrseB88F+25cwQF1xT3F2Qr1K0ook
-	 7f89nUf55tjfGeeDV0BafB60Bb0Y0T+X88aqYcym1sgIDUc2By7l4DnsZQZxR52L/a/4J
-	 zZ+gJbepaS6cr8MwVkL3umOkGuHKuE+FoG1YhiG7wWvaXDhoHyaKsAfXDsNyBtsIThQ==
+	t=1794286940;
+	b=urGThH1Wuw9OA7QIxqIBUTEOyKL1s8chO3YHulkaKQCEggOG2iMv1DvotW+mzs6+Qh2B
+	 LFIZhVb7b8+2XPARmmSGAkYO8xxwZS09Imhag+BfqtnyKhQKOmZ5LjGJYTf8R6pI3prky
+	 3z5Rqyh7Lg9iBAAEQi8fkuMxDJvjwql81PBusqZekHtTyecdjBBOJ7bdpVvWayrFJALLR
+	 JP0y/ipxWyOCS20qIm+3cmzspnBIngEITjVQeOojqQPdnQcchPwfv9D8ihGgdkwU9bZX6
+	 VQkvMJFSVnevEGFjGv0gTWgNp23xHKHR7Q6tTiEXHH/t7g48+SfxMgGn3RgxPX9H/Xw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794286938;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794286940;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=QH3sulygYhhWPnxKAIiCVfW20U0EPZtpLbJ/h67Rp6Y=;
-	b=VoOQivnLmXrGi4JtVhguutNnOW5eqEcnV0kgswJqjd1JUFjJfwPYNjSMweD8fIIJSeaD
-	 Tf67O0Vb2r7bHDGAFaYag1JSmtAhZ1v03O3inAjzSDcpqvws2oNWCrlj5no/rWbJgtKJl
-	 v08oy4LcW1+IChoah1d8Xy29F0/Ir0HyNUDAW+F74TxOTBScrFAkrsciufF5f3bL7ZJ/E
-	 KPt3bKf2P0qzGaTbxWEhglbu8DC4S1UtJ3Aq5UYJatYODfmquWqnHTfIlzfNX2datD9wI
-	 DPzZ55G2NiG3T6NHJpRFSY6EBQgR+N7TOe/t9bWrgjn1uQdhlKbp146tVIISm4J/yBg==
+	bh=Jomqh3EBPc599hlxv7mE3jDDZh0m6vOE0Julqd7EtAs=;
+	b=LZ/U+7Dw9ebiDWS15JTPCDalVlWdL+edySXNXxD5MZEc3KgOmxGNtIRMtKk3j1xiQwjk
+	 p+Nr1Dy/eXJZjRaCFBqGyw/OBJpKM6IIApPyBXuGs61GluEp0EKO4kmf08taPuDo7vyWX
+	 aJLAJqG9UiOm3RBk4HWGpUh3s/aUwwS0z4oNNEpTqsGPjk+oMAfZbW2U6KLVCcvTpqz6s
+	 0ZH8PvHrsH8RKoKU/ZL381VPHsEhnLQwCJQnKKnqTtW9KDe/xdaQptAd6wTZRbHbEP0Lr
+	 KuHzeWDtRjFrEljy9bGJkcMzDd57FDu4ML+cC7d17TDRHuKadQT5krGCZq/QyY3XExg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ZsmBlEoE;
-	arc=none smtp.remote-ip=209.85.128.72
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com [209.85.128.72])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Py5I6zuL;
+	arc=none smtp.remote-ip=209.85.218.69
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com [209.85.218.69])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7296606B0A9
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7296606B0A9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6243606B88E
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D6243606B88E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ZsmBlEoE
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4a359b714f8so11744035e9.2
-        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 21:02:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Py5I6zuL
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c50549f6cf1so9144266b.3
+        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 21:02:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794286936; x=1794891736; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1794286938; x=1794891738; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=QH3sulygYhhWPnxKAIiCVfW20U0EPZtpLbJ/h67Rp6Y=;
-        b=ZsmBlEoEGABLfHdoklEfimEeGrwDA0ApsG2hu2K/k3P5Sz6q5wztASFujjeK/5f5+y
-         IjvAgxWEBmoS0u15lQaMyFzvvdZDCMDsrIK/+70RHvf4b3C0izK+BXYx1B0cMxYed9iU
-         v13Jsac9kEWoDDvebVnYgO5DzAjDv8WBhZFxMgpxUugUH28OMOmlr/oiDtwM/yUVhkDZ
-         VGe9Uy+wD4Ef71SP6taGhYxiL6k+BpCLkXG3oFvch/QKNlZ43PAvUWPqDTizx3zYTJ1o
-         QqI2a+aKQdhk9UJiejPO89a4DnKPmlPkTPmwJ4deMrZX3yb0XqTzUxFNERmRnESp+D9T
-         8XAg==
+        bh=Jomqh3EBPc599hlxv7mE3jDDZh0m6vOE0Julqd7EtAs=;
+        b=Py5I6zuLDc2O4ylVDAQMOq2xfBJFMok6YcLdXsK3QGtW7DYKWl96IpTNBZq7lZQmZg
+         AK6gvo5ikQg7vvsyfBARQlTyOutCAmBXgXTuZ9tBioMV46RHozJErkvhjbybFIM3Jssy
+         nUDOredF8ewQgTHougB8nv6IM3UI5LlEd+1Kz3XT5Xy+Uj+46TwBfUdiI+c8dhGjSxNT
+         r9dSigFcCXa8j1u4wWMG5H6MyTB+YaLOMG6TIIVS0kdbJMwoLEOvebusPvBPNGTWvurR
+         SMSFlMx1u96fGSaPZsN9kcMtjbhO2gd7MGZaqXkBQSYdbhb3ZdbS6/b99Yc4XN17lGwD
+         IcCg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794286936; x=1794891736;
+        d=1e100.net; s=20260707; t=1794286938; x=1794891738;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=QH3sulygYhhWPnxKAIiCVfW20U0EPZtpLbJ/h67Rp6Y=;
-        b=E0KDCKC8o2I7GKe6hMbJHUEDjTVSmdg+xBXzOy2/N+kySuEc9ZLFbnVQHOBCrYBRA6
-         H+64a7R66JHv5uEgOrprRN8pUkNukjifpjVuQXsoWUhYQzmEZzutW5PCsrzFSM/4m0po
-         rHDAvWFMHOCh7MIonkUQsdo4hytJraqCTEsqQutibX5fVyPHYWAapzNlS1kyuJse8l1g
-         siWEU75uh71l0wDuEuCcyWHbKqIuZQIv7+JmgFxf4Q+Kckzs4IrZtTCmGmT4+9KH4IUW
-         GFI6GEH65q/tqasEUD/wfRBY0pkkCKLTDeFGeOnC+ksN/MfODBIG4I4mnjzl+uWZ1M8s
-         YvnQ==
-X-Forwarded-Encrypted: i=1; AL+hErHGHQWp0tg9Zsz62r6kyksa0I4INgu1nGemQkneE9XZThStjewudGWhfNuIFBs3r/yKPhbuBqid1Tc=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/sOu+9XykGfReqpRydZFAsqCRPZUwDwLT2nE6WPZODRlUMHymd
-	lgOSQNU5BTV1Db6CzG6NUZ4xn+O5YWFBeF9lioxoaTE3ff7UhElmmVHSLoY+r512QCyZvZ1tvqc
-	IBz1shjtvhUu5H1icCw==
-X-Received: from wrvd15.prod.google.com ([2002:a5d:538f:0:b0:48e:1449:1f6c])
+        bh=Jomqh3EBPc599hlxv7mE3jDDZh0m6vOE0Julqd7EtAs=;
+        b=zbb3crbmPDRRdsJ8eulnteIWRKDbsq77QDeiMYdzab6v+5ZYr/1I1ZoinlY4d/WnaV
+         zb4L03VNngDPFyGCrmugO828ZAJzfIdj8AEn5ELDmkt55EPRZKE0BCM+9kng7ayZEIuU
+         OuauBj2o9JzdldSMPY5GPCwSMBCi/cGWd4EtcEj8xIP1nceTx35V2se2dnPrMQBhvc8V
+         x2n0AAffTZOMeqHtQ7ExnLiEw9G73IFcviDZmlqVm9RWkBGcgXzlGkB5lEBlRw7g5Es7
+         RlDQhULoa0AE07XFW/PH9AdW+ObtcXGVsSU/ZDgUzETx8LH8bEMWHvMwxvNtidMPrNVt
+         B8TA==
+X-Forwarded-Encrypted: i=1; AL+hErGcCJnoMdc4MbJiaGaXflzmO7LAjHyFpg5hatDnhaXK6yFW7FH0dcghp5LiUZCVKOOY/R6og32c6UU=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/tYZkrAbAQZfbSbYyT3a/4EPRSDRnylsw/SRkv5OSyKpv3hgic
+	OhnYgbbSFPE9u4OK8nu3QrWyVwenGPAcUSfc7onfkjHZz+Q6H+2jrR7zSGSEPP06b95n+Q/oKBb
+	tsYlvkt/AwMBxASWF0w==
+X-Received: from edzg2.prod.google.com ([2002:a05:6402:902:b0:6b5:8540:2bf])
  (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:3b9b:b0:4a5:a5ca:de1d with SMTP id 5b1f17b1804b1-4ba023577bfmr24128895e9.30.1794286936085;
- Mon, 09 Nov 2026 21:02:16 -0800 (PST)
-Date: Tue, 10 Nov 2026 05:01:53 +0000
+ 2002:a17:907:3d8f:b0:c48:a838:c16d with SMTP id a640c23a62f3a-c5049629dbbmr100182566b.30.1794286938072;
+ Mon, 09 Nov 2026 21:02:18 -0800 (PST)
+Date: Tue, 10 Nov 2026 05:01:55 +0000
 In-Reply-To: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailer: git-send-email 2.56.0.506.g506a7eabc5-goog
-Message-ID: <20261110050202.529473-11-tarunsahu@google.com>
-Subject: [PATCH v4 10/19] liveupdate: Add feature header to struct luo_session_ser
+Message-ID: <20261110050202.529473-13-tarunsahu@google.com>
+Subject: [PATCH v4 12/19] liveupdate: Add feature header to struct luo_file_ser
 From: Tarun Sahu <tarunsahu@google.com>
 To: Pasha Tatashin <pasha.tatashin@soleen.com>, Mike Rapoport <rppt@kernel.org>, robin.murphy@arm.com, 
 	maz@kernel.org, will@kernel.org, David Matlack <dmatlack@google.com>, 
@@ -99,148 +99,124 @@ Cc: kvmarm@lists.linux.dev, linux-pci@vger.kernel.org,
 	Tarun Sahu <tarunsahu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Precede each serialized session entry in the LUO session KHO block set
-with struct kho_ser_hdr via DECLARE_KHO_SER so future session features can
-append fields to struct luo_session_ser without breaking compatibility
-between adjacent kernels.
+Precede each serialized file entry in a LUO file set KHO block set with
+struct kho_ser_hdr via DECLARE_KHO_SER so future per-file metadata
+features can append fields to struct luo_file_ser without breaking
+compatibility between adjacent kernels.
 
-Size session block-set entries using kho_ser_size(luo_session_ser),
-initialize each entry feature header during luo_session_serialize(), and
-validate the incoming feature header in luo_session_deserialize_one()
-before accessing the struct luo_session_ser payload.
+Initialize file set block sets with kho_ser_size(luo_file_ser), initialize
+each entry feature header in luo_file_freeze(), and validate the incoming
+feature header in luo_file_deserialize_one() before accessing the struct
+luo_file_ser payload.
 
 Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 ---
- include/linux/kho/abi/luo.h     |  6 +++---
- kernel/liveupdate/luo_session.c | 38 ++++++++++++++++++++++-----------
- 2 files changed, 29 insertions(+), 15 deletions(-)
+ include/linux/kho/abi/luo.h  |  6 +++---
+ kernel/liveupdate/luo_file.c | 26 +++++++++++++++++++-------
+ 2 files changed, 22 insertions(+), 10 deletions(-)
 
 diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
-index dfa7ea434d0d..425c52c494f1 100644
+index bd19211c64e1..38b4658183a2 100644
 --- a/include/linux/kho/abi/luo.h
 +++ b/include/linux/kho/abi/luo.h
-@@ -132,15 +132,15 @@ static_assert(!IS_ENABLED(CONFIG_64BIT) ||
-  * between kernels via Kexec Handover. An array of these structures (one per
-  * session) is created and passed to the target kernel, allowing it to
-  * reconstruct the session context.
+@@ -92,6 +92,8 @@ DECLARE_KHO_SER(luo_ser, 24, 0, 0);
+  * @compatible:  File handler compatible string.
+  * @data:        Private data
+  * @token:       User provided token for this file
 + *
 + * Preceded by &struct kho_ser_hdr.
   */
- struct luo_session_ser {
- 	char name[LIVEUPDATE_SESSION_NAME_LENGTH];
- 	DECLARE_KHOSER_PTR(file_set_ser, struct luo_file_set_ser *);
+ struct luo_file_ser {
+ 	char compatible[LIVEUPDATE_HNDL_COMPAT_LENGTH];
+@@ -99,9 +101,7 @@ struct luo_file_ser {
+ 	u64 token;
  };
  
--static_assert(sizeof(struct luo_session_ser) == 72);
+-static_assert(sizeof(struct luo_file_ser) == 64);
 -static_assert(!IS_ENABLED(CONFIG_64BIT) ||
--	      __alignof__(struct luo_session_ser) == 8);
-+DECLARE_KHO_SER(luo_session_ser, 72, 0, 0);
+-	      __alignof__(struct luo_file_ser) == 8);
++DECLARE_KHO_SER(luo_file_ser, 64, 0, 0);
  
- /* The max size is set so it can be reliably used during in serialization */
- #define LIVEUPDATE_FLB_COMPAT_LENGTH	48
-diff --git a/kernel/liveupdate/luo_session.c b/kernel/liveupdate/luo_session.c
-index df667fe15fb2..641bd67ce76e 100644
---- a/kernel/liveupdate/luo_session.c
-+++ b/kernel/liveupdate/luo_session.c
-@@ -131,7 +131,7 @@ struct luo_session_global {
- 	struct luo_session_header outgoing;
- };
+ /**
+  * struct luo_file_set_ser - Represents the serialized metadata for file set
+diff --git a/kernel/liveupdate/luo_file.c b/kernel/liveupdate/luo_file.c
+index 02d09a80d785..2da327f8bdae 100644
+--- a/kernel/liveupdate/luo_file.c
++++ b/kernel/liveupdate/luo_file.c
+@@ -486,10 +486,12 @@ int luo_file_freeze(struct luo_file_set *file_set,
+ 	kho_block_set_it_init(&it, &file_set->block_set);
  
--#define LUO_SESSION_SER_SIZE (sizeof(struct luo_session_ser) + \
-+#define LUO_SESSION_SER_SIZE (kho_ser_size(luo_session_ser) + \
- 			      sizeof(struct luo_file_set_ser))
+ 	list_for_each_entry(luo_file, &file_set->files_list, list) {
+-		struct luo_file_ser *file_ser = kho_block_set_it_reserve_entry(&it);
++		DECLARE_KHO_SER_HDR(luo_file_ser, *fhdr) =
++			kho_block_set_it_reserve_entry(&it);
++		struct luo_file_ser *file_ser;
  
- static struct luo_session_global luo_session_global = {
-@@ -557,23 +557,33 @@ int __init luo_session_setup_incoming(u64 sessions_pa)
- 	return 0;
+ 		/* This should not fail normally as blocks were pre-allocated */
+-		if (WARN_ON_ONCE(!file_ser)) {
++		if (WARN_ON_ONCE(!fhdr)) {
+ 			err = -ENOSPC;
+ 			goto err_unfreeze;
+ 		}
+@@ -502,6 +504,8 @@ int luo_file_freeze(struct luo_file_set *file_set,
+ 			goto err_unfreeze;
+ 		}
+ 
++		kho_ser_init(fhdr, luo_file_ser);
++		file_ser = kho_ser_payload(fhdr, luo_file_ser);
+ 		strscpy(file_ser->compatible, luo_file->fh->compatible,
+ 			sizeof(file_ser->compatible));
+ 		file_ser->data = luo_file->serialized_data;
+@@ -742,11 +746,19 @@ int luo_file_finish(struct luo_file_set *file_set)
  }
  
--static struct luo_session_ser *luo_session_ser_init(void *mem)
-+static struct luo_session_ser *
-+luo_session_ser_init(DECLARE_KHO_SER_HDR(luo_session_ser, *fhdr))
+ static int luo_file_deserialize_one(struct luo_file_set *file_set,
+-				    struct luo_file_ser *ser)
++				    DECLARE_KHO_SER_HDR(luo_file_ser, *fhdr))
  {
- 	struct luo_file_set_ser *file_set_ser;
--	struct luo_session_ser *ser = mem;
-+	struct luo_session_ser *ser;
+ 	struct liveupdate_file_handler *fh;
+ 	bool handler_found = false;
++	struct luo_file_ser *ser;
+ 	struct luo_file *luo_file;
++	int err;
 +
-+	kho_ser_init(fhdr, luo_session_ser);
-+	file_set_ser = (void *)fhdr + kho_ser_size(luo_session_ser);
- 
--	file_set_ser = mem + sizeof(struct luo_session_ser);
-+	ser = kho_ser_payload(fhdr, luo_session_ser);
- 	KHOSER_STORE_PTR(ser->file_set_ser, file_set_ser);
- 
- 	return ser;
- }
- 
- static int luo_session_deserialize_one(struct luo_session_header *sh,
--				       struct luo_session_ser *ser)
-+				       DECLARE_KHO_SER_HDR(luo_session_ser, *fhdr))
- {
-+	struct luo_session_ser *ser;
- 	struct luo_session *session;
- 	int err;
- 
-+	err = kho_ser_validate(fhdr, luo_session_ser);
++	err = kho_ser_validate(fhdr, luo_file_ser);
 +	if (err)
 +		return err;
 +
-+	ser = kho_ser_payload(fhdr, luo_session_ser);
- 	session = luo_session_alloc(ser->name);
- 	if (IS_ERR(session)) {
- 		pr_warn("Failed to allocate session [%.*s] during deserialization %pe\n",
-@@ -606,7 +616,7 @@ int luo_session_deserialize(void)
++	ser = kho_ser_payload(fhdr, luo_file_ser);
+ 
+ 	down_read(&luo_register_rwlock);
+ 	list_private_for_each_entry(fh, &luo_file_handler_list, list) {
+@@ -810,7 +822,7 @@ int luo_file_deserialize(struct luo_file_set *file_set,
+ 			 DECLARE_KHO_SER_HDR(luo_file_set_ser, *file_set_fhdr))
  {
- 	struct luo_session_header *sh = &luo_session_global.incoming;
- 	static bool is_deserialized;
--	struct luo_session_ser *ser;
-+	DECLARE_KHO_SER_HDR(luo_session_ser, *fhdr);
+ 	struct luo_file_set_ser *file_set_ser;
+-	struct luo_file_ser *file_ser;
++	DECLARE_KHO_SER_HDR(luo_file_ser, *fhdr);
  	struct kho_block_set_it it;
- 	static int saved_err;
  	int err;
-@@ -635,8 +645,8 @@ int luo_session_deserialize(void)
+ 
+@@ -848,8 +860,8 @@ int luo_file_deserialize(struct luo_file_set *file_set,
  	 * reliably reset devices and reclaim memory.
  	 */
- 	kho_block_set_it_init(&it, &sh->block_set);
--	while ((ser = kho_block_set_it_read_entry(&it))) {
--		err = luo_session_deserialize_one(sh, ser);
+ 	kho_block_set_it_init(&it, &file_set->block_set);
+-	while ((file_ser = kho_block_set_it_read_entry(&it))) {
+-		err = luo_file_deserialize_one(file_set, file_ser);
 +	while ((fhdr = kho_block_set_it_read_entry(&it))) {
-+		err = luo_session_deserialize_one(sh, fhdr);
++		err = luo_file_deserialize_one(file_set, fhdr);
  		if (err)
- 			goto save_err;
- 	}
-@@ -665,15 +675,17 @@ int luo_session_serialize(void)
- 	kho_block_set_it_init(&it, &sh->block_set);
+ 			goto err_destroy_blocks;
+ 		file_set->count++;
+@@ -883,7 +895,7 @@ int luo_file_deserialize(struct luo_file_set *file_set,
+ void luo_file_set_init(struct luo_file_set *file_set)
+ {
+ 	INIT_LIST_HEAD(&file_set->files_list);
+-	kho_block_set_init(&file_set->block_set, sizeof(struct luo_file_ser));
++	kho_block_set_init(&file_set->block_set, kho_ser_size(luo_file_ser));
+ }
  
- 	list_for_each_entry(session, &sh->list, list) {
--		struct luo_session_ser *ser = kho_block_set_it_reserve_entry(&it);
-+		DECLARE_KHO_SER_HDR(luo_session_ser, *fhdr) =
-+			kho_block_set_it_reserve_entry(&it);
-+		struct luo_session_ser *ser;
- 
- 		/* This should not fail normally as blocks were pre-allocated */
--		if (WARN_ON_ONCE(!ser)) {
-+		if (WARN_ON_ONCE(!fhdr)) {
- 			err = -ENOSPC;
- 			goto err_undo;
- 		}
- 
--		ser = luo_session_ser_init(ser);
-+		ser = luo_session_ser_init(fhdr);
- 		err = luo_session_freeze_one(session, ser);
- 		if (err) {
- 			kho_block_set_it_prev(&it);
-@@ -691,7 +703,9 @@ int luo_session_serialize(void)
- 
- err_undo:
- 	list_for_each_entry_continue_reverse(session, &sh->list, list) {
--		struct luo_session_ser *ser = kho_block_set_it_prev(&it);
-+		DECLARE_KHO_SER_HDR(luo_session_ser, *fhdr) =
-+			kho_block_set_it_prev(&it);
-+		struct luo_session_ser *ser = kho_ser_payload(fhdr, luo_session_ser);
- 
- 		luo_session_unfreeze_one(session, ser);
- 		memset(ser->name, 0, sizeof(ser->name));
+ void luo_file_set_destroy(struct luo_file_set *file_set)
 -- 
 2.56.0.506.g506a7eabc5-goog
 
