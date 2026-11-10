@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794296113;
-	b=G+Rvta2yqOZoqADMu9ugymLhpA8EJuY8AswHiL95ioDrqTNAXvWJTKmRsSI/9TgY24VD
-	 HuVvh132F5WWnnYuEuz/uVpZRKgAnAYOJKUkYQl51E5pB1PSRUg5UyQ7l3USLMWpGqcDQ
-	 BDq81tsnzVWG6fQLcoXf9lIzQUioIPx+uVgzQ9jq7ET5wjm0W+2tRt9jD3FMjHKGG1Ed2
-	 ytR2Hav1ORcslDv/hygyY82Fp1lu0bw1w4tL4YQlg0qqZHojm0OUgNV9zgtByxGczzURi
-	 pkXBoge6H/xsfbIYEO7X4iHC8aR3IzjnmLkIFKjerqciDB1OyebFJSL5XnRUhmoS5lA==
+	t=1794296114;
+	b=3VvgZQpt5vnVKpDs12lT8c3nClU2OYhxvo8U5s70GtdxX19J3V8aPjyT2SssorfaC11A
+	 yNFxV4lkh1ffMPWVXQuL/esUPQLuQPi5m8HQKjjG6NzEu5RSxKwpv4jIdojDxz1PIaIR1
+	 l7DltGmF55Rotu5xkVENs/SsJRkiqaCC0oXq5nnyM6EkPjjQuYpYwmMiXzMkGVl0cEOtz
+	 BLSfuzeSsrOs6ghPMUxvSafaNwPM1VhxyItIi2DduTJii2vD2TrHY/TFcQJkNl4ASAbd0
+	 uOTxVc5GjBJUSz8r4YEVhywPHElHfOiJl/rhl9gwg0rUkORNEge+1ywg7SFjQUkbtCQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794296113;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794296114;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=sZJfyn0ha4u9I7komfCaaL0RzgMrCw/R9R4BaGkytU8=;
-	b=PPUDO4A4PevG4Y/ftvZSXmz4/ivkdzuAKeE9JtcGJfr+sXMHM+3+773bojpkKB9hKSe9
-	 QIIITgyyXP3zhTpz28F8PEaLp0IkVpp1Qg0IlkpvfAXNAUNzYiO6sH7YBMCvGQqhjvkP6
-	 pLgk3TmQw0ORG9lcpVXaMYsMTkrwqxyXjyWbspx1lO1On9FoBDJGEzS/4Lc+Ng0P2pRL+
-	 gkBbkaauxhimDlsYVx+D0bJFWIwSl8Fyk3uqqyUrh4GgolFM1D+fzi+P+Cb0tVHQxDrV/
-	 QJ+WF6lFIwW7wjhH1bSTyy0XF94X6WHJgJ9QS26L2/v3IXW2K7gGk7SkUFq56P7AStw==
+	bh=gzUz5dZW7OURo/NbKy54dPMncmSwPLDw8PnChmO1qIA=;
+	b=nQTSZgWiNrENLDqPlHOHIeeba/oZdSX5v4GdfT2IXNew6WmxF1jb32y4ZxLFj3PTExWp
+	 uhH9rtvB4NzK1l8xDbAUT4FGApVDYL4H312xJ1uLReYVURsjOU2g+/z6WVmhykoTHJ3C3
+	 aBPBuSPR3lzD1h382V4fQg8OOhturqgmi7iR+0Y9pkLCOZQnLdu8n5bnCahCUo8PaswnJ
+	 A4PhF3NiH8t3BG/V5kVD0V+gQqCnOKORNp6cQyqddyGkRCPFGHdY/GWL24w09VcEnpL8E
+	 YG2H/gyVgghd3HngFCvlEA2d3+IKwcqOuhzaxHAwbof/2ehwFEclwJCRyME/mnLIu3A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lU8zdIdn;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eF0L4L5O;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 362DF606A321;
-	Tue, 10 Nov 2026 07:35:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5E73606A32E;
+	Tue, 10 Nov 2026 07:35:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lU8zdIdn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B531F008A1;
-	Tue, 10 Nov 2026 07:35:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eF0L4L5O
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 438A01F008A2;
+	Tue, 10 Nov 2026 07:35:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794296112;
-	bh=sZJfyn0ha4u9I7komfCaaL0RzgMrCw/R9R4BaGkytU8=;
+	s=k20260515; t=1794296113;
+	bh=gzUz5dZW7OURo/NbKy54dPMncmSwPLDw8PnChmO1qIA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lU8zdIdnpOKOcBhAlT3qsxp1Xl860DsbbBoFgtmklK3T6tuGQwyeh8Rrkoi5gBoTH
-	 VH3RTlpp54InoMd2MtXQIWqhzYlllTixFaOPwOeW3uiYIwYcm7XY85JJ/u/F6GCwuS
-	 ++kLy4AQubadsMC5LOIfy4XlalN7xv4DiD5eaiB1nEFxmaDzdtuJLIC122fwuwG3df
-	 mZrpjCYX1lhJ2Q7p0JVuL4N6isglyEptiAtwBsncvxRxltjv5PAFMRqC/9k3BjJVok
-	 D/2XczwOSCgFxUr3YeoNWt0rt3q7rltov63N4hHgLA6iC1+yex5qIdiyc7vhbAulMu
-	 8+ox5yPJUlifA==
-Message-ID: <sashiko-outbox-206501@kernel.org>
+	b=eF0L4L5OfynRZagXMqQnCSsx4X8SNqRdMMpsDrL0hPJdQO1Pmt6LUcJGInI6Hp++K
+	 vGpEKoL+jPFgiIzJmtQ6a1Xr8nto73CeawwCz8FAd6lm7wU3RWczYoE0OB6ajqER4o
+	 WeV4iBQ3vzenTALX/8uhZH5180xkIf6a5WZgokvIfwlrvW/eMQLaHVgaY+UIZjw0Rh
+	 kBrRcAw8sxz4RsarvNNUSLpPrkCNITWGngU8XI3OrC4rf79C93xbqovMSCTeke4vzS
+	 mBUQYGzn7GJmXV7Sp90dFXXGcmIKPY2bfqQLud3v7bgozoXHjyn5jQaPKJmKj85FO4
+	 GMlUWXlB4XbVA==
+Message-ID: <sashiko-outbox-206502@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 01/19] Input: gameport - attach manual drivers
- through the driver core
+Subject: Re: [PATCH v2 02/19] wifi: mac80211_hwsim: lock device for manual
+ driver binding
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
 Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261109-device-trust-core-v2-1-3b12d9a9f861@nvidia.com>
+In-Reply-To: <20261109-device-trust-core-v2-2-3b12d9a9f861@nvidia.com>
 References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
- <20261109-device-trust-core-v2-1-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-2-3b12d9a9f861@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Tue, 10 Nov 2026 07:35:12 +0000
@@ -63,12 +63,10 @@ Precedence: list
 
 > From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> Manual gameport binding calls connect before publishing the binding, so
-> driver-core admission cannot reject a device before functional setup.
->=20
-> Use device_driver_attach() to run the existing bus probe and removal
-> callbacks under the device lock. This gives manual attachment the same
-> admission, setup and failure cleanup as automatic probing.
+> The documented API contract for device_bind_driver() requires the device
+> lock. mac80211_hwsim uses it for a newly created class device with no bus,
+> so no automatic driver-core path can bind the device concurrently and the
+> missing lock was safe.
 >=20
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
@@ -76,5 +74,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109-device-tru=
-st-core-v2-0-3b12d9a9f861@nvidia.com?part=3D1
+st-core-v2-0-3b12d9a9f861@nvidia.com?part=3D2
 
