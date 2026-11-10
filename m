@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794285176;
-	b=rhSaiK0C1kvlRf1RRqiaEU6Htc1Kr6Lu8Kkxj22NTvhQfzcvOlsk1hDavLk7ofjFo3iU
-	 uEra9PxGHdaRNEjhSp9HATLS2C368L+VHiA2DNNB05/XDSxCJekxL4e1PUWTHLCCsClpK
-	 KoE0TL80A+69/dGMvG2jkuo870VgAf9vNnYKwOKZrK2pwwqEEEBhqmjlVf3e9KUAAjoU9
-	 DW1e2dGnndc2T+LcOHu6BUVPRLA2VXTVqyNK0jelegQayWJccfpxsi0eDX2b+w8ZoHTEO
-	 kkHeu+D62tNfnX3hkfvryfjMkr7v5ec+rEESTxs6tfHEtumz7Kp6r3OVsmT/P68M5LA==
+	t=1794285252;
+	b=lrqttbaNDIUJInS6ACuM32KG8kmiH1vLcnIy08HtzixtGbfW3ouZR1/qjXxj2BOacVX9
+	 PmF2lyp02naFGyyHzRxpODsckHQ2HFkSsLGqEKyYmk8ItAR6zCVal4ky1BLAw1k3xwhfB
+	 6yWrk3r3m0cmmgGQXeKIWzzLKw4/2bY03AdkY7j5SIxcbVkE70o3Xg8S6ABrYhCAUCUFL
+	 ZVt0IQuxbq0B/fUcu4xQ2wStd9ByEnZMMInAKZkHtvcrt4BM6sHxXTAE7ds0VAfwBO/n1
+	 N6uBZkR9HsF8E8tF1xBt1KmleIjVyNOgwvRjpNUpP5P4efSK6zsf/N5diRnkt5c5UAA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794285176;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794285252;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=MO+azDzaPSMthUOau624HVqEPwDEByH15hq31DNGo5A=;
-	b=bPSheXi2yI1uqcakruyjnbxFWLAEJtCejnbHmxoFOjq75eitP/1jmQO9en561MmLdai/
-	 v+OiPufzmsNDoCay+za9dzx3Pt3zJMFZCilZT2kwpgILcyz6O0CvZMqnz3HP3NDYdcMPq
-	 ZNo73BUYJPL0sqoRje2Z2Hf663anOgW2aJKIHdKUol/JX5LOUqm+DhcoY1n4hoe3kRVtk
-	 eCUcuI22lQh5ttaecDQ0yOAdCoYS2Cye1ubiHlvJ9PUQORCWQwpKaIlPRVj4UePR7Rc7Y
-	 Gm7vnhRTwVEorE86mHX4QZwKGAa8j5vcYjSNdvr4IgoR/ZPl0xW6LPtObRQJgBJbdCA==
+	bh=AshAl4OXougadyVJP4TTq8ro15mnEANQcP8mLfhnY6g=;
+	b=EnuI0s/5MoixYrIkcIGDck+wq3l1lo7zBocwGaXOZU9sbSjtHxd+tJS5Htg2XzCtKBcw
+	 N41wNYiQR80SiIfhTNeNfZjnYBDPXEF2S/ZFXWfwFThmXvHutHASqxcoaE73B+oqQqAqs
+	 rKWfT6WrBU6v5S/nFMVdI1VKFm57QyYBcIHo2crxamcq5WrY+rYaCZW3TpmNcaBGQbKRg
+	 wJpsZXKyHZosvmuhzsE+tDl7mybuyPRmmWmh2eEohcsvJCS7n5p9wrSeI5xn4JvMZPW5l
+	 pLhVECg8dCMbYtkb/m9Xl8Yora54LlA2lFrH6cPCVt2AvP5vSQp7fg4vFCUkghYuJNw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NWcQsWzg;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K6lzOZOt;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CBA160A6F76
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:32:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BCFB606A338
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:34:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NWcQsWzg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2B711F00900;
-	Tue, 10 Nov 2026 04:32:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K6lzOZOt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79FC61F0089F;
+	Tue, 10 Nov 2026 04:34:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794285175;
-	bh=MO+azDzaPSMthUOau624HVqEPwDEByH15hq31DNGo5A=;
+	s=k20260515; t=1794285251;
+	bh=AshAl4OXougadyVJP4TTq8ro15mnEANQcP8mLfhnY6g=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=NWcQsWzgRmJiKuDiY5gOrIH5RCRT75pRcZUvDJq6vtTo+0k33e5vBQBOmwPZOg786
-	 CgEEEUPqbfyWdeW4h5DiikBLaRSlmfpNqpQi+N/tup079doMv/n8XuZhPpMeMF2UWj
-	 xumnObMD5axhRKXPm2q5KTw2Xi5WZytCJlnxZ0IZmc+weu8qfFmPz/iuTUFJZmnZqF
-	 2agwzQkuY5sFqapiKunYvtQpnILNR9D6VdUd86SKI3rsECElrUkFEP5iiAHk/is23C
-	 v9XpRFKfswH40pPID2z7Sx5tE/rJWTUOlJQiJYPEauRCuCrNDvACjGBn1JEnEoImBc
-	 Ar4YqMYhu2UGw==
-Message-ID: <sashiko-outbox-206211@kernel.org>
+	b=K6lzOZOtEQbnFubrAd5noLw4M578lD9QecjWWKL41PgEJNjvRyg9GYxy67Tw0Mpbs
+	 ODNTgDZTOlZbFY6bsQTIKtrDvqdnLg8XI7JjwSkkzeDmF3XDf1xZi62eeuXr9wCh63
+	 EtP8pndYuVPU4SAsqJCIIlluiWZkTqExropaU+wFKdY1QwTOOOuSLNohkseHFoKwD5
+	 HGv/N6vai/xKucm8R0Ix6ZLC7Yp3SMcWNhbBL/gYY0YSqzLTUbOPCaJjyU1zM1Gl6t
+	 k6jGS0yg4Fb0iC1biCQot3SGdFDg5RJcLmIzuaNNjPsuryKFI16UNIJOgsG7BGJLGi
+	 SjW34eDvrQOhw==
+Message-ID: <sashiko-outbox-206212@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 09/25] lib: rspdm: Initial commit of Rust SPDM
+Subject: Re: [PATCH v6 02/25] rust: create basic untrusted data API
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com, linux-pci@vger.kernel.org
-In-Reply-To: <20261110041832.1730924-10-alistair.francis@wdc.com>
+In-Reply-To: <20261110041832.1730924-3-alistair.francis@wdc.com>
 References: <20261110041832.1730924-1-alistair.francis@wdc.com>
- <20261110041832.1730924-10-alistair.francis@wdc.com>
+ <20261110041832.1730924-3-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 04:32:55 +0000
+Date: Tue, 10 Nov 2026 04:34:11 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,31 +59,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Alistair Francis <alistair.francis@wdc.com>
+> From: Benno Lossin <benno.lossin@proton.me>
 >=20
-> This is the initial commit of the Rust SPDM library.
+> When the kernel receives external data (e.g. from userspace), it usually
+> is a very bad idea to directly use the data for logic decision in the
+> kernel. For this reason, such data should be explicitly marked and
+> validated before making decision based on its value.
 >=20
-> Security Protocols and Data Model (SPDM) [1] is used for authentication,
-> attestation and key exchange. SPDM is generally used over a range of
-> transports, such as PCIe, MCTP/SMBus/I3C, ATA, SCSI, NVMe or TCP.
+> The `Untrusted<T>` wrapper type marks a value of type `T` as untrusted.
+> The particular meaning of "untrusted" highly depends on the type `T`.
+> For example `T =3D u8` ensures that the value of the byte cannot be
+> retrieved. However, `T =3D [u8]` still allows to access the length of the
+> slice. Similarly, `T =3D KVec<U>` allows modifications.
 >=20
-> From the kernels perspective SPDM is used to authenticate and attest devi=
-ces.
->=20
-> This initial commit setups the framework for SPDM support. This uses the
-> `Validate` and `Untrusted` traits, which means we can treat the
-> responses as `Untrusted` until we validate them.
->=20
-> The next few patches add SPDM functionality, which allows us to perform
-> basic authentication.
->=20
-> 1: https://www.dmtf.org/standards/spdm
->=20
+> Signed-off-by: Benno Lossin <benno.lossin@proton.me>
+> Message-ID: <20250814124424.516191-3-lossin@kernel.org>
 > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110041832.1730=
-924-1-alistair.francis@wdc.com?part=3D9
+924-1-alistair.francis@wdc.com?part=3D2
 
