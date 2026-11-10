@@ -1,85 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794323545;
-	b=Zqugf+iJG294ZU80cUQB1C1+hHcCbvVAUw0MbWYyQlOsSs5bDUNcODarTHx14sq7+wca
-	 0qwPTxE865J7HSA+Sc9MvfgtsIGRNBhs2J24nFPektXSv7QuNb8FWa24EcfM2wIHPsPFJ
-	 F89tmlNc70BVFGPjCNucZ+kh80f6A9Rh6BZDsznnggfkR5yFhKBITwlCuqzgMelICa1UE
-	 jEFyblbcejm3nTyZKge3oGZox1dOlum4moKroXt6QP6tlv/okE3mhXAFnhB+4JUfp+tuR
-	 XKpvmN9jdet5cidbbPG8IVeVn4e9Xj4ZZVIRDPzYp1UPHdqMkIIJt85olaIc9xx+Huw==
+	t=1794323548;
+	b=xWpFoT9fVQQxORTHDL/CJNdtVSn9vAKpg1pv2ibHM6mcQA/NiXWKoVTA8DpFmQ9VY38T
+	 WGeCaUUM+rZkyKLt8MrviXcpEDMOu6FsLAOAYyQPVogIB/5NTMsKe0AYt6YEI4H5AiyY0
+	 FAfj8mR0KSDXaKkPfcgNyeSgZ/PvsnpTqqcbxyiOVVBC39q+GdTGNVBXgF5jNreTYVdDB
+	 Bwu1o2p6OKwY5sZBPZ55jJOJUGOVM/vvuZu6qMe8e/orOqGUdZAN7WCiOdQXNH/6homJX
+	 lojaRniShqj6lGbsYbrfRcHYUSswpRAKImWo4wffR/Mz/dpmDdV8hgBJaNYy0PFWgig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794323545;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
-	bh=KpEwWty65XIKqwE7JeJ6p16oyvStp8N2eZzOQMIZadI=;
-	b=qMpcirzQ6hYgOveIZUvmX8jNu9kJ3znhCPG7/WMSylQpSQt5rV/20sukYoDwpLP40jd2
-	 T+N4VIPKrETEXWgHjl47ZZn93JQL7AwvkOw7z+CjH9wgcPWcpd6DZUAo8bNyEeqbP05KJ
-	 KVmajAq1h0FpioPOjNuQvBkuNqWQnsoMOhHVpyDN5KoZvfFiXgdgzyfb0rj1Y9YzfSwG8
-	 6lPAYNtIRxbUE9VQ6I0vIMLfwUe1D3sb45nV5bZrlf23h+joa6DRoEt8axMB6VDxHIOVq
-	 9eHdUi+PN4cEvOmTvDb5tPezz0s2uJOM1pXPaMCJOaZDz60PTTAJ3+8TKzmnxjYBZFw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794323548;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=6huyC42OcEJSJtNBsLbohvdWKdl0MB/0OpnZcQwVFMs=;
+	b=JFLrEKiP3+ZgYNcYSW6e4RaVnY1f9Gz221fwyCIPefqAsMkP6GRxyAtyDDglJPHPO4Ie
+	 q1ijSjT5xoUBBSebS7WZzEPcCXqd6OdnHmkINZku3Vh4DKKdX6bwn8BRciaGTHeAZvCzV
+	 gRs7EGJw9oCuX/ZpgpgNWxCph+Jv0342tuTrIIrbPq8DLwTrwMjSMTMExIPhLKdhypkzM
+	 +uZf1e1Hx4aqOiZC6ct9UZ97WDsNECHVsKkhpFNIW0X+sfmxmCC6hsoADBbIiojWT8OcW
+	 j0MuUNboHakMrMIRuX25sB8jkIxv43U3TXYnHE77tb9A0FODyO0SLiOY0/gjEBhEcyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=soleen.com;
-	spf=pass smtp.mailfrom=soleen.com;
-	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b="YOUBG/UJ";
-	arc=none smtp.remote-ip=209.85.221.178
-Received: from mail-vk1-f178.google.com (mail-vk1-f178.google.com [209.85.221.178])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Lpfpxs9e;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EDB860A2607
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 15:12:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7EDB860A2607
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3476960A262C;
+	Tue, 10 Nov 2026 15:12:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=YOUBG/UJ
-Received: by mail-vk1-f178.google.com with SMTP id 71dfb90a1353d-5eafaeb8684so673003e0c.3
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 07:12:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1794323544; x=1794928344; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=KpEwWty65XIKqwE7JeJ6p16oyvStp8N2eZzOQMIZadI=;
-        b=YOUBG/UJDUN4UyxvkhIoLhefkcKvcqtCc43YY9icyFLipWGwJr4yRhoF61ai04yb3G
-         /3oA/YdYUik8WvsHFnI3gFCqTxtjsY0R+rgJT3k6h2A7QoXojCu8iohoASLyE0xrRsG6
-         r77coPHPIo9sHj3xb1YOG5IhOJKV9qF8R6gyeeM54RzrM2UnL6uNga7Md3t05uiI9v6o
-         5KldDRCzbIk9P4MYLEtb+lU5m6ZqVMMuwQ4336EDEh3PepvHzOcgNGzJe9mzOCIKRb4w
-         P2iFaU19sefu/7GQ+UIx4MnWmqodZKnGvXovtykItH/b2HiCw11TEk6EiCg3vu0DA4qv
-         p42g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794323544; x=1794928344;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KpEwWty65XIKqwE7JeJ6p16oyvStp8N2eZzOQMIZadI=;
-        b=RKYxv3p+fywthvi3ck3B/WicJLa2fdvBA4Nr528XikFElkyZsBJMWlcigiZqfj9feT
-         XcS3bVTuuuxwyP6RAciXxzJy4cmtXoNuAAU/dHOoYmmPmAscqu74wUAR65VcTH6+eM+e
-         W/ELbeYrl0kbshaJ3Mxw+CxPVprLvYWVmKghy5GH0tR5gxmYFmLOUn3j062t7GGl8e8Z
-         zje8W9Pn0ACHFXMUazXzf0qYYvY22Ru+od+hjId6xtkcrJ27esNy7GGIMPevExCpQ64J
-         Vv+SGCIiB4phDvBJJFiWZN+cqWldnDnBUc5zNRyVyAHRE3l4bUxHDLn1seAdjLTfdG+G
-         RzNA==
-X-Forwarded-Encrypted: i=1; AL+hErFcHLNQNwUSiF6KCdGMWRtsfY3rl9thHAuMTBrjbmiLOfSqAjMNEG/bSqoGM9Y90+HR0VVt2rSySUY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9hvLnNut9mvfPOdcav5q1ltWKLt+TZGDCFKCZ01jUn1zaSBG2x
-	P26by37HWUR0q4TDpZyeRJ9qX97Syd5w86fCVJb5JnJ7iYSUzLBvuORnQtyeysoAu7E=
-X-Gm-Gg: AYBFou1DvFD1dxB5IVUGZS/hjwGvhjS/as2VNhHk49sD1Qm7KOMB1VclOEmPol7STdB
-	V/tGlQpC4xYRMGnOE3V22OfZOoRxmvkFx5Fkd0bZFppqu8WIr0Z1yiZExhXxQH2Hy/z5LSNmg+v
-	XfrGgn43T/rjRc5UTHcDW6grGHEI4L8WYQXeeVc8tIjwfQOaPyufCdlsKvKGWg0CsY8JI/SEwRE
-	5ZkoNGrafT9ZreM6OFMx2qYpqKAaHSpKHdg8zePzpUoZ91FT5huHSfSmEjxnptB5BUlBJqYqYKr
-	VLq07AsXa45fTa8kuf2mT02suCdoIstZEpb8xGq0fMctcRy9ekDG+kYicaLgLuQPZW+WYenB7Ji
-	22IhvigyfYGw/njqWyd4xuLWcEXqNoLRvprf4+I+OwSb/dN4ZVrvX2b7qT/1IpphqHRxkUy640l
-	l+OmRz8GETq7gCLpSJx/TE7qckna/6RPPvThTT9BoAqcLswNVUly9LAM1iaUyEm5kAWwnYEs5V3
-	+rQoha0fn5UdO/kyWdRXrbY0uybkXiljnkumCo6EgeR0+MQqrvWmbBEEPmklViMbHYLjLSt6OtM
-	AOuKDrHuXNl09aqmGX/WPn4nPs+YE0Go08mvaDtO4vPjkcDv6mWfrIKdsrzfw+aQ2IGMsEgronA
-	0IMf2UOJHdsIxFZywUbFP3gBj2ZYb
-X-Received: by 2002:a05:6122:5313:b0:5ea:a0f0:192f with SMTP id 71dfb90a1353d-5ee0d0cd07bmr947867e0c.10.1794323544266;
-        Tue, 10 Nov 2026 07:12:24 -0800 (PST)
-Received: from localhost (16.49.199.35.bc.googleusercontent.com. [35.199.49.16])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ee0c45a110sm2039560e0c.2.2026.11.10.07.12.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2026 07:12:23 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Lpfpxs9e
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A3991F008A7;
+	Tue, 10 Nov 2026 15:12:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794323548;
+	bh=6huyC42OcEJSJtNBsLbohvdWKdl0MB/0OpnZcQwVFMs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Lpfpxs9emOazBU7AL1hCo/630IvsrlOz5UJdUCX+dEP38ciQK7jdOOzdcdj8WBu7/
+	 RXSi9LKOQcoaDp2B6FNrt+YCu+R5yQnoGm5r8wZRMgGcQFk+o6ws5ur5/oelhKtm8r
+	 r+biD8Khm7nt07eRZcUSrwxZwueHSob8JAVMrVzsZ80e07oIVI/ib06SKmv+LmG3rb
+	 lB4VnKm+u0er+qwEmYO5SO0sNfgdOcR+g7A2Wo8kf2lHAzsKP8xb0/AQNppG6zeIoE
+	 fnAmFSECXkYGaWHby7yF6C/mPqiqriIBqrLjB5LzMApvASBOHY2mYwiwkVyCLLvDW8
+	 ADm8ozkBk56ug==
+Date: Tue, 10 Nov 2026 17:12:24 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-input@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org, dmitry.torokhov@gmail.com
+Subject: Re: [PATCH v2 11/19] driver core: Introduce a generic device trust
+ level
+Message-ID: <20261110151224.GM8635@unreal>
+References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-11-3b12d9a9f861@nvidia.com>
+ <sashiko-outbox-206511@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -88,81 +59,134 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 10 Nov 2026 10:12:22 -0500
-Message-Id: <DMRMLZSZ0LAZ.D4P70QWX0IHB@soleen.com>
-Cc: <kvmarm@lists.linux.dev>, <linux-pci@vger.kernel.org>, "Pratyush Yadav"
- <pratyush@kernel.org>, <kexec@lists.infradead.org>, <kvm@vger.kernel.org>,
- <iommu@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
- <skhawaja@google.com>, <sagis@google.com>, <linux-arch@vger.kernel.org>,
- <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
- compatibility
-From: "Pasha Tatashin" <pasha.tatashin@soleen.com>
-To: "Tarun Sahu" <tarunsahu@google.com>, "Pasha Tatashin"
- <pasha.tatashin@soleen.com>, "Mike Rapoport" <rppt@kernel.org>,
- <robin.murphy@arm.com>, <maz@kernel.org>, <will@kernel.org>, "David
- Matlack" <dmatlack@google.com>, "Alexander Graf" <graf@amazon.com>,
- <seanjc@google.com>, <jgg@nvidia.com>, <loganodell@google.com>,
- <arnd@arndb.de>, <dwmw2@infradead.org>, <baolu.lu@linux.intel.com>, "Bjorn
- Helgaas" <bhelgaas@google.com>, <oupton@kernel.org>, <alex@shazbot.org>,
- <gle.com@google.com>, <pbonzini@redhat.com>, "Andrew Morton"
- <akpm@linux-foundation.org>, <kevin.tian@intel.com>, <joro@8bytes.org>
-X-Mailer: aerc 0.22.0-39-g5d7784875be2
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-6-tarunsahu@google.com>
-In-Reply-To: <20261110050202.529473-6-tarunsahu@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <sashiko-outbox-206511@kernel.org>
 
-On Tue Nov 10, 2026 at 12:01 AM EST, Tarun Sahu wrote:
+On Tue, Nov 10, 2026 at 07:35:20AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential
+> issues to consider:
+> - [High] driver core: device_trust_prepare_full() breaks default boots
+>   with -EPERM
+> - [Medium] driver core: device_trust_prepare_full() calls
+>   trust_resolve() unlocked
+> --
+> 
+> commit cc9d85465ea19f97fc7a0889f6993f37d1a58048
+> Author: Leon Romanovsky <leon@kernel.org>
+> 
+> driver core: Introduce a generic device trust level
+> 
+> This commit adds generic device trust admission and a device_trust.default
+> boot parameter to resolve a device's trust policy into an active trust
+> level before driver probing.
+> 
+> > diff --git a/drivers/base/trust.c b/drivers/base/trust.c
+> > new file mode 100644
+> > index 0000000000000..6a71abf10b3bb
+> > --- /dev/null
+> > +++ b/drivers/base/trust.c
+> > @@ -0,0 +1,132 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +
+> > +#include <linux/device.h>
+> > +#include <linux/errno.h>
+> > +#include <linux/export.h>
+> > +#include <linux/init.h>
+> > +#include <linux/string.h>
+> > +#include <kunit/visibility.h>
+> > +
+> > +#include "base.h"
+> > +
+> > +static enum device_trust_policy device_trust_default_policy __ro_after_init;
+> 
+> [ ... ]
+> 
+> > +static int __device_trust_prepare(struct device *dev,
+> > +				  const struct device_driver *drv, bool full_only)
+> > +{
+> > +	enum device_trust_policy policy;
+> > +	enum device_trust_level level;
+> > +	int ret;
+> > +
+> > +	policy = dev->trust_policy;
+> > +
+> > +	if (policy == DEVICE_TRUST_POLICY_DISABLED)
+> > +		return -EPERM;
+> > +	if (dev->bus && dev->bus->trust_resolve) {
+> > +		ret = dev->bus->trust_resolve(dev, drv, policy, &level);
+> > +		if (ret)
+> > +			return ret;
+> > +	} else {
+> > +		level = policy == DEVICE_TRUST_POLICY_ADVERSARY ?
+> > +			DEVICE_TRUST_ADVERSARY : DEVICE_TRUST_FULL;
+> > +	}
+> > +	if (level == DEVICE_TRUST_DISABLED)
+> > +		return -EPERM;
+> > +	if (full_only && level != DEVICE_TRUST_FULL)
+> > +		return -EPERM;
+> > +	if (dev->p->trust_state == DEVICE_TRUST_COMMITTED &&
+> > +	    dev->trust_committed_level != level)
+> > +		return -EINVAL;
+> > +
+> > +	WRITE_ONCE(dev->trust_committed_level, level);
+> > +	dev->p->trust_state = DEVICE_TRUST_COMMITTED;
+> > +	WRITE_ONCE(dev->trust_level, level);
+> > +	return 0;
+> > +}
+> > +
+> > +int device_trust_prepare(struct device *dev, const struct device_driver *drv)
+> > +{
+> > +	device_lock_assert(dev);
+> > +	return __device_trust_prepare(dev, drv, false);
+> > +}
+> > +
+> > +int device_trust_prepare_full(struct device *dev, const struct device_driver *drv)
+> > +{
+> > +	if (device_trust_default_policy != DEVICE_TRUST_POLICY_FULL)
+> > +		return -EPERM;
+> 
+> [Severity: High]
+> Does requiring device_trust_default_policy == DEVICE_TRUST_POLICY_FULL
+> here cause device_driver_attach_full() to fail with -EPERM on every
+> default boot where device_trust.default= is not passed on the command
+> line?
+> 
+> When device_trust.default= is omitted, device_trust_default_policy remains
+> DEVICE_TRUST_POLICY_DEFAULT, even though that policy resolves to
+> DEVICE_TRUST_FULL on buses without trust_resolve.  Callers converted to
+> device_driver_attach_full(), such as phy_attach_direct() when attaching
+> the generic PHY fallback driver and serio_bind_driver(), will then fail
+> with -EPERM unless the kernel is booted with device_trust.default=full.
 
-> +/**
-> + * DECLARE_KHO_SER - Register a serialized payload structure with KHO.
-> + * @name:         Structure tag name (e.g. luo_ser).
-> + * @payload_size: Compile-time expected size of struct @name in bytes.
-> + * @nr_required:  Total number of defined required features.
-> + * @nr_optional:  Total number of defined optional features.
-> + *
-> + * Size and 8-byte alignment are asserted under CONFIG_64BIT: KHO and LU=
-O are
-> + * 64-bit only, while !CONFIG_KEXEC_HANDOVER stubs pull ABI headers into
-> + * 32-bit builds where u64 has 4-byte or 2-byte alignment.
-> + */
-> +#define DECLARE_KHO_SER(name, payload_size, nr_required, nr_optional)	\
-> +	static_assert(!IS_ENABLED(CONFIG_64BIT) ||			\
-> +		      sizeof(struct name) =3D=3D (payload_size),		\
-> +		      "struct " #name " size mismatch");		\
-> +	static_assert(!IS_ENABLED(CONFIG_64BIT) ||			\
-> +		      __alignof__(struct name) =3D=3D 8,			\
-> +		      "struct " #name " must be 8-byte aligned");	\
-> +	extern struct kho_ser_hdr __kho_ser_hdr_##name;			\
+While I did this intentionally to make sure that missing option won't
+leave system unprotected, I had second thought now as it will break
+backward compatibility.
 
-Remove this extern.
+> 
+> > +
+> > +	return __device_trust_prepare(dev, drv, true);
+> > +}
+> 
+> [Severity: Medium]
+> Can device_trust_prepare_full() end up calling dev->bus->trust_resolve()
+> without holding the device lock?
 
-> +	enum {								\
-> +		__KHO_SER_SIZE_##name =3D (payload_size),			\
-> +		__KHO_SER_NR_REQUIRED_##name =3D (nr_required),		\
-> +		__KHO_SER_NR_OPTIONAL_##name =3D (nr_optional),		\
-> +	}
-> +
-> +/**
-> + * DECLARE_KHO_SER_HDR - Declare a feature header variable, field, or pa=
-rameter.
-> + * @name: Structure tag name registered with DECLARE_KHO_SER().
-> + * @decl: Declarator (e.g. *fhdr, **out_fhdr, or * inside DECLARE_KHOSER=
-_PTR).
-> + *
-> + * Declares @decl with type struct kho_ser_hdr while checking at compile=
- time
-> + * that @name was registered with DECLARE_KHO_SER(), documenting which
-> + * serialized payload structure a feature header pointer belongs to.
-> + */
-> +#define DECLARE_KHO_SER_HDR(name, decl)	typeof(__kho_ser_hdr_##name) dec=
-l
+Not for the upstream code, both serio and PHY are connected to the
+buses without ->trust_resolve().
 
-Remove DECLARE_KHO_SER_HDR, use kho_ser_hdr directly.
+Thanks
 
---=20
-Pasha
-
+> 
+> The kernel-doc for struct bus_type::trust_resolve requires the device lock
+> to be held, and the kernel-doc for device_driver_attach_full() states that
+> buses with a trust resolver must use device_driver_attach().  Unlike
+> device_bind_driver(), which rejects dev->bus->trust_resolve with
+> -EOPNOTSUPP, device_trust_prepare_full() calls __device_trust_prepare()
+> unlocked without checking dev->bus->trust_resolve.
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com?part=11
+> 
