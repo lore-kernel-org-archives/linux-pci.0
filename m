@@ -1,83 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.175
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794284421;
-	b=oEYuX+uWJGhYDbO30425uxRcOkSLj3NKB4JmiIBykon9BJk82dhKASzquGmTvq94xl7u
-	 bz6GBh/iMs6hyM2CaOaTPML2Mw1x/CkXcDMKUF2lidZCs1toKfUC8OkQ/ZsmJO3+cm0FQ
-	 vMc38Xx0XuE7Ce9+in1kFF3xrdWlUAvVStWYHwp+qcWk04CSvjCGwHu+KfmxDoRWKN6fX
-	 qx4Z2tFlkEtW7vDrTqnA52n//iIEA0OIkcPwjQrkGYU76BPSHtGv93LujZVE1JBmOWNOC
-	 OE6qJ2TT8wL6bwROt4cBovM5OhseaKWqg4mdh9Ys1Pbu45TwibafWb6JuSJVxGUgMdg==
+	t=1794284428;
+	b=QIqU7DwrQb4U3W+2ZdVxjkpP6WjjrQaXbC/XCY0Uxx9+24+4Go8gW7cD+pvTTvkHMKoQ
+	 yMPRX605HuSmkuwjXy+6wFCfUQFHt1JY660ZQLrkLW5sqwkgwkMQCnkwbNU94DxG+6Nd1
+	 1xQJG2VxF9vycVVxNv0ENpQ/I2v8qsxZoMjw1pPFQcPo3SMeJebZTZBqwKbpMHdi7gOtU
+	 Sp6fzkXouF4m0Y0pgtue4Cf38VzHDcC7zq2stCAtWYOzuD+ivNDKZyJ8qs8SyugwSIitG
+	 zMRMuuUBFp5xAyCS5PsIB2Zb+cU8RKBbX6vsuAEQbWFxGz7VRHEYtjtUYyBr2wJZ9NA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794284421;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794284428;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=kIMdMW0vli7k7kSrLT2WE+OKV4xntGT1c/66y0oxHRM=;
-	b=R1/g3nJHFXdxY9/zd0Sxe1NU7nzGCKRzz+NAwa8uHslGhiU91OW6lX34XuK+ay7h1Sf4
-	 UDZvocnFuKIcrbLptHakqppWdqYTSjuXUgOhXmPqA2MGlhl1CaUSqv4bXlZHqIuj9EcNf
-	 YLM4+8+BVoJEH1ATDo1RM6dXKzdDXqe21rv2WiaTvUv7UkupE6YWmdNE4sdG6x6acyUOa
-	 zfEreYxVlt/WEt9ZVhMF0vd3PsMJ/5YDxIRkt4ssROPu5H6TO8v8BAwnD+6ndKyfgO3N6
-	 wSXkNKe1ECLPvcS3hNX446XTd2xnab0Ws+z99kmCf9P5qxi20UI2erQi7t6knrewMpw==
+	bh=rX3eOIhdhRHySKS78JmU6O3hNLJaTPPxqUJgDm/7MWc=;
+	b=g1SdNtK6BuLdAM+ke9jYcA6CR8SiP7iTLSrST9deyBYvnPiK0sYc7GlehEWx2CMGR8LK
+	 fyQZtB95jayTuGB/XFeb+ngWNb+3PYl+u3Tq/51qBqm9bug7NqsgputbjPBYxuypMgXG3
+	 4wyo/G/oWXOhWb+XKZaIFBrPMKq1BkhsZ42rYxAdg6caUQIfnf3XFqpZ26zBwdmnLG40L
+	 eJyY5eKUSIdUYX01q69VnRYT41cBOQsiymgZgO8KDGUsV8BZqaCudG7yinkmVuwJptHFH
+	 F3qxagr7B7iE/CTNHBxlHTOb+BfZNrP9OAEEJwaTLV7t7urZp7tjLhn0lD5HrmTk7RA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=H3gRAh+r;
-	arc=none smtp.remote-ip=74.125.82.48
-Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uvEfM8X4;
+	arc=none smtp.remote-ip=74.125.82.175
+Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9A5C606A33D
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:20:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E9A5C606A33D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 704A9606A9EB
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:20:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 704A9606A9EB
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=H3gRAh+r
-Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-1b3ada81853so1361110c88.0
-        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 20:20:19 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uvEfM8X4
+Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-36dbde64409so3184623eec.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 20:20:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794284419; x=1794889219; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794284427; x=1794889227; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=kIMdMW0vli7k7kSrLT2WE+OKV4xntGT1c/66y0oxHRM=;
-        b=H3gRAh+r18TE707CSqjuK1h3DVQyK2y2bi+BBucxACouqIL7nqDLt5+t2FHkoA/Oj+
-         2x68kiswyOrkZFkhRSBtpaKTmz1dn/paxZ8Yt5y94Z0H2K4Hiy9qVxgEYiGjbp+Kiqu1
-         qp/XYwAyjfV9VKsDeqyaAOAO/qVFQvftlxFz+bEsLbDjeAf2JOWwkWgCK38fRRC9VXv7
-         JuUv1QHe63szAMI1x5qSdEKzjazn7ygWMwoQVkk+r7l205JmHKIFUHXgYBF/8Q9RXqdd
-         p3hH8er8DhAsfe3sSnXd2TdAoEBqv1ZdM5aiHefPtpO1Stw/xkDrBnRM2viVvHPnPLJJ
-         axSA==
+        bh=rX3eOIhdhRHySKS78JmU6O3hNLJaTPPxqUJgDm/7MWc=;
+        b=uvEfM8X4IxWaMOOCG6rWQCcu+jMa0IxtQ3RvzoErXFfQZBgBlvlfZcyXCeUtI/XcJN
+         uUgT1Qk4i/ZwyY++oO+ltVDxZk0KgIMJtHKLw8frZ7eqNtyeF7/2D2PJWhS6NrI8TJST
+         Z3oxFoC4ozbyy9Z/HcCusVncRl3oJFymmij3cWA0Y4yrxgHQAemAVDECBU2zbAKlLJtU
+         G/P/v1MpiJD/nSWbB0vXucFpk7L4bx1gsRU1f263VxHG47QynsshxJd/uoBMsbHmCmBA
+         IgtYyB6zvHw89AK9UQ9QeILZTXFN8ckF0sQKBlCKOKxH/3piYR79IdOaW505FomMX47l
+         3EwA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794284419; x=1794889219;
+        d=1e100.net; s=20260707; t=1794284427; x=1794889227;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=kIMdMW0vli7k7kSrLT2WE+OKV4xntGT1c/66y0oxHRM=;
-        b=qDBIg0ZH1gBL/V7uIBwh6cqFqX3xa6ospyZ6j1psi4Fgi1l2okl3go//s0YyDJfkHV
-         FWUCItqPSFpciRHKceq3Q3ocQTZbMlVNInAR/hhmqxcYhLyIgHKEnSpNxSgXjgbi1N8x
-         hWqSJ9Br7+EW97VmeONs/0ZY74Q0Z2J5xtIo42WCfkn4koqhNj6rXA7MABSFO8/IfKod
-         jz5afFHPattpBvUe3hEM9Ukm/0x8RggwC/xIY7tEG7KQvU1ZRuAuZclpAaoQN+zC1G/l
-         Za9LjkJRKq9+CYDHXtbYYOvfIn2iCe/pMLD9l2CO5jLHz5S1LTAnoVN5yNDMZEbpU4qY
-         I5Sw==
-X-Forwarded-Encrypted: i=1; AL+hErGKgXKA5lWTUs/Q24W9OV5jfzTgWdGnQGkkqG8ZIYAqUTZVTVaVhaZFWpXyYE80/4wJMFHX/KX8ijU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9FEhsEMxXfbdc3KSCXCuOzOpEr5VyGW2LvwvVYu8jT6Qx2IEK6
-	pYlzS4U0M1yyU4pF3IV7mJ8VpUtx2isToHlMGrJ5JMDkK1tVzNpGUM+o
-X-Gm-Gg: AYBFou3x84q0JQrI8zhiM8xG2TAVt96V6/AaZV539xe9vEk37+vRie4pOI/jf+++xuR
-	ewFny3vNplG8OqxzN3S1dqubSsT/8zuTV4EQEZ1RYhKAEoad6UXjFL1TAaaKjmAHVP2i0s5FX+o
-	cl9MHgTny3Ajen9DNSb5S0Emj0sfWaTUH8t75jB0680aNnPOnETqwsJFaQqPtwVZPDJFJg/x2/3
-	/9nA9Ol8U5WRkb44rYXmtiw2bsRr6hF0baQVfhaAYKUmulWdvOlDVMtLphBPlqPb9lMhHByTzMU
-	bAgHkqbcMLMXu8m6KxDpiO13/p2/ZHSbQq/s0BMjquwOOgDi75hJ0BJFWqwCx1aoTPx6qkJKadB
-	gU/wVIPkz3T7s84xXDeA6UaWYHPBcAu4bBujYWP/jrA6XdX846TpvbCJsSsaz1zqsSD4tspHHPZ
-	lPGlWqkmGzoGPI9JgedmGOWKOJIAvCp2wfRPvyttwp/SDTXyvhf132kPbuohq6Y0W1ncbimVJk3
-	gsPR9yMSCW3hTJgpABo9js0a2MIqQzM+IzuOISXzAyIDBfqTbfCAk3HAU1PBvzYOZo2ZxMQDZRi
-	t3zt8GaMCtTuMeVwv2YsAX0+4ocLu/lPjQe7HzslXy7VkK8=
-X-Received: by 2002:a05:7022:7f01:b0:1b2:43ac:d3a3 with SMTP id a92af1059eb24-1b3b5fee2aamr1980191c88.24.1794284418835;
-        Mon, 09 Nov 2026 20:20:18 -0800 (PST)
+        bh=rX3eOIhdhRHySKS78JmU6O3hNLJaTPPxqUJgDm/7MWc=;
+        b=GlbxaftopxUBVmZzIN/PG4Wb89m1ekyZFR5IG/5uW9xPMPuKJ2qk9WfZgrrSMW72bF
+         FuWKMP18dNQqldArtRQJgpnYFUm4LioqQaxcXAxkPwvDeZPPt8s6HFhIqNO5ODsES9r5
+         2m0bwJlzYIszDZ0MjCt2HBTaHKZWIZoAb9lvtZ9W+SFns6sEHXYeN79pUX8cy8wRN4nR
+         HtMhGh8OQLNYNjAWwozCOC7wzY5cnfk9YFqJtJbUdh8WXYykJ1WykxxMVFkeZKb/p4Ln
+         V7AVss+K6gRaqmEuy3+vSEAoeaROgueiHLV5/0nos7M2Wxemo0YbLGau2rPHVoegNt/Z
+         HVUA==
+X-Forwarded-Encrypted: i=1; AL+hErHZwxtTtLkk4toL9/jGm8xakVKzPnl5N57n3oMA5FCkix+eWkSLY6tP0X1QkjhAshdreg0y1TAXOw8=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9BKwq/WQtC9tduWhQSvsQLb18omCz+DgVQY8IKzzIQYo2+jSRR
+	aWJUlP9nlC4RyZrkdVyNr3isrZ+ENlyREZ4K129C176NWCHfHerWzmtA
+X-Gm-Gg: AYBFou3Kl0qymoaCAGbV2sBdhMawDOzs9F4GvtSOXGWj+5cQxoorhe7qAkp4R27tx2q
+	DDU9g24UMYJZqQRVF8G79UrHsH9VxaqtnowxeB8TlNgAoPPyTXzPPmD0L97tq9cnBqiDjmH/HcK
+	kdrsOzLDUoos3pQYn/uprx3aoQ7qN4TR88TdZLIKCR+1SKnUmUp39RLnEi+hD5HLwMt4Zp5EC8r
+	g+ypDtKl0zFAVNzHBSMzLW2DW5x80sQzoOtdpFmIEI64rXQCFACGrRFdHdmAvn+PIOMHuo5b8uV
+	0h9yjHKvDNxLsRfKRCmgS1QUmFniTerN/u8DFOex/O82Q7nFgNbM0yRB34d95dRN0e/RxHpX2+h
+	YmhmV0vlQ16nUoaBJiIupSW33NtGdZfX6N96S0nZsX9BRC4XCl47tC+/Rn8YddssitxG9MNIcBR
+	B+nJKH92ezE6oyoS3mH8AHGkuERlYw2P7Mg5hRsTbSfNUqhHMF2p3ouSlagm/wOqEWULl+zeeEw
+	aQtS+xHBUIWzWzJvFjks/p3alIn02dq3ZiLVK61YJ7FnXVShvzRcD1p1dViUHj7S9hhSS9WoKG+
+	n8XnOI8ZGDV/NuUnr0i9zPuHkIYPGmyJTflYszo07HbjyVc=
+X-Received: by 2002:a05:7022:3b84:b0:143:26cf:8615 with SMTP id a92af1059eb24-1b3b604c358mr2166039c88.25.1794284427436;
+        Mon, 09 Nov 2026 20:20:27 -0800 (PST)
 Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:13b2:851f:d9cb:44c5])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b3b5b7ba88sm3540459c88.22.2026.11.09.20.20.10
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b3b5b7ba88sm3540459c88.22.2026.11.09.20.20.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 20:20:18 -0800 (PST)
+        Mon, 09 Nov 2026 20:20:26 -0800 (PST)
 From: alistair23@gmail.com
 X-Google-Original-From: alistair.francis@wdc.com
 To: bhelgaas@google.com,
@@ -104,10 +104,11 @@ Cc: gary@garyguo.net,
 	bjorn3_gh@protonmail.com,
 	benno.lossin@proton.me,
 	alex.gaynor@gmail.com,
-	Alistair Francis <alistair.francis@wdc.com>
-Subject: [PATCH v6 11/25] PCI/TSM: Support connecting to PCIe CMA devices
-Date: Tue, 10 Nov 2026 14:18:18 +1000
-Message-ID: <20261110041832.1730924-12-alistair.francis@wdc.com>
+	Alistair Francis <alistair.francis@wdc.com>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Subject: [PATCH v6 12/25] PCI/CMA: Add a PCI TSM CMA driver using SPDM
+Date: Tue, 10 Nov 2026 14:18:19 +1000
+Message-ID: <20261110041832.1730924-13-alistair.francis@wdc.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261110041832.1730924-1-alistair.francis@wdc.com>
 References: <20261110041832.1730924-1-alistair.francis@wdc.com>
@@ -124,341 +125,280 @@ Content-Transfer-Encoding: 8bit
 
 From: Alistair Francis <alistair.francis@wdc.com>
 
-In the next patch we are going to add a PCIe CMA TSM driver, as such we
-need to ensure that is_pci_tsm_host() will allow us to connect to CMA
-capable devices. These devices don't necessarily has DEVCAP_TEE or IDE
-support.
+Component Measurement and Authentication (CMA, PCIe r6.2 sec 6.31)
+allows for measurement and authentication of PCIe devices.  It is
+based on the Security Protocol and Data Model specification (SPDM,
+https://www.dmtf.org/dsp/DSP0274).
 
-To avoid calling pci_find_doe_mailbox() everytime is_pci_tsm_host() is
-called we can cache the CMA support in struct pci_dev and just check
-against that.
+CMA-SPDM in turn forms the basis for Integrity and Data Encryption
+(IDE, PCIe r6.2 sec 6.33) because the key material used by IDE is
+transmitted over a CMA-SPDM session.
 
+As a first step, add support for authentication via a CMA TSM driver.
+
+This was previously discussed here:
+http://lore.kernel.org/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch
+
+By utilising a TSM driver we get a lot of the TSM driver probe policies
+"for free". Currently there is no mechanism to provide evidence to
+userspace, as the TSM system doesn't support that at the moment. That
+can be added later when support by TSM.
+
+Credits: Jonathan wrote the original proof-of-concept for a CMA implementation.
+Lukas reworked that for upstream. Wilfred contributed fixes for issues
+discovered during testing. Alistair reworked it as a TSM driver.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Co-developed-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Co-developed-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 ---
- drivers/crypto/ccp/sev-dev-tsm.c |   4 +-
- drivers/pci/doe.c                |   3 +
- drivers/pci/tsm.c                | 107 +++++++++++++++++++++++--------
- include/linux/pci-tsm.h          |  32 ++++++++-
- include/linux/pci.h              |   1 +
- 5 files changed, 115 insertions(+), 32 deletions(-)
+ MAINTAINERS             |   1 +
+ drivers/pci/Kconfig     |  14 ++++
+ drivers/pci/Makefile    |   2 +
+ drivers/pci/cma.c       | 150 ++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/doe.c       |   3 -
+ include/linux/pci-doe.h |   4 ++
+ 6 files changed, 171 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/pci/cma.c
 
-diff --git a/drivers/crypto/ccp/sev-dev-tsm.c b/drivers/crypto/ccp/sev-dev-tsm.c
-index 1d2561628f432..22f2855f397bd 100644
---- a/drivers/crypto/ccp/sev-dev-tsm.c
-+++ b/drivers/crypto/ccp/sev-dev-tsm.c
-@@ -226,7 +226,7 @@ static struct pci_tsm *dsm_probe(struct tsm_dev *tsmdev, struct pci_dev *pdev)
- {
- 	struct sev_device *sev = tsm_dev_to_sev(tsmdev);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7af01251af461..43ac4c0a1ae3d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -25393,6 +25393,7 @@ L:	linux-cxl@vger.kernel.org
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/devsec/spdm.git
++F:	drivers/pci/cma*
+ F:	include/linux/spdm.h
+ F:	lib/rspdm/
  
--	if (is_pci_tsm_host(pdev))
-+	if (is_pci_tsm_dsm(pdev))
- 		return tio_host_probe(pdev, sev);
- 	return NULL;
- }
-@@ -237,7 +237,7 @@ static void dsm_remove(struct pci_tsm *tsm)
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 0c7408509ba24..0862ef69aa3fd 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -124,6 +124,20 @@ config PCI_ATS
+ config PCI_IDE
+ 	bool
  
- 	pci_dbg(pdev, "TSM disabled\n");
- 
--	if (is_pci_tsm_host(pdev)) {
-+	if (is_pci_tsm_dsm(pdev)) {
- 		struct tio_dsm *dsm = container_of(tsm, struct tio_dsm, tsm.base_tsm);
- 
- 		pci_tsm_host_destructor(&dsm->tsm);
-diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-index 6b5d9ba8e9697..365634fb0df7a 100644
---- a/drivers/pci/doe.c
-+++ b/drivers/pci/doe.c
-@@ -871,6 +871,9 @@ void pci_doe_init(struct pci_dev *pdev)
- 			pci_doe_destroy_mb(doe_mb);
- 		}
- 	}
++config PCI_CMA
++	bool "Component Measurement and Authentication (CMA-SPDM)"
++	depends on RSPDM
++	select CRYPTO_ECDSA
++	select CRYPTO_RSA
++	select CRYPTO_SHA256
++	select CRYPTO_SHA512
++	select PCI_DOE
++	select PCI_TSM
++	help
++	  Authenticate devices on enumeration per PCIe r6.2 sec 6.31.
++	  A PCI DOE mailbox is used as transport for DMTF SPDM based
++	  authentication, measurement and secure channel establishment.
 +
-+	pdev->doe_cma = pci_find_doe_mailbox(pdev, PCI_VENDOR_ID_PCI_SIG,
-+					     PCI_DOE_FEATURE_CMA);
- }
+ config PCI_TSM
+ 	bool "PCI TSM: Device security protocol support"
+ 	select PCI_IDE
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 41ebc3b9a5182..16abfd0e17e19 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -41,6 +41,8 @@ obj-$(CONFIG_PCI_NPEM)		+= npem.o
+ obj-$(CONFIG_PCIE_TPH)		+= tph.o
+ obj-$(CONFIG_CARDBUS)		+= setup-cardbus.o
  
- void pci_doe_destroy(struct pci_dev *pdev)
-diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
-index 10c9c6696624d..170e53ae4a0a0 100644
---- a/drivers/pci/tsm.c
-+++ b/drivers/pci/tsm.c
-@@ -88,8 +88,8 @@ static void pci_tsm_walk_fns(struct pci_dev *pdev,
- 		if (!pf)
- 			continue;
- 
--		/* on entry function 0 has already run @cb */
--		if (i > 0)
-+		/* the caller is responsible for running @cb on the host itself */
-+		if (pf != pdev)
- 			cb(pf, data);
- 
- 		/* walk virtual functions of each pf */
-@@ -145,8 +145,8 @@ static void pci_tsm_walk_fns_reverse(struct pci_dev *pdev,
- 			cb(vf, data);
- 		}
- 
--		/* on exit, caller will run @cb on function 0 */
--		if (i > 0)
-+		/* the caller is responsible for running @cb on the host itself */
-+		if (pf != pdev)
- 			cb(pf, data);
- 	}
- }
-@@ -175,6 +175,9 @@ static int probe_fn(struct pci_dev *pdev, void *dsm)
- 	struct pci_dev *dsm_dev = dsm;
- 	const struct pci_tsm_ops *ops = to_pci_tsm_ops(dsm_dev->tsm);
- 
-+	if (pdev->tsm)
-+		return 0;
++obj-$(CONFIG_PCI_CMA)		+= cma.o
 +
- 	pdev->tsm = ops->probe(dsm_dev->tsm->tsm_dev, pdev);
- 	pci_dbg(pdev, "setup TSM context: DSM: %s status: %s\n",
- 		pci_name(dsm_dev), pdev->tsm ? "success" : "failed");
-@@ -221,8 +224,13 @@ static int pci_tsm_connect(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
- 	 * is the ultimate arbiter of security state relative to a given
- 	 * interface id, and if it says it can manage TDISP state of a function,
- 	 * let it.
-+	 *
-+	 * Only a function in a valid DSM position (function0 or upstream
-+	 * port) with TEE capability manages subordinate functions. A plain
-+	 * CMA host manages only itself, leaving sibling functions available
-+	 * to be connected independently.
- 	 */
--	if (has_tee(pdev))
-+	if (has_tee(pdev) && is_pci_tsm_dsm(pdev))
- 		pci_tsm_walk_fns(pdev, probe_fn, pdev);
- 	return 0;
- }
-@@ -287,6 +295,19 @@ static DEVICE_ATTR_RW(connect);
+ # Endpoint library must be initialized before its users
+ obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
  
- static int remove_fn(struct pci_dev *pdev, void *data)
- {
-+	struct pci_dev *host = data;
-+	struct pci_tsm_host *tsm_host;
-+
-+	/*
-+	 * Only teardown the security context of functions that belong to the
-+	 * DSM being disconnected, leaving any sibling DSM in the same slot
-+	 * untouched.
-+	 */
-+	if (!pdev->tsm || pdev->tsm->dsm_dev != host)
-+		return 0;
-+
-+	tsm_host = to_pci_tsm_host(pdev->tsm);
-+	guard(mutex)(&tsm_host->lock);
- 	tsm_remove(pdev->tsm);
- 	link_sysfs_disable(pdev);
- 	return 0;
-@@ -299,6 +320,7 @@ static int remove_fn(struct pci_dev *pdev, void *data)
-  */
- static int __pci_tsm_unbind(struct pci_dev *pdev, void *data)
- {
-+	struct pci_dev *host = data;
- 	struct pci_tdi *tdi;
- 	struct pci_tsm_host *tsm_host;
- 
-@@ -307,6 +329,14 @@ static int __pci_tsm_unbind(struct pci_dev *pdev, void *data)
- 	if (!pdev->tsm)
- 		return 0;
- 
-+	/*
-+	 * When walking a DSM's dependent functions skip any that belong to a
-+	 * different DSM in the same slot. A NULL @host is a direct unbind of
-+	 * @pdev itself.
-+	 */
-+	if (host && pdev->tsm->dsm_dev != host)
-+		return 0;
-+
- 	tsm_host = to_pci_tsm_host(pdev->tsm);
- 	guard(mutex)(&tsm_host->lock);
- 
-@@ -437,7 +467,7 @@ EXPORT_SYMBOL_GPL(pci_tsm_guest_req);
- 
- static void pci_tsm_unbind_all(struct pci_dev *pdev)
- {
--	pci_tsm_walk_fns_reverse(pdev, __pci_tsm_unbind, NULL);
-+	pci_tsm_walk_fns_reverse(pdev, __pci_tsm_unbind, pdev);
- 	__pci_tsm_unbind(pdev, NULL);
- }
- 
-@@ -451,12 +481,13 @@ static void __pci_tsm_disconnect(struct pci_dev *pdev)
- 
- 	pci_tsm_unbind_all(pdev);
- 
-+	pci_tsm_walk_fns_reverse(pdev, remove_fn, pdev);
-+
- 	/*
- 	 * disconnect() is uninterruptible as it may be called for device
- 	 * teardown
- 	 */
- 	guard(mutex)(&tsm_host->lock);
--	pci_tsm_walk_fns_reverse(pdev, remove_fn, NULL);
- 	ops->disconnect(pdev);
- }
- 
-@@ -587,8 +618,17 @@ static umode_t pci_tsm_attr_visible(struct kobject *kobj,
- 
- 		if (attr == &dev_attr_connect.attr ||
- 		    attr == &dev_attr_disconnect.attr) {
--			if (is_pci_tsm_host(pdev))
-+			if (is_pci_tsm_host(pdev)) {
-+				/*
-+				 * Hide while the function is managed by
-+				 * another DSM, so userspace cannot connect()
-+				 * it independently or disconnect() a context
-+				 * that connect() never established.
-+				 */
-+				if (pdev->tsm && !is_dsm(pdev))
-+					return 0;
- 				return attr->mode;
-+			}
- 		}
- 	}
- 
-@@ -662,14 +702,15 @@ static struct pci_dev *find_dsm_dev(struct pci_dev *pdev)
- 	struct device *grandparent;
- 	struct pci_dev *uport;
- 
--	if (is_pci_tsm_host(pdev))
--		return pdev;
--
- 	struct pci_dev *pf0 __free(pci_dev_put) = pf0_dev_get(pdev);
--	if (!pf0)
--		return NULL;
- 
--	if (is_dsm(pf0))
-+	/*
-+	 * Functions subordinate to an active DSM are managed by that DSM,
-+	 * even if the function itself has a CMA DOE mailbox. Check for the
-+	 * DSM context before considering this function to be its own TSM
-+	 * host.
-+	 */
-+	if (pf0 && pf0 != pdev && is_dsm(pf0))
- 		return pf0;
- 
- 	/*
-@@ -677,20 +718,24 @@ static struct pci_dev *find_dsm_dev(struct pci_dev *pdev)
- 	 * downstream devices, check the first upstream port relative to this
- 	 * endpoint.
- 	 */
--	if (!pdev->dev.parent)
--		return NULL;
--	grandparent = pdev->dev.parent->parent;
--	if (!grandparent)
--		return NULL;
--	if (!dev_is_pci(grandparent))
--		return NULL;
--	uport = to_pci_dev(grandparent);
--	if (!pci_is_pcie(uport) ||
--	    pci_pcie_type(uport) != PCI_EXP_TYPE_UPSTREAM)
--		return NULL;
-+	if (pdev->dev.parent) {
-+		grandparent = pdev->dev.parent->parent;
-+		if (grandparent && dev_is_pci(grandparent)) {
-+			uport = to_pci_dev(grandparent);
-+			if (pci_is_pcie(uport) &&
-+			    pci_pcie_type(uport) == PCI_EXP_TYPE_UPSTREAM &&
-+			    is_dsm(uport))
-+				return uport;
-+		}
-+	}
-+
-+	/*
-+	 * With no DSM context above it, a TSM host capable function (e.g.
-+	 * one with a CMA DOE mailbox) is its own host.
-+	 */
-+	if (is_pci_tsm_host(pdev))
-+		return pdev;
- 
--	if (is_dsm(uport))
--		return uport;
- 	return NULL;
- }
- 
-@@ -828,7 +873,13 @@ static void __pci_tsm_destroy(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
- 	else if (tsm_dev != tsm->tsm_dev)
- 		return;
- 
--	if (is_link_tsm(tsm_dev) && is_pci_tsm_host(pdev))
-+	/*
-+	 * Only a device that is actually acting as a DSM (self-hosted,
-+	 * connected context) goes through the disconnect() path. A function
-+	 * that merely has a CMA mailbox but belongs to another DSM is a
-+	 * plain subordinate.
-+	 */
-+	if (is_link_tsm(tsm_dev) && is_dsm(pdev))
- 		pci_tsm_disconnect(pdev);
- 	else
- 		pci_tsm_fn_exit(pdev);
-diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
-index 950e2c36a4cae..ddaec2168c7e9 100644
---- a/include/linux/pci-tsm.h
-+++ b/include/linux/pci-tsm.h
-@@ -3,6 +3,7 @@
- #define __PCI_TSM_H
- #include <linux/mutex.h>
- #include <linux/pci.h>
-+#include <linux/pci-doe.h>
- #include <linux/sockptr.h>
- 
- struct pci_tsm;
-@@ -130,8 +131,11 @@ struct pci_tsm_host {
- 	struct pci_doe_mb *doe_mb;
- };
- 
--/* physical function0 and capable of 'connect' */
--static inline bool is_pci_tsm_host(struct pci_dev *pdev)
-+
-+/* device is a Device Security Manager (DSM), similar to
-+ * is_pci_tsm_host() but doesnt' support CMA
+diff --git a/drivers/pci/cma.c b/drivers/pci/cma.c
+new file mode 100644
+index 0000000000000..3f0c989b52c5d
+--- /dev/null
++++ b/drivers/pci/cma.c
+@@ -0,0 +1,150 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Component Measurement and Authentication (CMA-SPDM, PCIe r6.2 sec 6.31)
++ *
++ * Copyright (C) 2021 Huawei
++ *     Jonathan Cameron <Jonathan.Cameron@huawei.com>
++ * Copyright (C) 2022-24 Intel Corporation
++ * Copyright (C) 2026 Western Digital
++ * 	Alistair Francis <alistair.francis@wdc.com>
 + */
-+static inline bool is_pci_tsm_dsm(struct pci_dev *pdev)
- {
- 	if (!pdev)
- 		return false;
-@@ -163,6 +167,30 @@ static inline bool is_pci_tsm_host(struct pci_dev *pdev)
- 	return PCI_FUNC(pdev->devfn) == 0;
- }
- 
-+/* device is a TSM host and capable of 'connect' */
-+static inline bool is_pci_tsm_host(struct pci_dev *pdev)
++
++#define dev_fmt(fmt) "CMA: " fmt
++
++#include <linux/err.h>
++#include <linux/pci.h>
++#include <linux/pci-doe.h>
++#include <linux/pci-tsm.h>
++#include <linux/pm_runtime.h>
++#include <linux/slab.h>
++#include <linux/spdm.h>
++#include <linux/tsm.h>
++
++#include "pci.h"
++
++static int pci_doe_transport(void *priv, struct device *dev,
++			     const void *request, size_t request_sz,
++			     void *response, size_t response_sz)
 +{
-+	if (!pdev)
-+		return false;
++	struct pci_doe_mb *doe = priv;
 +
-+	if (!pci_is_pcie(pdev))
-+		return false;
-+
-+	if (pdev->is_virtfn)
-+		return false;
-+
-+	/*
-+	 * Report capable if CMA is supported, which can be supported on any PCIe
-+	 * device.
-+	 */
-+#ifdef CONFIG_PCI_DOE
-+	if (pdev->doe_cma)
-+		return true;
-+#endif
-+
-+	return is_pci_tsm_dsm(pdev);
++	return pci_doe(doe, PCI_VENDOR_ID_PCI_SIG, PCI_DOE_FEATURE_CMA,
++		       request, request_sz, response, response_sz);
 +}
 +
++struct pci_cma_tsm {
++	struct pci_tsm_host host;
++	struct spdm_state *spdm;
++};
++
++static struct pci_cma_tsm *cma_tsm_from_tsm(struct pci_tsm *tsm)
++{
++	struct pci_tsm_host *host = container_of(tsm, struct pci_tsm_host, base_tsm);
++
++	return container_of(host, struct pci_cma_tsm, host);
++}
++
++static struct pci_tsm *pci_cma_tsm_probe(struct tsm_dev *tsm_dev,
++					 struct pci_dev *pdev)
++{
++	struct pci_cma_tsm *cma;
++	int rc;
++
++	if (!pdev->doe_cma || pdev->is_virtfn)
++		return NULL;
++
++	cma = kzalloc(sizeof(*cma), GFP_KERNEL);
++	if (!cma)
++		return NULL;
++
++	rc = pci_tsm_host_constructor(pdev, &cma->host, tsm_dev);
++	if (rc) {
++		kfree(cma);
++		return NULL;
++	}
++
++	cma->spdm = spdm_create(&pdev->dev, pci_doe_transport, cma->host.doe_mb,
++				PCI_DOE_MAX_PAYLOAD, NULL);
++	if (!cma->spdm) {
++		pci_tsm_host_destructor(&cma->host);
++		kfree(cma);
++		return NULL;
++	}
++
++	return &cma->host.base_tsm;
++}
++
++static void pci_cma_tsm_remove(struct pci_tsm *tsm)
++{
++	struct pci_cma_tsm *cma = cma_tsm_from_tsm(tsm);
++
++	spdm_destroy(cma->spdm);
++	pci_tsm_host_destructor(&cma->host);
++	kfree(cma);
++}
++
++static int pci_cma_tsm_connect(struct pci_dev *pdev)
++{
++	struct pci_cma_tsm *cma = cma_tsm_from_tsm(pdev->tsm);
++
++	/*
++	 * The DOE mailbox lives in the device's config space, so the device
++	 * must be runtime-resumed for the duration of the SPDM exchange.
++	 */
++	PM_RUNTIME_ACQUIRE(&pdev->dev, pm);
++	if (PM_RUNTIME_ACQUIRE_ERR(&pm))
++		return -ENXIO;
++
++	return spdm_authenticate(cma->spdm);
++}
++
++static void pci_cma_tsm_disconnect(struct pci_dev *pdev)
++{
++	/* SPDM state is freed in pci_cma_tsm_remove() */
++}
++
++static struct pci_tdi *pci_cma_tsm_bind(struct pci_dev *pdev,
++					struct kvm *kvm, u32 tdi_id)
++{
++	return ERR_PTR(-EOPNOTSUPP);
++}
++
++static void pci_cma_tsm_unbind(struct pci_tdi *tdi)
++{
++}
++
++static ssize_t pci_cma_tsm_guest_req(struct pci_tdi *tdi,
++				     enum pci_tsm_req_scope scope,
++				     sockptr_t req_in, size_t in_len,
++				     sockptr_t req_out, size_t out_len,
++				     u64 *tsm_code)
++{
++	return -EOPNOTSUPP;
++}
++
++static const struct pci_tsm_ops pci_cma_tsm_ops = {
++	.link_ops = {
++		.probe		= pci_cma_tsm_probe,
++		.remove		= pci_cma_tsm_remove,
++		.connect	= pci_cma_tsm_connect,
++		.disconnect	= pci_cma_tsm_disconnect,
++		.bind		= pci_cma_tsm_bind,
++		.unbind		= pci_cma_tsm_unbind,
++		.guest_req	= pci_cma_tsm_guest_req,
++	},
++};
++
++static struct tsm_dev *pci_cma_tsm_dev;
++
++static int __init pci_cma_tsm_init(void)
++{
++	struct tsm_dev *tsm_dev;
++
++	tsm_dev = tsm_register(NULL, &pci_cma_tsm_ops);
++	if (IS_ERR(tsm_dev))
++		return PTR_ERR(tsm_dev);
++
++	pci_cma_tsm_dev = tsm_dev;
++	return 0;
++}
++late_initcall(pci_cma_tsm_init);
+diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+index 365634fb0df7a..5f79307e0f087 100644
+--- a/drivers/pci/doe.c
++++ b/drivers/pci/doe.c
+@@ -31,9 +31,6 @@
+ #define PCI_DOE_FLAG_CANCEL	0
+ #define PCI_DOE_FLAG_DEAD	1
+ 
+-/* Max data object length is 2^18 dwords */
+-#define PCI_DOE_MAX_LENGTH	(1 << 18)
+-
  /**
-  * enum pci_tsm_req_scope - Scope of guest requests to be validated by TSM
+  * struct pci_doe_mb - State for a single DOE mailbox
   *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aa3765a20a96c..5e9887873bc41 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -566,6 +566,7 @@ struct pci_dev {
- #endif
- #ifdef CONFIG_PCI_DOE
- 	struct xarray	doe_mbs;	/* Data Object Exchange mailboxes */
-+	bool		doe_cma;	/* A CMA/SPDM DOE mailbox is present */
- #endif
- #ifdef CONFIG_PCI_NPEM
- 	struct npem	*npem;		/* Native PCIe Enclosure Management */
+diff --git a/include/linux/pci-doe.h b/include/linux/pci-doe.h
+index bd4346a7c4e75..7540396336def 100644
+--- a/include/linux/pci-doe.h
++++ b/include/linux/pci-doe.h
+@@ -19,6 +19,10 @@ struct pci_doe_mb;
+ #define PCI_DOE_FEATURE_CMA 1
+ #define PCI_DOE_FEATURE_SSESSION 2
+ 
++/* Max data object length is 2^18 dwords (including 2 dwords for header) */
++#define PCI_DOE_MAX_LENGTH	(1 << 18)
++#define PCI_DOE_MAX_PAYLOAD	((PCI_DOE_MAX_LENGTH - 2) * sizeof(u32))
++
+ struct pci_doe_mb *pci_find_doe_mailbox(struct pci_dev *pdev, u16 vendor,
+ 					u8 type);
+ 
 -- 
 2.56.0
 
