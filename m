@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794300640;
-	b=oQjwihRIJZqkB0IVQOWRt4TfDLrKi/oDD7LzRX1j2T628PMRdY/TGje0UXgH/UnwAyHO
-	 aQuzLz68JFPsJG3WGOLKedPDfD+AzKaTjMkQEyRCV+W1OPvxP4+WfD3+SAwsRVBpi2b3Q
-	 ralvjS7f5j54B7elGOlvD5vOIWnTlDYGXUQHBvKzMK1PZd2lIgRSKP98sJRNO2Ug/7JcV
-	 wRGmNzski2Wqb1e+gLcpe7KU2rhB76IG8hHwu13Ho69lz3v3z/Eut204iD272/Lepvsdq
-	 ViPGiFlKQpga4AkSYISHIMi52uaKg6yfX0W7rCvBnGTCtTn1uKsVyiRwYvqwvJUAc9g==
+	t=1794300728;
+	b=f9Wgpq5gGV2C8GzBLTX6PXg4bHTqswkKeVwciOhMWIT/tlJCfCVMo0mo+4siMmBG0Yp6
+	 5cH3GSmlHJFWxPjjGnxx4xw4Ckj2D6XOPhbBqlka03JOT3hJh8qxQqO1M2ue3pADdKJbb
+	 P1//41YSdmBO53pmxZLDBWuMseNjl9AdvvTvtCUDkG/FqLLwWon+TjgYTHUjr77Zmx+MF
+	 B7MEe2BeqG7ilPsn0DhI/viKIe0Aw4dLaLZzkh80E3mr+m78D75mm4cRwGA4N7rF9rL2C
+	 7c4ek43uUrWiunB539WM7z/NfpPMt2FYDZ5tcdFio0w0Dsh/CEWCFh9XCBosdJrNnjw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794300640;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794300728;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=bmu09YCM3B0f7iPIV9QACx+8SnU/r/NTv5+O5dh4SDY=;
-	b=nMxu70Jn+cgoqidq/tlDA2pySW8L+2keV8XVEnIf40Jmx9AYgYjm+ds3PruFYnJh2ihg
-	 3/uDO4K3v9b3iopX2lTHY3SXfNjAKVJHnl+0RF8ZY001QatMUrZZnduFxuKLGmcGT27BH
-	 fUV8VDmpPTZczbs1eWEFHOj0KiTiRJTvpjkJbjHHqic1mpEdVuXF9fDf7OCRRdYSci0+R
-	 ty92nuqqDImuOa2y7ZA7K/6ZdtjmLphnMRQ4MpSeO+D2yXGGa1w9Ar/DdOdKkAuJO6g5C
-	 Yms46MTU7AL7GhUEuGnAcTqXXis7VW6Ka6QlM2GReiicZ5mYIBr8omHpPTLUL3QMoZw==
+	bh=k2vrbG3qJWvwgvJN4aU5eAq9985vjKRNCf686kQgLTE=;
+	b=t+oCrV4fj4hpTqFt38uYgDeDFRkuEdp6O4Kk3gAgDf/mkpUSuSweO0T0ix0Geq7zhn5U
+	 0XMH5i0yfNTfYYLoY6yQv4avOfhq346MSpl1ffxqgBpxqiSdT3HHmWquTWr18VMdpO6bG
+	 snEhNV+Fl67vXBMrvh+nk4ekrzHPwQSNdW9boD4i0bBr75gYBn3lboak+YuJ+1nAmQnZM
+	 SrHpeE44a1jwgHdZVYULU/qgAFsD9vdSdIFyVEmRt24EGYLJbNo5AWff26M18oUPxxwAG
+	 mk2utdf237ZjhYUCpEzaolJ6fEqRmBZ8BDxrfgYvKMQaIqgUJ4NWzDzUiW8qKp+96oQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="id/O6Juz";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fZddTlHC;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADCFD606A31C
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 08:50:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C08360A2604
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 08:52:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=id/O6Juz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 161971F0089F;
-	Tue, 10 Nov 2026 08:50:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fZddTlHC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD5F81F008A7;
+	Tue, 10 Nov 2026 08:52:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794300639;
-	bh=bmu09YCM3B0f7iPIV9QACx+8SnU/r/NTv5+O5dh4SDY=;
+	s=k20260515; t=1794300727;
+	bh=k2vrbG3qJWvwgvJN4aU5eAq9985vjKRNCf686kQgLTE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=id/O6JuzukFE/YEUPS+ndmObu5PkEu4an1Y5ZO96nsRLGfngkdJU93Ncb2XmpzMvu
-	 xL/Z1IN925FtCJ5rAvnnO0guxNVfz2FsjeBePA6BBQjqIQe9GSVC6FTHqpRloGZtBO
-	 F1zHIxq+FXJuWMmCUV61gpADtnYtyRAWunF/jj6pbO8YZhxtYSd0HpJRh2kDTD1pVl
-	 RjYN4GoELRzQHB7amL5cBYk/ghU0si6WeJnHoAgZ3R+VwJOsVysbhkUbP7pmMIyNv+
-	 ucEcgrCGYgrGbqoWcAU80wUkQhNAjNgzut4cSMAVk4vIlMhO4oy+C7GGFNdGePe+P/
-	 SwLRZ0RWqSqzQ==
-Message-ID: <sashiko-outbox-206668@kernel.org>
+	b=fZddTlHCw5GLyOJFGHIAx4VKqesfm84A/LKDU0PVlkOWrRRB4SUn9IouY2itBnPzf
+	 wvilpJxi18Sh1B941EdbDWadFzvSd5DbuYtalXJmcsQS6WphTPbbAetsG/TetxI6I0
+	 tR46NDFHsPPg6n/AV824Gft4+nvYBIwxNaU9qNVkk4uKzNpIqc18yNcekEAW4FhTAc
+	 yqAKlcATIyDetv4clpn1IaBt95wK5lhdCZhp2Cnb62NRMBa/Rhsk2IuI9aWWIAgN23
+	 fiCtD9RM0JWfjbRiEQ6wvSw4sztX7/y4DT71TP9FD7dAaJ48j2N3P2UNvmqJQcVoL1
+	 ZaY4DQZs0+mwg==
+Message-ID: <sashiko-outbox-206673@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 05/10] PCI: endpoint: pci-epf-vntb: Export endpoint
- DMA channels
+Subject: Re: [PATCH v9 10/10] NTB: ntb_hw_epf: Support DMA and MW sharing a
+ BAR
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Koichiro Den" <den@valinux.co.jp>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261110082459.1798763-6-den@valinux.co.jp>
+In-Reply-To: <20261110082459.1798763-11-den@valinux.co.jp>
 References: <20261110082459.1798763-1-den@valinux.co.jp>
- <20261110082459.1798763-6-den@valinux.co.jp>
+ <20261110082459.1798763-11-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 08:50:38 +0000
+Date: Tue, 10 Nov 2026 08:52:07 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,20 +61,12 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> An RC may use endpoint-local DMA read channels to transfer data directly
-> to an endpoint DMA address once both sides agree to use them. Quiescing
-> an unrolled eDMA channel disables its whole direction, so reserve the
-> complete read direction and route its interrupts to the RC when dma_bar
-> is configured.
+> A vNTB endpoint can place DMA resources after an MW in the same BAR.
+> Limit the MW to the advertised boundary so clients cannot overwrite
+> those resources.
 >=20
-> Describe the controller and per-channel descriptor memory in a private
-> control-region extension.
->=20
-> Add a dma_bar configfs attribute. An explicit BAR selection enables DMA
-> export. Leaving it unassigned keeps the feature disabled.
->=20
-> Keep resources already assigned to a BAR in place, and map the rest
-> through the selected dma_bar.
+> Advertise this support in LINK_UP, including when DMA is unavailable.
+> Older endpoints ignore the argument.
 >=20
 > Reviewed-by: Frank Li <Frank.Li@nxp.com>
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
@@ -83,5 +75,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110082459.1798=
-763-1-den@valinux.co.jp?part=3D5
+763-1-den@valinux.co.jp?part=3D10
 
