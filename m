@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794285021;
-	b=W4r+xzLdkzF04lcpVeO00VLx0dEtJuxhS06c41M5rppApCvDzzBHYCfW5Q4DLlUppX+g
-	 sIsQ8MbcCvbj7o88Tz6R7GowqGr+mOxEl/sdd/iXHio3c4DUafL81WBd6RE4Pg8QPxoGl
-	 zxKv0nlzZKS6Jkj+MtxJ+r0K2GZmwclQHbINUdY2Hcdn3HtchgbSJinbyiSY4Ja9eTHVA
-	 gYnsvZshgT7YDHr5nwOPGix+OyuUMUXReqlG/qIMtpwEkcIf9m3aSTmZxpUW24k0eX5W3
-	 ofYnpBDNJ9ITUxWcKvltovjQI3U4837/65e1MhPKOIzozz7I1UEpfoHMavxM63Ajwdw==
+	t=1794285164;
+	b=4o6T96g/rYYyE13Yk+LJ1A+8KKgH4zalJQBepDuCYVXQIxpZAENrauuKSFj+7hAIhoQJ
+	 8hNGsMDmwRw8CPeyjfobLDjwyEcrJJ2OCAMDa6dBjvnU/byWa/YT7HisWAyuwUkRFoiTt
+	 n6lYVD2KPfEesgVWOb+VxOF93exlF+szt6g2zNRdriyMLgfMe+MLS9GYJFcRN7gFLHu8E
+	 dSObyCvajzaPuJ7tir+oG3084AJmUQbe+0H6zB4w9JrF9AJNSF7/MU33Zi9uu+hN7VWSL
+	 aAb1KHTv1YzNGHmSid2M/j+1tv0qjUFDpbA6KvR4vop6CiK1FZrxQp2IQRKmNTRd6Ow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794285021;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794285164;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=U6lpqh0Qlvm9lkxAjOiSSFCfLwf1euhZNOYhXMx1YDM=;
-	b=ibf2Ln70F9xhAdCBV8uohG3Aj8jEhvO2AW+45ZNmr+QU8OzVS/PseJnm2sJn7hLK6lUx
-	 OEBHBDiEaaBgY5QyOwQt7My+3B4E09LDZNSE1/tynHr+NzTInbNDNVATw20f8T2lVyGQX
-	 sFHvlLNpRH5GN2pYoQixbZAQUNYgYw6S2HQf96pbV1SH/j/QRImzA+J1f4RSXO7j+4+Kb
-	 KkiVTjtHULZaaEriGXgO0t/EBHnKB6dQmAjHGn1goNOODTFiMacm1oSf/PS7sJVgbBvWs
-	 uGpH6Umt8zV9D0I5Qfd8snMw13UcWz/G0JshlvoqQEe2FCaiWzaxUzavDOL+zV2bQNA==
+	bh=DF6VPU9Pgd3OqmLZnbL7e6i9yxurQ/Ok/Kl+9nGeV0o=;
+	b=KBVgKQgk5jbcnrOFMmbhs8lVprBmNnuogNUFqLvWFAMBtORRJNyM987n051asO+wPx9+
+	 cOOqwz81rtIGBeXCWvKvIBG+K1NHwtNSJHWlwif+etwR+Wa+HjT3rgM7fqjbD06Az96uj
+	 O3S7zTe4Gl8naNb1NLJLFcTFYreuLW3NHBlx7nF7GCAysGhsqQHcvVu7UiLG+1ySIdKoU
+	 vEvvMjAdqg3Wad8kSGtPTPWhUhEe+2lPcoY5KC9XCWIcIz8ss9WturwniQ/a1pyHp1Gv1
+	 oDbyXC5adaz6K8ewWAGezTvxk38eo5AyhaZ3mj2KqfttbWcKuhNVbEu5Ugmj+gkcpXA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EEGLQuld;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmGPLtTa;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16A7360A261A
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:30:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D619606A325
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:32:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EEGLQuld
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C01181F008A7;
-	Tue, 10 Nov 2026 04:30:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmGPLtTa
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 114BD1F0089F;
+	Tue, 10 Nov 2026 04:32:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794285020;
-	bh=U6lpqh0Qlvm9lkxAjOiSSFCfLwf1euhZNOYhXMx1YDM=;
+	s=k20260515; t=1794285164;
+	bh=DF6VPU9Pgd3OqmLZnbL7e6i9yxurQ/Ok/Kl+9nGeV0o=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=EEGLQuldH0jifyB5jaBubnvUWeZeLo6dfKdxEsQWkGYercFKBIDkzkBGsvajTsrIz
-	 KJhMycSewYuK6DGZNuHXSBHcCXKvHFaL8d/Ow6d42RMmIHDg7FqdZqN0HJwtIV4l/P
-	 TEWG2XsTZ9f7y4bRq8v7zBJd1AOEdhk2y9mMPvtxQYinTfdlc56FUet26jcb4OZSzJ
-	 DtIry1D82yz6NmzaM/TQoBbQO6EMShiTGdqNmSZx0Er4wCkhJLY0szNMnkyfVLG83V
-	 1V4xzw1TETG1iGGf0kY5JG9lqbL4gstIBXdAo6VZjG5Qa6gvb2F4kngBlAgsdPixUG
-	 pRkV9CMXsWiow==
-Message-ID: <sashiko-outbox-206205@kernel.org>
+	b=bmGPLtTaDVb6cfQI9q4ObThjMFdbxJVWLmahYyMFXT3CC3Kxbeg5tFtA5Zz8kK6hZ
+	 oLu4DkRap2jr/wdubXjtsW9W7HkCNe0JnHnQNBwLinaHVnvQKcbJfrPXWgdpfYrgrm
+	 Pep0yrwT9IVcY5eErqUnfSxcHK94Tfxqmh/kv4QiZrDcc+r51kxoeEkb2A+CrQxDl6
+	 nXk/CSCPmMl6oGZ+cOGBWsLS0SEedYPhsInQvoalxVXSpt/QJofGWWxD3JO5RL8Mb7
+	 KXlPBN98vFtDlXidkIBiBW65dWXSLYPDie895Flw+VcmT814Wg781apqKLdLXB7rjl
+	 jjiStnaAtzK9g==
+Message-ID: <sashiko-outbox-206210@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 07/25] rust: add bindings for hash.h
+Subject: Re: [PATCH v6 14/25] lib: rspdm: Support SPDM get_version
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com, linux-pci@vger.kernel.org
-In-Reply-To: <20261110041832.1730924-8-alistair.francis@wdc.com>
+In-Reply-To: <20261110041832.1730924-15-alistair.francis@wdc.com>
 References: <20261110041832.1730924-1-alistair.francis@wdc.com>
- <20261110041832.1730924-8-alistair.francis@wdc.com>
+ <20261110041832.1730924-15-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 04:30:20 +0000
+Date: Tue, 10 Nov 2026 04:32:42 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,8 +61,7 @@ Precedence: list
 
 > From: Alistair Francis <alistair.francis@wdc.com>
 >=20
-> Make the functions crypto_shash_descsize(), crypto_shash_digestsize()
-> and crypto_free_shash() available to Rust.
+> Support the GET_VERSION SPDM command.
 >=20
 > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
@@ -70,5 +69,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110041832.1730=
-924-1-alistair.francis@wdc.com?part=3D7
+924-1-alistair.francis@wdc.com?part=3D14
 
