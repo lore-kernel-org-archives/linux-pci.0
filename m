@@ -1,127 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794320381;
-	b=O5UKtiXL+6Fp+O+CPC7uiRPXVzn9L+9fmYUFTPmc32TKLaW+ejOhaJ3c7kqTjrsHiCvS
-	 sEpDjNLxlKVumLXHTjtyKTft8I3bIhZCHIo1J2bMipFS6YqV8Ew+DEkzLaBFDIUQhAjfQ
-	 0I3ehZh1/6MItQLQoQfbwtrNBcBQD/sEQCVmKh/rMfIzm8Kg9gLwjMPNWhD8Fxt94yifp
-	 S3FQW1Q8C8BrazquNij9zedOO2LLc7LX6Adh8yFvaXogcSdWlggA+oA3Qy7NOvSuxy2YP
-	 /Q23yBAWZXAtiTRYzMco6E3cfcWmKj6vK3PoCyFDrFDr0SZh1VoW+M7OHJGcuvd5YpQ==
+	t=1794320391;
+	b=WRRcR9EbHIjn2Ye/NlbVjnoFgXSJGjaZ5EoGVQupZdMD+bair/JuIgV15Ls6V6QKTwZe
+	 Y8KfZyH6A0rVJI4JNTVaaFfkVLskBirhrL6cRUU/rDITphfDO9MxMuVwJU2gfp7dDD42s
+	 Wzlv5HxBGp2zXa5oXC+Tk19lZ6/MRYdXvxiB3S/aewbVT+8Yn+xgVnMBT2kR7bLLIP1Xd
+	 3sym+5rO/zPUCxHJf5NvppHCOCU6T+gW8xT5MY1nDVy7fMFgt7lnCiaM3EcaXhjZ7eRx7
+	 5T8QjRbL3ElKZDaivSfMCho4e1v0wmzgatZOP2DwxWiV2BP+YxNHLlUDVf9075DaVhg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794320381;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spam-Flag:X-Spam-Level:X-Spamd-Result:X-Spam-Score;
-	bh=ey86SkVvx7i9NDOgarxUx2o/w+Rx/Wx0u51qrIOGmpM=;
-	b=JeLsbqWiMjdzG6+TgWbDK+u6VONvVQ4vS5lnJDT7W4Ih4MDUjRWkT9qu/byT7EGI7UuI
-	 cdbG6X8Unr5z0g8QBK83y3RqybhhT43ewiDOsxj5UHne7T3bnJ+xr/hfa5TYfMkIB0r/x
-	 Rnw42/0aMcwAIwN7t2eD2RcQ5oU7kWFSRRc2PkP5tRNglsCelBSF7HZnm+G+LY8jAJJRx
-	 AmwHPUbl8AVaEB2NUlZ8tJREGPFjvSbcPbfuIu5iU4PSdT+4YK26NLAMnxgrgzsnOO5Cf
-	 +bo9l1mpnzyCUDZUziUnTSJk+ouoWbVWWXqf7XmzEgAjw7z0BjiWdZvl9zoHRvaGlkw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794320391;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=IBD63mXVAB9tRvzlY0mflXUJuM26Hy1nA4TKi2zhtyk=;
+	b=ceUadKvSiW/Yxm5v75nJDeqHwqiR1SfkNmj9nT8o4IMmqSaZ5qDrBSegB2yiCobdvyxT
+	 pyI52T78UkbqfgiEyZJHAjWSdlPIjR4+/T9voYuPtJS+qG0ZE/r0n4aVE0mJSGAyQSxoF
+	 4gxJCfah/G5Z5LGjx0bedVhKuN1CxZ99f9lwfEgHCk5z0fKa1VETmpA/pCAbFyuNwavyC
+	 m7qgMRAaG5linZLFF4CDVhHcxl+c/yKfkYfUtWx0MeVthscAH8Kx0sDALh2SWJbkRGlgn
+	 NBfo7BQYCdcTBCNwlLA4iu3hf66hKxM2T5MksA1KlPOzIkPVxu53LWHuO3J3+kkXKBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=24m00Mxy;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=gWL5bCh6;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=24m00Mxy;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=gWL5bCh6;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ft9x1Fze;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D7A560A262B;
-	Tue, 10 Nov 2026 14:19:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D7A560A262B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 035F4606A332;
+	Tue, 10 Nov 2026 14:19:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=24m00Mxy;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=gWL5bCh6;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=24m00Mxy;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=gWL5bCh6
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8A12F21E31;
-	Tue, 10 Nov 2026 14:19:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794320377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ey86SkVvx7i9NDOgarxUx2o/w+Rx/Wx0u51qrIOGmpM=;
-	b=24m00MxyS14C4kCTYYtxKWJP25EBVNVIxLRshWhDnl2XZwRpRipDNZJw4Avu/J2svsqCMy
-	VTYT/SHAlqxbP0FIU7B9V7eV3/1rBXkEe/Lcm9f8ja9SENmigoj1MKRmnopRtQWBaY3OFh
-	eux20BDfQ6AJqBojuMAzQiJJg3QKDxU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794320377;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ey86SkVvx7i9NDOgarxUx2o/w+Rx/Wx0u51qrIOGmpM=;
-	b=gWL5bCh6bmxfDaClyKTxrGr/cthAMhYHhVBSAgTvyrROUNgpSm1do5CLIUVQzQAzFJlTzk
-	zIhImlSyPcZvZwDQ==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794320377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ey86SkVvx7i9NDOgarxUx2o/w+Rx/Wx0u51qrIOGmpM=;
-	b=24m00MxyS14C4kCTYYtxKWJP25EBVNVIxLRshWhDnl2XZwRpRipDNZJw4Avu/J2svsqCMy
-	VTYT/SHAlqxbP0FIU7B9V7eV3/1rBXkEe/Lcm9f8ja9SENmigoj1MKRmnopRtQWBaY3OFh
-	eux20BDfQ6AJqBojuMAzQiJJg3QKDxU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794320377;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ey86SkVvx7i9NDOgarxUx2o/w+Rx/Wx0u51qrIOGmpM=;
-	b=gWL5bCh6bmxfDaClyKTxrGr/cthAMhYHhVBSAgTvyrROUNgpSm1do5CLIUVQzQAzFJlTzk
-	zIhImlSyPcZvZwDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5517613479;
-	Tue, 10 Nov 2026 14:19:37 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id I5aLDPkn82qLGgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 10 Nov 2026 14:19:37 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id D0CEC22536; Tue, 10 Nov 2026 15:19:36 +0100 (CET)
-Date: Tue, 10 Nov 2026 15:19:36 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
-	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH v2 29/51] proc: don't walk through a non-directory when
- resolving a name
-Message-ID: <okuebbxuf5q6xy452dlnxaqwainsafs5waulvn54j3vqxg2dhx@hh6ql7sg3pte>
-References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
- <20261104-work-procfs-bugfixes-v2-29-bbf7d5546809@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ft9x1Fze
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E39A81F008A1;
+	Tue, 10 Nov 2026 14:19:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794320390;
+	bh=IBD63mXVAB9tRvzlY0mflXUJuM26Hy1nA4TKi2zhtyk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ft9x1FzedVvgFlwnml0bPMihpW39jjhhf3Gv5QQVN1aatjgBLDezeXW/K3xSRCR6g
+	 uuQ8nbQy6DSu9Rsd3ugres2Gm7XewnYKEqy049a14Qd/7nApwDyk+luZ6M4+BgnITp
+	 0heE4mEoTOnkPyEwzv811l5zRdaY8QiPyVqOlemmdtciLXs8wxyqMml6HYBekHFdEZ
+	 QHSCObhQey3jdf42MP9JrK09iXL+HGMVSiDpxXnWzrW7neITSndhXrhz2pX5hykHBS
+	 9btjBmuoOhC9etyEPxIXwEgKUF5QZ5rFo6OErbX+Gimp2E2CcOq8HrNY7R7aerjrCa
+	 YQcmUVLI2wr9g==
+Date: Tue, 10 Nov 2026 16:19:45 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-input@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org, dmitry.torokhov@gmail.com
+Subject: Re: [PATCH v2 03/19] USB: Lock registered interfaces during manual
+ driver binding
+Message-ID: <20261110141945.GH8635@unreal>
+References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-3-3b12d9a9f861@nvidia.com>
+ <sashiko-outbox-206503@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -133,103 +61,48 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-29-bbf7d5546809@kernel.org>
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spamd-Result: default: False [-11.30 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RL63fqwwx8ot6gmekemcs76f9d)];
-	MISSING_XM_UA(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[60];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,suse.cz:email]
-X-Spam-Score: -11.30
+In-Reply-To: <sashiko-outbox-206503@kernel.org>
 
-On Wed 04-11-26 18:47:15, Christian Brauner wrote:
-> __xlate_proc_name() walks the components of a name like "a/b/c" and
-> takes whatever it finds for "a" and "b" as the directory to go on in.
-> It never checks that they actually are directories. So
-> proc_create("file/x") hangs x into the subdir tree of the regular file
-> "file". Nobody can look x up there, but remove_proc_subtree() on the
-> file removes and frees x along with it, behind the back of whoever
-> registered x.
+On Tue, Nov 10, 2026 at 07:35:13AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential
+> issue to consider:
+> - [High] usb: core: unlocked dev->driver updates in
+>   usb_driver_claim_interface()
+> --
 > 
-> pktgen passes the name the writer of "add_device" picks to
-> proc_create_data(), and only the part in front of the '@' has to name
-> a network device:
+> commit aa47d25b59fe6dc15ab05e899c754ff4b6a72894
+> Author: Leon Romanovsky <leon@kernel.org>
 > 
->   echo "add_device lo@"   > /proc/net/pktgen/kpktgend_0
->   echo "add_device lo@/x" > /proc/net/pktgen/kpktgend_1
->   echo "rem_device_all"   > /proc/net/pktgen/kpktgend_0
->   echo "rem_device_all"   > /proc/net/pktgen/kpktgend_1
+> USB: Lock registered interfaces during manual driver binding
 > 
-> The third write frees both entries and the fourth one makes kpktgend_1
-> call proc_remove() on the freed second one:
+> This commit locks registered USB interfaces around device_bind_driver() in
+> usb_driver_claim_interface() and updates btusb_mtk_claim_iso_intf() to acquire
+> the USB device lock instead of the target interface lock.
 > 
->   BUG: KASAN: slab-use-after-free in proc_remove+0x8f/0xa0
->   Read of size 8 at addr ff110001134c8e70 by task kpktgend_1/243
->   Call Trace:
->    proc_remove+0x8f/0xa0
->    pktgen_remove_device.isra.0+0x118/0x500
->    pktgen_rem_all_ifs+0xeb/0x1a0
->    pktgen_thread_worker+0x1b42/0x7280
+> > diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
+> > index d3a61ebc6afb0..ad5d9d5fc7598 100644
+> > --- a/drivers/usb/core/driver.c
+> > +++ b/drivers/usb/core/driver.c
+> > @@ -584,8 +584,11 @@ int usb_driver_claim_interface(struct usb_driver *driver,
+> >  	/* if interface was already added, bind now; else let
+> >  	 * the future device_add() bind it, bypassing probe()
+> >  	 */
+> > -	if (device_is_registered(dev))
+> > +	if (device_is_registered(dev)) {
+> > +		device_lock(dev);
+> >  		retval = device_bind_driver(dev);
+> > +		device_unlock(dev);
+> > +	}
+> >  
+> >  	if (retval) {
+> >  		dev->driver = NULL;
 > 
-> The files of a network namespace belong to the root of its user
-> namespace and these writes don't require a capability. So once pktgen
-> is loaded an unprivileged user can do this in namespaces of its own.
-> 
-> Treat a component that isn't a directory like one that doesn't exist.
-> All names with a '/' that the tree passes in as literals only walk
-> through directories. pktgen is fixed separately to not pass such names
-> in the first place.
-> 
-> Reported-by: Chris Mason <mason@kernel.org>
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+> [Severity: High]
+> Does taking device_lock(dev) only around device_bind_driver() leave
+> dev->driver and the interface binding state unprotected on a registered
+> interface?
 
-Looks good. Feel free to add:
+Yes, the thing is that behaviour existed before, but no problem, let's
+try to fix it in separate patch.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  fs/proc/generic.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-> index 4c3fcaf68ef4..6ac9c4c13897 100644
-> --- a/fs/proc/generic.c
-> +++ b/fs/proc/generic.c
-> @@ -170,7 +170,7 @@ static int __xlate_proc_name(const char *name, struct proc_dir_entry **ret,
->  	de = *ret ?: &proc_root;
->  	while ((next = strchr(cp, '/')) != NULL) {
->  		de = pde_subdir_find(de, cp, next - cp);
-> -		if (!de) {
-> +		if (!de || !S_ISDIR(de->mode)) {
->  			WARN(1, "name '%s'\n", name);
->  			return -ENOENT;
->  		}
-> 
-> -- 
-> 2.53.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks
