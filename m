@@ -1,56 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794290113;
-	b=NM/uutZ0QnEZ2igaqbEmS0HGSuwn22nh4T5smYW1u3/4GA+dvO/URKPNQ6+3VHBznOYw
-	 zGZz+JTcrj0pH6YlZfhtQjvEFX14hhi9NiMK8PRTwAPOzaCHFp2CVPh3elRki+uYnP9PQ
-	 uul0lWniKoWr4ilLA/kneiU9y6rThXlytKectYRO5rlNpC65INdyK8IljfvakJTa+ekBS
-	 RaYf0zffphe2aKW5xXE9EBCxTPO7x27ny9X9v5mh+JQLy6UcZVdvSdD/0NYgubUkDAyUl
-	 F55LzLvHQ/H8Tcd2BIBqzCUndJhcBcYvcxuzOeSpg8JxWhQbDXMzNHxoN2ryK0D8wQA==
+	t=1794290165;
+	b=rmtHz/d+1v78BqhH5z3E92+mu+Gsl1Jt/Oxj11mkfmVDRncSmywR592pu2c61envbWM4
+	 kmXVbpFTBw4E9WCSvfvKcHNYBWtEFznpvR+2mwE2YDtwmjI5UiQs0jDLwWXru+lMNsOtK
+	 FcimPlcOFW1esALedjjmhAEHsr0rl93xqbK1tSb3THS1gwFEARVBJRvvfOJwHHG+9+BvZ
+	 VBB7d0yOwSW/puklML9KGVGSWhgIiP3Wthkyn1yp0SJuomf9eKmXIoLny6ZHLoD1hfSLx
+	 yLshXDI8b+CsDA5jBQaUrvKJbVrNn8BwmYDoY1K3XsOKL4sPkUNxwFZzRSFOWzCh1Tg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794290113;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794290165;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ZMb0A76m0cdloY8ZDI1xomsA+K8B8nV+of+cUA0oRJQ=;
-	b=PAdBdZ6wUjK0aG2V7omXbTg23nMb1FExneASJCi6AbUIt/u3si3DXH4iSxeIHIea1bIH
-	 PIHFzKOl6dncU2hEyJ/DKipJpLwJGEZbEP5AfNlxa/WTsb638Sy1I6PEYu4Xut0UA+NsU
-	 b8ubh1a7BI1/TolY1gG8fVf+61y+Fj6yHAmQZ8F7/vOuq0YXA/GFrlRL62rkPJ8yLcp+B
-	 ySYDkU/5A66La/GjlnNfL02J+Qe5Hg0LbQZ0rV5RITI06m+fDZGSxwM6K3kdz1caU0x4+
-	 GDRh1qDC/BvsgDJc+ddQ0uHiYIfo5upSxZmvKi2BLoXYIW4i7wXPwmjzb+xbp4lvIvA==
+	bh=InU34aQHl2Y1/PYvcti4YCFewZ5eYohHaIfKHTk063g=;
+	b=FdDO6EXIiuSctvOsRocrg5UpA1JdD/hoX5MeesV50kbkWmX5MgjOxaHT9kyNt6tC2gem
+	 0jDkPrpvs2YzNGLftLe/Oou5D7mt09m311x8Bb6nU8ICFLM7gPxbiaHGvTSyeHS6ZCO1M
+	 nzI8Z11RIR+Zer2JLn3xjxpftvDyaPtjtNoHv/xy2MeYaHRmI7v8kdNK8ojA7DsjejVMQ
+	 KxNuQcAW7cE3AeQUWCrQlWXSEJCEBE7+oc7WPYoK9TfsH9FcjF1+oge5MBfNEc2gy/hUc
+	 iQSpmFnPNMUXXRE3G1bjmNZMHQWgHw5u7r926u77SKnQwpQoLwk44AqZfmu7QHU7K1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="A/lAcPPh";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Va39L7/I";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B9F606A31C
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:55:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A152606A321
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:56:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=A/lAcPPh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BAA81F0089F;
-	Tue, 10 Nov 2026 05:55:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Va39L7/I
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB77E1F0089F;
+	Tue, 10 Nov 2026 05:56:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794290112;
-	bh=ZMb0A76m0cdloY8ZDI1xomsA+K8B8nV+of+cUA0oRJQ=;
+	s=k20260515; t=1794290164;
+	bh=InU34aQHl2Y1/PYvcti4YCFewZ5eYohHaIfKHTk063g=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=A/lAcPPh8FWDPRDYF8COwIr7uwhFhrs5IaqiZw59+hvxZYJM2n3kaeC0Pj/OWEm0N
-	 c/n7GDgOCvjL7tzJlJiyqL9wePIj34IdvnW1v7tRbkW/bG54xGyJOFXMSi5aY8QweI
-	 4o7bTdxa/9ZdifjcMAmVPEWwlANyu2+Fxxak3QnScIixr/JcL0wQB0N+a0OcVPwE4y
-	 sC5Zi/MWz0unE+IIW+z4YL8rey+QFcu5yvRm5mKy93h9CssIEvAq4SbNsj/FVXZuhr
-	 ZObQKj+DZXGZiCZ4Slva7tAwNL437gdS82tnNB6iiyppd1VBzvbNvkCnfyAj+e+A+k
-	 +GjE2LNcHTTHg==
-Message-ID: <sashiko-outbox-206352@kernel.org>
+	b=Va39L7/I8Er7CPaFTRbCU0gDU8WJFnvz/NfcgY9NvLAB6xUiaMXoU+mp4ehIvV/Gu
+	 5xXeaM9NxSqYGnqWneBhpwNWl1iuMfuqRcssSraMSacxFeiCaLF1ce/Ea8xRHWhmtM
+	 MQpIk5AyE3C2/c53Yd2TFfsDXRG0JbxGp025mkw8pZeU+se5hVqHEbAVIu0IDMsxM5
+	 RbgkwVbnaikf1Lvqzdv/fq7iNOMPrTgeJFN5BYS+mJhUrtITs7BIJzSi0Sdip4lzX+
+	 YRRDJZnB2nBBu5dtT70umikn8yeUy9Fl59Kg+4yYez9eUt1EJYzOw7v76JX2mCMo9A
+	 SjQ4txQUXnL/A==
+Message-ID: <sashiko-outbox-206355@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: Save the Root Port state before a
- platform-specific reset
+Subject: Re: [PATCH] PCI: Clear the bridge's subordinate pointer when child
+ bus registration fails
 Reply-To: sashiko-reviews@lists.linux.dev
 To: lirongqing <lirongqing@baidu.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261110053348.2419-2-lirongqing@baidu.com>
-References: <20261110053348.2419-1-lirongqing@baidu.com>
- <20261110053348.2419-2-lirongqing@baidu.com>
+In-Reply-To: <20261110053410.2469-1-lirongqing@baidu.com>
+References: <20261110053410.2469-1-lirongqing@baidu.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 05:55:11 +0000
+Date: Tue, 10 Nov 2026 05:56:04 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,70 +61,93 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [High] PCI: corrupting Root Port saved state in
-  pcibios_reset_secondary_bus()
+- [Low] PCI: missing Fixes trailer for pci_alloc_child_bus() error
+  cleanup
+It also noticed 1 related pre-existing issue this patch does not
+introduce:
+- [Critical] PCI: double put of bridge->dev in
+  pci_register_host_bridge() [1]
 --
 
-commit c84a514dca7805a856128814f9bfb335473ce7f7
+commit 145a85e5894672f4949013776fe03b0bdc6734a5
 Author: Li RongQing <lirongqing@baidu.com>
 
-PCI: Save the Root Port state before a platform-specific reset
+> PCI: Clear the bridge's subordinate pointer when child bus registration f=
+ails
+>
+> pci_alloc_child_bus() stores the new bus in bridge->subordinate before
+> device_register(&child->dev). If registration fails,
+> put_device(&child->dev) runs release_pcibus_dev() and frees the bus, but
+> bridge->subordinate still points at it.
+>
+> The caller returns without scanning the new bus, yet the rest of the resc=
+an
+> or removal path still follows dev->subordinate:
+> pci_assign_unassigned_bridge_resources() and pci_stop_bus_device() walk
+> bus->devices of the freed bus.
+>
+> Clear the pointer before dropping the reference.
+>
+> Signed-off-by: Li RongQing <lirongqing@baidu.com>
 
-This commit adds a pci_save_state() call in pcibios_reset_secondary_bus()
-before invoking host->reset_root_port().
+[Severity: Low]
+Since 1f2768b6a3ee ("PCI: Fix reference leak in pci_alloc_child_bus()")
+added the put_device(&child->dev) call that frees child on registration
+failure without clearing bridge->subordinate, should this include:
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d6590805faeb2..b4981e8060e28 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5082,6 +5082,7 @@ void __weak pcibios_reset_secondary_bus(struct pci_=
-dev *dev)
->  	int ret;
-> =20
->  	if (pci_is_root_bus(dev->bus) && host->reset_root_port) {
-> +		pci_save_state(dev);
->  		ret =3D host->reset_root_port(host, dev);
->  		if (ret)
->  			pci_err(dev, "Failed to reset Root Port: %d\n", ret);
+  Fixes: 1f2768b6a3ee ("PCI: Fix reference leak in pci_alloc_child_bus()")
 
-[Severity: High]
-Does calling pci_save_state(dev) here overwrite the Root Port's working
-saved state (saved during enumeration in pci_bus_add_device() and
-pcie_portdrv_probe()) with post-error or post-link-down register values?
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 222ad696a1581..efa85ae052106 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1271,6 +1271,8 @@ static struct pci_bus *pci_alloc_child_bus(struct p=
+ci_bus *parent,
+>  	pci_set_bus_msi_domain(child);
+>  	ret =3D device_register(&child->dev);
+>  	if (WARN_ON(ret < 0)) {
+> +		if (bridge)
+> +			bridge->subordinate =3D NULL;
+>  		put_device(&child->dev);
+>  		return NULL;
+>  	}
 
-During link-down recovery via pci_host_handle_link_down() ->
-pcie_do_recovery() -> pci_host_reset_root_port() -> pci_bus_error_reset(),
-the link is already down before pcibios_reset_secondary_bus() runs.  Downst=
-ream
-Ports clear PCI_EXP_DEVCTL2_LTR_EN on link down (and pci_bridge_reconfigure=
-_ltr()
-in pci_restore_pcie_state() is a no-op for Root Ports because
-pci_upstream_bridge(dev) is NULL), while controllers such as pcie-dw-rockch=
-ip
-and pcie-qcom have already reset their non-sticky Root Port registers on the
-link-down event.  Saving state at this point captures those cleared registe=
-rs
-and restores them after host->reset_root_port().
+[Severity: Critical]
+This problem wasn't introduced by this patch, but does
+pci_register_host_bridge() [1] drop bridge->dev twice when
+device_register(&bus->dev) fails?
 
-Similarly, in the fatal AER recovery path, aer_root_reset() disables Root
-Port AER interrupts before resetting the bus:
+pci_register_host_bridge() takes a second reference to bridge->dev via
+bus->bridge =3D get_device(&bridge->dev).  When device_register(&bus->dev)
+fails, the error path jumps to unregister, which calls
+put_device(&bridge->dev) and then put_device(&bus->dev):
 
-drivers/pci/pcie/aer.c:aer_root_reset() {
-	if (host->native_aer && aer)
-		aer_disable_irq(root);
+drivers/pci/probe.c:pci_register_host_bridge() {
 	...
-	} else {
-		rc =3D pci_bus_error_reset(dev);
+	bus->bridge =3D get_device(&bridge->dev);
+	...
+	err =3D device_register(&bus->dev);
+	bus_registered =3D true;
+	if (err)
+		goto unregister;
+	...
+unregister:
+	put_device(&bridge->dev);
+	device_del(&bridge->dev);
+free:
+	...
+	if (bus_registered)
+		put_device(&bus->dev);
 }
 
-Calling pci_save_state(dev) inside pcibios_reset_secondary_bus() records the
-IRQ-disabled PCI_ERR_ROOT_COMMAND value into dev->saved_cap_space, so any
-subsequent pci_restore_state(dev) will leave Root Port AER interrupts
-disabled.  And if host->reset_root_port() fails, dev->state_saved is left s=
-et
-with the broken state, causing pci_pm_suspend_noirq_common() to skip saving
-state and pci_prepare_to_sleep() on system suspend.
+Because put_device(&bus->dev) invokes release_pcibus_dev(), which calls
+put_device(pci_bus->bridge), both references to bridge->dev are dropped
+and the host bridge is freed before returning to the caller.  When a
+caller such as pci_create_root_bus() then calls put_device(&bridge->dev)
+on its own error path, it triggers a use-after-free and double put.
+
+[1] https://sashiko.dev/#/bug/linux-274884f5-d0c4-48cf-95bc-82c1e0b3753d
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110053348.2419=
--2-lirongqing@baidu.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110053410.2469=
+-1-lirongqing@baidu.com?part=3D1
