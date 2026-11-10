@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794303487;
-	b=a7X+sM1NWxdBdSY4t1CNBd8eS+yS5AwWBR+R0JqfTsLmJQEYc59votUfHVsfZb8sQkpd
-	 zkxErsMo//YQR93Uhu/+qRFdf9b7+gdBkmPotLCvOaVLJjZMO9d9Gz0Uu+NThHdZITrRQ
-	 HNXPZJeJUF1GuO3w9rGL1SsQgeHlGOa/MjY4bNUwP+09BC+RS4k9K/TX4sTdxxnJ80GHK
-	 8HeHw53/lWH0M21TBOavMoNjewJNdfxcetjJBWpybmhePuEA3KYdr005dirYqFfS4jx8h
-	 Y3KGrf0ybcUiQsgAIbe5vsKsYtzfDKjVi2odYYNNp5wbVlJoMmPgOYo4JX2RLSXAt1g==
+	t=1794303700;
+	b=RGPrEbE3OF/PaLfFjxLyAGmKaU6toBcrhUf2VgMAlI72btXVqzkUgF22O0VaYItNKiNU
+	 RQRLsa3FOaa94EVp5DdWLeW4Mt9ujye4GSC7ZO4oaa508gsCbCU54MGsQah2vhm8s/DWg
+	 z22aDRFdUYj6V4L/NfiNdqQUxEsSVKhpOCsmE6GgXFcyad+UX4xLAbcVryF51+h8nrfv+
+	 a2GagO+6v97S0okyZwGbwuKpgNp8FfCVwu2aMRiwrLoAl36ItCdMzVa1RNbV+YlRN4zU6
+	 Gp61ReU1K4udCfne6TqF4/AiiGTLpvm94juX2hFsoCSFpT5/k5+Fw+zrBvsZnL5Xw/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794303487;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794303700;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mLmQNHZFrFTnBNz7JpEU7QMHVi+W8lb3qj30THHitEM=;
-	b=pH9V4lsTqEPPQO6FKikOrrNnxDHEkSPTSP3GYCHzygXjEp2Y0clDjykwoDqv9qerZtRT
-	 yUt/1ekMzyGT6UgWgAdcSo9WBOUHuGUVVIJGuV7VY8VN0vAJZ5LMKp/efy26f4kd7kzg+
-	 rJ3KLymsMF4DHkDGcDrL0KAhfAyy03ldZ3sccW0AW4McrKYXOZbmej5di7NX7J8x/Nah0
-	 59/2Rq51Vf1J0tWz1E7LKwGuylJ6rtejQ4wSybxrasuJ8seIqq9u8am9m3sR6aup49y12
-	 EBNl/7hAaeT/md+0dugUmkSfMjpRcMG+ga2PXz7lvhpOYFHRCGAdakhs1Du4TFm2A1g==
+	bh=Elfi3sE5BgVj1t5gsjBEELA6hJDkM91cQD8viQnP3Ug=;
+	b=eidfI17JHSWtaZuk32cqzj9clnic1Lm+UG3y0KFDLfcboYwwII4jx6Piytuzh5Wol98U
+	 20HgJ0Q8AiSq5uPUcDKQuprLXoZ6jWT0umPoVdG/+OlFbwaZaVnWZIJWHU4+erMNBMXDR
+	 xaQlkt+MoBvRW7wpW633hgac/HiRI19Ju2lgReqaXgZanDvWm2vFhQgRxtghBmK0ij1V1
+	 9XAYXFXecE2/nKK23VuCodIS4ybS+jEv+wM0WA6JHBoyyvgYu6z//rPtsbNv9aFWxrLLm
+	 77DVMbMQiNZ+qJbyS5NQcfKRfYVYoX82uxnpMshNLH7YDXFXAFlhZ4RDRucZLB7PDkA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TtyazV7T;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ACTTAg5j;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 418B6606A326
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 09:38:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C614606B175
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 09:41:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TtyazV7T
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7F171F0089F;
-	Tue, 10 Nov 2026 09:38:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ACTTAg5j
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 047DC1F008A1;
+	Tue, 10 Nov 2026 09:41:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794303486;
-	bh=mLmQNHZFrFTnBNz7JpEU7QMHVi+W8lb3qj30THHitEM=;
+	s=k20260515; t=1794303700;
+	bh=Elfi3sE5BgVj1t5gsjBEELA6hJDkM91cQD8viQnP3Ug=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TtyazV7TFMAJRKs62lMKR10h6NB6OhbS0wZQlDuqmJ2ypFbKnJtdqMyedy7AhUe7d
-	 U9lI0zX9UbYyvUz0GWpSGy5HpdBZhPIYxBVfTrIaZb4KmJLDTY+gqgRooWJJ1SmmXq
-	 HDpOooi7RLQSvZMGclbT2BGtauKup0JL8iRjSkYJ19pFY8d1eHVsl1ebTd3qSvfwKG
-	 9TrqqNUf27WE3VYld8rWJIXPMNzyeyEzQypVHz2832DWnijCo07ZdPK04P6Yq9FRqo
-	 59vWLJc2ELy8qKxAQBsaJbmDauxq7mEJkng/C7IgdV0n7qDRYPv74GmXsN3wbbkCUN
-	 14sYQbSsIsrVQ==
-Message-ID: <sashiko-outbox-206786@kernel.org>
+	b=ACTTAg5j6hq1w1CJGQdx/npCrK7w9oJy06f20fuJkvrRgHmNrDmmTgXRUOz3Cj3nr
+	 RJqFkmeXqriLI2/RvyxDCXuvOLF1PUR9lOsfAIPCIwMQSpnQcdP3LZT3+mKyPyOm4U
+	 zKK+93hfYn2D2jR4xP0oO/yID2s0DM0m1Tb4sJRbfY3Ep5Gc3FG0UVT0y4DDxj1xiv
+	 FBgRj795Skjdb5jI8dL5mtMgkamB/qq0xByP0S2mrlh62ZMm/oBXjLOFi81WQIqw23
+	 8ReMji8SPMXsa9iMqTKT9AFLmMJqlfWewTKI/xuu7YhH+wXlr5sptpUcm6+92Vhj53
+	 CiZuUGw6CRgPA==
+Message-ID: <sashiko-outbox-206793@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/6] LoongArch: efi: Provide sysfb_primary_display
- for screen_info users
+Subject: Re: [PATCH v3 3/6] LoongArch/PCI: Remove vga default device
+ override
 Reply-To: sashiko-reviews@lists.linux.dev
 To: wuqianhai@loongson.cn
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261110090203.2631481-2-wuqianhai@loongson.cn>
+In-Reply-To: <20261110090203.2631481-4-wuqianhai@loongson.cn>
 References: <20261029033440.973077-1-wuqianhai@loongson.cn>
  <20261110090203.2631481-1-wuqianhai@loongson.cn>
- <20261110090203.2631481-2-wuqianhai@loongson.cn>
+ <20261110090203.2631481-4-wuqianhai@loongson.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 09:38:06 +0000
+Date: Tue, 10 Nov 2026 09:41:39 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,15 +64,18 @@ Precedence: list
 
 > From: wuqianhai <wuqianhai@loongson.cn>
 >=20
-> LoongArch defines and initializes sysfb_primary_display only when
-> CONFIG_SYSFB or CONFIG_EFI_EARLYCON is enabled.  The PCI VGA arbiter and
-> the framebuffer console need the firmware framebuffer information through
-> screen_info whenever CONFIG_SCREEN_INFO is enabled, even if neither of
-> those options is set.
+> pci_fixup_vgadev() forces the VGA default device to a non-Loongson VGA
+> device whenever a Loongson display controller is present.  This was
+> added to prefer a discrete graphics card as the default boot device, but
+> it makes vga_default_device() inconsistent with the firmware boot
+> display: the firmware framebuffer lives on the integrated controller,
+> while the override points the default at a discrete card (or leaves it
+> unset when there is no discrete card).
 >=20
-> Drop the guards so sysfb_primary_display is always defined and
-> initialized, and its EFI stub alias is always provided, mirroring x86.
-> This avoids selecting SYSFB just to obtain the symbol.
+> The fixup runs from pci_bus_add_device(), i.e. after the VGA arbiter has
+> already selected the default device through the firmware framebuffer, so
+> it overrides that choice.  Drop it so vga_default_device() consistently
+> reflects the boot display.
 >=20
 > Signed-off-by: wuqianhai <wuqianhai@loongson.cn>
 
@@ -80,5 +83,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110090203.2631=
-481-1-wuqianhai@loongson.cn?part=3D1
+481-1-wuqianhai@loongson.cn?part=3D3
 
