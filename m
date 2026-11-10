@@ -1,106 +1,45 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794337338;
-	b=CSbF8wCwL8IUmsjDSkZcQjtlcTuaNRt9PTR3UMxeZW8qw3FxiNlmyj5PvUfCxwQepPiK
-	 2Yi6OTSg2ET/4AhvNopoYibV8eUkBo7RNS5NMZMBNdjJ56+eLrmPerqgevLCq/+lObo1V
-	 0JSMs7pYsiK1D3hu/lAiwOLfBDOrOnWECC3HL7N2AgBkQw3u5s/qZ3suS07lTbKqgxvAs
-	 eg/bwuSNpHOU96l9YFJQEvFhjWD97uHkEIiNSxvycYxy1iO9PVA2qP3kBFwB9BlX84TOV
-	 OoL4zqfPRK7g6DfnBlkX+HFuSBL8g3DcgGbks9xaRp/bVN9L1NkOjzDTiJUwPwNNPzA==
+	t=1794339860;
+	b=UN8eaTzEXwy7lGmlG1QpdTE0Lm2D1QA9Xg05b6RaH6oYJT3vypskWzWvDLa/TPRwA0Ti
+	 UyxIVwi5imeHI92Rp+oiumHAisfGe5ncIr6cy77axFG0WHtFe+28DJfs7WQSR1X4vaEWu
+	 sVmzy3FTYwpfZsAKYEZ5HrHqkoBsEmuhuumC4V1Z/gC+9C5AOVX9fL7vD5fZO1iiv2CFH
+	 WADCmRrLwJQwe36b174C4ua3+TC8YxBGXQ5NikHuXGSMcdVawP1JoInsVpZfMuXoZIRM9
+	 4FROVIDEKR8EiX4mmEoCpv3vIoeSLp9UktrbN0M3DK6KdS3dWUHTTjBdTsSrDOTup+w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794337338;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=Rc92iNBDR3TpfE1Wb0FPlqB33KW4gheFc7Efbj9D4zA=;
-	b=gAQrjGDe2HDDP+TZs3YYq6Ia8Dwqi1sS8wPhPLfYE3TTg0iqF5SSHOccW1dfQf71arjh
-	 /fSr2excw+pVpMjcdDxxyALp59kfc96XoN4d81KuTEu2vmy3kjL4rQbzzjbXKYMIh7uwE
-	 3QNrWT2GdNGEdqKuh7xrZ4o32NuRt4FUYyZLTWlsR5qHRDwk34h0ianO5dA9pO3Fpi90W
-	 G2MLKhe4gclXfV8BNhi8spdXfAajLN+mNBDBtHiLrswnaZOCg2CHI4T+7DeJ3lLagDBCE
-	 WQO2xxuQ7KPayrLTSsBDHQ/2Bvmg6wJy1ErNHfNCXWLurSM0tqVhBtvkpYiOGcIEs0A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794339860;
+	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
+	 Content-Type:Date:Message-Id:To:From:Subject:Cc:References:
+	 In-Reply-To;
+	bh=fWfqbq9OHseUAlW92SLhKNSaqa3qmI+MBczXn8z6J5A=;
+	b=jJAGOyLY471pdiVxA9c7f9tyXCt1n5ANPtJFQE226afZPq8Ffe5QzIn/o/LF4CTf5C2T
+	 lI6X/F/S+yADsiCLHj41zlxYAn9s82CNaz1rKe7pUmWi1aZJCBXWrnJTU8RJPeyRqQ/qo
+	 gxx1NbsW8pQN14pWMm0yTJ2/F2rsDQhpc/VFTPNZtHvn+fuhBmHydGcfsu2//NYz/2sji
+	 outECwEuuj52pCamKOFnY+XVA3dJBZX2m9Vhex/jTbVSJQ1TQVMzoq8k31VnZzEqaKc7k
+	 O16OGPNa2z6qGDI+85cyPjth3/0sG/jPronPQ51CsecQmEuWq3Pp9OYuasrQ1TW0EKg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=qO+JZOY4;
-	arc=none smtp.remote-ip=209.85.214.171
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O6Uit6jO;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59583606A330
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 19:02:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59583606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391A4606A320;
+	Tue, 10 Nov 2026 19:44:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=qO+JZOY4
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2e9f6a16afcso5675ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 11:02:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794337338; x=1794942138; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Rc92iNBDR3TpfE1Wb0FPlqB33KW4gheFc7Efbj9D4zA=;
-        b=qO+JZOY4XThqw7+Njn/UYcPIm7ZmOo3MiW+t20KLHVibC+4UuvF6oB0AUlTA5C+Kz5
-         8bfjmyokmdpWkvtsirhnzw3yZxnpal6DZh4ctcbQuikaRqogrXN0Fg5MkiFa8k3d0ZdV
-         6yHbQWhuX6VDHoqmvKkSeQVgoE06RF1Rh46qLj1+0lLUGq1fvXjYSdZ/wzPg2gJdk5mk
-         ri70ob/7Sp1bFE8dTCuvgv7LeNHaYdC667uwY7mMMz+afixjYSayD4a69OskUXzmcrNu
-         AXpWknVWVYiL/bjDdQg7mYlZxD1abxJRY2WRtUvcVfj93a3zD+lUsfOsoLuWUOnWKoUl
-         Z+Tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794337338; x=1794942138;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Rc92iNBDR3TpfE1Wb0FPlqB33KW4gheFc7Efbj9D4zA=;
-        b=tTmKt95pfSxm24liSGCU9yUD5dW8TkIV7d2eXLFbb5ZUAi7OZ+1JimdsD6j3uLLJkE
-         BkB3qaUxnePFa7VSAasjM4nSbROPc5+NzesXXSFfKIxVCoQLQ80Du/lGClzrRci18N0v
-         Fx9KiGQKDPuaoO4OdJg5VC/j49ivoFlOB+4sF6sXCvSkTrD2PNp6/eI6tTR2KGXZGDgF
-         2Tgu5WEN9QhBCFR92nxvTJAYl1+pndFI6rHF7xqnN9/sTFbV1PtI4fbj1w2xyTdThOIm
-         AMS9+/EMYGAf9DQg35z01OqEj/YN+wTJ9tAjCVHTwZzgaICht/wCi7Ul7Zpp9BEHGW/I
-         lP4g==
-X-Forwarded-Encrypted: i=1; AL+hErEmSfCclZIXDeC22g3j9LgwJEZjtgAJYFUm3ae7ecxEwf0UnaG3VClOABb8JOdAIo0HIzYgosnlkps=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9WHZ+snKOGEtXxEH7TLq3Z/To1aosrHwuAgXQPZtI2Qnim6o5w
-	p4ThY+biV/3eKRXhCraqCjK9aASXslwOa5oMAUbEJ7JlMZDT4TH29OTDNENZrgxTDw==
-X-Gm-Gg: AYBFou0pXq1dTua3qZ+fOfQcu82kwAWK8/EnXjJslm2n4c9ez85Nmy9Gen2QY0R01Ei
-	FjcJy6aibw1VXxTmwp5BZSNJt/bL2vwbRc2Us23vyxuc9BjBrrBozPizqar/BNCOOekqOTePEjK
-	mTjM+eQ0ZWGOS5g32v/LP/A8K7sTzSHLSoXz2A3iAvAI4mcXOQ1YEdOnCKR0TigNTkGD8uscD47
-	OHWtCG4dboiTQm9iEsepIq1ZEJVzn2mUxtpDeoYXIaDoFhzthC2SseXyUvaC5tcFw96YCH90hDH
-	3BR/osE46jbiV19YiNPJlfYiVHi06DDyREQbGjS4gt5rzfaXjmx9kzpsg0x5yBPUWmc7znRc0O4
-	ydeVoOyxxiZdglsNqGKUBtKIHzBCETosODRno4nmJXq2IhvUxjpy9pfDMgGTynsCN/NgRCyg+6I
-	wvT321EflhPR2ULswMAc4RgiWlbYKqnFyQg//JastGQMUrHjMZrOdnYEE8TrdYn7wC6QP1EdLnI
-	Gc7qkA1Mr7aJbceUJcdjvXGMf0X5nwrftJTiC1hxjOsqoBfnbhimoSqtYF0L+70rvfD+gPlx3yU
-	39816Q2/ybRntoPA9q9hj2Ss5Gnqr/mn/P7jMb7tzVN/0drOI3KPPiIdIMlF75LD
-X-Received: by 2002:a17:903:1b44:b0:2d5:db38:8010 with SMTP id d9443c01a7336-2edba3e2a10mr5113665ad.15.1794337336971;
-        Tue, 10 Nov 2026 11:02:16 -0800 (PST)
-Received: from google.com (60.89.247.35.bc.googleusercontent.com. [35.247.89.60])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b17db31cafsm914394a91.3.2026.11.10.11.02.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 11:02:15 -0800 (PST)
-Date: Tue, 10 Nov 2026 11:02:11 -0800
-From: Vipin Sharma <vipinsh@google.com>
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org, ajayachandra@nvidia.com, 
-	alex@shazbot.org, amastro@fb.com, ankita@nvidia.com, apopple@nvidia.com, 
-	bhelgaas@google.com, chrisl@kernel.org, christian.koenig@amd.com, corbet@lwn.net, 
-	dmatlack@google.com, graf@amazon.com, jacob.pan@linux.microsoft.com, jgg@nvidia.com, 
-	jgg@ziepe.ca, jrhilke@google.com, julianr@linux.ibm.com, kees@kernel.org, 
-	kevin.tian@intel.com, leon@kernel.org, leonro@nvidia.com, lukas@wunner.de, 
-	mattev@meta.com, michal.winiarski@intel.com, parav@nvidia.com, 
-	pasha.tatashin@soleen.com, praan@google.com, pratyush@kernel.org, rananta@google.com, 
-	rdunlap@infradead.org, rientjes@google.com, rodrigo.vivi@intel.com, rppt@kernel.org, 
-	saeedm@nvidia.com, schnelle@linux.ibm.com, skhan@linuxfoundation.org, 
-	vivek.kasireddy@intel.com, witu@nvidia.com, yanjun.zhu@linux.dev, yi.l.liu@intel.com
-Subject: Re: [PATCH v6 04/27] vfio/pci: Register a file handler with Live
- Update Orchestrator
-Message-ID: <20261110185305.GC519525.vipinsh@google.com>
-References: <20261102153656.1431701-1-vipinsh@google.com>
- <20261102153656.1431701-5-vipinsh@google.com>
- <au5T7qouVfxJSDmr@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O6Uit6jO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FE7C1F0089F;
+	Tue, 10 Nov 2026 19:44:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794339859;
+	bh=fWfqbq9OHseUAlW92SLhKNSaqa3qmI+MBczXn8z6J5A=;
+	h=Date:To:From:Subject:Cc:References:In-Reply-To;
+	b=O6Uit6jO3IsZoIfrOy3SW4hqltdD1ucWDADRC3HhxylC/zZnFAOdNMh7Q62k2iJNl
+	 98Y2Ol65S0WRG+Dsv/Fo7Ph6FVV+dR3TbRmS1vtGkkhsLH5/hY5NWEloToTLTMoBag
+	 zzgQOQqOrX+UUlJIXG4FKrP1ZqkyAhbuOtxsWlACnLrAEqwFf2U9RYYzM9W1DsZwAi
+	 dIrJ39C3ygTIBdBR7TmjPzKTghgaJaYX5iZ2CHTW5vBJUF1BeKaw76TENQUS21XL+u
+	 xyn3mkt8y8SEL4D9QbqvNuKdAE47PNLXd4Q4xe8DdoRvdrn8pRk/vOWngLU9PJ7WpG
+	 xy4in6w8m33zQ==
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -109,70 +48,312 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <au5T7qouVfxJSDmr@google.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 10 Nov 2026 20:44:09 +0100
+Message-Id: <DMRSE390GRTH.OZ9KS5QS8M4H@kernel.org>
+To: "Simon Song" <xinmengs@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v2 10/12] rust: vfio: separate common device handling
+ from PCI
+Cc: <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <alex@shazbot.org>, <jgg@nvidia.com>,
+ <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
+ <airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <aliceryhl@google.com>, <tmgross@umich.edu>, <jhubbard@nvidia.com>,
+ <ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <kjaju@nvidia.com>, <alkumar@nvidia.com>, <ankita@nvidia.com>,
+ <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
+ <boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+ <work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
+ <peter@colberg.org>
+References: <20261023154009.2246627-1-xinmengs@nvidia.com>
+ <20261023154009.2246627-11-xinmengs@nvidia.com>
+In-Reply-To: <20261023154009.2246627-11-xinmengs@nvidia.com>
 
-On Fri, Nov 06, 2026 at 10:29:06PM +0000, Samiullah Khawaja wrote:
-> On Mon, Nov 02, 2026 at 07:36:33AM -0800, Vipin Sharma wrote:
-> > Register a live update file handler for vfio-pci device files. Add stub
-> > implementations of all required callbacks so that registration does not
-> > fail. Register it with both live update framework and PCI subsystem.
-> > 
-> > This file handler will be extended in subsequent commits to enable a
-> > device bound to vfio-pci to run without interruption while the host is
-> > going through a kexec Live Update.
-> > 
-> > Put this support behind a new Kconfig VFIO_PCI_LIVEUPDATE. Initial
-> > support is added for no-iommu model vfio-pci devices.
-> > 
-> > Co-developed-by: David Matlack <dmatlack@google.com>
-> > Signed-off-by: David Matlack <dmatlack@google.com>
-> > Signed-off-by: Vipin Sharma <vipinsh@google.com>
-> > ---
-> > MAINTAINERS                            |  1 +
-> > drivers/vfio/pci/Kconfig               | 11 ++++
-> > drivers/vfio/pci/Makefile              |  1 +
-> > drivers/vfio/pci/vfio_pci.c            | 11 +++-
-> > drivers/vfio/pci/vfio_pci_liveupdate.c | 75 ++++++++++++++++++++++++++
-> > drivers/vfio/pci/vfio_pci_priv.h       | 14 +++++
-> > include/linux/kho/abi/vfio_pci.h       | 28 ++++++++++
-> > 7 files changed, 140 insertions(+), 1 deletion(-)
-> > create mode 100644 drivers/vfio/pci/vfio_pci_liveupdate.c
-> > create mode 100644 include/linux/kho/abi/vfio_pci.h
-> > 
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 5d1b58271989..167aa9d66ce8 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -28662,6 +28662,7 @@ F:	Documentation/ABI/testing/debugfs-vfio
-> > F:	Documentation/ABI/testing/sysfs-devices-vfio-dev
-> > F:	Documentation/driver-api/vfio.rst
-> > F:	drivers/vfio/
-> > +F:	include/linux/kho/abi/vfio_pci.h
-> > F:	include/linux/vfio.h
-> > F:	include/linux/vfio_pci_core.h
-> > F:	include/uapi/linux/vfio.h
-> > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-> > index 296bf01e185e..e8285ad93a69 100644
-> > --- a/drivers/vfio/pci/Kconfig
-> > +++ b/drivers/vfio/pci/Kconfig
-> > @@ -42,6 +42,17 @@ config VFIO_PCI_IGD
-> > 	  and LPC bridge config space.
-> > 
-> > 	  To enable Intel IGD assignment through vfio-pci, say Y.
-> > +
-> > +config VFIO_PCI_LIVEUPDATE
-> > +	bool "VFIO PCI support for Live Update in no-iommu mode"
-> > +	depends on PCI_LIVEUPDATE && VFIO_NOIOMMU
-> 
-> Can we handle this dependency in code instead of doing through
-> configs? Are there any build dependencies on noiommu?
+On Fri Oct 23, 2026 at 5:40 PM CEST, Simon Song wrote:
+> +/// A VFIO device, independent of its bus-specific wrapper.
+> +///
+> +/// # Invariants
+> +///
+> +/// The underlying `vfio_device` is initialized and remains alive while =
+borrowed.
+> +/// Callback contexts are borrowed only for the corresponding callback a=
+nd thread;
+> +/// only [`Normal`] references can be reference-counted.
+> +#[repr(transparent)]
+> +pub struct Device<Ctx: DeviceContext =3D Normal> {
+> +    raw: Opaque<bindings::vfio_device>,
+> +    _context: PhantomData<(Ctx, NotThreadSafe)>,
+> +}
 
-I can remove it but then by itself VFIO series will enable LIVEUPDATE
-irrespective of VFIO_NOIOMMU and it will just fail when someone tries to
-enable it. So, kconfig looks cleaner to me.
+I think this needs to be declared differently, see below.
 
-Can your series modify this kconfig and add (VFIO_NOIOMMU ||
-IOMMU_LIVEUPDATE)? Will that work for you?
+> +impl<Ctx: DeviceContext> Device<Ctx> {
+> +    /// # Safety
+> +    ///
+> +    /// `raw` must point to an initialized `vfio_device` that remains al=
+ive for
+> +    /// `'a`. The caller must provide the guarantees of `Ctx` throughout=
+ the borrow.
+> +    #[cfg_attr(not(CONFIG_VFIO_PCI_CORE), expect(dead_code))]
+> +    unsafe fn from_raw<'a>(raw: *mut bindings::vfio_device) -> &'a Self =
+{
+> +        // SAFETY: Self is a transparent wrapper; the caller guarantees =
+validity and context.
+> +        unsafe { &*raw.cast() }
+> +    }
+> +
+> +    fn as_raw(&self) -> *mut bindings::vfio_device {
+> +        self.raw.get()
+> +    }
+> +}
+> +
+> +// SAFETY: VFIO uses the embedded class device's refcount to own the ful=
+l allocation.
+> +unsafe impl AlwaysRefCounted for Device {
+> +    fn inc_ref(&self) {
+> +        // SAFETY: A shared reference keeps the initialized VFIO device =
+alive.
+> +        unsafe { bindings::get_device(&raw mut (*self.as_raw()).device) =
+};
+> +    }
+> +
+> +    unsafe fn dec_ref(obj: NonNull<Self>) {
+> +        // SAFETY: The caller owns the VFIO reference being released.
+> +        unsafe { bindings::put_device(&raw mut (*obj.as_ref().as_raw()).=
+device) };
+> +    }
+> +}
+> +
+> +// SAFETY: Ordinary VFIO references expose no unsynchronized callback op=
+erations.
+> +unsafe impl Send for Device {}
+> +// SAFETY: Shared access only changes the embedded class device's refere=
+nce count.
+> +unsafe impl Sync for Device {}
+> +
+> +/// Callback data stored after the bus-specific C device structure.
+> +///
+> +/// # Invariants
+> +///
+> +/// `reg_data` is dangling when unpublished; otherwise it borrows pinned=
+ data kept
+> +/// alive until callback access has ended. `open_data` is null outside a=
+ successful
+> +/// first open, otherwise owns a pinned allocation until the last close.
+> +/// The bus-specific layer drains callbacks before releasing either allo=
+cation.
+> +struct CallbackData<R: CovariantForLt, O: ForLt> {
+> +    reg_data: UnsafeCell<NonNull<R::Of<'static>>>,
+> +    open_data: UnsafeCell<*mut O::Of<'static>>,
+> +}
+
+We don't need to arbitrarily limit registration data to require covariance,
+eventually we will need invariant data.
+
+Also, I think we don't need ForLt/CovariantForLt at all. Both types are
+associated types of an ops trait, so they can just be GATs, i.e.:
+
+	type RegistrationData<'a>: Send + Sync + 'a;
+	type OpenData<'a, 'data: 'a>: Send + Sync + 'a;
+
+> +
+> +#[cfg_attr(not(CONFIG_VFIO_PCI_CORE), expect(dead_code))]
+> +impl<R: CovariantForLt, O: ForLt> CallbackData<R, O> {
+> +    fn new() -> Self {
+> +        Self {
+> +            reg_data: UnsafeCell::new(NonNull::dangling()),
+> +            open_data: UnsafeCell::new(core::ptr::null_mut()),
+> +        }
+> +    }
+> +
+> +    /// Access registration data without allowing its erased lifetime to=
+ escape.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// Registration data must be published and remain valid through thi=
+s call.
+> +    /// The caller must exclude concurrent changes to `reg_data`.
+> +    unsafe fn registration_data_with<V>(&self, f: impl for<'a> FnOnce(&'=
+a R::Of<'a>) -> V) -> V {
+> +        // SAFETY: The caller keeps registration data alive and excludes=
+ mutation.
+> +        // Covariance permits shortening its erased lifetime to this bor=
+row.
+> +        let reg_data =3D unsafe { (*self.reg_data.get()).cast::<R::Of<'_=
+>>().as_ref() };
+> +        f(reg_data)
+> +    }
+> +
+> +    /// # Safety
+> +    ///
+> +    /// The caller must be an I/O callback while VFIO keeps the device o=
+pen.
+> +    /// Registration and open data must remain valid, with their pointer=
+ slots
+> +    /// unchanged throughout the call.
+> +    unsafe fn callback_data_with<V>(
+> +        &self,
+> +        f: impl for<'borrow, 'data> FnOnce(&'borrow R::Of<'data>, Pin<&'=
+borrow O::Of<'data>>) -> V,
+> +    ) -> V {
+> +        // SAFETY: The caller excludes open/close and unregister while b=
+orrowing the data.
+> +        unsafe {
+> +            self.registration_data_with(|reg_data| {
+> +                let ptr =3D (*self.open_data.get()).cast::<O::Of<'_>>();
+> +                // The data lifetime stays independent of the callback b=
+orrow,
+> +                // so borrowed OpenData fields cannot be stored back int=
+o OpenData.
+> +                f(reg_data, Pin::new_unchecked(&*ptr))
+> +            })
+> +        }
+> +    }
+
+I don't think we necessarily need the extra closure, we only ever pass this=
+ to
+callbacks of the ops trait, but it would allow us to make the accessor safe=
+:
+
+If we move them onto Device directly, we can leverage the type states. E.g.=
+ we
+can group them with traits and only implement e.g. callback_data_with() for=
+ type
+states that allow for this.
+
+> +
+> +    /// # Safety
+> +    ///
+> +    /// Call only during exclusive first open, with no existing open dat=
+a.
+> +    /// All resources borrowed for `'a` must remain valid until `close()=
+` returns.
+> +    unsafe fn open<'a, I: PinInit<O::Of<'a>, Error>>(&self, init: impl F=
+nOnce() -> I) -> Result {
+> +        // Allocate before calling the driver so allocation failure cann=
+ot follow open.
+> +        let data =3D KBox::<O::Of<'a>>::new_uninit(GFP_KERNEL)?;
+> +        let data =3D data.write_pin_init(init())?;
+> +
+> +        // SAFETY: Only the owning pointer moves; close drops the alloca=
+tion in place.
+> +        let raw =3D KBox::into_raw(unsafe { Pin::into_inner_unchecked(da=
+ta) });
+> +        // SAFETY: First open is exclusive; the caller keeps borrowed re=
+sources alive
+> +        // through close. Lifetimes do not affect the allocation's layou=
+t.
+> +        unsafe { *self.open_data.get() =3D raw.cast::<O::Of<'static>>() =
+};
+> +        Ok(())
+> +    }
+> +
+> +    /// # Safety
+> +    ///
+> +    /// Call once after a successful open, with all callbacks drained an=
+d the next
+> +    /// open excluded. Registration data and borrowed resources must rem=
+ain alive.
+> +    unsafe fn close(&self) {
+> +        // SAFETY: Last close exclusively takes the allocation published=
+ by open.
+> +        let raw =3D unsafe { core::mem::replace(&mut *self.open_data.get=
+(), core::ptr::null_mut()) };
+> +        // SAFETY: The allocation came from KBox::into_raw and is destro=
+yed without moving it.
+> +        unsafe { drop(KBox::from_raw(raw)) };
+> +    }
+
+This seems like a bit of a back and forth because logically we want those
+methods on vfio::Device so you can take advantage of the type system
+information.
+
+But in this implementation CallbackData lives in the vfio::pci::Device, lik=
+ely
+for memory layout reasons.
+
+But we can also do something like this:
+
+	#[repr(C)]
+	pub struct DeviceBase<Raw, R, O, T, Ctx =3D Normal> {
+	    raw: Opaque<Raw>,
+	    data: CallbackData<R, O>,
+	    _context: PhantomData<(T, Ctx, NotThreadSafe)>,
+	}
+
+	// vfio.rs
+	pub type Device<T, Ctx =3D Normal> =3D DeviceBase<
+	    bindings::vfio_device,
+	    T,
+	    <T as Operations>::RegistrationData<'static>,
+	    <T as Operations>::OpenData<'static, 'static>,
+	    Ctx,
+	>;
+=09
+	// vfio/pci.rs
+	pub type Device<T, Ctx =3D Normal> =3D super::DeviceBase<
+	    bindings::vfio_pci_core_device,
+	    T,
+	    <T as Operations>::RegistrationData<'static>,
+	    <T as Operations>::OpenData<'static, 'static>,
+	    Ctx,
+	>;
+=09
+Of course we can't have AsRef<vfio::Device> with this, but we don't need it=
+.
+
+For instance, there's only one AlwaysRefCounted impl needed:
+
+  unsafe impl<Raw: RawDevice, R, O, T> AlwaysRefCounted
+      for DeviceBase<Raw, R, O, Normal>
+  {
+      fn inc_ref(&self) {
+          let vdev =3D unsafe { Raw::raw_vfio_device(self.as_raw()) };
+
+          unsafe { bindings::get_device(&raw mut (*vdev).device) };
+      }
+
+      unsafe fn dec_ref(obj: NonNull<Self>) {
+          let raw =3D unsafe {
+              Opaque::cast_into(&raw const (*obj.as_ptr()).raw)
+          };
+
+          let vdev =3D unsafe { Raw::raw_vfio_device(raw) };
+
+          unsafe { bindings::put_device(&raw mut (*vdev).device) };
+      }
+  }
+
+We can either rely on the fact that vfio_pci_core_device's first member is =
+the
+vfio_device, or make it explicit with something like:
+
+	/// Maps a C device structure to its embedded VFIO device.
+	///
+	/// # Safety
+	///
+	/// Implementations must return the address of the `vfio_device` at the
+	/// beginning of `Self`, preserving the input pointer's provenance.
+	unsafe trait RawDevice {
+	    /// # Safety
+	    ///
+	    /// `raw` must point to an initialized, live `Self`.
+	    unsafe fn raw_vfio_device(
+	        raw: *mut Self,
+	    ) -> *mut bindings::vfio_device;
+	}
+
+Not that this isn't only to make use of some type system information (there=
+'s
+other ways to achieve that too) but also to make vfio::Device useful for no=
+n-PCI
+implementations, as they need CallbackData too.
