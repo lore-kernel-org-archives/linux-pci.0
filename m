@@ -1,129 +1,130 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794320707;
-	b=MnLugNZUPFcjT+t5Pid/vGqFBmeW/8BBrt4QntWrwFmU6QkvAOe4x0z036OhQVTaROCX
-	 +PRa26ExMsOv0kQ1fIS4E1sAz8asd9JenJe3wGPrX9LZ8xwyhi5latuZxp9zT7d/p4/MT
-	 SH3cb8VIzJ/NV73krrUJJme/mt1oSGf5Ce3/5CgQgZ/rdkmoJfzoZhdrQ3vLk38Rf2zdo
-	 arZXBhgJ2xwQcBc2AjWBKZrMgga8JWlHxhfJH73561hs553wOLS14UZFbre5tMSDj3J0i
-	 fnACo7F8gEDKYB12iXTWMWlrfGqBPtW2imID/KXKLrkUmo0B2CeB7y5MT7R0M7OFCJA==
+	t=1794320737;
+	b=EnCr9uOb1d3T3umpLrErWsC2i6sfLgWHx0h9YsO4BJPgeECfAcI7M6kRTsq+W7o3iHe5
+	 eeTPvciDIglitBY+CPCAMz9EenMzRKZEoq6jb/D/j8YzSP980jXzRe/Qj1VJJ2N7KX0wj
+	 ToFH4Fb8ZCW+8rz3xz4yYO/F76yBO+ISmRZ0ySGi7N0l94eaelkBqNdZHiVepK4H1+SFo
+	 RCsIbtdGhKsie9LHDHQrlF5veGS5NzJzvNQdL+s448525sRLjTlDH42Ix89FRB+fg0hFU
+	 82kdVJM5cQH9nxlDPo2RV7ciiNyo8sibawOKZqQ/2Lr2/G2+YBzX0MhoRVzCUAfmJSQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794320707;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spamd-Result:X-Rspamd-Server:X-Rspamd-Action:
-	 X-Spam-Flag:X-Spam-Score:X-Spam-Level:X-Rspamd-Queue-Id;
-	bh=vFU8SLB5yQFXTKmgyVP3p6vbPpLP3uckbwzKSwj5Zbg=;
-	b=lkoczamsdELe405gDE7OFxffnvJt2CQ3OB2Go9bN+60QvDnVWC8M0nkYDEv+TXPafvn0
-	 ft7ldf8Wn5qO/i3TLlY0qfVOptcraVtbiDqHSOctm7vZ3eGvZBIPC0hmwWLl7tG+kj5aI
-	 1NWus5WcGv6W6PfXAMwiIdnN59pMlXW+6m6/woNJ0LBIBjD/gcqIGyhYTMWmkYgNFRFEA
-	 pzIo/I6QGeHTPC6/VfYjriXjLS+AIqBgdBDas/e8RPKcl35K30jO5g0YfJZO2hvywOYqo
-	 ZkS1vzOrDuA8Lc5lBGN+Cx1kRNeJUdH2lX4c5XZliXP48jz3gBBNgu7e187pwTy9//g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794320737;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=lkAP1m7U86A6D3jq5FI3LtbBiJBALHf/XTrdqm7iRv0=;
+	b=seQfE8CUGI/pYTrOzc1k+e9+mET8tqqFQ1pDefeiIyf7xnFlKQrkKdXtgDBYSiolb2Iw
+	 0cJELR8b6JD9WPQ8HG0RAcdC7NgSmbHLKnOTELn9DoSdlwUdmygPBh7TalO3AzuAMIkIo
+	 jWEVQl90qBuaKPnQ5Kyb4W3SwMg5Yc4cbeH5qjTmhGbSqqDxQaO13cXxJD2Zz8oWMc7sS
+	 ruNAK23HlD04NMnDHaqbPLW9Dv/XUQReea8R1Ug3JcFNUCzz/NgBca4WCvyuoR6c4dZmo
+	 qFgHS1NRGwMbuYv2TM/BP08Vk+hwdHPxGTlrYrD/klnq/zFnMkeqBi8BJ97RWVkKimA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=bjk4WUGs;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DcZW88hG;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=bjk4WUGs;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DcZW88hG;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=none header.from=ziepe.ca;
+	spf=pass smtp.mailfrom=ziepe.ca;
+	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=YHCNwWvx;
+	arc=none smtp.remote-ip=209.85.219.52
+Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47EF460A2613;
-	Tue, 10 Nov 2026 14:25:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47EF460A2613
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A85360A2603
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 14:25:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0A85360A2603
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=bjk4WUGs;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DcZW88hG;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=bjk4WUGs;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DcZW88hG
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id A263621E96;
-	Tue, 10 Nov 2026 14:25:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794320704; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vFU8SLB5yQFXTKmgyVP3p6vbPpLP3uckbwzKSwj5Zbg=;
-	b=bjk4WUGsRYs0sP8E0ONkDW8hyxwCcqK6F/Z+No2aVyfis1MlyWmiOhtWAdfYs7F/8CipUe
-	M6ChAxycGmD+5TO2yaDPV3YEJYRhQ7n9jG4KZpA9RGENMEDcySYwTh7Zpl9Q1XnchbyaQz
-	9csObL3BU5hnSJHNTzbwr+PQnEnCSJ4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794320704;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vFU8SLB5yQFXTKmgyVP3p6vbPpLP3uckbwzKSwj5Zbg=;
-	b=DcZW88hGUmkolX453pml7rhjUnXP/geJBXTnLO3CcrhsdfC+rAH/ij69WBdSoxJA/XOD03
-	2vl1fFNAf7DiXYCQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=bjk4WUGs;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=DcZW88hG
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794320704; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vFU8SLB5yQFXTKmgyVP3p6vbPpLP3uckbwzKSwj5Zbg=;
-	b=bjk4WUGsRYs0sP8E0ONkDW8hyxwCcqK6F/Z+No2aVyfis1MlyWmiOhtWAdfYs7F/8CipUe
-	M6ChAxycGmD+5TO2yaDPV3YEJYRhQ7n9jG4KZpA9RGENMEDcySYwTh7Zpl9Q1XnchbyaQz
-	9csObL3BU5hnSJHNTzbwr+PQnEnCSJ4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794320704;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vFU8SLB5yQFXTKmgyVP3p6vbPpLP3uckbwzKSwj5Zbg=;
-	b=DcZW88hGUmkolX453pml7rhjUnXP/geJBXTnLO3CcrhsdfC+rAH/ij69WBdSoxJA/XOD03
-	2vl1fFNAf7DiXYCQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 737AB13479;
-	Tue, 10 Nov 2026 14:25:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id yxLEE0Ap82qXIAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 10 Nov 2026 14:25:04 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id A39EC2253A; Tue, 10 Nov 2026 15:24:59 +0100 (CET)
-Date: Tue, 10 Nov 2026 15:24:59 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
-	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH v2 14/51] proc: sysctl: don't stop readdir at an entry
- that is being unregistered
-Message-ID: <efix7fc3j7xbogyb3zaotsi3bwl4s4p6nvwrnlpbue5khrlf43@orqtyoglh5b7>
-References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
- <20261104-work-procfs-bugfixes-v2-14-bbf7d5546809@kernel.org>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=YHCNwWvx
+Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-91c11468b5fso18427676d6.0
+        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 06:25:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1794320736; x=1794925536; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=lkAP1m7U86A6D3jq5FI3LtbBiJBALHf/XTrdqm7iRv0=;
+        b=YHCNwWvxZ2i5OqHQ+YUqQLCC1rzv2GgovdQMVYEwKh33tRosyn7GSIJuDa41qmh/kW
+         zi7LyeKhFQOPYEl+gUniDWgNdaawKzYRwoS7Dq0Cx9eafD18pzSWOBgk0COIE+DG118i
+         S5bwR2UJTtx2uoqYAeHAyK/dxjo4bAnlVjVlKAp5uCve1qemG+leX9AgPW5FTMSGevza
+         aK8L0rcHuwhC3z9DNrC7UjQwC0QG7d3DQfBuriogPZkFVd264tz+6Hml+iB06xl4HH1G
+         y8/vRZyBHrGKwiKkupF3SKK0bECjiQV15fzHQ3Z56gBpctujXKC1iL8VZGRRSe6K9b4t
+         6xPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794320736; x=1794925536;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=lkAP1m7U86A6D3jq5FI3LtbBiJBALHf/XTrdqm7iRv0=;
+        b=GX6+kCzFQLpdnRK77zvJnXVAvDwSTAOFDG3qMID8OnLF+q0mYupZHsvmr6RmHSBv9i
+         u1NtjOj0K9qfaG6mD+effgPHJaWk6oBIYnCTHLGoHEG4So/4BS9S7FP9OzPQM//eD9/l
+         1yAXz5FEPAGMN6iAlaITIFCwaLU2at0w7QhzfVCWeJ+7XrE1dpG5htoqhgmey3WH3Gq1
+         AfDGRRGfLe8VPezBLqoYcxdvjirfxy4KQ2V8q92k45vECBjif682i1bI1YfBavgUf4Yc
+         awSVzBy3UWuXnrI+98ow7bdcvCtn1njsLxVYhTKONXbX4zF1ox+0Odw0ySzT2W2eb9gK
+         Gaiw==
+X-Forwarded-Encrypted: i=1; AL+hErG5qYJCRRxTKBweXxVHv0hS2ikAAximlKUKtBteaYKgpGr/3Tuv4DSSPCM2xnfaasHSs+6/DmmGMOU=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8Jz8vZbuTegrp8Jm/wFtCpGL3M9sbelW+xVi5aVeJ289SKWHuK
+	KfWJKk3jCf6mxOQA3eIyjCnHZBDIYR9bdkWl6YmeIczfo7CUKJd17sP3Vq5qxqQyVqU=
+X-Gm-Gg: AYBFou3FSeyyMgTxhGKl8YlIOkF5kRJr5uwutlMNXx9xFa4VFS2PljlBiBaGnTw8k9J
+	otpTDqLR+KdjpbGI6jcHGRnTGg4dE07UmJ6g0NhQo+T4FgfCYlVDybQ8xfa+uG/8zIKQEVnRhAZ
+	NUd2d7B+5oTH3HzNAFSlxHD9Ig9aOKgQSPvXa7DjH/IFyvMEsQSHRRTvRiwXFI1DN5mWtY5uzu5
+	OEEPLyeqexsCfsK76YhJlr4As9fzJl6pNvKWBZZzAt7TkoCLuaJu9au4CdJXoh2u0c6bBJobgTI
+	vBmqzFS5I339uw3Zgg0dFwvV0JstZYjvo5u9KFFmwMMRifms8MlX0xV9lB30NJ7eydmmHqSSn9y
+	AbLOulfJVvRtHJCISFIkqo8kTHjGZdT6ZNj7JST5sGZ/oc1LLIhti3jm5k490FOHP/PUE4+v7BK
+	eZib7Al3i0abVqAuILH2ANxPqLfCbj9xybOXnFzFldxHHkKKYgmQKjHrJNnpeD+H3KXfMGoWAok
+	MMkD+1XJrnBKVA3Rb7uGpLgQQF4msKzysKMbtghEBFCFliTOQNLhBg1AuKW1KwMsLy5XWuTkps7
+	zqQuVgNvzFmFZM3KJ647Ra1c1711ZU0cfpmcycXJn0Zq3HrR9JC2tG7zHFoWgJpx2LRqJsl1SO/
+	VAhYfepDvkraA
+X-Received: by 2002:a05:6214:5281:b0:91b:87cc:6d3e with SMTP id 6a1803df08f44-91eef628900mr47274136d6.1.1794320735682;
+        Tue, 10 Nov 2026 06:25:35 -0800 (PST)
+Received: from ziepe.ca (hlfxns010zw-159-2-239-150.pppoe-dynamic.high-speed.ns.bellaliant.net. [159.2.239.150])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ef0501c1csm21854426d6.30.2026.11.10.06.25.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Nov 2026 06:25:35 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xQmn0-00000005tbF-1WYc;
+	Tue, 10 Nov 2026 10:25:34 -0400
+Date: Tue, 10 Nov 2026 10:25:34 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev
+Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
+Message-ID: <20261110142534.GY663069@ziepe.ca>
+References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
+ <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
+ <20261110122237.GG8635@unreal>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -135,92 +136,94 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-14-bbf7d5546809@kernel.org>
-X-Spamd-Result: default: False [-11.51 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	MIME_TRACE(0.00)[0:+];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	R_RATELIMIT(0.00)[to_ip_from(RLpnapcpkwxdkc5mopt1ezhhna)];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[60];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,suse.cz:dkim,suse.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -11.51
-X-Spam-Level: 
-X-Rspamd-Queue-Id: A263621E96
+In-Reply-To: <20261110122237.GG8635@unreal>
 
-On Wed 04-11-26 18:47:00, Christian Brauner wrote:
-> proc_sys_fill_cache() creates the inode of an entry that has no dentry
-> yet. Since ace0c791e6c3 ("proc/sysctl: Don't grab i_lock under
-> sysctl_lock.") proc_sys_make_inode() refuses to do that once the table
-> is being unregistered and fails with -ENOENT. readdir takes every table
-> it lists into use and unregister_sysctl_table() marks the table as
-> being unregistered before it waits for readdir to let go of it. So an
-> entry that is unregistered right then makes proc_sys_fill_cache() fail,
-> proc_sys_readdir() stops there and returns 0. If that getdents64() call
-> hadn't emitted anything before that entry userspace sees the end of the
-> directory and never gets the entries behind it. A listing of
-> /proc/sys/net/ipv6/conf can end early that way while a device goes
-> away.
+On Tue, Nov 10, 2026 at 02:22:37PM +0200, Leon Romanovsky wrote:
+> On Mon, Nov 09, 2026 at 01:53:02PM +0000, Robin Murphy wrote:
+> > On 09/11/2026 7:33 am, Leon Romanovsky wrote:
+> > [...]
+> > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> > > index b486b8bbd1fcd..8be2a246d4903 100644
+> > > --- a/drivers/iommu/iommu.c
+> > > +++ b/drivers/iommu/iommu.c
+> > > @@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
+> > >   static int iommu_get_default_domain_type(struct iommu_group *group,
+> > >   					 int target_type)
+> > >   {
+> > > -	struct device *untrusted = NULL;
+> > > +	struct device *restricted = NULL;
+> > >   	struct group_device *gdev;
+> > >   	int driver_type = 0;
+> > > @@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
+> > >   		driver_type = iommu_get_def_domain_type(group, gdev->dev,
+> > >   							driver_type);
+> > > -		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
+> > > +		if (dev_is_pci(gdev->dev) &&
+> > > +		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
+> > 
+> > I think this should be the generic device_is_adversarial(gdev->dev) now - in
+> > fact probably all the dev_is_pci()/to_pci_dev() stanzas aren't conceptually
+> > PCI-specific, just an artefact of the current "untrusted" flag being so.
 > 
-> So skip an entry whose table is being unregistered, like readdir
-> already skips a link it can't follow. Lookup treats such an entry as
-> gone too since ea5751ccd665 ("proc/sysctl: don't return ENOMEM on
-> lookup when a table is unregistering").
+> I wanted to do the same, but iommu_get_default_domain_type() may be called
+> before the PCI device's trust level has been set. At that point, we are
+> still in "disabled" mode, whereas device_is_adversarial() checks for
+> "adversarial" mode.
 > 
-> Fixes: ace0c791e6c3 ("proc/sysctl: Don't grab i_lock under sysctl_lock.")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+> The below is from AI, I asked to present me the path for that:
+> --------------------------------------------------------------------------------
+> For a newly discovered PCI device with an available IOMMU and a new IOMMU group:
+> pci_scan_single_device()
+>   pci_device_add()
+>     device_add()
+>       bus_notify(dev, BUS_NOTIFY_ADD_DEVICE)
+>         blocking_notifier_call_chain()
+>           notifier_call_chain()
+>             iommu_bus_notifier()
+>               iommu_probe_device(dev)
+>                 __iommu_probe_device(dev, NULL)
+>                   iommu_setup_default_domain(group, 0)
+>                     iommu_get_default_domain_type(group, 0)
+> 
+> For a device whose initial policy is adversary, its state during that call is:
+> dev->trust_policy          = DEVICE_TRUST_POLICY_ADVERSARY
+> dev->trust_level           = DEVICE_TRUST_DISABLED
+> dev->trust_committed_level = DEVICE_TRUST_DISABLED
+> dev->driver               = NULL
+> 
+> device_is_adversarial(dev) = false
+> 
+> The active level changes later, during binding:
+> really_probe()
+>   device_trust_prepare()
+>     __device_trust_prepare()
+>       WRITE_ONCE(dev->trust_level, DEVICE_TRUST_ADVERSARY)
+>   dev->bus->dma_configure()
+>   call_driver_probe()
 
-Looks sane. Feel free to add:
+The ordering here is wrong, this is a consequence of splitting this
+into different series. I don't think we need to fix it in this series,
+but as a followup. For now I would aim to make 'no functional change'
+and still follow the ACPI selection during default domain creation.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+The long term goal is to detect that the trust level is disabled
+during iommu_probe_device() (ie we are running in a secure booting
+mode), attach the device to BLOCKED (which should be a NOP) and defer
+allocating the default domain.
 
-								Honza
+This would preserve the DRTM iommu & ATS blocked behavior through
+until driver binding, giving userspace a chance to do an attestation,
+turn on link ide and so on before exposing the system to DMA from the
+device.
 
-> ---
->  fs/proc/proc_sysctl.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
-> index 6c0859c66563..b4a309d49698 100644
-> --- a/fs/proc/proc_sysctl.c
-> +++ b/fs/proc/proc_sysctl.c
-> @@ -704,6 +704,9 @@ static bool proc_sys_fill_cache(struct file *file,
->  			if (unlikely(res)) {
->  				dput(child);
->  
-> +				/* skip an entry whose table is being unregistered */
-> +				if (res == ERR_PTR(-ENOENT))
-> +					return true;
->  				if (IS_ERR(res))
->  					return false;
->  
-> 
-> -- 
-> 2.53.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Once userspace sets the trust level and binds a driver then we can
+allocate a default domain using the user set trust level and avoid the
+above problem.
+
+For the CC VM use case today there won't be a vIOMMU, and there is an
+indepenent control for DMA ENABLE in the TSM driver so this doesn't
+matter right now for CC.
+
+Probably put this detail in the commit message
+
+Jason
