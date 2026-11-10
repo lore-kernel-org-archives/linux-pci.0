@@ -1,85 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.172
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794316236;
-	b=wEHS2jsYKwaoGtbxXkk09RyGJ4gT350VV/cGrHUPiUWOnyfsWd6tjkPFM8Ur9xT48+F/
-	 6fcJHwn+E5KyqC2bwGPTEkeyW8nr8bxtqpapph/rL+7CL/6yxTQ8ePss2/FgZGOG8n7Na
-	 1j1Ax04dbIdGNk/PIFWv0X8OXNXwEA5qvSHEkT2vQtnlNMmCXrIDqqld2X5Z1pSOea4Ig
-	 WlgIav4Mjs4DBiKYU+/YO02kDe000raulU3iutT2i+dEBKbHoLh4/7UxIgshTBkBn1APP
-	 gtZQbE4QcjBiE4TcCz7KEqnT5gChct0lm0GhwjkfC7Tt05Rqy/r+OaII5tn3CIfHkDw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794316236;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 To:Cc:Subject:From:X-Mailer:References:In-Reply-To;
-	bh=XQDfTOBLyQYKItk/7IbkqTdv3CPMUC9LzGhAb3DHHto=;
-	b=TWnOAqYRpH2yPPUlCkAaN0lrAmEK17inArdjUvbzUuY+rWDSm/BiUqjZUJeL4lQNjNfz
-	 3aqPb80Z66eHp6UOok679CTc1zTO7OyU9811cnZAzFZWgqJC+tBX6IZy03cGHCM6Twwuc
-	 B6gbHIL9g0NT0eQxMm5kXW5JHJljLVzbnSWITCO2vgDKBwljcMwCyS0adZi5IswnJSSoS
-	 IG9th0QI7GT3toUT1CE2rj2sZlXkL78uLSD2WR1J+AQpVamLu4XQ71hjl63ffakVjsJLk
-	 WqemhcUDoLmOLy3gnSmZd2MIFCQRPZyaw/CB5zIpSKXSX8OqB0e8YvyE4BdhKS/HjqA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=soleen.com;
-	spf=pass smtp.mailfrom=soleen.com;
-	dkim=pass header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=giz8XH7k;
-	arc=none smtp.remote-ip=209.85.221.172
-Received: from mail-vk1-f172.google.com (mail-vk1-f172.google.com [209.85.221.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.94
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794317807;
+	b=krRV+0Ee/eqGYZLVtw5W0CvDi1MMCW/eXu1WtS/8RCOKr23yDu5aX2GttF15Bj7oIO//
+	 b2thyurh7VjN3I9Zf2qQ+eg33v64Kb/wJkVutKlB30+ynFaVQgxcHwMZmkMaU0GaCAWzt
+	 AfpUQyqjBrah4rG1EhiXUN32y7bbqRh198xdVIWdXaSOqA2bfD8fSqsWpLsroBxG6tZ1w
+	 nrZLyrwyC4r6KeC+V8tp5PFQjvvIYv3vzdo2yQExYCNsuXUt+ADSR80uBKKKIShsCZmrQ
+	 uWTtHAlQlhPlApBkTT2wnWZF07yKasgEDwBk4+ZDFO9Uw7AiSZsrL51qys4eDZE2xqg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794317807;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:Feedback-ID:X-Zoho-CM-AccountID:
+	 X-ZohoMailClient;
+	bh=0azMahU3OokpLVsuQ5UXOF5UyDmli+pSUQLgONyqu+4=;
+	b=U3V5T3e8nGmN9P6qkV0LHrb5ZMNS7S4kLSyIkGF987uSs79S4HlniszNapgOZ3ktkyOq
+	 P9wJkhJpYbLxFuu918oi7PCxwaUFXa96pMWxw04yjFwyKsGshZyX2whSDPrERbz2S2vq2
+	 xMXHjOpVHrrlWKQylGJ5EJqJb09gsM9O7fJhVgzfoBWp6zH0p1QsFBODLrl258gv/lTTB
+	 dSCtXe+ghTYVcyIYb0QPH+GtU+FUBOW0CAIx6s4iK8KbAh42zKC0lNSTQ7HeMplfL5KRX
+	 mdxQxVKZAJ90dCS/84fvNmxYM6VFV05tDMF0iNNFz/QQT84n/v2ilD4zwss83ltrxwA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=zohomail.com;
+	spf=pass smtp.mailfrom=zohomail.com;
+	dkim=pass header.d=zohomail.com header.i=@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=Uahep5AR;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.94
+Received: from sender5-pp-o94.zoho.com (sender5-pp-o94.zoho.com [165.173.182.94])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C963060A2623
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 13:10:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C963060A2623
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64E78606A74C;
+	Tue, 10 Nov 2026 13:36:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 64E78606A74C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.a=rsa-sha256 header.s=google header.b=giz8XH7k
-Received: by mail-vk1-f172.google.com with SMTP id 71dfb90a1353d-5eadef147ffso616213e0c.3
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:10:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1794316235; x=1794921035; darn=vger.kernel.org;
-        h=in-reply-to:references:from:subject:cc:to:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=XQDfTOBLyQYKItk/7IbkqTdv3CPMUC9LzGhAb3DHHto=;
-        b=giz8XH7kLVNdvxOASwgI4RprGKiyUEsoiMXkvupuqdbq9I7LXpuFZqF9NAaqie1qMr
-         HNJZv2mOnI1c14z3zIJwnN7vIs8ky6CILsvv2CM0qmoOH9g3iRbx1bbXTS7NHMeYMWDc
-         T1E3X751NjsqCQfFyFJFZ/1wwBrMlG9vrd5wNzsn7G8Ze3LfFR7gBEFXW/avDW9IJBDC
-         tg48AzOGXWZzS3cj3uRy9HUOHAvypw2biHfmU5mc8WkPHCq5oCLx7A1KH9y3W7p0DbVV
-         Z8ZPRJ/mvn6eRb0cH+TTlVE5RtTkT5jIfBviqNGhmYhHP7IR91Dl8nmTHPnqTd/K3rGg
-         w4sw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794316235; x=1794921035;
-        h=in-reply-to:references:from:subject:cc:to:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=XQDfTOBLyQYKItk/7IbkqTdv3CPMUC9LzGhAb3DHHto=;
-        b=TsK9FWOsc8BIGU4CJWKHcchnt7XBSjo8I6uvPVOsesYUdu3vlpwZyMM1P9MlI1vEeB
-         3tv3T+7faiewRj3utOa+oSQhGAczj7WfgfKvyqpgDmeziBFdwFN++zzvK+8l31M6kJxw
-         +9P2BOVsbzU6Klwmmj6NPNV7vw25MOZ4ekZLK0uFWAiWiZxtmRjsjwEzR8zXPmbDGPz4
-         r7X19OQBLLOOAULnPzqcQGH/a7zX+N8wgfAPOztxTz8yJUeaVwltICNKL4gc3fxDnJ5U
-         kaRXnvVX5VARpXnMur3DtykaRV5RMR6+gzn32rdmMdm1Mfo3VbNueojXdU02CY1tzWG4
-         8ulQ==
-X-Forwarded-Encrypted: i=1; AL+hErF64Xs21Mqt1ROqgQwHIQwmWxjMagg778QIysHkH+Epp7F6mtrK1/PBBs3UpwdkmvVbCLrHgzsODsU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+JfIRIY34yqKV/ZaqkYrwGG1Hnv99FVFS+31KJWkQxMnKvwKyL
-	02h0e7xK53o3LL7IpQf3Nz/oFmjN27mC3tBfGgxUttEeuRjJ1mrOonHJSWiqRAkCS1I=
-X-Gm-Gg: AYBFou2AcFkLCyQfBHO1eORB7W9DSOHKm2h+NYCkzzYIktp93u94+pIcIVW9xNObep/
-	WJoD5B0CSkQGlnUxK18ENRp1PZDZsvFG9l3pD2b4PF3KiAI9880ZyRof3D/sknXQhYlFXqYTJd3
-	C2sBQBJubkXSDQxkn2v7cWrlb57wFhNbz42E/R8cxiqOC9vFajnRWP3edRiS7zPmGfmyUc4wQbi
-	ziJXlNhrqYuNqrPrH44fSUlOIGDqv/wtGTklZ3L/ZEEnUBuLHEjS2oKC33RMUfNEAKHnYUZB5x+
-	U3HZUKZlxuzIr/EXakjbvylYeEkYIIl3/FlySqPnnN9NkbSAS60p8/SGC1JiAGTzYgsKjNsSCWq
-	HfeuWqwA3Mc/JHghJOVZk+IpCuQUBU/DKwJqhPSVHUeLgJyQm7e03a4UjbVGraGvmDJA0GVVbap
-	0jEulm5NF2GZjBzEBn8f1wGOzPNHeHH+n0CgchVwwf2RgzTIEe0dPtZwdEy+ga13qRjoPSEmcTq
-	GZh0Cq9hXJaMhFvGVWv/v4LE2gl0hOBGt7RystVGJUHqZV1rasYZn6aW6pwt65yaO8fS7tFHotn
-	MppGZw8ZiJmzdUmf5Jg22PNZUcZ4/8vgFzB4przZXa+0DvySZXKqUiRvcmL0lpsiSwpWYEA8JgO
-	A/cr7MCsYR4Qy65yox+bQ3cBnfxtfQ3s=
-X-Received: by 2002:a05:6122:222a:b0:5c7:fbb5:6ea0 with SMTP id 71dfb90a1353d-5ee0d068066mr932090e0c.4.1794316234604;
-        Tue, 10 Nov 2026 05:10:34 -0800 (PST)
-Received: from localhost (64.167.245.35.bc.googleusercontent.com. [35.245.167.64])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-99c20081409sm1695863241.8.2026.11.10.05.10.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2026 05:10:33 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=zohomail.com header.i=@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=Uahep5AR
+ARC-Seal: i=1; a=rsa-sha256; t=1794317778; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=K4/+UttRAjzAJ3tYTbL5chZCJ5VRYGIvtDflTCJkgEt4DbDydg5RAmAbarg8p+uCcJUOUYOoCJGRwe8Z/FD5PlkcUf0Y9DpvJtryT619TE9IS9NWNPSCfJTQ8xTpoeJ1QC+0GdEw6r0KWxE7bpAjMaYA+3oA/F2yqUcp2dAeN8I=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1794317778; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=0azMahU3OokpLVsuQ5UXOF5UyDmli+pSUQLgONyqu+4=; 
+	b=LqNg3qfY7VB9fLy5VfuDjI4o28UPGBLncjpx1Y6lOwXxcBX1YWueXy4rpZEibW7t52hoAQo0SqF0YHrIS0iw5wW0QdmLoLq52Z8TBpp975nqetk8Z4Rmc6GwWaCHoh+tJieSewj820E3qSCGP8+dR5k0iVzQpsN4o0V988461HA=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=zohomail.com;
+	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
+	dmarc=pass header.from=<ming.li@zohomail.com>
+DKIM-Signature: a=rsa-sha256; b=Uahep5ARfTOcVThz/h0awv+3+zSEEIu2EMY9g+co7qXLTPHvF+z8xOcw0JJ7yH9mNyeZysNLWp+Ml4VqHV5vRDJQqxHD86MfAqkNeLMZzaZFuja08+HrNxZqsBNGJHnumbvTm9k4Nyec6/2iP9yj+AxbtsK9yG8eK99gye/2iJ0=; c=relaxed/relaxed; s=zm2022; d=zohomail.com; v=1; bh=0azMahU3OokpLVsuQ5UXOF5UyDmli+pSUQLgONyqu+4=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
+Received: by smtp.zohomail.com with SMTPS id 1794317777710817.8057734110412;
+	Tue, 10 Nov 2026 05:36:17 -0800 (PST)
+Message-ID: <f67ecd0e-1eae-41b1-8a61-d06eb062e523@zohomail.com>
+Date: Tue, 10 Nov 2026 21:36:08 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -88,250 +58,257 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 10 Nov 2026 08:10:32 -0500
-Message-Id: <DMRK0PU0VCN3.15F59WLOQ05P4@soleen.com>
-To: "Tarun Sahu" <tarunsahu@google.com>, "Pasha Tatashin"
- <pasha.tatashin@soleen.com>, "Mike Rapoport" <rppt@kernel.org>,
- <robin.murphy@arm.com>, <maz@kernel.org>, <will@kernel.org>, "David
- Matlack" <dmatlack@google.com>, "Alexander Graf" <graf@amazon.com>,
- <seanjc@google.com>, <jgg@nvidia.com>, <loganodell@google.com>,
- <arnd@arndb.de>, <dwmw2@infradead.org>, <baolu.lu@linux.intel.com>, "Bjorn
- Helgaas" <bhelgaas@google.com>, <oupton@kernel.org>, <alex@shazbot.org>,
- <gle.com@google.com>, <pbonzini@redhat.com>, "Andrew Morton"
- <akpm@linux-foundation.org>, <kevin.tian@intel.com>, <joro@8bytes.org>
-Cc: <kvmarm@lists.linux.dev>, <linux-pci@vger.kernel.org>, "Pratyush Yadav"
- <pratyush@kernel.org>, <kexec@lists.infradead.org>, <kvm@vger.kernel.org>,
- <iommu@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
- <skhawaja@google.com>, <sagis@google.com>, <linux-arch@vger.kernel.org>,
- <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 02/19] kho: block: Record the entry size in the block
- header
-From: "Pasha Tatashin" <pasha.tatashin@soleen.com>
-X-Mailer: aerc 0.22.0-39-g5d7784875be2
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-3-tarunsahu@google.com>
-In-Reply-To: <20261110050202.529473-3-tarunsahu@google.com>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v17 02/19] cxl: Share CXL port upstream PCI device lookup
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
+ Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <iweiny@kernel.org>,
+ Jonathan Cameron <jic23@kernel.org>, Vishal Verma
+ <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Joshua Machauer <machaujo@amazon.de>,
+ Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org,
+ Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+References: <20261105185917.2667656-1-smadhavan@nvidia.com>
+ <20261105185917.2667656-3-smadhavan@nvidia.com>
+From: Li Ming <ming.li@zohomail.com>
+In-Reply-To: <20261105185917.2667656-3-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Feedback-ID: zu08011227cd6656a0b0b917d8a199c6e100004c38c21d393ffd7344d61fa92497026c4e4ee171ecce232c3e:ZohoMail
+X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
+X-ZohoMailClient: External
 
-On Tue Nov 10, 2026 at 12:01 AM EST, Tarun Sahu wrote:
-> Subsystems using the KHO Serialization Blocks framework currently do
-> not record the serialized entry size in the block header. The entry size
-> is only known to individual callers, which must track and store it in an
-> owning serialized data structure. If a newer source kernel adds fields
-> to an entry, the changed entry size breaks the stride when an older
-> target kernel iterates over blocks.
+
+在 2026/11/6 02:59, Srirangan Madhavan 写道:
+> read_cdat_data() resolves a CXL port's upstream device to its backing PCI
+> device. HDM cache updates need the same mapping.
 >
-> Add an entry_size field to struct kho_block_header_ser. On the outgoing
-> side, record bs->entry_size into every block header during allocation.
-> During restoration, derive the entry stride directly from the block
-> header instead of relying on caller-supplied dimensions. The
-> kho_block_set_init() interface remains unchanged. A zero entry size,
-> or one that differs between blocks of a set, is rejected during
-> restoration.
+> Factor the lookup into cxl_port_get_uport_pci_dev() and return a referenced
+> PCI device to make caller ownership explicit.
 >
-> This change modifies the serialized layout of struct kho_block_header_ser
-> and shifts the offset of serialized entries within preserved blocks.
-> Bump KHO_FDT_COMPATIBLE from kho-v4 to kho-v5 so that pre-v5 and post-v5
-> kernels cleanly reject mismatched handover state during boot. Also
-> update the stale compatible string example in the documentation.
+> Use automatic reference cleanup in read_cdat_data(), as suggested by
+> Li Ming, so early returns release the PCI device reference.
 >
-> Suggested-by: Pratyush Yadav <pratyush@kernel.org>
-> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> Reviewed-by: Richard Cheng <icheng@nvidia.com>
+> Reviewed-by: Li Ming <ming.li@zohomail.com>
+>
 > ---
->  include/linux/kho/abi/block.h          | 10 ++++----
->  include/linux/kho/abi/kexec_handover.h |  6 ++---
->  kernel/liveupdate/kho_block.c          | 32 +++++++++++++++++++++++---
->  3 files changed, 38 insertions(+), 10 deletions(-)
+> Changes in v17:
+> - Use an explicit pci_dev_put() on a single exit path in
+>    read_cdat_data() instead of mixing __free() with goto cleanup
+>    (Sashiko)
+>    https://sashiko.dev/#/patchset/20261029145703.2185231-1-smadhavan@nvidia.com?part=2
+
+Reviewed-by: Li Ming <ming.li@zohomail.com>
+
+
+I still think the new goto makes the code harder to follow. But I saw 
+your discussion in v13[1], both Jonathan and Dave agree with your 
+current changes. I post my proposal here which can eliminate all goto 
+labels. If there is no response from them, or if they disagree with my 
+changes, we can continue with your implementation.
+
+[1]: 
+https://lore.kernel.org/all/fb513893-7c6c-408c-811f-1eae20f0436c@intel.com/
+
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index 9d807c1a002c..fbf4b56a39c4 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -573,17 +573,8 @@ void read_cdat_data(struct cxl_port *port)
+         size_t table_length, length;
+         int rc;
+
+-       if (is_cxl_memdev(uport)) {
+-               struct device *host;
+-
+-               cxlmd = to_cxl_memdev(uport);
+-               host = cxlmd->dev.parent;
+-               if (dev_is_pci(host))
+-                       pdev = to_pci_dev(host);
+-       } else if (dev_is_pci(uport)) {
+-               pdev = to_pci_dev(uport);
+-       }
+-
++       struct pci_dev *pdev __free(pci_dev_put) =
++                               cxl_port_get_uport_pci_dev(port);
+         if (!pdev)
+                 return;
+
+@@ -606,30 +597,32 @@ void read_cdat_data(struct cxl_port *port)
+          * bytes for the DOE header. Table data starts afterwards.
+          */
+         buf = devm_kzalloc(dev, sizeof(*buf) + length, GFP_KERNEL);
+-       if (!buf)
+-               goto err;
++       if (!buf) {
++               dev_err(dev, "Failed to allocate CDAT buffer.\n");
++               return;
++       }
+
+         table_length = length;
+
+         rc = cxl_cdat_read_table(dev, doe_mb, buf, &length);
+-       if (rc)
+-               goto err;
++       if (rc) {
++               devm_kfree(dev, buf);
++               dev_err(dev, "Failed to read CDAT.\n");
++               return;
++       }
+
+         if (table_length != length)
+                 dev_warn(dev, "Malformed CDAT table length (%zu:%zu), 
+discarding trailing data\n",
+                         table_length, length);
+
+-       if (cdat_checksum(buf->data, length))
+-               goto err;
++       if (cdat_checksum(buf->data, length)) {
++               devm_kfree(dev, buf);
++               dev_err(dev, "Failed to validate CDAT.\n");
++               return;
++       }
+
+         port->cdat.table = buf->data;
+         port->cdat.length = length;
+-
+-       return;
+-err:
+-       /* Don't leave table data allocated on error */
+-       devm_kfree(dev, buf);
+-       dev_err(dev, "Failed to read/validate CDAT.\n");
+  }
+
+
+> ---
+>   drivers/cxl/core/core.h |  1 +
+>   drivers/cxl/core/pci.c  | 24 ++++++------------------
+>   drivers/cxl/core/port.c | 26 ++++++++++++++++++++++++++
+>   3 files changed, 33 insertions(+), 18 deletions(-)
 >
-> diff --git a/include/linux/kho/abi/block.h b/include/linux/kho/abi/block.=
-h
-> index 36bdbaf9b3b8..a40b0906c821 100644
-> --- a/include/linux/kho/abi/block.h
-> +++ b/include/linux/kho/abi/block.h
-> @@ -40,9 +40,10 @@
-> =20
->  /**
->   * struct kho_block_header_ser - Header for the serialized data block.
-> - * @next:  Physical address of the next struct kho_block_header_ser.
-> - * @count: The number of entries that immediately follow this header in =
-the
-> - *         memory block.
-> + * @next:       Physical address of the next struct kho_block_header_ser=
-.
-> + * @count:      The number of entries that immediately follow this heade=
-r in the
-> + *              memory block.
-> + * @entry_size: The size in bytes of each serialized entry in the block.
->   *
->   * This structure is located at the beginning of a block of physical mem=
-ory
->   * preserved across a kexec. It provides the necessary metadata to inter=
-pret
-> @@ -51,9 +52,10 @@
->  struct kho_block_header_ser {
->  	u64 next;
->  	u64 count;
-> +	u64 entry_size;
->  };
-> =20
-> -static_assert(sizeof(struct kho_block_header_ser) =3D=3D 16);
-> +static_assert(sizeof(struct kho_block_header_ser) =3D=3D 24);
->  static_assert(!IS_ENABLED(CONFIG_64BIT) ||
->  	      __alignof__(struct kho_block_header_ser) =3D=3D 8);
-
-The above change goes away once my comment on the previous patch=20
-is addressed.
-
-> =20
-> diff --git a/include/linux/kho/abi/kexec_handover.h b/include/linux/kho/a=
-bi/kexec_handover.h
-> index 2f4fb9c63942..6f12f5037ea5 100644
-> --- a/include/linux/kho/abi/kexec_handover.h
-> +++ b/include/linux/kho/abi/kexec_handover.h
-> @@ -41,7 +41,7 @@
->   *   restore the preserved data.::
->   *
->   *     / {
-> - *         compatible =3D "kho-v3";
-> + *         compatible =3D "kho-v5";
->   *
->   *         preserved-memory-map =3D <0x...>;
->   *
-> @@ -62,7 +62,7 @@
->   *     };
->   *
->   *   Root KHO Node (/):
-> - *     - compatible: "kho-v3"
-> + *     - compatible: "kho-v5"
-
-These are just examples, don't update them.
-
->   *
->   *       Identifies the overall KHO ABI version.
->   *
-> @@ -90,7 +90,7 @@
->   */
-> =20
->  /* The compatible string for the KHO FDT root node. */
-> -#define KHO_FDT_COMPATIBLE "kho-v4"
-> +#define KHO_FDT_COMPATIBLE "kho-v5"
-> =20
->  /* The FDT property for the preserved memory map. */
->  #define KHO_FDT_MEMORY_MAP_PROP_NAME "preserved-memory-map"
-> diff --git a/kernel/liveupdate/kho_block.c b/kernel/liveupdate/kho_block.=
-c
-> index 0d2a342ef422..9b148009085e 100644
-> --- a/kernel/liveupdate/kho_block.c
-> +++ b/kernel/liveupdate/kho_block.c
-> @@ -16,6 +16,12 @@
->   * array of serialized entries. Multiple blocks are linked together via =
-a
->   * physical pointer in the header, forming a linked list that can be eas=
-ily
->   * traversed in both the current and the next kernel.
+> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
+> index 35eaf636adc9..983d7690c3a5 100644
+> --- a/drivers/cxl/core/core.h
+> +++ b/drivers/cxl/core/core.h
+> @@ -157,6 +157,7 @@ long cxl_pci_get_latency(struct pci_dev *pdev);
+>   int cxl_pci_get_bandwidth(struct pci_dev *pdev, struct access_coordinate *c);
+>   int cxl_port_get_switch_dport_bandwidth(struct cxl_port *port,
+>   					struct access_coordinate *c);
+> +struct pci_dev *cxl_port_get_uport_pci_dev(struct cxl_port *port);
+>   
+>   static inline struct device *port_to_host(struct cxl_port *port)
+>   {
+> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+> index 9d807c1a002c..905892cfedef 100644
+> --- a/drivers/cxl/core/pci.c
+> +++ b/drivers/cxl/core/pci.c
+> @@ -564,26 +564,13 @@ static unsigned char cdat_checksum(void *buf, size_t size)
+>    */
+>   void read_cdat_data(struct cxl_port *port)
+>   {
+> -	struct device *uport = port->uport_dev;
+> +	struct pci_dev *pdev = cxl_port_get_uport_pci_dev(port);
+>   	struct device *dev = &port->dev;
+>   	struct pci_doe_mb *doe_mb;
+> -	struct pci_dev *pdev = NULL;
+> -	struct cxl_memdev *cxlmd;
+>   	struct cdat_doe_rsp *buf;
+>   	size_t table_length, length;
+>   	int rc;
+>   
+> -	if (is_cxl_memdev(uport)) {
+> -		struct device *host;
+> -
+> -		cxlmd = to_cxl_memdev(uport);
+> -		host = cxlmd->dev.parent;
+> -		if (dev_is_pci(host))
+> -			pdev = to_pci_dev(host);
+> -	} else if (dev_is_pci(uport)) {
+> -		pdev = to_pci_dev(uport);
+> -	}
+> -
+>   	if (!pdev)
+>   		return;
+>   
+> @@ -591,14 +578,14 @@ void read_cdat_data(struct cxl_port *port)
+>   				      CXL_DOE_PROTOCOL_TABLE_ACCESS);
+>   	if (!doe_mb) {
+>   		dev_dbg(dev, "No CDAT mailbox\n");
+> -		return;
+> +		goto out;
+>   	}
+>   
+>   	port->cdat_available = true;
+>   
+>   	if (cxl_cdat_get_length(dev, doe_mb, &length)) {
+>   		dev_dbg(dev, "No CDAT length\n");
+> -		return;
+> +		goto out;
+>   	}
+>   
+>   	/*
+> @@ -624,12 +611,13 @@ void read_cdat_data(struct cxl_port *port)
+>   
+>   	port->cdat.table = buf->data;
+>   	port->cdat.length = length;
+> -
+> -	return;
+> +	goto out;
+>   err:
+>   	/* Don't leave table data allocated on error */
+>   	devm_kfree(dev, buf);
+>   	dev_err(dev, "Failed to read/validate CDAT.\n");
+> +out:
+> +	pci_dev_put(pdev);
+>   }
+>   EXPORT_SYMBOL_NS_GPL(read_cdat_data, "CXL");
+>   
+> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+> index 625e4aa427db..5dc2815d82d8 100644
+> --- a/drivers/cxl/core/port.c
+> +++ b/drivers/cxl/core/port.c
+> @@ -34,6 +34,32 @@
+>   static DEFINE_IDA(cxl_port_ida);
+>   static DEFINE_XARRAY(cxl_root_buses);
+>   
+> +/**
+> + * cxl_port_get_uport_pci_dev - get the PCI device for a port's upstream device
+> + * @port: CXL port to map to a PCI device
 > + *
-> + * Each block header also records the size of its entries. A newer kerne=
-l may
-
-"newer kernel" does not make sense in the documentation comment, as any=20
-kernel can do that. I would suggest "outgoing kernel." By the way, in=20
-this series you use the terms "source" and "destination" kernel, whereas=20
-traditionally we have used "outgoing" and "incoming." While both=20
-conventions work, it would be preferable to maintain consistency.
-
-> + * append fields to an entry, so the kernel that writes a block and the =
-kernel
-> + * that reads it can use different entry sizes. The reader steps through=
- the
-> + * entries with the recorded size, so every entry is found, and it does =
-not read
-> + * beyond the recorded size of an entry.
->   */
-> =20
->  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> @@ -110,6 +116,8 @@ static int kho_block_set_grow_one(struct kho_block_se=
-t *bs)
->  	if (IS_ERR(ser))
->  		return PTR_ERR(ser);
-> =20
-> +	ser->entry_size =3D bs->entry_size;
+> + * Return: A referenced PCI device, or NULL if the upstream device is not PCI.
+> + * The caller must release the returned reference with pci_dev_put().
+> + */
+> +struct pci_dev *cxl_port_get_uport_pci_dev(struct cxl_port *port)
+> +{
+> +	struct device *uport = port->uport_dev;
+> +	struct device *host;
 > +
->  	err =3D kho_block_add(bs, ser);
->  	if (err) {
->  		kho_block_free_ser(bs, ser);
-> @@ -242,7 +250,8 @@ static bool kho_block_set_is_cyclic(struct kho_block_=
-set *bs)
->   *
->   * Restores a serialized block set from a given physical address. The ca=
-ller is
->   * responsible for ensuring that the block set @bs has been allocated an=
-d
-> - * initialized prior to calling this function.
-> + * initialized prior to calling this function. The entry size and the nu=
-mber
-> + * of entries per block are taken from the restored block headers.
->   *
->   * Return: 0 on success, or a negative errno on failure.
->   */
-> @@ -250,6 +259,7 @@ int kho_block_set_restore(struct kho_block_set *bs, u=
-64 head_pa)
->  {
->  	struct kho_block_header_ser *ser;
->  	u64 next_pa =3D head_pa;
-> +	u64 entry_size =3D 0;
->  	int err;
-> =20
->  	/* Restored block sets use size from the previous kernel */
-> @@ -264,8 +274,21 @@ int kho_block_set_restore(struct kho_block_set *bs, =
-u64 head_pa)
->  	}
-> =20
->  	while (next_pa) {
-> +		u64 capacity;
+> +	if (is_cxl_memdev(uport)) {
+> +		struct cxl_memdev *cxlmd = to_cxl_memdev(uport);
 > +
->  		ser =3D phys_to_virt(next_pa);
-> -		if (!ser->count || ser->count > bs->count_per_block) {
-> +		if (!ser->entry_size || (entry_size && ser->entry_size !=3D entry_size=
-)) {
-> +			pr_warn("Block contains invalid entry size: %llu\n",
-> +				ser->entry_size);
-> +			err =3D -EINVAL;
-> +			goto err_destroy;
-> +		}
-> +		entry_size =3D ser->entry_size;
-> +		bs->entry_size =3D entry_size;
-> +		capacity =3D (KHO_BLOCK_SIZE - sizeof(*ser)) / bs->entry_size;
-> +		bs->count_per_block =3D capacity;
+> +		host = cxlmd->dev.parent;
+> +	} else {
+> +		host = uport;
+> +	}
 > +
-> +		if (!ser->count || ser->count > capacity) {
->  			pr_warn("Block contains invalid entry count: %llu\n",
->  				ser->count);
->  			err =3D -EINVAL;
-> @@ -370,7 +393,10 @@ void *kho_block_set_it_reserve_entry(struct kho_bloc=
-k_set_it *it)
->   * @it: The block iterator.
->   *
->   * Iterates through previously written entries during state deserializat=
-ion,
-> - * respecting the actual count stored in each block's header.
-> + * respecting the actual count stored in each block's header. Entries ar=
-e
-> + * spaced by the entry size recorded by the kernel that wrote them, whic=
-h can
-> + * be smaller or larger than the caller's structure. Fields beyond that =
-size
-> + * are not present in the entry.
->   *
->   * Return: A pointer to the next serialized entry, or NULL if all serial=
-ized
->   * entries have been read.
-
-
-
-
-
---=20
-Pasha
-
+> +	if (!host || !dev_is_pci(host))
+> +		return NULL;
+> +
+> +	return pci_dev_get(to_pci_dev(host));
+> +}
+> +
+>   /*
+>    * The terminal device in PCI is NULL and @platform_bus
+>    * for platform devices (for cxl_test)
