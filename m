@@ -1,55 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.94
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794321048;
-	b=4kK/q3EY0SrPtDPaMbrZ0Kp5wNfhEuRcfMq5xORdSpMnkLxIELYgyp6YcfV2Z+yOpzHe
-	 ZWyLirjcT4tBlSfr/MMMI1Fxff3ik30nq4eAkPmmLVwgjVET/7ZOhDG73f9xYmQxjbSV7
-	 BVIuNpf2LL00Z1swedsu9wlybjYy/OHBiEFoHWYIC+GN4UQWOn96QSu5kvKcy270LnYcm
-	 50fNZzaxFSGTOYTEirbTD6GCOR2M6FFd2eL845e7cKWHP+8HG8alYQ4rdB+Z7RAKWd5JO
-	 94/PdVFF/oS7Y15uIitypKNTvXm37IMejXLM2N/BMqn4YbySust7o3PcpBn4ls+UB2Q==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794321048;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:Feedback-ID:X-Zoho-CM-AccountID:
-	 X-ZohoMailClient;
-	bh=Uz3VQehd1ZO63zGzNf2pR7KZcKqmtRJlfsRiVXSrTt8=;
-	b=gsiv7SHiPVBofv9V8DEYvC4EX5R1QozovsVrDxdzNemUd1BmT9fB6r2bvVdQVNkRZAsl
-	 hR6XxEzkPnRMLH6cT24GR9YJK1mfqCQSv32RwrdAvRakcInvDphzZ/sedtSaPmW+/nVAi
-	 dhqpMU4VjplL3dISMPzGSrrAgqnGTufs6UFV1txxKgFDrhjcEj8+Mg3oVxD6qKLn6kJj6
-	 5jeUe5ricrY242Sj2Z+8gv18pUxakR7DHYVRkArD3OWwxojk94DNGkMBvltWyT/xoWwNZ
-	 LAqDn5oam49HOQCTABCdNjtrqoPexp8wsT8FrTT5EqlTpsLOitNjSF2q0OLWUiWsARg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zohomail.com;
-	spf=pass smtp.mailfrom=zohomail.com;
-	dkim=pass header.d=zohomail.com header.i=@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b="eK4KBa/i";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.94
-Received: from sender5-pp-o94.zoho.com (sender5-pp-o94.zoho.com [165.173.182.94])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.67.10.101
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794321111;
+	b=3udwM/MdUqUeERQFkK/hu8a+wYsEQ13+lcbtbBb8S/N1Erzg5pjt/WlG4M/HVRKFZOQ8
+	 os5voYtelyo+qsE4EMkljhqAuhrr+1bNuCz4s4cfdXfWrUxhr1Vqz1SgmkrZsISHT3EYp
+	 f9LXqHvn3mGuJTYUlHwqHOg403+7UQjABbaB3NloQnwyEKMnTl6OqvdP1JkXwRUZr6nls
+	 ay+ugmsqUEsmSQjUfyB0IYPcuQtAXo1xGcWAjotgCT6S0HohFfNFD0scqri6bNZzmklHa
+	 dU4JaggoZhSpI7BJ30gxwVux/LauRgKBp8TT9JO0+/jNkX2+nUg4dC5OCUIUwqH2N7Q==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794321111;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=oF4ltqac0ezbbEs6TWdN65bvPsCRJbHWS/4qDcsLy5I=;
+	b=U2U1iMZBhQoHK0XsVx7mwAm8X8r6y51wnxYII+yDerlAhVPguasvBDLIJmNh4vxsRsGe
+	 HFf6HWsGxLzFHo8jeWG4Tvjjx8rSZ+ZJTpWCnU2yggu+98uIEi+i2A7CmmyXXZT20XiCc
+	 B8UZAgazgGfpzok7akf60DwA1ELVV9XmZ8D6jYzqoQ0WVVVsplvtJwJipMWTkJGmU7yuv
+	 ydP/sW6uCLlktseva5x4ht2JLX0TD9RHVxbITLWTQNMYVuBbWxu3EWcIeNaIUHbSP2Va6
+	 RSrOagFA84zc31uHO8SxPYML4AAzEeAU1UfH9NffSCYDp7hRyqyzi1IwKXw+T+aYlFg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=lunn.ch;
+	spf=pass smtp.mailfrom=lunn.ch;
+	dkim=pass header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=2cqNPi16;
+	arc=none smtp.remote-ip=156.67.10.101
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67416606A334;
-	Tue, 10 Nov 2026 14:30:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67416606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06D6C606A32A;
+	Tue, 10 Nov 2026 14:31:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06D6C606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=zohomail.com header.i=@zohomail.com header.a=rsa-sha256 header.s=zm2022 header.b=eK4KBa/i
-ARC-Seal: i=1; a=rsa-sha256; t=1794320990; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=NKnNEjVw8C3OyDG1l/YQIqFxBNBFCIgpDzKBFz2un/PdCKesy/c4CPA+XZHS+IiE9W5dh7BIe/XvNpI2oFYf53xXdkFpSov2ZGbB7g/GJT47T6DF06WnR5K3zYffBmfRFTzYcACkgYT1dSlM0CDpNj4S1JV0aAlZo2OUygJi6zk=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1794320990; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=Uz3VQehd1ZO63zGzNf2pR7KZcKqmtRJlfsRiVXSrTt8=; 
-	b=EJlopRIvPcgdOddz8srvfCbLveUW4h/huQeyRGH8jlodthrjb0e7mC/UWrGTbeOVQFFnNpG55p9fxDPVsjgkmCESEnX263xAfW5NbUb8LdkLp8xkpb7ubGh5ttzUsKGK9ZB6ffKLfN/5ezaGzDYWr5HWPSF7iWA4NKUwEoDhZs0=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=zohomail.com;
-	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
-	dmarc=pass header.from=<ming.li@zohomail.com>
-DKIM-Signature: a=rsa-sha256; b=eK4KBa/iauSPX/nv2TVYReezT7FWcggkCddjkTE6acRx9KedKykkQMpkzmWSslM+jGGf/0GEhGriXleJ9Iq6ZvxkiFRtuA5fYK8b+7Tocs6NnMRcL7z+d2W7tULIA/QKTHnvtcE9Gii00Zh02A0ShEAycGqJo7DroDFGG6S41zQ=; c=relaxed/relaxed; s=zm2022; d=zohomail.com; v=1; bh=Uz3VQehd1ZO63zGzNf2pR7KZcKqmtRJlfsRiVXSrTt8=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
-Received: by smtp.zohomail.com with SMTPS id 1794320989675255.06119992728588;
-	Tue, 10 Nov 2026 06:29:49 -0800 (PST)
-Message-ID: <568d7c66-eb67-4369-8b15-5ee923471881@zohomail.com>
-Date: Tue, 10 Nov 2026 22:29:36 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=2cqNPi16
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+	s=20171124; h=In-Reply-To:Content-Transfer-Encoding:Content-Disposition:
+	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:From:
+	Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Content-ID:Content-Description:Content-Disposition:
+	In-Reply-To:References; bh=oF4ltqac0ezbbEs6TWdN65bvPsCRJbHWS/4qDcsLy5I=; b=2c
+	qNPi16R2xVUs4julQG+1vayBeJpg57S7y/aevBMNVTA5Qu67bt0LjGyw28PR7vzH66PzaVwk21xLh
+	QhFrRP59c3ctKZEnHp2gF1VgLMD74gWHfuR4O5IHLp3cXIesp5ul7cxaD7syNLMLNA+auvVZu+RdX
+	Vu8XU63Tu4DEEn4=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+	(envelope-from <andrew@lunn.ch>)
+	id 1xQmsV-00FVDj-4w; Tue, 10 Nov 2026 15:31:15 +0100
+Date: Tue, 10 Nov 2026 15:31:15 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v2 10/19] net: phy: Use the compatibility driver
+ attachment API
+Message-ID: <019fceab-1b0b-44a5-8cef-1f77d7d6ac07@lunn.ch>
+References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-10-3b12d9a9f861@nvidia.com>
+ <ab062469-ece0-495e-8486-78404c580cdb@lunn.ch>
+ <20261110073919.GF8635@unreal>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,383 +95,114 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 12/19] PCI/CXL: Add CXL Device Reset sequencing
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <iweiny@kernel.org>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Joshua Machauer <machaujo@amazon.de>,
- Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261105185917.2667656-1-smadhavan@nvidia.com>
- <20261105185917.2667656-13-smadhavan@nvidia.com>
-From: Li Ming <ming.li@zohomail.com>
-In-Reply-To: <20261105185917.2667656-13-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Feedback-ID: zu080112275078c8cd6af39e4f48d52aae00009eb5ad88169d258afe3326155aeda86fdec19a50683e8bdc99:ZohoMail
-X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
-X-ZohoMailClient: External
+In-Reply-To: <20261110073919.GF8635@unreal>
 
+On Tue, Nov 10, 2026 at 09:39:19AM +0200, Leon Romanovsky wrote:
+> On Mon, Nov 09, 2026 at 02:45:35PM +0100, Andrew Lunn wrote:
+> > > @@ -1956,11 +1958,10 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+> > >  	}
+> > >  	phydev->drv_owner = drv_owner;
+> > >  
+> > > -	if (phydev->is_genphy_driven) {
+> > > -		err = d->driver->probe(d);
+> > > -		if (err >= 0)
+> > > -			err = device_bind_driver(d);
+> > > -
+> > > +	if (bind_genphy) {
+> > > +		err = device_driver_attach_full(drv, d);
+> > > +		if (err == -EBUSY)
+> > > +			irq = phydev->irq;
+> > 
+> > Just looking at this, it is not clear where the EBUSY can from? 
+> 
+> I relied on the comment above: “Assume that if there is no driver, ...”.
+> Since PHYs do not use the standard automatic probing mechanism, I have no
+> way to tell whether a driver is already bound.
 
-在 2026/11/6 02:59, Srirangan Madhavan 写道:
-> Implement CXL Device Reset for eligible Type 2 devices: disable CXL.cache,
-> perform supported writeback, drain transactions, prepare the IOMMU,
-> initiate reset with Memory Clear enabled, and wait for completion.
->
-> Observe the 100 ms post-reset quiet period before polling Status2, and
-> treat an all-ones read as not ready. Wait for the timeout the device
-> advertises, up to 100 seconds, and access only Status2 until reset
-> completion, error or expiry, as CXL 4.0 section 9.7.3 requires. Control2
-> cleanup runs only afterwards. Treat Control2 command bits as
-> transient state, restore cache policy on exit, preserve the primary error,
-> and abort when IOMMU preparation fails.
->
-> Reuse Device DVSEC discovery from cache initialization and keep the
-> reset entry point declaration private to PCI core.
->
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
->
-> ---
-> Changes in v17:
-> - Wait for the reset timeout the device advertises, up to 100 seconds,
->    instead of clamping it to 20 seconds, so that Control2 is not accessed
->    while the device may still be resetting. The warning for an unknown
->    timeout encoding now reports the timeout used (Richard)
->    https://lore.kernel.org/linux-cxl/auQC2UECQ8vaelPz@MWDK4CY14F/
->
-> Reference branch: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=04f8f84816d724f8b47f4d47a77916ac37c63a49
-> ---
->   drivers/pci/cxl.c             | 244 +++++++++++++++++++++++++++++++++-
->   drivers/pci/pci.h             |   5 +
->   include/uapi/linux/pci_regs.h |  12 ++
->   3 files changed, 260 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/cxl.c b/drivers/pci/cxl.c
-> index a0d20f4210a5..9ac5948f595b 100644
-> --- a/drivers/pci/cxl.c
-> +++ b/drivers/pci/cxl.c
-> @@ -3,13 +3,17 @@
->   /*
->    * CXL reset support in the PCI core. Cache the HDM decoder state of a CXL
->    * memory device at enumeration, so it can be restored after a reset without
-> - * a CXL driver. HDM register formats and programming live in drivers/cxl.
-> + * a CXL driver, and implement CXL Device Reset. HDM register formats and
-> + * programming live in drivers/cxl.
->    */
->   #include <linux/bitfield.h>
->   #include <linux/cleanup.h>
-> +#include <linux/delay.h>
->   #include <linux/errno.h>
->   #include <linux/io.h>
->   #include <linux/ioport.h>
-> +#include <linux/iommu.h>
-> +#include <linux/jiffies.h>
->   #include <linux/kernel.h>
->   #include <linux/pci.h>
->   #include <linux/slab.h>
-> @@ -223,3 +227,241 @@ void pci_cxl_hdm_cache_release(struct pci_dev *pdev)
->   {
->   	cxl_hdm_cache_release(&pdev->hdm);
->   }
-> +
-> +/*
-> + * CXL r4.0 sec 9.7.2 defines the reset completion timeout encodings.
-> + * Sec 9.7.3 leaves config-space access behavior undefined for 100 ms after
-> + * initiating CXL Reset, then limits software to CXL Status2 access until
-> + * reset completion, timeout, or error. Wait for the full advertised timeout
-> + * so that Control2 is not accessed while the device may still be resetting.
-> + */
-> +#define CXL_RESET_RRS_WAIT_MS 100
-> +#define CXL_RESET_STATUS_POLL_MS 20
-> +static const u32 cxl_reset_timeout_ms[] = {
-> +	10, 100, 1000, 10000, 100000,
-> +};
-> +
-> +/*
-> + * CXL 4.0 section 9.6 permits using the device cache size to determine
-> + * a timeout. Use a conservative fixed estimate of 100 ms.
-> + */
-> +#define CXL_CACHE_WBI_TIMEOUT_US 100000
-> +#define CXL_CACHE_WBI_POLL_US 100
-> +
-> +#define CXL_RESET_CTRL2_CMD_MASK \
-> +	(PCI_DVSEC_CXL_INIT_CACHE_WBI | PCI_DVSEC_CXL_INIT_CXL_RST)
-> +
-> +static int cxl_reset_update_ctrl2(struct pci_dev *pdev, int dvsec,
-> +				  u16 set, u16 clear)
-> +{
-> +	u16 ctrl2;
-> +	int rc;
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, &ctrl2);
-> +	if (rc)
-> +		return pcibios_err_to_errno(rc);
-> +	if (PCI_POSSIBLE_ERROR(ctrl2))
-> +		return -ENODEV;
-> +
-> +	/*
-> +	 * INIT_CACHE_WBI and INIT_CXL_RST are commands. Do not replay a command
-> +	 * that remains set in the value read back while updating persistent
-> +	 * Control2 state.
-> +	 */
-> +	ctrl2 &= ~CXL_RESET_CTRL2_CMD_MASK;
-> +	ctrl2 &= ~clear;
-> +	ctrl2 |= set;
-> +
-> +	rc = pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, ctrl2);
-> +	if (rc)
-> +		return pcibios_err_to_errno(rc);
-> +
-> +	return 0;
-> +}
-> +
-> +static int cxl_reset_wait_cache_wbi(struct pci_dev *pdev, int dvsec)
-> +{
-> +	unsigned long deadline;
-> +	u16 status2;
-> +	int rc;
-> +
-> +	rc = cxl_reset_update_ctrl2(pdev, dvsec,
-> +				    PCI_DVSEC_CXL_INIT_CACHE_WBI, 0);
-> +	if (rc)
-> +		return rc;
-> +
-> +	deadline = jiffies + usecs_to_jiffies(CXL_CACHE_WBI_TIMEOUT_US);
-> +	while (time_before(jiffies, deadline)) {
-> +		usleep_range(CXL_CACHE_WBI_POLL_US,
-> +			     CXL_CACHE_WBI_POLL_US * 2);
-> +
-> +		rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_STATUS2,
-> +					  &status2);
-> +		if (rc)
-> +			return pcibios_err_to_errno(rc);
-> +		if (PCI_POSSIBLE_ERROR(status2))
-> +			return -ENODEV;
-> +		if (status2 & PCI_DVSEC_CXL_CACHE_INV)
-> +			return 0;
-> +	}
-> +
-> +	pci_warn(pdev, "timed out waiting for CXL cache writeback and invalidate\n");
-> +	return -ETIMEDOUT;
-> +}
-> +
-> +static int cxl_reset_disable_cache(struct pci_dev *pdev, int dvsec, u16 cap)
-> +{
-> +	int rc;
-> +
-> +	rc = cxl_reset_update_ctrl2(pdev, dvsec,
-> +				    PCI_DVSEC_CXL_DISABLE_CACHING, 0);
-> +	if (rc || !(cap & PCI_DVSEC_CXL_CACHE_WBI_CAPABLE))
-> +		return rc;
-> +
-> +	return cxl_reset_wait_cache_wbi(pdev, dvsec);
-> +}
-> +
-> +static int cxl_reset_restore_cache_policy(struct pci_dev *pdev, int dvsec,
-> +					  u16 saved_ctrl2)
-> +{
-> +	int rc;
-> +
-> +	rc = cxl_reset_update_ctrl2(pdev, dvsec,
-> +				    saved_ctrl2 & PCI_DVSEC_CXL_DISABLE_CACHING,
-> +				    PCI_DVSEC_CXL_DISABLE_CACHING);
-> +	if (rc)
-> +		pci_err(pdev, "failed to restore CXL cache policy: %d\n", rc);
-> +
-> +	return rc;
-> +}
-> +
-> +static int cxl_reset_wait_done(struct pci_dev *pdev, int dvsec, u16 cap)
-> +{
-> +	unsigned long deadline;
-> +	u32 timeout_ms;
-> +	u16 status2;
-> +	int idx, rc;
-> +
-> +	idx = FIELD_GET(PCI_DVSEC_CXL_RST_TIMEOUT, cap);
-> +	if (idx >= ARRAY_SIZE(cxl_reset_timeout_ms)) {
-> +		idx = ARRAY_SIZE(cxl_reset_timeout_ms) - 1;
-> +		pci_warn(pdev,
-> +			 "unknown CXL reset timeout encoding; using %u ms\n",
-> +			 cxl_reset_timeout_ms[idx]);
-> +	}
-> +
-> +	/* Allow one retry after the mandatory 100 ms quiet period. */
-> +	timeout_ms = max_t(u32, cxl_reset_timeout_ms[idx],
-> +			   CXL_RESET_RRS_WAIT_MS + CXL_RESET_STATUS_POLL_MS);
-> +	pci_info(pdev, "CXL reset timeout: %u ms\n", timeout_ms);
-This log is improper, “CXL reset timeout:” seems like the timeout 
-happens, but it just outputs the timeout value before starting waiting 
-for CXL reset done. How about something like "Waiting for CXL reset to 
-complete. (max wait: %u ms)\n"?
-> +	msleep(CXL_RESET_RRS_WAIT_MS);
-> +	deadline = jiffies + msecs_to_jiffies(timeout_ms -
-> +					      CXL_RESET_RRS_WAIT_MS);
-> +
-> +	for (;;) {
-> +		rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_STATUS2,
-> +					  &status2);
-> +		if (rc)
-> +			return pcibios_err_to_errno(rc);
-> +		if (status2 != U16_MAX) {
-> +			if (status2 & PCI_DVSEC_CXL_RST_ERR)
-> +				return -EIO;
-> +			if (status2 & PCI_DVSEC_CXL_RST_DONE)
-> +				return 0;
-> +		}
-> +
-> +		if (time_after_eq(jiffies, deadline))
-> +			return -ETIMEDOUT;
-How about outputing a pci_err() when timeout happens? Like what you did 
-in cxl_reset_await_cache_wbi().
-> +
-> +		msleep(CXL_RESET_STATUS_POLL_MS);
-> +	}
-> +}
-> +
-> +static int cxl_clear_memory(struct pci_dev *pdev, int dvsec, bool initiate)
-> +{
-> +	if (initiate)
-> +		return cxl_reset_update_ctrl2(pdev, dvsec,
-> +					      PCI_DVSEC_CXL_INIT_CXL_RST |
-> +					      PCI_DVSEC_CXL_RST_MEM_CLR_EN,
-> +					      0);
-> +
-> +	return cxl_reset_update_ctrl2(pdev, dvsec, 0,
-> +				      PCI_DVSEC_CXL_RST_MEM_CLR_EN);
-> +}
-> +
-> +static int __cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
-> +{
-> +	int rc, rc2;
-> +
-> +	if (!pci_wait_for_pending_transaction(pdev)) {
-> +		pci_err(pdev, "timed out waiting for pending transactions\n");
-> +		return -ETIMEDOUT;
-> +	}
-> +
-> +	rc = pci_dev_reset_iommu_prepare(pdev);
-> +	if (rc) {
-> +		pci_err(pdev, "failed to stop IOMMU for CXL reset: %d\n", rc);
-> +		return rc;
-> +	}
-> +
-> +	rc = cxl_clear_memory(pdev, dvsec, true);
-> +	if (!rc)
-> +		rc = cxl_reset_wait_done(pdev, dvsec, cap);
-> +
-> +	/* Always clear Memory Clear; successful cleanup must not hide reset failure. */
-> +	rc2 = cxl_clear_memory(pdev, dvsec, false);
-> +	if (rc2)
-> +		pci_err(pdev, "failed to clear CXL Reset Memory Clear: %d\n", rc2);
-> +	rc = rc ?: rc2;
-> +
-> +	pci_dev_reset_iommu_done(pdev);
-> +	return rc;
-> +}
-> +
-> +static int cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
-> +{
-> +	u16 saved_ctrl2;
-> +	int rc, rc2;
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, &saved_ctrl2);
-> +	if (rc)
-> +		return pcibios_err_to_errno(rc);
-> +	if (PCI_POSSIBLE_ERROR(saved_ctrl2))
-> +		return -ENODEV;
-> +
-> +	rc = cxl_reset_disable_cache(pdev, dvsec, cap);
-> +	if (!rc)
-> +		rc = __cxl_reset_execute(pdev, dvsec, cap);
-> +	/* Restore cache policy after any attempt to disable caching. */
-> +	rc2 = cxl_reset_restore_cache_policy(pdev, dvsec, saved_ctrl2);
-> +	return rc ?: rc2;
-> +}
-> +
-> +int cxl_reset_function(struct pci_dev *pdev, bool probe)
-> +{
-> +	u16 dvsec, cap, ctrl;
-> +	int rc;
-> +
-> +	rc = cxl_pci_device_dvsec(pdev, &dvsec, &cap);
-> +	if (rc)
-> +		return rc;
-> +	if (!(cap & PCI_DVSEC_CXL_CACHE_CAPABLE) ||
-> +	    !(cap & PCI_DVSEC_CXL_MEM_CAPABLE) ||
-> +	    !(cap & PCI_DVSEC_CXL_RST_CAPABLE) ||
-> +	    !(cap & PCI_DVSEC_CXL_RST_MEM_CLR_CAPABLE))
-> +		return -ENOTTY;
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL, &ctrl);
-> +	if (rc)
-> +		return pcibios_err_to_errno(rc);
-> +	if (PCI_POSSIBLE_ERROR(ctrl))
-> +		return -ENODEV;
-There are many instances where we use pci_read_config_word() together 
-with PCI_POSSIBLE_ERROR(). Would it make sense to introduce a helper to 
-wrap pci_read_config_word() and its PCI_POSSIBLE_ERROR() error handling?
-> +	if (!(ctrl & PCI_DVSEC_CXL_CACHE_ENABLE) ||
-> +	    !(ctrl & PCI_DVSEC_CXL_MEM_ENABLE))
-> +		return -ENOTTY;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	return cxl_reset_execute(pdev, dvsec, cap);
-> +}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 9e218f236e66..743e65abd758 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -733,9 +733,14 @@ static inline void pci_doe_disconnected(struct pci_dev *pdev) { }
->   #ifdef CONFIG_CXL_RESET
->   void pci_cxl_hdm_cache_init(struct pci_dev *pdev);
->   void pci_cxl_hdm_cache_release(struct pci_dev *pdev);
-> +int cxl_reset_function(struct pci_dev *pdev, bool probe);
->   #else
->   static inline void pci_cxl_hdm_cache_init(struct pci_dev *pdev) { }
->   static inline void pci_cxl_hdm_cache_release(struct pci_dev *pdev) { }
-> +static inline int cxl_reset_function(struct pci_dev *pdev, bool probe)
-> +{
-> +	return -ENOTTY;
-> +}
->   #endif
->   
->   #ifdef CONFIG_PCI_NPEM
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index ca3e77b72d87..7224857c7b30 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -1352,10 +1352,22 @@
->   #define   PCI_DVSEC_CXL_CACHE_CAPABLE			_BITUL(0)
->   #define   PCI_DVSEC_CXL_MEM_CAPABLE			_BITUL(2)
->   #define   PCI_DVSEC_CXL_HDM_COUNT			__GENMASK(5, 4)
-> +#define   PCI_DVSEC_CXL_CACHE_WBI_CAPABLE		_BITUL(6)
->   #define   PCI_DVSEC_CXL_RST_CAPABLE			_BITUL(7)
-> +#define   PCI_DVSEC_CXL_RST_TIMEOUT			__GENMASK(10, 8)
->   #define   PCI_DVSEC_CXL_RST_MEM_CLR_CAPABLE		_BITUL(11)
->   #define  PCI_DVSEC_CXL_CTRL				0xC
-> +#define   PCI_DVSEC_CXL_CACHE_ENABLE			_BITUL(0)
->   #define   PCI_DVSEC_CXL_MEM_ENABLE			_BITUL(2)
-> +#define  PCI_DVSEC_CXL_CTRL2				0x10
-> +#define   PCI_DVSEC_CXL_DISABLE_CACHING			_BITUL(0)
-> +#define   PCI_DVSEC_CXL_INIT_CACHE_WBI			_BITUL(1)
-> +#define   PCI_DVSEC_CXL_INIT_CXL_RST			_BITUL(2)
-> +#define   PCI_DVSEC_CXL_RST_MEM_CLR_EN			_BITUL(3)
-> +#define  PCI_DVSEC_CXL_STATUS2				0x12
-> +#define   PCI_DVSEC_CXL_CACHE_INV			_BITUL(0)
-> +#define   PCI_DVSEC_CXL_RST_DONE			_BITUL(1)
-> +#define   PCI_DVSEC_CXL_RST_ERR				_BITUL(2)
->   #define  PCI_DVSEC_CXL_RANGE_SIZE_HIGH(i)		(0x18 + (i * 0x10))
->   #define  PCI_DVSEC_CXL_RANGE_SIZE_LOW(i)		(0x1C + (i * 0x10))
->   #define   PCI_DVSEC_CXL_MEM_INFO_VALID			_BITUL(0)
+They do use the automatic probe mechanism. But also extend it.
+
+Maybe some background will help.
+
+IEEE 802.3 specifies how PHYs should operate, it list all the
+registers which are needed for basic operation etc. If a PHY follows
+the standard, genphy is sufficient to drive the PHY.
+
+Now. Networking vendors like to do two things:
+
+1) Do more than what the standard specifies, like interrupts and
+blinking LEDs.
+
+2) Don't closely read the standard, and break their implementation
+
+These two cases require a specific driver.
+
+There is a lot of history to phylib, from before my time. It seems
+like the current model was retrofitted around earlier code. The result
+is that when the MDIO bus is enumerated, PHYs can be found on the bus
+and are registered to the bus in the normal way. The driver core will
+look to see if there is a driver which matches the ID values in
+registers 2 and 3, and if so probe that driver. If there is no
+matching driver, a call is made to user space to ask it to load the
+driver with the given IDs.  That operates asynchronous, when such a
+driver is loaded, the driver core will run the match again and probe
+the device with the driver.
+
+Because there can be up to 32 devices on the MDIO bus, the MAC driver
+often knows which PHY device it should use. If not, MAC drivers
+sometimes use the first PHY on the bus. It does not really matter, the
+point is, we know the device exists, even if it has not been probed
+yet, so we can get a reference to it.
+
+The MAC most often connects to its PHY during open(). At that point,
+if the driver core has bound a PHY driver to the PHY device, it is
+good to go.
+
+If however, there is no PHY driver for the PHY device, it can mean a
+few different things:
+
+There is no driver of that PHY because it follows 802.3, and genphy is
+expected to be used. However, genphy does not have a list of IDs it
+can drive, so the usual probing mechanism does not match it to the
+device. It would be nice if it did actually have such a list, but it
+does not.
+
+There is driver, but it has not been built, or is missing from the
+initramfs, or is not part of the image, etc. So we just use the genphy
+driver and hope for the best.
+
+So, if we have got this far, there is no driver for the PHY, we make
+use of genphy.
+
+> > And why set irq to phydev->irq?
+> 
+> If the above operation can fail with -EBUSY, the wrong IRQ was restored.
+
+How has it got the wrong interrupt?
+
+genphy cannot use interrupts, because interrupts are not part of
+802.3. Device tree can list an interrupt for the device, and if the
+device specific driver is used, phylib can use that
+interrupt. However, since interrupts are optional, phylib defaults to
+polling.  phydev->irq is over powered and set to PHY_POLL to indicate
+polling should be used. The phylib core will look at the PHY driver,
+see if it supports interrupts, and if not, set phydev->irq ==
+PHY_POLL.
+
+The binding of genphy to the device cannot fail, at least in the
+current phylib code. So up until recently, setting phydev->irq to
+PHY_POLL was fine. However, that is changing. There is a use case,
+because of bad hardware design, that genphy is initially used to get
+the device up. But later, the real driver module becomes available and
+gets loaded. /sysfs is then used to unbind genphy and bind the
+specific driver. Because phylib has set phydev->irq to PHY_POLL, the
+specific driver cannot use interrupts. So on unbind, phydev->irq is
+set back to the value in the MDIO bus.
+
+As is said, this code is fragile, and complex. You have to assume your
+LLM is producing slop, and really take a close look at the code, if
+you want to get it correct.
+
+    Andrew
