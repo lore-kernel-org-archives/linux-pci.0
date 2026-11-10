@@ -1,56 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=114.242.206.163
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794301126;
-	b=njAFnJjQN62xTjAvHlpUk1Nh9FhExEN7YL2fGaP3mMJx8espmAc8sKdk9eV0AkFOUOL9
-	 xqLDAB0xdjMwlac8dE5k0+JFPJT4ai9CPu38ZGJT0RH6Qhk3yCrmDpRnuxxs8AxxuGzcE
-	 SksVNQYLUp5NqtyNmB5d3d4BdD8YkyNNGu+NF9fjnJ8s68GRMz5RT88CdzILpvjT/STRf
-	 nZrpG35bH/X30me96cKXZFhzt7GBKctO35uScoaVcsq+gi6xlyqfeW1wh5muStSwQbUN9
-	 0B1PvNPEgQppfSONGhkebGONQ3HoQDGQ6zzSGKZkXI7hGfoLzeb7rO7tVh4UFzmWs+Q==
+	t=1794301173;
+	b=fpiN7DDtm7LQfuqQ2r7Ts9sM3c2dWVqGYiIx2eFQIAF1k1XrK+XebgeXn3SjQmholwyQ
+	 fzw49GhKrpq1zmpGvjEYe58ZehixpLlh9WEonTTrslJmE6oxbi+Rd3mKDH+nkKv0zCZly
+	 TbG1HuofQg47Mpao5/M75I2VQ31XumP6iMmyjjq46d7V97W4vNKFpV5KOis3NI4mAyU1t
+	 89B4Zyov87/9JT9tkQZM98yFoBeHyl//t4sqNPfFJ7Zghh2Sy2ggibZYb0gWmnuTnDU3f
+	 mqL6RL5YUM+Q/nsIP85ak1aU7YTgxb6rvCsLSTaE64RrqvKYCx49WYBKiFn/OsMzzog==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794301126;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=xhVWndVR0o6SKTuadyxAZL9oN674X8yuA97DrjcZg2U=;
-	b=gr3Yi33KQmP9P5/f3312InAfNv9S2LJFUYrjQz8PgMABM4wkMfz8mqLJnScz8ZpzcNFs
-	 DDnjsHjQnh5Rt66jg114Sh/3j6ua0UZAsVBnxahQLs9zMOEaGI4fngjEZ4syhd+OyuQ4o
-	 jScXyehzb7zYFgAZI9VlrYT7vTIiPnMBEP1OnwJpkMbPar59SNEae0IMwQHRduPOSVdOM
-	 jUubp3h9lchgrnBDV9WKdxIadEOGcbkeGpLCUR6479KlhA/L803t2GGu7/5tx8iCmZI/0
-	 ao9RY6I5v2vB1a1bKY+74RBAdYVRevS4/+dDjI5Qy7M+vsowO1bbAY5IFdrI5+LisDw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794301173;
+	h=DMARC-Filter:Received:Received:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-CM-SenderInfo:
+	 X-Coremail-Antispam;
+	bh=UriPUrEKGMPcV1kTeVLDKkGMmTprVWESy8oG8aPSbZo=;
+	b=z2UE21Zp/KeGBgqyEECGGrzAnPWtAPLJI3ZVgmQvbI4dB/KEUJIjabso/8JvQV8AzHGL
+	 dCKlKYhDe3GfKOSC492zJ9Lhwo5+bkFnCfMzro0D2BDxAfikbaKqFEEb6hdxjsPYqjEZC
+	 UWkh0ayBo3/nUMvmMXHQqdiTzp/EYYn0qUGDRfmVOk5rCgSJpw4AEWOgDXpzMBQ/gsQUt
+	 wzFehiLtdag2X8ZvgViIAgTsGnlUNrxFukfv6TnkAdeQ1nP0SrL1k8W5evsZJQoo3O/cw
+	 MgIeCgV2zdKYSEP0f1+GYp9DXJEKXN5PfgF/UC496ZpHAO3xKpuYkYM+F+pvyGfcRPA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IyFZ8v5T;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8CE260A2628;
-	Tue, 10 Nov 2026 08:58:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IyFZ8v5T
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AC311F008BF;
-	Tue, 10 Nov 2026 08:58:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794301125;
-	bh=xhVWndVR0o6SKTuadyxAZL9oN674X8yuA97DrjcZg2U=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IyFZ8v5TTlePo0Hh6D34oCUkZXHkZ+RStYOGMjLX/lhAydKK0ImkZpbPY63VaEM3X
-	 CzRFuMGnfo7toJncmsXEra2YY1kkz9Q3wMo+dPTboBrk5bVLx5EaFPBB/HAMJboH4W
-	 YWvwB8M5eckqkHS8IXhqgpFoVNuSRNjnnk1R9fxZLSussCl2qc2e01pJPuysgai8WB
-	 YdImJniSPcQCI5iESIwCpV2Z64cf1aiaaFXnMuLrKVKwJ+MNzLB+CjkbVZVf8/sgG1
-	 HQv4Q1lmB30nvU6w+S9Rmojz3sOKacWMvohK/M960IRdKbI20mGZOEe6y/m0737r0F
-	 b1CIc+RvKDj/w==
-Message-ID: <sashiko-outbox-206684@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 09/10] NTB: ntb_hw_epf: Discover vNTB-embedded DMA
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Koichiro Den" <den@valinux.co.jp>
-Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev
-In-Reply-To: <20261110082459.1798763-10-den@valinux.co.jp>
-References: <20261110082459.1798763-1-den@valinux.co.jp>
- <20261110082459.1798763-10-den@valinux.co.jp>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 08:58:45 +0000
+	dmarc=none header.from=loongson.cn;
+	spf=pass smtp.mailfrom=loongson.cn;
+	arc=none smtp.remote-ip=114.242.206.163
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B664D606A32A;
+	Tue, 10 Nov 2026 08:59:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B664D606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=loongson.cn
+Received: from loongson.cn (unknown [10.20.42.172])
+	by gateway (Coremail) with SMTP id _____8DxztLy3PJqwiAeAA--.20886S3;
+	Tue, 10 Nov 2026 16:59:30 +0800 (CST)
+Received: from ubuntu.loongson.cn (unknown [127.0.0.1])
+	by front1 (Coremail) with SMTP id qMiowJBxa87t3PJqCXQzAA--.20943S3;
+	Tue, 10 Nov 2026 16:59:27 +0800 (CST)
+From: wuqianhai@loongson.cn
+To: chenhuacai@kernel.org,
+	kernel@xen0n.name,
+	tzimmermann@suse.de,
+	deller@gmx.de,
+	bhelgaas@google.com
+Cc: ardb@kernel.org,
+	ilias.apalodimas@linaro.org,
+	javierm@redhat.com,
+	loongarch@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-fbdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	wuqianhai <wuqianhai@loongson.cn>
+Subject: [PATCH v3 5/6] efi/libstub: Enable direct sysfb_primary_display access on LoongArch
+Date: Tue, 10 Nov 2026 16:57:28 +0800
+Message-Id: <20261110085729.2628009-2-wuqianhai@loongson.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261110085729.2628009-1-wuqianhai@loongson.cn>
+References: <20261110085729.2628009-1-wuqianhai@loongson.cn>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,113 +64,54 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qMiowJBxa87t3PJqCXQzAA--.20943S3
+X-CM-SenderInfo: 5zxtxtpqkdxqxorr0wxvrqhubq/
+X-Coremail-Antispam: 1Uk129KBj9xXoW7GF1fCFW5GrWxCFykWFWxuFX_yoWkCFgEya
+	s8urZrWr4j9ryYgr4UKrWfuas0qay0qw1kZF92yrW3tw4jgwn5Ww4kXwn7CF13AryvkrZ8
+	A3WDCF9xAr48tosvyTuYvTs0mTUanT9S1TB71UUUUbUqnTZGkaVYY2UrUUUUj1kv1TuYvT
+	s0mT0YCTnIWjqI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUI
+	cSsGvfJTRUUUbqAYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20x
+	vaj40_Wr0E3s1l1IIY67AEw4v_JF0_JFyl8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAF
+	wI0_Gr1j6F4UJwAaw2AFwI0_JF0_Jw1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqjxCEc2
+	xF0cIa020Ex4CE44I27wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_
+	Wrv_ZF1lYx0Ex4A2jsIE14v26F4j6r4UJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2
+	Ij64vIr41lw4CEc2x0rVAKj4xxMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48J
+	MxC20s026xCaFVCjc4AY6r1j6r4UMxCIbckI1I0E14v26r126r1DMI8I3I0E5I8CrVAFwI
+	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26F1j6w1UMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+	WxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26F4j6r4U
+	JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUxFksUU
+	UUU
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] NTB: ntb_hw_epf: DMA IRQ reservation conflicts with vNTB tail
-  doorbell vector
---
+From: wuqianhai <wuqianhai@loongson.cn>
 
-commit f7a63c5c0603979fdb93290006c7e19909b1a6bf
-Author: Koichiro Den <den@valinux.co.jp>
+alloc_primary_display() returns NULL on LoongArch when neither
+CONFIG_EFI_EARLYCON nor CONFIG_SYSFB is enabled, so the EFI stub does not
+populate the core kernel's sysfb_primary_display.  Allow LoongArch to link
+directly to sysfb_primary_display, like x86, so the firmware framebuffer
+information is always available.
 
-NTB: ntb_hw_epf: Discover vNTB-embedded DMA
+Signed-off-by: wuqianhai <wuqianhai@loongson.cn>
+---
+ drivers/firmware/efi/libstub/efi-stub-entry.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-This commit decodes the vNTB endpoint-local DMA extension in ntb_hw_epf
-and registers advertised DW eDMA channels before registering the NTB
-device.
+diff --git a/drivers/firmware/efi/libstub/efi-stub-entry.c b/drivers/firmware/efi/libstub/efi-stub-entry.c
+index efa3ab8ad1c6..2ac22720675c 100644
+--- a/drivers/firmware/efi/libstub/efi-stub-entry.c
++++ b/drivers/firmware/efi/libstub/efi-stub-entry.c
+@@ -20,6 +20,7 @@ struct sysfb_display_info *alloc_primary_display(void)
+ 		return __alloc_primary_display();
+ 
+ 	if (IS_ENABLED(CONFIG_X86) ||
++	    IS_ENABLED(CONFIG_LOONGARCH) ||
+ 	    IS_ENABLED(CONFIG_EFI_EARLYCON) ||
+ 	    IS_ENABLED(CONFIG_SYSFB))
+ 		return kernel_image_addr(&sysfb_primary_display);
+-- 
+2.34.1
 
-> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_=
-epf.c
-> index ff92c2a61ce7d..e0016128b95c0 100644
-> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-
-[ ... ]
-
-> @@ -347,16 +581,20 @@ static int ntb_epf_init_isr(struct ntb_epf_dev *nde=
-v, int msi_min, int msi_max)
->  {
->  	struct pci_dev *pdev =3D ndev->ntb.pdev;
->  	struct device *dev =3D ndev->dev;
-> +	unsigned int dma_max =3D ndev->dma.nr_irqs;
-> +	unsigned int dma_min;
->  	u32 argument =3D EPF_NTB_MSIX_ENABLE;
-> +	unsigned int ntb_irqs;
->  	int irq;
->  	int ret;
->  	int i;
-> =20
-> -	irq =3D pci_alloc_irq_vectors(pdev, msi_min, msi_max, PCI_IRQ_MSIX);
-> +	irq =3D pci_alloc_irq_vectors(pdev, msi_min,
-> +				    msi_max + dma_max, PCI_IRQ_MSIX);
->  	if (irq < 0) {
->  		dev_dbg(dev, "Failed to get MSIX interrupts\n");
-> -		irq =3D pci_alloc_irq_vectors(pdev, msi_min, msi_max,
-> -					    PCI_IRQ_MSI);
-> +		irq =3D pci_alloc_irq_vectors(pdev, msi_min,
-> +					    msi_max + dma_max, PCI_IRQ_MSI);
->  		if (irq < 0) {
->  			dev_err(dev, "Failed to get MSI interrupts\n");
->  			return irq;
-> @@ -364,8 +602,17 @@ static int ntb_epf_init_isr(struct ntb_epf_dev *ndev=
-, int msi_min, int msi_max)
->  		argument &=3D ~EPF_NTB_MSIX_ENABLE;
->  	}
-> =20
-> -	ndev->db_count =3D irq - 1;
-> -	for (i =3D 0; i < irq; i++) {
-> +	dma_min =3D dma_max && irq > msi_min;
-> +	/* Reserve one shared DMA IRQ when available, then give the rest to NTB=
-. */
-> +	ntb_irqs =3D min_t(unsigned int, irq - dma_min, msi_max);
-> +	ndev->dma.nr_irqs =3D irq - ntb_irqs;
-> +	if (dma_max && !ndev->dma.nr_irqs) {
-> +		dev_warn(dev,
-> +			 "No IRQ available for endpoint DMA, continuing without DMA\n");
-> +		ndev->dma.type =3D 0;
-> +	}
-> +	ndev->db_count =3D ntb_irqs - 1;
-> +	for (i =3D 0; i < ntb_irqs; i++) {
->  		ndev->irq_ctx[i].ndev =3D ndev;
->  		ndev->irq_ctx[i].irq_no =3D i;
->  		ret =3D request_irq(pci_irq_vector(pdev, i), ntb_epf_vec_isr,
-> @@ -377,7 +624,7 @@ static int ntb_epf_init_isr(struct ntb_epf_dev *ndev,=
- int msi_min, int msi_max)
->  	}
-> =20
->  	ret =3D ntb_epf_send_command(ndev, EPF_NTB_COMMAND_CONFIGURE_DOORBELL,
-> -				   argument | irq);
-> +				   argument | ntb_irqs);
-
-[Severity: Medium]
-Does reserving tail vectors for DMA here conflict with the endpoint's
-last doorbell vector?
-
-In MSI-X mode, pci-epf-vntb sets the MSI-X table size to ntb->db_count
-(at most 32), so pci_alloc_irq_vectors() returns irq =3D ntb->db_count <=3D
-msi_max.  When irq > msi_min, dma_min is 1, which sets ntb_irqs =3D
-ntb->db_count - 1 and assigns 0-based vector ntb->db_count - 1 to
-dw_edma via ntb_epf_dw_edma_irq_vector().  However, pci-epf-vntb ignores
-the vector count in argument:
-
-drivers/pci/endpoint/functions/pci-epf-vntb.c:epf_ntb_cmd_handler() {
-	case EPF_NTB_COMMAND_CONFIGURE_DOORBELL:
-		...
-		ntb->peer_msix =3D argument & EPF_NTB_MSIX_ENABLE;
-		ctrl->command_status =3D EPF_NTB_COMMAND_STATUS_OK;
-		break;
-}
-
-Because vntb_epf_db_valid_mask() still exposes all ntb->db_count - 2
-doorbells on the endpoint, ringing doorbell bit ntb->db_count - 3 raises
-vector ntb->db_count - 1 on the host, routing the doorbell interrupt to
-dw_edma instead of ntb_epf_vec_isr().  The mismatched
-ntb_db_valid_mask() between host and endpoint also causes
-ntb_transport_probe() to compute a different qp_count on each side when
-mw_count >=3D ntb->db_count - 3, preventing the transport link from coming
-up.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110082459.1798=
-763-1-den@valinux.co.jp?part=3D9
