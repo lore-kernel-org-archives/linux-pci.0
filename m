@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794284794;
-	b=DR5SWgZXAEr0BFwMSEjrqRQcnisgNVeP1wfnG7lciqbrziVCmcG7mhTYTpNu4IUNenMK
-	 4l72QYaWFDcWMZCF5Cyic9EY0fN1tUBDbdkMQfmcstVzQElPGjYILiOLl7rvjlc4wzsSQ
-	 erFhduHm4R2qFxe98MvnVJ7jdDuV2eW4vmzkvOIY7rGAi9QUM/OY8cg0KhE512KU7eBeb
-	 tzT7NXrtmLxSQkK28PoCgUfLD2GIyQHcqo1icNk3LjBhv3HUU0yH1qJ+OUP220ybdN0Tt
-	 GFoaTBbtq0VFVqbOJsjaXFop5pBtaDMMTUWI3WxH8afjsWYQNDiC2eNYTc+MogIs6MQ==
+	t=1794284810;
+	b=BhoOz6tqJGjuxA14dBmE/C4WqHXHqNpUHAWoWYWhoxvpYLsbSWZh4FB7wa8br1Tb0lKD
+	 IO+Iiuua1uIc1gtC2YKjWi/M062N80wM7eGnGWTDVtPw6BsE2BkhcqKMgBmnATqkSbvXY
+	 a/52sB0e2MlNLJaSsBhDVtoVUz2CfjW2EF3esev0a8waadOa3D+Z3eDn1hdfSbuX5R6ni
+	 AAgMWUlvHZB5ME3KkgBcspDH7JFwTxKKb4eQK2Uv7t4HorVDB241At/mBPY19aFa4T/Vj
+	 CfDC7skEUbItOy7mdqCqAP+S1sEzqKcn28wjm4XpQAqrW/b5fZ3Ym8RHXrWJBkOZRQw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794284794;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794284810;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=co0aejwE4kHN04AT/RO2nF2ay0+LPtSRPQv4r+7BkR8=;
-	b=z7ODaXzr05hBdoF96oFa8tKSU7nbj4JA4CHJZQea85lLWInaC+WPTN207rgbFPqWQZBD
-	 PlVrHZ7EXgfFZFdQdZg0j/5HNG99ciQ6DHR67PAYSYDn27GMx5BCgHypXT437vmFwPByt
-	 bu1RgtGF8tXCvVfRxSLD4RnR+ijaB2xvlL1LXzrEPEcP7CgDpYZc84ld90pGwD9Btpo7V
-	 ZYzu5kXNb4j4dPa/ZEFpYuULcfMC7DpLtyKjmrn355jGn1S6BD1ZZY2gZ6BIYhKvyVcQi
-	 gkFVGGGVaJVO02uY3NnGSTxEmuCptc4v8ZqI/yiH3yfWVpGOZ1Uz6GQMcVdC63evN5w==
+	bh=vQNwBiVP3xTDeOUsdledqbqghtxx94CCdrIUVRDDZZU=;
+	b=e44PotIA5rs8tQRo37+I2KeIYF551IbBRrq94Yg15AKcJejngs+nXK0V9Y+1KTdgmXPS
+	 ShOqQccIwdUD7chO9rBPx/75JdiCxLUW5Ue9EDadM/Ax6LYb2KXGZw8sxZWhRSJHydmKo
+	 ySXKMXebZexszHV9QKLdm8wgaxjpu2U0QN3YvkfvVq2B/3dROH5JVHDtDhoNeT2sVB5li
+	 XwSUEjRGCn8CaBsE4URgrFRPlZJiXrWqtC0v7dAOg/XcLBVGdGMJ/2cEFPRhp/TtJuTzu
+	 K6g2MWWXoPOvl3ZTF+AKawj0pXf77BGPK4k3hzd/3isJt4gs6MbTf20LclPIZJ2ATdA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Sw7UKA3R;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FGW8YPhS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A48F5606A729
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:26:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A01606A335
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:26:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Sw7UKA3R
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 234541F0089F;
-	Tue, 10 Nov 2026 04:26:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FGW8YPhS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8E7F1F0089F;
+	Tue, 10 Nov 2026 04:26:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794284794;
-	bh=co0aejwE4kHN04AT/RO2nF2ay0+LPtSRPQv4r+7BkR8=;
+	s=k20260515; t=1794284809;
+	bh=vQNwBiVP3xTDeOUsdledqbqghtxx94CCdrIUVRDDZZU=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=Sw7UKA3Rrg7/DjytLALRXHraRN/klo6pB8MW4OE0AZc9vu2zcxoAqO5iaTBTXxFpa
-	 lYrPM7gf+Fr5lr0wbPCWvU4R6qIYw4eZm61+QcncD43y6kJCDOuXxpHfUgcfylzlH8
-	 xeT4z+Hcdo/SuXsvD68Ib+KQHDAwTEX7f0qy6lQuNBXd3fMlu9B7U98QMERi1yoObd
-	 HZkk8oXbIajaRHsWExNfSHXqo1UYi49Vq79IeR21IKvWd6F4EWmIEgaucIZjDFfa3z
-	 f2KlvnqXUL1eOnc1mOCE9wLonNztp844t4NnhdEuSeerl6AOzdYlceGbSehZgQsKuM
-	 VfFpxnZ9YyO7g==
-Message-ID: <sashiko-outbox-206197@kernel.org>
+	b=FGW8YPhS2TZZIip89Q0gfqy1lFi6I9ChcoO+nd55l2SUdP1S4e2UfNZ7uJf5AbvPY
+	 oVd9YvplACOL9ydOAFh//pFBQBbo1TxXDgpKdm9/U2LMgyYsVzX+QxYvwM00cCRbPP
+	 GRMYIqqDbIsauD2Fd9o+iCsFsNAuSVR2YAuUt6FTUF1ZDPO+gHx2MEcXYaLsvee3Yt
+	 MXOjlMn80huZByfM2VoFM2YYzM2Jq8LCXN2vePN7FTyug38OXmzPydnuBIjAqB23u4
+	 b2WyXJJxY/DhfVTOguWBmTU8g36JUXUoYgmfvN0fsU6hL1X+JWLYgexx5LVGv19XIZ
+	 d2HMsV6oROsvQ==
+Message-ID: <sashiko-outbox-206198@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 03/25] rust: validate: add `Validate` trait
+Subject: Re: [PATCH v6 04/25] X.509: Make certificate parser public
 Reply-To: sashiko-reviews@lists.linux.dev
 To: alistair23@gmail.com, linux-pci@vger.kernel.org
-In-Reply-To: <20261110041832.1730924-4-alistair.francis@wdc.com>
+In-Reply-To: <20261110041832.1730924-5-alistair.francis@wdc.com>
 References: <20261110041832.1730924-1-alistair.francis@wdc.com>
- <20261110041832.1730924-4-alistair.francis@wdc.com>
+ <20261110041832.1730924-5-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 04:26:33 +0000
+Date: Tue, 10 Nov 2026 04:26:49 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,34 +59,34 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Benno Lossin <benno.lossin@proton.me>
+> From: Lukas Wunner <lukas@wunner.de>
 >=20
-> Introduce the `Validate<Input>` trait and functions to validate
-> `Untrusted<T>` using said trait. This allows one to access the inner
-> value of `Untrusted<T>` via `validate{,_ref,_mut}` functions which
-> subsequently delegate the validation to user-implemented `Validate`
-> trait.
+> The upcoming support for PCI device authentication with CMA-SPDM
+> (PCIe r6.1 sec 6.31) requires validating the Subject Alternative Name
+> in X.509 certificates.
 >=20
-> The `Validate` trait is the only entry point for validation code, making
-> it easy to spot where data is being validated.
+> High-level functions for X.509 parsing such as key_create_or_update()
+> throw away the internal, low-level struct x509_certificate after
+> extracting the struct public_key and public_key_signature from it.
+> The Subject Alternative Name is thus inaccessible when using those
+> functions.
 >=20
-> The reason for restricting the types that can be inputs to
-> `Validate::validate` is to be able to have the `validate...` functions
-> on `Untrusted`. This is also the reason for the suggestions in the
-> `Usage in API Design` section in the commit that introduced
-> `Untrusted<T>`.
+> Afford CMA-SPDM access to the Subject Alternative Name by making struct
+> x509_certificate public, together with the functions for parsing an
+> X.509 certificate into such a struct and freeing such a struct.
 >=20
-> The `Validate::validate()` function allows additional context to be
-> passed, which can be used as part of the validation process. For example
-> comparing data against already negotiated information.
+> No functional change intended.
 >=20
-> Signed-off-by: Benno Lossin <benno.lossin@proton.me>
-> Message-ID: <20250814124424.516191-4-lossin@kernel.org>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> Reviewed-by: Alistair Francis <alistair.francis@wdc.com>
+> Reviewed-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110041832.1730=
-924-1-alistair.francis@wdc.com?part=3D3
+924-1-alistair.francis@wdc.com?part=3D4
 
