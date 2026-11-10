@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794286947;
-	b=ET97GVvNHhwYz3sRHnbohiXmKvUsBv9Po57hGobNERnjIbo/qqWgwEerPaTkiqXbZ9qz
-	 3wejozgBd05l4MwRC7/fj2VLdc/EudR95wwLBhovAmNnYmqHJOk4qIXLk19prhKRLqfNd
-	 TOsQPdVw4s4/5J9q0WX0bhv2xtbmniJsIjmMI5mIfFT1210fLr/Stm7tR+zSQueG0YTOI
-	 DkhbbKsop8fAyaeG8bI0xamBLFVVG19X1QnaEwC8jIs/ciqCjxEe4C22TXARVM8nUZEYj
-	 zRRtU60dU8s1+WwuzwsEHhI4gZYH5b0bBOpt/EkWalNhuQRjK9xSJT2WeKEQtzwSPCg==
+	t=1794286943;
+	b=VsmZREZg6fthcpapvLGFmEMF3a4zAx3WIY5aR2d3mdXu4NsXSVHR3Rag8FlMerMc0GnK
+	 XJ4SAtrPVwu7se4kcVwwf5FlpzJX+FwZYA9w5CIvJYNz7cSF3cG+BL1YHVZ/UnRyPAS0J
+	 zKpLsXrAvCGp1yhCW/VObuTEB9x8YSfUTKGiDKbR9WEYjU0kTY3ieUnaRKg0kf3LAZNx3
+	 oWnBxxI470KjD0LBiKgaaDEFIZ4QGVKeynfnS7iG8agbmkjpgGSeGZ8xXUO7vs7Dhp6lO
+	 PmcjjY3fEp6hJonhBar88VXpHxkqtkK5CTSXyOwSy3wybWjw11L4TP3ktPEM/+gkAuQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794286947;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794286943;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=hS6VkHJCMMhJIKk9BuX59tEknsJKMmzlEArInOfp3hI=;
-	b=LqBJmtDyyGllvDVyGVuugG4gJuM//lIlvLobYODKTwx7q3GJ1BiErqnln5AZu47r+11L
-	 ev9LZPqbfCipT+qEP0+3MHuWCYfKiJ7CpRY6/HQ05AzIyEOWyNB2rZyTiyL2lFp9c/sn0
-	 1FtDT+6LyFdew9EWG3QXMSpEQUXPq77P97257r+ukvw8uy+v3GecfGUgb4RgmbZE1WsgM
-	 MMhV2/7oeX/ibKI6OBKHuyxijplkpKB61b9H9fKXCE0JKjKg1J0XWio4Pqf2Tb5JdeseH
-	 BOFQ/tWaHHia95jxGsHGqNyQM+R08KoIsT4iPOww3B3RoFvf9fusy3kWXpAEnC9D93A==
+	bh=3seM7JJG/qIc4h+h1T0VWvSmXn/fwRDakjk9Gf7qDBQ=;
+	b=IR7EvWJwM32mfje9UWZvsGA059rhk4UmuDdZSmoLUp6wzVvLCf6ZxD59clOv0gTUfE2+
+	 3pr0I+SzjKqpWivsozpqUdR/NfJgU2ELH8AXmfVXPPOjsENNyEhmTtBWq9hhq12YDL+As
+	 AGXZC0HnbppXxkMeLbCy2hTvcGHJnlzlFNyW44wQvlo6VEAKhwzakoZ7j6sruCMoPMBux
+	 DORBb43tiwwg4QZrE8Ruw5uf8EEixuCYVgAX36mlnx/lwAB5LWXhRl+gZehhOuK1BjAJV
+	 UrbO3tjOBVGQSNsVyeAyAkR3VBXtdyGSXzJqkqNYMaTwGkOfhU6Yu76bgWIzOpd2Pfw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="S58Fi/4S";
-	arc=none smtp.remote-ip=209.85.208.72
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=f9XXrmva;
+	arc=none smtp.remote-ip=209.85.208.69
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com [209.85.208.69])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B2A9606E4BE
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7B2A9606E4BE
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B667606C934
+	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 05:02:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7B667606C934
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=S58Fi/4S
-Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-6b5e0ce4132so1260304a12.3
-        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 21:02:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=f9XXrmva
+Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-6b3f840cb9cso1943573a12.1
+        for <linux-pci@vger.kernel.org>; Mon, 09 Nov 2026 21:02:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794286946; x=1794891746; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1794286941; x=1794891741; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=hS6VkHJCMMhJIKk9BuX59tEknsJKMmzlEArInOfp3hI=;
-        b=S58Fi/4SZtrSTvMJ1M5E3tCwXCGgw/1g+d35Cbh17HUXFluAO8iFF/keBKl8sX+Uic
-         E6P1Fef8bClCGEothgFJ4hn9o1FD3q5CffFW4J90BZyGxj9x9h6nYckAyDwSAxyJSuBg
-         W3uOiQPs7LZ47GXaptrqvdtQMbRu7rLcevhmuZBPJTpOTDQGPIrD+Zm0ZuX5CyhXV8Jd
-         FfgxElJr+8tDGFiH8/kHQPsRwDozK37NpLDvl9KdfNkEGxOXYcccvwzmPH3TryqsUvMG
-         MUAPNC60CP7zEQupK/dVpENaIu9MfU+Z/7L0+ZWewMQrmtSLyAD6c/Gnf1E8KND+7S2i
-         pinQ==
+        bh=3seM7JJG/qIc4h+h1T0VWvSmXn/fwRDakjk9Gf7qDBQ=;
+        b=f9XXrmvaRLg0xj4dcXctGWEY8BrKH3qmsyeo44rusibgES4NoTKTLE+uonETvL9BSb
+         hlWkmmvnwsKAyAyWSDpJtRMZv/Yv8fORVQGql7lStc80SZeC2svhGuD0amiMeWjPaST5
+         JZ5lHuWn/V3icbf6y+4mqgiabh35jxMaZgHBXdsx1PqjFyLvBtAan3LPjZlHA7wIAUkc
+         8B69CF07c3xf2MnJdPZIVKKts/D7Fg7ltWzBRg78IycxIMK/ksmSyzIergrH4kOyDDiP
+         ewag5x2MOxUFx8ueEO8fLiHHTCmH6LFZyDPOTNqLIbte5jFAXZKB16ywuJDJOT0bvC/5
+         jVrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794286946; x=1794891746;
+        d=1e100.net; s=20260707; t=1794286941; x=1794891741;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=hS6VkHJCMMhJIKk9BuX59tEknsJKMmzlEArInOfp3hI=;
-        b=bw+yC7ubUMiJPsaDzTA5CHcCRH1pr/6OXXqAwaotQWDfA8imc5f03A6J40P1MmfAVF
-         pI0eLbyCWgvELGsZMJjb1u9XN/iRkpTeOB5opDnkM5ar5/kLdZmCkaTCJm/IdlEQbJTd
-         roMXaIGKEMfEZHJ54gD4D8Fjtz3TqfexjxOJ6ViYO4/YEsUfEfkdvoXe8H1aIUYqMvsm
-         y1IMNukUtMyB+iP+OCx6qBq5kZ6UCDGSQjPKDaPsybQ02IxTQdAfklKN/DYSWVyBKtES
-         MEbNef4yK/Oow9vQF27YrhEBuLf95eCAWcIuX/kxQMN/e5vmccW7fK55h6pjPm5rDJiM
-         IVlQ==
-X-Forwarded-Encrypted: i=1; AL+hErE+w69DZCvH+jNeL0k3EoArh2MYfFHUhOHV6qleGhPXOT+Ap5iy+W1r7SujUd2+RFXQ1hvDSvW7UY0=@vger.kernel.org
-X-Gm-Message-State: APuU4Z80jcsAXl3k4nazS8p8oPebunhGKk+0cEosWsv1P0MJAdY9GwhA
-	3fKrtBvO4oQQMKXinVArVg6jdnQiAGIHPvxKARnHrOllWitSJXpcfi1WAYrhEuVZCDoDsufizun
-	5uw9PBXQQKCddbjX8Hw==
-X-Received: from edqu26.prod.google.com ([2002:aa7:d89a:0:b0:6b7:37e3:4968])
+        bh=3seM7JJG/qIc4h+h1T0VWvSmXn/fwRDakjk9Gf7qDBQ=;
+        b=ZvrHJjIdChpDevRxr5hMn4wl/UQ67l7nzHKAroJT3KQP+gQoaJEXpzWcD40jE6Hpkm
+         dCB4idBRTtNQ0X30OzpWCvkPokULqK4I38Vg7d/4kcYdakR71PdImJRSvZLZz4kyuO49
+         lIQbBXPkr6N3wNG3P5xLcX/D8RXiaXho2OP1JqKmM+vNmTIih1aBvoSoJ79dKVirkvVB
+         Aanw1Xr/kklPkyJ6viK6VkNwLTSu2ki0irzcbfMTBIT9WX0BC5n+Ct2d6pwcO/uzJdqm
+         WcJJcinB1J+J0gb4rMT7RQp84wBpFNaIlCZVQrvTgtdfRY+SvRJ+FRapHg5QpLZRNfsT
+         ixnA==
+X-Forwarded-Encrypted: i=1; AL+hErH/xXDCfdyhCh9cWtTmOXlGxbfwvIgpaKHitcg+QTSyAOcHjmthJxikVlEJ0/Rf+7CsHZSP6e0mQhA=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9DIYdFBjajPy3hdg/ef2PXXnYWWICYbkLfS/erSjQNErFjqJ06
+	+Xj+RfwNO2NyUlayTTR4wDqvI3wjRzjdc5cgpnemUqrXcs/RrFLKWpaf0NhVOBI3xzwFfsgPf5p
+	V+nYIHFHDe3gJLBbcEw==
+X-Received: from edl8-n1.prod.google.com ([2002:a05:6402:4248:10b0:6b1:a845:1d31])
  (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6402:2422:b0:6b7:dc8:c824 with SMTP id 4fb4d7f45d1cf-6b756b08c35mr1192059a12.42.1794286944980;
- Mon, 09 Nov 2026 21:02:24 -0800 (PST)
-Date: Tue, 10 Nov 2026 05:02:01 +0000
+ 2002:aa7:d896:0:b0:6b7:2969:a2b4 with SMTP id 4fb4d7f45d1cf-6b756aeeca3mr787329a12.39.1794286940631;
+ Mon, 09 Nov 2026 21:02:20 -0800 (PST)
+Date: Tue, 10 Nov 2026 05:01:57 +0000
 In-Reply-To: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261110050202.529473-1-tarunsahu@google.com>
 X-Mailer: git-send-email 2.56.0.506.g506a7eabc5-goog
-Message-ID: <20261110050202.529473-19-tarunsahu@google.com>
-Subject: [PATCH v4 18/19] mm: memfd_luo: Add feature header to struct memfd_luo_folio_ser
+Message-ID: <20261110050202.529473-15-tarunsahu@google.com>
+Subject: [PATCH v4 14/19] liveupdate: Add feature header to struct luo_flb_ser
 From: Tarun Sahu <tarunsahu@google.com>
 To: Pasha Tatashin <pasha.tatashin@soleen.com>, Mike Rapoport <rppt@kernel.org>, robin.murphy@arm.com, 
 	maz@kernel.org, will@kernel.org, David Matlack <dmatlack@google.com>, 
@@ -99,238 +99,136 @@ Cc: kvmarm@lists.linux.dev, linux-pci@vger.kernel.org,
 	Tarun Sahu <tarunsahu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Precede each serialized folio entry in the preserved memfd folio array
-with struct kho_ser_hdr via DECLARE_KHO_SER so future per-folio memfd
-features can append fields to struct memfd_luo_folio_ser without breaking
+Precede each serialized File-Lifecycle-Bound (FLB) entry in the preserved
+FLB array with struct kho_ser_hdr via DECLARE_KHO_SER so future FLB
+metadata features can append fields to struct luo_flb_ser without breaking
 compatibility between adjacent kernels.
 
-Allocate the preserved folio array using kho_ser_size(memfd_luo_folio_ser)
-per entry and initialize each entry feature header in
-memfd_luo_preserve_folios(). On the incoming path in
-memfd_luo_discard_folios() and memfd_luo_retrieve_folios(), validate each
-entry feature header with kho_ser_validate() and advance between entries
-using fhdr->size so entries written with a different feature layout are
-traversed accurately.
+Compute LUO_FLB_MAX and outgoing entry offsets using
+kho_ser_size(luo_flb_ser), and initialize each entry feature header in
+luo_flb_serialize(). On the incoming path in luo_flb_retrieve_one(),
+validate each entry feature header with kho_ser_validate() and advance
+between entries using fhdr->size so entries written with a different
+feature layout are traversed accurately.
 
 Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 ---
- include/linux/kho/abi/memfd.h |  6 ++--
- mm/memfd_luo.c                | 66 +++++++++++++++++++++++++----------
- 2 files changed, 51 insertions(+), 21 deletions(-)
+ include/linux/kho/abi/luo.h |  6 ++----
+ kernel/liveupdate/luo_flb.c | 39 +++++++++++++++++++++++++------------
+ 2 files changed, 29 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/kho/abi/memfd.h b/include/linux/kho/abi/memfd.h
-index 27f8880ee593..1aad47ce7322 100644
---- a/include/linux/kho/abi/memfd.h
-+++ b/include/linux/kho/abi/memfd.h
-@@ -51,6 +51,8 @@
-  * @pfn:       The page frame number of the folio.
-  * @flags:     Flags to describe the state of the folio.
-  * @index:     The page offset (pgoff_t) of the folio within the original file.
-+ *
+diff --git a/include/linux/kho/abi/luo.h b/include/linux/kho/abi/luo.h
+index 4913707ba0d3..1b660d41bb90 100644
+--- a/include/linux/kho/abi/luo.h
++++ b/include/linux/kho/abi/luo.h
+@@ -181,7 +181,7 @@ DECLARE_KHO_SER(luo_flb_header_ser, 16, 0, 0);
+  * passed to the new kernel. Each entry allows the LUO core to restore one
+  * global, shared object.
+  *
+- * If this structure is modified, `LUO_ABI_COMPATIBLE` must be updated.
 + * Preceded by &struct kho_ser_hdr.
   */
- struct memfd_luo_folio_ser {
- 	u64 pfn:52;
-@@ -58,9 +60,7 @@ struct memfd_luo_folio_ser {
- 	u64 index;
+ struct luo_flb_ser {
+ 	char name[LIVEUPDATE_FLB_COMPAT_LENGTH];
+@@ -189,9 +189,7 @@ struct luo_flb_ser {
+ 	u64 count;
  };
  
--static_assert(sizeof(struct memfd_luo_folio_ser) == 16);
+-static_assert(sizeof(struct luo_flb_ser) == 64);
 -static_assert(!IS_ENABLED(CONFIG_64BIT) ||
--	      __alignof__(struct memfd_luo_folio_ser) == 8);
-+DECLARE_KHO_SER(memfd_luo_folio_ser, 16, 0, 0);
+-	      __alignof__(struct luo_flb_ser) == 8);
++DECLARE_KHO_SER(luo_flb_ser, 64, 0, 0);
  
- /*
-  * The set of seals this version supports preserving. If support for any new
-diff --git a/mm/memfd_luo.c b/mm/memfd_luo.c
-index 94510f73a606..c00daa8a508e 100644
---- a/mm/memfd_luo.c
-+++ b/mm/memfd_luo.c
-@@ -86,10 +86,10 @@
+ /* Kernel Live Update Test ABI */
+ #ifdef CONFIG_LIVEUPDATE_TEST
+diff --git a/kernel/liveupdate/luo_flb.c b/kernel/liveupdate/luo_flb.c
+index a8dcdb8456fd..d38c223741ff 100644
+--- a/kernel/liveupdate/luo_flb.c
++++ b/kernel/liveupdate/luo_flb.c
+@@ -53,11 +53,11 @@
  
- static int memfd_luo_preserve_folios(struct file *file,
- 				     struct memfd_luo_ser *ser,
--				     struct memfd_luo_folio_ser **out_folios_ser)
-+				     DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, **out_folios_ser))
+ #define LUO_FLB_PGCNT		1ul
+ #define LUO_FLB_MAX		(((LUO_FLB_PGCNT << PAGE_SHIFT) -	\
+-		kho_ser_size(luo_flb_header_ser)) / sizeof(struct luo_flb_ser))
++		kho_ser_size(luo_flb_header_ser)) / kho_ser_size(luo_flb_ser))
+ 
+ struct luo_flb_header {
+ 	struct luo_flb_header_ser *header_ser;
+-	struct luo_flb_ser *ser;
++	DECLARE_KHO_SER_HDR(luo_flb_ser, *fhdr);
+ 	bool active;
+ };
+ 
+@@ -159,6 +159,7 @@ static int luo_flb_retrieve_one(struct liveupdate_flb *flb)
  {
- 	struct inode *inode = file_inode(file);
--	struct memfd_luo_folio_ser *folios_ser;
-+	DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *folios_ser);
- 	unsigned int max_folios;
- 	long i, size, nr_pinned;
- 	struct folio **folios;
-@@ -138,14 +138,16 @@ static int memfd_luo_preserve_folios(struct file *file,
- 	}
- 	nr_folios = nr_pinned;
+ 	struct luo_flb_private *private = luo_flb_get_private(flb);
+ 	struct luo_flb_header *fh = &luo_flb_global.incoming;
++	DECLARE_KHO_SER_HDR(luo_flb_ser, *fhdr) = fh->fhdr;
+ 	struct liveupdate_flb_op_args args = {0};
+ 	bool found = false;
+ 	int err;
+@@ -177,10 +178,18 @@ static int luo_flb_retrieve_one(struct liveupdate_flb *flb)
+ 	if (!fh->active)
+ 		return -ENODATA;
  
--	folios_ser = vcalloc(nr_folios, sizeof(*folios_ser));
-+	folios_ser = vcalloc(nr_folios, kho_ser_size(memfd_luo_folio_ser));
- 	if (!folios_ser) {
- 		err = -ENOMEM;
- 		goto err_unpin;
- 	}
- 
- 	for (i = 0; i < nr_folios; i++) {
--		struct memfd_luo_folio_ser *pfolio = &folios_ser[i];
-+		DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *fhdr) =
-+			(void *)folios_ser + i * kho_ser_size(memfd_luo_folio_ser);
-+		struct memfd_luo_folio_ser *pfolio;
- 		struct folio *folio = folios[i];
- 
- 		err = kho_preserve_folio(folio);
-@@ -195,6 +197,8 @@ static int memfd_luo_preserve_folios(struct file *file,
- 
- 		folio_unlock(folio);
- 
-+		kho_ser_init(fhdr, memfd_luo_folio_ser);
-+		pfolio = kho_ser_payload(fhdr, memfd_luo_folio_ser);
- 		pfolio->pfn = folio_pfn(folio);
- 		pfolio->flags = MEMFD_LUO_FOLIO_DIRTY | MEMFD_LUO_FOLIO_UPTODATE;
- 		pfolio->index = folio->index;
-@@ -228,7 +232,7 @@ static int memfd_luo_preserve_folios(struct file *file,
- }
- 
- static void memfd_luo_unpreserve_folios(DECLARE_KHO_SER_HDR(kho_vmalloc, *folios_fhdr),
--					struct memfd_luo_folio_ser *folios_ser,
-+					const DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *folios_ser),
- 					u64 nr_folios)
- {
- 	long i;
-@@ -239,7 +243,10 @@ static void memfd_luo_unpreserve_folios(DECLARE_KHO_SER_HDR(kho_vmalloc, *folios
- 	kho_unpreserve_vmalloc(folios_fhdr);
- 
- 	for (i = 0; i < nr_folios; i++) {
--		const struct memfd_luo_folio_ser *pfolio = &folios_ser[i];
-+		const DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *fhdr) =
-+			(const void *)folios_ser + i * kho_ser_size(memfd_luo_folio_ser);
-+		const struct memfd_luo_folio_ser *pfolio =
-+			kho_ser_payload(fhdr, memfd_luo_folio_ser);
- 		struct folio *folio;
- 
- 		if (!pfolio->pfn)
-@@ -277,7 +284,7 @@ memfd_luo_ser_init(DECLARE_KHO_SER_HDR(memfd_luo_ser, *fhdr))
- static int memfd_luo_preserve(struct liveupdate_file_op_args *args)
- {
- 	struct inode *inode = file_inode(args->file);
--	struct memfd_luo_folio_ser *folios_ser;
-+	DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *folios_ser);
- 	DECLARE_KHO_SER_HDR(memfd_luo_ser, *fhdr);
- 	struct memfd_luo_ser *ser;
- 	int err = 0, seals;
-@@ -384,16 +391,23 @@ static void memfd_luo_unpreserve(struct liveupdate_file_op_args *args)
- 	inode_unlock(inode);
- }
- 
--static void memfd_luo_discard_folios(const struct memfd_luo_folio_ser *folios_ser,
-+static void memfd_luo_discard_folios(const DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *folios_ser),
- 				     u64 nr_folios)
- {
-+	const DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *fhdr) = folios_ser;
- 	u64 i;
- 
--	for (i = 0; i < nr_folios; i++) {
--		const struct memfd_luo_folio_ser *pfolio = &folios_ser[i];
-+	for (i = 0; i < nr_folios; i++, fhdr = (const void *)fhdr + fhdr->size) {
-+		const struct memfd_luo_folio_ser *pfolio;
- 		struct folio *folio;
- 		phys_addr_t phys;
- 
-+		if (kho_ser_validate(fhdr, memfd_luo_folio_ser)) {
-+			pr_warn("invalid folio feature header, folios not discarded\n");
-+			return;
-+		}
+-	for (int i = 0; i < fh->header_ser->count; i++) {
+-		if (!strcmp(fh->ser[i].name, flb->compatible)) {
+-			private->incoming.data = fh->ser[i].data;
+-			refcount_set(&private->incoming.count, fh->ser[i].count);
++	for (u64 i = 0; i < fh->header_ser->count;
++	     i++, fhdr = (void *)fhdr + fhdr->size) {
++		struct luo_flb_ser *ser;
 +
-+		pfolio = kho_ser_payload(fhdr, memfd_luo_folio_ser);
- 		if (!pfolio->pfn)
- 			continue;
- 
-@@ -411,7 +425,7 @@ static void memfd_luo_discard_folios(const struct memfd_luo_folio_ser *folios_se
- 
- static void memfd_luo_finish(struct liveupdate_file_op_args *args)
- {
--	struct memfd_luo_folio_ser *folios_ser;
-+	DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *folios_ser);
- 	DECLARE_KHO_SER_HDR(memfd_luo_ser, *fhdr);
- 	struct memfd_luo_ser *ser;
- 
-@@ -447,9 +461,10 @@ static void memfd_luo_finish(struct liveupdate_file_op_args *args)
- }
- 
- static int memfd_luo_retrieve_folios(struct file *file,
--				     struct memfd_luo_folio_ser *folios_ser,
-+				     const DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *folios_ser),
- 				     u64 nr_folios)
- {
-+	const DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *fhdr) = folios_ser;
- 	struct inode *inode = file_inode(file);
- 	struct address_space *mapping = inode->i_mapping;
- 	struct folio *folio;
-@@ -457,12 +472,20 @@ static int memfd_luo_retrieve_folios(struct file *file,
- 	int err = -EIO;
- 	long i;
- 
--	for (i = 0; i < nr_folios; i++) {
--		const struct memfd_luo_folio_ser *pfolio = &folios_ser[i];
-+	for (i = 0; i < nr_folios; i++, fhdr = (const void *)fhdr + fhdr->size) {
-+		const struct memfd_luo_folio_ser *pfolio;
- 		phys_addr_t phys;
- 		u64 index;
- 		int flags;
- 
-+		err = kho_ser_validate(fhdr, memfd_luo_folio_ser);
-+		if (err) {
-+			pr_err("memfd_luo_folio_ser feature validation failed: %pe\n",
-+			       ERR_PTR(err));
-+			goto put_folios;
-+		}
++		err = kho_ser_validate(fhdr, luo_flb_ser);
++		if (err)
++			return err;
 +
-+		pfolio = kho_ser_payload(fhdr, memfd_luo_folio_ser);
- 		if (!pfolio->pfn)
- 			continue;
- 
-@@ -472,7 +495,7 @@ static int memfd_luo_retrieve_folios(struct file *file,
- 			pr_err("Unable to restore folio at physical address: %llx\n",
- 			       phys);
- 			err = -EIO;
--			goto put_folios;
-+			goto next_put_folios;
++		ser = kho_ser_payload(fhdr, luo_flb_ser);
++		if (!strcmp(ser->name, flb->compatible)) {
++			private->incoming.data = ser->data;
++			refcount_set(&private->incoming.count, ser->count);
+ 			found = true;
+ 			break;
  		}
- 		index = pfolio->index;
- 		flags = pfolio->flags;
-@@ -524,15 +547,22 @@ static int memfd_luo_retrieve_folios(struct file *file,
- unlock_folio:
- 	folio_unlock(folio);
- 	folio_put(folio);
-+next_put_folios:
-+	i++;
-+	fhdr = (const void *)fhdr + fhdr->size;
- put_folios:
- 	/*
- 	 * Note: don't free the folios already added to the file. They will be
- 	 * freed when the file is freed. Free the ones not added yet here.
- 	 */
--	for (long j = i + 1; j < nr_folios; j++) {
--		const struct memfd_luo_folio_ser *pfolio = &folios_ser[j];
-+	for (; i < nr_folios; i++, fhdr = (const void *)fhdr + fhdr->size) {
-+		const struct memfd_luo_folio_ser *pfolio;
- 		phys_addr_t phys;
+@@ -573,7 +582,7 @@ int __init luo_flb_setup_outgoing(u64 *flbs_pa)
  
-+		if (kho_ser_validate(fhdr, memfd_luo_folio_ser))
-+			break;
+ 	header_ser->pgcnt = LUO_FLB_PGCNT;
+ 	luo_flb_global.outgoing.header_ser = header_ser;
+-	luo_flb_global.outgoing.ser = (void *)fhdr + kho_ser_size(luo_flb_header_ser);
++	luo_flb_global.outgoing.fhdr = (void *)fhdr + kho_ser_size(luo_flb_header_ser);
+ 	luo_flb_global.outgoing.active = true;
+ 
+ 	return 0;
+@@ -594,7 +603,7 @@ int __init luo_flb_setup_incoming(u64 flbs_pa)
+ 
+ 	luo_flb_global.incoming.header_ser =
+ 		kho_ser_payload(fhdr, luo_flb_header_ser);
+-	luo_flb_global.incoming.ser = (void *)fhdr + fhdr->size;
++	luo_flb_global.incoming.fhdr = (void *)fhdr + fhdr->size;
+ 	luo_flb_global.incoming.active = true;
+ 
+ 	return 0;
+@@ -626,10 +635,16 @@ void luo_flb_serialize(void)
+ 		long count = refcount_read(&private->outgoing.count);
+ 
+ 		if (count > 0) {
+-			strscpy(fh->ser[i].name, gflb->compatible,
+-				sizeof(fh->ser[i].name));
+-			fh->ser[i].data = private->outgoing.data;
+-			fh->ser[i].count = count;
++			DECLARE_KHO_SER_HDR(luo_flb_ser, *fhdr) =
++				(void *)fh->fhdr + i * kho_ser_size(luo_flb_ser);
++			struct luo_flb_ser *ser;
 +
-+		pfolio = kho_ser_payload(fhdr, memfd_luo_folio_ser);
- 		if (!pfolio->pfn)
- 			continue;
- 
-@@ -549,7 +579,7 @@ static int memfd_luo_retrieve_folios(struct file *file,
- 
- static int memfd_luo_retrieve(struct liveupdate_file_op_args *args)
- {
--	struct memfd_luo_folio_ser *folios_ser;
-+	DECLARE_KHO_SER_HDR(memfd_luo_folio_ser, *folios_ser);
- 	DECLARE_KHO_SER_HDR(memfd_luo_ser, *fhdr);
- 	struct memfd_luo_ser *ser;
- 	struct file *file;
++			kho_ser_init(fhdr, luo_flb_ser);
++			ser = kho_ser_payload(fhdr, luo_flb_ser);
++			strscpy(ser->name, gflb->compatible,
++				sizeof(ser->name));
++			ser->data = private->outgoing.data;
++			ser->count = count;
+ 			i++;
+ 		}
+ 	}
 -- 
 2.56.0.506.g506a7eabc5-goog
 
