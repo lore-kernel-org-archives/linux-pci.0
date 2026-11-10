@@ -1,87 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794313171;
-	b=XJaGI2lHgQqQuaFjnNMc9vnDdtY2uacdXfIjcYqGw+3EzK8c8utSrSbqcMQfRVt41dIq
-	 0jcTVTncIdM4row/Yl0mF8BK1W9WSQ+jCEyRFwZpzylZ1cGrT+V1D6EZdVwdS9ddqyq5e
-	 vTHbSVqwbwF48MIsiBQOy5ieWQcKpKdbm8A9vzuMVMdJSMR2f7wsbltLf5di21RHCj3CJ
-	 VLOCgIxNV+5ss34y45AX/uZiT+pZkF1JsCLUnD/qCLNQ23B9+dZTTR31pOu40gALlhl3s
-	 44ERLtKNFD2qpokub+5xEL2wCd6BlpLPheJzqtcoFsZxGnG13k2MtHLc50bQeiIqRwQ==
+	t=1794313362;
+	b=Zi6sJdV+RPeq9ZpXLd7plq0v0gAOLZqj/Px69Rx8CFX3wnw9xiWNq0DPXEpIdP8VYMig
+	 EvWxiB2+4qIXbq33APJGOJnnoo/UDLmmxHjsWGoOzp8dFXQ67U0AjUKLT0SWNjgTyG+sT
+	 97j3AUMdlp9SwHHHrjtRr5HFFG+rXfqPNyJxQ4FMYVL13kTMy1BNpYw5BsAbNns47ka2s
+	 I/sw9aBbF+WSwB7oXPOcgHbMgjiwkYgNJEHSvppOBQUenqKgLNInt1xwLNWKxKQWcHAgL
+	 g7W4I9uGDDV34ZSFiVFTYqp+y+7gyXoD1rnFZFyEPunJHbT0NERibt0J1MUyql6rQpA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794313171;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:From:To:Cc:References:
-	 Content-Language:Autocrypt:In-Reply-To:Content-Type;
-	bh=yXt9f0OhTGqOlSUzrOWZtQolrNkkgqL54IxnAL6Q9F4=;
-	b=BaIdRGlEEt6CqI78HeqiR9r7XG/zA0CJQmGk0l7eWjUGUkWpyBeyFLp/MHriexMqptBF
-	 EnJ3P5trwn+7rpHRkbFCMNSWU7mR8EN859j0wIzTymD/FxJxS3f9NgZOgKhTqcZ+WPCTo
-	 eu7F4J4OjmSYpVgJDSojmJ5McDRW/JV0HvDn3Jq/tq7mgbJnKW1ca+jOGy8SuW0cCr9Ww
-	 VXGROpTCnfov+u2OBov7vb/SCxuNVqXxFnVvXxU9ofoKnZcwprm4kX0YgKOpnRx9BLXEQ
-	 kqTmh7uxkjmUhWPAsA/RKZeyiHl7eT8gz8RnT9ud6CwndihzANLJGQj1+kmN169ythg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794313362;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=hGl7nmxQkT5vba1RqxCfKXkqe6DTt+rPNJp2pMu6m5k=;
+	b=EM0v49TgYhp9txmwtx9N2pjgEVJHiIk8hEnfHUBCHafLyS1TnVH1HCslXkPnV4aRqI+A
+	 DsP1fp/J8l0YlQJMYet5CzYMHZmI+lMTtK8y1C/xrbOALyuDSc4JFWJsRM1NKTuIJbKaT
+	 SFzSAT35JDhrcbS92Ntk8hL+MQ3cv6L+cMK34MOPvE28JvXPPESTPD8s/vUzOvAHMYPni
+	 7D3P/jw4Ky46O645609ESN0JFqVbDfZXycsuyGQ7G8qVwZb0T2PZ7GXm5zfYmpHOLfGgj
+	 4M0yA19Hkf4P9FPQ395YCOWTyGiDlBxSbQNKtmd1ZceEjV+hfBo2WmMejC73wJ2o8mw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Mwng6FcH;
-	arc=none smtp.remote-ip=209.85.128.50
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="k/co0YoI";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11AB3606A325
-	for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 12:19:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11AB3606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CE6F606A330;
+	Tue, 10 Nov 2026 12:22:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Mwng6FcH
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so23597695e9.1
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 04:19:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794313169; x=1794917969; darn=vger.kernel.org;
-        h=content-type:in-reply-to:autocrypt:content-language:references:cc
-         :to:from:subject:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=yXt9f0OhTGqOlSUzrOWZtQolrNkkgqL54IxnAL6Q9F4=;
-        b=Mwng6FcHPa1fIQhzl4EaTI2RfQxfhrXeLy9P/oJMNJ7RYOQ4DEdGtlGYiPtc5D2XFa
-         GR/tFyoRdpChmdioH53keADiBALB3ODOdp1diOXMDTZuKfhTG6Zw5zL3oEtR0tj2LhPI
-         nUb+Hqy1J1dIFj6l6obVEQWDQHfjQf4rCQAqJLOLohSw267toc4dAxW+OxbOy2Vdlszs
-         uaqYfuClbgxJQvAlb2QeD5w39CvgxKLd8dHqyAkLthWaciVxoNRenGRgHILPPVskLclZ
-         PWPYSIqFuRjB1C8gkDRIQ77gn9i9oThJwCIJ9oFEoammrXQjbcbDQlprmz6TmD+NjFNZ
-         EQxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794313169; x=1794917969;
-        h=content-type:in-reply-to:autocrypt:content-language:references:cc
-         :to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yXt9f0OhTGqOlSUzrOWZtQolrNkkgqL54IxnAL6Q9F4=;
-        b=RgnN2MiPMERisw6qEMqe0WVWR3s015noDCCvAZo/4d9Ce0nTGTRpovDI0lwsIh0LZw
-         c+iJXhFPYsaZqF1gRMF+lJvUat18aSiZp1p3v5p0zSaTfLSoyW/64dEd8oyRb5mPHM1Y
-         8aFQ0dO4zdvYLNNxECzExasw5yNIW8jCWh3Gr3BGFdXXfsEQWvxzVdxivquJnLtDpDaA
-         VVHjscwLsAOkECxmBiavKhhge2DhAZ+iDecZCV/vkxaCE0tBkz5lLqAVlW8Kd7O9YP2q
-         wqSmZoT5sKlQ9VIr/8kVRqFIjiWStSJdfZJcAM1LjzdzYQbv26KCaa7mX4gFyDSJMn7l
-         Habg==
-X-Forwarded-Encrypted: i=1; AL+hErGiRZcHAXBA4L59xCvLFqck98RLdZfGXiNWur67eD15kCssM4RrDdnEabsLGQLbcxRPjBxN01IcL2E=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8n7/FEk1wj7h4p8rHTR6aJCpm5Wha1MAjEesmsC0xe2T0kc2Z0
-	oQY7c8ND8ygVq7kafqdvCf+Zclf1yqge6e7T9BqDaPGg1j6pzdwmb6TJ
-X-Gm-Gg: AYBFou03nrD5TG98EZbsLnnIoVbvrhJ+3mtsFUBdD3uh8n9adr4m2qKZ2smywB4oZii
-	sH2peyn0osQ4diJK8Op+MduXVPhJeoHaY6jKb2xbuEP6973yr7CGNGcMdtNNKETot489B2zdC2o
-	GeDhZD/zNPyXxoJptCjNwLf8uLDRRn6qSCQVF3Y7fcD3gYx/LMHmT/yNggP+u96oJzfmpNjmJQB
-	z7MGEEFvky4sZNEZaBj8N2/LVgr3RWXOJ1gt4MHG0R6rxwa+qNfqVc94sPBVLBZ6qVeyP84k4Z3
-	vLEsXDGKehvSslPYLVhUpIUFvm35PbBk00ZEd3pSqe2cJQgRQSDtIs96vDgRFOKGFfRhCrQcvhT
-	M2dX4Ty05UA/lAV81AHaMbfNVATQBMXQ1dHkTwxzsLHzYwEj2Pj3BTHhqGOOYYkeCcw2/DbisSc
-	7+EF/ddhSgJQ3iln5Naq6rDY0sisIKjpy5HW41QL0TxmycZH0R6UfUpjQH670gqudOEVt5oOsAR
-	sBjAqGI5FwMlfpW8+fqNX1uEgSD1r6tFbkIKtYqYpWsVa0zXM4mJ0qZ3In6+LPV0/6UNMOl6o8P
-	iprTgG4M3jM5aFJZ6fIl79+MR/jEMiO8DkQxe6j8dnx4l9Vy6RoTV7JOModzvY4BTeeXJbDvfm5
-	w5VoCUAt5pPa1o2Pe0XG5/Jdj06Qr1is=
-X-Received: by 2002:a05:600c:500d:b0:4a2:18c4:61a5 with SMTP id 5b1f17b1804b1-4ba0233cbf4mr41095235e9.6.1794313169273;
-        Tue, 10 Nov 2026 04:19:29 -0800 (PST)
-Received: from ?IPV6:2001:818:dc1d:c500:21cd:8ec9:48da:59ee? ([2001:818:dc1d:c500:21cd:8ec9:48da:59ee])
-        by smtp.googlemail.com with ESMTPSA id 5b1f17b1804b1-4ba01fe2f09sm70848775e9.4.2026.11.10.04.19.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2026 04:19:27 -0800 (PST)
-Message-ID: <5cdc7ef0-e18f-4afc-96b2-ee4e92bc29ee@gmail.com>
-Date: Tue, 10 Nov 2026 12:19:26 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k/co0YoI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F06431F008A3;
+	Tue, 10 Nov 2026 12:22:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794313361;
+	bh=hGl7nmxQkT5vba1RqxCfKXkqe6DTt+rPNJp2pMu6m5k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=k/co0YoIuiKLXr7WyXUtAA3pWaow2/ThCpywVER/G9aHTuINfpPRlsNOpNeL6eA3/
+	 D5sZv/XI4weWMAEFMkPnaDXkHY2UHv8Cdj7T/MIPQB22hzafVwXl2t+9X4IMEyPgpr
+	 F0ULBbRJhBETzW0sC9499EvstL1a01e1JBff+474UeAj3qIpzZreFtMDiNmPvYB/v0
+	 DQ6uDL9B11Sn02jp3cV2DD6qnO+2jQITqeM+wfh8YW38tXvXhBbJX3qjL6QtqUpij7
+	 siAlaQEibl/CLeXTc5YbwPyy9yrA2KiEY8qTX0k5buBizyNTN0MjlMDpBRy18qmjhy
+	 RbXwSrQ5cyugw==
+Date: Tue, 10 Nov 2026 14:22:37 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
+Message-ID: <20261110122237.GG8635@unreal>
+References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
+ <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -91,148 +87,139 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: Disable async suspend for AMD rev 0x62 ACP and HD
- Audio
-From: Diogo Sousa <diogogsousa@gmail.com>
-To: Mario Limonciello <superm1@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Vijendar Mukunda <Vijendar.Mukunda@amd.com>,
- David Glushkov <david.glushkov@sntiq.com>, linux-sound@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20261016135042.44914-1-diogogsousa@gmail.com>
- <d8a95ffc-d4ab-4c45-9d6d-53c49e3137aa@kernel.org>
- <b0591ad8-cfe8-4a47-9e53-ef304c04485a@gmail.com>
-Content-Language: en-US
-Autocrypt: addr=diogogsousa@gmail.com; keydata=
- xsFNBEzj++QBEADaeyllLa2R1Op95JHSKhMp+ocO/xb9MgTS4BmgE7ZTnWBMks+8iizppRKq
- Zr+9zzDvS+xf9LRnfGZpvcNnbhdSLIahmA0AZz0/phn3mdz1wtS5H4qdEC18eqmV0x/hzbNy
- 9PLoKyGVWbilCwhFohsFwfui95OGWpcb5W2MorBBqxlP73VaaUu3WnDHaQWMFkDt4fH5wF10
- oSf/TtR+VLqk5dzn3ud1KXTX0u50bbPbvSXupLE/LqZcxs/DFQDzUUcMfNQIvZHTrh70ZuGw
- rrayyO6oxAgvUyvejeQy+Px58JBM5jEWfHGtjVgbVH8gfRfQgo4X5eULk8UVDueb+Zoy+Gb8
- FiztAXei70/09RREPwFpx5DblMlYFRsx2K2LVcUmvbN0bbeKXYGpn19sXpToWxa8afxNcyVB
- Z60JggnhJjOhMzU1I8frtGPKXRSZGTYYhaZMf9sw9rHf3Lcxc4mvpKEaikKl3Fh9XLmkTKxz
- 278XkK4z5THNY4rKbJ8KNacIn+ooF6FWxarVFlJypq5CmQcFN8F9Ay1pLSI8tNf+KZi/Ef6O
- u4lMc1R8pjV/wZpEhkOgBkXJHLUue7S2H2+wb2LfaRT8vyjo0m+XR783fMnUMBhqe0E+sDia
- TwmyJ/7XXjUj9pFDvyDpa0W7XUk1MaTJOqvt/2/0/3Nym6FiiQARAQABzTREaW9nbyBNaWd1
- ZWwgR2FzcGFyIGRlIFNvdXNhIDxkaW9nb2dzb3VzYUBnbWFpbC5jb20+wsF9BBMBAgAnAhsD
- Ah4BAheAAhkBBQJSz5KJCAsJDQoIDAcLBhUKCQgLAgQWAwIBAAoJEN6T8FNssaHV6xkQAJII
- JSWjOLDhZZMqm4vQZAyPtlplUVt5zmLS9vmfachMVoQ8Iba/TD4qhp0SA/Sp06euFpCxiuiy
- c3SMwEFTMl7cdTDFYarBJhY5uePcBbNyXyCjWSJQv6sRx5r4TiDHwv3mFy2+l8TjpUrZIvqk
- GTz+HrL2hibPnH++uHcw7zU9XrIBInfE/KRGvuNt/WG9qE8I308lgqoMEjqKRf/Mnjz3WCny
- BbNu5K8GHtwy1SM/kEoG2mngAKNpqdmAv9SVu8QGbIC5RWlUDYYaXwMmMhnmvuoxqyrg9vtx
- cSzQPoYD/eAQrLRikyXNowRTGwKLiYSUcebve2y3mq/NtygBxLH5QFZCp2dsV2mz9Xho7uZA
- wDXH64IOujDc3IHTWVIJrtV3Og//Hhj0e1vvg7QqlBkNArPE+aGa6UeWiAqrz27mkx07SW5R
- pPa3CDn5uF2Jg//zVspgR51ELSGkv9MyyhwgMX7eKy0KSBK8IzsG7yJD1Y4ycZpSXRW+pn25
- 9ql8PNczm2XeWFXUDKzZLb5TG/obMUSHBWH0TxCLBgj7CBdPGbe58P4LcgU2Qtm7SSB3OFtM
- L1b6bAvGEMLDRbsn4hccQWu4Nw9gIEumdiZLRzuOLISYQ4xiK+B+ip/stQ0h9e1oirqriscf
- eXocONHWd6bp4WKG/7WVRSGTINJsCtAPzjgEZg8lHxIKKwYBBAGXVQEFAQEHQIt6DI+7mpmD
- aNTZeGsRiXp/gddHCpsAupTD0uHFhzt5AwEIB8LBfAQYAQgAJhYhBPOaBwll1Nou3oUKfd6T
- 8FNssaHVBQJmDyUfAhsMBQkHhM4AAAoJEN6T8FNssaHVsO0QALQgjTkHjxw14jPnKPZ8UcTN
- oMJV+ugGqqsKRQm6Ag8Lj3gUhXlgkcqt8R7YwbNB5PnSCGF5pvt2euigbgWd98PxHRDYPIyC
- E9455kDdfiD8PS8yNf/hWo5Iqz/5EEdAlYqPHE/RnpCtUXiIWndRMhyUwqXIeafGX1gwjWOm
- Ls3mmDQ/tVs3SgAdbt7noNUbBm1kNeCn4QOWAec13zhSnkq56FntuxpbeFVT+ZxoDhMFAlpW
- Kq8raJZ6kag87bM/L3QhJSj23YkW2Mt68IYVtk+7PcXwnOcRmYRuJIugw4lWhmzqjgUh4KBp
- xPqdG1+xNp1ivHUpTzmen5OE6feNOr5vj2+suy289Stt4kK6r5GEQKeuTw0AzMhAQ+YqI98a
- scSsGLGHSP2wFh+yqkhCRzJ34XM9aa96D/FWE8NEKpTStpCYi4IVh1E56LmLXvC5smhJX7D0
- lKPGvLriW/5I49MYkg22nJoHBanm7a++xCexA+W9+5PCog5sOK4IHeSJXuK+9rdlh9nF4Vug
- IPzQKkqvQooWGNhREw7AQw+98XypqrlC4ZHd6Vlj7/S+yiWWlkia1vNxIvSyLGGiQwoB16L7
- JhMwt3izozAX967ty0PfDWe2dY0+aWdATSme9G1ieV4sksiAYQ0yIzlzJOU4kLaKZ4SZuFc2
- hq9XZVX1eRVA
-In-Reply-To: <b0591ad8-cfe8-4a47-9e53-ef304c04485a@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------KnRqjVH1a0oVYKtDg6ax6tOG"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------KnRqjVH1a0oVYKtDg6ax6tOG
-Content-Type: multipart/mixed; boundary="------------kXM7oS8iaGLMrKAcsxJSmxi0";
- protected-headers="v1"; hp="clear"
-Message-ID: <5cdc7ef0-e18f-4afc-96b2-ee4e92bc29ee@gmail.com>
-Date: Tue, 10 Nov 2026 12:19:26 +0000
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: Disable async suspend for AMD rev 0x62 ACP and HD
- Audio
-From: Diogo Sousa <diogogsousa@gmail.com>
-To: Mario Limonciello <superm1@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Vijendar Mukunda <Vijendar.Mukunda@amd.com>,
- David Glushkov <david.glushkov@sntiq.com>, linux-sound@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20261016135042.44914-1-diogogsousa@gmail.com>
- <d8a95ffc-d4ab-4c45-9d6d-53c49e3137aa@kernel.org>
- <b0591ad8-cfe8-4a47-9e53-ef304c04485a@gmail.com>
-Content-Language: en-US
-Autocrypt: addr=diogogsousa@gmail.com; keydata=
- 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
- hq9XZVX1eRVA
-In-Reply-To: <b0591ad8-cfe8-4a47-9e53-ef304c04485a@gmail.com>
+On Mon, Nov 09, 2026 at 01:53:02PM +0000, Robin Murphy wrote:
+> On 09/11/2026 7:33 am, Leon Romanovsky wrote:
+> [...]
+> > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> > index b486b8bbd1fcd..8be2a246d4903 100644
+> > --- a/drivers/iommu/iommu.c
+> > +++ b/drivers/iommu/iommu.c
+> > @@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
+> >   static int iommu_get_default_domain_type(struct iommu_group *group,
+> >   					 int target_type)
+> >   {
+> > -	struct device *untrusted = NULL;
+> > +	struct device *restricted = NULL;
+> >   	struct group_device *gdev;
+> >   	int driver_type = 0;
+> > @@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
+> >   		driver_type = iommu_get_def_domain_type(group, gdev->dev,
+> >   							driver_type);
+> > -		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
+> > +		if (dev_is_pci(gdev->dev) &&
+> > +		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
+> 
+> I think this should be the generic device_is_adversarial(gdev->dev) now - in
+> fact probably all the dev_is_pci()/to_pci_dev() stanzas aren't conceptually
+> PCI-specific, just an artefact of the current "untrusted" flag being so.
 
---------------kXM7oS8iaGLMrKAcsxJSmxi0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+I wanted to do the same, but iommu_get_default_domain_type() may be called
+before the PCI device's trust level has been set. At that point, we are
+still in "disabled" mode, whereas device_is_adversarial() checks for
+"adversarial" mode.
 
-SGkgQmpvcm4gYW5kIE1hcmlvLA0KDQpmcmllbmRseSBwaW5nIG9uIHRoaXMgb25lLiBJJ20g
-YWxyZWFkeSBvbiB0aGUgbGF0ZXN0IEJJT1MgZm9yIHRoaXMgbGFwdG9wIChHNjE0RlIuMzE3
-KS4gTWFyaW8sIGlzIHRoZXJlIGFueXRoaW5nIGVsc2UgeW91J2QgbGlrZSBtZSB0byBjaGVj
-az8NCg0KVGhlIENhY2h5T1MgaXNzdWUgaW4gdGhlIGBMaW5rOmAgdGFnIGhhcyBtb3JlIHJl
-cG9ydHMgb2YgdGhlIHNhbWUgcmVncmVzc2lvbiBvbiBNRUNIUkVWTyBhbmQgQVNVUyBUVUYg
-bGFwdG9wcy4NCg0KQ2hlZXJzLA0KRGlvZ28NCg0K
+The below is from AI, I asked to present me the path for that:
+--------------------------------------------------------------------------------
+For a newly discovered PCI device with an available IOMMU and a new IOMMU group:
+pci_scan_single_device()
+  pci_device_add()
+    device_add()
+      bus_notify(dev, BUS_NOTIFY_ADD_DEVICE)
+        blocking_notifier_call_chain()
+          notifier_call_chain()
+            iommu_bus_notifier()
+              iommu_probe_device(dev)
+                __iommu_probe_device(dev, NULL)
+                  iommu_setup_default_domain(group, 0)
+                    iommu_get_default_domain_type(group, 0)
 
---------------kXM7oS8iaGLMrKAcsxJSmxi0--
+For a device whose initial policy is adversary, its state during that call is:
+dev->trust_policy          = DEVICE_TRUST_POLICY_ADVERSARY
+dev->trust_level           = DEVICE_TRUST_DISABLED
+dev->trust_committed_level = DEVICE_TRUST_DISABLED
+dev->driver               = NULL
 
---------------KnRqjVH1a0oVYKtDg6ax6tOG
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+device_is_adversarial(dev) = false
 
------BEGIN PGP SIGNATURE-----
+The active level changes later, during binding:
+really_probe()
+  device_trust_prepare()
+    __device_trust_prepare()
+      WRITE_ONCE(dev->trust_level, DEVICE_TRUST_ADVERSARY)
+  dev->bus->dma_configure()
+  call_driver_probe()
 
-wsF5BAABCAAjFiEE85oHCWXU2i7ehQp93pPwU2yxodUFAmrzC84FAwAAAAAACgkQ3pPwU2yxodVO
-iw/+LVQKqZrJsUnZfQzoLPGx5v36hlXJR6E0qK8B2gg563WWPbffI7coLh7n6rm/8VOKzsHl1wnt
-Gdz2n1DW8ldd7710lK+FWxtefoC0WgipwocxM0rGnenbMpA8FE5M1cFECQe/YfGjFB9YfZ+UGW8c
-pAc4qur1P1oWYlsaucKX6M1HGHAMgXYhY5Mf+TbMEYNbFwPWAylAuTOgirKVbBnrf9I8mtMSrX7p
-W+aieL3RIA7eOhOEtNLDobPfIWWHypYuLLD+YqrZFcnbd+/0R9ZR++zFzHWaZLOqE7kFsumQ98NN
-kw/pP4YH2K3+7qkhzqk4uoDfP3+xJi4QeHYofjkDZWs+WhjjUswQWt6Od5+414NuBj+kw7fyEc8k
-fezi4sfBGaK27GSO6wQm5ASxmEm4/OqLq1MGcBc0xTr0ARJtQfAgcJAiABeAtB75Bo58hjVQI0mm
-YOcMyVu/El2zBhaa95j0N3c/d1Fji3yWWCC3NUO8AFMP4+A12tIIfTfewtDHAGrfcK5cMxR2yBfl
-L1gLGCN4leKXMYTCBFk2J+jlkQQ4mtrk1C0QLOmAxMtav2mh+yjJG1BS3ifnoYUUHqEFGEEGr0J4
-ciO2lnoflVPIx9WL3YzEL7Ay7iCY3gwBZUkqi8QkOB3doINtqsT20OpNJoD+x/AicRMfmRT6/GNi
-x9Y=
-=FYmn
------END PGP SIGNATURE-----
+> 
+> >   			/*
+> > -			 * No ARM32 using systems will set untrusted, it cannot
+> > -			 * work.
+> > +			 * No ARM32 using systems select a restricted trust
+> > +			 * policy; it cannot work.
+> >   			 */
+> >   			if (WARN_ON(IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU)))
+> >   				return -1;
+> > -			untrusted = gdev->dev;
+> > +			restricted = gdev->dev;
+> >   		}
+> >   	}
+> [...]
+> > @@ -616,6 +608,28 @@ static inline struct pci_dev *to_pci_dev(const struct device *dev)
+> >   {
+> >   	return container_of(dev, struct pci_dev, dev);
+> >   }
+> > +
+> > +static inline bool
+> > +pci_dev_default_is_restricted(const struct pci_dev *pdev)
+> > +{
+> > +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
+> > +
+> > +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
+> > +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
+> > +}
+> 
+> Unless I've wildly misunderstood, I'm not sure this is right - if the user
+> has set DEVICE_TRUST_POLICY_DISABLED to explicitly override the bus-default
+> behaviour, but that leads to the IOMMU layer special-casing all PCI devices
+> as adversarial and thus force-*enabling* all their trust-model restrictions,
+> isn't that pretty much the complete opposite of what was asked for?
 
---------------KnRqjVH1a0oVYKtDg6ax6tOG--
+We have two levels: policy - that describes the default of all devices
+for that bus. level - actual decision on how that device is going to be
+operated.
+
+"Disabled" prevents driver probing until the device is authorized,
+"Adversary" permits probing and requests the available protections
+for operating an untrusted device.
+
+Both need conservative initial IOMMU setup: a disabled device may later
+be authorized as adversary, and authorization does not rebuild its IOMMU
+domain.
+
+Thanks
+
+> 
+> Thanks,
+> Robin.
+> 
+> > +
+> > +static inline bool pci_dev_ats_permitted(const struct pci_dev *pdev)
+> > +{
+> > +	enum device_trust_level level = device_get_trust_level(&pdev->dev);
+> > +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
+> > +
+> > +	if (level == DEVICE_TRUST_DISABLED)
+> > +		return policy != DEVICE_TRUST_POLICY_ADVERSARY &&
+> > +		       policy != DEVICE_TRUST_POLICY_DISABLED;
+> > +
+> > +	return level == DEVICE_TRUST_FULL;
+> > +}
+> > +
+> >   #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+> >   #define for_each_pci_dev_reverse(d) \
+> >   	while ((d = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+> > 
+> 
