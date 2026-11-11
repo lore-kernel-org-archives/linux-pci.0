@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794425940;
-	b=knz69J9JBMGd9xbAO+RQj/dTGpL6NIdm26opWsg76gA/xGor9/DRmbCF56c7+gAAEGvn
-	 SiqTXSGoINXjuxQD+vmVx2zB2U+OrF48OtNRKkGm8Df2U3YHxYn5odb60dr+Xljg0jHFG
-	 hTSdVDTk9qpjXTnIRi1J/2OH962WIebWvpVijSOyTOczMIasKEhY56vqqNBInvzyUgGhB
-	 tOeYM9xzAg+shWa5pBrOOtibYdvNrbxXUFKn90XnCL6sskFI6SR7D88reLt6zvV1prlov
-	 HinZy+872KK16SS0D25TQuY2Gt/s1+Kd79Yvv0rDI+Q7HhR0yZA/OEtSf42RRMbnlKA==
+	t=1794425990;
+	b=eZc+wj7tw316YkWYCzfWseIFHcz+BH/2nXwLG/qOIlhEeKP2g9AOj1JuppDN25DJLt1p
+	 gp6QBmEDRL+YOjRxzJAXIl3n63qyBjoiIt85Jyc7aURk5cypOxT5gn15YF4yiwKqP/7bE
+	 DGs5N+Hkj5SCWGcuXKFEozt99hbyKCeG96XXr1T9kHIoob0mdEpB1kzxuzLekGA/q30S+
+	 dIm6UmFHOSXffxYMqexpX9BioztgKx2IYc+irgMp/KM+jTka2/zVKuG+tIM+ErIjppsu0
+	 L/VTcyz9W4pdbAgu1jTBLLhCgnsMmYz34W3ca4jFIR0Fhwyp++U/c0KXE7nmhA9sCeg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794425940;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794425990;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=/uwzYM2V4S/TcmXLwvAqE6rhtl/wFP1SG2AT8iG1aSg=;
-	b=vxsPATcfJt22zxBR1KGM5dH4haci+nKlOt1SAgcEf9OUuCqpOtA0adgoqOfLjimpVesw
-	 BSEpLvjRkgtfuSHHfZzmjmFpFxieGHZMjOsG3X6VDV22CTMKnwO++Y4gfGBO3eGvc1r0o
-	 duNxg9d+Q/Iaild/GiNzwNEduRRptZPmS5x7hPFEPVg1h6UZvZWY3B6zRoVaKV4RYwgeC
-	 Hvba31Iu+4oNQ5TY872I6r/T4CmM6Em1tPyeXyNr2x6R3OJto2dnibVR2d40P08JB92WY
-	 k97jnHEnDPQtNY880YhQwqGSwlK1MBS7+cXEAJbjl+ASYPafNcxwhaHf2frBWaATxxQ==
+	bh=m7iqxzOaOvIy+p/xUqdcUs+aaVf8y8pMTVLLIrRmDu4=;
+	b=ApI6BRs5AVzz183UIimySDDuyWN2Kt/RkupRGBcqHjnqJ8mPF0exSB518pg2oxWlCTVE
+	 Cw5lIVeBYNgl79neQHZZxGfocJVK/M84xiIzCykAE4IP+Eacc9+n/phx4GMiileQXoOQ2
+	 3+s4mpFSyX26KNInJ6AHbzurMK9YI6Y9AXHNLF8M9+veTwjnoudJAjVmKpkSGhvLfJueD
+	 lWu2E7ZYkoxdW8/mkL11UNLFHjv53RCN1ENq6BrXsKjt8Bc/KbtD8BCmolWuwUCmIHPQz
+	 uHlVLkM16I1GFrlZYTS8ijpEzDu+pCBsUBN0eQ8sFBEtpW7mpTO5yfnUgGCYVUeJZbA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eXHD1y6g;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="d/W6lrnh";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289E0606A327
-	for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2026 19:38:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE18606A31C
+	for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2026 19:39:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eXHD1y6g
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A0011F00A07;
-	Wed, 11 Nov 2026 19:38:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d/W6lrnh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EAD91F00A05;
+	Wed, 11 Nov 2026 19:39:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794425939;
-	bh=/uwzYM2V4S/TcmXLwvAqE6rhtl/wFP1SG2AT8iG1aSg=;
+	s=k20260515; t=1794425990;
+	bh=m7iqxzOaOvIy+p/xUqdcUs+aaVf8y8pMTVLLIrRmDu4=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=eXHD1y6g8rUHEhPNrnJ0mGImMfaT2xy+vc7EmGP5UkAZAPVWDG1X/eF3PJeN064mI
-	 DldaPuEgIsQGWUEJC2XRqJPnezIVzhjNf8B7Igo89fhQWoMhQolW+QfQkWv89fSFA9
-	 TBaz/1BZQJbpFrhK1QhS+m2EJuFTylw0Foqs8fIioG3pz2rhnjvVvL2kvWx4jJpR66
-	 JHf6zkWuQKOHeKExME16lSMVnLkfRCMtU+pJoopbXvQj9byAYP3uLaHBOcAkyAp4AW
-	 VhAHRNnxFxXTo4gQpW9Dx/PSVbxiKUl0Jva05MJZolNPZ76FhAmW638cL1V0x+TIbJ
-	 82YNm84czKGGw==
-Message-ID: <sashiko-outbox-209581@kernel.org>
+	b=d/W6lrnhaCjxwt4Rz4UBryrYpN2e+kUpAzND4Et3TwDyk2TvEcB7PTm4pjopAPIt8
+	 XzgYkSD8XuaBEFdHDHtghAY3ys5f2kRLwhTgEy5cUhrm0FaGMbAnhJapqFyvhjQ048
+	 GJbHuAVwv4vNwSsnSBjJh3Z9LqT3Nt92yZ5e22JoHTGd+dmp5wgFHwsm4B/eTCfQmc
+	 WPqXK1sXu2jM4n//uNx70lLTXp9VIuwG1r0EyB3ffr8OyzQIZ4wuZLauKyXhUJgTxI
+	 J6wMVgsUYwf+RwkFJBUPov4diHHLOpRWG3oyke0N6H7mPrvgkj+7VAAzqY7FokpO+N
+	 csedNYZ/rEyKw==
+Message-ID: <sashiko-outbox-209582@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH 1/7] vfio: selftests: Add vfio_pci_find_mem_bar()
+Subject: Re: [RFC PATCH 6/7] vfio: selftests: Add vfio_pci_find_p2p_pair()
  helper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Matlack" <dmatlack@google.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261111192411.4133780-2-dmatlack@google.com>
+In-Reply-To: <20261111192411.4133780-7-dmatlack@google.com>
 References: <20261111192411.4133780-1-dmatlack@google.com>
- <20261111192411.4133780-2-dmatlack@google.com>
+ <20261111192411.4133780-7-dmatlack@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 11 Nov 2026 19:38:59 +0000
+Date: Wed, 11 Nov 2026 19:39:49 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,27 +60,18 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Mina Almasry <almasrymina@google.com>
+> Add vfio_pci_find_p2p_pair() to locate an initiator device with memcpy
+> driver support and a distinct target device with a memory BAR of at
+> least min_bar_size bytes from an array of VFIO PCI devices.
 >=20
-> Add vfio_pci_find_mem_bar() to libvfio to locate a BAR (or range within
-> a BAR) of at least min_size bytes that behaves like ordinary memory and
-> can be safely read and written without device-specific side effects.
+> Factor out vfio_pci_has_p2p_path() as the central place to validate PCI
+> topology and P2P DMA reachability between the two devices in the future.
 >=20
-> Detection is backed by a table of known devices, starting with QEMU's
-> pci-testdev (1b36:0005) BAR 2 when configured with membar=3D<size> and
-> membar-backed=3Don.
->=20
-> Suggested-by: David Matlack <dmatlack@google.com>
-> Cc: David Matlack <dmatlack@google.com>
-> Cc: Matt Evans <matt@ozlabs.org>
-> Signed-off-by: Mina Almasry <almasrymina@google.com>
->=20
-> Reviewed-by: David Matlack <dmatlack@google.com>
 > Signed-off-by: David Matlack <dmatlack@google.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111192411.4133=
-780-1-dmatlack@google.com?part=3D1
+780-1-dmatlack@google.com?part=3D6
 
