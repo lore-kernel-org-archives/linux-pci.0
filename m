@@ -1,72 +1,154 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.163.59.82
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794357218;
-	b=J7VnpmNNo8heQj3eKHu35XTNPQaICnMtXgpva1biPomtJX3pP11DmKufYRhkRflwJJTn
-	 3pOZb9MMp0HndsWB9FWG5mayOtFS8s9DDM4P+uABqJGl2ERdZaGZIHNanTNCjkg9oSTau
-	 YGuLYlDFY0iVLr897nFM/Scv7RYrKjFq+q+4qBsgbMh8/MzsT9BWdrQsP7bJjz+7elwcr
-	 0z6LJkLTh23HRJXyDh6QybBGnBcrBo+SfIdm4zrmOxaxO2fwq/M1Fh/K5W+wYrnuXg6yj
-	 DP30ro9pt35TR4/79DHeevAMs//tbJ4DskJwXqkDi6QwE1cJdMOnpmcQahD693ChRDQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794357218;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Mailru-Src:X-7564579A:X-77F55803:
-	 X-7FA49CB5:X-C1DE0DAB:X-C8649E89:X-D57D3AED:X-Mailru-Sender:X-Mras;
-	bh=aqncHlMLeBK9aRPR8mBo2bszB3jWM7nDG44QaoD1NsM=;
-	b=XTbaPxZbinGTLkb0VZBEABMeH9TbdLH2+9gnOzY2T2LmMmbo8CbexD6Kwh5unWD9mrY4
-	 3gDa6/5nigOxv5aUDIUSurqzLe6LF7sxrnPRyBosHFiuyNc8Z/zVEuVPIpFZYWmDd1djk
-	 VhDYNd7Aoks+LVkjjfegnSB7j5WtbA/dryJgBem86x47cXW6rrjdtOh2g6CV+jIOD7vul
-	 TR6H8RNmq+MzrQMovbkMkFsfs2uav6wxd5fAIKdx411wA0oVjzzLffyH8ecmbGY5na6hY
-	 D6QHe3X/HxV6+cfHqIB09GL4dpeY1WhF5YYNvbxoAjQx5mfnvV6tOBPHRkP10AS3+Qg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mail.ru;
-	spf=pass smtp.mailfrom=mail.ru;
-	dkim=pass header.d=mail.ru header.i=@mail.ru header.a=rsa-sha256 header.s=mail4 header.b=How0T8Ql;
-	arc=none smtp.remote-ip=95.163.59.82
-Received: from send243.i.mail.ru (send243.i.mail.ru [95.163.59.82])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.126.140
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794358379;
+	b=Gney6gfjG6DXnN2IdHrgyAmFsbbK0vyH4TmiygbmXFktk3iR+W7f8xc0JJtmF81PnrWF
+	 oF2KxArMg+poLQzr4GCEzvbwT71t309Xf+dLuh6IoPL2YfdFLIExb1duUqUPeFppXKxup
+	 WaWua3dmYIw6tgpKBUhmWD+H0S1GqsetbulGivNgl+VYUxAsVxF7CSydK25eBMUk3/Fpf
+	 oaFklkcZo0pPsY82PQ45MaGN9rV948bSp12pv1YuDjx3TuG1OJrbPdFubkqMBhCSTFasE
+	 XCxw1i43z9E8B6c7EdvN8Fdz++J1GvgwrZly6q+/UxmPxunfE1i6LYRhtRQJpfqXXgw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794358379;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
+	 Thread-Topic:Thread-Index:Date:Message-ID:Accept-Language:
+	 Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:msip_labels:
+	 drawingcanvaselements:composetype:x-ms-publictraffictype:
+	 x-ms-traffictypediagnostic:x-ms-office365-filtering-correlation-id:
+	 x-ms-exchange-atpmessageproperties:x-ms-exchange-senderadcheck:
+	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=YXZ1RBMLuzCK7yik4xpMRJs5UUDXkFtHDZ07CerhL2Q=;
+	b=RvQiqZq1gPMYGVuW9KEOIbz51ljEzNuxpDnevNuSPYJhNz094iOlmnvil0oGDsEfEB+U
+	 gnISD4bJfgneX+IxE7B9mEfFxfw1eVVCV7Ws1GTt5kli6FcsSDh/d5/cUdetaf+3b2YWD
+	 PMz3EKeL1l2l1EjQxvvNAjJrbM/F9l0RB1ziVNnq7tNadR2oIZqXnGtezb1a+KoOtDSAu
+	 v1L8vsnmYh+dzj4EwqSCEichAUF/hFp8FL4lEr2Jwh/Hxx6WAMsbpfNEQpMqxjAymcpJd
+	 OxqHpXphHr17XJH3/5ekZnlrwNRQhlGLC0RmAtju9vVcLpjeLRO/tKGvaPt8hmnKu1g==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=diodes.com;
+	spf=pass smtp.mailfrom=diodes.com;
+	dkim=pass header.d=diodes.com header.i=@diodes.com header.a=rsa-sha256 header.s=selector2 header.b=LKvWGxAO;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.126.140
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022140.outbound.protection.outlook.com [52.101.126.140])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF861606A31C;
-	Wed, 11 Nov 2026 00:33:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF861606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mail.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.ru
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D28C7606A320
+	for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2026 00:52:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D28C7606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=diodes.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=diodes.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=mail.ru header.i=@mail.ru header.a=rsa-sha256 header.s=mail4 header.b=How0T8Ql
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mail.ru;
-	s=mail4; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:From:Sender:Reply-To:To:Cc:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive:
-	X-Cloud-Ids:Disposition-Notification-To;
-	bh=aqncHlMLeBK9aRPR8mBo2bszB3jWM7nDG44QaoD1NsM=; t=1794357216; x=1794447216; 
-	b=How0T8QlzQAuYWk0g5LmUeMW7L9xgf1SowdMYqWKIuR/OnNR0YcPCb9RDBru5B2yB/txquabge+
-	R3v034H453BO57D449L9r6Hdrin+4wzbLgc8t004/ALjQ+hT3MneZmAMLJpyTsY1PTDP+T49jsx+A
-	AyZ/2i0A7Rv1Gg5IZqrOK+6ZJuZJN+7kzH2AMHdW1epNJhglSQQc9ThvbrWEVkFjddDy74dpcFwrS
-	weZIoVb1T0p8sSZnwRkWL4zjDcWeVcGOY7dK9shLxBhUBWY6cYQXpbDjcKPe75HVxGgSonlIUfsrU
-	x+mcg400JKU0Me5789Zawx3NPVvGSgvEoUrA==;
-Received: by exim-smtp-5cc8b577fd-hcqcf with esmtpa (envelope-from <gvozd188@mail.ru>)
-	id 1xQwHI-00000000Hj3-0TKU; Wed, 11 Nov 2026 03:33:28 +0300
-From: Vladimir Nedoshivin <gvozd188@mail.ru>
-To: szymon.durawa@linux.intel.com
-Cc: nirmal.patel@linux.intel.com,
-	bhelgaas@google.com,
-	robh@kernel.org,
-	mani@kernel.org,
-	kwilczynski@kernel.org,
-	lpieralisi@kernel.org,
-	asutosh.pathak@linux.intel.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Vladimir Nedoshivin <gvozd188@mail.ru>
-Subject: Re: [PATCH v10 0/7] VMD add second root bus support
-Date: Wed, 11 Nov 2026 04:32:49 +0400
-Message-ID: <20261111003249.10880-1-gvozd188@mail.ru>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261106184256.4130-1-szymon.durawa@linux.intel.com>
-References: <20261106184256.4130-1-szymon.durawa@linux.intel.com>
+	dkim=pass (2048-bit key, unprotected) header.d=diodes.com header.i=@diodes.com header.a=rsa-sha256 header.s=selector2 header.b=LKvWGxAO
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=tc3/87UnRcSyQU+vwxarGPQAAmPcchCMeN3T5g+tqv0lyw9+rjtDU7j8nShXKckOzDpnRqEBLLKb7i7kY71KSqu9DIMkhQxZ+Bu3OTvQGncLmuVEBXH2aJl4jamVczoAO1a8G0SOglqpNxOkQHVdU8RsSZmgIYArM86R+Y9zeGW2HjFxs4reffmPD5EVAoG9BUYLWPCVcMeY/gxhGaIZ9k9WsEE044NvuZv/23ubdWz/G/3mjC9+i8SJVO5/Eb2cxcDG0twfNHjCs6oWDReLQoFNAW1+KtTu7rm26ulyEki5/wZzesHg//JsKpdaT23ZRY5zf5bvfn9HMVzj5RzSJw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YXZ1RBMLuzCK7yik4xpMRJs5UUDXkFtHDZ07CerhL2Q=;
+ b=N7jDkR0SrhRODA80qIaiwYLq/mIKKGSinlkWMrMZ6CyDW7Zy7nLxMPxIhf6TCEghougK8N3f5F7Yg0bUL/4A4p1OKG2FVcvYuH4onymkUGCRWmDX/9esIWTIlz9Mnvj7DgH3Bl2WgmKNMiJIDZWlpbYesc/M0nwvizx90y/28LbEevJ4ngEa4jhN5agHA7L11lfTYXD7fPEHFT9MT50+crSzHz1IP7LnCHXaFpSMBAJUkIrLTKdIYmnWRKt6EyLeXPyV5CAtpcJSk/dXwmy1NxNAKJaIxZ0/QErJFH53Iu1qdehJILMz3ghGpvmq1Mg+UMM0x1lATJKUZkTHNYhnhw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=diodes.com; dmarc=pass action=none header.from=diodes.com;
+ dkim=pass header.d=diodes.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=diodes.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YXZ1RBMLuzCK7yik4xpMRJs5UUDXkFtHDZ07CerhL2Q=;
+ b=LKvWGxAOi4/Oy0AvWlpIwjtr0hISVlNEWeqCGVbtoozaizhtvXzIy73Ua6PjAAdsuxITq9Ixq8dQuAqX/+sakYLHqRbRuwElGtyhqZpywM4AA7lyScLik+jBNZ8rBLDHfNvY+GwtXUlA6/IsSVEXIBx2dimeSE/Jktrr7G1ckvsOV2yUr7xBKjGRMD/FnB1c2CAK8CVJikEQxHgOdw8Kx97vyMQ77opdwPXiluN65sR6aQRjgUFgwOLCJi4BZav/G8J4UfweDX6G5tn//UVQ7DOuZNTBPL3EKHoqdPxJet7RM8TqXhQ+19pu3HZTyZ4ynaqnnfJNzV17xj8FRcND6A==
+Received: from JH0PR02MB7011.apcprd02.prod.outlook.com (2603:1096:990:52::9)
+ by SEYPR02MB6605.apcprd02.prod.outlook.com (2603:1096:101:1ac::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.12; Wed, 11 Nov
+ 2026 00:52:52 +0000
+Received: from JH0PR02MB7011.apcprd02.prod.outlook.com
+ ([fe80::a44:f104:f70e:56c7]) by JH0PR02MB7011.apcprd02.prod.outlook.com
+ ([fe80::a44:f104:f70e:56c7%6]) with mapi id 15.21.0592.012; Wed, 11 Nov 2026
+ 00:52:52 +0000
+From: =?utf-8?B?U2ltb24gQ2hlbmdb6YSt6YeR56eJXQ==?= <simon_cheng@diodes.com>
+To: "sashiko-bot@kernel.org" <sashiko-bot@kernel.org>, Nirmoy Das
+	<nirmoyd@nvidia.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject:
+ =?utf-8?B?5Zue6KaGOiBSZTogW1JGQyBQQVRDSCB2Ml0gUENJOiBXb3JrIGFyb3VuZCBQ?=
+ =?utf-8?Q?ericom_PI7C9X3G606GPC_Port_4_BAR_erratum?=
+Thread-Topic: Re: [RFC PATCH v2] PCI: Work around Pericom PI7C9X3G606GPC Port
+ 4 BAR erratum
+Thread-Index: AQHdcXY0CndfqWg3GU6FbBhaTN6STA==
+Date: Wed, 11 Nov 2026 00:52:51 +0000
+Message-ID:
+ <JH0PR02MB7011C479E26E65DDB03F9C93EB712@JH0PR02MB7011.apcprd02.prod.outlook.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+drawingcanvaselements: []
+composetype: reply
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=diodes.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: JH0PR02MB7011:EE_|SEYPR02MB6605:EE_
+x-ms-office365-filtering-correlation-id: 2dbd93e9-c1b7-47fa-cf41-08df3f8e1d5a
+x-ms-exchange-atpmessageproperties: SA
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|1800799024|23010399003|366016|18002099003|6133799003|10067099003|55112099003|38070700021|11063799006|261102123227099003|261009223027099003|261022075727099003|261022105027099003|261026140227099003|261021121427099003|56012099006|261026121527099003|261028144727099003;
+x-microsoft-antispam-message-info:
+ wZpihHYw5BacBoKF2dtBcR3NgDX3pMXdKP1A6J/Kkwywz0LeUlynvl9dN5Y+jAJTfp1D2QR6Mm6ozfR7qxQaNNhj6qzFEmrzRFrNvKTZD85jbKqJocWoINUO41ymnyG6D295sTByysg0flVrPM51mBnjNPXFiZ2o264Sq8wxo6XteWxEHkn9LNlASYqlphXCbtdbILh3FYm67Du/CjS/Ko031/Lr1sjq6MyLwnADZsVUfJ3LfdpWYLgH9Oltyfz4OLjOcT/oWlVleH9DylV29rZKnDgpbhsTPd6QozfO5wFYQTbV/Bjk1onEzobrFoq2s1j8WvF+3Hrz7cbD6JUirAtMNdMXO/+H4B9uitTff964wbxVVdAPJKgj7UpNUAacUxQ7ojSmOWKJmFJUi7sFQPVAIijO1N43PINcN0isjWungFavQaxj4Qoi8KM2b1ZSdLiqFVNQaVtEZV2+sLrakS022z71t15M/F6ck+aZtM/7oFjuIMj2oStXedLJi00JKNNeUaEbpcxEsba2Iz5cuqRTSNk35XpM2HCjwPuWiNh2PY5UyttWyUuuVToC6PJl7XD0bl+unE8iUI1Lszl8hciPeyTPTjAiV64IFJ9TOClwgJEG39xjXKMToFS5526IozVuttHjAVMPsR4pmvkzoDdMTaU/HtZVEGsK/t7fGEF1AqSHsaiUUuF6CMSfVpDLy5ntlB1YRu7kf9GEEtfqEY39HMjC+iU/pRxxOnNxhCU=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:zh-tw;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:JH0PR02MB7011.apcprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(23010399003)(366016)(18002099003)(6133799003)(10067099003)(55112099003)(38070700021)(11063799006)(261102123227099003)(261009223027099003)(261022075727099003)(261022105027099003)(261026140227099003)(261021121427099003)(56012099006)(261026121527099003)(261028144727099003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?R3ZFWVY0YXRpbGhoZVllL3Vxb3RxRFB5dVIxd0pOempYTVlUV01ERXY5bjIv?=
+ =?utf-8?B?RjU4c0JWVjhjRGp0RzRMSHVkK242YmV5RExBQVJPZkVvMVNkQlU4WTBOaGpM?=
+ =?utf-8?B?bVpUQ1FCYUxVSDlNdmVZZVFRblorc3BuL1VZTm9XUlU0VVU2U0JmYUxFb2dD?=
+ =?utf-8?B?OHpZS2xPRGpCY0hMODgzck5ic3lGNW1HMSswMmtEUUxvZE9aUHAxZ25PemhO?=
+ =?utf-8?B?SHl5bEpRcVlEQ05qYmVoQi94cXFmbER1NDhJSlNZZE5xRmlCVGhzYS81WWVB?=
+ =?utf-8?B?MGZkYUZVNzFXUURWSjFCUEI2Ry95TlNTeGFQeXdFSFZiTlJaTlFwL1duR29h?=
+ =?utf-8?B?azNEQW1YREwvbGxDTG5HcU5FeERETGpQMXNlbHlCeC8yM3hGSzBSemU4OEc3?=
+ =?utf-8?B?dzREWldkbnNxTnJaTjVpREFwT0VYMGNsN3Baa3JGSFU4S0ozVnUrMnd5SEVv?=
+ =?utf-8?B?VzZwaVVsQldtVmpwaXhFNU9RK1JTOWgrU3l4V20ya282ZXloYmZLN1lydkJP?=
+ =?utf-8?B?cDdoK2xZMzRvVWFLd0R4LzF2NU9FWW5HMUozT0JWU3Z6QzEwSWdvMWNVRjJD?=
+ =?utf-8?B?K3JqM044Z3FXSVc3TWJjZ0o4SThpMjlLR1p6Z0YvS2pOSHJLOHFiMk1XSU44?=
+ =?utf-8?B?Y0JaOVd6Zm15MXlRUG1UM2ROazJzUmo3bFB0WG9sQWpOSDdhTmxlRThNNS9p?=
+ =?utf-8?B?ZGdwQ3BvbTFUNjN1LzFmQWU2dHp4aGg5SnZsRFc3VnF0RjdYbDEwTXB0OW9S?=
+ =?utf-8?B?dVdsekhpaUZQeTVuRkdNc09KUEswWXVFZmZDNHFqMTAzS0wxM1FpZDRlL2py?=
+ =?utf-8?B?ZkVyY2wyKzNKcTM2OGhxb2hQTHFUQm1LMVh4aUZEQjBJbTBzL3M2L1ZmOWg0?=
+ =?utf-8?B?UEUyRTRIb3dMK0l1YXpWRVZQMGx1TE00OHk2ZnZOR1RIUGtiaXo5bEY2dWhJ?=
+ =?utf-8?B?cHpDNFdXdUxpdHNLKzhJUmtidmRERm1kcGo1NUt6bUFqN3NIeEVlUnhBUkt3?=
+ =?utf-8?B?aXhLZ2ZFTWgxSmRyNXNSdDVyd0lyUmo4cVVpd1pMOXBpbWhNR04zOFEwY0lW?=
+ =?utf-8?B?eDBmNDc4K1JTT2pIeWVHMlg2VFdLVzRNOVJXbm1lSTVnMUt2RUxtOXJUTUk1?=
+ =?utf-8?B?Rm5uVFY2UFpJY0czRWh2dFdoVll0ZVpCeUp1NkJFVlM4LzM3OEdKM3BlYTQ0?=
+ =?utf-8?B?VlBRd1NhRStkaDRTMW40cmVlTU5QSENNeUdDaU1VcXRYUmZIeDR3RXYxRktV?=
+ =?utf-8?B?WHd6OGJJd3Bvdnp4VXpuRXRna0VNTVZHT01ZVUFVNC9vY1ZTdll1Y1pXOGFp?=
+ =?utf-8?B?VEhsTzNlQVA1SEhUeUpDNmhrUDkxMGx6a3o5MTZtT2U2RXp2K2FDbDRkUkJY?=
+ =?utf-8?B?NHlDVmV6K040a01EUUsrRmVFVDFlcXJmNWFqTlZTbUdlT3hGQUhnWWY0aFdj?=
+ =?utf-8?B?VDJMQU1aY0lzb3psSndTSFI4cFVLYmc1VXBNSkR6RVhONWVxVDB5RjByRTFt?=
+ =?utf-8?B?L3NMWUdWbXN1Y29XOFRLQ2ZNeUpSRnFkTlA4b1dvWmNldWw2Qy9YMjBUN2Rk?=
+ =?utf-8?B?NW9tZWVtWWsxVzdDQmQvMnZaUzkyOU8rSUh1YTBYRFZ2ZkxZcWpLS2ZTSXRC?=
+ =?utf-8?B?V2R0UThNNFR5NU1Rb2hRR3BFUHBFNW9VYWJESVJmd0IyNVBSVEFPU0xPK1po?=
+ =?utf-8?B?ZXZ6Y0YvanU1dG9nSk5UK2ZwRExhZGRXMWVsSnlnT2FzUXlUaWkya2tKOGRJ?=
+ =?utf-8?B?LzI3ek1iQ0hZVE5IeHp2Q1B2UGhWNzQraTU1eE11d3JSdWlabGhUclhxd3RV?=
+ =?utf-8?B?enBNZ2lxZ3E0RmQyMkp2ZnBKd28xTjd4bFlmcDFtU202MU9YMXNmTmJ2SXZw?=
+ =?utf-8?B?alpOQ3dEOFpmWXVtSUFCdkhjUncyVjdhbjU2cm1ManQvUjRoREJNaTlHL3FQ?=
+ =?utf-8?B?cXkvYnBhdW5mN0Nwdjc1aTZwYnYwVW51MDMxY1M2N1ZiSXYwVHNYSUtFL05R?=
+ =?utf-8?B?bUVxb0ptOXlQYUN3UGpIWCtCcWFmVTBnYVg0WFVuSFc2Z3hKOVlsd0xtUm1Y?=
+ =?utf-8?B?RUt0elp4aGovVkkzYjNmSWlBVGlYZTBGRWE4WEsxcTduTkYzUzgrYzVRT0FR?=
+ =?utf-8?B?emZ5TmNHZjFVVS9vZEVEZ2pCK21ZbkdaTDh1WEFVcGtYblY1YmFseWE3M00z?=
+ =?utf-8?B?bUtxN2JmMmhwZnUydlpWMU9POWdTN3U4eUFabitnWUt4U0JXSkxUaVRNL211?=
+ =?utf-8?B?M01aYlhSUFlUNW94MS9PbGd6TVJqY01EUllTZk9od2sxTEJtUC93VGFrM0JH?=
+ =?utf-8?B?ODk5ZjVGS0xRT0VFTVdSZVczeUFkOFBvWEZRWHIreFkzM1RuTmwrUT09?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -76,218 +158,48 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Authentication-Results: exim-smtp-5cc8b577fd-hcqcf; auth=pass smtp.auth=gvozd188@mail.ru smtp.mailfrom=gvozd188@mail.ru
-X-Mailru-Src: smtp
-X-7564579A: 646B95376F6C166E
-X-77F55803: 4F1203BC0FB41BD960A32E02787845123C321558CF4C036251223D188490A1AB182A05F53808504033DB28EF86568F8E3DE06ABAFEAF6705A3D293A29633E220861817D778526D998ACF784BD97B3DAF
-X-7FA49CB5: FF5795518A3D127A4AD6D5ED66289B5278DA827A17800CE792C68BF9CD4C0E9EEA1F7E6F0F101C67BD4B6F7A4D31EC0BCC500DACC3FED6E28638F802B75D45FF8AA50765F7900637AC83A81C8FD4AD23D82A6BABE6F325AC2E85FA5F3EDFCBAA7353EFBB553375669BFFA6ABF9D5DBB931815D8B9B40E3675776F37D5D114482C0BFD38D9EF459EA8EEF46B7454FC60B9742502CCDD46D0DD2DCF9CF1F528DBCF6B57BC7E64490611E7FA7ABCAF51C92176DF2183F8FC7C0B27420F9988F54058941B15DA834481F9449624AB7ADAF37BA3038C0950A5D36D5E8D9A59859A8B630908C26FC17074C76E601842F6C81A1F004C906525384303E02D724532EE2C3F43C7A68FF6260569E8FC8737B5C2249EC8D19AE6D49635B68655334FD4449CB9ECD01F8117BC8BEAAAE862A0553A39223F8577A6DFFEA7CE1AEB6AF2DA18B6243847C11F186F3C59DAA53EE0834AAEE
-X-C1DE0DAB: 0D63561A33F958A596672647538B6FEE5002B1117B3ED696E95D453CD075B09992212597CCBD6D77823CB91A9FED034534781492E4B8EEAD1A3F3A3731258CC5BDAD6C7F3747799A
-X-C8649E89: 1C3962B70DF3F0AD73CAD6646DEDE1918E10F71CB4DF9F9677DD89D51EBB774225B6776AC983F447FC0B9F89525902EE6F57B2FD27647F25E66C117BDB76D659290526FDBC30468A2B0214D9C5E5D32DC749A5A8261127A618C1805660F274C77AA40E424DA1315BB8341EE9D5BE9A0A9C28CB25B55143ADD9893E7B6C8DC0539C696F041636E13252EE4E5D9E54FDA4A7285BF96B6084FCFBA54DA8216DA934F6C4A2408CBCF31D24A389F0E278DBF4
-X-D57D3AED: 3ZO7eAau8CL7WIMRKs4sN3D3tLDjz0dLbV79QFUyzQ2Ujvy7cMT6pYYqY16iZVKkSc3dCLJ7zSJH7+u4VD18S7Vl4ZUrpaVfd2+vE6kuoey4m4VkSEu53w8ahmwBjZKM/YPHZyZHvz5uv+WouB9+ObcCpyrx6l7KImUglyhkEat/+ysWwi0gdhEs0JGjl6ggRWTy1haxBpVdbIX1nthFXOcIETfglQORZ0zpDET4Zrk3igikrdHlWOZpY/ZR+DFRAP+qXqN/L60=
-X-Mailru-Sender: A47ED0EA96B79D3129134CB94CD97376CB0DAB1D9284FA65B951B70A5BD4BD8E3AE51C5AC609F25A3796AF590E5454F153148BAE84F7D0213DDE9B364B0DF2894C9083906008D79F5EA11F3C5F3A97E80D4ABDE8C577C2ED
-X-Mras: Ok
-
-Hello Szymon, Bjorn, and PCI maintainers,
-
-I have successfully tested the complete VMD Second Root Bus v10
-patch series on my MSI Vector 17 HX AI laptop with Intel Arrow Lake
-and VMD controller 8086:ad0b.
-
-I would also like to provide some background on the original problems,
-the previously developed workaround, and the relationship between this
-series and the ARL004 interrupt-ordering fix.
-
-The original investigation is documented here:
-
-https://bugs.launchpad.net/bugs/2166325
-
-Hardware:
-- Laptop: MSI Vector 17 HX AI A2XWIG
-- CPU: Intel Core Ultra 9 275HX
-- VMD controller: Intel 8086:ad0b
-- VMD PCI address: 0000:00:0e.0
-- NVMe: Phison 1TB ESR01TBYCCA4-EDJ-2MS
-- Operating system: Ubuntu 26.04
-- Secure Boot: enabled
-
-1. Original problem: NVMe device not detected
-
-With the stock Ubuntu 7.0.0-30/31 VMD driver, the internal NVMe SSD
-was not detected.
-
-The kernel reported:
-
-  vmd 0000:00:0e.0: Unknown Bus Offset Setting (3)
-
-As a result, the NVMe device behind Intel VMD was not enumerated.
-
-The laptop firmware does not provide a usable option to disable
-Intel VMD/RST.
-
-I initially integrated an earlier revision of your Second Root Bus
-patch series into the Ubuntu VMD driver.
-
-This successfully restored NVMe enumeration, but exposed a second
-hardware-related problem.
-
-2. Second problem: ARL004 interrupt-ordering erratum
-
-After restoring NVMe enumeration, storage operations experienced
-repeated stalls of approximately 30 seconds.
-
-The kernel reported:
-
-  nvme nvme0: I/O tag ... timeout, completion polled
-
-A diagnostic sequential read of 1 GiB required approximately
-121.339 seconds, corresponding to about 8.8 MB/s.
-
-The investigation identified the Intel Arrow Lake ARL004 erratum:
-
-  MSI from VMD-Owned Device May Pass Memory Write
-
-An MSI may reach the processor before preceding posted writes from
-a VMD-owned device become visible in memory.
-
-This can cause the NVMe interrupt handler to observe stale
-completion-queue data.
-
-An experimental workaround was implemented by performing a PCI
-configuration-space read from the MSI-initiating device before
-dispatching the corresponding interrupt.
-
-With this workaround, the same diagnostic read completed in
-approximately 0.882 seconds.
-
-A subsequent 10 GiB read also completed normally, without the
-previously observed NVMe completion timeouts.
-
-3. Upstream ARL004 fix
-
-Following the initial investigation, I submitted an upstream patch
-enabling the existing VMD interrupt-ordering quirk for Intel
-Arrow Lake VMD device 0xad0b.
-
-The patch was accepted by Bjorn Helgaas under the title:
-
-  PCI: vmd: Flush DMA writes before handling MSI on Arrow Lake
-
-Upstream commit:
-
-  2c88c2dc1852
-
-The accepted implementation uses the existing
-VMD_FEAT_INTERRUPT_QUIRK mechanism.
-
-This is separate from the Second Root Bus feature.
-
-The original Ubuntu investigation and test results are available
-in Launchpad bug #2166325.
-
-4. Testing the Second Root Bus v10 series
-
-I have now tested all seven patches from your v10 series,
-based on Linux 7.4-rc1.
-
-To preserve my working Ubuntu installation, I compiled the patched
-vmd.c as an external module against the Ubuntu 7.0.0-43-generic
-kernel headers.
-
-The only source compatibility adjustment was replacing
-PCI_DEVICE_ID_INTEL_VMD_28C1 with its numeric value, 0x28c1,
-because the identifier was unavailable in the Ubuntu headers.
-
-The resulting module was signed using an enrolled MOK and loaded
-through a separate test initramfs.
-
-The test therefore used:
-- Ubuntu kernel 7.0.0-43-generic
-- VMD source from Linux 7.4-rc1
-- All seven Second Root Bus v10 patches
-- The upstream ARL004 interrupt-ordering quirk already present
-  in the 7.4-rc1 base
-
-No additional local ARL004 workaround was applied to the v10 source.
-
-The loaded module was verified using srcversion:
-
-  45EF68AF5A6E01AAA2882CF
-
-5. Test results
-
-The system booted successfully.
-
-Both VMD PCI domains were created:
-
-  vmd 0000:00:0e.0: PCI host bridge to bus 10000:e0
-  vmd 0000:00:0e.0: PCI host bridge to bus 10001:e1
-  vmd 0000:00:0e.0: Bound to PCI domains 10000 and 10001
-
-The NVMe controller was successfully detected behind BUS1:
-
-  nvme nvme0: pci function 10001:f1:00.0
-
-The NVMe controller initialized successfully, and the Ubuntu
-root filesystem mounted normally.
-
-Sequential read performance:
-
-  Command:
-  dd if=/dev/nvme0n1 of=/dev/null bs=4M count=1024 iflag=direct
-
-  Data read: 4 GiB
-  Duration: 4.16695 seconds
-  Throughput: approximately 983 MiB/s
-
-This is comparable to the approximately 984 MiB/s previously
-observed with my working ARL004-specific driver.
-
-Hardware MSI-X interrupts were active.
-
-During a separate 1 GiB direct-read test, the aggregate VMD
-interrupt count increased:
-
-  Before: 134377
-  After:  138680
-  Difference: +4303
-
-One observation worth mentioning:
-
-The virtual NVMe interrupt counters (nvme0q*) remained at zero
-in /proc/interrupts, while the underlying physical VMD MSI-X
-counters were active.
-
-Despite this, NVMe I/O completed successfully, and no VMD/NVMe
-errors or timeouts were found in the checked kernel logs.
-
-6. Test limitations
-
-This was a test of the v10 VMD source built as an external module
-against Ubuntu 7.0.0-43, not a boot test of the complete
-Linux 7.4-rc1 kernel.
-
-The completed testing covered boot, device enumeration,
-read-only NVMe I/O, and interrupt activity.
-
-Dedicated write stress testing, suspend/resume, and long-term
-stability testing have not yet been performed.
-
-7. Conclusion
-
-The Second Root Bus v10 series successfully resolves the NVMe
-enumeration problem on this Intel Arrow Lake VMD 8086:ad0b platform.
-
-Combined with the previously accepted upstream ARL004
-interrupt-ordering fix, the system boots successfully, detects
-the NVMe controller behind BUS1, and achieves normal sequential
-read performance.
-
-No functional regressions were observed during the completed tests.
-
-Thank you for your continued work on Second Root Bus support.
-
-Tested-by: Vladimir Nedoshivin <gvozd188@mail.ru>
-
-Best regards,
-Vladimir Nedoshivin
+X-OriginatorOrg: diodes.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: JH0PR02MB7011.apcprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2dbd93e9-c1b7-47fa-cf41-08df3f8e1d5a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Nov 2026 00:52:51.9793
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 0d06d8d8-8ae9-41a0-a393-f29912d98b07
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: K1dIfQnH1MoY/NI/XvPOU8QVYUrTkdDMZqeIAHhw9tZapCx78JZg1ZQGTZWrbddhO102M/7vpvl8LHi5c9DKAQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR02MB6605
+
+SGkgTmlybW95LArCoCBJdCBsb29rcyBncmVhdC4gKGFnYWluLi4uKQoKQWNrZWQtYnk6IFNpbW9u
+IENoZW5nIDxzaW1vbl9jaGVuZ0BkaW9kZXMuY29tPgoKCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCuWvhOS7tuiAhTogc2FzaGlrby1ib3RAa2VybmVsLm9yZwrlt7Ll
+grPpgIE6IOaYn+acn+WbmywgMjAyNiDlubQgOSDmnIggMTcg5pelICDkuIvljYggMDY6NDkK5pS2
+5Lu26ICFOiBOaXJtb3kgRGFzCuWJr+acrDogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZwrkuLvm
+l6g6IOWbnuimhjogUmU6IFtSRkMgUEFUQ0ggdjJdIFBDSTogV29yayBhcm91bmQgUGVyaWNvbSBQ
+STdDOVgzRzYwNkdQQyBQb3J0IDQgQkFSIGVycmF0dW0KCgo+IFdoZW4gdGhlIENyb3NzLURvbWFp
+biBFbmQtUG9pbnQgKENERVApIGZ1bmN0aW9uIGlzIGRpc2FibGVkIG9uIHRoZQo+IFBlcmljb20g
+UEk3QzlYM0c2MDZHUEMsIFBvcnQgNCBleHBvc2VzIG5laXRoZXIgYSBCQVIgcmVzb3VyY2Ugbm9y
+IGFuCj4gTVNJLVggY2FwYWJpbGl0eS4gSXQgc3RpbGwgY2hlY2tzIG1lbW9yeSByZXF1ZXN0cyBh
+Z2FpbnN0Cj4gQkFSIDAgKyAweDdmMDAwIGFuZCBCQVIgMCArIDB4N2YwODAsIHRoZSBNU0ktWCBU
+YWJsZSBhbmQgUEJBIGFkZHJlc3Nlcy4KPiBXaXRoIHRoZSBpbnRlcm5hbCBCQVIgdmFsdWUgYXQg
+emVybywgcmVhZHMgcmVhY2hpbmcgUG9ydCA0IGF0IHRoZXNlCj4gYWRkcmVzc2VzIHJlY2VpdmUg
+VW5zdXBwb3J0ZWQgUmVxdWVzdCAoVVIpIENvbXBsZXRpb25zLgo+IAo+IFRoZSBhZmZlY3RlZCBz
+eXN0ZW0gaGFzIHRoaXMgdG9wb2xvZ3k6Cj4gCj4gICAwMDAyOmExOjAwLjAgIFBJN0M5WDNHNjA2
+R1BDIHVwc3RyZWFtIHBvcnQgWzEyZDg6YzAwOF0KPiAgICAgKy0wMDAyOmEyOjA0LjAgIFBJN0M5
+WDNHNjA2R1BDIFBvcnQgNCBbMTJkODpjMDA4XQo+ICAgICAgICAgKy0wMDAyOmEzOjAwLjAgIE1p
+Y3JvbiA3NDUwIFBSTyBOVk1lIFNTRCBbMTM0NDo1MWMzXQo+IAo+IERpb2Rlcycgd29ya2Fyb3Vu
+ZCBpcyB0byBjb3B5IHRoZSB1cHN0cmVhbSBwb3J0J3MgQkFSIDAgaW50byBQb3J0IDQuCj4gVGhp
+cyBwbGFjZXMgdGhlIFRhYmxlIGFuZCBQQkEgYWRkcmVzc2VzIHdpdGhpbiBNTUlPIHNwYWNlIGFs
+cmVhZHkKPiBhbGxvY2F0ZWQgdG8gdGhlIHN3aXRjaC4gUG9ydCA0IGFjY2VwdHMgdGhlIHdyaXRl
+IGJ1dCBzdGlsbCByZXR1cm5zCj4gemVybyBvbiBjb25maWctc3BhY2UgcmVhZHMsIHNvIHJlYWRi
+YWNrIGNhbm5vdCB2ZXJpZnkgdGhlIG1pcnJvci4KPiAKPiBGaXJtd2FyZSBjYW4gYXBwbHkgdGhl
+IHdvcmthcm91bmQgZHVyaW5nIGJvb3QsIGJ1dCBMaW51eCBCQVIgc2l6aW5nCj4gcmVhZHMgemVy
+byBmcm9tIFBvcnQgNCBhbmQgd3JpdGVzIHRoYXQgemVybyBiYWNrIGFmdGVyIHByb2JpbmcuCj4g
+UmVzb3VyY2UgYXNzaWdubWVudCBjYW4gYWxzbyBtb3ZlIHRoZSB1cHN0cmVhbSBCQVIgMCwgbGVh
+dmluZyB0aGUKPiBmaXJtd2FyZSBtaXJyb3Igc3RhbGUuCj4gCj4gUmVhcHBseSB0aGUgbWlycm9y
+IGFmdGVyIHJlc291cmNlIGFzc2lnbm1lbnQgYW5kIGFnYWluIGFmdGVyIFBDSQo+IGNvbmZpZ3Vy
+YXRpb24gc3RhdGUgaXMgcmVzdG9yZWQgZHVyaW5nIGVhcmx5IHJlc3VtZS4gSWYgdGhlIHVwc3Ry
+ZWFtCj4gQkFSIGlzIDY0LWJpdCwgYWxzbyBjb3B5IEJBUiAxIGFuZCBkaXNhYmxlIG1lbW9yeSBk
+ZWNvZGluZyB3aGlsZQo+IHVwZGF0aW5nIGJvdGggaGFsdmVzLCB1bmxlc3MgbW1pb19hbHdheXNf
+b24gaXMgc2V0Lgo+IAo+IEFzc2lzdGVkLWJ5OiBDb2RleDpHUFQtNQo+IFNpZ25lZC1vZmYtYnk6
+IE5pcm1veSBEYXM=
