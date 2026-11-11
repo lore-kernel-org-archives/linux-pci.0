@@ -1,74 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.71
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794378059;
-	b=rQ+0+kN9gog836CqJbnzgVaY0Wc/C6tRtcXjvMQWOBsnb/714isT8ODDwwZytUZCptHG
-	 Iv0cNhXOK9wk+B4hrgqwAkf2XBwqmPe2nNaZ+rAq9Jz7u1FiWaRniPTu31f/XWBG9AloD
-	 Dz2Frojuo/LkzarIqJoSly+7Kxb53GIUd+4OhVAirwhB68Ibj5sWkTgIm451gfRZoqFVh
-	 pd27qeYBzcyzDvkEIooMemxIwPmygwcBDZ3t8iBMbJ7qBORB3tyM+ElIs1tdj4jJbQmQn
-	 v606SlY2O/8YDxKnuxGKYrQEnOLmHzfrBYKwn2DZ1QCv4d+mfQcqSbn2GIPBwIRRrNQ==
+	t=1794378749;
+	b=EbaLTqu3bi0PER8Ux6JtlgKZax4JFdOdl/rYjIKqe2ulOATz2Wtk33DL77HqQAfm6OSY
+	 oBpn3bX38CFn8xoT64oI/d2Z4DdQeIfTQbnfwlnuRkXVtBKAAxbURLgiqnNIs5EKkZosG
+	 O0NmIAQY3rLzZuLXFrcr/ouflPzbIc6UF+xZ1DfMq9GVn4arL+J06LPUgmJ7rcAl0Wh9q
+	 3ffPW2HDCOuBlINdi5WjSLn/ZMz1JNe+3KUUauk6hbqaTSeoND+KEptBKY5zMmMr/lA7L
+	 FWbpaimIsGL8ce7U5suSubxnwudx5sCTucMeFBOcr9GIfBdoosuzbvEbDg1pgzpRoaA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794378059;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794378749;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=Up8Sxm5Z/vJlw6/f/g9Tue73jy4SQVTZi+t46heonUg=;
-	b=SfUmLxhJwGfFYBvMxJBETrPGnCqPlEOwpnxmhi0HGGFbA6tbptD347gBBs78R8uoDTY9
-	 d6TLQVc9pGHe6Nyw8lJN4A7u352L4pCfWrQOwLJihis1yBnFvdCfoaHrUodijpviYPsET
-	 3j4LaXlgcqxp36WCWgL8qJeNvVE6F9gTi4MzwNVznK6s5AOVha3Mrs+8Y/9rRX7bUoHBg
-	 DKcjKFqZzTL/EdbggNAYKIEzewEQHMbCu+JBA8h1aKVw9tYz1sVu+utExp3DAyNw9FW5G
-	 wKNeUn6Y8/Kr4IpPfpV90Jj8YlzdL98INd4OuyE3z/R7bH6GNMPR3DgBGBtl5KdN5qQ==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=NjW1KmGU+DS1ERJ9U4i8KV9Kn21Cgrdw5EW3c2f8mCk=;
+	b=gbcNhRvtXEFsg9w5DNdj7VRijTlkI8vLOTma2xBjENFe4b3FipCGMBQ+BlExra67+kas
+	 7ezK8TZD9fxqc+0hxIPR+m9VVAD5BY8FjmoLF7PvQuGV0wJ4tUJBgs5MKMuelkfFzJSlk
+	 ft8ghoXhJHGoOYp/7I/IDACV6vzUPMQMgkFJNVZtcUluzDmoesqMTmTGyirHBsj4+9QPz
+	 k1z5nw6jl1ueiOLii4nCi2YpdsPu9HLz6O9dAURx/b0knwIX4gz8pXWQnsj2T5HrgKcRM
+	 tVAf2xJHTtzj36v43qigH6sOS17iMFgXoPb0BjY77EdNvvRcSEkr4K1f2rrFDzle8uQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=K3SLra2K;
-	arc=none smtp.remote-ip=209.85.218.71
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com [209.85.218.71])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="WA/vHAqI";
+	arc=none smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0BA606A324
-	for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2026 06:20:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B0BA606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1B92606A32A
+	for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2026 06:32:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F1B92606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=K3SLra2K
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-c504bdea834so111001866b.1
-        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 22:20:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WA/vHAqI
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a2072b9832so16256585e9.1
+        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 22:32:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794378056; x=1794982856; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Up8Sxm5Z/vJlw6/f/g9Tue73jy4SQVTZi+t46heonUg=;
-        b=K3SLra2KIWcksMIpKfy1Mxx9XFGe/HWkmm6BhzGD4Bpd+GFOdzlndylzR1bew3PJcB
-         guVwyNtd8ivH4Vf0d3fj1McYZ/0jV9+/kPMC0Qp0pnvAP7P4GWyUg2RA9z0XS5Z71E2G
-         FylBEQOIZHJZJ8Y90+p8snm3N2yzT1lAtoGCIyBhN4/eh7ZEEhBYP6G2BdG+hhDvt3Ru
-         t5O0CI58V5+9qSDYbxQw6g9QBa5k+9eGksHUHnlhEN2xel63jF+TkCZGz0OH+VJPxzLL
-         VmncvLlQ25gCCPe+ef198XExMv7Pp9TzxH8lfooCDGWV5RMYdoi9mlFVbMDyNVBbeMF4
-         Nn9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794378056; x=1794982856;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1794378747; x=1794983547; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Up8Sxm5Z/vJlw6/f/g9Tue73jy4SQVTZi+t46heonUg=;
-        b=f8PxU+wDpTG+o8Z4DKYKb2FE3M+HVZt9roc8DqqEhMGqQVxuh37nwwKBPCMIe4NmoV
-         05qgFBvlcLf9cjpdW//3QJhnptxLZ6wTsfRUIwRmtvEEnn3H2FWyZ9Lkqq40be8pQJCq
-         WgKJsm8LjmNrtqQVnQFP0nfny74tHRaQ9D9YjGl24D3z5ecGAFms5Yu1SnQ4ck/ungXH
-         W0SVfs06Dly+oJvVTFFEjTe2wamrt3XtxdMaqe05PSi3v4LlMNsksMPLNvJMmECDidaE
-         tNf9lNtRKFJnm2OWqC8T8IRiUNtAt1MEj/zoc3E0EdSxaoPXVuR6akLo1eqR/ZTDH/YU
-         yrFw==
-X-Forwarded-Encrypted: i=1; AL+hErESYrKeMnfSSUybZDe3XEiqp1Det671he5Nhfe9zqVphAWy7tD77aMKvtnVqnD22pat0aysUBkRyis=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/F3vd/BZxQnvctlQyilSuGDr+J0Vfp19LqsZPpAilxxvoq51wJ
-	kKJudSNo9lsn6EGrb9L4snISSD3FUhPZJC5dzryGQA0lWKmYvHXxUOykQl0v/3gnLrv6qQc5ZWX
-	vbHWIvaxjXSToKi3r+A==
-X-Received: from ejcuu11-n1.prod.google.com ([2002:a17:907:c60b:10b0:c3f:fb8f:67f3])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:907:3e8b:b0:c31:8c48:e18b with SMTP id a640c23a62f3a-c5066aa85bemr101254666b.14.1794378056032;
- Tue, 10 Nov 2026 22:20:56 -0800 (PST)
-Date: Wed, 11 Nov 2026 06:20:55 +0000
-In-Reply-To: <179432062803.2329176.7220119921541924936.b4-review@b4>
+        bh=NjW1KmGU+DS1ERJ9U4i8KV9Kn21Cgrdw5EW3c2f8mCk=;
+        b=WA/vHAqIEHnJh6ZcLBcb+qvcB0j8M5spp1r2VAFx0pXQ1dc/VjhnstrlbE5O6eY5nN
+         5p4b2/79jrj4YjBrYwChPdDBPokn787ElHJlbWCYJ0mqS0/OFjtKybOa1pr8PZzpT7gV
+         UgfFWzInBd4BaB0vNGH5kzbevq52AwvbzS6itn1E4FyZodDxMQXyDVhT1xEi4fuI2Cqr
+         FazBxdcZxshv8vyuSKtTeOnAFWUPMTf2zbvCFWIb2eAcNzM5cUPCPCK0Cnb+MAhZp8tG
+         3CZVSW4XhW1NEOI8mM0Bnr2DPGIqwridDqSr+tUQVUWZwzBGGolKw7M0HXdxHI5QFyH8
+         PHUQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794378747; x=1794983547;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=NjW1KmGU+DS1ERJ9U4i8KV9Kn21Cgrdw5EW3c2f8mCk=;
+        b=oGolHesIpMmVYgczuR/MeO5f6NyV+l0YO8ZVS+zwaAbhJjSe+GHh3DvuKwwup75rGz
+         ppTNcLBlQegYr/LGGIpAtfEBkKB6EhoJXCzKwS8oFa/uySoMdd+EVdx4F/ne4kSE97Tq
+         twGC3Pr5G2UQMlhnpG+8nktTod8bAgSO+2EswX+OHhYMMRFmVxix4K5M0ySTXTxp3i3S
+         bM21oStMW04oiNMlRvclw2PMpkLIs4o3EaTFC7mj0t7DlyuW+TlCucR8TngB9R7FSiGJ
+         /m4iV73jTGlERsmfVEuZmnNynF0o/0SD8ZYvKEEPjTpOPucaOIx9ag4s9dKGvEYlktvO
+         RIHA==
+X-Forwarded-Encrypted: i=1; AL+hErFmrgmMt1ZDyblwfvq7Zpmiu08StkAMTL6Wm7Caa4DbgwMXLTT1DL5n4BfFXw/OLWQVPIz0Til36pM=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8bHyFmql0CwoLcsz6rV7HsD7DM7nGnIvOGBvMgt9ygjtuAi7Wr
+	OWNMDsBy6YpiuLr7+NzduY0coroeXGg1NZuZ9vCktHrMJuvJp2VBe5VI
+X-Gm-Gg: AYBFou2JYEzaKopQ2E32yC+UI6Bgqpyhr6NM88z5y5/oieJvPMD5fDMVjN+8AbRqHle
+	zhUvvRkx9i9JSlPLSxDGJkVNDVPNFg46UYBpn+QneJeuZ9icTzvTaeNTs6THdcVfFRsGjFwDtKc
+	p5fUXFOtJAgSmHgVbRXKjX7s9fFR5X7ZwZriPlfso9NpgI7kktIFCCZckwGqOuKnrBv+XrRzVSq
+	9+rhrwr6R/8yI9gfITD4RY+W/0464iapUv9/NFvbKEp2kGGfmVYNSYVWMkhjYtrPbOhn1xVgaIQ
+	is4pPShvBx919iRlfBxG/Xc0iA9pACAiSnfdm8nTdshC/5U/YGeLcgtDXZ1ZWqGfPhYahLPMp+9
+	fJGkYydQNrq2AY5jRuelamciWoRk/sXdUEcWgOvGD/PWxMAaRg7r9ddpnR29npkchp9HUJdN2h+
+	zi+nrmlCL3L6ZWRvItJ+v4l/FwKWAJpcb+Yf6NePnXpfFqNf2olkSL9k6iuIrRZDu2ZVZvKnqf4
+	fGO3irIu9JcyBm2I+LO41edLMaIXJL1fP4gFOM5Fxxu8NQ2Nzg5QiTN+Sb2eL4VrmCYDKkPE92I
+	YS0CuTyWvoZYlAYmRsxQ1ZyUkTtzamIuibnDgvlkUDPd2qk4CEhO
+X-Received: by 2002:a05:600c:4883:b0:4a1:d45a:3ae9 with SMTP id 5b1f17b1804b1-4ba08e1775cmr17291825e9.15.1794378746896;
+        Tue, 10 Nov 2026 22:32:26 -0800 (PST)
+Received: from Sheldon ([185.4.35.110])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4983585c5b9sm8823674f8f.9.2026.11.10.22.32.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Nov 2026 22:32:26 -0800 (PST)
+From: Victor Carreras <vicajilau@gmail.com>
+To: rafael@kernel.org,
+	hdegoede@redhat.com,
+	bhelgaas@google.com,
+	lukas@wunner.de
+Cc: mika.westerberg@linux.intel.com,
+	lenb@kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH v3] ACPI: x86: Disable wakeup on MSI MS-1592 and MS-1594 dGPU root port
+Date: Wed, 11 Nov 2026 07:32:21 +0100
+Message-ID: <20261111063221.14478-1-vicajilau@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261024054711.21587-1-vicajilau@gmail.com>
+References: <20261024054711.21587-1-vicajilau@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -77,225 +103,143 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261110050202.529473-1-tarunsahu@google.com> <20261110050202.529473-4-tarunsahu@google.com>
- <179432062803.2329176.7220119921541924936.b4-review@b4>
-Message-ID: <9huzy0azq46w.fsf@tarunix.c.googlers.com>
-Subject: Re: [PATCH v4 03/19] kho, memfd_luo: Reference struct kho_vmalloc via
- serialized pointer
-From: tarunsahu@google.com
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, Mike Rapoport <rppt@kernel.org>, robin.murphy@arm.com, 
-	maz@kernel.org, will@kernel.org, David Matlack <dmatlack@google.com>, 
-	Alexander Graf <graf@amazon.com>, seanjc@google.com, jgg@nvidia.com, loganodell@google.com, 
-	arnd@arndb.de, dwmw2@infradead.org, baolu.lu@linux.intel.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, oupton@kernel.org, alex@shazbot.org, 
-	gle.com@google.com, pbonzini@redhat.com, 
-	Andrew Morton <akpm@linux-foundation.org>, kevin.tian@intel.com, joro@8bytes.org, 
-	kvmarm@lists.linux.dev, linux-pci@vger.kernel.org, 
-	Pratyush Yadav <pratyush@kernel.org>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
-	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
-	skhawaja@google.com, sagis@google.com, linux-arch@vger.kernel.org, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Pasha Tatashin <pasha.tatashin@soleen.com> writes:
+On MSI Summit E16 Flip A12UCT (motherboard MS-1592, BIOS E1592IMS.111)
+and MSI Prestige 16 Studio A13VE / Summit E16 Flip A13VET (motherboard
+MS-1594, BIOS E1594IMS.115), the I2C touchpad (ELAN0305:00, 04F3:31FD)
+permanently stops generating interrupts as soon as the discrete NVIDIA
+GPU (0000:01:00.0) and its parent PCIe Root Port (0000:00:06.0,
+\_SB.PC00.PEG0) enter D3cold.
 
->> Subsystems preserving vmalloc allocations currently embed struct
->> kho_vmalloc directly by value in their serialized structures or device
->> tree properties. For example, struct memfd_luo_ser embeds struct
->> kho_vmalloc folios, and test_kho writes the structure directly into the
->> folios_info FDT property.
->> 
->> Embedding struct kho_vmalloc directly couples the containing layout's
->> field offsets and size to struct kho_vmalloc. Any modification to struct
->> kho_vmalloc shifts subsequent fields in the containing structure and
->> breaks the handover ABI across kexec.
->> 
->> Convert callers to hold a DECLARE_KHOSER_PTR pointer to struct
->> kho_vmalloc instead of embedding it by value. In memfd_luo, allocate the
->> main structure and struct kho_vmalloc in the same preserved folio, placing
->> struct kho_vmalloc in the remaining 8-byte-aligned space, and bump the
->> compatibility string to memfd-v3. In test_kho, place struct kho_vmalloc
->> in the remaining space of the FDT folio, store the serialized pointer in
->> the folios_info property, and bump the compatibility string to
->> kho-test-v2.
->> 
->> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
->>
->> diff --git a/include/linux/kho/abi/kexec_handover.h b/include/linux/kho/abi/kexec_handover.h
->> index 6f12f5037ea5..bee75a7006e8 100644
->> --- a/include/linux/kho/abi/kexec_handover.h
->> +++ b/include/linux/kho/abi/kexec_handover.h
->> @@ -11,6 +11,8 @@
->>  #define _LINUX_KHO_ABI_KEXEC_HANDOVER_H
->>  
->>  #include <linux/bits.h>
->> +#include <linux/build_bug.h>
->> +#include <linux/kconfig.h>
->>  #include <linux/log2.h>
->>  #include <linux/math.h>
->>  #include <linux/types.h>
->> @@ -177,6 +179,10 @@ struct kho_vmalloc {
->>  	unsigned short order;
->>  };
->>  
->> +static_assert(sizeof(struct kho_vmalloc) == 16);
->> +static_assert(!IS_ENABLED(CONFIG_64BIT) ||
->> +	      __alignof__(struct kho_vmalloc) == 8);
->> +
->>  /**
->>   * DOC: KHO persistent memory tracker
->>   *
->> diff --git a/include/linux/kho/abi/memfd.h b/include/linux/kho/abi/memfd.h
->> index 376a724a1d8c..7b49dd6d7e2a 100644
->> --- a/include/linux/kho/abi/memfd.h
->> +++ b/include/linux/kho/abi/memfd.h
->> @@ -81,7 +81,7 @@ static_assert(!IS_ENABLED(CONFIG_64BIT) ||
->>   *             to directly use them in the ABI.
->>   * @flags:     Flags for the file. Unused flag bits must be set to 0.
->>   * @nr_folios: Number of folios in the folios array.
->> - * @folios:    KHO vmalloc descriptor pointing to the array of
->> + * @folios:    Pointer to KHO vmalloc descriptor for the array of
->>   *             struct memfd_luo_folio_ser.
->>   */
->>  struct memfd_luo_ser {
->> @@ -90,14 +90,14 @@ struct memfd_luo_ser {
->>  	u32 seals;
->>  	u32 flags;
->>  	u64 nr_folios;
->> -	struct kho_vmalloc folios;
->> +	DECLARE_KHOSER_PTR(folios, struct kho_vmalloc *);
->>  };
->>  
->> -static_assert(sizeof(struct memfd_luo_ser) == 48);
->> +static_assert(sizeof(struct memfd_luo_ser) == 40);
->>  static_assert(!IS_ENABLED(CONFIG_64BIT) ||
->>  	      __alignof__(struct memfd_luo_ser) == 8);
->>  
->>  /* The compatibility string for memfd file handler */
->> -#define MEMFD_LUO_FH_COMPATIBLE	"memfd-v2"
->> +#define MEMFD_LUO_FH_COMPATIBLE	"memfd-v3"
->>  
->>  #endif /* _LINUX_KHO_ABI_MEMFD_H */
->> diff --git a/lib/test_kho.c b/lib/test_kho.c
->> index aa6a0956bb8b..cd0f183ff68e 100644
->> --- a/lib/test_kho.c
->> +++ b/lib/test_kho.c
->> @@ -25,7 +25,7 @@
->>  
->>  #define KHO_TEST_MAGIC	0x4b484f21	/* KHO! */
->>  #define KHO_TEST_FDT	"kho_test"
->> -#define KHO_TEST_COMPAT "kho-test-v1"
->> +#define KHO_TEST_COMPAT "kho-test-v2"
->>  
->>  static long max_mem = (PAGE_SIZE << MAX_PAGE_ORDER) * 2;
->>  module_param(max_mem, long, 0644);
->> @@ -34,7 +34,7 @@ struct kho_test_state {
->>  	unsigned int nr_folios;
->>  	struct folio **folios;
->>  	phys_addr_t *folios_info;
->> -	struct kho_vmalloc folios_info_phys;
->> +	DECLARE_KHOSER_PTR(folios_info_phys, struct kho_vmalloc *);
->>  	int nr_folios_preserved;
->>  	struct folio *fdt;
->>  	__wsum csum;
->> @@ -47,13 +47,13 @@ static void kho_test_unpreserve_data(struct kho_test_state *state)
->>  	for (int i = 0; i < state->nr_folios_preserved; i++)
->>  		kho_unpreserve_folio(state->folios[i]);
->>  
->> -	kho_unpreserve_vmalloc(&state->folios_info_phys);
->> +	if (KHOSER_LOAD_PTR(state->folios_info_phys))
->> +		kho_unpreserve_vmalloc(KHOSER_LOAD_PTR(state->folios_info_phys));
->>  	vfree(state->folios_info);
->>  }
->>  
->>  static int kho_test_preserve_data(struct kho_test_state *state)
->>  {
->> -	struct kho_vmalloc folios_info_phys;
->>  	phys_addr_t *folios_info;
->>  	int err;
->>  
->> @@ -61,11 +61,10 @@ static int kho_test_preserve_data(struct kho_test_state *state)
->>  	if (!folios_info)
->>  		return -ENOMEM;
->>  
->> -	err = kho_preserve_vmalloc(folios_info, &folios_info_phys);
->> +	err = kho_preserve_vmalloc(folios_info, KHOSER_LOAD_PTR(state->folios_info_phys));
->>  	if (err)
->>  		goto err_free_info;
->>  
->> -	state->folios_info_phys = folios_info_phys;
->>  	state->folios_info = folios_info;
->>  
->>  	for (int i = 0; i < state->nr_folios; i++) {
->> @@ -123,14 +122,19 @@ static int kho_test_prepare_fdt(struct kho_test_state *state, ssize_t fdt_size)
->>  
->>  static int kho_test_preserve(struct kho_test_state *state)
->>  {
->> -	ssize_t fdt_size;
->> +	struct kho_vmalloc *folios_vmalloc;
->> +	ssize_t fdt_size, alloc_size;
->>  	int err;
->>  
->>  	fdt_size = state->nr_folios * sizeof(phys_addr_t) + PAGE_SIZE;
->> -	state->fdt = folio_alloc(GFP_KERNEL, get_order(fdt_size));
->> +	alloc_size = fdt_size + sizeof(struct kho_vmalloc);
->> +	state->fdt = folio_alloc(GFP_KERNEL, get_order(alloc_size));
->>  	if (!state->fdt)
->>  		return -ENOMEM;
->>  
->> +	folios_vmalloc = folio_address(state->fdt) + fdt_size;
->> +	KHOSER_STORE_PTR(state->folios_info_phys, folios_vmalloc);
->> +
->>  	err = kho_preserve_folio(state->fdt);
->>  	if (err)
->>  		goto err_free_fdt;
->> @@ -234,7 +238,8 @@ static int kho_test_save(void)
->>  
->>  static int kho_test_restore_data(const void *fdt, int node)
->>  {
->> -	const struct kho_vmalloc *folios_info_phys;
->> +	const DECLARE_KHOSER_PTR(*folios_info_phys, struct kho_vmalloc *);
->> +	const struct kho_vmalloc *folios_vmalloc;
->>  	const unsigned int *nr_folios;
->>  	phys_addr_t *folios_info;
->>  	const __wsum *old_csum;
->> @@ -255,7 +260,11 @@ static int kho_test_restore_data(const void *fdt, int node)
->>  	if (!folios_info_phys || len != sizeof(*folios_info_phys))
->>  		return -EINVAL;
->>  
->> -	folios_info = kho_restore_vmalloc(folios_info_phys);
->> +	folios_vmalloc = KHOSER_LOAD_PTR(*folios_info_phys);
->> +	if (!folios_vmalloc)
->> +		return -EINVAL;
->> +
->> +	folios_info = kho_restore_vmalloc(folios_vmalloc);
->>  	if (!folios_info)
->>  		return -EINVAL;
->
-> Why do we need DECLARE_KHOSER_PTR() in test_kho.c at all?
->
-I tried to keep the kho_vmalloc reference after kho_ser_hdr to be
-same at every places. But Now I realized it is completely unnecessary.
+In the platform's SSDT (MSI_NB / AdlP_Rvp), \_SB.PC00.PEG0 sets its wake
+GPIO (WAKG) from the BIOS NVS variable P1WP, which erroneously points to
+GPP_A20 (INTC1055:00 pin 62) -- the GPIO interrupt line wired to the
+touchpad.
 
-> DECLARE_KHOSER_PTR() makes sense in shared ABI structs like struct 
-> memfd_luo_ser where both kernels reference the same struct field and get 
-> type checking between KHOSER_STORE_PTR() and KHOSER_LOAD_PTR().
->
-> Here, struct kho_test_state is purely local to the saving kernel and the 
-> handover ABI is just the "folios_info" FDT property carrying a u64 
-> physical address. Having two unrelated DECLARE_KHOSER_PTR() declarations 
-> doesn't buy any cross-kernel type safety
->
-> Can we drop DECLARE_KHOSER_PTR() here, keep a plain pointer in struct 
-> kho_test_state, serialize a u64 phys addr into the "folios_info" FDT 
-> property, and read it back as const u64 * + phys_to_virt() like the rest 
-> of the KHO FDT code?
+During boot, \_SB.PC00.PEG0.PON() calls \_SB.SHPO(WAKG, One), setting
+PAD_CFG0_GPP_A20.GPIROUTSCI = 0 and HostSwOwn = 1 so the OS GPIO driver
+owns the pin. However, when the root port runtime-suspends to D3cold,
+Linux enables ACPI wakeup via \_SB.PC00.PEG0._DSW(1, 0, 3), which sets
+WKEN = 1. Subsequent evaluation of \_SB.PC00.PEG0.PXP._OFF -> POFF()
+executes:
 
-Yes,Agree. I will update it. Thanks!
+  If (CondRefOf (WAKG))
+  {
+      If (((WAKG != Zero) && WKEN))
+      {
+          \_SB.SHPO (WAKG, Zero)
+      }
+  }
 
-~Tarun
->
-> -- 
-> Pasha
+This switches GPP_A20 ownership to ACPI GPE mode (HostSwOwn = 0,
+GPIROUTSCI = 1), silencing the touchpad interrupt until the dGPU wakes
+back up to D0. Under Windows, _DSW is not armed for S0 D3cold on this
+root port, leaving WKEN = 0 so POFF() powers off the dGPU (\PIN.OFF(PWRG))
+without touching GPP_A20.
+
+_DSW on the root port is reached through two paths: acpi_pci_wakeup()
+on the root port itself, and acpi_pci_propagate_wakeup() when the dGPU
+below it runtime-suspends. Both only check acpi_pm_device_can_wakeup(),
+i.e. adev->wakeup.flags.valid, so clearing the device's wakeup
+capability is not enough (the PCIe PME service sets it again anyway).
+
+Add an early PCI fixup in drivers/acpi/x86/utils.c for boards MS-1592
+and MS-1594 on root port 0000:00:06.0 (8086:464d on 12th Gen Alder
+Lake-P and 8086:a74d on 13th Gen Raptor Lake-P/H) that clears
+adev->wakeup.flags.valid on its ACPI companion. Early fixups run from
+pci_setup_device() after pci_set_acpi_fwnode() and before
+pci_device_add() calls device_add(), so pci_acpi_setup() never sees the
+port as ACPI wakeup capable and stays balanced with pci_acpi_cleanup().
+The root port and dGPU still reach D3cold normally, while GPP_A20 stays
+owned by the GPIO driver.
+
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220725
+Cc: stable@vger.kernel.org
+Signed-off-by: Victor Carreras <vicajilau@gmail.com>
+---
+Changes in v3:
+- Clear adev->wakeup.flags.valid from a DECLARE_PCI_FIXUP_EARLY quirk
+  instead of clearing the device wakeup flags in a final fixup. In v2,
+  pcie_pme_mark_devices() set can_wakeup back to true, and
+  acpi_pci_wakeup() / acpi_pci_propagate_wakeup() only check
+  adev->wakeup.flags.valid, so _DSW was still evaluated (sashiko-bot).
+  Running before pci_acpi_setup() keeps setup and cleanup balanced.
+- Tested on MS-1594 without the SSDT override: PEG0 no longer shows up
+  in /proc/acpi/wakeup, the root port and dGPU reach D3cold and the
+  touchpad keeps generating interrupts across repeated D3cold cycles.
+- Link to v2: https://lore.kernel.org/r/20261024054711.21587-1-vicajilau@gmail.com
+
+Changes in v2:
+- Move the quirk from drivers/pci/quirks.c to drivers/acpi/x86/utils.c
+  as it is x86-specific (Lukas Wunner).
+- Link to v1: https://lore.kernel.org/r/179272791966.20251.3697951431087014523@gmail.com
+
+ drivers/acpi/x86/utils.c | 53 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/drivers/acpi/x86/utils.c b/drivers/acpi/x86/utils.c
+index 418951639..11a5d51be 100644
+--- a/drivers/acpi/x86/utils.c
++++ b/drivers/acpi/x86/utils.c
+@@ -665,3 +665,56 @@ void __init acpi_proc_quirk_mwait_check(void)
+ 	 */
+ 	dmi_check_system(acpi_proc_quirk_mwait_dmi_table);
+ }
++
++/*
++ * On MSI Summit E16 Flip A12UCT (board MS-1592) and MSI Prestige 16 Studio
++ * A13VE / Summit E16 Flip A13VET (board MS-1594), the BIOS SSDT (MSI_NB /
++ * AdlP_Rvp) assigns the touchpad's GPIO interrupt pin (GPP_A20) as the PCIe
++ * wake GPIO (WAKG / P1WP) for the dGPU root port (\_SB.PC00.PEG0, 0000:00:06.0).
++ *
++ * When ACPI wakeup is armed on this root port via _DSW (setting WKEN = 1),
++ * subsequent D3cold transitions (\_SB.PC00.PEG0.PXP._OFF -> POFF) call
++ * \_SB.SHPO(WAKG, Zero), switching GPP_A20 ownership from GPIO driver mode
++ * to ACPI GPE mode and freezing the I2C touchpad (ELAN0305:00).
++ *
++ * Mark the root port's ACPI wakeup as invalid so that _DSW is never evaluated
++ * for it, neither directly nor when wakeup is propagated from the dGPU below
++ * it. This has to happen before pci_acpi_setup() runs from device_add(), so
++ * that pci_acpi_setup() and pci_acpi_cleanup() see the same state.
++ */
++static const struct dmi_system_id msi_peg0_no_wakeup_dmi_table[] = {
++	{
++		.ident = "MSI MS-1592",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "Micro-Star International Co., Ltd."),
++			DMI_MATCH(DMI_BOARD_NAME, "MS-1592"),
++		},
++	},
++	{
++		.ident = "MSI MS-1594",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "Micro-Star International Co., Ltd."),
++			DMI_MATCH(DMI_BOARD_NAME, "MS-1594"),
++		},
++	},
++	{}
++};
++
++static void quirk_msi_peg0_no_wakeup(struct pci_dev *dev)
++{
++	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
++
++	if (!adev || !adev->wakeup.flags.valid)
++		return;
++
++	if (pci_dev_id(dev) != PCI_DEVID(0, PCI_DEVFN(6, 0)))
++		return;
++
++	if (!dmi_check_system(msi_peg0_no_wakeup_dmi_table))
++		return;
++
++	pci_info(dev, FW_BUG "Disabling ACPI wakeup to avoid touchpad GPIO (GPP_A20) takeover in D3cold\n");
++	adev->wakeup.flags.valid = 0;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x464d, quirk_msi_peg0_no_wakeup);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0xa74d, quirk_msi_peg0_no_wakeup);
+-- 
+2.55.0
+
