@@ -1,83 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=141.14.17.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794414289;
-	b=LguS4L/C5WSxHQjcBqGo47W5NSmzeRI1P3BCgi3C2eeZ6iMmMeFo28eXou67k3GzSq9j
-	 tmWFyvZDqg6scEI5wOVI6cahnP7NNxy8xz7AFg2C1FElLOnE+0xW7wBV2fbLW4BT4jpOz
-	 QvEzbYIhdcddXctMi8zo6e8y81dWYb5/HorlZP90ilV3OapfgN6tPfy8g6ALATtkCurPF
-	 amnz/YBg/BgCxyjeRKBdlVuV1zg1/YV8f5tLNJUbNcFXyutt0A2WZjgkM0RbE/fjXuO18
-	 nEDNBOQhzTk3pOPjljQuTbnMNcRaHUrAriNkw1SqRBKvlk2kndz4xxGbaSDkC5VZwoA==
+	t=1794414890;
+	b=nwESy7GDRlx2DTOYsfsYACD3TBc1oFQa7cd4HNCvQmRLBFS8eE5dXvgPQKgokTIvF+39
+	 GYGXXaW3vJkC8K99FtJ/PSm/OvpQjbo0BbY247LKUj/wqObhzO4yJm+yCucSNp34lj7uB
+	 jpSBde/QIOqfnaQLhq5L3mpnWuXKEndq3wuTlsNGZ+1r7E/6IeKrJJjLVxTiOX8Bn0Nv5
+	 eCF7vUfH1yVFvod+4bhSMU28GmFU5mxuTPD7wLBCMf9AjxbwAGJOoksDsmXMPMnwUw5WS
+	 r+UMhIp03AU94dvT3WOaqHKLK8eiNJ/6y4OnvHLBo7DrzHODuoFMYW5hpuIbWlRjGWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794414289;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=OjsO/ys/ad/piKfPb2QV+3VHWakKPWNbmqHXdLgFmLM=;
-	b=TAlS4BP/FKQP+gSjTm29iRsk7DiwNwl5D1+h9STkgob+ee9toFgU5LIB1knHw4PsPrMl
-	 FiLeRcYVu++M+ymVz7dDdgET99m7+L1jhnc7WhSezh/Z5CUXVgWE5NRMF0QyMrlKT3hIG
-	 biOdlgP2uKu7b2WyoYbUlnKh+RRzk4OT1rUT+xTMwyqRJMkpS53vaf7RnKO7A1O/iqpwd
-	 dxq7KA4AN6ETKch/7NYaTBcvYcHTxtgzm/WLB+mWrXMGb8paX0U839xi63uaou/NjC1z9
-	 c8Na9m93aFLKogZmlmTT03Nv8tvIyPblZPMLvTcYDWh3nsgXPs4oFzgcry77/mq7CbA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794414890;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:DKIM-Signature;
+	bh=p7rJwov/3j8Ypjm8ghRAS0uIYAtINjdKXgXc9xzdwyE=;
+	b=kRiLlhVni4ip7xA9iOzofBmMKhT6VogaoG6JDT11wqfQjFQbH5gueaOWxK/GLvY0JeCI
+	 iLL65UJrEKnaFOu32VSdPbEshXuJ3fOKwf6yMzsVtKU74Ui+akvkbX6P6qJF77TRAIutF
+	 DzMxHk8sx79W5iTfJCZKvxRwjsC4op5PQhxAx/gRYfQ6cxzXkUNAmyzDIIZIwgisIBQXM
+	 tbMGZGYXMNIS/RfZkHulqW8BO+Zv5V9DHX0tjjPSUGsMKQJ4MdWtHW9ZMGi6rqBtxX/Mn
+	 3ko/5PvGfbssGdIGIggykWpR3ghn2hu2YJ/xVJ6LKBgHbd3Xa4IdNGhW9If4mlrKplA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D9R3bt8I;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=molgen.mpg.de;
+	spf=pass smtp.mailfrom=molgen.mpg.de;
+	dkim=pass header.d=molgen.mpg.de header.i=@molgen.mpg.de header.a=rsa-sha256 header.s=20260906 header.b=d0c0FhnU;
+	arc=none smtp.remote-ip=141.14.17.11
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B006606A324;
-	Wed, 11 Nov 2026 16:24:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89FAA606A324;
+	Wed, 11 Nov 2026 16:34:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 89FAA606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D9R3bt8I
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3EF51F00A05;
-	Wed, 11 Nov 2026 16:24:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794414289;
-	bh=OjsO/ys/ad/piKfPb2QV+3VHWakKPWNbmqHXdLgFmLM=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=D9R3bt8IMlmKCvjpNgRgysgj8jSfI13uGBJNO/Gz7VeltIMkdQtWk7rTUbnL+hSKP
-	 yw446sJdMUoV63jGJWmoLXrdm1ER/+eKiRPANmy8/oVLQQIHoxwQk4097d3gNv9RJN
-	 kPGqM0dBGFUDQwamvB9bgVigbzfmgo2HAwhl9bStSXnCsJPMOT+eRSw3AJbBNyDXRc
-	 8huwLIoPnXNi9b/6DowoNI3g+6A06OaWwxGcf8k5/7RxZl9Us0FcZzRZntTE+c9g0z
-	 h2AVNfplmuc6dmcm7rJeSw5ylRkvChp9Qq2tOVm3kX5/SsTu3LunBg9pwpNtEIVykp
-	 A7793R8G+sFfg==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: "Tian, Kevin" <kevin.tian@intel.com>,
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>
-Cc: Alex Williamson <alex@shazbot.org>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Krishna Reddy <vdumpa@nvidia.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Steven Price <steven.price@arm.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Will Deacon <will@kernel.org>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Subject: RE: [PATCH v8 10/15] PCI/TSM: Add vIOMMU-bound device contexts
-In-Reply-To: <SA2PR11MB4844957D715CDA1CC614E8C38C762@SA2PR11MB4844.namprd11.prod.outlook.com>
-References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
- <20261104161632.3547423-11-aneesh.kumar@kernel.org>
- <SA2PR11MB4844957D715CDA1CC614E8C38C762@SA2PR11MB4844.namprd11.prod.outlook.com>
-Date: Wed, 11 Nov 2026 21:54:32 +0530
-Message-ID: <yq5a4idntjy7.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=molgen.mpg.de header.i=@molgen.mpg.de header.a=rsa-sha256 header.s=20260906 header.b=d0c0FhnU
+Received: from abreu.molgen.mpg.de (g42.guest.molgen.mpg.de [141.14.220.42])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 2900C4C442F7CC;
+	Wed, 11 Nov 2026 17:34:01 +0100 (CET)
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: dlemoal@kernel.org,
+	cassel@kernel.org,
+	kbusch@kernel.org,
+	axboe@kernel.dk,
+	hch@lst.de,
+	sagi@grimberg.me,
+	linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Paul Menzel <pmenzel@molgen.mpg.de>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH RFC] PCI: Start the reset of WD PC SN730 NVMe controllers early
+Date: Wed, 11 Nov 2026 17:31:43 +0100
+Message-ID: <20261111163145.75027-2-pmenzel@molgen.mpg.de>
+X-Mailer: git-send-email 2.55.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,80 +64,129 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=molgen.mpg.de; s=20260906; 
+	t=1794414841; 
+	h=from:from:subject:date:message-id:mime-version:content-type:content-transfer-encoding; 
+	bh=p7rJwov/3j8Ypjm8ghRAS0uIYAtINjdKXgXc9xzdwyE=; 
+	b=d0c0FhnUNtG2eyBG6EmrEbAbSiDZFbKETWdxmZumAxx11pbvhVVYHVTxjZQ7mYUBWvjReR0aqVjB
+	K6lV3pms+Agdf/2W9eBV1EBGjH/Oegn0Acfu3hz4HJvKSBfLUsuAH+EGAbV2mwvQOa/WBGGCj5YyQG
+	rMwqLVvU5vimqbBu02YIccXU8x3I2hiqTSMQ1B8T87Xp1lnZeTDzp8X0BdRDvpelrewt3WBT8sTNo+
+	KsEPI9PU1lAwaDMOUVMiMDpx3fGCwC4si77NgEGcYrcYpZip7MRMNhexvG2Cm7jTGaAbRBw8GDszrg
+	07tY2iIXRBqEKDGXq9k7WCzQWMRc0Z1A==
 
-"Tian, Kevin" <kevin.tian@intel.com> writes:
+[Please consider this a bug report.]
 
->> From: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
->> Sent: Thursday, November 5, 2026 12:16 AM
->> 
->> An IOMMUFD vDEVICE represents a physical device within a virtual IOMMU
->> (vIOMMU) for a guest. It must use the same TEE Security Manager as its
->> vIOMMU. Pinning the vIOMMU backend keeps its tsm_dev registered, but
->> does not preserve the connection between the physical function 0 (PF0)
->> PCI device and that TSM.
->> 
->> Add a per-vDEVICE PCI TSM context. Verify that the PCI device and the
->> vIOMMU use the same tsm_dev, and account active contexts on PF0. Reject
->> disconnect with -EBUSY until all dependent vDEVICEs release their
->> contexts.
->
-> We really don't need so many vIOMMU/vDEVICE notations here,
-> especially in following code/comments. It's just about a tsm context
-> which holds the pf0 from disconnected. Then let's describe/code it
-> from that angle.
->
->> +struct pci_tsm_context *pci_tsm_context_get(struct pci_dev *pdev,
->> +					    struct tsm_dev *viommu_tsm_dev)
->
-> could clarify that each get returns a new context even on a same device.
->
-> s/viommu_tsm_dev/tsm_dev/. It's just a parameter to be matched against.
->
->>  {
->> -	struct pci_tsm_pf0 *tsm_pf0;
->> -	struct pci_tdi *tdi;
->> -
->> -	if (!kvm)
->> -		return -EINVAL;
->> +	struct pci_tsm_context *context;
->> +	struct pci_tsm_pf0 *pf0;
->> 
->>  	guard(rwsem_read)(&pci_tsm_rwsem);
->> +	if (!pdev->tsm || !is_link_tsm(pdev->tsm->tsm_dev))
->> +		return ERR_PTR(-EOPNOTSUPP);
->> +	/*
->> +	 * The vdevice can use a different PCI function from VIOMMU_ALLOC.
->> The
->> +	 * module pin keeps the vIOMMU's TSM registered, but does not
->> freeze this
->> +	 * function's link. Match its current TSM before pinning the link below.
->> +	 */
->
-> this is the example needing a rewrite...
->
+On a Dell XPS 13 9310 (BIOS 3.17.0) with a WD PC SN730 1 TB (15b7:5006,
+firmware 11170012, the newest available for this OEM drive), about one
+boot in ten mounts the root file system 100 to 700 ms late. With the
+nvme module probing at 0.29 s from a small initrd, the time from probe
+to Identify grows from 9 ms to 74 to 229 ms, and the partition table
+read and the mount get slower too:
 
-I'll simplify this and document the vIOMMU tsm_dev reference in the CCA
-code.
+    nvme nvme0: pci function 0000:01:00.0                 [0.293894]
+    nvme nvme0: passthrough uses implicit buffer lengths   [0.522525]  (+228.6 ms, usually +9 ms)
+     nvme0n1: p1 p2 p3 p4                                   +27.3 ms  (usually 3 ms)
+    EXT4-fs (nvme0n1p3): mounted filesystem                 +82.2 ms  (usually 8 ms)
 
-	/* The device must be connected to the TSM requested by the caller. */
-	if (pdev->tsm->tsm_dev != tsm_dev)
-		return ERR_PTR(-EXDEV);
+Tracing nvme_disable_ctrl() and nvme_enable_ctrl() with function_graph
+over 120 boots shows the time is spent waiting for the controller reset
+nvme_pci_configure_admin_queue() does first, as the firmware hands the
+controller over enabled:
 
->
->> +	if (pdev->tsm->tsm_dev != viommu_tsm_dev)
->> +		return ERR_PTR(-EXDEV);
->> 
->> -	if (!pdev->tsm)
->> -		return -EINVAL;
->> +	pf0 = to_pci_tsm_pf0(pdev->tsm);
->> +	if (!pf0)
->> +		return ERR_PTR(-ENXIO);
->
-> No need to check the return error as other places do?
+    boot  disable (CSTS.RDY 1->0)  enable (0->1)  4 KiB reads after
+    fast          2 ms                  2 ms           ~0.1 ms
+    slow     81 to 584 ms          16 to 60 ms        5 to 7 ms
 
-I didn't quite follow this feedback. Are you asking why we check for
-!pf0 here but not in other paths? If so, I think we can drop this check
-as well, since a valid pdev->tsm should imply a valid pf0.
+The controller state at hand-off, read from the initrd before nvme
+binds, is the same in fast and slow boots, CC=0x00460001 CSTS=0x00000001,
+so there is no shutdown in progress. The slow resets also happen without
+GRUB’s grubenv write before the hand-off (2 of 31 boots) and with the
+probe delayed to 0.76 s (1 of 30 boots), so it is no busy period after
+the firmware phase that a later probe would avoid.
 
--aneesh
+Clearing CC.EN before the driver binds, emulated from the initrd with
+devmem, works: the driver finds CSTS.RDY clear and continues, the reset
+completed within the first poll in 29 of 30 boots (35 polls once), and
+none of the 30 boots showed a slow reset, enable or read, against 8 of
+90 without it. The difference is not yet significant (p = 0.1).
+
+So start the reset in a final fixup during enumeration, at 0.19 s on
+this machine, about 100 ms before nvme probes, which overlaps a slow
+reset with the remaining kernel initialization and the module loading,
+and costs nothing for fast ones.
+
+With this change, 1 of 59 untraced boots stalls, against 7 of 41
+untraced boots without it. In the other 58 boots Identify comes 7 ms
+after probe and the root file system is mounted at 0.31 s. The stalled
+boot:
+
+    pci 0000:01:00.0: NVMe controller reset started early  [0.192544]
+    nvme nvme0: pci function 0000:01:00.0                 [0.292395]
+    nvme nvme0: passthrough uses implicit buffer lengths   [0.441335]  (+148.9 ms)
+     nvme0n1: p1 p2 p3 p4                                   +67.0 ms
+    EXT4-fs (nvme0n1p3): mounted filesystem                +104.7 ms
+
+That boot was not traced, so whether the reset outlasted the 100 ms head
+start or the enable was slow is unknown.
+
+Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+---
+ drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+
+Note, assisted by claude-opus-5-5 (found, traced and drafted)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7f1f47ea2ee41..e6535bcb0553e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4187,6 +4187,44 @@ static int nvme_disable_and_flr(struct pci_dev *dev, bool probe)
+ 	return 0;
+ }
+ 
++/*
++ * The firmware leaves the NVMe controller enabled, so nvme-pci starts by
++ * resetting it (CC.EN 1 -> 0) to set up its own admin queue.  The WD PC
++ * SN730 (firmware 11170012) usually completes that within 2 ms, but in
++ * about one boot in ten it takes 80 to 600 ms, and the enable and the
++ * first reads after it are slow as well, delaying the root file system.
++ * Start the reset during enumeration, so it runs in parallel with the
++ * rest of the boot, and nvme_disable_ctrl() finds the controller disabled.
++ * Like nvme_disable_ctrl(), skip the shutdown notification, as it could
++ * complete commands into memory the firmware owned.
++ */
++static void quirk_nvme_disable_early(struct pci_dev *dev)
++{
++	void __iomem *bar;
++	u16 cmd;
++	u32 cc;
++
++	if (dev->class != PCI_CLASS_STORAGE_EXPRESS || !pci_resource_start(dev, 0))
++		return;
++
++	pci_read_config_word(dev, PCI_COMMAND, &cmd);
++	if (!(cmd & PCI_COMMAND_MEMORY))
++		return;
++
++	bar = pci_iomap(dev, 0, NVME_REG_CSTS + sizeof(u32));
++	if (!bar)
++		return;
++
++	cc = readl(bar + NVME_REG_CC);
++	if (cc != ~0U && (cc & NVME_CC_ENABLE)) {
++		writel(cc & ~(NVME_CC_SHN_MASK | NVME_CC_ENABLE), bar + NVME_REG_CC);
++		pci_info(dev, "NVMe controller reset started early\n");
++	}
++
++	pci_iounmap(dev, bar);
++}
++DECLARE_PCI_FIXUP_FINAL(0x15b7, 0x5006, quirk_nvme_disable_early);
++
+ /*
+  * Some NVMe controllers such as Intel DC P3700 and Solidigm P44 Pro will
+  * timeout waiting for ready status to change after NVMe enable if the driver
+-- 
+2.54.0
+
