@@ -1,96 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.15
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794440687;
-	b=TrFmthm7fz1qj6Khw4D+NHvD72kViI7lgJVl7gvYaS96FkRNmM0KhwPex1h1KpTet9dB
-	 Mx5atx7D5lxVZUA6EL1bQS4Ef8OQg1FBUT8dJ7Bf7r3+y+o/ffMs7nfy2aIKkKM1meXDq
-	 9mR4ocYUfQERgxtM7Ml1qyfAmBprdSxLypcAt1LU73zxBkoZRPa0Enf9O8gLAm27gjWbn
-	 XqDpUge549vBRjrRpCMoYUcqo8ne7qBagG06g9xcmrtLKyij5iv+aUhLevmZ/oHMfA0Wv
-	 gtVkjXIGPH4Xuf14EfCEqYfh7rRkXjBUhOycAM96uM0aCwT2eItwm3agKQHg1m+HZuQ==
+	t=1794440906;
+	b=e4qmqC59oyBEpiQNfwsXY3bFhHOY0gbhLKOjGWvlNrCRogxDH7w4FlWVTTyyPNHsQzYF
+	 skS1aWmTTj+UwDMJmrTn4Z2S8mOH/gzt1Mk+5YdqMnfTHC7k8EHm6pNneXhHb8BhS5TuV
+	 +uUzWNkSorbwm8UVxKPYU6KgNAS1EZhXzSf4e9EMkmHWq9JfbzaVVu8n7pfFkZWnQm1tl
+	 zBvlYhRnA4DXcFYUkZzbzaMdc9/htiN4NPmnNdExQFXzZS0e64NqOV1Q4cVweVHqFvPSO
+	 5mexJmqq1nxBm+zcjvB0BgLkaQi88JMuNgkq0VbaQq1oxNYrNAySOEQQggU1sA9lcNA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794440687;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794440906;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=sdSp4JAEBIO1pQeZZS71rX8i5HCrtwFNUZ7pCreT77A=;
-	b=Oks4l0ApARf/fxMhhBAJ7lsdrbO/JPa0BxQNAFduOkH3c7RxQdDJjQNfoT+su8KnSYMv
-	 ggZFj2TaHb9JtyWTW4ei6OwBJldet8i78x4+COe10R+jZSpoBLu9e9BL1w7m87d2qPwi7
-	 /oCLpTNX7C+PjYTgUNJs0gcR2XNYQsp14bjJ2Fxba8cuUFZmYxa5TyQFvIenP1udGDsJI
-	 pw/BdzGNIrNK8RIhJEj7DIebi3ZPhLnBTnAmN55jxMUO1K4SqNEtKUKgOHP0KHtcfEv4g
-	 0gej9KKI8GybeFR/qlB77fZ+G7Ap0A36v8v/CtvjPy/xM1GHewrJ8KWHGUQxwing8lQ==
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=o13O8owmD+D7aAocojuQlucbQ1j1UddkBba8uNnH+YQ=;
+	b=CKAq7eBdGz/RCTSWyZX0lfJOG3B+K4Wu6A2pCouWWhmrNk8Dg5WdVjSAnuLN7j2tAbvz
+	 pCdbrAxSevCdkVX1FYUTKr6lnswdH5ug8iNZY6CJLNdEv5ptnXENMS2TD7yawJ5SmNk6S
+	 TAWSAmnLBj68PbnKoOQfO7vKgbAz60wA79LvP8Ry1kTqQHtFEP14UQM+i6KEluagthR+e
+	 57nFxJgAOFmScve9sa+St+kCjwt3AJ/FwGLECJPP/RsbbX/xYNR3OsvrZe3EEFULCra39
+	 ppr39DhXS8ZKBYC+drnk0HuUIPpfRFJRmOdkVAXYd42i/0PBOXJIiXF+pG6FSskv7Vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=gA7gYbT9;
-	arc=none smtp.remote-ip=192.198.163.9
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=YKkCWlIq;
+	arc=none smtp.remote-ip=192.198.163.15
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A9D2606A89A;
-	Wed, 11 Nov 2026 23:44:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7A9D2606A89A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8128F606A8A5;
+	Wed, 11 Nov 2026 23:48:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8128F606A8A5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=gA7gYbT9
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=YKkCWlIq
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794440684; x=1825976684;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=dj125zGEvAXWXtzneUQm2Fo30+JV1EKjt/TJ4mkqfhI=;
-  b=gA7gYbT9Pvw4OdGs+xH/J8FAORiqXLchVkKEmLBURxkb5ObfL1reGme5
-   pkUQfNJWOMcA9rWi8DJcjJ8DvMAPZ/DZ8Z7Yt7TQKLwHRuy2pnJaOiOh0
-   jkxRyKsTES31Lv+cb4NYVQsnwxpRPANrk8KcKjW2Og1dulIV2NK+R73ji
-   2sE6pAE7HQoN4ou0UccY3xQ7lYml1ERxIZZmWch6Ab9ucCd5N1jwp5rpK
-   3GR9P6H/QOj/p1ZaRxDHF8DaiO0DDlRWtluxTqIqrlx1FA1AQiH1Kzcuq
-   o8L2b0i/Qc4QbODafAh773JXcj9F2NoPzbNpt753PoAqA950bi3OCZSU6
-   A==;
-X-CSE-ConnectionGUID: e5Zx13UsSe68kJnDYOczWg==
-X-CSE-MsgGUID: fWLNpoetS4yHcrDjXraNAQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11963"; a="3099099"
+  t=1794440905; x=1825976905;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=9Cuegc/MuoDCo4oN8xNnf/pcpxsFdQP4keN2fSB0lfE=;
+  b=YKkCWlIqbv+MntrVW1kAk69u3zKeJW/GD1CSSwTDnD0Ob5D5SSbeHTyk
+   sn4s6B0i5m3smTrzwoOWuw267qBIEuwr6p478RQ98VMyz4jaTZMRqa8OI
+   Mp21r62yVLog0SEOLH8g9oiiS+XJw8tIDfKJLWcW1+WPpeAw7Cp5eQZYK
+   VUs4fCT9XSPPNw8Gz3Q+/XOcj+Zu8+5r8UpZ/bTqN71fy78UofwJ3iQkr
+   kIUQnTrIexfFu5g6wwamCCXnSwSedS8eioqwBWo9afJjbK3YH1HEW9vGu
+   ncLWDOk5VcDaCWPjN3+VQ7Q1bvv0OXHnM/7WRmlUPz3VLUvNTmBaQVuq2
+   g==;
+X-CSE-ConnectionGUID: CoDb8OI1Tyi/PFsg04QF8w==
+X-CSE-MsgGUID: 5vdL11maS5+oamVRHcg31w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11963"; a="3226550"
 X-IronPort-AV: E=Sophos;i="6.27,208,1787036400"; 
-   d="scan'208";a="3099099"
-Received: from fmviesa012.fm.intel.com ([10.60.135.152])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2026 15:44:43 -0800
-X-CSE-ConnectionGUID: kH3cqayDS3GUWnZAsbZHfA==
-X-CSE-MsgGUID: h2vE+jaoRUKLZ6aRiGD2fQ==
+   d="scan'208";a="3226550"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2026 15:48:24 -0800
+X-CSE-ConnectionGUID: OBrl5lPZQVGsO4ZZ0YyItw==
+X-CSE-MsgGUID: Wdq4BZXQSVqd2thien9rrw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,208,1787036400"; 
-   d="scan'208";a="10241290"
+   d="scan'208";a="8512350"
 Received: from pavel-dev.sc.intel.com (HELO pepopov-mobl2.intel.com) ([10.3.206.11])
-  by fmviesa012.fm.intel.com with ESMTP; 11 Nov 2026 15:44:42 -0800
+  by orviesa002.jf.intel.com with ESMTP; 11 Nov 2026 15:48:21 -0800
 From: Pavel Popov <pavel.e.popov@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Arnd Bergmann <arnd@arndb.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	Hans de Goede <hansg@kernel.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Peter Huewe <peterhuewe@gmx.de>,
+	Jarkko Sakkinen <jarkko@kernel.org>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>
 Cc: Pavel Popov <pavel.e.popov@intel.com>,
 	Leon Romanovsky <leon@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Len Brown <lenb@kernel.org>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	"David S . Miller" <davem@davemloft.net>,
 	x86@kernel.org,
-	Jim Chow <jim.chow@broadcom.com>,
-	Radu Rugina <radu.rugina@broadcom.com>,
-	Alexey Makhalov <alexey.makhalov@broadcom.com>,
-	Wei Liu <wei.liu@kernel.org>,
-	Michael Kelley <mhklinux@outlook.com>,
-	Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	virtualization@lists.linux.dev,
-	linux-hyperv@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	intel-gfx@lists.freedesktop.org,
+	amd-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-integrity@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
 	linux-arch@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v5 1/3] asm-generic: Add <asm-generic/cpu_device_id.h>
-Date: Wed, 11 Nov 2026 16:44:37 -0700
-Message-ID: <20261111234439.4098-2-pavel.e.popov@intel.com>
+Subject: [PATCH 0/7] Include <asm/cpu_device_id.h> without #ifdef CONFIG_X86
+Date: Wed, 11 Nov 2026 16:48:13 -0700
+Message-ID: <20261111234821.4814-1-pavel.e.popov@intel.com>
 X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20261111234439.4098-1-pavel.e.popov@intel.com>
-References: <20261111234439.4098-1-pavel.e.popov@intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -102,46 +113,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-<asm/cpu_device_id.h> exists only on x86, so generic code that
-matches on x86 CPU models has to wrap the include in #ifdef
-CONFIG_X86.
+<asm/cpu_device_id.h> exists only on x86, so generic code that uses it
+wraps the include in #ifdef CONFIG_X86. The P2PDMA series [1] adds a
+generic version of the header, so the include can be unconditional.
 
-Add an empty generic version, so the header can be included
-unconditionally. The CPU match tables themselves still need
-CONFIG_X86 for the model defines.
+This series drops the #ifdef around the include in the remaining
+users, and in ccp, which does not use the header, the include itself.
+Some of them also include <asm/intel-family.h>, which has no
+generic version. That include is removed: on x86 it is already pulled
+in by <asm/cpu_device_id.h>, and on other architectures the INTEL_*
+model defines are not used. The #ifdef stays around code that needs
+x86 for other reasons: CPU match tables using the INTEL_* model
+defines and boot_cpu_data accesses.
 
-Suggested-by: Leon Romanovsky <leon@kernel.org>
-Link: https://lore.kernel.org/r/25a0cdb4-9c4f-4531-bdf2-8d09eedd0883@app.fastmail.com
-Signed-off-by: Pavel Popov <pavel.e.popov@intel.com>
----
- include/asm-generic/Kbuild          | 1 +
- include/asm-generic/cpu_device_id.h | 5 +++++
- 2 files changed, 6 insertions(+)
- create mode 100644 include/asm-generic/cpu_device_id.h
+Patches 1-6 are independent of each other and can go through the
+respective trees once [1] has landed. Patch 7 does not depend on [1].
 
-diff --git a/include/asm-generic/Kbuild b/include/asm-generic/Kbuild
-index b7a388bef6e..fad71809ffa 100644
---- a/include/asm-generic/Kbuild
-+++ b/include/asm-generic/Kbuild
-@@ -13,6 +13,7 @@ mandatory-y += cacheflush.h
- mandatory-y += cfi.h
- mandatory-y += checksum.h
- mandatory-y += compat.h
-+mandatory-y += cpu_device_id.h
- mandatory-y += current.h
- mandatory-y += delay.h
- mandatory-y += device.h
-diff --git a/include/asm-generic/cpu_device_id.h b/include/asm-generic/cpu_device_id.h
-new file mode 100644
-index 00000000000..05c38c3ca1d
---- /dev/null
-+++ b/include/asm-generic/cpu_device_id.h
-@@ -0,0 +1,5 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _ASM_GENERIC_CPU_DEVICE_ID_H
-+#define _ASM_GENERIC_CPU_DEVICE_ID_H
-+
-+#endif /* _ASM_GENERIC_CPU_DEVICE_ID_H */
+Based on mainline (7.4-rc2+) plus [1]. Built with x86_64 and arm64
+allmodconfig, each patch separately.
+
+[1] https://lore.kernel.org/r/20261111234439.4098-1-pavel.e.popov@intel.com
+
+Pavel Popov (7):
+  ACPI: mipi-disco-img: Include <asm/cpu_device_id.h> unconditionally
+  drm/i915: Include <asm/cpu_device_id.h> unconditionally
+  drm/amdgpu: Include <asm/cpu_device_id.h> unconditionally
+  cpufreq: ondemand: Include <asm/cpu_device_id.h> unconditionally
+  platform/x86: Include <asm/cpu_device_id.h> unconditionally in soc.h
+  tpm: Include <asm/cpu_device_id.h> unconditionally
+  crypto: ccp - Drop unused <asm/cpu_device_id.h> include
+
+ drivers/acpi/mipi-disco-img.c              | 5 ++---
+ drivers/char/tpm/tpm.h                     | 2 --
+ drivers/cpufreq/cpufreq_ondemand.h         | 4 ++--
+ drivers/crypto/ccp/ccp-dev.c               | 3 ---
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 3 ---
+ drivers/gpu/drm/i915/intel_cpu_info.c      | 5 ++---
+ include/linux/platform_data/x86/soc.h      | 5 ++---
+ 7 files changed, 8 insertions(+), 19 deletions(-)
+
+
+base-commit: 067c5c24cef23d913b67eaaf71ae67e7169a6620
+prerequisite-patch-id: 2a8952c8b8b6b019585a8bc449db628f458658cb
+prerequisite-patch-id: 6b1715c7e4f230fedfcadf38303ce5966922caff
+prerequisite-patch-id: 88872ad297c6b8ec80cb4ec4057ab281e10c148d
 -- 
 2.54.0
 
