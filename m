@@ -1,108 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.19
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794371301;
-	b=4iVhwwSqKy362ejWIw6ZExdHqkUq2GnOZSTZyvS/ZOW3x3qMbc5F7N1uNbd0Wdr6kQym
-	 vy3/psp1vjSUHuL8vA6qoPxiaxIs/fXe2504ZjLPr8DjznoYCyZgQepw8df+PDc6W2OB2
-	 YzV1tIC38SWJjdmX71nEpj26v23BQqGew7aayzFLo9VihQDurl5owKlMq3ubvl3CwDW46
-	 jyellStFK6dLV5jmVRtuB8yAzHtz31vCPxDG5J94ssVp0pS7YUu+d0h1aQndRnZTXnUJH
-	 LbifT7YDkrZtkSvXfBlMul5hh8QSz6VpEnE1SW/U1m8AKnleF0PgYAOCmU2vleKIOqQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794371301;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Content-Type:Date:
-	 Message-Id:Cc:Subject:From:To:Content-Transfer-Encoding:References:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=35Degn5zt/JvR3C+BCJBZuEB/iHP5SNZh9EITfG2lqM=;
-	b=MVc+ZkMhjkF8VK6tcJXxHCSKxoykIVEGS7Ynz1kk0wi39/JoIJtDsb+yKpMwx2KOxwI0
-	 KYY/7RP8uske7bJdNqXTeSP3tg87Sul9SUDOUL6nZgjrz/hLcXr6JchZ5rcxChc3vEwCf
-	 AqKGczN4VfAXP8VS3bVuhVF71QlGK7B08yGYc3YBgUe6JpB2SJ30OruABUx6nORqQqYav
-	 s1oT3RIECjZwSYKQ0FRDF4XzVf5+t/aPv17bixJIj34jwnFgVoNu7TYtXo4YjorcwjGow
-	 p9ZgC2hmJRUHRzsnp3v4zg1dO9KNRlxXQjkgl23llNkj60EMRz++3uECbssEQeRxSag==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Zf8t1MC1;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.19
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010019.outbound.protection.outlook.com [52.101.61.19])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.72
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794375422;
+	b=Vpgy8WBwHs/qAr14rewAkVvafG2yPzwTWQcePFOyjygbW2egax96/Z3qZblmOpLwswsC
+	 Fa/exDeP/XXYctAu5xRhAvex1fsqBneVjqj/vJAwmwtgtWglcDcwH/jffXUDmnUUdl2sq
+	 39XsueU65qqC1GmFk5Nnb2xxSqPCq/dogAgjGSJ5rpKaaUr9Pnd2U6/aY+YZSoAddwHyA
+	 Q1Pe4kqpLIMd3x5MAQPwk/L38i5rY1/nCVcmFsDwuF597sidTFhKY+tDA918UFu5JM60M
+	 WG/GJEU2lUZT1O+9zusDQ2/qErQWinLiS5UnOKNR3HXaDl1snnI42GATP4smO7aY4kw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794375422;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=eLmVTYOfswJ+cGfMoCZUFy1VK5TCu4veYLS+0REM4CM=;
+	b=Atg1G/hzq+YbaNlZHrGvfxdSR2xEDwecTZm8qhK8rwc0nUjpzU9TY77APX+KOj6euZsF
+	 dzIb7fiQ6dmItt9IuErGkLRO0NfAOOqhyJvdjaNrsyWF/nqcJtaXRWQDo6g9J0KST+nB6
+	 a/Y5L86wkisRT0Ajf+0mtFh5F6U2qortv7wq5dLTpqAAzLRsEh7hbL0hZL4dVD3huXfiZ
+	 L/N+GZY3LGtueGWdGPr8l4LAV40BBlei03yzoCG52UTLnpvC2eMF7u9Ow01wCmIZm221G
+	 UgEUM1q2r80txjVJt8mPAtM5uVGEHBKcHe77rE8iCyhpa0SUvAA2xcfXEUlxa90AcIw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=j0h7t6W2;
+	arc=none smtp.remote-ip=209.85.128.72
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com [209.85.128.72])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1532E606A31C;
-	Wed, 11 Nov 2026 04:28:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1532E606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A650606A32A
+	for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2026 05:37:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A650606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Zf8t1MC1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MZmbS36SHDu+4778+TH4otd7TWptukjSSlU5j0YQbDdloyqG/N9+tXE05iwtSOXkSH4ZRVkHsGrDqDV9WoqWB5lMgkevh+OJWBtfHXTtV+ctNnyXL2WuT3rQW/vrJBhnUWgwT2wuxhwvzvt1rywAxU2faYLBkxzf7iiuOWfUTb1NVoI9B57uRU8zPKvGIBmIq4WT9FeuCnu2tPqFaDmcBnXbHhOODGcmlVHY9bmDCv0V0Y6a1fm4E3Q0xHLg6tnkY+roM86Dz5HUCRlFL3UQpZLJREGPT05XG7yzghGTHneWQYKzp1v4m22zLr6btFTAjepV+Ox3BK1oP8uXBgd7Wg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=35Degn5zt/JvR3C+BCJBZuEB/iHP5SNZh9EITfG2lqM=;
- b=ep5s1tdVfaJnwjKc/GHCtIPzKS8oCRdaXbx3QhNLlpqXTrgiS0i0qbkFOSRBLuCYyo4/bND+ldpTG5UtAZyofXuOYoL6wgYPakhj0NmjjQOQ7ohwtTql2VECbGnzLNdcR26bjMYyLWpje5QeBob1UkRjxA93XbUOARbl5lSIVUME87gnlT84F5CYaBjFPtUxzIy9JD+tA/35nfl0LT9iT6IFbwQKowqHN6LvDfk6hK1KptZBq80zokeISJTT1sjgREkH0FuDUmj7dK86uuPXnt3ehUQvrN91Q/l9sqRnM0z3zfl16WJsAbpUml7aTcnAR5IZtn8kGZXz8AA8INPoiw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=35Degn5zt/JvR3C+BCJBZuEB/iHP5SNZh9EITfG2lqM=;
- b=Zf8t1MC1FyjHj+srOlDzrUH66UKXKVKszposQ744cAqvql4pUKYvqKAVeVrsFb/gxV3RENllgVUGhiZ2J9Ll/W+3SiarJ80Dr5QVepOHbUv0kxfarzHETKhNOqNyStpnysAOQH5LqiX+dKMTE1nIRY+ld6EvdgpqDM6xP2FOpsxeJpE00Qo7C4u9l+MGtTQYDnfBV/WBB+XJwd1NfSdcoKMq+Cb3KvK2Mk0mYLjoCBrS1PqQuvkyN5cCtMURs7ER0Lwz6uQEv+4GdYHSQaNAMntXexcHVCxiHmqWC6ERW3E06iCx3iu3FttPFNYEJNvsswh06ScFkyJGg1P4z1pFDg==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com (2603:10b6:303:20c::17)
- by EAYPR12MB999131.namprd12.prod.outlook.com (2603:10b6:303:2be::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.8; Wed, 11 Nov
- 2026 04:28:11 +0000
-Received: from MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1]) by MW4PR12MB6873.namprd12.prod.outlook.com
- ([fe80::a338:bd2c:3a38:ece1%5]) with mapi id 15.21.0592.010; Wed, 11 Nov 2026
- 04:28:11 +0000
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 11 Nov 2026 13:28:07 +0900
-Message-Id: <DMS3J9S13ESW.17NXIIGFG34MT@nvidia.com>
-Cc: <dakr@kernel.org>, <kvm@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
- <linux-pci@vger.kernel.org>, <alex@shazbot.org>, <jgg@nvidia.com>,
- <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
- <airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
- <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
- <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
- <aliceryhl@google.com>, <tmgross@umich.edu>, <markus.probst@posteo.de>,
- <jhubbard@nvidia.com>, <apopple@nvidia.com>, <joelagnelf@nvidia.com>,
- <ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <kjaju@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
- <kwankhede@nvidia.com>, <targupta@nvidia.com>,
- <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
- <boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
- <work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
- <peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: Re: [PATCH v4 04/32] gpu: nova-core: vgpu: detect boot state
- independently
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Alok Kumar" <alkumar@nvidia.com>
-Content-Transfer-Encoding: quoted-printable
-References: <cover.1793906667.git.alkumar@nvidia.com>
- <ec70c38e3160a75ec2727a2261b4a1d21de33c4d.1793906667.git.alkumar@nvidia.com>
-In-Reply-To: <ec70c38e3160a75ec2727a2261b4a1d21de33c4d.1793906667.git.alkumar@nvidia.com>
-X-ClientProxiedBy: TY4P286CA0021.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:2b0::6) To MW4PR12MB6873.namprd12.prod.outlook.com
- (2603:10b6:303:20c::17)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=j0h7t6W2
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4a0284121c6so20822385e9.3
+        for <linux-pci@vger.kernel.org>; Tue, 10 Nov 2026 21:37:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1794375420; x=1794980220; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eLmVTYOfswJ+cGfMoCZUFy1VK5TCu4veYLS+0REM4CM=;
+        b=j0h7t6W2DhVdMUK6Ake7JqZjqrnTvHtViAvJAdnP83aR3NfgvIHJywMNNZw2qDFFYJ
+         pZVHUlmqFSM0KTJ6KVSrk78AmbGhzrjkNyJThYbaCbowANuc6lSdDGXt5hINeyqJspkW
+         6+9+aP/K6t57zRXMZvIa1sdCqATbWCBs0Af0GV+w/9ssx/kDyne1QjMnI7LNbeKsR2nY
+         z2sf5dPvG4eOvKvELtfHTr97/MUcE9vGfDqwxg7s9FgiDgwLaLfE15EIe132P5/hGL2M
+         iHhvk0FcES6c9vCnyFTpsE2akeQay/L41FGbDg0wZPy0W0HZvzH2GkJkEQUovdYlXLBz
+         EZyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794375420; x=1794980220;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=eLmVTYOfswJ+cGfMoCZUFy1VK5TCu4veYLS+0REM4CM=;
+        b=0RIdegewI6Ep0by3GERiyl/va2+UqtrzFwo8dgpkkJFadtRvMdZwlnzhfdm2JhErVd
+         eY2BykBkWrbDrMxySiaSa40cM6lz3HDbSDTgsP7kcKAfi3tHt3Ol/K7CGppFUAlVpGwb
+         2+2KPd9ewV5bA4csos+cE2BfnO4TFyGkaUsJFEXGTbNN+0xyZcNhu0BQU18AZHiG1nVA
+         mAavItR0ix9meuu7PStctXQnBK7GsI+EWVELdztHjh0Cj9lBHUZb+pqewGUV6IIvx11P
+         N1J3BEcquuiyHOJV1Ju7jTY8C3rglwzSbZstJl7JgQXO3HLrIsBqqpN1vPjJHgnqpkgR
+         fleA==
+X-Forwarded-Encrypted: i=1; AL+hErGdTAvWIk/qfIEg+fwFiVbjI6/P1Mw3HVOJ9OR9SMTBapUitUJyvpYkPM3iUaUw1sEbC4YtNu/JGiA=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9BWjisN8MhEjdsYENPWZnIaVLDSnT1hkNQpGfTX0+Q1V58K+QF
+	q9QmTvIco5CbhOmOu9vsWoC9JXDTRqy0lL0l7DqoABh0ZN6/fXGZzz1qlsP0yrXLkpLnM29JDLN
+	v81U31bzmLwmvJcs2Jg==
+X-Received: from wmsl10.prod.google.com ([2002:a05:600c:1d0a:b0:4a3:5d5b:9ad9])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:600c:810c:b0:4a1:fbd2:f689 with SMTP id 5b1f17b1804b1-4ba09379cc1mr15865455e9.7.1794375419814;
+ Tue, 10 Nov 2026 21:36:59 -0800 (PST)
+Date: Wed, 11 Nov 2026 05:36:58 +0000
+In-Reply-To: <DMRJJX2ZSYQT.2U1TTBGE7R4RA@soleen.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -111,124 +77,128 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MW4PR12MB6873:EE_|EAYPR12MB999131:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4fa1ffbb-f297-42e5-e42e-08df3fac3183
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|23010399003|1800799024|366016|261009223027099003|10067099003|261028144727099003|261102123227099003|261026140227099003|261026121527099003|261021121427099003|261022105027099003|56012099006|4143699003|11063799006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	4QBBELDdwSf7+tZKp7tJL1t4a/eymbd8nbKAJ+Do0LyfQeSyIC5slaJS43fBr0sc1UnS25pF+bvTd9bIl2cqJc2RySuSEpTPEt41AXy3qXr0FJHh+ltBgG8ItzCpDB2/sQZwdBzrHus2f6KArDEuGGVLtcqdLXH+cL5+L+OMxAKJrk8U+C3B8zgu72fWh0nki4+2JRAnyzpVTMBnWS4VuVgZIGatRfUiZh9FOvVuYx8tsSblQucgAytSMVqSXVFtMbuJ9/s3Si7f5vJyfB+aPy5Bj/A7miDiOCx6eUZQ01poIhrYdrlMEvbi1ym/ymg9kg8sbH2TbFoTvhElbqUDu8M4JEx1pBpcJLBmVmslfAnkxTyL6ecnbZEMGNQxkiMtrO5iO1NvmnZFonNYCEjJL3DP2W8fwynZY1lskT7IESYjTRcT9/TqxhmJIIyPQPuPNb1RRmmdX2WjTCrvthgGX2IEnrRIo7n341PtmwNQm558uy1yeaW7HnpO0i7WsCpx0b3+PCFsNh/gFhlAiEPONRvHl+RcpvvzzCgrmbQwP1w3SUzmNjmYr4K4dJb4eaqwkp5n0UAIp4LRkvaOMrxWWXQP7Yn1bn6RBwHTKE1rpCggC781r4L+lsjhC7GEW3JDMJ88M8NeZhvgLci3e62iQ1TVGd6Pywfr2YHERKu6IQk=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR12MB6873.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(23010399003)(1800799024)(366016)(261009223027099003)(10067099003)(261028144727099003)(261102123227099003)(261026140227099003)(261026121527099003)(261021121427099003)(261022105027099003)(56012099006)(4143699003)(11063799006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?LzVLQm1vRXdnNFFDaHBRK2xubVN3T3NyUE1rdmVjVldPbGt2VVJSeGhjb3do?=
- =?utf-8?B?QjFOL3BJZXZNcllvYzRWZm0ybjlmZmJVaVFVK1RBcjlENEUzV09ubThTV1Fp?=
- =?utf-8?B?Vis1SkdPZHRpelNnOXoxYkZuOGZHYzVTM01rSDU3NVJQak5md3dWQ0JYV0t3?=
- =?utf-8?B?bTZ3UnVhYytuZ0RSYW9iVS90aDRXRXM3aS9oR1lPT3pIeU13WGRXdVoxNy9m?=
- =?utf-8?B?cHovV0dIR1E3eUphKzVmNTUwMzNqR0tOcThuZGFUZ0trWHByU1FaWE5mekd3?=
- =?utf-8?B?azlyTU1xeUJMODFSUDJIcWY4VEFHeVVNVExIdmNQOUtQNytJeDNxOTB0WmQv?=
- =?utf-8?B?YmoyRDhtQ29FcjJoUW1MeEhUZi82VHhydVFsUFVWbDBGNXlwaURydUhKSDRZ?=
- =?utf-8?B?RkFrN1N2TzM3OUI4TFRKTlE2K0JKSEVyaDRPWHQ5YXJZc1hWMVpLaUprTSt2?=
- =?utf-8?B?OVp1eC9xUzd2VSsrNW5aOU9CU0IyTE1sd0xkZFRlTTRpamU3a1BTNFp1RG1k?=
- =?utf-8?B?aUVCMlRyM3lFUzFxRDhnOFZINTZZL01WM0syVHVFQzRZVlB5cWNaYTZTWXJB?=
- =?utf-8?B?TmdBcUZnN3I1THVmR1hWeDU5UU5BTTZOM0M0Q2o1bVFXNitwREp0bUMySngy?=
- =?utf-8?B?ajVZck80ektSdGluOHlhWllUQXJSYThGdS9zQ0VvNFF1VkJpNDd2K0dlVERV?=
- =?utf-8?B?VDljQ0NzbTZUVFAvTUhLQ3VhM1BQbDRyWTAyTEVwZXhsZGhhemFzVnhhMFh4?=
- =?utf-8?B?eC9Jd2hCSi9iSFp2VDJLNmcveHM0U1M2bU41Q2dKK2lzaFR1SVUvakwreHlC?=
- =?utf-8?B?by9nVFVmMW0zb0R1SUdlR3dGTm5CMTlxUHZDT0lDTDNmdzl5dFlaQ3dJWkg1?=
- =?utf-8?B?SlRRL0laRkozb0pEblRpcjZkdTRkLzZsQUIrQmV1Z1N0RElkV3hTVEVOQXVB?=
- =?utf-8?B?ZzZmM09vaGlGTFhLZGVycHFSaTBML1BZM0pka0hoM0x4d1Y1Rkk3azhkTjIz?=
- =?utf-8?B?bllCd0tXOXNKN2E3QnRoTU01ekpieWFaa2x6OFlpeHM5Yk5YbU4vNlNhUzRV?=
- =?utf-8?B?TXRSZ205bjg5RHhFVWdvL1JFVmFoSnd4Q1loalFuRVZ4elcwOVZQS1NQTy9r?=
- =?utf-8?B?dHVUSGRLM1FNNEdES3RhTnNaK2wyZEN6Y05JaWZOTmZ2NFlVNnBIYU50T04r?=
- =?utf-8?B?b2UwVVc4QlB0eStpd2VzSFh0MW9aN245Z3F1N01aQVJyeFdxR0RqNWNOdVVs?=
- =?utf-8?B?QUtONmo1VUszanVFeXVMM1p3VTNGRi8xZkdPOVEzRHQ1NlVvZU03RFVCYjgz?=
- =?utf-8?B?d2ZFRGJVT1JBSENYZWlpS0VlNnN0dWZVTGpPcXVLbkk3U0w0UEhBQWNMeWhH?=
- =?utf-8?B?dGY2Zk1KNEQ1VzQ4QTJxNVFkK3JsOXdKVVRYR2s3cGIzZnB5WlNhbVRTVkE3?=
- =?utf-8?B?UGduSFdlQTVla0gzUU4rbmNRLzhFNDYzdFRmU05ncXZoUG9McnNDUGtyclZz?=
- =?utf-8?B?Z2hsb2kzbmNITHJyWTFHMXpsSWpGODBnaExMQnp3Rm5MZjd6NGFkc1lEeWUv?=
- =?utf-8?B?QUxLU3JGai9TcHcvckUydm9TZHhIQmNlK05GRnZxL1loVHVQbmhpRUMrMTRS?=
- =?utf-8?B?NWRNTDJxd1NzMjE5a0gvTlU5YkpHTXQwL29Vai83Y0RSVnBzaFNkL2tNVmdv?=
- =?utf-8?B?bmZhTm5SNVlGd1ptSXhpb1ZEL0NTMUQyQ29GN210c0xNVXBlVGxrWXdQa0ho?=
- =?utf-8?B?dlZRK0pPUzNwcFM1VC9XS2FKY3Q3WU5OUzBNY2FtZTZjeTM3YmhEUU9kLy96?=
- =?utf-8?B?M3BYTjFORWFRaGpnR2dsWTlmVUhHSS9LSGd2bTA1cnlpb25QU3JNRmlQSnhQ?=
- =?utf-8?B?T2JHZ2Z0S3NCTGRJVFp6SVE5ZVJpTVRBQzd6ZlYxSmp3RzQ1MHhIZCszQWpK?=
- =?utf-8?B?dFdrcjNhRzVSdVBLMmZ0WE10ZWFPWG1HMTliVGk5dmM5ODd3RDFvVU5kb0Fj?=
- =?utf-8?B?ZmVuS3BKdytLcUpwcCtrSGZFNTFJd2FHL2xmc3I2UDA2Si9RUitQLzRPM2Ex?=
- =?utf-8?B?MDlzU0xwd1NxR2RKR1pFNVpydVFTSkYwSzdKQVo4aFp3WW9VZ1NVUmh5ZWFJ?=
- =?utf-8?B?ZlBCd0lvckRJMUI3ajh1emlqL3VoUGJXZ1JPNktKWC83ZzNERFk1SHNjMFFR?=
- =?utf-8?B?TnlhQS8wRVVVWHhPc21PdXBnTmFad1h2c1RjYnJsNmM2MFlLNFA4TUExdndq?=
- =?utf-8?B?UlZWYkNhejNPWnlOVFUzTy9SY285UktwVStib0tWNkhEamtibmt1K1U3SUM2?=
- =?utf-8?B?aE1YMXY5VzV6cGNJSllMNkNKK1ZhVW9OUGRLdzhkSmhPYnQ1Qlo1Zz09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4fa1ffbb-f297-42e5-e42e-08df3fac3183
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR12MB6873.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2026 04:28:11.0748
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Qwmevf0wqGWIeisz/YPhrlLHizBKnfRHqPHeokMOhq6YfYfAWkR3Xe6mWSEXc5AEW9EGq0EYH52oPEQPAPJgWQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: EAYPR12MB999131
+Mime-Version: 1.0
+References: <20261110050202.529473-1-tarunsahu@google.com> <DMRJJX2ZSYQT.2U1TTBGE7R4RA@soleen.com>
+Message-ID: <9huz5wy4q685.fsf@tarunix.c.googlers.com>
+Subject: Re: [PATCH v4 00/19] kho, liveupdate: Add feature header for
+ fine-grained ABI compatibility
+From: tarunsahu@google.com
+To: Pasha Tatashin <pasha.tatashin@soleen.com>, Mike Rapoport <rppt@kernel.org>, robin.murphy@arm.com, 
+	maz@kernel.org, will@kernel.org, David Matlack <dmatlack@google.com>, 
+	Alexander Graf <graf@amazon.com>, seanjc@google.com, jgg@nvidia.com, loganodell@google.com, 
+	arnd@arndb.de, dwmw2@infradead.org, baolu.lu@linux.intel.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, oupton@kernel.org, alex@shazbot.org, 
+	gle.com@google.com, pbonzini@redhat.com, 
+	Andrew Morton <akpm@linux-foundation.org>, kevin.tian@intel.com, joro@8bytes.org
+Cc: kvmarm@lists.linux.dev, linux-pci@vger.kernel.org, 
+	Pratyush Yadav <pratyush@kernel.org>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
+	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
+	skhawaja@google.com, sagis@google.com, linux-arch@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri Nov 6, 2026 at 2:39 PM JST, Alok Kumar wrote:
-<...>
-> diff --git a/drivers/gpu/nova-core/vgpu.rs b/drivers/gpu/nova-core/vgpu.r=
-s
-> index 905b3a7331fd..b405ba49c490 100644
-> --- a/drivers/gpu/nova-core/vgpu.rs
-> +++ b/drivers/gpu/nova-core/vgpu.rs
-> @@ -30,19 +30,16 @@ pub(crate) enum VgpuState {
->      },
->  }
-> =20
-> -/// vGPU state manager.
-> -pub(crate) struct VgpuManager {
-> -    state: VgpuState,
-> -}
-> -
-> -impl VgpuManager {
-> -    /// Creates a vGPU manager by querying SR-IOV and the FSP PRC vGPU k=
-nob.
-> -    pub(crate) fn new(
-> +impl VgpuState {
-> +    /// Detects the boot mode, falling back to disabled if querying the =
-device fails.
-> +    ///
-> +    /// Call after creating the FSP and before allocating GSP firmware r=
-esources.
-> +    pub(crate) fn detect(
+"Pasha Tatashin" <pasha.tatashin@soleen.com> writes:
 
-I think `new` was a fine method name here as it is a constructor...
+> On Tue Nov 10, 2026 at 12:01 AM EST, Tarun Sahu wrote:
+>> This v4 of feature flags support for LUO and KHO is no longer an RFC.
+...skip
+>>
+>> Each serialized structure is preceded in memory by struct kho_ser_hdr
+>> and registered via DECLARE_KHO_SER(name, payload_size, nr_required,
+>> nr_optional). Both struct kho_kexec_metadata and struct pci_dev_ser are
+>> explicitly marked with __aligned(8) because their largest member is a
+>> 32-bit integer, and 8-byte alignment is required by DECLARE_KHO_SER() so
+>
+> I do not believe we need __aligned(8), because the struct immediately 
+> follows the newly introduced kho_ser_hdr, which is 8-byte aligned. 
+> However, we should verify that the combined size (header + payload) 
+> is 8-byte aligned.
 
->          pdev: &pci::Device<device::Core<'_>>,
->          chipset: Chipset,
->          fsp: Option<&mut Fsp<'_>>,
->      ) -> Self {
-> -        let state =3D Self::detect_state(pdev, chipset, fsp).unwrap_or_e=
-lse(|e| {
-> +        let state =3D Self::query_state(pdev, chipset, fsp).unwrap_or_el=
-se(|e| {
->              dev_warn!(
->                  pdev,
->                  "vGPU state detection failed: {:?}; disabling vGPU\n",
-> @@ -51,12 +48,11 @@ pub(crate) fn new(
->              VgpuState::Disabled
->          });
->          dev_dbg!(pdev, "vGPU state: {:?}\n", state);
-> -
-> -        Self { state }
-> +        state
->      }
-> =20
->      /// Detects the vGPU state from the chipset, SR-IOV capability and F=
-SP PRC knob.
-> -    fn detect_state(
-> +    fn query_state(
+Yes, we can check total size alignment and remove the __aligned(8). I
+will update it.
 
-Here as well, I don't see a benefit in renaming this method.
+~Tarun
+
+>
+>> trailing feature payloads remain 8-byte aligned across 32-bit and 64-bit
+>> kernels.
+>>
+>> Also, Introduce DECLARE_KHO_SER_HDR(ser_name, fhdr) which is just the
+>> wrapper for struct kho_ser_hdr fhdr, This makes it clear
+>> To which ser_name, this fhdr belongs to.
+>>
+>>
+>> Series structure:
+>>   - Patch 1 removes __packed from KHO, LUO, and memfd ABI structures and
+>>     asserts their natural size and 8-byte alignment under CONFIG_64BIT.
+>>   - Patch 2 records entry_size in struct kho_block_header_ser so the
+>>     incoming kernel derives the entry stride from the block header.
+>>   - Patch 3 converts callers that embedded struct kho_vmalloc by value
+>>     (memfd_luo and test_kho) to reference it via DECLARE_KHOSER_PTR so
+>>     struct kho_vmalloc can grow independently.
+>>   - Patch 4 converts struct luo_session_ser to reference
+>>     struct luo_file_set_ser via DECLARE_KHOSER_PTR instead of embedding
+>>     it by value so both structures can grow independently.
+>>   - Patch 5 introduces struct kho_ser_hdr, DECLARE_KHO_SER(),
+>>     DECLARE_KHO_SER_HDR(), and the serialization/validation helpers in
+>>     include/linux/kho/abi/feature.h.
+>>   - Patches 6-18 add the feature header to each of the 13 KHO, LUO, PCI,
+>>     and memfd serialized structures in independent patches.
+>>   - Patch 19 adds a KUnit test suite (kho_feature) covering the feature
+>>     header helpers.
+>>
+>> [1] https://lore.kernel.org/all/20260903023452.721732-1-loganodell@google.com/
+>> [2] https://lore.kernel.org/all/20261021152527.375070-1-tarunsahu@google.com/
+>> [3] https://lore.kernel.org/all/20261026174217.603114-1-tarunsahu@google.com/
+>>
+>> Tarun Sahu (19):
+>>   liveupdate, kho: Remove __packed from KHO, LUO and memfd ABI
+>>     structures
+>>   kho: block: Record the entry size in the block header
+>>   kho, memfd_luo: Reference struct kho_vmalloc via serialized pointer
+>>   liveupdate: Reference struct luo_file_set_ser via serialized pointer
+>>   kho: Add feature header for fine-grained ABI compatibility
+>>   kho: kexec_metadata: Add the feature header
+>>   kho: vmalloc: Add the feature header
+>>   kho: block: Add the feature header to blocks
+>>   liveupdate: Add feature header to struct luo_ser
+>>   liveupdate: Add feature header to struct luo_session_ser
+>>   liveupdate: Add feature header to struct luo_file_set_ser
+>>   liveupdate: Add feature header to struct luo_file_ser
+>>   liveupdate: Add feature header to struct luo_flb_header_ser
+>>   liveupdate: Add feature header to struct luo_flb_ser
+>>   PCI: liveupdate: Add feature header to struct pci_ser
+>>   PCI: liveupdate: Add feature header to struct pci_dev_ser
+>>   mm: memfd_luo: Add feature header to struct memfd_luo_ser
+>>   mm: memfd_luo: Add feature header to struct memfd_luo_folio_ser
+>>   kho: Add KUnit test for the feature header helpers
+>>
+>>  MAINTAINERS                            |   1 +
+>>  drivers/pci/liveupdate.c               |  99 +++----
+>>  include/linux/kexec_handover.h         |  15 +-
+>>  include/linux/kho/abi/block.h          |  21 +-
+>>  include/linux/kho/abi/feature.h        | 372 +++++++++++++++++++++++++
+>>  include/linux/kho/abi/kexec_handover.h |  11 +-
+>>  include/linux/kho/abi/kexec_metadata.h |  17 +-
+>>  include/linux/kho/abi/luo.h            | 102 ++++---
+>>  include/linux/kho/abi/memfd.h          |  27 +-
+>>  include/linux/kho/abi/pci.h            |  66 ++---
+>>  include/linux/kho_block.h              |   8 +-
+>>  kernel/liveupdate/kexec_handover.c     |  98 ++++---
+>>  kernel/liveupdate/kho_block.c          | 172 +++++++++---
+>>  kernel/liveupdate/luo_core.c           |  43 +--
+>>  kernel/liveupdate/luo_file.c           |  58 ++--
+>>  kernel/liveupdate/luo_flb.c            |  69 +++--
+>>  kernel/liveupdate/luo_internal.h       |   9 +-
+>>  kernel/liveupdate/luo_session.c        |  55 +++-
+>>  lib/Kconfig.debug                      |  13 +
+>>  lib/test_kho.c                         |  38 ++-
+>>  lib/tests/Makefile                     |   1 +
+>>  lib/tests/kho_feature_kunit.c          | 184 ++++++++++++
+>>  mm/memfd_luo.c                         | 183 ++++++++----
+>>  23 files changed, 1271 insertions(+), 391 deletions(-)
+>>  create mode 100644 include/linux/kho/abi/feature.h
+>>  create mode 100644 lib/tests/kho_feature_kunit.c
+>
+> -- 
+> Pasha
