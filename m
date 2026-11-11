@@ -1,97 +1,184 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.3
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794403097;
-	b=qHoaEv4fmw43ZVwIxC7V/BBr1FF6YlYCfVp3RsPSl6RWNUvcQ+YtCrgP/iWvAcvcLD9x
-	 pOEH2q3CMIZWngY4g1VdqwKopbdOIwFyumVvqtVahgz2djLFQzVEEzlgQ7dcZC7z5ACFE
-	 /FpeCRJ6u7WhYOJl0SW0jok2MpBJcohpgH1jo7RZmV3mtjIuCdURAFVK9ARTCXoxIGOJ2
-	 6h+Hq4d/W+rEDN6Ag/svEBHST1phxS2XJAMR4d3CvQ2kV8JtnCFLb0ZDqR2Y6v0oJUeGQ
-	 HipUXsmQYKT3/tKodATdomnHkBa7Dw8EhRqk07KV4h2GD7qHjDPychgkUS5zmal3JUg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794403097;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=G3KKvzfoCzecAzp6anoyTgVQFNBDyDfcLWgzqjd3O2c=;
-	b=xpk85kVLh6Ks8LeX0iaLdNnvMdCs3Ma3PovBWKLtj08fE4RxbIqqA2CbXyLf61IYF+RU
-	 94Hc6r+0z6wF+Y2BqT2a3UYe9ZUNtWw5ZaEpe6PQG97irlmbcansWN2rHNI4rFTawFOd+
-	 aS1ZZo1Hkk8V38RYKc5ccM8yNd+tprd+XbvlNTc47ABWyoS4eT22RU1Y2iwrqEpqjlvz1
-	 Md7KZkhmuG5tLQEixDiVUxqmqE5FIvuWiH429RhGf0/FDa9ohEP8OzH1jVSZbVvzmVb7g
-	 pxVyuRbMVcaOKpuC1BCFBAHSs1pjeGZjb8qhXQ9M+k+swFyIuR/vrRj95i9OkeV647g==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=DUpMyQCh;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.3
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012003.outbound.protection.outlook.com [52.101.43.3])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794403824;
+	b=wYWZsjGSy7VidY/lE9gh21xYAEV3SKC+Akar1Q3TYbAuZMigAIG5jFaZGCo34L0TaKtV
+	 D/FoyurYXSfB2uXYVxQm+7ZftxZdhZx0KzvITOl8QXbJaEZW0QOTJyFVoaJA5BFIKGEHU
+	 boN4hJtVa9s9UQuD7p/Z2BAx6qz8QlpefWttJdRR8Y5lV/T00yMFdKJPL/fTFHIERRQY6
+	 HhgU5HnuB8h9Ife2IIYfx/WJT7xr7t6ZJwgmXr8b6nBmNXR3NduBNzGHjUOzfhez8nLuI
+	 spIJ8YQ5nJDgUbgq+xD5FHYa8vBFIkfFdXJ2Gzo2SqATwDHqXG0zY5FTDqFAKOXbqbA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794403824;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:Message-ID:Subject:From:To:Cc:
+	 In-Reply-To:References:Autocrypt:Content-Type:
+	 Content-Transfer-Encoding:Date:MIME-Version:User-Agent:X-TM-AS-GCONF:
+	 X-Proofpoint-Reinject:X-Proofpoint-Spam-Info:X-Authority-Analysis:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=vJ2dUUZCJGSHVy+N9jFxxvcVlyEBSBDtM55u9FMgeyE=;
+	b=yJvSShGCCFj0I/TqvGEyKvpX/KhIRkhue0M4P5IHbqlPsT5TxA0XoDRZKWGWyeNQv1Qq
+	 Ym6Dq+qg/cUz3b3RcE1XylSS9hVMM1+Q6Dw6PwN7D6U/N+2GuvbojhvjlCxb0EECzTPHa
+	 NIJJBuA/YoKaIovc/AnX7AGs3XqmEYIhmX9DEhLmisXN2BhAFKOa05qIcoiz/nM1czZoz
+	 JopS4t/VhmQoedk33wMYXbkTv1S4wVERO45w74yZCmRLvkmQe0WUwGSso45aMvxOUv7ZY
+	 ogoN3uP21OCJwIZVff25S0gdXjmNPSnJjUR3zLCRrdJTMKsc+Ryz/fSbCpmEWdEEuZg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b="ei6IDIE/";
+	arc=none smtp.remote-ip=148.163.156.1
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95D7606A33B;
-	Wed, 11 Nov 2026 13:18:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C95D7606A33B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5AFB606A32A;
+	Wed, 11 Nov 2026 13:30:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5AFB606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=DUpMyQCh
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=r8D+5xlJR5Ojudk78eksgzG4Ll+cUy6BV5S1ABIcShbkdrTZ88xI9RZ5gisSS7NNfHr4T1+LQrcRPYeCaFCHYrR9yUxXTzIHmVyrjZkJwBmAMNbB7WKcZCqM003dvgRt84PmLi+2PDyLS4kKZWjGSdecB4EeQGbdS4KnGsJeZcMuf6WQ8HhLQMmhAioQjXEvbU8sWryCes/V+4DOHh8mrbp9wqM3v5VoNKqrLjcCumylRss9lxFNdKRigNSz9S2QH3n+tlvOBIqoPULZlojdCTixpmqRsn856Aan09rEFr9MnTtd5hml5063yMzvMymj6AfEWAEfl+K41GWqsgTFAg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G3KKvzfoCzecAzp6anoyTgVQFNBDyDfcLWgzqjd3O2c=;
- b=u6UophgPg99SM+6vKGzO0IVAprw7i8+O7gQMAqWZ+8dzIrb6xRPOXR1Y+DAvUwlKkTtu8HuVcH7pDleD1ZW0Rk123Mv6WLjweRy3b7YYn90RHRvaZNQxcCr1Ytk79atYhaAIs1o2P76xctrj+is1QhO58sxZmMAtymhTqP2tBNUO0RBNiteOsPHicuCpiHNzJPkyLgdERq5FRRxC4vfJsYuRGtw7wGLAXEqlRMMedgoOsPuCzE9EaRG0gQmNcnTp733Zf0VTA5zC5E4G2aRJ0XHdnWGjzhFDmf5ze8QqkBzgBtUfmd0iyTnvJp3WWXTGEWKa4sHvInlL5LxO9zt70Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G3KKvzfoCzecAzp6anoyTgVQFNBDyDfcLWgzqjd3O2c=;
- b=DUpMyQChXEf86ghZx1++hJafjbjZed6J2Uvw7OImyZQWaMiUjAP14dNqMpzgBuBtpFi0jYfx8IpiCrTykRQiYmBNxLbYhekCpTsVn+G8iQj4OC5RHPnq5vB+jRPn/sevsTe3dOPhC7GfkMUdwi3Z6gw8nLl01hii4/QclSE4h8I=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA0PR12MB7091.namprd12.prod.outlook.com (2603:10b6:806:2d5::17)
- by IA4PR12MB492409.namprd12.prod.outlook.com (2603:10b6:207:129::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.9; Wed, 11 Nov
- 2026 13:18:13 +0000
-Received: from SA0PR12MB7091.namprd12.prod.outlook.com
- ([fe80::ec33:1213:cfd8:63bc]) by SA0PR12MB7091.namprd12.prod.outlook.com
- ([fe80::ec33:1213:cfd8:63bc%5]) with mapi id 15.21.0615.008; Wed, 11 Nov 2026
- 13:18:13 +0000
-Message-ID: <eba45235-a6b1-4a48-9c56-9e069c299478@amd.com>
-Date: Wed, 11 Nov 2026 18:48:00 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/3] PCI: Cache bridge firmware secondary bus number
-To: Mario Limonciello <mario.limonciello@amd.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Alex Deucher
- <alexander.deucher@amd.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
- <christian.koenig@amd.com>
-Cc: Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org
-References: <20261110-vfct-regression-v5-0-f49fae981bf3@amd.com>
- <20261110-vfct-regression-v5-1-f49fae981bf3@amd.com>
-Content-Language: en-US
-From: "Lazar, Lijo" <lijo.lazar@amd.com>
-In-Reply-To: <20261110-vfct-regression-v5-1-f49fae981bf3@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MA5PR01CA0119.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:1a7::7) To SA0PR12MB7091.namprd12.prod.outlook.com
- (2603:10b6:806:2d5::17)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=ei6IDIE/
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6ABCimbW1145607;
+	Wed, 11 Nov 2026 13:29:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=vJ2dUU
+	ZCJGSHVy+N9jFxxvcVlyEBSBDtM55u9FMgeyE=; b=ei6IDIE/R5IK1aSjm/JJtJ
+	rweoEk1alSMyDBenEHcPMuwFfi0HTTSEGJBmjQTeKPFUI55BDD1K960CCbWtmyWI
+	TkVqBZsGtK68APk9qq/2z4GuWyqtcIaXgsoEaDncAZYCXf5Y8MMbOV3vhNNQ0IvV
+	5z+UOf5JYFHjQib40MH96J5W7gjWfNwlUumHiUDleL23ZRMgbm4+fUYh3cp89tQr
+	UF81u/zIyH5b+cV0kowMIMID/mm1mgqv6wT3Imm6Mk4KoyMliDZtpVSZSdsyyAFk
+	jPF5Y+hZ3BiN8p3QOl09WXZI7fLp0EOYCafktTF/NcUxhNP6lWJrXJ3zlLCEfGYg
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hsuq72c3j-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 11 Nov 2026 13:29:55 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6ABCYs0T3379745;
+	Wed, 11 Nov 2026 13:29:54 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hv4nsv86q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 11 Nov 2026 13:29:54 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6ABDTrgn33358522
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 11 Nov 2026 13:29:53 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 3C04A58054;
+	Wed, 11 Nov 2026 13:29:53 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4559A5805A;
+	Wed, 11 Nov 2026 13:29:47 +0000 (GMT)
+Received: from [9.111.22.168] (unknown [9.111.22.168])
+	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 11 Nov 2026 13:29:47 +0000 (GMT)
+Message-ID: <757b59869b1a58e714d6a411f7c5a4714d0f959e.camel@linux.ibm.com>
+Subject: Re: [PATCH v15 1/5] PCI/IOV: Make pci_lock_rescan_remove()
+ reentrant and protect sriov_add_vfs/sriov_del_vfs
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+To: Benjamin Block <bblock@linux.ibm.com>, Benjamin Block
+ <bebl@ategam.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Heiko Carstens	
+ <hca@linux.ibm.com>,
+        linux-intel-xe <intel-xe@lists.freedesktop.org>,
+        piotr.piorkowski@intel.com, Farhan Ali <alifm@linux.ibm.com>,
+        Halil Pasic	
+ <pasic@linux.ibm.com>, Gerd Bayer <gbayer@linux.ibm.com>,
+        Lukas Wunner	
+ <lukas@wunner.de>, Guenter Roeck <linux@roeck-us.net>,
+        Manivannan
+ Sadhasivam	 <mani@kernel.org>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander
+ Gordeev	 <agordeev@linux.ibm.com>,
+        Ionut Nechita <ionut_n2001@yahoo.com>,
+        Tobias Schumacher <ts@linux.ibm.com>,
+        Ramesh Errabolu
+ <ramesh@linux.ibm.com>,
+        linux-kernel	 <linux-kernel@vger.kernel.org>,
+        Sven
+ Schnelle <svens@linux.ibm.com>, Keith Busch <kbusch@kernel.org>,
+        Andreas
+ Krebbel <krebbel@linux.ibm.com>,
+        Julian Ruess	 <julianr@linux.ibm.com>,
+        Matthew Brost <matthew.brost@intel.com>,
+        Ionut Nechita	
+ <ionut.nechita@windriver.com>,
+        Omar Elghoul <oelghoul@linux.ibm.com>,
+        Michal Wajdeczko <michal.wajdeczko@intel.com>,
+        linux-pci
+ <linux-pci@vger.kernel.org>,
+        Ionut Nechita	 <sunlightlinux@gmail.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        linux-s390	
+ <linux-s390@vger.kernel.org>,
+        Dragos Tatulea <dtatulea@nvidia.com>, stable@vger.kernel.org
+In-Reply-To: <3e3bfc04a89459de57c4783734ff56e4ec979db0.1790267348.git.bblock@linux.ibm.com>
+References: <cover.1790267348.git.bblock@linux.ibm.com>
+	 <3e3bfc04a89459de57c4783734ff56e4ec979db0.1790267348.git.bblock@linux.ibm.com>
+Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 11 Nov 2026 14:28:46 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -101,130 +188,123 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA0PR12MB7091:EE_|IA4PR12MB492409:EE_
-X-MS-Office365-Filtering-Correlation-Id: ace461d6-c68e-4c43-9871-08df3ff63d51
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|23010399003|366016|11063799006|4143699003|10067099003|261022075727099003|261021121427099003|261102123227099003|56012099006|261026121527099003|22082099003|18002099003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	ddujd9CeJLPmhq6kvFW3yH8RzabRsxiFLtfxyQ3OsJka3HfwyJj1D+VKuEBRtDfhbfJX6RkJm12AiGgGfacmwF24B1NM9veOFLpFgzS1PoCBLBivHZQcNJDe6Urx0jF/6dfJY5yDwajDbs+rh5UyF6L5ND3/YJRLNA3RYqjh5lbc+DF28Sw8z6co3QF1GNmhmp1GFrIqkecBOxZ7a3wromOVVV6FJbKCa62DDzvoBfFTLfVEzSxX6ZdNd1aACJF5UMNMn+j1ZkoBkCRpL5ziXVcQ7jANHMR2UIC9P+GbbvVnvTfGjTma6jEhN+6U47n2conBrdER1VRw0yerDmi8KrFKevZj0PLbcEBAJZxaBDmDjYxEvMahSRce/sqt6wSx5mZuL3ci0Rzo+CiJo4bE27H6lUa8n8pmCSKR2GezXXu8EmJLU4dtKAyTAsxG7rgbnGdifHJTIoekRJHwlil+11i440MDL+bMWjdNe3kgkb1WOdkr6ZfpoOFz7FHAgDb5HRXUUIsJGT6UVrw6WaDyc7XWl5xRo5A9KaE8ZtJwGVcCPUWTRiW0wWrIRwUr/HClmFWFrKqHWcCG/V4AsyPLVsmwXFG2WUFu7pqDD5/Ap5qm4rve0T9gFraQitNcmm5uP3+9Yg+WQX43ptEtL0VBenvAyR+LY4KRK0Y6FNqohDY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB7091.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(23010399003)(366016)(11063799006)(4143699003)(10067099003)(261022075727099003)(261021121427099003)(261102123227099003)(56012099006)(261026121527099003)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Z2VjRkxSazl2R3o4QVgyVjFPWHFha3lSRFpZb01IckVjU3NNUFZqTis2Mmkx?=
- =?utf-8?B?YUVXZndVdEY2MmdTejF4czFVU05aNkQ5OU5DMi9NeWFxRFNSeCtZWGNsallq?=
- =?utf-8?B?b1JPVytsRzZmRXM5WEViYjJKQVBCRVdxNkdHdEpIaEFOUE5OL0R0aFRuZk9x?=
- =?utf-8?B?c2JvSGhBVUI5R29relREY3QyUVNMcFBRdlBERFhaMHMrSWpLaGlVWUdrZFBN?=
- =?utf-8?B?L0VUYkJpdmUrbTRzTEdlTmE5azNHN0lFdmpROFQ1Wno5V25GL3R5RXVCYnpj?=
- =?utf-8?B?K2NUcnBqajNQeWcyRE9xOWdrS0F1ZTlqV2lkTkNScVhOU2F6UzQ3ZmU2cS9k?=
- =?utf-8?B?b2Rpb05XUC8zdjZiZ1ZqUW1zS25La1dMTi9yanNzYTROOU41d25RTUx1ZE9h?=
- =?utf-8?B?bUpiQjFvSCtMajlDOFJQVEp3SVFWcDRHNFM3RXdaaUk2NEo3MzZzVHVmVjFa?=
- =?utf-8?B?bjRXd2dPRG9IK3EzRHE2Ymk0elY4dmd3eXNrQm1OYWE2cks4VE1mbEtkN3J0?=
- =?utf-8?B?VjgwSm5jYzZPRzJwVWhYc2NZdHhlZUR6Vk5EaUFBUS9CdDBsWXVybGFmVjNY?=
- =?utf-8?B?aDFDb2VxQmhZa3RxTVJnbE1ES1c0TW4zV0hldEFUQU9oNVBQUWg0K3ZIRW1V?=
- =?utf-8?B?MHdYQ2ZJUjRoZlFIcVRMR3haVXlNZ0g5QlJPNTVmb3NXc3Y4eE0xQ3hQZjVU?=
- =?utf-8?B?STRyc2FndGpoSzhKQVBZLzNESjhjV2tVbUNHOW83aVFONkhZa1ozbnY0UFZj?=
- =?utf-8?B?YzNXdGhZOVhOMU84eXQxUHA5K1hDZGd0aGxwTzRsQlp4ZFVta1RTdjlUTzNZ?=
- =?utf-8?B?V2VUb0lSQTdGS1dYc281SHFSWUN2Zy80cUY4bGx1YXU1SCtBYktMUlpiZE0w?=
- =?utf-8?B?MWJ6RU03T3c5MEVOWDd0SVQ5RlZCVCtXSVowWS9MZFJaT25RcjRkOTNhRHRs?=
- =?utf-8?B?YUE3akxaczBQRlh4dVptZkxtZEdQakxuUXkxaHdRL3JyS2ZESDNNVk9jVXlj?=
- =?utf-8?B?TCt1MmEwSHdxSFNPWFFvQkoyTTNWQkFUMGV2eEZIQmtEbFh5YXpsblE1dm5w?=
- =?utf-8?B?NE9KVHFtdGdQbklxV2FMdy9MWTFOSFpScVE3dWRmV2lGWk1WT0RhdVRVcXd1?=
- =?utf-8?B?aTQ1eEwwMHM0eWJORG1KM0hHZXNybHJObGQ2SzRIT0ZGbmVyWE56VERIN1lu?=
- =?utf-8?B?N1hNN0kxV2R4KzhvS1I4d2g5QStyWk83QlVxQlhuRnd6dVpMMGxFQWxzOVdF?=
- =?utf-8?B?TDNjU3lqUDJWU2RxN01TRnZxUnJNQkdUakpNcXRLZlFhejFKK25kd3VtVVhW?=
- =?utf-8?B?cEhoMUpseUFNS08zemEwQXBzell5YTkwMzJqTmhwbllKNmFYZWVkUUxFSDlF?=
- =?utf-8?B?aGlHY3lSYy9qaW0yWDZKSFIyTUxkTWVNZ3h5ZFZRMWRnMnVqRWhiSUtEOFJl?=
- =?utf-8?B?TlV4L3cxQ1g0bk1aY3RpbmFNWXFpeTAxZDRieVlET01tdGlMbStVc2toc3o2?=
- =?utf-8?B?Y0RtVk9ib0dEYnFZTGpidlJSeklPc3BvRGsrSFg1NXhwVUxOMGx5OC9CWmZP?=
- =?utf-8?B?dnJ3UTVyRGRHZE1PWU44TXVRalhZUGphVVZCZXpUTCtMM3lLWVNYOXNCUzlZ?=
- =?utf-8?B?ZlNTaGJBNE9wekszVERnTjFjSVcweHNVQ1BBWTFzNkhXeUNPSERyVlRQUDI4?=
- =?utf-8?B?akpTdHZFVVlLVEJoTFNySldRQUNYRkxXV3dGRzRtY2crc2wxWkg4QTh2V3Nn?=
- =?utf-8?B?M2UrdlZtTTNFNUNqMnpmSDZ6a1pTY1ZiWmdzTFJLeldDQ1A5ZkV1L0xaNDhM?=
- =?utf-8?B?cDlVRXVYM0R3OVoxTlpQZVlTcG5oak55Si9laEh5TnBxUCtLM1hBV2pSZmRF?=
- =?utf-8?B?ZzlIOEtjZC9RblFaaXNUVVUrYTROWGZlbDR5b3k0RjVlMnN3OURNTmtsdnA5?=
- =?utf-8?B?WElVTHE3WUpFQkZXR2Q5Snc1SkxGWmE3d041TXQyd1JpM0N1UHlTaCt6dWlU?=
- =?utf-8?B?eHczSVRaS0N1L2lIejhKbWhYMlFHQnBMWXVCNnkvN0VsbzJmd3IzaHRXZjAz?=
- =?utf-8?B?OExXMCtiZzlHWG9BYmVub2pTYTZDSWY0U01remNyeUNadDdrU0R0Ty9RdU92?=
- =?utf-8?B?b2NNbytNdzA0TFFPYlh1ZjB1aU5ITnIwWERvMDVtTDVBNUYvMHdueitkZnk2?=
- =?utf-8?B?b2FrQ1Y5MHdlcTkvVGpKcEwyNnBFYVF5S3ZSa283N0JVbGFPTjVPZjhabXNq?=
- =?utf-8?B?amNQbW5SZFZwTWs0ZkNabE85NmRwbEVuRFpRNnRhbmtlZlRISCtna2J3YlF5?=
- =?utf-8?Q?oxuAXaxIrwMZX5RqRb?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ace461d6-c68e-4c43-9871-08df3ff63d51
-X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB7091.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2026 13:18:13.6938
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4nLhraoFVkzDO1njYaFZUgCteOtPRU3b0G9n6hUNX6EJ8bqPyWzVQfOGyeESs1RI
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR12MB492409
+User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTExMDA1MiBTYWx0ZWRfX4spW+bdZtEdO
+ ar8AL2puVV37v8xLEuWdydbvJGCAfZv7jhQMxP4spXqglOTESXJyECpmvLgw3//SzfYdoKCbjcT
+ crvjrrdRvWAhi5LeOAhkb0SAL0tie5s=
+X-Authority-Analysis: v=2.4 cv=HbCB3SE8 c=1 sm=1 tr=0 ts=6af46dd3 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=t7CeM3EgAAAA:8
+ a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=PtN3Y-iHzQweFIBZXwoA:9 a=QEXdDO2ut3YA:10
+ a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-ORIG-GUID: CsYFFla_IZOQuiBb-vm6JEcbsyFqbI9L
+X-Proofpoint-GUID: DNWZkMfk9r_h-L_vg50Z-qH3Fp5-F0gy
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTExMDA1MiBTYWx0ZWRfX2lvR4i2tS2Rb
+ Mr+C1ZfKibFPPn2oujL71vl+PdEFW0XmBf0/jiig+Izam+zpv0oZ/fCRb+570AHf2ZfHWpwE418
+ sx+/jDHKVoJirKD+119u66LJXp1i5uV56VhYgP0kLWLnhT9/foDud5lFmX+QifSDcfVypyjlXJ9
+ 7n/qrDVdlSPk8hmDCL29XDzD21YsK5WlLDKHKe6qdptjrBddD4pYRPoqp6CfY6wgMt9wLiY3Zrn
+ NgzAnmeWsX6QUNIuJPZjPtsUpacvfAawVwMiCYd4kV96Xzi63p/yZImXWsaHx6jJO/3AMFZM2kV
+ vBno4t4yAa5ZX7wf1Avwcnms3IyQ7XB0+rr96Aox1TB2Ap5rW+sja1dxeA3ReZpi9rhosOcBMXe
+ /0kQQjyIFKYd/xYZkpWHxpFAyKYftYnLIxXL6HV9s+2U7bvKgQvorkBTKQ8fYasp2TYzbprFX0m
+ kYe5RpbpnupBNR36XRg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-11_02,2026-11-11_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 adultscore=0 spamscore=0 bulkscore=0 phishscore=0
+ impostorscore=0 priorityscore=1501 clxscore=1011 lowpriorityscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2611040001
+ definitions=main-2611110052
 
-
-
-On 11-Nov-26 4:18 AM, Mario Limonciello wrote:
-> Bridge scans are split into two passes when bus numbers need reassigning.
-> Save the firmware secondary bus number on the bridge pci_dev during pass 0,
-> before the bridge is disabled, and keep it for pass 1 so devices discovered
-> there can read the original bus number via their upstream bridge.
-> 
-> Guard the cached value with a validity flag so later rescans do not overwrite
-> it with the renumbered runtime value.
-> 
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+On Thu, 2026-09-24 at 18:29 +0200, Benjamin Block wrote:
+> From: Ionut Nechita <ionut.nechita@windriver.com>
+>=20
+> After reverting commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove
+> locking when enabling/disabling SR-IOV") and moving the lock to
+> sriov_numvfs_store(), the path through driver .remove() (e.g. rmmod,
+> or manual unbind) that calls pci_disable_sriov() directly remains
+> unprotected against concurrent hotplug events. This affects any SR-IOV
+> capable driver that calls pci_disable_sriov() from its .remove()
+> callback (i40e, ice, mlx5, bnxt, etc.).
+>=20
+> On s390, platform-generated hot-unplug events for VFs can race with
+> sriov_del_vfs() when a PF driver is being unloaded. The platform event
+> handler takes pci_rescan_remove_lock, but sriov_del_vfs() does not,
+> leading to double removal and list corruption.
+>=20
+> We cannot use a plain mutex_lock() here because sriov_del_vfs() may also
+> be called from paths that already hold pci_rescan_remove_lock (e.g.
+> remove_store -> pci_stop_and_remove_bus_device_locked, or
+> sriov_numvfs_store with the lock taken by the previous patch). Using
+> mutex_lock() in those cases would deadlock.
+>=20
+> Make pci_lock_rescan_remove() itself reentrant by tracking the current
+> owner task and a recursion depth counter, as suggested by Lukas Wunner
+> and Benjamin Block, since these recursive locking scenarios exist
+> elsewhere in the PCI subsystem:
+>  - If the lock is already held by the current task (owner =3D=3D current)=
+:
+>    increments the depth counter and returns without re-acquiring,
+>    avoiding deadlock.
+>  - If the lock is held by another task: blocks until the lock is
+>    released, then records the owner and sets depth to 1.
+>  - If the lock is not held: acquires the mutex normally.
+>=20
+> pci_unlock_rescan_remove() decrements the depth counter and releases
+> the mutex (clearing the owner) only when the depth reaches zero.
+> A WARN_ON catches mismatched unlock calls from tasks that do not own
+> the lock.
+>=20
+> This avoids relying on mutex_get_owner(), which is not exported to
+> modules and caused link failures for builds that inline this code
+> outside of the core kernel image.
+>=20
+> This approach keeps the API unchanged: callers simply pair lock/unlock
+> calls without needing to track any return value or use separate
+> reentrant variants.
+>=20
+> Add pci_lock_rescan_remove()/pci_unlock_rescan_remove() calls to
+> sriov_add_vfs() and sriov_del_vfs() to protect VF addition and
+> removal against concurrent hotplug events.
+>=20
+> Remove the rescan/remove locking from sriov_numvfs_store() that was
+> introduced by commit a5338e365c45 ("PCI/IOV: Fix race between SR-IOV
+> enable/disable and hotplug"), since the locking is now handled directly
+> in sriov_add_vfs() and sriov_del_vfs() where it is actually needed,
+> reducing the lock scope.
+>=20
+> Fixes: 18f9e9d150fc ("PCI/IOV: Factor out sriov_add_vfs()")
+> Fixes: 05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when enablin=
+g/disabling SR-IOV")
+> Fixes: a5338e365c45 ("PCI/IOV: Fix race between SR-IOV enable/disable and=
+ hotplug")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Lukas Wunner <lukas@wunner.de>
+> Suggested-by: Benjamin Block <bblock@linux.ibm.com>
+> Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
+> [bblock@linux.ibm.com: rebase on v7.3, READ_/WRITE_ONCE changes, comments=
+]
+> Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
 > ---
->   drivers/pci/probe.c | 4 ++++
->   include/linux/pci.h | 3 +++
->   2 files changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27008e2ea5afc..14b3dd7dac271 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1418,6 +1418,10 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->   
->   	pci_dbg(dev, "scanning [bus %02x-%02x] behind bridge, pass %d\n",
->   		secondary, subordinate, pass);
-> +	if (!pass && !dev->fw_sec_busnr_valid) {
-> +		dev->fw_sec_busnr = secondary;
-> +		dev->fw_sec_busnr_valid = true;
-> +	}
+>  drivers/pci/iov.c   |  9 +++++----
+>  drivers/pci/probe.c | 27 +++++++++++++++++++++++++--
+>  2 files changed, 30 insertions(+), 6 deletions(-)
 
-I think the original suggestion from Bjorn was to save it inside 
-pci_read_bridge_windows() which happens before the two pass scan. In 
-that case, it doesn't need the extra flag or checks.
+Thanks for taking over from Ionut and refusing to give up on this. I
+don't love needing a reentrant lock, but it seems like the simplest,
+and most contained solution to a real problem until such time as a full
+rework of the pci_rescan_remove lock comes up. It also feels easy
+enough to understand and the added WARN_ON() should catch the double
+unlock case. Also both upstream sashiko and my own LLM reviews with
+multiple models are all happy with this.
+
+So I think we should go ahead with this and feel free to add my:
+
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
 
 Thanks,
-Lijo
-
->   
->   	if (!primary && (primary != bus->number) && secondary && subordinate) {
->   		pci_warn(dev, "Primary bus is hard wired to 0\n");
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5ffcf5ce8c966..b942dbb4edf57 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -363,6 +363,8 @@ struct pci_dev {
->   	struct pci_slot	*slot;		/* Physical slot this device is in */
->   
->   	unsigned int	devfn;		/* Encoded device & function index */
-> +	/* Firmware secondary bus number saved across bridge scan passes */
-> +	unsigned char	fw_sec_busnr;
->   	unsigned short	vendor;
->   	unsigned short	device;
->   	unsigned short	subsystem_vendor;
-> @@ -414,6 +416,7 @@ struct pci_dev {
->   	unsigned int	pme_poll:1;	/* Poll device's PME status bit */
->   	unsigned int	pinned:1;	/* Whether this dev is pinned */
->   	unsigned int	config_rrs_sv:1; /* Config RRS software visibility */
-> +	unsigned int	fw_sec_busnr_valid:1;
->   	unsigned int	imm_ready:1;	/* Supports Immediate Readiness */
->   	unsigned int	d1_support:1;	/* Low power state D1 is supported */
->   	unsigned int	d2_support:1;	/* Low power state D2 is supported */
-> 
-
+Niklas
