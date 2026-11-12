@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794494025;
-	b=I92WUkXZSkqzU9gBoR7W6qiCAORSZhiWppQbtVDX6MgFd5pArPvh2ObuueXJTst5ML+W
-	 T/OXBQUfy6dijcYBiNwPdCQwlnbMtdLmzVaptmc9RHmmAdgOTTpWvbtHIiphJQ6evs27S
-	 HrM+zvjPOr/EEY1TY2MYqXuYcmFs1woRbTsEDzAA+HN3j70nkUzJJuPvBaDbwwoOV20H0
-	 2F0xec5IcAWrrE7XZn2tvccGeG18Vqu2etR2XaNUf6K7+Is13BPFgijAqyKz+Dj/3IU6O
-	 ff0QkNsFSCw08kC8MbwRymIAgLD4E4+MTAs1E7yOUbiBNrPU6QaRbn01pkVac4RcggA==
+	t=1794494098;
+	b=lU9zhVawpJVYyBNH9ajcUL6fNgZACnTxE8xqSwyish5D0S4874c6ZoCz1+y2y2m7uGvi
+	 NjEDiXXmV+G0oVKkx72ZPFWGFjifsMzyRHKo7JENZv1mtV6e9S2fZqglX48hPyLRGSLjl
+	 vAdOg0z2Dook6lKzMFYIiV99AR1G0tgySAqEn7bABOln0FKosmlL4iSOUjYLFAdottjpy
+	 y0YChYPLE9pbK+tHUkB3aSk/XGOFcAveKWy8tOuxcGaOzPemam6lmc3feNNNVvRoj630S
+	 +8dxwvhE3NYpKP1bqdwGvLPa9RblIqoS1Y1ufTDfcfVVaVUz5iDtDzsO3UNHQyNbkQw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794494025;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794494098;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Na/bxPhMJJatNkuNHIQdICorOo9HZ98b11hKUS/wbDE=;
-	b=ZlO/IJshxm/IZvIKVgmQBXHbpUPLl7BWo4046cF8F599zP7Aws9m5ePzttGwFN3rw1lP
-	 ElwJXS1kbDGSjJVjnhw8vsfznHR2u3155lDrKAMG69QHFIUJ8c6bLguCVZhpmSAKXjYeO
-	 OscGpLfFC1pCZN6TwnZ16PdqvjgwPEIy+Wo+ZG2xmGY5oasaGJ2Og7zLXb2K7aZnIzKdG
-	 t/28FMwUbVi5QgVhFirbd7ut9NRFsHBKN1RnYh0FxE8itkDACjnxDZpGPGvgYs+nsZhxw
-	 +/4CDCYc8bfQUc7MNbhNlp9n477R68jyHQ0T+76NLCyHdPZO9LjWk070qdBi1Gr9+vQ==
+	bh=okB6vl/1TDzisI9DFyez22xC0rlSnWh4wi66jyHWIt0=;
+	b=nR8vhM6RjeQF7dY8ftkybFXjR2EWPb25jtl4lPUe2qw6pL9DorhNwKNObMh1X+yR75Nl
+	 FQ8Rvnj/h6g8Lb/nyDi25+QwooJDON/dhwKjN8gnb7PTT+bN1/j7wISDleexiqZockCUt
+	 n7qtsdWtHr4Hmd4ZzJxyk6IuU5v76vSBGln54amqlbHpI2oyKyU5BRmQjNOwmU1CnRHjQ
+	 FBsAHyulSBM7V2In80xTgXwBubeh4LN4UDHidof4pkDTOIJqoQ/aeOhNEIrjSl95P5uV0
+	 as1O/sdDlrlvt7ra3mGuexfevREa9C5cg4S7VCcN8X44VOS2AHaNQHxNzrGRhOB9CuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M7uK8CSS;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Tm0o16bp;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A41E606A327
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:33:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D54606A321
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:34:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M7uK8CSS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D86011F00A05;
-	Thu, 12 Nov 2026 14:33:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Tm0o16bp
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BA2B1F00A05;
+	Thu, 12 Nov 2026 14:34:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794494025;
-	bh=Na/bxPhMJJatNkuNHIQdICorOo9HZ98b11hKUS/wbDE=;
+	s=k20260515; t=1794494098;
+	bh=okB6vl/1TDzisI9DFyez22xC0rlSnWh4wi66jyHWIt0=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=M7uK8CSSAdzrxwKFNGtyihGqw6v7hbIy7Np3hV8vyI2xhdWsx9AT09WmPoXac43C6
-	 9b36iV1v2AS+dkO/K92UgkZ15zDkmQ8Ovi5ywKdU0LiUO/ye0s2XkOuddtlbVu8rGk
-	 0uxP27GfcfqUF7lTy1F2WWRtP2ErDPv1kBv9wyH2H1fH2ZWY7sGT+On0yFUG4nc4c6
-	 Rh5BuRgCq7jZxYSzMcAAi70P9ZIqS+H6mQepMl/i7Z7nN+TgxrZ4/ACHYnSSa9rm6F
-	 1PEg+zYeuu44XXEOgYX5cp4zELV/lMuZQEmSDhj0l3g+FKk1m++G70HgfGr/jv8XFS
-	 sztxdXdhUyubA==
-Message-ID: <sashiko-outbox-211341@kernel.org>
+	b=Tm0o16bpLUtUxxricVY1uKniHCDjuc/mnG+uQC3VciTkwJpUJEoVyhAjlsols0eU2
+	 rLY08nyDHlSpwK0m+zx6/L/oMeAz4aejhU7FZI1WIQ9K3gpJOvFAeA5p1eZX5l3Wz/
+	 2oh0MagCquUBsPnCHG0nIH1qIZH5QU1Ul6AznEVcmUthYc0qV3lNCRdrpqMu0GWPdU
+	 i+ePp3DQNMhlIMhUfIFlbIjYx3mYyiHYHrvpwpLBmn8DraWTE9uWfcBa9lvtrmOgM2
+	 gIxlZ1yiLfrMp/VzgkGQmGT3AGyqGKo8I9qW9rCpRrqip1d3euCzGNGrC+hfErsx/x
+	 zAwAXPgfHd1Uw==
+Message-ID: <sashiko-outbox-211345@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v3 03/20] vfio/pci: Avoid waiting for the bus lock
- when preparing D0
+Subject: Re: [RFC PATCH v3 06/20] vfio/pci: Use access ops for BAR and ROM
+ accesses
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261112141632.918954-4-skolothumtho@nvidia.com>
+In-Reply-To: <20261112141632.918954-7-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
- <20261112141632.918954-4-skolothumtho@nvidia.com>
+ <20261112141632.918954-7-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 14:33:44 +0000
+Date: Thu, 12 Nov 2026 14:34:57 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,21 +60,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> A D0 transition can wait behind a pci_bus_sem writer while holding locks
-> needed by PCI error recovery. Recovery holds the bus read lock, leaving
-> all three tasks waiting for each other.
+> Recovery needs to wait for hardware reads and writes to finish before
+> changing device state. Use access ops for individual MMIO and PIO
+> reads and writes, covering BAR, VGA, port-I/O and ioeventfd accesses.
+> Keep copies to and from userspace outside SRCU.
 >=20
-> Use pci_try_set_power_state() for D0 preparation during function reset,
-> hot reset, runtime suspend and SR-IOV enable. Preserve VFIO's saved PM
-> state handling and unwind reset and SR-IOV requests if D0 preparation
-> fails.
->=20
-> Runtime suspend returns -EAGAIN on bus-lock contention. Keep its existing
-> handling of other D0 errors to avoid leaving runtime PM in an error state.
->=20
-> Apply this even when recovery is disabled, since global IRQ cleanup can
-> wait for another device's D0 transition. Low-power transitions keep the
-> existing helper. Subsequent patch handles config-space power requests.
+> For ROM reads, keep mapping, reading into the buffer and unmapping within
+> one SRCU read-side section. Copy the buffered data to userspace afterward.
 >=20
 > Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 
@@ -82,5 +74,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112141632.9189=
-54-1-skolothumtho@nvidia.com?part=3D3
+54-1-skolothumtho@nvidia.com?part=3D6
 
