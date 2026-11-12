@@ -1,110 +1,149 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.52.34
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.37
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794493252;
-	b=eX7RuWpV8I66CI8IXC9o9qRkcckVAM0xiCKnKZn1xUWNHbNr+1BY9oQ6//SRRkJobDzu
-	 OqURVfzk0P918BO23MhgUuFiTtgCyG8H3i6t6gbTMaUr1sZRn9sTHDiVuuH3jLUT+KQOD
-	 /nBSjQEhsic3PuP3vJgfrOhHqGErRWh8Ft46m6ATm86aYTX+wzBYhwgAKHef3NCWMR+qd
-	 F4yAtGacxXtMkqjlRBUBdyptWkZUdLE/EbukOi4VqFgsTeKa6Vo+z37rjEzJqnJUtb4Ly
-	 ExDfQrMx9LgFfvYqe+kYJdofKrhx9LPQv0oF2TU/XQNF0IDJiweTeEcJt3QHcu3Ki2g==
+	t=1794493588;
+	b=qr1po1xeZnp1Dvku0qqYhrZk84+BjOPpcSXHwet6fXqdxgCxGLwZDyvaGtwrpvL8ttlv
+	 9BqOJ256jBOzmpAQHzlIxlotvCSlgftFajCsuvuemtK1k54cAk2BimbPl61pcnync+G1U
+	 UelprTgb/uKEfZsCukGX+IarYwl+WofNcg307Nb4tukwrMK7a49LVLGfs0T8u4vZ/4Lnu
+	 XesXda+RWKr2uSe0NspJAk9GRkw17PpGlD60d/0P7QHHX9ysp9pIAAT5VIGYaUZDen80C
+	 Bqqibw7QYtz6/dv6Mg/yaMX66JnIhcTX0KoMDMhF+tFMYB1coxEADiXiy06SxTdZ5sA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794493252;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding:Content-Type:
-	 X-Originating-IP:X-ClientProxiedBy:X-EOPAttributedMessage:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794493588;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
+	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
+	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
+	 x-ms-office365-filtering-correlation-id:x-ms-exchange-senderadcheck:
+	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
 	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=bcdwMjM/YWfwMXARh1y+slJkx1n1WaHUF2Q7b5RLCO0=;
-	b=ICg/iAUqSElx96L96hd7OSwhJRJofSvJ9e77L8QIxlV/qbpkSUN73xywfNxS59fK/M2k
-	 n9RgolEmIDpF8E8jJM5DcTTnzuUbmIfBbF4obVcvblnuL8ZB/+KFozrzSCFexgBMTuX4n
-	 4BKW0v6zJ449evQ0AS/wjX3I2n+51mMni1Ro3nB1HKY4sBqcNnbmBDBo1l9XVqHuGh5h6
-	 PiFZrlfced9ndFeF2zB7xMyRI1TAIUroaiO8rKYsPkvhY4hpYkAwlR2ErHbDV3YJX9qQx
-	 Mik3N70L2STa6NG51Hqz4gDToxulqN1A2bbeRp+NKOlxDtTFgErpni59+eRCPMlFK6Q==
+	bh=habjPIGyp0HPSihZEv/bCCfXrEmiZJCFXNeNpXTs2nU=;
+	b=FV1qLDZ1BbfHpa7yxT6OJbEyCPUwkSOgGr6Bs0F6lJvcNbUWPKcJO94Q4gjY/3gjsuxe
+	 g36Dsr75lPnvzQCfm+dD95CYe1v4IyqtwJ13Jg8Dz6clpk0s7eTLTzLngNteF0KFnDKgl
+	 voJxDTKo0YIsZNy150XpVfzNS1pC7YPdFSCb7vW/PwYlTJEWL0uGSwyvr9bujAuDhrwSS
+	 doKZDyMqMbdzF2dLeQOjUpbnj+FrjQBrZQga8YVQbiIJ7LiYFmPbSlqFUOBnl+PuC5/t1
+	 zpYl9L0nGJVnFOKt6ogaRTmyrIlFEaIjBUEO+RWwi1jMviTbdZwtmqAOPiKzFUsmOjQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=UAvkEFto;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.52.34
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011034.outbound.protection.outlook.com [52.101.52.34])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Gr4dclfI;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.37
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010037.outbound.protection.outlook.com [52.101.85.37])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FBAB606A8BE;
-	Thu, 12 Nov 2026 14:20:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1FBAB606A8BE
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A537606B2C0;
+	Thu, 12 Nov 2026 14:26:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3A537606B2C0
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=UAvkEFto
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Gr4dclfI
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=j44Ep/JZbasqHIJ7q3i7psWXlN/3hmqAtutnYj/qbJS2ahtG8mye8AAWfALYd6FiGGMkL1L5gwQbqdoN/Csr5OxqY5WuIeKWj+qIz01z5+JhP8mR30kJlwmS637dpR0LsdpuxY8AN9tLaTchmWTNn90LHMEYmuWyoLo6kmTON9q6cw3n6E/4gJUx3+F36jjcBOO8G1o6kKzGv1D666Gi/UG7dwBmGD73xRBYcKaYex0OENa/L5B43qKwJUk603J0CmqZgUH4fA+fpIhdAV/lXjwgt6gFmv5vzHPfHXOMngqPjG74Z5B38YETQJeUd9omyLITcGZMYZbRX1V7z1tyuA==
+ b=sUpAYRmGB8ZWjBCbHcdujnL7ICVhzIyPSX26rShu/qVZvSHD6WlphImE8Z6sWEHxwHd0kEP1iwABYC0vcLqRrF8Ba+LPsPb1qG1F+6BZ/nga4CO2+KHD/rRlAreGzELEpSChrVeR/D0nCivv4k81u8l+YWqOJpjP/fXh8RI4wCWkDp0+AI+QXBVUM4zrWj9YCgK9KWcrDsrMSSo4x4gaoRTSxLR+CESnAUVPbMjwNJMIrul8A4KwVRmQtnuR/e3yFSFf0ckW5wAP9MxGltALIF6rh6Y4sVaqI0rrgRS5X+xY/lyMVo6d6FCteypTiXEaHZl8PUQjAYrdkUZKEJJdIg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bcdwMjM/YWfwMXARh1y+slJkx1n1WaHUF2Q7b5RLCO0=;
- b=QfKbPEsYhPsslDBaC5CkJWGYTJ0YbUkOZsJzySUQUcPazJykeY49pSnfBYErevEuW2Wl9d/C996KcRV3RoRBFRFlMf3GnyUQlrZE0W69dEStt6zNe0L/FR0vb5813tKGvT79Rm12q/tnR4ATXCWMeu4GeJ574UgN3LauR/nqVj/tiUenf6oRkFtLPgkobH+PsV3JUU2BVx461k0jbWlnhgAECf3uY4agdrgKfu0XHjT6W7v6dcmWCI0p5uGuKhodt100tQaDlF15wjGaMiiiHwUkla4GiZ4X0tHe6b4DuZIe4O0UwWXTiI5KffQmuWDABkDeMsf1/hcN52Z/V/drKQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
+ bh=habjPIGyp0HPSihZEv/bCCfXrEmiZJCFXNeNpXTs2nU=;
+ b=qpahWmx4qK3dsr4fS46uX8pguZLaWXS75SxwcDHkfGeHMMOvSJ9u5fXDXyJ0o3Z69Wk2s6XAA0vZOG37888B8kfOav46hdotk7/Csx/dC9Dy6ATZyVqlPO6tV6s4EUcm6JAg5/ofNNoDJwaGn7VvmrzF1yLTXHJeMiriWxdrhSpoGD51ZxGZ2+PE9+gW7HjB0leOGgtpQ41rl5+bTYGZxBVS38ANR5VmXMCNVIv2KHVkVrojQWUQ7tTGCAlxveyxSqWjgb//2l8fQyvEaPNyf2YeHokAtOf173F/KO1K4p2v71pxb5jjCSQV1Msuy7PXeclBRoTMo+znqk5M80qXFw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bcdwMjM/YWfwMXARh1y+slJkx1n1WaHUF2Q7b5RLCO0=;
- b=UAvkEFtoPLJOXlKMPS6c+aNAK0NAmuxnyhOrMkcFWnQRCeQVa6Tc8qSKYl0aqSnQLUFjjt/T7eg6wENzOgFyViONSG3o3hf/2gNwUcN4MalP4+Y2sQNtn2xaUFlhtmqR16HBP2ZXJVzIB7itPl7rCCtDCPYNeYD3VZRBAJGTfQvPJUw6Z971UZUvbumVISjVObVb+gzj6tiYqGpMM8jHm2f163EKoBAjEEbouJtbstyXtTlexLxAZ7ais8L73GZUMTanf4JFroVPfonaERDvYYtOjs6/53OKgoX2zJmaDpdDIup2SQSIO8IXNni90CGr7qHbmwK91qtHWwmVPbeD4Q==
-Received: from SJ0PR03CA0220.namprd03.prod.outlook.com (2603:10b6:a03:39f::15)
- by CHBPR12MB869915.namprd12.prod.outlook.com (2603:10b6:610:406::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.9; Thu, 12 Nov
- 2026 14:18:47 +0000
-Received: from BY1PEPF000264B3.namprd02.prod.outlook.com
- (2603:10b6:a03:39f:cafe::81) by SJ0PR03CA0220.outlook.office365.com
- (2603:10b6:a03:39f::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.9 via Frontend Transport; Thu, 12
- Nov 2026 14:18:47 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- BY1PEPF000264B3.mail.protection.outlook.com (10.167.242.120) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.615.4 via Frontend Transport; Thu, 12 Nov 2026 14:18:47 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 12 Nov
- 2026 06:18:24 -0800
-Received: from NV-2Y5XW94.nvidia.com (10.126.231.37) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 12 Nov
- 2026 06:18:21 -0800
-From: Shameer Kolothum <skolothumtho@nvidia.com>
-To: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <kevin.tian@intel.com>,
-	<kbusch@meta.com>, <michal.winiarski@intel.com>,
-	<satyanarayana.k.v.p@intel.com>, <sonangp@nvidia.com>, <ankita@nvidia.com>,
-	<nathanc@nvidia.com>, <mochs@nvidia.com>, <skolothumtho@nvidia.com>
-Subject: [RFC PATCH v3 11/20] vfio/pci: Use access ops for hardware information queries
-Date: Thu, 12 Nov 2026 14:16:23 +0000
-Message-ID: <20261112141632.918954-12-skolothumtho@nvidia.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261112141632.918954-1-skolothumtho@nvidia.com>
-References: <20261112141632.918954-1-skolothumtho@nvidia.com>
+ bh=habjPIGyp0HPSihZEv/bCCfXrEmiZJCFXNeNpXTs2nU=;
+ b=Gr4dclfIU4d1qDSOtFo29iVXdtuZ0rG0OxA0i98mwvQxpHzsDZzj3nKIk+w/W46eSHDZ+77MJ/xv/rusZvWECHMIT+d9N1M/yWBJYCevJ5vjVIvea5C6o8lOwXoDulYdIzYW/hyGpUMMABmfMeOfw9JXR7vqog1g/FZB/cOjXKYI+lK8yO3LNJDDG/lln+l5CRXgh1aXlHfRqnY6wYU9M824q+6dYzE55n8MEG2bujeKLNytxBLtxm8BlgIEocZfRAv8J4WaI5tihsCmQ6tqsBfjpNKmmdInb0JGoDlQGfMFFesTbwTV6jIx4N8H1uHkG5/60c3E8O2NRmG/MCovNA==
+Received: from PH9PR12MB252631.namprd12.prod.outlook.com
+ (2603:10b6:510:42d::23) by DM4PR12MB6303.namprd12.prod.outlook.com
+ (2603:10b6:8:a3::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.8; Thu, 12 Nov
+ 2026 14:26:21 +0000
+Received: from PH9PR12MB252631.namprd12.prod.outlook.com
+ ([fe80::44ef:d404:34a7:4a]) by PH9PR12MB252631.namprd12.prod.outlook.com
+ ([fe80::44ef:d404:34a7:4a%3]) with mapi id 15.21.0592.012; Thu, 12 Nov 2026
+ 14:26:21 +0000
+From: Shameer Kolothum Thodi <skolothumtho@nvidia.com>
+To: Keith Busch <kbusch@kernel.org>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "alex@shazbot.org" <alex@shazbot.org>,
+	"jgg@ziepe.ca" <jgg@ziepe.ca>, "kevin.tian@intel.com" <kevin.tian@intel.com>,
+	"kbusch@meta.com" <kbusch@meta.com>, "michal.winiarski@intel.com"
+	<michal.winiarski@intel.com>, "satyanarayana.k.v.p@intel.com"
+	<satyanarayana.k.v.p@intel.com>, Sonang Patel <sonangp@nvidia.com>, Ankit
+ Agrawal <ankita@nvidia.com>, Nathan Chen <nathanc@nvidia.com>, Matt Ochs
+	<mochs@nvidia.com>
+Subject: RE: [RFC PATCH v2 00/16] vfio/pci: Handle PCI error recovery and
+ report state to userspace
+Thread-Topic: [RFC PATCH v2 00/16] vfio/pci: Handle PCI error recovery and
+ report state to userspace
+Thread-Index: AQHdUDizqfEnaJ2PVkymlz3AjIHjGLchfysAgAlDZuA=
+Date: Thu, 12 Nov 2026 14:26:21 +0000
+Message-ID:
+ <PH9PR12MB2526314C74224B9D064F0A7EA3AB702@PH9PR12MB252631.namprd12.prod.outlook.com>
+References: <20260929173305.204856-1-skolothumtho@nvidia.com>
+ <au4GznJ7p1k0kdcD@kbusch-mbp>
+In-Reply-To: <au4GznJ7p1k0kdcD@kbusch-mbp>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH9PR12MB252631:EE_|DM4PR12MB6303:EE_
+x-ms-office365-filtering-correlation-id: 1289208c-832b-4c5c-9e04-08df40c8ec91
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|7416014|376014|1800799024|23010399003|4143699003|38070700021|261026140227099003|11063799006|10067099003|56012099006|261022105027099003|261026121527099003|261022075727099003|261028144727099003|261009223027099003|18002099003|22082099003;
+x-microsoft-antispam-message-info:
+ xx8TXtV4KJWCJGaMzLumdzkS44wqNU10uy0kX4Mh2wu/6eAw6pkqMXIT2zsOEbbBKe+hnJ93nR/peAv5BQTeZKAAr/RZaYPZNVKMadPR7iuIZirYsTmA6R8e32CoCFG1GDAhoT3Pu1NZURXSiE3q7M0qzyiveDGmF4kLMrqqYHcx/KXXVD8hZH00LUaa3YdJXy6ezDr1mVs47RYcImsbthVBRD1HfCr2nWlhBgQB2augUNtdBQo4b5kD9rwmJFJQW4TSSxCHujpbmSiKZANF83Fft3oIXGtgZiI50BCX44T4i3kdPll24hOs7zWdm1mV5sT9KDH+hCTdxOw56pGMqZjCuGG8K3CrUglU8rVsGx2zJOEK9BxsxqgwSinFsM2IMhHUDSZKQ2/uS9fgqUTTJEYBVVcBiuL4doiAwyPijhOJxM45faV9UE4msE0G/PdRs8VckOB9HrdnBrqHUpzCfXq3Jr4cFCR1uitWRdKMGIXPkSg/Ux4JFKlFfeJeFQRIr3N8U7QK4zcU/tMiOZmdDXAHjH1H+mQjH8JIa5/b3BswXJXllMzzm4X/ylr4V/jUJTejjcXI0SzFwJTST6tTOSo5ZRxxZaUNvXlNO69WnBqCU8NREN67qNxAWvuCoSIBYTmhPKDs2Q5BFuaCHGC+TyGbbMzPKX4xSebmG5qnkKjVASHl+56AMtXutkLJbSUpyUlPiG9ME0A4y2fujoS33aFmuQc2d7CkBhnSC+u4bqI=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH9PR12MB252631.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(23010399003)(4143699003)(38070700021)(261026140227099003)(11063799006)(10067099003)(56012099006)(261022105027099003)(261026121527099003)(261022075727099003)(261028144727099003)(261009223027099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?36bS0ihfVKUh8R5StnPtsWz1TeUPQeEfIiemkCBZR3VBdQ7p0XAx6KUWHZQc?=
+ =?us-ascii?Q?1GcUSBSY9ydB3c5zstlnf8Xce8mQ6EMO+nfAzB7ZDuH0iCqap9TBt744O9fG?=
+ =?us-ascii?Q?eaMD1f4dOQ2MuHqo7tRVXgQ8VgAtrAQaxVESkTCCLnHRFkpOANDHCPtoGtn7?=
+ =?us-ascii?Q?usA3mai5kIBPQagfgZ/DdOPewhtxy2F7QGMajJOP17V070mc41U5jRTWQ+LA?=
+ =?us-ascii?Q?6uH3J/GOxkIXN778e5wFu9wtW3bEHJkoVojS6JlXfVNwpUwsf8L+7H0fzLK3?=
+ =?us-ascii?Q?r3g3yKLIxMPCV3BsblkZ3iWxGNaz8Ao2pgKygNn9YZnGKZK1Pl2czAeWDnHd?=
+ =?us-ascii?Q?40LoEs+8P8lTnda1M2devoHD5dle/Kc9OFkMkRT/hDGmEfZp9QgWD7KQaIrG?=
+ =?us-ascii?Q?Km1qdQR6LVjeuC4fsNFJSixVCCNTDkJ5zb43bjBVVGpqUcfA7+3xY81zYqLh?=
+ =?us-ascii?Q?fya2mQ101ZD2PdEBo+DXUj+MX6IwRqi6BSP10/nr0A8NKgHggP92fONxze6U?=
+ =?us-ascii?Q?VWbzapXIAovZikoSWH9QTrX9e9s0d2n7ATF6ZUd4iNUPbd70syMtJxrlVwzk?=
+ =?us-ascii?Q?b4Gnu52MFWYM4T+9cZRMki2kqGQDcpmBM/rF13rG68z9u6zrU4dKuDdO+y5b?=
+ =?us-ascii?Q?IG8jZsTUjRVIvKPq0OxDkW1SxaFlk+biwsRzZn/u312LLEpkaoSqmZ1RAE2e?=
+ =?us-ascii?Q?B83hd/31fRujUvmzXAvYoMiTh3moH7ZkHDR2IO/nXGzAjoewy0yP4Oq+MBu9?=
+ =?us-ascii?Q?H12u0Ek23HO+wYyz/AiCxXk62Hnx67MsaTpS901mEr8mrowR1H0kaK7joAtF?=
+ =?us-ascii?Q?Zem/BcMsN497H5CaiH3wrrhci7tvhhMeuc56iqj8s4/GvWA2Hxrwmd9fahyZ?=
+ =?us-ascii?Q?s7Hh9McCkWBeMpAQeS2BWuKYz3u4LZSPKrg8+xa+6mQ7UF1T/23+70aLy7V/?=
+ =?us-ascii?Q?lRIwEJjiLN5LzGTO2N2pA9YHJknO5EtKczDm12BDvsCUf5x7fudebtX9/KJA?=
+ =?us-ascii?Q?lPl26owHXd3xmV9CRT+5ph8FeIjdo48MBQzeqoLoGq8iR+lTgbJhu8TzHc9w?=
+ =?us-ascii?Q?c56cFyf1og4AwkG7lnXUrViKEYrV5JAY0yJlgtUQfRDdaqME2x+k6l13SQ/i?=
+ =?us-ascii?Q?xEL/7y2MiDKEJEXe5BCpeOGGhi94+xV9OEYo3EWqL0mLf/3cKKp/JfwDx1F8?=
+ =?us-ascii?Q?vC73bQqNJchhqnIdqL2dV5BbFgzOwcIaptcGIIGikLKPCM5A5DkDRFj35yu7?=
+ =?us-ascii?Q?t3rbHIq6RGGPLsNTkia6GaFTBeyruL4Q7BZwfcfs11bLHRGTT83g9LfPGCsb?=
+ =?us-ascii?Q?X6GigKvFpEn6PDe9DNejZ1HWNxZAIsJXATboTutlZXAbEXGz5obfZbbscCXu?=
+ =?us-ascii?Q?dE/pLbVt7gFU1FpyLN3UpME9mU85mDOYxk9Oz1ZSdPt87MnlpOGe3aE2oYk1?=
+ =?us-ascii?Q?Zn6GOk9ul578+G8GpPq/6acq+24KyZLp/WBTXM0PF4MfJAMRrzcjhacm0U1S?=
+ =?us-ascii?Q?bObR2jTMQKKxoAaMe1mZ4rQ69BE/k5myLQsp9AEhJ8qTvHB7hEBM23Y38ZYc?=
+ =?us-ascii?Q?k2y9hJfm3vbxZTYJ00pvkVMe6XB2+kG7Tllgswjf0VXeCFPGYfiUpiB/3eZK?=
+ =?us-ascii?Q?ARFPp6I8AqmgIpI7qn1cX950WkBDasq2QzulUyKqF+hGDyfzNDB2IIXHijAI?=
+ =?us-ascii?Q?bK3wtwUoejpxt0JYMo6ESxg1GHMeDwhE1uvHyqvCKehajhbU54Rg5kTmt+T1?=
+ =?us-ascii?Q?UyOGQrzPOw=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -114,171 +153,71 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY1PEPF000264B3:EE_|CHBPR12MB869915:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7d425b0d-c557-4f8f-e9e4-08df40c7dde7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|376014|36860700016|23010399003|6133799003|22082099003|261009223027099003|18002099003|261022075727099003|261022105027099003|261021121427099003|261102123227099003|261028144727099003|261026140227099003|261021123027099003|56012099006|10067099003|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	8hBn9z0sgskW1gM4l7gcDrW95ijU/P7b3EwYzq/6Mm1yR0T9S+HX7sO7GntNQEybS4ZdgJI6pocwmKBpa8x60mbBGqErED52XSsbFhAHoKul1Bn6ITSZq3QsxL9+AC5OXltbDkZleUrBzQnd8wX6Ahz6yVdikrMHUTYKCvkcwhM++nhaplO75HRyZXVWAw9OTNBM9xJOAxHKo4uQz3euTz+dugXCMvbn2wr2MHjM5OB+ngt356EL3CUJ5WfLVbmYVgvjMH8YEV8E18jSCM2OwVx2uLTCw4sgG8FHk8o5pQYI0ut/z9viDMrwW/m+NFbFS2eTYqXMTvqiXkRH4wZvjGt29FTtH1YPgZ4WrCTZWZJpboYeCiXq/KS97Kpo+z9LZ1buGt03Ao19q7zILTcVEPc7D6TPCdkURwWBoIezYDkwIVEncUIlVyU5lqcBHzsGt11k5Ju5C2IAVcThBV5BmA9uclIHbUsytQpzrMeiq2akD4tCTmhehH8wvnORxp7Ku2HNYp9D+wvymkkATI3oMxU/Mh7y1dtwHjfr8IDZhwQdjuXaDBjhAMPalrZ5BQT16Ef2PEh86SgM4FFw0Qpf4T0CqbxAWz6xXOwEjfV0tPGo1hJ+MK3BWzx9HARk3qLMjiz82ni5KBx5fReCFPJuImj/yCU+1x8rdZFbcEW+PE1gH0v7sEkLEgm2d6QNBAN1hzXSeALQG/03Kv4DmPfJAg==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(36860700016)(23010399003)(6133799003)(22082099003)(261009223027099003)(18002099003)(261022075727099003)(261022105027099003)(261021121427099003)(261102123227099003)(261028144727099003)(261026140227099003)(261021123027099003)(56012099006)(10067099003)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	hYwYnJn5XlXmMPxsZCrcaK8ZZ88/XgtRlqRqUH5G3nEN7qQynYngaDCubuNEA+nn6pNKoW9kXCsxMxO/InRXmhEy8MZeyZIVggBI7iu6LFjXh6FkHtk1RbwzrzRjgnDRPQpI7rxzUZ5wMxB6lOt/oXkeaoN9K7yva8G1co7qVQqVQdC5q3b60fblorFk8klkoHNBf/cP6M4mLY3XGv+8zt/kvl8qLv8ggzC4JeXs3xdtumustGGzhJd3ilbQIqfw+1xyBHYh9gbDRzWuhkcwZEaN2wOeqKZHNa26nDOopqQwD8EpnDdGRsm/49e2OPZT+i2ZMuPyRqeCk6AzG1QVCBMm8Qs/1KIrNLhaVL4a+vKprMCAvhsdG6D1WBlMy6AzUuUMFeYjyFnz1VADyCS+poSRrho0Vcjrjw33S4CBpoGwzBJ/BJKF8pmfRQ3tMZFD
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2026 14:18:47.5236
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH9PR12MB252631.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1289208c-832b-4c5c-9e04-08df40c8ec91
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2026 14:26:21.5389
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7d425b0d-c557-4f8f-e9e4-08df40c7dde7
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BY1PEPF000264B3.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CHBPR12MB869915
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 5qCCPSlLvgpYk0T5OzzzKHuOpdPrzVOTwk2CVhvqLVEwWQXSVRO21TPSqyfAfttcK6QOd1Y0FY6yL2L6/gbB7g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6303
 
-AtomicOps and ROM information queries access PCI configuration and ROM
-contents. Run these accesses through access ops and keep userspace
-copies outside SRCU. Free the capability buffer if the query fails.
 
-A VF's AtomicOps query accesses its PF. If the PF is managed by VFIO and
-supports recovery, check its access ops too. Hold the PF's access_lock
-and reject queries when it is closed, since its SRCU instance exists
-only while open. Other PF drivers retain their existing behavior.
 
-Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
----
- drivers/vfio/pci/vfio_pci_core.c | 82 ++++++++++++++++++++++++--------
- 1 file changed, 61 insertions(+), 21 deletions(-)
+> -----Original Message-----
+> From: Keith Busch <kbusch@kernel.org>
+> Sent: 06 November 2026 16:57
+> To: Shameer Kolothum Thodi <skolothumtho@nvidia.com>
+> Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; alex@shazbot.org; jgg@ziepe.ca;
+> kevin.tian@intel.com; kbusch@meta.com; michal.winiarski@intel.com;
+> satyanarayana.k.v.p@intel.com; Sonang Patel <sonangp@nvidia.com>; Ankit
+> Agrawal <ankita@nvidia.com>; Nathan Chen <nathanc@nvidia.com>; Matt
+> Ochs <mochs@nvidia.com>
+> Subject: Re: [RFC PATCH v2 00/16] vfio/pci: Handle PCI error recovery and
+> report state to userspace
+>=20
+> External email: Use caution opening links or attachments
+>=20
+>=20
+> On Tue, Sep 29, 2026 at 06:32:49PM +0100, Shameer Kolothum wrote:
+> > Hi,
+> >
+> > Currently, vfio-pci signals the error eventfd from error_detected() and
+> > returns PCI_ERS_RESULT_CAN_RECOVER, including for permanent failure. It
+> > has no slot_reset() or resume() callback, so userspace is not notified
+> > when host recovery completes or whether the device was reset.
+> >
+> > This series adds opt-in host PCI error recovery for vfio-pci. It blocks
+> > device access during recovery, restores device state after a host reset=
+,
+> > and reports recovery status to userspace. The kernel runs host recovery
+> > and the VMM decides how to recover the guest.
+>=20
+> We've been experiementating with this recently. It turns out that doing
+> a meaningful recovery on the user space side is a bit more difficult
+> than initially thought, but we can at least get more deterministic
+> behavior with these notifications and gracefully stop affected
+> processes. I don't think there is much else the kernel side can do to
+> make this go any better, so this series looks good to us.
+>=20
+> Acked-by: Keith Busch <kbusch@kernel.org>
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index fc6b2673be88..da7166669dc7 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1178,6 +1178,33 @@ static int vfio_pci_info_atomic_cap(struct vfio_pci_core_device *vdev,
- 	return vfio_info_add_capability(caps, &cap.header, sizeof(cap));
- }
- 
-+static long vfio_pci_access_atomic_cap_target(struct vfio_pci_core_device *vdev,
-+					      void *data)
-+{
-+	return vfio_pci_info_atomic_cap(vdev, data);
-+}
-+
-+static long vfio_pci_access_atomic_cap(struct vfio_pci_core_device *vdev,
-+				       void *data)
-+{
-+	struct vfio_pci_core_device *pf_vdev = vdev->sriov_pf_core_dev;
-+
-+	if (!pf_vdev || !pf_vdev->pci_recovery_supported)
-+		return vfio_pci_info_atomic_cap(vdev, data);
-+
-+	/*
-+	 * VF AtomicOps queries read the PF's configuration. The PF association
-+	 * lasts until VF removal, but its SRCU instance exists only while
-+	 * the PF is open.
-+	 */
-+	guard(mutex)(&pf_vdev->access_lock);
-+	if (!pf_vdev->device_open)
-+		return -EIO;
-+
-+	return vfio_pci_core_access(pf_vdev, vfio_pci_access_atomic_cap_target,
-+				    data);
-+}
-+
- static int vfio_pci_ioctl_get_info(struct vfio_pci_core_device *vdev,
- 				   struct vfio_device_info __user *arg)
- {
-@@ -1209,10 +1236,12 @@ static int vfio_pci_ioctl_get_info(struct vfio_pci_core_device *vdev,
- 		return ret;
- 	}
- 
--	ret = vfio_pci_info_atomic_cap(vdev, &caps);
-+	ret = vfio_pci_core_access(vdev, vfio_pci_access_atomic_cap, &caps);
- 	if (ret && ret != -ENODEV) {
--		pci_warn(vdev->pdev,
--			 "Failed to setup AtomicOps info capability\n");
-+		if (ret != -EIO)
-+			pci_warn(vdev->pdev,
-+				 "Failed to setup AtomicOps info capability\n");
-+		kfree(caps.buf);
- 		return ret;
- 	}
- 
-@@ -1235,6 +1264,31 @@ static int vfio_pci_ioctl_get_info(struct vfio_pci_core_device *vdev,
- 	return copy_to_user(arg, &info, minsz) ? -EFAULT : 0;
- }
- 
-+static long vfio_pci_access_rom_info(struct vfio_pci_core_device *vdev,
-+				     void *data)
-+{
-+	struct vfio_region_info *info = data;
-+	struct pci_dev *pdev = vdev->pdev;
-+	void __iomem *io;
-+	size_t size;
-+	u16 cmd;
-+
-+	/*
-+	 * Check ROM content is valid. Need to enable memory
-+	 * decode for ROM access in pci_map_rom().
-+	 */
-+	cmd = vfio_pci_memory_lock_and_enable(vdev);
-+	io = pci_map_rom(pdev, &size);
-+	if (io) {
-+		info->flags = VFIO_REGION_INFO_FLAG_READ;
-+		/* Report the BAR size, not the ROM size. */
-+		info->size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
-+		pci_unmap_rom(pdev, io);
-+	}
-+	vfio_pci_memory_unlock_and_restore(vdev, cmd);
-+	return 0;
-+}
-+
- int vfio_pci_ioctl_get_region_info(struct vfio_device *core_vdev,
- 				   struct vfio_region_info *info,
- 				   struct vfio_info_cap *caps)
-@@ -1272,29 +1326,15 @@ int vfio_pci_ioctl_get_region_info(struct vfio_device *core_vdev,
- 
- 		break;
- 	case VFIO_PCI_ROM_REGION_INDEX: {
--		void __iomem *io;
--		size_t size;
--		u16 cmd;
--
- 		info->offset = VFIO_PCI_INDEX_TO_OFFSET(info->index);
- 		info->flags = 0;
- 		info->size = 0;
- 
- 		if (pci_resource_start(pdev, PCI_ROM_RESOURCE)) {
--			/*
--			 * Check ROM content is valid. Need to enable memory
--			 * decode for ROM access in pci_map_rom().
--			 */
--			cmd = vfio_pci_memory_lock_and_enable(vdev);
--			io = pci_map_rom(pdev, &size);
--			if (io) {
--				info->flags = VFIO_REGION_INFO_FLAG_READ;
--				/* Report the BAR size, not the ROM size. */
--				info->size = pci_resource_len(pdev,
--							      PCI_ROM_RESOURCE);
--				pci_unmap_rom(pdev, io);
--			}
--			vfio_pci_memory_unlock_and_restore(vdev, cmd);
-+			ret = vfio_pci_core_access(vdev, vfio_pci_access_rom_info,
-+						   info);
-+			if (ret)
-+				return ret;
- 		} else if (pdev->rom && pdev->romlen) {
- 			info->flags = VFIO_REGION_INFO_FLAG_READ;
- 			/* Report BAR size as power of two. */
--- 
-2.43.0
+Hi Keith,
 
+Thanks for that. I have posted an RFC v3 here [0]. The overall design
+and UAPI remain the same, but access serialization and power-state
+locking have changed enough that I haven't carried your Acked-by=20
+forward.
+
+Please take a look at v3 and let me know whether your ack still
+applies.
+
+Thanks,
+Shameer
+
+[0] https://lore.kernel.org/kvm/20261112141632.918954-1-skolothumtho@nvidia=
+.com/
