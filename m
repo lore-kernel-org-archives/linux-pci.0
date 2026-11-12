@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794493933;
-	b=16HFRe5Xl2yAqU0fDtokzBTstNINXzwkbI4mmR9cGo8aNi+VLBotFzgvECvJh0o9oHEN
-	 dYUdS/L5wF0uso19oPfEwEsk/95w/sXisItILWiQxQKLCqqbHe+afmvPE36phoHF9wVz4
-	 KZbe+E49EIWmGJOjeOPnNwMLTYoZ0hiXZ/xTdR2DK110VOdM9J/jhD41iLs4kSJFrEXiX
-	 oKkCP6u7DsSGkFtmlzYY2Zii+oXixr1opsFkYp2ElUD27uYVGtDIYuxKteWnK/fjXltBH
-	 X4exAAxPCu7Wd2RQWAzU4mfOPqCHBMO+N9293Uf6oFqnCb2mX22WJ0iZSTVQeAncpeA==
+	t=1794493989;
+	b=alOCrd0nb9NCwXbK/+VJ+ek/kj5FdkW+0C/he7jX7GSl+03C6KTywi2kqJ3DEdCRkWZB
+	 tvwHI5jxs/5juKXW7wnWofjSgU7a5BBfKpPHIj6ZJY4N7amt3h7oPeARRhJWXJN0aYLId
+	 vn/yPu4CoTAF0lpjKCt9f2+pOzEivmVLmsnrzPEgPBdtXOYUKPw39JFsGWPAdZ8OyxxLD
+	 D8crW0kLxCsw3Hwk6hsyXJ9HjdW10cnMyX3ddkGbzspuf9ej/MLMlqT1yFJD11AGiLxDD
+	 O5Wn5bk3Tzpah7Ag2p6Qt8WtlCsuITOiLJ2miQpoTTU1osxVbrF1sxFdv1YQ9vbocXA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794493933;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794493989;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=foXDGGGEZNGKYZdnr9DiRWy6+/PHkP1LxkXC97iLxU8=;
-	b=ZTElc0MlrXBmAvBmoNoNDRlR8OREWorAcpBKTe6G7/mYllkTojXqxVzuBxmJ6EukQq5X
-	 FSYHvk7BBftbfKtw6Rkp1g0EsPRvSHF9d722qMq4CblWtm0fyRopOXLX2Bc5wze3d5bNn
-	 4jmYIaf7zTuoRwX+STzIoE0E86hgI4emWueUqmkMc+2yavrBHMl9O/c4xvU9D9pQmA1So
-	 CKb6UznGx2tutTTTQZDnC1Eoe+lfWaIEvqj/DTddpYx/qll2GZfrnPbsar6QznTy9JQJX
-	 66XUTqa8HwGjtx3No+rEWvTWj3sYMWV3LtupEQCS5VJixQqebNARIZdeWYerCaEPmDw==
+	bh=TyhmxkXe2xSDq8t4nKlbW+i5b/vMvo4+jHr3tEdLk8I=;
+	b=aDLNMNIqlTJhYvGOX2iH4uRpCY+Gv34IK0dKKlPWgXdLcIJdkWeInPTf8kq2RBmptrmA
+	 HeHODC2ula4vuPFUgYkBwO8qatrXLabGxoBf7FwvutYmqouSYjylNgkvHDAYYzhIGJ7kZ
+	 el339V7NSMQ0Rax6Z/FZE0A9m+xctIEpfwwo3rWW4U0NMyAIjf38GjR+rxOYVl/wN3cGn
+	 07pkGkuudQ62ouTRNs65diIE8XYmshZMMjXgnz/OLH+khbbZ0uFRzEVw2UkbJGEqIfuv6
+	 sAu55SlWTGyqWAYuaFW4TvHug4t7Bxnr2zyltIESkcsNiJEH7WBg3hhB1DNrWKLFqEA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Mimj3geE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TLERL2Dp;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EAE0606A8B1
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:32:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B878A606A88F
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:33:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Mimj3geE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C889E1F00A05;
-	Thu, 12 Nov 2026 14:32:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TLERL2Dp
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39DA91F00A05;
+	Thu, 12 Nov 2026 14:33:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794493933;
-	bh=foXDGGGEZNGKYZdnr9DiRWy6+/PHkP1LxkXC97iLxU8=;
+	s=k20260515; t=1794493989;
+	bh=TyhmxkXe2xSDq8t4nKlbW+i5b/vMvo4+jHr3tEdLk8I=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=Mimj3geEs3BRszX0LyoV/vIJD8tdnIajNEunetVsffhoddo0C+axEn82HLQT7IAT+
-	 O+O7uUJ+lk6dk2GfoUX7wCFL6M2FL9rVRJXw+tgvpqTl2JZJlczyD+4x7xCkFKXdVT
-	 HNIuLp4fXgAAUwVMw0yYHX7zQk0F6NTZYdupBc1PkowhoTcMIOpfyXHqyyYwieD9lo
-	 c7wWpzJhyozhwhZevctVUdHXSrDaYb7+La5TI143UBDPP5m9GoiRGPVYQ6LZg8KRmU
-	 z0KUVhQc58AouGTWvoRY3tiH2Swcp7EwYrtJwBz9ZI2Ft/dS199JZL4Emgwwn/Cwn8
-	 P2tp1a9Z9EO8g==
-Message-ID: <sashiko-outbox-211339@kernel.org>
+	b=TLERL2DpY8PR/ui1U1Anm94HAI0lFo/0DDWDWACuxaSsY0FNvhRLwWZO6L5NOz2Y9
+	 yE+dMSdZES6NtlzU2jDKaDNAvZq9hE3YzEmgyakr6eaB/VwAcuzO6k/+DrDzhz+XED
+	 cFmlFbov9X8jUNd5l9N86v2BmmNIqzkd8MPKObeNpA+3wLu0HHusQdCyflKzZJpgeI
+	 jDJnVeyF6oDAM2GcarlUaw+VpEjqbOdF2bCrPsTWGp7SaL7S6TX1wHEhTs4cCy6pPN
+	 m7T6Fv9jQJ42nquHhKIKFfhhDGGmnNynx+kgVz6F7PaH6NNRDm+bMWNNnjra8GKtYl
+	 38rxz/dpBhexw==
+Message-ID: <sashiko-outbox-211340@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v3 09/20] vfio/pci: Use access ops for function
- reset
+Subject: Re: [RFC PATCH v3 10/20] vfio/pci: Use access ops for runtime-PM
+ requests
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261112141632.918954-10-skolothumtho@nvidia.com>
+In-Reply-To: <20261112141632.918954-11-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
- <20261112141632.918954-10-skolothumtho@nvidia.com>
+ <20261112141632.918954-11-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 14:32:12 +0000
+Date: Thu, 12 Nov 2026 14:33:08 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,16 +60,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Userspace function reset and its D0 preparation must finish before host
-> recovery changes device state.
+> Userspace low-power requests change PM references and device mappings.
+> Run these requests through access ops so recovery can reject new
+> requests and drain admitted operations.
 >=20
-> Run both through the SRCU-protected access ops. Reject blocked requests
-> and let recovery drain admitted operations. The D0 helper returns
-> -EAGAIN on bus-lock contention.
->=20
-> Hold memory_lock across preparation and reset so concurrent PM writes
-> cannot put the device back into D3. Keep the existing DMA-BUF mapping
-> removal and restoration around reset.
+> Validate userspace arguments and obtain the eventfd reference before
+> entering SRCU. Release the reference if entry fails. Keep the existing
+> memory_lock protection and PM reference handling.
 >=20
 > Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 
@@ -77,5 +74,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112141632.9189=
-54-1-skolothumtho@nvidia.com?part=3D9
+54-1-skolothumtho@nvidia.com?part=3D10
 
