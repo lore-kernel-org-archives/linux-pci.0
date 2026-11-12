@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.201.6
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.52.34
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794493228;
-	b=OKsLFB4Mp3vq0ZZOADAdWG8KBYps6ws8yKN0beYUy66bSBDwTPGvGJfZq+/MRmm2/Ccs
-	 1PbkV/ws9GkaQWo94WD34UGCLsew/4TFHzRFt5v/UGoAssay0O9N5GuvxHQW2zjyUzZNU
-	 +rE98pSaY/naVKqtRkbYgN7wMMcgjqFhvK69DePGlH+Eo/3FS5hT+hWSgoDs8ZAKhMXMv
-	 Qi+8t7NzrCjEIJY7Dv9HtBw5UQLmXab/WGQMt44XvhrlEb1Np+8o5dK99bXh+j+xWGp/o
-	 umgeew1IKp61TIiXsDztoeEgZMd0sFcqEwVsxLnnybn8pz35CaQ2cnh9BJXdU/H6Now==
+	t=1794493252;
+	b=eX7RuWpV8I66CI8IXC9o9qRkcckVAM0xiCKnKZn1xUWNHbNr+1BY9oQ6//SRRkJobDzu
+	 OqURVfzk0P918BO23MhgUuFiTtgCyG8H3i6t6gbTMaUr1sZRn9sTHDiVuuH3jLUT+KQOD
+	 /nBSjQEhsic3PuP3vJgfrOhHqGErRWh8Ft46m6ATm86aYTX+wzBYhwgAKHef3NCWMR+qd
+	 F4yAtGacxXtMkqjlRBUBdyptWkZUdLE/EbukOi4VqFgsTeKa6Vo+z37rjEzJqnJUtb4Ly
+	 ExDfQrMx9LgFfvYqe+kYJdofKrhx9LPQv0oF2TU/XQNF0IDJiweTeEcJt3QHcu3Ki2g==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794493228;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794493252;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
@@ -26,35 +26,35 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=ClXyhC3+RsuUgrJDxd9N8wZMYWV9PGzosE0ADnY/4wI=;
-	b=BmJO8fXbfdsqCRfvMdUA5LDrJhWfzOq+f6Bwre0OTGQZxZJnCU9luUd7z47elFsCZVfy
-	 s1ySTSIiKXY4cy/XtSHzdqDq3pWj9swGEtuNXgNctDNj9HXb8/yMMvblRzM/jMu5JhA4u
-	 ij6xfJZ8hdzs5KbP1PuB1tWQhUSUqlpxUl/AHVTHBVG3wuvZc0DXcg3UVbms9xNtsth8I
-	 Kygg6gRIxb3DzRV16xDq9k/eFZZCF9bPgJqaXslplCyxv/YYOU0zfslzBFnk7zTyNh+i8
-	 Z9wmsLJNd9n/SZHiiSzGbBRaPK5tvl9DL6F3sIEMSDlgjVRXog8zLq5TM7muuHi7vSw==
+	bh=bcdwMjM/YWfwMXARh1y+slJkx1n1WaHUF2Q7b5RLCO0=;
+	b=ICg/iAUqSElx96L96hd7OSwhJRJofSvJ9e77L8QIxlV/qbpkSUN73xywfNxS59fK/M2k
+	 n9RgolEmIDpF8E8jJM5DcTTnzuUbmIfBbF4obVcvblnuL8ZB/+KFozrzSCFexgBMTuX4n
+	 4BKW0v6zJ449evQ0AS/wjX3I2n+51mMni1Ro3nB1HKY4sBqcNnbmBDBo1l9XVqHuGh5h6
+	 PiFZrlfced9ndFeF2zB7xMyRI1TAIUroaiO8rKYsPkvhY4hpYkAwlR2ErHbDV3YJX9qQx
+	 Mik3N70L2STa6NG51Hqz4gDToxulqN1A2bbeRp+NKOlxDtTFgErpni59+eRCPMlFK6Q==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=nRCQdrGT;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.201.6
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013006.outbound.protection.outlook.com [40.93.201.6])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=UAvkEFto;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.52.34
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011034.outbound.protection.outlook.com [52.101.52.34])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C6B6073789;
-	Thu, 12 Nov 2026 14:20:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 50C6B6073789
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FBAB606A8BE;
+	Thu, 12 Nov 2026 14:20:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1FBAB606A8BE
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=nRCQdrGT
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=UAvkEFto
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rV2MRDYG0zXiYkAJR0B/5u/l51GWzNa7Ifglx0q4Tq0IWkLKqtO8OncTAWjob5UBXcRnpTPsqO1k2HcSMEAtzJJ/dM3T/oqpKA/HGLxN0P1mFrtcg60MGLSh5HoWWUjvdS4Lx0oKrAUx79GoBpekaB3CbnezIwtlp9LmZaCdyp3/4fDghWW8rtRSgEqlzehQazb9tv2S6qDoH+95yqLR7MishtUZ2QzOM+MJZXtci/cPU+gAPbI1/g2X0OQEdBtf4ecHO6MZ1PZr+sGfijbpXKnTeYK4HQNaUuuM/FrTGJhdSG1MbonXHwa5BDaLjQtVGG/ZCHURKAT10TlXhN9djw==
+ b=j44Ep/JZbasqHIJ7q3i7psWXlN/3hmqAtutnYj/qbJS2ahtG8mye8AAWfALYd6FiGGMkL1L5gwQbqdoN/Csr5OxqY5WuIeKWj+qIz01z5+JhP8mR30kJlwmS637dpR0LsdpuxY8AN9tLaTchmWTNn90LHMEYmuWyoLo6kmTON9q6cw3n6E/4gJUx3+F36jjcBOO8G1o6kKzGv1D666Gi/UG7dwBmGD73xRBYcKaYex0OENa/L5B43qKwJUk603J0CmqZgUH4fA+fpIhdAV/lXjwgt6gFmv5vzHPfHXOMngqPjG74Z5B38YETQJeUd9omyLITcGZMYZbRX1V7z1tyuA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ClXyhC3+RsuUgrJDxd9N8wZMYWV9PGzosE0ADnY/4wI=;
- b=NdobB8m/yq1XkrGVWZtXxQSJO8ihuly8JcuPHF+JkvavXapGv/46O7l9bkJ44TCXItXBmQF7IZ99BDCeIOFu2JPGYbrcdATaWiviI98L4y97o5l9LQr8GgWXWgxUBI7mh6+69Q04UQ+mAdsAs4SIiHODOeojMdL2zwYF9DpFesHMEHIGPtjce5YzPeRVqssQ8aJ2xSNwSu8drJKn5YvAUgFrNnper6Kw5qy8q3mMGdoAdLDuyCR2f664GwerO75UowJiwt6KsW2MNv8w2eQ4xeksJHNgb7KPUxlPVo6FErFJ+ax7axwigS19/Zf6ft5P/vTiFT7YpHN1w9OPZf74Rw==
+ bh=bcdwMjM/YWfwMXARh1y+slJkx1n1WaHUF2Q7b5RLCO0=;
+ b=QfKbPEsYhPsslDBaC5CkJWGYTJ0YbUkOZsJzySUQUcPazJykeY49pSnfBYErevEuW2Wl9d/C996KcRV3RoRBFRFlMf3GnyUQlrZE0W69dEStt6zNe0L/FR0vb5813tKGvT79Rm12q/tnR4ATXCWMeu4GeJ574UgN3LauR/nqVj/tiUenf6oRkFtLPgkobH+PsV3JUU2BVx461k0jbWlnhgAECf3uY4agdrgKfu0XHjT6W7v6dcmWCI0p5uGuKhodt100tQaDlF15wjGaMiiiHwUkla4GiZ4X0tHe6b4DuZIe4O0UwWXTiI5KffQmuWDABkDeMsf1/hcN52Z/V/drKQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -62,17 +62,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ClXyhC3+RsuUgrJDxd9N8wZMYWV9PGzosE0ADnY/4wI=;
- b=nRCQdrGTay3XrrfFjmeppNbsJwTPxWHlLsvXqr3bhHABXGEanfFGfCDBn8JzKuBXlG7mrlrgBT1kn+NAgOPKuEpYjloA7LodaW21xxoWSgMkIlgJ3oVhHuafjZa3Jojvd4XJuIzZUoIpG2Fsv9gLoRsrAl0LNahcmtlC3xhyvdeW6eXr70To+9ySh/xuXE++qPkUsUzwExiByRpbtM45uGxIx0zc+EuR6ewTPzEpMaRowV3ylfjcQxDpr/+LA+2rqzx/5jnfs1EaNmUpOI8+aNaRSR6iSrj/8G2h+LTqo9WakBwKaW2+MAwLAAx3GVXoKFL7igO63Xifl01VD2dLFw==
-Received: from SJ0PR03CA0219.namprd03.prod.outlook.com (2603:10b6:a03:39f::14)
- by DS7PR12MB6262.namprd12.prod.outlook.com (2603:10b6:8:96::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.615.9; Thu, 12 Nov 2026 14:19:00 +0000
+ bh=bcdwMjM/YWfwMXARh1y+slJkx1n1WaHUF2Q7b5RLCO0=;
+ b=UAvkEFtoPLJOXlKMPS6c+aNAK0NAmuxnyhOrMkcFWnQRCeQVa6Tc8qSKYl0aqSnQLUFjjt/T7eg6wENzOgFyViONSG3o3hf/2gNwUcN4MalP4+Y2sQNtn2xaUFlhtmqR16HBP2ZXJVzIB7itPl7rCCtDCPYNeYD3VZRBAJGTfQvPJUw6Z971UZUvbumVISjVObVb+gzj6tiYqGpMM8jHm2f163EKoBAjEEbouJtbstyXtTlexLxAZ7ais8L73GZUMTanf4JFroVPfonaERDvYYtOjs6/53OKgoX2zJmaDpdDIup2SQSIO8IXNni90CGr7qHbmwK91qtHWwmVPbeD4Q==
+Received: from SJ0PR03CA0220.namprd03.prod.outlook.com (2603:10b6:a03:39f::15)
+ by CHBPR12MB869915.namprd12.prod.outlook.com (2603:10b6:610:406::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.9; Thu, 12 Nov
+ 2026 14:18:47 +0000
 Received: from BY1PEPF000264B3.namprd02.prod.outlook.com
- (2603:10b6:a03:39f:cafe::50) by SJ0PR03CA0219.outlook.office365.com
- (2603:10b6:a03:39f::14) with Microsoft SMTP Server (version=TLS1_3,
+ (2603:10b6:a03:39f:cafe::81) by SJ0PR03CA0220.outlook.office365.com
+ (2603:10b6:a03:39f::15) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.9 via Frontend Transport; Thu, 12
- Nov 2026 14:19:00 +0000
+ Nov 2026 14:18:47 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -82,15 +83,15 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
 Received: from mail.nvidia.com (216.228.117.160) by
  BY1PEPF000264B3.mail.protection.outlook.com (10.167.242.120) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.615.4 via Frontend Transport; Thu, 12 Nov 2026 14:19:00 +0000
+ 15.21.615.4 via Frontend Transport; Thu, 12 Nov 2026 14:18:47 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 12 Nov
- 2026 06:18:40 -0800
+ 2026 06:18:24 -0800
 Received: from NV-2Y5XW94.nvidia.com (10.126.231.37) by rnnvmail201.nvidia.com
  (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 12 Nov
- 2026 06:18:36 -0800
+ 2026 06:18:21 -0800
 From: Shameer Kolothum <skolothumtho@nvidia.com>
 To: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -98,9 +99,9 @@ CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <kevin.tian@intel.com>,
 	<kbusch@meta.com>, <michal.winiarski@intel.com>,
 	<satyanarayana.k.v.p@intel.com>, <sonangp@nvidia.com>, <ankita@nvidia.com>,
 	<nathanc@nvidia.com>, <mochs@nvidia.com>, <skolothumtho@nvidia.com>
-Subject: [RFC PATCH v3 15/20] vfio/pci: Use access ops for SR-IOV configuration and shared reset
-Date: Thu, 12 Nov 2026 14:16:27 +0000
-Message-ID: <20261112141632.918954-16-skolothumtho@nvidia.com>
+Subject: [RFC PATCH v3 11/20] vfio/pci: Use access ops for hardware information queries
+Date: Thu, 12 Nov 2026 14:16:23 +0000
+Message-ID: <20261112141632.918954-12-skolothumtho@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261112141632.918954-1-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
@@ -119,185 +120,165 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY1PEPF000264B3:EE_|DS7PR12MB6262:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9e4d3924-e378-447c-5272-08df40c7e55f
+X-MS-TrafficTypeDiagnostic: BY1PEPF000264B3:EE_|CHBPR12MB869915:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7d425b0d-c557-4f8f-e9e4-08df40c7dde7
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|376014|23010399003|36860700016|1800799024|18002099003|22082099003|6133799003|11063799006|261026121527099003|261022105027099003|261026140227099003|261022075727099003|261009223027099003|261028144727099003|56012099006|261021123027099003|261021121427099003|261102130727099003|261102123227099003|10067099003;
+	BCL:0;ARA:13230040|1800799024|82310400026|376014|36860700016|23010399003|6133799003|22082099003|261009223027099003|18002099003|261022075727099003|261022105027099003|261021121427099003|261102123227099003|261028144727099003|261026140227099003|261021123027099003|56012099006|10067099003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	8Q6KVJXI0jA0FRqkGb91rqs4fbaadRAVwUcsilIxxApQYlEo77EKX1XTLvHmrqbS6U/vMgjS1GW+DoEVcHhlfJWcHrR+lF9zsYUuSHy6CNJviP8UfAw5mVtdQtb6T0hPr1MbNG+Xi/bZvwp9buNdJLfTAZW2BneAAt170yEfW+DrTDP+9MjgRRuRLUkdg85DqqAzMwGyY2Qmb9aeFAUVRRyMqOfx86Ymniv2woq8NZT+ixWQkShp99oJCjAIpw4YC4PVTHI2cv4Kv0NHSa3awmAC+TjSr6tbuGErooyuqPAWrhGsXrXl921ilAl+y2laFy9nbzL6f37ghDs93BxASSoiGvG7DqqmxjkVL0jEgvDn8erwch3A8+eTyVPoCv5RjRvmuWti9girG/yvN2tMTk+q5+Z8f6uWNaomvB9T1+qzRx7ITJSjQmojqCX1nTXuJmae5ay/DXJNN++DqibZsxzp9h1rBx1q+o9CquGxSDPdJVHw1QWRgMx03UjIwtu59ptY+UkzuPThYHaoAoOHl/1wHDoPZ9tGEbjV+b6N94u6Jt4j8o74ewPd49TJcW5YwCG6Y8CqIV+7gPE/cW86hDMrkircB4xb2xFP1ayz0QaDOLpGP6W9xooqP+LLBF1vCW46DfXeUUxEWvOR90btMMwDDySrlVtXfW/TEKY0Gp/qL7ncUJmrS5BV4jEkpUsNhsLTi/s8901uZokKBCH0fQ==
+	8hBn9z0sgskW1gM4l7gcDrW95ijU/P7b3EwYzq/6Mm1yR0T9S+HX7sO7GntNQEybS4ZdgJI6pocwmKBpa8x60mbBGqErED52XSsbFhAHoKul1Bn6ITSZq3QsxL9+AC5OXltbDkZleUrBzQnd8wX6Ahz6yVdikrMHUTYKCvkcwhM++nhaplO75HRyZXVWAw9OTNBM9xJOAxHKo4uQz3euTz+dugXCMvbn2wr2MHjM5OB+ngt356EL3CUJ5WfLVbmYVgvjMH8YEV8E18jSCM2OwVx2uLTCw4sgG8FHk8o5pQYI0ut/z9viDMrwW/m+NFbFS2eTYqXMTvqiXkRH4wZvjGt29FTtH1YPgZ4WrCTZWZJpboYeCiXq/KS97Kpo+z9LZ1buGt03Ao19q7zILTcVEPc7D6TPCdkURwWBoIezYDkwIVEncUIlVyU5lqcBHzsGt11k5Ju5C2IAVcThBV5BmA9uclIHbUsytQpzrMeiq2akD4tCTmhehH8wvnORxp7Ku2HNYp9D+wvymkkATI3oMxU/Mh7y1dtwHjfr8IDZhwQdjuXaDBjhAMPalrZ5BQT16Ef2PEh86SgM4FFw0Qpf4T0CqbxAWz6xXOwEjfV0tPGo1hJ+MK3BWzx9HARk3qLMjiz82ni5KBx5fReCFPJuImj/yCU+1x8rdZFbcEW+PE1gH0v7sEkLEgm2d6QNBAN1hzXSeALQG/03Kv4DmPfJAg==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(23010399003)(36860700016)(1800799024)(18002099003)(22082099003)(6133799003)(11063799006)(261026121527099003)(261022105027099003)(261026140227099003)(261022075727099003)(261009223027099003)(261028144727099003)(56012099006)(261021123027099003)(261021121427099003)(261102130727099003)(261102123227099003)(10067099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(36860700016)(23010399003)(6133799003)(22082099003)(261009223027099003)(18002099003)(261022075727099003)(261022105027099003)(261021121427099003)(261102123227099003)(261028144727099003)(261026140227099003)(261021123027099003)(56012099006)(10067099003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	23onQrdvJYLtDS+/vFj7/JwfkBu3YX+0dFfRjCGEBxDIZ9sIYKvPRmg+pDR+yCdSLYnvhXvJLoIRyhXXPbP8BMiXmMxmdZbVh+hOn41JHnB+8VxwPeX7p3Sx0hZwNEIezORYhsHdmdSyL881/aACqoZA91BLdw5un703mq5vj6TuMbBN0brFbzY7Flo+GmCq4caplt2WszvKR0h/gZ7E1qByIzrLKha955v053VxeCESwN3+1L3J46Bv8YcIFsMvcPK1icHeOxF64GaxePEGbWFp7fGfDOOSP1p/4Hs1d5omqCxUSIG+8WxwPfN2SuLh1q2LJvaDx+Vo5v94jVWNHsl69AU3Bampg+U9KdcL+kanDq6mMFWNaz9yojnVubVKVeSfvVSBhkYANV6nEd9e6qzTnlP1JULX0ar9Rub7Z5+te/CNbtFdsqK7BlBi96QF
+	hYwYnJn5XlXmMPxsZCrcaK8ZZ88/XgtRlqRqUH5G3nEN7qQynYngaDCubuNEA+nn6pNKoW9kXCsxMxO/InRXmhEy8MZeyZIVggBI7iu6LFjXh6FkHtk1RbwzrzRjgnDRPQpI7rxzUZ5wMxB6lOt/oXkeaoN9K7yva8G1co7qVQqVQdC5q3b60fblorFk8klkoHNBf/cP6M4mLY3XGv+8zt/kvl8qLv8ggzC4JeXs3xdtumustGGzhJd3ilbQIqfw+1xyBHYh9gbDRzWuhkcwZEaN2wOeqKZHNa26nDOopqQwD8EpnDdGRsm/49e2OPZT+i2ZMuPyRqeCk6AzG1QVCBMm8Qs/1KIrNLhaVL4a+vKprMCAvhsdG6D1WBlMy6AzUuUMFeYjyFnz1VADyCS+poSRrho0Vcjrjw33S4CBpoGwzBJ/BJKF8pmfRQ3tMZFD
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2026 14:19:00.0552
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2026 14:18:47.5236
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9e4d3924-e378-447c-5272-08df40c7e55f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7d425b0d-c557-4f8f-e9e4-08df40c7dde7
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	BY1PEPF000264B3.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6262
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CHBPR12MB869915
 
-SR-IOV configuration and shared hot reset can change device state during
-recovery. Both can involve unopened devices, whose per-open SRCU
-instance is unavailable.
+AtomicOps and ROM information queries access PCI configuration and ROM
+contents. Run these accesses through access ops and keep userspace
+copies outside SRCU. Free the capability buffer if the query fails.
 
-Select SR-IOV configuration through access ops under the PCI device
-lock. Reject requests for open devices while access is blocked, but
-preserve configuration of unopened devices. Unregister uses the internal
-helper to remove VFs regardless of the selected ops.
-
-Select hot-reset preparation under each device's memory_lock. Reject
-open recovering devices, but allow unopened and failed devices so they
-do not prevent resetting healthy siblings. Unwind the acquired locks if
-preparation fails.
+A VF's AtomicOps query accesses its PF. If the PF is managed by VFIO and
+supports recovery, check its access ops too. Hold the PF's access_lock
+and reject queries when it is closed, since its SRCU instance exists
+only while open. Other PF drivers retain their existing behavior.
 
 Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_priv.h |  4 +++
- drivers/vfio/pci/vfio_pci_core.c | 55 +++++++++++++++++++++++++++++---
- 2 files changed, 54 insertions(+), 5 deletions(-)
+ drivers/vfio/pci/vfio_pci_core.c | 82 ++++++++++++++++++++++++--------
+ 1 file changed, 61 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-index c195ed3e4d9e..e4f3e4f51180 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -100,6 +100,10 @@ struct vfio_pci_access_ops {
- 	int (*set_power_state)(struct vfio_pci_core_device *vdev, pci_power_t state);
- 	/* Caller holds memory_lock. */
- 	void (*restore_dmabufs)(struct vfio_pci_core_device *vdev);
-+	/* Caller holds the PCI device lock. The device need not be open. */
-+	int (*sriov_configure)(struct vfio_pci_core_device *vdev, int nr_virtfn);
-+	/* Caller holds memory_lock for this member of the reset set. */
-+	int (*prepare_hot_reset)(struct vfio_pci_core_device *vdev);
- 	/* Select and call both INTx methods while holding irqlock. */
- 	irqreturn_t (*intx_handler)(struct vfio_pci_core_device *vdev,
- 				    struct vfio_pci_irq_ctx *ctx);
 diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 89cebe2522ba..0ef51810254e 100644
+index fc6b2673be88..da7166669dc7 100644
 --- a/drivers/vfio/pci/vfio_pci_core.c
 +++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -312,6 +312,11 @@ static void vfio_pci_probe_power_state(struct vfio_pci_core_device *vdev)
- 	vdev->needs_pm_restore = !(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET);
+@@ -1178,6 +1178,33 @@ static int vfio_pci_info_atomic_cap(struct vfio_pci_core_device *vdev,
+ 	return vfio_info_add_capability(caps, &cap.header, sizeof(cap));
  }
  
-+static int vfio_pci_sriov_configure_live(struct vfio_pci_core_device *vdev,
-+					 int nr_virtfn);
-+static int vfio_pci_prepare_hot_reset(struct vfio_pci_core_device *vdev);
-+static int vfio_pci_prepare_hot_reset_blocked(struct vfio_pci_core_device *vdev);
-+
- static long vfio_pci_access_live(struct vfio_pci_core_device *vdev,
- 				 vfio_pci_access_fn fn, void *data)
- {
-@@ -334,10 +339,21 @@ static void vfio_pci_restore_dmabufs_blocked(struct vfio_pci_core_device *vdev)
- {
- }
- 
-+static int vfio_pci_sriov_configure_blocked(struct vfio_pci_core_device *vdev,
-+					    int nr_virtfn)
++static long vfio_pci_access_atomic_cap_target(struct vfio_pci_core_device *vdev,
++					      void *data)
 +{
-+	/* SR-IOV can be configured without an open VFIO device. */
-+	if (!READ_ONCE(vdev->device_open))
-+		return vfio_pci_sriov_configure_live(vdev, nr_virtfn);
-+	return -EIO;
++	return vfio_pci_info_atomic_cap(vdev, data);
 +}
 +
- static const struct vfio_pci_access_ops vfio_pci_live_ops = {
- 	.execute = vfio_pci_access_live,
- 	.set_power_state = vfio_pci_try_set_power_state,
- 	.restore_dmabufs = vfio_pci_dma_buf_restore,
-+	.sriov_configure = vfio_pci_sriov_configure_live,
-+	.prepare_hot_reset = vfio_pci_prepare_hot_reset,
- 	.intx_handler = vfio_pci_intx_handle,
- 	.intx_unmask = vfio_pci_intx_unmask_live,
- };
-@@ -346,6 +362,8 @@ static const struct vfio_pci_access_ops vfio_pci_blocked_ops = {
- 	.execute = vfio_pci_access_blocked,
- 	.set_power_state = vfio_pci_power_blocked,
- 	.restore_dmabufs = vfio_pci_restore_dmabufs_blocked,
-+	.sriov_configure = vfio_pci_sriov_configure_blocked,
-+	.prepare_hot_reset = vfio_pci_prepare_hot_reset_blocked,
- 	.intx_handler = vfio_pci_intx_handle_blocked,
- 	.intx_unmask = vfio_pci_intx_unmask_blocked,
- };
-@@ -2594,7 +2612,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_register_device);
- 
- void vfio_pci_core_unregister_device(struct vfio_pci_core_device *vdev)
- {
--	vfio_pci_core_sriov_configure(vdev, 0);
-+	vfio_pci_sriov_configure_live(vdev, 0);
- 
- 	vfio_unregister_group_dev(&vdev->vdev);
- 
-@@ -2622,8 +2640,8 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(struct vfio_pci_core_device *vde
- }
- EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
- 
--int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
--				  int nr_virtfn)
-+static int vfio_pci_sriov_configure_live(struct vfio_pci_core_device *vdev,
-+					 int nr_virtfn)
- {
- 	struct pci_dev *pdev = vdev->pdev;
- 	int ret = 0;
-@@ -2695,6 +2713,13 @@ int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
- 	mutex_unlock(&vfio_pci_sriov_pfs_mutex);
- 	return ret;
- }
++static long vfio_pci_access_atomic_cap(struct vfio_pci_core_device *vdev,
++				       void *data)
++{
++	struct vfio_pci_core_device *pf_vdev = vdev->sriov_pf_core_dev;
 +
-+int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
-+				  int nr_virtfn)
-+{
-+	device_lock_assert(&vdev->pdev->dev);
-+	return vfio_pci_access_ops(vdev)->sriov_configure(vdev, nr_virtfn);
++	if (!pf_vdev || !pf_vdev->pci_recovery_supported)
++		return vfio_pci_info_atomic_cap(vdev, data);
++
++	/*
++	 * VF AtomicOps queries read the PF's configuration. The PF association
++	 * lasts until VF removal, but its SRCU instance exists only while
++	 * the PF is open.
++	 */
++	guard(mutex)(&pf_vdev->access_lock);
++	if (!pf_vdev->device_open)
++		return -EIO;
++
++	return vfio_pci_core_access(pf_vdev, vfio_pci_access_atomic_cap_target,
++				    data);
 +}
- EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
++
+ static int vfio_pci_ioctl_get_info(struct vfio_pci_core_device *vdev,
+ 				   struct vfio_device_info __user *arg)
+ {
+@@ -1209,10 +1236,12 @@ static int vfio_pci_ioctl_get_info(struct vfio_pci_core_device *vdev,
+ 		return ret;
+ 	}
  
- static bool vfio_dev_in_groups(struct vfio_device *vdev,
-@@ -2776,6 +2801,23 @@ static int vfio_pci_dev_set_pm_runtime_get(struct vfio_device_set *dev_set)
- 	return ret;
+-	ret = vfio_pci_info_atomic_cap(vdev, &caps);
++	ret = vfio_pci_core_access(vdev, vfio_pci_access_atomic_cap, &caps);
+ 	if (ret && ret != -ENODEV) {
+-		pci_warn(vdev->pdev,
+-			 "Failed to setup AtomicOps info capability\n");
++		if (ret != -EIO)
++			pci_warn(vdev->pdev,
++				 "Failed to setup AtomicOps info capability\n");
++		kfree(caps.buf);
+ 		return ret;
+ 	}
+ 
+@@ -1235,6 +1264,31 @@ static int vfio_pci_ioctl_get_info(struct vfio_pci_core_device *vdev,
+ 	return copy_to_user(arg, &info, minsz) ? -EFAULT : 0;
  }
  
-+static int vfio_pci_prepare_hot_reset(struct vfio_pci_core_device *vdev)
++static long vfio_pci_access_rom_info(struct vfio_pci_core_device *vdev,
++				     void *data)
 +{
-+	lockdep_assert_held_write(&vdev->memory_lock);
-+	vfio_pci_dma_buf_move(vdev, true);
-+	vfio_pci_zap_bars(vdev);
++	struct vfio_region_info *info = data;
++	struct pci_dev *pdev = vdev->pdev;
++	void __iomem *io;
++	size_t size;
++	u16 cmd;
++
++	/*
++	 * Check ROM content is valid. Need to enable memory
++	 * decode for ROM access in pci_map_rom().
++	 */
++	cmd = vfio_pci_memory_lock_and_enable(vdev);
++	io = pci_map_rom(pdev, &size);
++	if (io) {
++		info->flags = VFIO_REGION_INFO_FLAG_READ;
++		/* Report the BAR size, not the ROM size. */
++		info->size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
++		pci_unmap_rom(pdev, io);
++	}
++	vfio_pci_memory_unlock_and_restore(vdev, cmd);
 +	return 0;
 +}
 +
-+static int vfio_pci_prepare_hot_reset_blocked(struct vfio_pci_core_device *vdev)
-+{
-+	/* Unopened and failed devices must not prevent a shared reset. */
-+	if (READ_ONCE(vdev->device_open) &&
-+	    !(READ_ONCE(vdev->pci_recovery_flags) & VFIO_PCI_RECOVERY_FAILED))
-+		return -EBUSY;
-+	return vfio_pci_prepare_hot_reset(vdev);
-+}
-+
- static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
- 				      struct vfio_pci_group_info *groups,
- 				      struct iommufd_ctx *iommufd_ctx)
-@@ -2849,8 +2891,11 @@ static int vfio_pci_dev_set_hot_reset(struct vfio_device_set *dev_set,
- 			break;
- 		}
+ int vfio_pci_ioctl_get_region_info(struct vfio_device *core_vdev,
+ 				   struct vfio_region_info *info,
+ 				   struct vfio_info_cap *caps)
+@@ -1272,29 +1326,15 @@ int vfio_pci_ioctl_get_region_info(struct vfio_device *core_vdev,
  
--		vfio_pci_dma_buf_move(vdev, true);
--		vfio_pci_zap_bars(vdev);
-+		ret = vfio_pci_access_ops(vdev)->prepare_hot_reset(vdev);
-+		if (ret) {
-+			up_write(&vdev->memory_lock);
-+			break;
-+		}
- 	}
+ 		break;
+ 	case VFIO_PCI_ROM_REGION_INDEX: {
+-		void __iomem *io;
+-		size_t size;
+-		u16 cmd;
+-
+ 		info->offset = VFIO_PCI_INDEX_TO_OFFSET(info->index);
+ 		info->flags = 0;
+ 		info->size = 0;
  
- 	if (!list_entry_is_head(vdev,
+ 		if (pci_resource_start(pdev, PCI_ROM_RESOURCE)) {
+-			/*
+-			 * Check ROM content is valid. Need to enable memory
+-			 * decode for ROM access in pci_map_rom().
+-			 */
+-			cmd = vfio_pci_memory_lock_and_enable(vdev);
+-			io = pci_map_rom(pdev, &size);
+-			if (io) {
+-				info->flags = VFIO_REGION_INFO_FLAG_READ;
+-				/* Report the BAR size, not the ROM size. */
+-				info->size = pci_resource_len(pdev,
+-							      PCI_ROM_RESOURCE);
+-				pci_unmap_rom(pdev, io);
+-			}
+-			vfio_pci_memory_unlock_and_restore(vdev, cmd);
++			ret = vfio_pci_core_access(vdev, vfio_pci_access_rom_info,
++						   info);
++			if (ret)
++				return ret;
+ 		} else if (pdev->rom && pdev->romlen) {
+ 			info->flags = VFIO_REGION_INFO_FLAG_READ;
+ 			/* Report BAR size as power of two. */
 -- 
 2.43.0
 
