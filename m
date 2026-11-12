@@ -1,57 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794443448;
-	b=D7vz8m8cnRbGH7ilnyILXIvCMVxzsXc8p+iFmL3STUYwzEySQx5wL1QY+xtzeIABlxIa
-	 WKeueC+Ih2U101SgT37QQ2sfTFS4+NMUjcJM0n++p8IL92vBx6uEoeVgqalXyQgVA63HJ
-	 E2oxHP8+5/Pkh1qs/aU6XwhB4h2wHhi2OSSMdioch62L88DdjkLq5VHgyKxPYAna6bYYg
-	 Qb1lcITfrRBs5n6zV1O1XiLQvVoPRjNB+c8hGS6yyGnIFOg1ZesGRb2fw8MZhhMNCk2bY
-	 Dq5rCcaedal3cei/m0HDQjhnxc8LXSzFOo/6z3o0Bm6Yfjo4bUWwL8/E+covKWb9bCQ==
+	t=1794444014;
+	b=kZ/3/ZDVB/oSWIvRyhrcIFw68cpbRXcAt28/OsLpMwJNlMH19bY0A8r2NJ9C//loFQU3
+	 WdazFeqtxYwaFOP3x0WowqavoR1ujOJlDDYJ7QsKsufVpMgLGdjgC4Pedh1V979wrKell
+	 IYpOA6tJ9FQZUr/Z+jq+LPYW9mdIBts/8dOujcnhvtNbZdysAnsOPF+/AW72NPJIIEvkW
+	 B1GP9zadyo3Pa8a3PiZgfyAuuEUDPw900WyKxW1dhPS7MFuRAJ4JLxFHqHm+LRlv0Ay5B
+	 llDXh4pqw4MXP1jQshKfrld8/HIs+rBECEyEhSRq3AhH84PKsarfTUNN6YOMrFjOtSA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794443448;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=t+NGV2AAyfYSQ77/p3qf2VWaZ4ota4JzwmDv/Clw/rg=;
-	b=LTxQCgQzbhUNyut55B1XMYjuJ+c+2c0NDJ2fCXkHD/grBy+x9jWJ10AwDsGzxMZCAfWT
-	 T0qdpklmbaQsWaaIM3BaMJ2gycXLYiP78mjWh/dar0FGiEkV9aFXtUOea1JPixEpTVN51
-	 /NITKwfj8RPf1hTZpJ0e5YwstsvC3kaxSgO444rOaLjUGUgTzdKWDWQdIgGHuWXtJDzv0
-	 kNDLXZKr3S4MnNBHMLM1ioHe3EJ1l4Zt7GkWn8aZAczjPjvBZN5dbK/Ej5EcDI4E9B2sY
-	 kNVYbXvu9K0hCjvBCLf6OST7p4UFKKmK6uBMzgie1aZkMq+bTOch1FTtXW+L0n5jUOQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794444014;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=LctdR/JCjxXqXaUQaTN2ULstUn/j3yJ+h0QrraA+KO8=;
+	b=UPlfktxrhSn+TrVPh1e043LARUOn6MVU5CU/lAN43E1w31n4l9TQjKGI8EL/faJXf+QU
+	 yNsbuUQpIDYibkzu4Qk/ZqlxPBNgXQ4x8u1iSgUfcVeQRGsOkq497UX7hAm2EyvfSZGLk
+	 C9yY9DfMkkHBGh5KikNEig4xA3s0RfG1ig2Y7YCEXpBT4klo+OwBowthjjhYqmAJoW2E8
+	 hDFe5mXBe/DyO7h9UseJ0P5RFD2VEGAh+OnRpNY9cSLvGa5xUY7kFWiJ0y842SoS3tNc3
+	 3Ig2+ABlHKvIxtsg+U/0pcLaAGOShP7IkVfAxyOaUqe8TsJqRw4XV/ymuL4FUQB06dA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ksM7GvsI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ays3K3pI;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E279606A321
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 00:30:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with UTF8SMTPS id C9D93606A335;
+	Thu, 12 Nov 2026 00:40:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ksM7GvsI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A51051F00A05;
-	Thu, 12 Nov 2026 00:30:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ays3K3pI
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B06BA1F00A0F;
+	Thu, 12 Nov 2026 00:40:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794443447;
-	bh=t+NGV2AAyfYSQ77/p3qf2VWaZ4ota4JzwmDv/Clw/rg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ksM7GvsIPRE45G0xb2k2ZNCxmibVbZB4gzmPDOwSxSJP2BXalPL5yy8o9Rslw99Ae
-	 IQM13FlJE8qJBBkqIIGGLBMAmCMQR8VDOGih7OBHz0xvkGbHMuMYyqV+6eqdTs8B27
-	 tBenLjH9CNNSW8Gh2V9EYahcrCHIdLzU0114RGeTTY92OCMFcy6AQoc+5NAg05748s
-	 +n1XO7Szr0+X2jyaXQJPDyXPXxkQnrA6Epf+0iEYj/3zjUwV7d3lhs1Q+5cGgDje4w
-	 FzW+Ajcjo7X5J7Tk/PIuntUHCYPVROiVb+BPiJRjk1VZkgsoRvyNE2hv86Xp8XhOCK
-	 /q3sSNGu8sfPQ==
-Message-ID: <sashiko-outbox-209923@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 7/7] crypto: ccp - Drop unused <asm/cpu_device_id.h>
- include
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pavel Popov" <pavel.e.popov@intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261111234821.4814-8-pavel.e.popov@intel.com>
+	s=k20260515; t=1794444014;
+	bh=LctdR/JCjxXqXaUQaTN2ULstUn/j3yJ+h0QrraA+KO8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ays3K3pIaLgkjHtf67+YKirgb77xzOsgoaqDmEP/g+4Qe5AaNi4B39YOWoUh1lzKI
+	 Zi7/z86Ihs4YZJJ7R6sbJJTlh5U25IRSQr2M7CbZ/l7oNky3/H7pWxOAAd114X/FkD
+	 us95OeCkgMlJcVkMHJa/dfAOSB0NI5+dzyms7qN+3irdnRQ1F1OX0RH9RxzbQMO8cp
+	 6xLiuz/R5U8PMqbIT0nhOaUPAqqSFg+K4xa9+ieDK9b2fmrnW3Kzp1B2GrWtApoU8e
+	 t2UaBe6LeHGtWas9QjH/p4y+yHYGzcFiBYW/QLy86NrTZsAr71hHZWfAUUcMexFnCv
+	 5LECeq1WSVyww==
+Date: Thu, 12 Nov 2026 02:40:10 +0200
+From: Jarkko Sakkinen <jarkko@kernel.org>
+To: Pavel Popov <pavel.e.popov@intel.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Peter Huewe <peterhuewe@gmx.de>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Arnd Bergmann <arnd@arndb.de>, Len Brown <lenb@kernel.org>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	"David S . Miller" <davem@davemloft.net>, x86@kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
+	intel-gfx@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-integrity@vger.kernel.org, linux-crypto@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 6/7] tpm: Include <asm/cpu_device_id.h> unconditionally
+Message-ID: <avUK6uzoAJax0ZKn@kernel.org>
 References: <20261111234821.4814-1-pavel.e.popov@intel.com>
- <20261111234821.4814-8-pavel.e.popov@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 00:30:46 +0000
+ <20261111234821.4814-7-pavel.e.popov@intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,16 +82,19 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261111234821.4814-7-pavel.e.popov@intel.com>
 
-> Nothing in ccp-dev.c uses <asm/cpu_device_id.h>; the CPU match table
-> it was included for is long gone. Drop the include and the #ifdef
-> CONFIG_X86 around it.
->=20
+On Wed, Nov 11, 2026 at 04:48:19PM -0700, Pavel Popov wrote:
+> <asm/cpu_device_id.h> now has a generic version, so the #ifdef
+> CONFIG_X86 around the include is no longer needed.
+> 
 > Signed-off-by: Pavel Popov <pavel.e.popov@intel.com>
 
-Sashiko has reviewed this patch and found no issues.
+Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111234821.4814=
--1-pavel.e.popov@intel.com?part=3D7
+Are these expected to be picked separately by subsystems?
 
+Br, Jarkko
