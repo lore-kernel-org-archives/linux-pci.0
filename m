@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794441677;
-	b=BE15bwzxyShMtRXFXAUnOductJ+ADDtq2HwozWv8aviKdZoOYIe9Ut2DLChkWK3nkMOs
-	 HEN80X4+0vMSuh22lFZ2TkVQQuar2ytWeLZoPLdsDmX8V1IAo0eNwWBbD+X5T04/v9wb6
-	 WITZnY3vzN/JXkVoujYPfaWmOoYCx6I1fxVk/3mu1mmh4+vZN/Xfr0ni+XV0rZTrAJcC2
-	 hn3SuB0VUmDxzkJHDrP4ny7eh+k0B1hKX3YmNMxJo3tHQFYGq6akGV4bZL7yl/K+3jHqh
-	 4KgtEWExT14NpLijcrRJwnciTTE4ZfH8lty/WUWjdk4P1vrGGxV3vBhbjyheBHY7xjg==
+	b=hKYnGBR9ztU74f9+94SjcOrFLOwuO3fV22fvZBIGyDqp3YHbNMvcD5g/jxaaaLdcgXNA
+	 WIjtcjXw18E9Tyhx9mVxGvxPfl0hiryyDsUgRpc33WHmVpOOXPZ757xjND02q7pyQmk5b
+	 URHWhouXkx+Z7xMpd2X7vR7whhQvf3H0vKnhjWO03lCSS2Vwmxh7BGl0EeQb2olTQO+OT
+	 3pg1bJjgCq9D/0nk8boDYEAXzXFt5eShHEBwuDWOOslFEpfBaVb3skah9zRIh2rXnYKTZ
+	 lnwIXWcc5oDmJvfx+Pk7+9pHpnoYPb18oCxZCCqRLpu6QGUU8mH1TpFKa+Y7yvB85FQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794441677;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=9iRil8YbAwGP9x6lT3FD1INIcuPlDihTe/ieoBzrBq4=;
-	b=WKAESosndscledL+80y5GFmnbgjsNqyfzysULpJ0WhDUdfD/2bITYCxcRD1MDHYeRD3L
-	 yDZXawdhUEQahy3vjhfaoZOglP6Rs/kdxJHDtOPAyfx/pLZ6c4Q4O94uLft/rIqMqVgWM
-	 aDeG1Yaj6WbzWfCzMz02aNVHhsmEsgCmmT5n5mEZvCEzDHsk2E9qeDWXWVa6xCDK54Llb
-	 ruHd5u7yvbwBSaJdyU4oSBl1BkYBE2Pg6iuGPky4321HJsk2Djs7wIql9P5JVQ3RZ96i6
-	 Eof9plkylgJEalt8LB/HqQvEyAwJfDuSd0UOZroY8o7GSmVVRg9a1V47hXWMI6gcP7Q==
+	bh=euPoI8bRNnIKsnX60+HzqrI+QtaRcWYwd4TcVTD6+lM=;
+	b=q6ygszy5X/aUPC3BgdcSbALqx7Ve27w9ALrAOpGmf5rrO5jKmzm4lz9K1UZiGKWVeGtH
+	 8W4Ve4kPOypgifR9khW/UWMxEiMOm6thgNjVsj2u2pc/UYmXpaC0lvex6ym1ZVQ41OpgN
+	 RNdN2+YlJHJpX90tiV8rkl6mVlb9k7CZNXwfzTgLpcfNj7lHotGiNGkhp0lLQGYNf5s86
+	 ck5q57UuemMTp1i6TDAa6KeEY0jOIZTb+my9ZhTXJ9FzT/yYmv1nrtuWZmpVpPvoUfi4o
+	 RRzcguNvmgPB67ra46JHR3rQ+MYwBt/n4V4CD4YICKyZ7mzPzaNv1VhZrSlF4PVZuyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mr9+8yqx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lopiPT9Z;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AFB7606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A546606A326
 	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 00:01:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mr9+8yqx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B63321F00A05;
-	Thu, 12 Nov 2026 00:01:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lopiPT9Z
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5804F1F00A0A;
+	Thu, 12 Nov 2026 00:01:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794441676;
-	bh=9iRil8YbAwGP9x6lT3FD1INIcuPlDihTe/ieoBzrBq4=;
+	s=k20260515; t=1794441677;
+	bh=euPoI8bRNnIKsnX60+HzqrI+QtaRcWYwd4TcVTD6+lM=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=mr9+8yqxw3VPlTHUHk3izW7Qk4Jt5JM7FEdqYwjSJSfSe5mnsSEfZKPTY9WBq754K
-	 pq5k75IEQ1brN7x425iM0EotBfSaVyr61orcHw7ZV18+Ue5PkWLP9kW9asvDuPnZLj
-	 ozG/AnOh5Mp68tOR2mFh3HAhK5hjGCGMSJUIWf8ITELJHljC8TSEQsPnmrD7GbWiTv
-	 jNUDNQnKleXNCbo+svrxRpP1DckvaLKvc3EXHQqc4bBlN+GG7Wq51+HoqVngSoJaNU
-	 M9pBmlNjnKg/yUUt+XpdrbXIhz5EK5wj/9E2LV8f6CoIy5zcZxW8jpa8Jiels/C2zy
-	 W8SuawEyJIbFA==
-Message-ID: <sashiko-outbox-209873@kernel.org>
+	b=lopiPT9ZSODa+HZmJ0TIDriPs/yqu9144HyK1NPEq6o82Q6lkzeDvrC2upXFXwqZY
+	 qF9OCcT4n5j54UH0xHK96t4CfoFiwQkRLk/BxNMHUrWqzgtvewj/tEg13cFtqHEHlf
+	 zDxmBFpjH4ubOAb3xDpsbDvRCMqndnQ/xcPvZpLpsECgvNLkg6in5X8ovyDua4jJw4
+	 GHjEzlUpj+yfpg6fU9w9JBUzgkoA3t6wmsZNmOGrLlKWN29Gc7AiWkqBu8htTQ5jUb
+	 0mPZ1Los/Pyl2XoiAm2J2+HRhyzB/05RcHcyvJGuwwYnkjhVJH0uMfXFtLLwffpWZ6
+	 jIfMyjbaoyiaw==
+Message-ID: <sashiko-outbox-209874@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 11/11] samples: rust: add a Rust SR-IOV PF and VF
- driver sample
+Subject: Re: [PATCH v6 10/11] rust: pci: add SR-IOV enable and disable
+ callbacks
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Simon Song" <xinmengs@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261111223337.508989-12-xinmengs@nvidia.com>
+In-Reply-To: <20261111223337.508989-11-xinmengs@nvidia.com>
 References: <20261111223337.508989-1-xinmengs@nvidia.com>
- <20261111223337.508989-12-xinmengs@nvidia.com>
+ <20261111223337.508989-11-xinmengs@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Thu, 12 Nov 2026 00:01:16 +0000
@@ -62,32 +62,28 @@ Precedence: list
 
 > From: Peter Colberg <peter@colberg.org>
 >=20
-> Add a sample module with a PF and a VF driver that demonstrates SR-IOV
-> using QEMU's 82576 (igb) emulation.
+> Allow Rust PCI drivers to configure SR-IOV through sriov_numvfs.
+> Split the C configure callback into sriov_enable() and sriov_disable(),
+> passing pinned driver data and a token for the requested operation.
+> Require drivers to implement both callbacks together.
 >=20
-> The PF publishes a pinned API object in its private data and provides a
-> submit_request() helper. The VF calls this helper with its Bound device
-> borrow. The helper performs the typed registration lookup, so the VF
-> driver does not use the API object or its lifetime encoding directly.
+> Return the enabled guard's VF count on success and disarm its rollback.
+> On a disable request, verify that the driver has removed all VFs before
+> reporting success. VfRegistration handles VF removal during PF teardown;
+> these callbacks only handle explicit configuration requests.
 >=20
-> Keep the PF and VF drivers in separate files, but build them into a
-> single module that registers both drivers. Separate modules would need
-> cross-crate Rust symbol exports, which can be added once the build
-> system supports them.
+> The PCI core invokes sriov_configure only through the PF-only
+> sriov_numvfs sysfs attribute, so no extra PF role check is needed.
 >=20
-> Unbinding the PF disables SR-IOV and removes its VFs before releasing
-> the registered data.
->=20
-> Link: https://www.qemu.org/docs/master/system/devices/igb.html
+> Suggested-by: Danilo Krummrich <dakr@kernel.org>
 > Signed-off-by: Peter Colberg <peter@colberg.org>
-> Co-developed-by: Zhi Wang <zhiw@nvidia.com>
 > Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-> Co-developed-by: Simon Song <xinmengs@nvidia.com>
+> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
 > Signed-off-by: Simon Song <xinmengs@nvidia.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111223337.5089=
-89-1-xinmengs@nvidia.com?part=3D11
+89-1-xinmengs@nvidia.com?part=3D10
 
