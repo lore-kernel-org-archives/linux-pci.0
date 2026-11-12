@@ -1,68 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794450291;
-	b=2VOEhQt/tmWtl4UhxzXUPsYG9KOp4OiZHGEG1v2YZEIvDX3zZILv69WIEHwNk6OFhVNv
-	 OVUiC7MX2wmruU3M6X7vS8tZTGN8IkdOB03RUwGLyeGmy1/DQNwBf4+8HRmU+WSaVG2Cr
-	 wXJ2ZunzwGdy7rsFoxz+QdRyrvoAGUE0Bpzm/U5nyZ91qOpPpGErgDb9DVCV0jwI8LADH
-	 AQAFLg9emiRED3+SNWnhuL96igKXNEMuO9rzLmm9nVPjY7OAqU1Bm7/3XFFDU3B1cZOTP
-	 bdIg6nahklfZbpMJkgQDtmb6ukHoQ6+bhYDerUtOpM/qlv2DxLpiF0RG4cKaEWD9fxA==
+	t=1794450476;
+	b=Iq2+6urRrO+KUyLlrTdYyC/hy2X3dtoea69H1xmglokcouPzhcNUVvP/5fEvMSDwZtfP
+	 9TPZ5yg8sKq+5A23TCkbRGJMlcqaWn/HA7FDRTX7Yd61ShERteF8Ft0EUg61VBHZwx99q
+	 gscoxR/vl2HcqYwSESVGLNNqVBhH6hxCukLTlkNlkHlGIqBODLGaid/BBUcvFuVMTi0Ic
+	 xRaKR4Ixt6+iQd/Sb0ymPHCzAhsRc8ppGxPcIyS2hJySSBocc1VoK7tyvh/YGSI8vgUl4
+	 BYgN5AdxkGgiM5sXb0kVmeO8ypsMZXqyEWfjBhsyLzyums5fvvjzYDbRjL55t+V1GMw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794450291;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo;
-	bh=B75XeCji0Hq4KB2ucqYdo8KpN0Fb8I/YrmcRagsu6Ms=;
-	b=Kyr1P3RQmaq+1D/gphAxfM10dd4P0CyVSXQU8msNW32AwvmoAvuHlurbmPYCtzIPZny3
-	 dbnrQtoUg7rnXpar2SkOC/TnPwe0JDJ1RQS/Kk2KWq2RDi7KDwRVes4qJmc6zPdphB60V
-	 KrhSsbEiDGaoN9jDrxsx4nLfF4EzKNpsTeSFjRZJNkbIkfXqMDM+OFO6y26rKRJaRnlWx
-	 kE0EKCtwjiKSfkQd9tdQdawFkJG+ZgzeKktjKTNydxDW5jurv/WinOPythBHSkX/X3zLc
-	 HfqylVCvQzTwG1M8JAsv/+DbnNNPsxLYmOhbQZfG6qRojIPp0y1puvGpkrIr1uFh/QA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794450476;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=ICrnL4UcR8LLqLqCE9GWPo1oFojYY9xg1h4vGR95yGA=;
+	b=4ilfCksxYdwRtDllJJWEcdw+ElfhQTIFeIubKd7NIBTebxNkORUqRGVXrgWor7y0alFM
+	 cl7UlJ4NHSi5SHbCyxNpohAtDc1mqiPHUNnxIhBbZQ5ULVElRCRoeYnowOWXJcycWdVvM
+	 WqBEtJsvSUtPphABPOVMoMkqlGiVdDcvNyQ/UUoBCLjioj+m3cCs87v3OUnAhf8bXL0VK
+	 sL6PoQyaB/oDY+hjd+Vyv3/VDxYmvG0G23YHSZ4TqSDQ+SZdfRxyBCzbibdm86EnaCfUs
+	 YXAQGFmOIGyjQFYAsSKbmsemC5vxwhlJaz2Hdq9RaQ3nbcFHnZYemwWqH6Ry9sHxYCA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=aEY7Yzpg;
-	arc=none smtp.remote-ip=117.135.210.5
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bw6wmlPL;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76742606A33A;
-	Thu, 12 Nov 2026 02:24:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76742606A33A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF63F606A321
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 02:27:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=aEY7Yzpg
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=B7
-	5XeCji0Hq4KB2ucqYdo8KpN0Fb8I/YrmcRagsu6Ms=; b=aEY7YzpgLMktlL9Ka/
-	rDcyD/NJMczXVnAL4o54+U1RCtEVcRQ+kEyos8gax9Kpcukr5MZh96R5XLZXo+lh
-	lGicryKbtxanOAfe7sbYcm5lrPuvXu05XSTfr1TAOOIlWBrsZxlt/AYtuKUdv87L
-	MaW5Zk2bkCFfrvobKQWKLNFu0=
-Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDXj+5GI_VqPgXEGg--.53291S6;
-	Thu, 12 Nov 2026 10:24:13 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: bhelgaas@google.com,
-	mani@kernel.org,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	thierry.reding@kernel.org,
-	ryder.lee@mediatek.com,
-	jonathanh@nvidia.com
-Cc: robh@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-tegra@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 4/5] PCI: mediatek: Use pcie_get_link_speed()
-Date: Thu, 12 Nov 2026 10:24:04 +0800
-Message-ID: <20261112022405.1230200-5-18255117159@163.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261112022405.1230200-1-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bw6wmlPL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28C9D1F00A06;
+	Thu, 12 Nov 2026 02:27:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794450476;
+	bh=ICrnL4UcR8LLqLqCE9GWPo1oFojYY9xg1h4vGR95yGA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bw6wmlPLVm5ZLiIqcdnBnS/QacKQLrtbEsFgGy8j84RIQz66NVdkbrvU/KYrJfRbD
+	 mnX1z2+lwKpl+ej6309B36XwqD07T6QII6Om+V7avPPuUGmP+RskVqhruoq7aVAgH3
+	 7tJdL5PeB/mic0sWStWLRIJ9MKi16px8GA5+41CZ59O1sac+AUjFI7Ta/GTruahtXs
+	 DN7a8Q6GNagu3ch8aEqKdI8yropPJjGHf7/UM1QurQfcnUU24OlXS5de2msI7Tn6Cm
+	 DxLciK6TinyTmcIFnGaeQ7EchVf05EIAVmSoa3vlNh54OHf8JgpXoFy4gf9QA7wKzk
+	 rJYfooIdY95jw==
+Message-ID: <sashiko-outbox-210191@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 5/5] PCI: Make pcie_link_speed[] private to probe.c
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hans Zhang" <18255117159@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261112022405.1230200-6-18255117159@163.com>
 References: <20261112022405.1230200-1-18255117159@163.com>
+ <20261112022405.1230200-6-18255117159@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 12 Nov 2026 02:27:55 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -71,38 +59,16 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXj+5GI_VqPgXEGg--.53291S6
-X-Coremail-Antispam: 1Uf129KBjvdXoW7JFWxGF4kKF17urW3uw43GFg_yoWfKFbE9w
-	nrtF4UJr4UGryfGw1YyFyFvr9ava4fWr10vayFqF1aya48u3s5Zr9agFWqqF9rGr4xXFy2
-	yr90kF4xCFyUCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRihL05UUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6w3zl2r1I00gPAAA3v
 
-MediaTek was added after pcie_get_link_speed() was introduced and still
-indexes pcie_link_speed[] directly.  Convert it to the helper so it does
-not depend on the array being exported and cannot go out of bounds on
-invalid speed values.
+> pcie_get_link_speed() is now the only accessor for pcie_link_speed[].
+> Make the array static and remove its extern declaration and export so no
+> other code can index it directly.
+>=20
+> Signed-off-by: Hans Zhang <18255117159@163.com>
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/pcie-mediatek.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Sashiko has reviewed this patch and found no issues.
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 3a3e91cd0c21..ffde365c987f 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -888,7 +888,7 @@ static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *host)
- 		speed = lnksta & PCI_EXP_LNKSTA_CLS;
- 
- 		pci_info(rp, "link retrained, speed %s\n",
--			 pci_speed_string(pcie_link_speed[speed]));
-+			 pci_speed_string(pcie_get_link_speed(speed)));
- 
- 	}
- 
--- 
-2.43.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112022405.1230=
+200-1-18255117159@163.com?part=3D5
 
