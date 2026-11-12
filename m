@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794445558;
-	b=nOTp6KqLQp6JPj71McIxDXdRPEaSIW6LqzXRAJ6b06CwQ5HBNo3cFrezvQucM2cvIMvj
-	 WArY9X3SnjlcneTCKDvUpdcs78za6/AKDKHVZtx+krUREgFKx5pGFTuYxsv8WV9IrZj5O
-	 FIjQsyn5Hd776ogc/l0mk+UUUijy1jOGIlHvDbcYK4xzYm7aGuIwb6O6cbXKyWOdFIFTo
-	 3FOomAbvJWiccYGkr/qBmu+++VSYAMRmefSgjyW+d2Y8Xc1+YIR5YCzybUHtHixqVT9+z
-	 eT4N/gMe+5ez6LoPAS3JQxQuVUm/g2F1kGqEVxjbHgJN9KBQGKNGTrZvhZdi6IKnrNQ==
+	t=1794445640;
+	b=LYnellqeSLTx4qxiT1k0ASW2JlZJoKGfJGOjXAW0ZACIo7mjZNxB3gicZy4uYUgxGB7X
+	 tj67LZD6WmhWdDfGO5EJvaVBbFOmHphNIq5xtk92oZA1MZfU89JBG9s7aYC6qF2P7JKXI
+	 PzmvKFl9o6dxL39+fFVJBJ9hdtUjtHuJbiXdksXeaMqEhBY0/LaLqTdrMZf64101ZUPbv
+	 IfcjEd/F+Mnc/KD4fjQEHahijX7KKoY0eSmiyuojY8Ntg9AK31ueehEMYUzOBsF3DXhC6
+	 lI7qyhNRQMVx5dfkwQZvGT+/GnGlUdRmEw6QMILd+oMOJjCmzWwP+9VKff7yhqS8wPQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794445558;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794445640;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=+Ad88Jzmpee0M4BHPGE44Z0ravDYeEYVqEIY475fdKw=;
-	b=0Jj6wJZydozr9NXAKMz4UWnw1RZpBqUNG7/qCs5cLVXrtEJqs/J+kTCyq2BzafwjJh1/
-	 qCNmtnp2thR1CUSdutOGhqSjoSJy0vniX3jSteDlMPofLbiYi7hoLnj6XiszEGli4YwuL
-	 K86IsfWykzibGMmKZLIUAPp0oS5cMm8/UPQtzqymsLq2JCoeAnJRJJ0ChzwI/V9W8T6Eo
-	 YgFg2scd6PrLtK3n8AKVc87XFmvlLpZ3RmzEZifdzS4rP0LYAtk9EY1a1ZNji7N5eRjFq
-	 XNGAz2XXHnfmTHHt7WhaoEYypMAGhh+5dJ68HKD/2zZR3hDowWp1QpUd2tAjeNBboTA==
+	bh=p4gcYViUT/rR83NAGTYh0OexBVN3tLBNAn50ToO4dxU=;
+	b=HGMnJugg5/THRHXiRVLx8TyT/i5J+PMOc/WtDbUE9lhz8ApYlRs6Hh9aBMZoSyL+lnxK
+	 APJn6ZcaL0ZfeM+HDx4mPEviycDeKAJsEKAjxWkjlPbt0QuLSJEotChyqT8ruSddtgmB2
+	 25j5kKLHHdFbvKfXFtBCLhC4VDP4AEcd7LfnkUGnPRdo6OOIk/tD59GVM2XzrvABDatBA
+	 nHLL0LaNNCr7+p+3rIYE4zrpFaI3aiVO1ZRJP1TDSHLpAA9J1bPby1naI2ZneLsGr+QEs
+	 qF8Zl4rqMwCf3XbFeN9ydxje0MA8SrtSsI+Wy+jT2u1BvJy5lhaatUuhZfB4OE9KExw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lWpzXdpY;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S7DRKGmC;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0479606A885;
-	Thu, 12 Nov 2026 01:05:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2464606A31C;
+	Thu, 12 Nov 2026 01:07:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lWpzXdpY
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BD691F00A14;
-	Thu, 12 Nov 2026 01:05:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S7DRKGmC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E0EF1F00A05;
+	Thu, 12 Nov 2026 01:07:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794445557;
-	bh=+Ad88Jzmpee0M4BHPGE44Z0ravDYeEYVqEIY475fdKw=;
+	s=k20260515; t=1794445640;
+	bh=p4gcYViUT/rR83NAGTYh0OexBVN3tLBNAn50ToO4dxU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lWpzXdpYpISyJXTwPKmll1a3hf3fQp0p8qeHhscG3WZU+9930g/dT/nWplS+eEId1
-	 5wUNlTqFftrK4jqbDwdWpL4w30DW9NJFxj0hpayrqrYjnCFYGhJi2RB41bo4fiJZnI
-	 NVWCi7B15lBeQzj5qoKhX6JWDjVRnAcqT2RckykPh0gCLcZ5i19XKWiF+wjqplnahB
-	 /dG2XtBMNbZ4IElKUrtymV0TtDrIUUHlrysBqczvPAjdEuZhPvkuZIVdszbPgifkrq
-	 fOVf+ImSe+UbSjJ2UvAgWWWsSJndBEPxW52TQ990ZlMcrP2zkLOKOE9gxKQw9QUwg/
-	 YHXODuGF39NoA==
-Message-ID: <sashiko-outbox-210036@kernel.org>
+	b=S7DRKGmCWIKvTK9Uq6DLvRlhmbnHDAaClMT9Gb+zNRcDAPNxh1/bNEdzuEuU5NdYA
+	 uyyjLr4Zg+hVXmPne42VJi1Hy68wNroG3nfZ6LnLLHd+K8VuaSQrkcn7xm3vGZHQUD
+	 aE+B+l5hCmC5efi6Sl/89LtdsO7WItSNVkAsXM9053mFHneGZsND5jGF+Gy0DvI7Nz
+	 9GQeBJism2wI5kSeAR+Zd6Ta9uYvgonN7gSfrUWVofC+gOg0pfTtKBtb7+1oFLvb8x
+	 LDqU7sqLB7vCDW6vlbfIfJc6BKn2aYHkhEbbX0FkpleKhhaN6DmWneb93uih3J6Lya
+	 Y3NkH1LvyjSRQ==
+Message-ID: <sashiko-outbox-210038@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/7] rust: auxiliary: remove the unbind() callback
+Subject: Re: [PATCH 2/7] rust: platform: remove the unbind() callback
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
 Cc: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org
-In-Reply-To: <20261112005455.1224352-4-dakr@kernel.org>
+In-Reply-To: <20261112005455.1224352-3-dakr@kernel.org>
 References: <20261112005455.1224352-1-dakr@kernel.org>
- <20261112005455.1224352-4-dakr@kernel.org>
+ <20261112005455.1224352-3-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 01:05:57 +0000
+Date: Thu, 12 Nov 2026 01:07:19 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,7 +65,7 @@ Precedence: list
 > binding. Both remain accessible from the destructor, so a separate
 > unbind() callback is no longer needed.
 >=20
-> Remove auxiliary::Driver::unbind() and the adapter's remove callback and
+> Remove platform::Driver::unbind() and the adapter's remove callback and
 > document that device teardown belongs in Drop or PinnedDrop.
 >=20
 > Signed-off-by: Danilo Krummrich <dakr@kernel.org>
@@ -74,5 +74,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112005455.1224=
-352-1-dakr@kernel.org?part=3D3
+352-1-dakr@kernel.org?part=3D2
 
