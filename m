@@ -1,68 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794527373;
-	b=T/V3hxdWy/g5j+v0GhQfeKhLFpIYuszrswXT62kX7+adazaCQ6+UbALm3MqZXvHf6/7Y
-	 V3yFn4kMtyBiK6/Moqln0PZGdZma9pcxSWovPL4S7utUz7AAvOFw1eFI0fXm8HpP+D8UL
-	 J9kS3RKsG9wqMTvjv0JYIq08PQxlXBmgqwHs3FqJkAM0vljOTMvv+3/EPy2ia99v9dm08
-	 V0Pbq1XgI6CK4TT1naPsczG5U2q9n1BT9Sky23gXQmu62Sf84zQz2qIIOu/u99gWN6kKK
-	 8WFK8UzeksOTmsPz5jXBOXrXuJZdg0UgvtKEECWkO4Lhw/cewRZyUdIm67wsiX5i0zw==
+	t=1794527825;
+	b=f+A9kH4Jw5WkubWjkYjoVfBLg8r2fNVi6ITYGx+rZI2udgDbfYI+3k+LrTduaSnfaf30
+	 RgdE7yRrCMMtmVhRBArk+w6PMpqSxt8e6n5RPH4gTqt7782CXiKSfp7PXEjioIS9HO8i8
+	 K9dx9zSfdLnhyfxDSRhkofYwSmIl0XCDqT2F6wuYHHLSp1tYrRM4jP4AZXK1aZ1b8P3Em
+	 3cjNItmdAYiR4rjULtXCln9HV7Yu3yB4eET7e7BRKjgFBD0X6vf9JsND+F3vZ/02Q6S+B
+	 riNCFvTrKXKZ80sjaIkAS5D6Plw9OXLzYA484DgWQN347rfmwsV44WXr+/Ww6DebnQA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794527373;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=kCaNw5eRaBRwjcLXTE3JL4PVNoPNDMQQUQLGaZbHGXw=;
-	b=H6GD7V3yA7k5zCVl5Ur4v5HIVWSExnBN6ZD8uKXd+V1+MTEv/ky0HHXG9ZOGQLFCP5KV
-	 +g7kkyHSRdYkNbUlY/z2uvkrPjjx7xr3A+emZZt1OWl02vG8SbtW5mdsYiq9akUq1D5ZY
-	 zqyjwr2SuZQdPrKRUozU8g0EQXuOg1kkNAwzoG6uWR6o8/oGsOf6QkJ9Tau5BfFXup8Po
-	 tA+u2J5D9bzpPhA9+zSyDrcf2li3hCT81GttxG+mc2CUYG5SgFt7oeyMTvkdgGNchdXaz
-	 obY5GIhxpzDTYffJPoTFptDZ5bgWdHF9RYHP4tK+skl88b2ibdaoybZvMmphdZDphXg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794527825;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
+	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=ElwPfqXeirLqqsU4zQh4EAXIe0nkzZW28c2DWS+oP2I=;
+	b=zvAk9d3NfcjlJ5XIpL1LOSBBvXxph+HoLNKgrAu5dCS+5/yiQIPZDm5PUk5th8IHEb0I
+	 EgKvAXC5Ms2YISXWZmtP1Y0Gbv0XyM9+G9oKBrswbLyW3BuQLXGgDVFfnLqViOtmVesKN
+	 NWPrSynCblLxyH7dTtz8OrD2zSHp8kjmMIGRRqHb7U+xrtncFHf8qgAgfKVUOSAkzcxQL
+	 n5j80wxXT7AVFNvPBZtljNAY+I6fsN46BS+ugzIi0B07PqNzSjEZQ6fI0DM5C1O1u+pZb
+	 Vvh8dbI1QityF4rIcLv/B898tyYDhTyvwTZTNYha9IqFhntpkIbl+jpCZUSXaxTZWIw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KO94zEM4;
-	arc=none smtp.remote-ip=192.198.163.11
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--skhawaja.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=AalXEhu8;
+	arc=none smtp.remote-ip=209.85.210.69
+Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com [209.85.210.69])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEB70606A31C;
-	Thu, 12 Nov 2026 23:49:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CEB70606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADB8E606A31C
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 23:57:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ADB8E606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--skhawaja.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KO94zEM4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794527373; x=1826063373;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=LDTlgoTiXXPqULWE834iHtRR+DdZfRL5mgHiLZgHS7I=;
-  b=KO94zEM4m22WKsa4oFwZTcslwg3eBxTwKT1ITmw2fPhUaDE5mSLD+zWI
-   ujJKctErh8QxvrHrJp8xYFnFKaFG6avXKRn8HI3QsxIkDuoQBsnGae5aK
-   SLzCoHuCeUjx5vyxLn1+mBMgmAagkMMJp0dD7Y+4UybvaByz0efMCkKSx
-   H3YQHYQlLCDGqaTncmT+awChsfgG8YRfiOywE3FYTwVfc3kjmXSN/sC74
-   fnw7a7o+VPK5I8QxlNU7AiyL1LzIWM+d1IBy0vyNweha1Ud2poOrujGK4
-   e2GpR9RJ9XS1vnLpMpkx6XnalRI6I4lxHWsKO+oK3r7sqnjYOZYeSBoZO
-   w==;
-X-CSE-ConnectionGUID: Pfvhf3ZlRvyFBZnRxbA5Zg==
-X-CSE-MsgGUID: y5KVO1I3RIeP7YemhVijgg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11964"; a="3247782"
-X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
-   d="scan'208";a="3247782"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2026 15:49:32 -0800
-X-CSE-ConnectionGUID: u6GHNGKtRReKeINebfksyg==
-X-CSE-MsgGUID: yItJD5dmQG6m6BtvGQiJ8w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
-   d="scan'208";a="8613663"
-Received: from jjgreens-desk24.amr.corp.intel.com (HELO [10.125.111.216]) ([10.125.111.216])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2026 15:49:30 -0800
-Message-ID: <bb459b23-0f26-4371-9228-9e69e061260d@intel.com>
-Date: Thu, 12 Nov 2026 16:49:28 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=AalXEhu8
+Received: by mail-ot1-f69.google.com with SMTP id 46e09a7af769-8615931306dso415764a34.0
+        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 15:57:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1794527823; x=1795132623; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ElwPfqXeirLqqsU4zQh4EAXIe0nkzZW28c2DWS+oP2I=;
+        b=AalXEhu85XLeavKUGJEoFPwFWjTcQjZ4Txj4QKRuORMa5u/JxvRMQDijHWuC6WR9YE
+         F9xZKhlT+ZIAWNJP0aTGXAb7cY1q3kKWVZPiHbsQKvBsF87tdzlzk/qE8PRoWbAOYN6d
+         66gw3T/dWo/17uwM+alpeXiaRku0KJH1HEaxl/AtYNIn4yEP7eLchrAoE0wigC655RWX
+         i468OPERQ3/LBnLJyKc1gTz58azBMlpqIJOH4w5kLGp2ifVgdstmNOYKm6X4LI3TWFm0
+         6GD8XDYITJMfvsjkIhu/GUAzMaBL5Dep5F2coVrBOBKyGX9eFQYOFkasyfqLOcpnljPE
+         AKTg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794527823; x=1795132623;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ElwPfqXeirLqqsU4zQh4EAXIe0nkzZW28c2DWS+oP2I=;
+        b=j9qdqfJ68WuteMR8BF4V5GTxLtI3/HN+eRD1nCpOvsxP80ec+rN1FPbtPcRlGtYnOE
+         RFCR9TGmxhJwZmH82iH5++8IXBVLtSeTQDHfiAZ9zODvd8mQTOZrZwqV8KPJEGcwCJ39
+         YKQ67okYyUKrDJ5XAB0pGgd3wpP8yhhvNcuaLLVfWiQq0Ny/I9F/Sg31XyT0mA0jBP+7
+         1rBp6/duQMGZl/Q5M0Q0fsgQ2CdOw5Bp0MIzhY3eurAs/dTcY84mAF/jCFy4XhKOKK4U
+         rig8kAqu7Qcq221j0tQzRRiWke38eYSWtfsy2QSZ3vSnnSMUOkoGK0RMGRq+I7vteMfD
+         I5jw==
+X-Forwarded-Encrypted: i=1; AL+hErHlSkDPt3Jjbc+ZoJ3aHjyfR+ALItEu6AnP2OkawnQN8Xa9nQPGxdSk/kO2R9KTAVH8ePnvPMh/0cE=@vger.kernel.org
+X-Gm-Message-State: APuU4Z81//GxbWPckyLfMqZDKobyAPt3M2FVS7pcYcGJRnmFCSITV/Ak
+	dOiaXr5mW4liOFcj3GIAw6Gc+A7Jer5o9J2LQfLNVm0Zk/PQX1ldFb5O/oN+LFWkPEqqLYTsHKw
+	D8T4UWEwnCsQXVA==
+X-Received: from iocot30-n2.prod.google.com ([2002:a05:6602:c29e:20b0:9ca:bccb:ca8a])
+ (user=skhawaja job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6808:181d:b0:564:3fe1:2fad with SMTP id 5614622812f47-56e645d54a4mr794959b6e.42.1794527823209;
+ Thu, 12 Nov 2026 15:57:03 -0800 (PST)
+Date: Thu, 12 Nov 2026 23:57:00 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -71,95 +75,120 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 08/19] cxl: Move cxl_rwsem into built-in code
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Ira Weiny <iweiny@kernel.org>, Jonathan Cameron <jic23@kernel.org>,
- Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Li Ming <ming.li@zohomail.com>, Joshua Machauer <machaujo@amazon.de>,
- Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261105185917.2667656-1-smadhavan@nvidia.com>
- <20261105185917.2667656-9-smadhavan@nvidia.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <20261105185917.2667656-9-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.611.g1030f0b940-goog
+Message-ID: <20261112235700.2029562-1-skhawaja@google.com>
+Subject: [PATCH] vfio/pci: Only lock the upstream bridge if the reset may need it
+From: Samiullah Khawaja <skhawaja@google.com>
+To: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kevin Tian <kevin.tian@intel.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Anthony Pighin <anthony.pighin@nokia.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Dan Williams <dan.j.williams@intel.com>, kvm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Samiullah Khawaja <skhawaja@google.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
+Commit 962ae6892d8b ("vfio/pci: Lock upstream bridge for
+vfio_pci_core_disable()") makes vfio_pci_core_disable() trylock the
+upstream bridge before resetting the device, and skips the reset if the
+trylock fails.
 
+All VFs of a PF have the same upstream bridge. Take a device with two
+VFs, both used by one process. When the process is killed, both VFs can
+be released at the same time. The first one takes the bridge lock and
+does its FLR, the second one fails the trylock and is never reset.
 
-On 11/5/26 11:59 AM, Srirangan Madhavan wrote:
-> Keep the region and DPA locks available to built-in CXL state management
-> when cxl_core is modular.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> Reviewed-by: Richard Cheng <icheng@nvidia.com>
+The bridge lock is only needed for a bus reset, which is done through
+the bridge. A VF is reset with FLR, and pci_parent_bus_reset() never
+resets the bus for it because the PF and the other VFs are on the same
+bus.
 
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Add pci_reset_needs_bridge_lock(), which returns true if any reset
+method enabled for the device is a bus reset, and only lock the bridge
+in vfio_pci_core_disable() when it does.
 
-> ---
->  drivers/cxl/core/Makefile    |  2 +-
->  drivers/cxl/core/hdm.c       |  5 -----
->  drivers/cxl/core/hdm_state.c | 15 +++++++++++++++
->  3 files changed, 16 insertions(+), 6 deletions(-)
->  create mode 100644 drivers/cxl/core/hdm_state.c
-> 
-> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
-> index 6703c1729396..9971efb237fb 100644
-> --- a/drivers/cxl/core/Makefile
-> +++ b/drivers/cxl/core/Makefile
-> @@ -1,6 +1,6 @@
->  # SPDX-License-Identifier: GPL-2.0
->  obj-$(CONFIG_CXL_BUS) += cxl_core.o
-> -obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o
-> +obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o hdm_state.o
->  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
->  
->  ccflags-y += -I$(srctree)/drivers/cxl
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index 5b5f5f22ea32..85f9abf58a42 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -17,11 +17,6 @@
->   * for enumerating these registers and capabilities.
->   */
->  
-> -struct cxl_rwsem cxl_rwsem = {
-> -	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
-> -	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
-> -};
-> -
->  static int add_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld)
->  {
->  	int rc;
-> diff --git a/drivers/cxl/core/hdm_state.c b/drivers/cxl/core/hdm_state.c
-> new file mode 100644
-> index 000000000000..c9cc019902ef
-> --- /dev/null
-> +++ b/drivers/cxl/core/hdm_state.c
-> @@ -0,0 +1,15 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
-> +#include <linux/export.h>
-> +#include <linux/rwsem.h>
-> +
-> +#include <cxl/hdm.h>
-> +
-> +#include "cxl.h"
-> +#include "core.h"
-> +
-> +struct cxl_rwsem cxl_rwsem = {
-> +	.region = __RWSEM_INITIALIZER(cxl_rwsem.region),
-> +	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
-> +};
-> +EXPORT_SYMBOL_FOR_MODULES(cxl_rwsem, "cxl_core");
+Fixes: 962ae6892d8b ("vfio/pci: Lock upstream bridge for vfio_pci_core_disable()")
+Cc: stable@vger.kernel.org
+Signed-off-by: Samiullah Khawaja <skhawaja@google.com>
+---
+Tested in QEMU with an igb PF behind a PCIe root port, bound to vfio-pci
+with two VFs. Both VFs are opened through VFIO and then closed from two
+threads at the same time, counting FLRs with a kprobe on pcie_flr().
+Without this patch one VF missed its FLR in 50 of 50 rounds, with it
+both VFs were reset in every round. I will send a VFIO selftest for this
+separately.
+---
+ drivers/pci/pci.c                | 28 ++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_core.c |  3 ++-
+ include/linux/pci.h              |  1 +
+ 3 files changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7c6f2aba8144..c44e4d4d8774 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5256,6 +5256,34 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+ 
++/**
++ * pci_reset_needs_bridge_lock - check whether a reset of @dev may need the
++ * upstream bridge to be locked
++ * @dev: PCI device to check
++ *
++ * A bus reset of @dev is done through its upstream bridge, so the caller must
++ * hold the bridge lock. The other reset methods only access @dev itself.
++ *
++ * Return: true if any of the reset methods enabled for @dev is a bus reset.
++ */
++bool pci_reset_needs_bridge_lock(struct pci_dev *dev)
++{
++	int i, m;
++
++	for (i = 0; i < PCI_NUM_RESET_METHODS; i++) {
++		m = dev->reset_methods[i];
++		if (!m)
++			break;
++
++		if (pci_reset_fn_methods[m].reset_fn == pci_reset_bus_function ||
++		    pci_reset_fn_methods[m].reset_fn == cxl_reset_bus_function)
++			return true;
++	}
++
++	return false;
++}
++EXPORT_SYMBOL_GPL(pci_reset_needs_bridge_lock);
++
+ /**
+  * pci_init_reset_methods - check whether device can be safely reset
+  * and store supported reset mechanisms.
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index fcbb2da860e2..ba3dfdadae39 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -777,7 +777,8 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+ 	 * overwrite the previously restored configuration information.
+ 	 */
+ 	if (vdev->reset_works) {
+-		bridge = pci_upstream_bridge(pdev);
++		bridge = pci_reset_needs_bridge_lock(pdev) ?
++			 pci_upstream_bridge(pdev) : NULL;
+ 		if (bridge && !pci_dev_trylock(bridge))
+ 			goto out_restore_state;
+ 		if (pci_dev_trylock(pdev)) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aa3765a20a96..cb2856f444ca 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1486,6 +1486,7 @@ void pcie_print_link_status(struct pci_dev *dev);
+ int pcie_reset_flr(struct pci_dev *dev, bool probe);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
++bool pci_reset_needs_bridge_lock(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+ int pci_reset_function_locked(struct pci_dev *dev);
+ int pci_try_reset_function(struct pci_dev *dev);
+
+base-commit: 7475ea8b58616b33c04afb976cf0fbaad9dd63fb
+-- 
+2.56.0.611.g1030f0b940-goog
 
