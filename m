@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794443366;
-	b=fEsgj3xLYfUWIlUxo+RvBImGHVswJlpY5Z50bvcASnXDW4vAUC/bPBTPIm3LfuHRRmAu
-	 vmaVmSf/BU8VYfIrQj0ScRo7IJiunK4RyEgdp5847rYDGfhw1lmp3fiMzk5u8pwSJ1GsE
-	 fXdqbBzBF133Wq3kwLhm5yKGVdD3LJ3P2FfDCFieaK70ZG3artimN8bQrNCeVH1lT8npn
-	 Y7E0q1Zfo/anTBDO5YnXrJ+kB1M8qxLBgKKTjZh1E6z+pAhcPNZeoqsvQmZu6OKnMhYJR
-	 DkgQT6RWFvAAm+nGDCNxJPRXMbcyQq2D2KNNMj7JVnrkmbee0yEu93/E43HrhKax7HA==
+	t=1794443448;
+	b=D7vz8m8cnRbGH7ilnyILXIvCMVxzsXc8p+iFmL3STUYwzEySQx5wL1QY+xtzeIABlxIa
+	 WKeueC+Ih2U101SgT37QQ2sfTFS4+NMUjcJM0n++p8IL92vBx6uEoeVgqalXyQgVA63HJ
+	 E2oxHP8+5/Pkh1qs/aU6XwhB4h2wHhi2OSSMdioch62L88DdjkLq5VHgyKxPYAna6bYYg
+	 Qb1lcITfrRBs5n6zV1O1XiLQvVoPRjNB+c8hGS6yyGnIFOg1ZesGRb2fw8MZhhMNCk2bY
+	 Dq5rCcaedal3cei/m0HDQjhnxc8LXSzFOo/6z3o0Bm6Yfjo4bUWwL8/E+covKWb9bCQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794443366;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794443448;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=0dHfdUeU5kkJAnQ1FS8FGfBenR6jk9I/2EW0oqMLXzA=;
-	b=W5OkoY/8cMUFG5l+81Ywjl18djHf0GSb6xjA6BjyprKUjigu6Uf52dIkpSoReHKltosm
-	 zYSicKJ3Wmh7xRRI04avCYCqIuSFM7Tq1tQX2CP+2o9px2bijN1KgM+7Vx+q9/mRlJQL8
-	 r3O7dq5DaTr9rUhnbmhZTT/zCwxB8prI3ItzuATswP4V6nWvXwnSoxC+prgEk6bGBfrNW
-	 O5aBJOGq1bnZa2wVDHVABZdhMMoTkyK0I5ITNUaO/faWmurTJYuRTzbdnpRLnqSFMj/RP
-	 7/eSU6WVfkCyHF2YljVFYHTp7RlyH2AblF9jSsEspqMHU6eKV7Szjv1inIyZx3EiUpQ==
+	bh=t+NGV2AAyfYSQ77/p3qf2VWaZ4ota4JzwmDv/Clw/rg=;
+	b=LTxQCgQzbhUNyut55B1XMYjuJ+c+2c0NDJ2fCXkHD/grBy+x9jWJ10AwDsGzxMZCAfWT
+	 T0qdpklmbaQsWaaIM3BaMJ2gycXLYiP78mjWh/dar0FGiEkV9aFXtUOea1JPixEpTVN51
+	 /NITKwfj8RPf1hTZpJ0e5YwstsvC3kaxSgO444rOaLjUGUgTzdKWDWQdIgGHuWXtJDzv0
+	 kNDLXZKr3S4MnNBHMLM1ioHe3EJ1l4Zt7GkWn8aZAczjPjvBZN5dbK/Ej5EcDI4E9B2sY
+	 kNVYbXvu9K0hCjvBCLf6OST7p4UFKKmK6uBMzgie1aZkMq+bTOch1FTtXW+L0n5jUOQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QbCnYHr+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ksM7GvsI;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B30DA606A31C
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 00:29:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E279606A321
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 00:30:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QbCnYHr+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29BF91F00A05;
-	Thu, 12 Nov 2026 00:29:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ksM7GvsI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A51051F00A05;
+	Thu, 12 Nov 2026 00:30:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794443366;
-	bh=0dHfdUeU5kkJAnQ1FS8FGfBenR6jk9I/2EW0oqMLXzA=;
+	s=k20260515; t=1794443447;
+	bh=t+NGV2AAyfYSQ77/p3qf2VWaZ4ota4JzwmDv/Clw/rg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QbCnYHr+BTJ7psH3NxXRKL9W5f/BxVJ6GD4srTs2qT9mzLoBM7GsQ836IDuu3wt7b
-	 w2lD5tVC2YMa7dNKJR6y7JWEGllkodZSQ9FEpqSMU5sILLy1Ylm5PrnWJPnUmlCG07
-	 ITn/JIpFBR8KFVZ/W6gPsV7roq4nrI0UdHxr60CG2dpRrafMkNeE8cW1KPBxxjQQQ8
-	 pKtRDGbxFMHu3Mn4wa3RS3tgOrt4VJRi6hRU20i7yQw8d4VUdr166weq5dyV4KtGQk
-	 ohdmTcg72mTFMIJuHS0xAMvS2kwWm1n9BIaYs3ZRuwPBDiU4ANVjBxUYJvpyRGB0sv
-	 G0Y/2dy4nBngw==
-Message-ID: <sashiko-outbox-209920@kernel.org>
+	b=ksM7GvsIPRE45G0xb2k2ZNCxmibVbZB4gzmPDOwSxSJP2BXalPL5yy8o9Rslw99Ae
+	 IQM13FlJE8qJBBkqIIGGLBMAmCMQR8VDOGih7OBHz0xvkGbHMuMYyqV+6eqdTs8B27
+	 tBenLjH9CNNSW8Gh2V9EYahcrCHIdLzU0114RGeTTY92OCMFcy6AQoc+5NAg05748s
+	 +n1XO7Szr0+X2jyaXQJPDyXPXxkQnrA6Epf+0iEYj/3zjUwV7d3lhs1Q+5cGgDje4w
+	 FzW+Ajcjo7X5J7Tk/PIuntUHCYPVROiVb+BPiJRjk1VZkgsoRvyNE2hv86Xp8XhOCK
+	 /q3sSNGu8sfPQ==
+Message-ID: <sashiko-outbox-209923@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 6/7] tpm: Include <asm/cpu_device_id.h> unconditionally
+Subject: Re: [PATCH 7/7] crypto: ccp - Drop unused <asm/cpu_device_id.h>
+ include
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pavel Popov" <pavel.e.popov@intel.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261111234821.4814-7-pavel.e.popov@intel.com>
+In-Reply-To: <20261111234821.4814-8-pavel.e.popov@intel.com>
 References: <20261111234821.4814-1-pavel.e.popov@intel.com>
- <20261111234821.4814-7-pavel.e.popov@intel.com>
+ <20261111234821.4814-8-pavel.e.popov@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 00:29:25 +0000
+Date: Thu, 12 Nov 2026 00:30:46 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,8 +61,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> <asm/cpu_device_id.h> now has a generic version, so the #ifdef
-> CONFIG_X86 around the include is no longer needed.
+> Nothing in ccp-dev.c uses <asm/cpu_device_id.h>; the CPU match table
+> it was included for is long gone. Drop the include and the #ifdef
+> CONFIG_X86 around it.
 >=20
 > Signed-off-by: Pavel Popov <pavel.e.popov@intel.com>
 
@@ -69,5 +71,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111234821.4814=
--1-pavel.e.popov@intel.com?part=3D6
+-1-pavel.e.popov@intel.com?part=3D7
 
