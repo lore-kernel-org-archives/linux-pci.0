@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.200.68
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.68
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794482087;
-	b=kdChEefOSM6IZStXzQov2boMgx09CQa2W5kVzKWIbk0T7jpqi04G1RsdpW6JXjUZ27ks
-	 3CoJFA3JslsA0BAT3jyA3J3lAjUgm4tQesMukRorei+QKgSgrpiunGDAoAnVHejo5hMgH
-	 cQcspmcaxkclCvbWMskgLGPQQ+FOzewpbxt7Y9W+rf2b8fOStaQyVyNCyHj65NlFb1kKT
-	 9L3teg5i98QfHmzkuqB/nSA2gNpE7PAuxWVow4zrj+Cpp0Hj+smiyNoxAQ9WE3FRpQqeb
-	 KuOtXGjxebICd3qDV1ioh0UMPbw9Bl02r/F550e39Yho64yCdkQSChR6PmSCuohmuBQ==
+	t=1794483734;
+	b=rQyEzQ21klsovX+fuCaM7EZgum3LP7iU9BQh4XhdNOJxIeXlxqfT9EA3UHbOqjmq344e
+	 hVa+hbXSc9SuBrNwxWJvR8i9X/v7xDQPlRZDui0P6+iILJt6IsBsXzmFzhhu46MNCTrGa
+	 Vj/oaq7tAFmVBUR8qGhtyKZTpstvasLV1qW9um9Xri8RZxHePqC3nasPXniZYyS44lesp
+	 4vwDtodYkIri1dD9SBnzzhsT+4rtTnYovvlwLK1B5uiRdPjyOsj8sE2VN+9roVhi7YAY3
+	 WgJAP/gp8YRLfXe9KD2I+TUcBDAEsgbEKo7rrcJO3l8+MSAlG9suCTeVuTPQ2RWrG/w==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794482087;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794483734;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
 	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
@@ -24,58 +24,58 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=fIN5eRiK/uQwMsbCgu3VuKnu+Rj+wC0ixDxfqMueLaI=;
-	b=Ut1nYMiep4tdk2LAEHMj6J+w5SGOxFVf1Cn+H8TR12u6eH2n/wPyFO/A/+9PZrdb8bsg
-	 4j3W4quY0aPE33QuNB5UaNGeu1en5fargFG+iKeJwdTAXsFIZeFzTxfwCzRsf1TvWmK/R
-	 1+X9cuI3n6PvV2PUnHAfTE21oBJh66BXt0ElHya/QV5a0ul3gezxFBy+ys2oaXfRX4//I
-	 vy41p9TQTctXh9xoHCLrnOQw6ghuXkt45qqbRgPLunTJ2IakjlhupHHlZX7NzNVO3aslg
-	 GZnA5ApWDWyfhLtvN1ALCyxJQSqmb3Win6OZcMLQ+41m1heXiJf5Zy6TZvaPkL3TYug==
+	bh=ObbK7DcFrrnAFnco2vakl0ICKmRsOJ2xnMm3XbyFtu8=;
+	b=X85AICCupnNpbGpufLaBC2sOks6o7TQk+bkpaFqFhL1OPwNbOlpIxHMyajzagdgYwWXJ
+	 oBa4TPHvMqMkhS3gZirzcfGF4XTq/L47RLijszvXRMxmNJ20UC3kTfg88HWY6rb9uVOqe
+	 AcNxsx8SSgovObIpCRsEz4h4kZjHAgWnprVCRlOQrg0mCi7BTekoL99YXPeqZ5yXfQnA6
+	 FFruPuH1ikR9OYE34l59uQXuxTtAPSDTyMlxFPHY3VzRoOxM3Nhns4pQfNxx6Wl0/94u0
+	 OF7A/UyVMIJzdStVdtM/HPuR4C63tY6tPoYH50sbYBRW38SMy0PhSmAw4etKl1Bq7AA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=xw7ekuAU;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.200.68
-Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012068.outbound.protection.outlook.com [40.107.200.68])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=hLaIA1zg;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.68
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010068.outbound.protection.outlook.com [52.101.56.68])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73546606A332;
-	Thu, 12 Nov 2026 11:14:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 73546606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47C3B606A321;
+	Thu, 12 Nov 2026 11:42:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47C3B606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=xw7ekuAU
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=hLaIA1zg
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=U7hBqeM5M2aTNoF1b1EmQOGBR1Wpm29RXLiDeerDHXJeLL9AWBM8RjijyCP4LZ3JPsgAJST3Te5d8khcsHY7R2B7vDnxTlATAlBHGC2tMg81Olv+y+6V8f3FPZZXkcO7zFAwDZfF7RexKtFvlb4F3u0DMSY0R1ism7Xj+lKX2S2kjTJE5GaOZfQnzjIPBxa9B9meEzJ+iuFfnjzJzfwClEjGuFNE9jUtmBYgbh3cEWC2nEUZPbVsSv5cr+D+ZEBnuzslOTRyU42jqefvl1Ime4b3zrBnGw+DSnZ32p20g3PIUVweW8zwjNbpKUWXHkc/2U3zQOvmhZsVgXVVrTwhXw==
+ b=ccY6wZv//LbvkfQdr8urKe2Z02sBiqKKxrczeMtmuGrdWCTH+e7EDh5wNQIJz8ibUtnsmvPxM+iEhV+AwzEndfzfKft88ZCtvaLryHigeRKRoBIBbeTq/JVKsPpQ3yU2/X6RoOFtdc9SCrTPOjW+8wnk56nHpdKu2aisWh4CwtvGgaqnDdFk1wC1OuOIE1e8yAiPdw249dGtDpzPYvlicRBzJqwtXWo6p4b8jQlo/emnI2xDzBO5Yncj/lrjs+7+/guvPFrCPoSs/UrSxKzdrXBhk4HO1wMYm13oTu5kl00sOIiA8rB/2CHkzDPFVGeD+ibdOLMPz4qJplzG0XydTA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fIN5eRiK/uQwMsbCgu3VuKnu+Rj+wC0ixDxfqMueLaI=;
- b=wK95E+utOKqCoypCBFFTESLG4y0PyzBYXfSiT32mU6kX6zYVE5asok70SVaMVl0QfTdAdFhoVkQPFve6IZFIq1tz1x8HW2zFZrJmyJNFJNaUdsiN2m8NNN+0stuaFqVEAEVD0geyOcfXMJmBQxts+utGt8JeJeTd36guFjXg7Fs0HPIngxjodhSjcMV89SosALTO0Q3ikdqrXHW/TCOqctCq1cpOZX8PisVBabo7P3lZCYkobxdLZNlnJcZUZLayzPNzE+4KGYAzPZzlrCRSIaA4J0ayjhogA9j5t1kioRR9ULDCOMGaeOVQFhxaEJuiF4FZn9pqotP0Z9XgPuhj1g==
+ bh=ObbK7DcFrrnAFnco2vakl0ICKmRsOJ2xnMm3XbyFtu8=;
+ b=xuEog6Hy4hPRORKYTXfLxw83/Szrhtmo3IrmJjzLTNIeSIj5rPgTvNQ0fpGDrg9xf4zipGgp8RsW2FrfxTndnbaw7cBgXsf6iJetP4jnxgzKBJnGcchv+2BD3L+dOW1mauFNl6CX7JZM46I8uy1lJls+MGUSYrk16ZyzCPD/zJ9vrLmdS0iUs6oMSyhQaKL0/ulrwh1D1eNureN5oJLhKJVQZ43MTeorFNZ1KjqAlS2H1o0gQZt1B2+7vj9kinrO/LC8T999S7p+QMDDWWZWq0QBukwCA4aqM6DHePmPeSgAO9FvEt3cR8ZwlVrx16aajMMyjvn7WlRG/1zrCdkonw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fIN5eRiK/uQwMsbCgu3VuKnu+Rj+wC0ixDxfqMueLaI=;
- b=xw7ekuAUeW34VH67m3gt5k6wz42XBeERV8arFwPNl21fqpO8FgUjcdQBFLHAExr4EMQ1WczLNgkxe1YwJTj4ywsMzaO0ya7duj2OTmPPeh0wkHS1Yyz+ZGsRIeZL5TxrLaZ3+pd9CNTvXiyYb023e2OT9i9F34VtoBBBRG/BF2I=
+ bh=ObbK7DcFrrnAFnco2vakl0ICKmRsOJ2xnMm3XbyFtu8=;
+ b=hLaIA1zgSV8hhq45Oiid3aTRLmOq6iwkwoW5DssktSLy2ig6XSHgIeD5xpiRE0R0GyPJ9aR4UhaYCzxpFLjWOCKn+aaUx0b/RxcI4LspJZYvnrvAy8BTxtYGW5QyxhGobd//rgQEnp8i39D/g+8yNQFk436sVT656Fuzp4qhAdc=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=amd.com;
 Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10) by IA0PR12MB7601.namprd12.prod.outlook.com
- (2603:10b6:208:43b::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.10; Thu, 12 Nov
- 2026 11:14:41 +0000
+ (2603:10b6:806:4db::10) by PH7PR12MB7354.namprd12.prod.outlook.com
+ (2603:10b6:510:20d::13) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.8; Thu, 12 Nov
+ 2026 11:42:08 +0000
 Received: from SA1PR12MB999228.namprd12.prod.outlook.com
  ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
  ([fe80::4dba:119e:8e7c:37b3%6]) with mapi id 15.21.0615.007; Thu, 12 Nov 2026
- 11:14:41 +0000
-Message-ID: <9eb572d7-fa3a-4734-9773-44a3fb465b6a@amd.com>
-Date: Thu, 12 Nov 2026 22:14:31 +1100
+ 11:42:08 +0000
+Message-ID: <9773f2fa-f80a-449c-9e9e-722d1c71f989@amd.com>
+Date: Thu, 12 Nov 2026 22:41:53 +1100
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 02/15] virt: coco: tsm: Remove the device from lookup
- before PCI teardown
+Subject: Re: [PATCH v8 03/15] virt: coco: tsm: Complete PCI registration
+ before publishing the device
 To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>, iommu@lists.linux.dev
 Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
  Catalin Marinas <catalin.marinas@arm.com>,
@@ -96,14 +96,14 @@ Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
  linux-tegra@vger.kernel.org
 References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
- <20261104161632.3547423-3-aneesh.kumar@kernel.org>
+ <20261104161632.3547423-4-aneesh.kumar@kernel.org>
 From: Alexey Kardashevskiy <aik@amd.com>
 Content-Language: en-US
-In-Reply-To: <20261104161632.3547423-3-aneesh.kumar@kernel.org>
+In-Reply-To: <20261104161632.3547423-4-aneesh.kumar@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY5P300CA0057.AUSP300.PROD.OUTLOOK.COM
- (2603:10c6:10:1fe::7) To SA1PR12MB999228.namprd12.prod.outlook.com
+X-ClientProxiedBy: SY5P300CA0040.AUSP300.PROD.OUTLOOK.COM
+ (2603:10c6:10:1fd::7) To SA1PR12MB999228.namprd12.prod.outlook.com
  (2603:10b6:806:4db::10)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -115,156 +115,180 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|IA0PR12MB7601:EE_
-X-MS-Office365-Filtering-Correlation-Id: e147d1bb-4c4a-4c76-ea3b-08df40ae25a0
+X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|PH7PR12MB7354:EE_
+X-MS-Office365-Filtering-Correlation-Id: 26426111-8848-43a7-5764-08df40b1fb7e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|376014|366016|1800799024|10067099003|4143699003|11063799006|56012099006|261022105027099003|261028144727099003|261026121527099003|261026140227099003|261021123027099003|261021121427099003|261102130727099003|261102123227099003|261009223027099003|22082099003|18002099003;
+	BCL:0;ARA:13230040|7416014|376014|23010399003|366016|1800799024|261102130727099003|56012099006|261026140227099003|11063799006|261022105027099003|4143699003|261021123027099003|261022075727099003|261026121527099003|261021121427099003|261028144727099003|261102123227099003|261009223027099003|10067099003|18002099003|22082099003|3023799007;
 X-Microsoft-Antispam-Message-Info:
-	mNXGq2KMZc7as7THM31BnJhXTFmMqfYBkIu5CW+6XrWsgLuq8SGG41bp41nxHRamZoHHQCEkkksU0AWEIjxWld/SeDZEqHFMxTIdUqVrHLolTmGJEJSiHdnN+sTsguUiF4afPxKLqvQoLAquJ6lqMHI8A4XR2/EtEfuZjMZn3Oes9GUJZGj8dkmVHj1NRcU9UsV4/tpyqjCRgJIISnr4zVy4Tkrw5kuV67f2zlKVKPwZgMTqVG+Tu/iLAPY7noEONkfjNtc34OxuMUP7q2IxqKISIquAP3SzPQjmq+R9RruZgTqiqZE2p02kfSxq2ytmzwzhwAfe2jMTEjC1jnwijnjD6+4rWr0BLy9tyzlezz8gvYqEpAXZ3nqb8Bhone5o+fDateqUTtTupRQiQCr+/V/cSsy66QZRm1S6fOP4cI/3I+pGYlKFJ4NqTDxYbeus2h4Y5ASqE7ujlY+7/Gyt64jBSBgWVHnwjPS2gvFj0mbJvWwNOAZHdiTeXfMQiiLM93TUPD7slMoEVLN/vIFHLmUR67UB+pw9WAAEHrQ4M34ShE3EjOjJIsQEygvncHvU8AJu1fWXatdmhyufYKcdWSZXKjF8jEMrBz7VOTEpH/M40AuWXmcMCo/3+bgBbcSMaJS8vyZSo/LOyIGu8u6762mj7cKudmHgrGIwKil7Izo=
+	Tbkl2SSsl7WbbVJ4IkVDO4TqTHv9INGV7lpnanfIkrhKu0MRgg6+xQqcshmeR4KwJDeSuB6bpf4AVdnP9vB9ahdPidyTu/YvkeondRioIRRHvPmQfZTOYKAgtoq+BIsVO2NO6mMooiSwu1kczmdTCM7E5INSt9GzdTwB22/AEPyicj1hvcCy/GfyKXKc99oemJ3S/fRE6F9lnqjGdXM6AERdrwJdK3JzPk8mjB9oa4c3w6jwkhEiMVNn+jQPLfWiUV0f5pGdBwZU6iMuR8CnJqOFb+Bzz/BL8exXmejxYFpQDOcMXxjhwV4fg9IFxAGynpS8B8SQS1nDJiCMC51WpXg1FA9F8FprQWTs/2blzGIz/fn1u7EIpUXAUM5D2AXy6CpWGW3a7Ovmx24uuixJgGursGQoxKOqRAw4NsLZtKCVZuwDojvzLoUkgceKOjyAcPhxQ/jwRXxplJeeK93kdxQ97pjBMwSuthPJvLIY5B94DPaaRpMcnBaGek4fcFiweHoZ74YWWbpl9G8QS+C12Dgd5uwwCEvfpyez/HKUKrCEeEAzPjqms7VB45awvG7cC04TPrbmkH+TH09SK/aegblh6FLLRD3C+oI9VOrOdSwbjiI7uVuzgwpbLc/pZMWIzjsSuEgdzgcgy/X9CiqMpS8OX5yoRP3HeHPrI3ETiGc=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(376014)(366016)(1800799024)(10067099003)(4143699003)(11063799006)(56012099006)(261022105027099003)(261028144727099003)(261026121527099003)(261026140227099003)(261021123027099003)(261021121427099003)(261102130727099003)(261102123227099003)(261009223027099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(366016)(1800799024)(261102130727099003)(56012099006)(261026140227099003)(11063799006)(261022105027099003)(4143699003)(261021123027099003)(261022075727099003)(261026121527099003)(261021121427099003)(261028144727099003)(261102123227099003)(261009223027099003)(10067099003)(18002099003)(22082099003)(3023799007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cFhrVUU1TE5YL0NtRWpnSXNKSkd6c3ZHR1VaUjR0ZGw0MzdNMkkySzY4d0Z5?=
- =?utf-8?B?Vy9NZkR0N2hDQldlM09DdVgrRUg0THZJYXcyUVhLL2dpSko1bHJLSkMzd3Q3?=
- =?utf-8?B?WDdPU21CODBKN3ZMdXB1S1BHQjBBZ3ljZGRTaXRmNGJkaHl2OW9wV3haS21D?=
- =?utf-8?B?Zm1VbTk4M1QrQWt2NlJLdmdGbU1wWnJMaUwyVEE5NUJuai9Dc1l5VVpvQWk0?=
- =?utf-8?B?RTRpRlZDUTkxcWt2cFdsV1Izelg1VnEwL3FKS3MvdlVMdXFRQi9lN0tvYWdD?=
- =?utf-8?B?Q3doZ3NIalg5WlBycm9aL0VnejZvdFZPMFdTc3dHWTNMWXlVT2dFczVlQlRh?=
- =?utf-8?B?d0F4a1JaZ3VYZzF0ejhoblF6S3RhYVpadnpiY05vRE5HcDJZaGxidXM3amcw?=
- =?utf-8?B?dHY2NDNza1dWRTBuTWEzaUxSdm9ETXViSU1YbWFjVjBtRjBtTkd5Nnc1OVJn?=
- =?utf-8?B?clpURHZyNUJaMkNlRzNkSWYwY01iNXZWaE1HdmJ3Y1F2L1BJT0xNMGU0ckU2?=
- =?utf-8?B?cDZoS1RuNC82MityTmpHcFRUWVpxN2xKRkVLM3VlRHYvYmpkWW1KYWtRMkhL?=
- =?utf-8?B?ZkF0V01LTjRTL2pyOFhwK21kQXVUVFZ2UVZONHppUStwYm5Ic092Vk5sZHA5?=
- =?utf-8?B?S2F3UTAxcS9sTWVJbEZPcEk1azAyakhuT3JpcGdkWUg1T0RFYnAreksxZHpw?=
- =?utf-8?B?cVRHNS9FTVRkVzV1d0pCZHVidzlZMlZTT3RVa0ZjblB3UHAvQXBuQi8yRitN?=
- =?utf-8?B?SnVNVWcxTnlueVdzN3VjbU1HYlN6VHBkdEZXWW1zUyt6KzZCeXp6SFBNeWVz?=
- =?utf-8?B?T0FHMkJnRW1EVnlxSGtNdGtEeSt3cEUwV0d3UFdFcDZEU1k3QWowT1pLVE5S?=
- =?utf-8?B?SG9odzc2ejNrTWxkOVZJcGFFUitWTitZUHhSUExlT2J3Z09zVGVlcTR6Rnp4?=
- =?utf-8?B?NFVKYUMzclZhNWxtRGNudlFiNUdDUWkwdDczcjlsZU1sUlRYMWY3TjZMd1V5?=
- =?utf-8?B?R1dlTFE3VlB4N1FSdDVkeWNHbkJVaGxzUHZJNXA1RFRFOHMyOXhCclA2SHhI?=
- =?utf-8?B?cmdLUDlTU1h2c2RIR1R4eklNWDhmM3l5TndVYWw4RjFhSDJ4UjVuT3U1T0VP?=
- =?utf-8?B?bDBjei9HbGxla1BSeHZKNWNLNTZBWE1McXpOUC9PQWpuTmhXd3FxbStuMVNy?=
- =?utf-8?B?OXVzUC82dVFwOU9ERUJOcnVVZ0pLdDQrdlVseEZmaThPZExNcnM2OWV1QUZT?=
- =?utf-8?B?YW1LOWlWMHY4aEF2bE1rb3JZeVlzdzduaGt6alVZQi9NbjgwVmRkRzZ1ZGdk?=
- =?utf-8?B?UzdvZzhxQmNISUlqTzNvVU9DVFVZOXlBbEZRMHZmSlp6cWhaMTkvZzhtZDV1?=
- =?utf-8?B?dkhhUURZQTF5VkRlOHR0SERxYVhEQnJRVkNVQUQ4L2lrcEZyeUZYcWJYdnZh?=
- =?utf-8?B?ZWJWMkJ5K3llSzZ5Y1hkVzNXdk1nQURheUdmc256MUYwb3R0WWd1aTVIbFVU?=
- =?utf-8?B?cldJZWlONGFEWStpMXZweXF5S3NzQmc4VWlhR2JuLzRFcmRWd1RxNWxqSGpZ?=
- =?utf-8?B?cURYMzJWcDlTdnRNclpCRVhQbWNnUVpqdHQ2ZzJ1YXFwOUp6cC84YmoxNm5C?=
- =?utf-8?B?ZTg5STdQWkloNmZKMWt2QzJjR3F5bHNVcW92MGtER1M3bUUwWks3djk2S2da?=
- =?utf-8?B?QUFuTFpnUU5hajhWUzR3TlJoNitTbUthbnRkNURIUElSdVF6K1FMK2Rod3Vl?=
- =?utf-8?B?cWhHRWtHRDNLWi9qak02RnJTYmk0bkkrSXNXMlZlKzFYRjBIQTRYUzVPaXJI?=
- =?utf-8?B?d2QzODY3dUFGODFaU21NaEpwcmk2ZEp2ZjNnTVRMTGZBcXR0MW1CUjZvOTFi?=
- =?utf-8?B?MysxdFNBdWNwd0o1ZFZkdllQbWRCTlBnOC9qbEpGMWdKZVhDdmk2enlkYTFP?=
- =?utf-8?B?MjNDZVdBUWYxMEg4Sy9PZnMveWtvQ1RDa2RVUlE3WG9Rd0lFbzVuMUIrUjBE?=
- =?utf-8?B?SGVhUnF2WEk5a2R1MHNqZThFaHdKKzZmQS9nWUtKeWZMUG53UGExNnJ2U3Yy?=
- =?utf-8?B?dmhITnZrWXlQbEJFZDROS2gzeW5WUDBFcytDb0lLQ0ZnZlllVGd5NndIMFNW?=
- =?utf-8?B?RGZFZWlMU3lYeGdaa0hMSWZQMk9SUEp0V3l2clBaYXlnMldDUzllUWl2eTJ4?=
- =?utf-8?B?SDZYcS84MVdqNTZocG1ibnRLbXYycXJSTXRPRFdIVUdnQ3c0dnhjRzJFUVdK?=
- =?utf-8?B?RGp5R3M2eXRCRTJlM1o2WWhkWkNUMWdHcGtmQndwekUyUlNTUlRDdTZycVVy?=
- =?utf-8?Q?svsp56JUtRJyDM2rDd?=
+	=?utf-8?B?MWVBZG04M0JLWmxKaWE2a0JLOEEzbDE0eEduLzBYZUdXRmc2RTBuRGdpZlMz?=
+ =?utf-8?B?Y2JZNFlCWmZ6aU5hUUhXVVcrUitSRUllejNxMkZDZzVXSkRVT3ZwRE12NXdr?=
+ =?utf-8?B?b3lUb3kxOWdnMS9KVERpRzdZdnl5Q09FUkF6S1VnNjZjM1FKbEZyYzBBdE9L?=
+ =?utf-8?B?N1g2YTNSQVJzWGZ6Q1lVTGNGUEpCS2tqTUFzWDc5RFErNUdML3o1dGtUVWpM?=
+ =?utf-8?B?cnNTODBmcDcxb3hqL29jeWhSNzJuZUN5YkhEK1V0Y2tPT21LQUMzbm9PRzVP?=
+ =?utf-8?B?Q013T01HVUZ0eGg4VS9xcmc4cXpxbWdnbUNwZ1o5cnlUQ0s5TTBIWTFTWVBI?=
+ =?utf-8?B?cG1QRi91Nzg1ZVQwSFhJdTJ1MTB3TFFBSFZUb3J0R0lnVGdneFRueUJyR3hJ?=
+ =?utf-8?B?bVlMOEthSWpuTmY3Y2dlMTVYMXBuY1dycjFmRytSMEcyRXJyL1ZYVVZKMHlU?=
+ =?utf-8?B?VzMrNHBsWWxWMHlQeW9NZ1U4N0hQSGNxTk8vTTZLR0xHYnNQcEtkaG04MVZU?=
+ =?utf-8?B?NUVkQXQxcnVwb0xZOVFWMkdyODVzVHFzMzhMdFVKTEVWR1h5VmZwVmpaVjFC?=
+ =?utf-8?B?d0ZCZmhJRVo4ck9mTlc4bU9uMVYyc21EMXRRdWxQMGZ0cjQrZFJwaVhodkdj?=
+ =?utf-8?B?Wis2TXQvVVZHdzZBNEU0TzNNZ3IzOTFQNis0T1Z6WE1Ob2QvazhCWW5TWkxN?=
+ =?utf-8?B?NTZ4bjIrenNyanFXejF0ZHVQSmJDdkZmNDkvQmVUWmdrV3dLTEI0aUlBd2R6?=
+ =?utf-8?B?Q1ZEOFFDbjBZU01FdUY5dVBMZTFsRVF4Q25EYmNrN0ZYemFINk1saEJSSzU3?=
+ =?utf-8?B?NGFGcTBVbVNYUHEvUFZSV2dKbWtwU2M4TGRPcjV1TDViQlU5VzBrTTF4WlB5?=
+ =?utf-8?B?eWZJMjNTdHp0dFJoMUp5MUdXbEdETEpHbmIrK3BWSmtXYkd0allpZnJWeG5Z?=
+ =?utf-8?B?WnVvR1BZNGp6dmhQNktBa1poR3VlRy9xbWozRGpBTXMrMXpLcEcvdTMxWUtF?=
+ =?utf-8?B?bzhBVXFsWjFibEZXNXhYMHJtUWV5cjlPNlJ5Q0hEWnRQeWR1MVcyMmV0V3Z5?=
+ =?utf-8?B?Z3VSaEtRMzRvV0R4c0Z4VC93SVVBM04zZldYRk1ZR0w5eWJDYkIvWm8xWVlS?=
+ =?utf-8?B?UDJMYkU5UGNML2NUcVpPMDdPYm5rU2lwNmZCZGtzd0N6S1kzUU10UUJWK0lz?=
+ =?utf-8?B?K2E1Wm1sWkpxL0JtRmpXQTFXeW5mS042MVAycVZSRFF6Wk10cGhjMDFPVWVO?=
+ =?utf-8?B?dXpFUlBhZmJFbWF0NEVhQm1jRTdnekppWk4yLzBEUlZlbFp3ZFNqUUZHMVV1?=
+ =?utf-8?B?bktmSVBzK3BZRDl1QjV5SDJjSUhNRGJ5T1p2bVRFOUtldDVDWFhKakFxeG1V?=
+ =?utf-8?B?V2huQWxkSklUQVJnc2lXOWphOHNCVzAvbW95UXNHWG9GQXE0TDJKSDRPTWVN?=
+ =?utf-8?B?cmQ5TWdqUVJmcGQ3SHJtWDY3bUFuTll2TG5zUW9PeGtpbHg3dldUdStGVTh0?=
+ =?utf-8?B?NGZZYkNEdU45c200U28vWnFCWk1RbFF6MHNiajMyWHVvY1J2VXEzenRZcEhq?=
+ =?utf-8?B?aFk3VUxxSDhaelprbFVaTlVwZkNYd0F1UmZJYWwrakFXOXpyeXpFRWhCcEsy?=
+ =?utf-8?B?bXY1Zm0rZk0zVWhicTBJUGFNYmtsdjBzM3NlMFkzQmNXbE40cDh1TCtvaFJE?=
+ =?utf-8?B?VUU3bUlud2IzekRiLzJhYzdBeVU2NGE1Qk9iQVc3UjVEY1RIK1FVZmhNbm9u?=
+ =?utf-8?B?ZGpJcFBucWxrd3JuZlF0S1FBeDBvYWNuUkJyRHlsUjRYcnFpdXBrMktUSmF1?=
+ =?utf-8?B?YUhPemwxK1lkOHRLSHMrMm0yelVpdldtK253N3lHcW0vdVlIOVVCaWxqRmRP?=
+ =?utf-8?B?aVRzUFdCVkllZDNsTmhGUlRlYXMzbGs3SHo4UE1ZeG9pK0JvRGxpYkc1b0h1?=
+ =?utf-8?B?ZWhhN1pSb01ML1huOFhFeXZBdm45RnRsNFZvU0tkQ2d5MWhjbjFINXRGMDlS?=
+ =?utf-8?B?N1pyNXdCSkMwNFoyWGlzNURnQjNkcmRDdUpoelR5NkpOMzFyaFVGOVo3aEF0?=
+ =?utf-8?B?elY4bFU2WjQydzFPQ2FrZit6OSthbmRCeUFjRmkxOUIxZjFiTzRRbzdRTzZt?=
+ =?utf-8?B?WjNjaGFEWGJTWFR2NkhHQmZwNzVmS0FGNHNMdWZybFlEalovT2o2MEZFNEJx?=
+ =?utf-8?B?Y29wdkV2c1F2aUhnVnRTUTR1aXJBa3A1MDlGcmNOZ1EvSGkrdjRVaS9SRVNI?=
+ =?utf-8?B?OUZ5eFU0TVU1ZXdmSTZWbUMrcTFvYUFHbFpTZzlnWDIzNmEvcmNETWk2ckx5?=
+ =?utf-8?Q?wVFew2E8XEki2E+87Z?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e147d1bb-4c4a-4c76-ea3b-08df40ae25a0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 26426111-8848-43a7-5764-08df40b1fb7e
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2026 11:14:41.0774
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2026 11:42:08.3515
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1OE2d+KuUC+k+8peSIaknhR0dPi0NiDA8P/m3T07YF1289tJQKey3gaZPTogDJpUsIuXEd9kDGuxg+p7qG/blg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB7601
+X-MS-Exchange-CrossTenant-UserPrincipalName: m+WB17RtA/cDYQJgs2QMApQ5fOcYRVGmE5VFC027kBT8ldtEUcJ8qf0iIIc58Bl2tLDzgzPcmvuVFdoGQF2bRw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB7354
 
 On 5/11/26 03:16, Aneesh Kumar K.V (Arm) wrote:
-> PCI connect looks up a TSM by ID under pci_tsm_rwsem. Previously,
-> tsm_unregister() released that lock after tearing down PCI state while
-> the TSM was still in the class lookup. 
-
-tsm_unregister() is not touching that lock, what do I miss?
-
-> A racing connect could then
-> attach a new PCI context that the teardown would never see.
+> tsm_register() calls device_add() before initializing and validating the
+> PCI operations. This makes the new TSM discoverable through the class
+> lookup while PCI registration can still fail. This ordering was introduced
+> by commit 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link
+> Encryption").
 > 
-> Remove the device from the class lookup first, then take the PCI write
-> lock to drain in-flight operations and destroy their contexts. Drop the
-> device reference only after PCI teardown completes.
+> An existing link TSM can keep the PCI connect attribute visible during
+> registration of another TSM. A concurrent write naming the new TSM can
+> therefore reach it through:
+> 
+>    connect_store()
+>      find_tsm_dev()
+>        class_find_device()
+>      is_link_tsm()
+>      pci_tsm_connect()
+> 
+> If the new backend supplies both link and device security operations,
+> pci_tsm_register() rejects it before taking pci_tsm_rwsem. The registration
+> thread then follows:
+> 
+>    tsm_register()
+>      tsm_register_pci()
+>        pci_tsm_register() -> -EINVAL
+>        tsm_dev->pci_ops = NULL
+>      device_del()
+>      put_tsm_dev() [cleanup guard]
+> 
+> If connect has already attached a PCI context, its temporary device
+> reference does not protect the stored tsm_dev pointer after the call
+> returns. Registration cleanup can then free a TSM still referenced by
+> that context. The original tsm_register_pci_or_reset() error path also
+> had this problem: device_unregister() removed the class device and dropped
+> its reference without tearing down an attached PCI context.
+> 
+> Commit 37a73b0448ad ("tsm: Remove the device from lookup before PCI
+> teardown") subsequently added the unlocked pci_ops reset shown above.
+> That reset can also race with the connect path's accesses to pci_ops.
+> 
+> Complete PCI registration before device_add() publishes the class device.
+> On PCI registration failure, the TSM remains undiscoverable. If
+> device_add() fails instead, unregister the PCI operations to roll back
+> the counters and PCI sysfs visibility before releasing the device.
+> 
+> With pci_ops initialized before device_add(), the class PCI attributes
+> are created with the correct visibility, so remove the subsequent sysfs
+> group update. Keep the PCI change notification after successful device
+> publication.
 > 
 > Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
 > Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 > ---
->   drivers/virt/coco/tsm-core.c | 22 ++++++++++++++--------
->   1 file changed, 14 insertions(+), 8 deletions(-)
+>   drivers/virt/coco/tsm-core.c | 16 ++++++++++------
+>   1 file changed, 10 insertions(+), 6 deletions(-)
 > 
 > diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
-> index e784993353d8..f79135986102 100644
+> index f79135986102..e370806d8436 100644
 > --- a/drivers/virt/coco/tsm-core.c
 > +++ b/drivers/virt/coco/tsm-core.c
-> @@ -56,26 +56,25 @@ static struct tsm_dev *alloc_tsm_dev(struct device *parent)
->   	return no_free_ptr(tsm_dev);
->   }
->   
-> -static struct tsm_dev *tsm_register_pci_or_reset(struct tsm_dev *tsm_dev,
-> -						 struct pci_tsm_ops *pci_ops)
-> +static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops)
-
-Why changing a pointer to an int here as later tsm_register() converts it back to a pointer?
-
-And I never understood what is _reset for here (so +1 for that) but now we have tsm_register_pci() and pci_tsm_register() which is weird. May be just open code it? Thanks,
-
-
->   {
->   	int rc;
->   
->   	if (!pci_ops)
-> -		return tsm_dev;
-> +		return 0;
->   
->   	tsm_dev->pci_ops = pci_ops;
->   	rc = pci_tsm_register(tsm_dev);
->   	if (rc) {
-> +		tsm_dev->pci_ops = NULL;
->   		dev_err(tsm_dev->dev.parent,
+> @@ -71,9 +71,6 @@ static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops
 >   			"PCI/TSM registration failure: %d\n", rc);
-> -		device_unregister(&tsm_dev->dev);
-> -		return ERR_PTR(rc);
-> +		return rc;
+>   		return rc;
 >   	}
->   
->   	/* Notify TSM userspace that PCI/TSM operations are now possible */
->   	kobject_uevent(&tsm_dev->dev.kobj, KOBJ_CHANGE);
-> -	return tsm_dev;
-> +	return 0;
+> -
+> -	/* Notify TSM userspace that PCI/TSM operations are now possible */
+> -	kobject_uevent(&tsm_dev->dev.kobj, KOBJ_CHANGE);
+>   	return 0;
 >   }
 >   
->   struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
-> @@ -96,15 +95,22 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
+> @@ -91,15 +88,22 @@ struct tsm_dev *tsm_register(struct device *parent, struct pci_tsm_ops *pci_ops)
 >   	if (rc)
 >   		return ERR_PTR(rc);
 >   
-> -	return tsm_register_pci_or_reset(no_free_ptr(tsm_dev), pci_ops);
+> -	rc = device_add(dev);
+> +	/* Complete PCI registration before exposing the TSM to class lookup. */
 > +	rc = tsm_register_pci(tsm_dev, pci_ops);
-> +	if (rc) {
-> +		device_del(dev);
-> +		return ERR_PTR(rc);
-> +	}
-> +	return no_free_ptr(tsm_dev);
+
+I'd move the !pci_ops check from tsm_register_pci() here, to match the pci_tsm_unregister() below. Or just open code it.
+
+>   	if (rc)
+>   		return ERR_PTR(rc);
+>   
+> -	rc = tsm_register_pci(tsm_dev, pci_ops);
+
+ah that's why a pointer became an int...
+
+
+> +	rc = device_add(dev);
+>   	if (rc) {
+> -		device_del(dev);
+> +		if (pci_ops)
+> +			pci_tsm_unregister(tsm_dev);
+>   		return ERR_PTR(rc);
+>   	}
+> +
+> +	/* Notify TSM userspace that PCI/TSM operations are now possible. */
+> +	if (pci_ops)
+> +		kobject_uevent(&dev->kobj, KOBJ_CHANGE);
+
+Why do we do this only when pci_ops!=NULL? Also, why do we even allow pci_ops==NULL?
+[a minute later] ah 04/15 does just that. Make it first in the series so following patches get simpler?
+
+01..04 can go first really.
+
+Thanks,
+
+
+> +
+>   	return no_free_ptr(tsm_dev);
 >   }
 >   EXPORT_SYMBOL_GPL(tsm_register);
->   
->   void tsm_unregister(struct tsm_dev *tsm_dev)
->   {
-> +	/* Remove the class lookup first. */
-> +	device_del(&tsm_dev->dev);
->   	if (tsm_dev->pci_ops)
->   		pci_tsm_unregister(tsm_dev);
-> -	device_unregister(&tsm_dev->dev);
-> +	put_device(&tsm_dev->dev);
->   }
->   EXPORT_SYMBOL_GPL(tsm_unregister);
->   
 
 -- 
 Alexey
