@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794445281;
-	b=s+J26yQbIW0qSrC6fIRDL94EDZYa+aPLqZroDkPEoQGN2F+oWRr2HqJfUs4sYmOSRWxz
-	 JYhS+nHhJljCnaTMoYJ0NNqah0ipCbEjwPRcm7Rxhl/yBLGWNQjhi6AycN94T3Z5RvrTG
-	 fWW62cIcEAJWgyLuQUXStPBkQHsuGYpz/Fj7wXQoFty5eVJmaGbyWErwFbRNM0A70AxIw
-	 6G6CrqhmT703ezcxh8fn+a3PFLSqpi4PNDQ1qrytQGweeCHpUr4fMAvlyJWIh7c9qEurm
-	 cCbIXkYAU1fRIR3AD7P4KJp2zV/ecTzB138ZdNwfZXujMzM5QSTE7J9uypYv54ISePQ==
+	t=1794445288;
+	b=RxqK8apGnahE2te03azJ9EmRsWSQ1YYDRn92dacp7JTGV16NvImcdYfShZcSO1JiIHZE
+	 Re0BwubBg8uA1DeHe2dSdAXYPoypd6km3A3E9JlnPBeWTJiLlMFo6HweEdc8/65qwkrX0
+	 lYh7HpQrxMqLYAj65JBZ5WhPNqmPPtkpDr6EY4vNTYpGlRhRbI4kaH7E8sfx72EvosAXJ
+	 PPw9HJQUB2RPWWsjTqiaVKYJhRgxu3cOMUhiz1kC/Q8K7F6KN8frVILOqBSZH/rWbBZC/
+	 FCmgvRRkp2urLGBzoZSyV8u4NKN9tTRTj5P6i8JdqIa8iN03gjE51MYA0962xQQxn1A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794445281;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794445288;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=MIIb6rSboRyfg+V2+jSvUyNcoy8Ms/pJKveT9QZ2nA0=;
-	b=AZ8e7cFByQTksZCvRRYTqLVLtRC+jxWRR7835cmUtYaW0uALbrAhjwA7udVdu9jAEPVp
-	 cpx6uqNk83UVbebT9VkqJ6zgEQqAWbaHS0rmYBbgeEPDyDZJjtwOWRrjABTGx73l3j3NZ
-	 ZS7fZxFIoxwPMUUIE0WogrgmtHN+CS873L9Y7vI7Bro+Xt+7e7rSvXeeJ6VFmK64rN+ft
-	 e1TMiFdVxBCV+jzW2Xw9yIcutUERFRKmMgTjpv/CAWGgFUcuc9F0Ssyz/2QGuw7UqsLCR
-	 Wdfc/IikdkImDWWFJ2SnY72Fq2SHzVc7N3f2t53lblaGlpLHZCWAqtRZe1ZrN44lx1w==
+	bh=bGSJmNS+bV5BZ5dQzsylM1FMlmoLtHBr401LFqMYU/k=;
+	b=dI8jSS5fK332PuY5qjbyGzitz3KBeFU4sg0WTTW2fNgNIwHCOwTHuiROR7cInOXRpuzh
+	 sIrSPhB5yoJVjeEOYunGKqkGE+0eW6C+28IVjJ21NvB5zTNCZEHwe/omPq2BEyD8Ac8wB
+	 Pf25QkSS5y4MDpfgTKRXzvfiu76V9T2ZocwnkmPW1B3PQTTEbntN/7zSLVA9sgIt5IgGB
+	 8+U2aBKDxZVCg/8cmkY/xGs4Cbp2ARbcmKNifxEPyUrTJYzgNsTwyIHk2/cgempKk+MdT
+	 tf1iNogNKyvjXBACgPoLDtQ2d+ch0k6tmyY0OSTglqneGTteAAHV7tDbhKCtgZtwg3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mS6zvT3o;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XE1Kzosb;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B60606A883;
-	Thu, 12 Nov 2026 01:01:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 023BE606A33D;
+	Thu, 12 Nov 2026 01:01:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mS6zvT3o
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B1511F00A06;
-	Thu, 12 Nov 2026 01:01:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XE1Kzosb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6BC61F00A07;
+	Thu, 12 Nov 2026 01:01:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794445281;
-	bh=MIIb6rSboRyfg+V2+jSvUyNcoy8Ms/pJKveT9QZ2nA0=;
+	s=k20260515; t=1794445287;
+	bh=bGSJmNS+bV5BZ5dQzsylM1FMlmoLtHBr401LFqMYU/k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mS6zvT3ofJ9MOfaJf8DmsaK2RKNUJpGBwGRtbwsZa7eHrlSECzUPRkVzb65q/8sIX
-	 3LBWGOxHCd+KpnDwMt9E9yfihON+4XGBoeHTZ2fvUzqth28CzZvHjQnqnyU5jAU/wt
-	 FwrdbkXXtzgUldMK6Kja8aqyGSIAbEYQhLjfFA6l0TIDU6zAG1LHvtLf9TZru177PA
-	 cGLel5v3vpMYk3H1bUkTigIQHHysZt2uSSgajhe8t4vB58deYQ3Vi62C3ds1uRmqMH
-	 nKIaxFTbxQmqDQIHu4/rFgebrV8gMmp5dliSTi3h7jVv2AJvgD4ZqHxi155cQa5f6U
-	 EhfgKSv0bTo5Q==
+	b=XE1KzosbxRy+KM/8Ia5MOKGfki9gDjwtkNSu71wooL5AQKARIjX63JMX7ORMm/9h/
+	 2DxUlCHNtk+VNS9Qumsjv6cmPVKT3v5tas6TOTkt8usYqlEaCDYzJJAc09rBr9ceHo
+	 4WsYm9z3szCiOeHqJ6kj8MpA34nrT+cctut9ebFysqtj3G6HTvNxwlJb0Dxt0knIcb
+	 qD8tZ/pWFFIIFFB9R9R/r5tAt7uyRHmlYwfB/WsREi6SWD8Qm138/n8uHenYo6Ci7K
+	 9NjZnLE8+Qp9axdZHlU5UzEwkLS3fQQuV7TfE9RRafvM/vK8lJ/ldVL4halameviV2
+	 993CQiNhvh5Ig==
 From: Danilo Krummrich <dakr@kernel.org>
 To: gregkh@linuxfoundation.org,
 	rafael@kernel.org,
@@ -69,9 +69,9 @@ Cc: driver-core@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-usb@vger.kernel.org
-Subject: [PATCH 2/7] rust: platform: remove the unbind() callback
-Date: Thu, 12 Nov 2026 01:52:56 +0100
-Message-ID: <20261112005455.1224352-3-dakr@kernel.org>
+Subject: [PATCH 3/7] rust: auxiliary: remove the unbind() callback
+Date: Thu, 12 Nov 2026 01:52:57 +0100
+Message-ID: <20261112005455.1224352-4-dakr@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261112005455.1224352-1-dakr@kernel.org>
 References: <20261112005455.1224352-1-dakr@kernel.org>
@@ -91,50 +91,49 @@ device resources and a Device<Bound> reference for the duration of the
 binding. Both remain accessible from the destructor, so a separate
 unbind() callback is no longer needed.
 
-Remove platform::Driver::unbind() and the adapter's remove callback and
+Remove auxiliary::Driver::unbind() and the adapter's remove callback and
 document that device teardown belongs in Drop or PinnedDrop.
 
 Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 ---
- rust/kernel/platform.rs         | 34 ++++-----------------------------
- samples/rust/rust_i2c_client.rs | 12 ++++++------
- 2 files changed, 10 insertions(+), 36 deletions(-)
+ rust/kernel/auxiliary.rs | 34 ++++------------------------------
+ 1 file changed, 4 insertions(+), 30 deletions(-)
 
-diff --git a/rust/kernel/platform.rs b/rust/kernel/platform.rs
-index f49aedcc94b1..09dabd6022b6 100644
---- a/rust/kernel/platform.rs
-+++ b/rust/kernel/platform.rs
-@@ -75,7 +75,6 @@ unsafe fn register(
+diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
+index 9d3de109b381..d4618c92181f 100644
+--- a/rust/kernel/auxiliary.rs
++++ b/rust/kernel/auxiliary.rs
+@@ -64,7 +64,6 @@ unsafe fn register(
          unsafe {
-             (*pdrv.get()).driver.name = name.as_char_ptr();
-             (*pdrv.get()).probe = Some(Self::probe_callback);
--            (*pdrv.get()).remove = Some(Self::remove_callback);
-             (*pdrv.get()).driver.of_match_table = of_table;
-             (*pdrv.get()).driver.acpi_match_table = acpi_table;
+             (*adrv.get()).name = name.as_char_ptr();
+             (*adrv.get()).probe = Some(Self::probe_callback);
+-            (*adrv.get()).remove = Some(Self::remove_callback);
+             (*adrv.get()).id_table = T::ID_TABLE.as_ptr();
          }
-@@ -109,21 +108,6 @@ extern "C" fn probe_callback(pdev: *mut bindings::platform_device) -> kernel::ff
+ 
+@@ -105,21 +104,6 @@ extern "C" fn probe_callback(
              Ok(0)
          })
      }
 -
--    extern "C" fn remove_callback(pdev: *mut bindings::platform_device) {
--        // SAFETY: The platform bus only ever calls the remove callback with a valid pointer to a
--        // `struct platform_device`.
+-    extern "C" fn remove_callback(adev: *mut bindings::auxiliary_device) {
+-        // SAFETY: The auxiliary bus only ever calls the probe callback with a valid pointer to a
+-        // `struct auxiliary_device`.
 -        //
--        // INVARIANT: `pdev` is valid for the duration of `remove_callback()`.
--        let pdev = unsafe { &*pdev.cast::<Device<device::CoreInternal<'_>>>() };
+-        // INVARIANT: `adev` is valid for the duration of `remove_callback()`.
+-        let adev = unsafe { &*adev.cast::<Device<device::CoreInternal<'_>>>() };
 -
 -        // SAFETY: `remove_callback` is only ever called after a successful call to
 -        // `probe_callback`, hence it's guaranteed that `Device::set_drvdata()` has been called
 -        // and stored a `Pin<KBox<T::Data<'_>>>`.
--        let data = unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>>() };
+-        let data = unsafe { adev.as_ref().drvdata_borrow::<T::Data<'_>>() };
 -
--        T::unbind(pdev, data);
+-        T::unbind(adev, data);
 -    }
  }
  
- impl<T: Driver> driver::Adapter for Adapter<T> {
-@@ -214,6 +198,10 @@ pub trait Driver {
+ /// Declares a kernel module that exposes a single auxiliary driver.
+@@ -205,6 +189,10 @@ pub trait Driver {
      type IdInfo: 'static;
  
      /// The type of the driver's bus device private data.
@@ -144,13 +143,13 @@ index f49aedcc94b1..09dabd6022b6 100644
 +    /// [`Device<device::Bound>`] reference for use during teardown.
      type Data<'bound>: Send + 'bound;
  
-     /// The table of OF device ids supported by the driver.
-@@ -230,20 +218,6 @@ fn probe<'bound>(
+     /// The table of device ids supported by the driver.
+@@ -217,20 +205,6 @@ fn probe<'bound>(
          dev: &'bound Device<device::Core<'_>>,
-         id_info: Option<&'bound Self::IdInfo>,
+         id_info: &'bound Self::IdInfo,
      ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound;
 -
--    /// Platform driver unbind.
+-    /// Auxiliary driver unbind.
 -    ///
 -    /// Called when a [`Device`] is unbound from its bound [`Driver`]. Implementing this callback
 -    /// is optional.
@@ -165,39 +164,7 @@ index f49aedcc94b1..09dabd6022b6 100644
 -    }
  }
  
- /// The platform device representation.
-diff --git a/samples/rust/rust_i2c_client.rs b/samples/rust/rust_i2c_client.rs
-index c8a23875ef5b..e25492612f9c 100644
---- a/samples/rust/rust_i2c_client.rs
-+++ b/samples/rust/rust_i2c_client.rs
-@@ -78,7 +78,7 @@
-     sync::aref::ARef, //
- };
- 
--#[pin_data]
-+#[pin_data(PinnedDrop)]
- struct SampleDriver {
-     parent_dev: ARef<platform::Device>,
-     #[pin]
-@@ -127,13 +127,13 @@ fn probe<'bound>(
-             }
-         })
-     }
-+}
- 
--    fn unbind<'bound>(
--        pdev: &'bound platform::Device<device::Core<'_>>,
--        _this: Pin<&Self::Data<'bound>>,
--    ) {
-+#[pinned_drop]
-+impl PinnedDrop for SampleDriver {
-+    fn drop(self: Pin<&mut Self>) {
-         dev_info!(
--            pdev.as_ref(),
-+            self.parent_dev,
-             "Unbind Rust I2C Client registration sample.\n"
-         );
-     }
+ /// The auxiliary device representation.
 -- 
 2.56.0
 
