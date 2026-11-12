@@ -1,61 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794518908;
-	b=n3Up/TcKgTSJ0nX8j6DCJKenJdhuXAgaMiUyR7PNS/8Y+ix1Q3iH+tHnENbKhM0oGkvc
-	 zgpdLcyEEEz2vPcJRST+c0hi+ilEwdGarSK06jyCLNO3qNT7MWF/VnbnSFXKkrfnkGRb6
-	 3mP2eLBKZi4wY4lJUcMDzw5HCpEcdtZK6T5A/r82UsA3SxOEH8jLuyljV/M9t7uvRyuxZ
-	 1uWfhzg/QxPt+gslAR7z4ovnguiCCtoVuDoEV+4pwgfeMx2xocA5nFd1++93mZbIReFBa
-	 pwVKHvmlpU7RteZI6WJbpHZJTgtJ1N0MFFdBGn8W1TBiP/02kPKM7xeP39JHzUVYdRA==
+	t=1794519305;
+	b=C7dLBelEo1H7RRRktKnhrpYNwXq8oxctpnJyNXO+ryyQVlxjL1SSOqcbj8M4wiXGX5FJ
+	 v+0IN1ytwgHNl3s1lV9ZtgG3k5co3ZyXMA4AMU/llNqkLqWaTxjuY5tvCAtqlMUshgoFz
+	 05iz06zAUqUe+/oNMUrNhX9MCVCE4DQ2aXv4hPSPXWmFg3hMnRUe9jJWFldI0SHiVPHtk
+	 G4vaano4DkLbLs0D8kA6mwUBs9bNxDkj1FJT+UI4G+xB3iNvQl74H/CFPnYe3GfEMgkcD
+	 MGERu7g83vq6sMAtJC6z3KdUGneHcx49qA0u9LkjwPQF6zvITu43DHhw/dEkf9YVLvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794518908;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=h6Eo0XlcXWzNo/1A0p0/ThIiBGDgrSwqCITWPuHtixw=;
-	b=kfEP4cELcF0caC3Ea15C4UZaYVnuLbkDqDHSSJBG0hwDmXvXLbIKz1tK4vNxvVkxGjE5
-	 YLsPNkIgReNezohooBsNLjfibLlnYVU79BQdn9qpNHcqlg7ivxEvVjBH4fuympp2YHzMe
-	 r7E2WRtsChMSZu7QdO0SInsUrCUwCrPcYw3LFu4Bf5vMU/bJuhXWxhgZsijMlhBIuav6L
-	 Anw52G/z8Cwo9Po19RmubhPHcm5yotd2EjeUmMGY0+9lhhJnGqIbA7f87Y41vyQk9WQez
-	 NsKABdlul0lVeid9DuKFg1efUv+1L2hpd05HEgdqXapp/FpYzrM8FrYSBVaPj/7angA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794519305;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:
+	 Organization:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=BhcCDoIl9otRnW4ujBdyNoukGej6r/uzdNbV6Dh8hRc=;
+	b=c6BFtO2IvDSVc4TGMLIxn0L3COdbnvai7iNUBIzLy/6CH2OJbMb38BEX7iJxfRlr05/E
+	 Qgk6SuElKinqG+R3T696HSy/XW01dpoBpl5xi0a5Iw0DkEcGABzMDSCZ4NwTyrYE4S2QB
+	 bX3NTyNSv4+Gix7oBbRqN5INMZ81OgM9YBWibEBzPSwtxb+QKim33Y63sQ8c1cIbxmBQE
+	 TXPhpJPl2GpnOTnTDvp8Iknu3BwxkrfL3cbGSRzAqF1gJKT5prIqQnVeLm/raozPnbuuT
+	 xRb+Bsi9eFlVOMj2wo62zmMuXZ7RK2Dfx4An+GOWZMu7hkh2R1GzbrVHYeVtzydNLdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fiilfKCh;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=kXc7Y1nZ;
+	arc=none smtp.remote-ip=198.175.65.17
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C8AE606A31C;
-	Thu, 12 Nov 2026 21:28:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC3D606A321;
+	Thu, 12 Nov 2026 21:35:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4EC3D606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fiilfKCh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB9081F000C4;
-	Thu, 12 Nov 2026 21:28:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794518907;
-	bh=h6Eo0XlcXWzNo/1A0p0/ThIiBGDgrSwqCITWPuHtixw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=fiilfKChROavlxHT1KkCFLjLthg63yVRIg0vhy9Dr0ZR1LkXb3pdZM3wT5cu++9tB
-	 FN9R0SESt7jS6U7fcprTYEvbsyvmz/pTgcNzwDR5SNsCtWdhj2FMb+NaoiVS+I32WK
-	 bp8V9luAj0fhjw0ZvV2Dx4ksGq/IfVr69YsZMy7dDeJaxS9+X3cJE6c4qPXLqCJxb3
-	 LwQ5nhIo6idjJWYCZnWp13ZDgZpCjEEtAa3TMB2qMkBjLbXgZBzOvltK9kDQ3WIUqq
-	 nN66x83jRwgD93ogX39X6lqkoZxvEPLwxg7wDXHj02I2v5dOJaUgKVhax4d/QbH++9
-	 /NLizGn4uFeKA==
-Date: Thu, 12 Nov 2026 15:28:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Nathan Lynch <nathan.lynch@amd.com>
-Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=kXc7Y1nZ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794519304; x=1826055304;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qiPKcs32cIql2L4FKZiiE+381T/H6p7Ydei/f5AE/Xk=;
+  b=kXc7Y1nZakc4z6acqtuMcvVf6lPAD6UaTf1jv00vuJ820ElUNxVTJ7v3
+   qCXIygQKo6GCfbAFAL1TYnwK/rBPSHKuFhaFVFlSfjRJEPB44Cqz4OjnX
+   Pkuw3iwcmW1ldvbqhjR05l3L3ptVi2Dhn3n4wXq4YcNOvY8aHVX7KHjDc
+   uCx7ZRJlKcSw6S9JvsnL3j3ZbYBesWGzcHk42wHPAIELDE8VTYHc5mg7j
+   Hh0hK/nPqGmBYVVOSGVhpvpbFkgQ1gO8IL8JJAw1fUFEdNtK0rzlR4Fpb
+   0YmBKchY0W7IvjyliatlSvNUuppZ6dgMaTgNV7BvKCQHrbekPWSTXBf+7
+   A==;
+X-CSE-ConnectionGUID: USrtO+7WSb+9wuzokFUi7w==
+X-CSE-MsgGUID: bavmjwhsT7Ozu9u+/Ojdag==
+X-IronPort-AV: E=McAfee;i="6800,10657,11964"; a="3337894"
+X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
+   d="scan'208";a="3337894"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2026 13:35:04 -0800
+X-CSE-ConnectionGUID: RpXP1+IKRjCrp7G288nWEQ==
+X-CSE-MsgGUID: 7Z8WZBzRQqymuNkyk7JalA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
+   d="scan'208";a="9317428"
+Received: from zzombora-mobl1 (HELO kekkonen.fi.intel.com) ([10.245.244.107])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2026 13:34:59 -0800
+Received: from kekkonen.localdomain (localhost [IPv6:::1])
+	by kekkonen.fi.intel.com (Postfix) with SMTP id 153E5121B71;
+	Thu, 12 Nov 2026 23:34:59 +0200 (EET)
+Date: Thu, 12 Nov 2026 23:34:59 +0200
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo
+From: Sakari Ailus <sakari.ailus@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Jani Nikula <jani.nikula@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	David Rientjes <rientjes@google.com>, John.Kariuki@amd.com,
-	Jonathan Cameron <jic23@kernel.org>,
-	Kinsey Ho <kinseyho@google.com>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	PradeepVineshReddy.Kodamati@amd.com,
-	Shivank Garg <shivankg@amd.com>,
-	Stephen Bates <Stephen.Bates@amd.com>,
-	Tycho Andersen <tycho@kernel.org>, Wei Huang <wei.huang2@amd.com>,
-	Wei Xu <weixugc@google.com>, dmaengine@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 01/25] PCI: Add SNIA SDXI accelerator sub-class
-Message-ID: <20261112212826.GA907393@bhelgaas>
+	intel-gfx@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-staging@lists.linux.dev, linux-pci@vger.kernel.org,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Andy Shevchenko <andy@kernel.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v1 1/1] media: Consolidate AtomISP v2 PCI IDs in the
+ pci_ids.h
+Message-ID: <avYxAxh61Rv956SO@kekkonen.localdomain>
+References: <20261002094813.856439-1-andriy.shevchenko@linux.intel.com>
+ <asFuWAQUPxETWqDL@kekkonen.localdomain>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,50 +100,19 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261103-sdxi-base-v4-1-3668ccc7aab8@amd.com>
+In-Reply-To: <asFuWAQUPxETWqDL@kekkonen.localdomain>
 
-On Tue, Nov 03, 2026 at 08:49:42PM -0600, Nathan Lynch wrote:
-> Make the class code for SNIA Smart Data Accelerator Interface (SDXI)
-> functions available to both C and Rust code.
-> 
-> See PCI Code and ID Assignment spec r1.14, sec 1.19.
-> 
-> Co-developed-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
+Hi,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+On Sun, Oct 04, 2026 at 12:06:32AM +0300, Sakari Ailus wrote:
+> > Assuming that media subsystem is the main beneficiary I think it is the best
+> > to route it via that tree. For others (i915, PCI, PDx86), please Ack if you
+> > are agree.
 
-> ---
->  include/linux/pci_ids.h | 1 +
->  rust/kernel/pci/id.rs   | 1 +
->  2 files changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 030c86dd6d67..dcb26f52b5a1 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -154,6 +154,7 @@
->  
->  #define PCI_BASE_CLASS_ACCELERATOR	0x12
->  #define PCI_CLASS_ACCELERATOR_PROCESSING	0x1200
-> +#define PCI_CLASS_ACCELERATOR_SDXI		0x120100
->  
->  #define PCI_CLASS_OTHERS		0xff
->  
-> diff --git a/rust/kernel/pci/id.rs b/rust/kernel/pci/id.rs
-> index dbaf301666e7..d714e4b83852 100644
-> --- a/rust/kernel/pci/id.rs
-> +++ b/rust/kernel/pci/id.rs
-> @@ -292,6 +292,7 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
->      SP_OTHER                   = bindings::PCI_CLASS_SP_OTHER,                   // 0x118000
->  
->      ACCELERATOR_PROCESSING     = bindings::PCI_CLASS_ACCELERATOR_PROCESSING,     // 0x120000
-> +    ACCELERATOR_SDXI           = bindings::PCI_CLASS_ACCELERATOR_SDXI,           // 0x120100
->  
->      OTHERS                     = bindings::PCI_CLASS_OTHERS,                     // 0xff0000
->  }
-> 
-> -- 
-> 2.56.0
-> 
+Just checking -- are the respective maintainers fine with merging this via
+the media tree?
+
+-- 
+Regards,
+
+Sakari Ailus
