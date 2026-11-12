@@ -1,112 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794453752;
-	b=2neYxrQJEOPQ/fRvzY1vFdO3dCeS2cssClJrdBSC0ZRjQVGB5y4XL4JaegM9PSc2qMQz
-	 29nXExjT8A6TI5HifDUALdLwXVo4tfhN9cr/FFw3Nujxd9pPT1P6nSfrLAT/s+Gcq94+2
-	 NuEb7omNBo2rbsfVrmnMduNuJoYCjihTFSj7txGaz8QheauQfi4W1MLVvSlVs5Pyvrtp1
-	 XTyeeSSL6s+WbQ4wQ99rXGTaoCdDPG/7fe3/Tx2BKgYcSkcGlbYISvWU+/HN6NyUt27cu
-	 NxDkT2EAJSuAS8d3JAfp/mZf7CmpH7+DOMZMXcUBm5FjRn6QSH29bF5E/cbVb0WNC7A==
+	t=1794453821;
+	b=lVCI9xmZUDiCJOjNBLYWSYxS2ggNNzrIMh8jIJeOH24+cQOVyBFM4Uqp7iqrnE1mCag1
+	 uq6hHH1sSkYQQUzf7zmsKTwrHcp2pzZMSVaLlKi6rjEcR3bkiXpScKRgr4omkR6v3h8IT
+	 ivloQG+cXoNKW9sd7NmeFV+jVxxoFVX1UAFS79rivZGo86mMUzvQyO3Z308qtvLhRofHN
+	 i2JWPAe28O2J0BcSK8VZjNgWiJI7+zOPBZt2p1OeNA0POSZwxMFCkStQJ+yXJXTKZyo6L
+	 6vvLxN0QgCziSJiGU7zaK4rzzh+JFkbHCo/xrFQ/YW8PGp6zJZ0YJVcCqLVhGMkip6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794453752;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:
-	 X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=Nia/3Fejzq/8pwGFpOYXDtAfbAIiNtIbDIVtuujz/Q0=;
-	b=qHz1Bih9Ci0gvRUtt3VvAU/WghvBxxWcNAEmFze2ac6svdWyAfsOAdLEcwHbjLZRzi4l
-	 AnNCQMgJIohsbUDbeIdNNK0ywWWv9RBgFMmztObAtfTrDgEyAsLFvKjtzDraS9pFKi3w3
-	 9PhQLTJtJjierflP/GxkZdrundC5MxBoAqXLR9y/n1kdhttDpajlOSoem+zd1lTVqg6If
-	 enbxnL5KeUXncwZkHUjrQcjPBSm/BCASoagKPZHuVysR8568iDHZgFpT+d1en2CqQUsWT
-	 VJpP6AmuCdTHl7DkrfVMk5cOe4vD9dftCJKsyDJHTILF07fCe6TXID8Pq9cB5hVp5+A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794453821;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=t0gEVkJKvgwS09FwmWOtPlKUg1VPVvbrgPzuWRKhz+s=;
+	b=KHrulnPlfSrzHUwJYVXgVGUyfkPbZsSneNh9J5vS4UW/7lOX8XSwctmOgKmQg2ARW8mr
+	 04lLQE6JzC7MVQYjmwUYgDf2KE3A9mI8/QcqjSmVq2U9jKWI8ZaiDs+msboBaVPuSIQEL
+	 k/JbE3pT9X0Lfsb+WOFjPEgPz99TFTww0atCzF4mP9/H6SqbM11PO4dDLSmysQh/cAg0t
+	 hTsOsjAjRcAYN2TqeAtLu9inTGa/eOKbBnDx0WlBaPMA58+0dwn15JC8Zad2ktYphWhGx
+	 5OCN7MDB+O89sIkWB0nTfDL7CKMI55lYdp2xKSIb0p4af25lT1Z0opxQbqWE9Y0Or5A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=LOpIkJFk;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=hKJTmD8A;
-	arc=none smtp.remote-ip=205.220.168.131
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aYckdRAb;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20994606A32A
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 03:22:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20994606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10750606A31C
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 03:23:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=LOpIkJFk;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=hKJTmD8A
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AC2ZacM3158778
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 03:22:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Nia/3Fejzq/8pwGFpOYXDtAfbAIiNtIbDIVtuujz/Q0=; b=LOpIkJFk1qcw9dNR
-	IGn4sA5UCOtmAyOLiqsLJomBSihf4tRG/wVsCktehqAKlkuNZgtYphQhJjW6Y110
-	kTG5YWTTru2Y4kr1/8Qaz2fJNsQUA5m5Ka/oMwTdFZcaTTHwgtDbyWShJX3YM2kD
-	EmjFp/er0dKt0SxCLGtWua47LlVvaLI2blykILXXkO3UwS+VXzUWZRxAMyr0kUAL
-	D2ZraxIHHVBA5T54djHiEvNFaJ4a29MejhkgHnvgHbDKd2hHf1ktkpCFc9c1JW8w
-	HlSYTbk1ggYxW2ytlV2rCexQSaEEvjbUKJ7IAbCnqhsZMIW4j1I8fuadDWk7094Z
-	MUoEtQ==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hvk7pva6g-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 03:22:31 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2eaae8d29e0so49239995ad.2
-        for <linux-pci@vger.kernel.org>; Wed, 11 Nov 2026 19:22:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1794453751; x=1795058551; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Nia/3Fejzq/8pwGFpOYXDtAfbAIiNtIbDIVtuujz/Q0=;
-        b=hKJTmD8AodPUvHcOjitGgCh9MoQUuv7i4Kiftg+Dl1qtZatee4EQiQ3M2mNFxjbFL+
-         776wuU96k+YfpRD744QkPEcwxnAww5DAY1Lh2ePT/tjGZuX6SG2w1gYDnLr2s6nOqmyk
-         I0uMbmJkazlSFIuzLZBcKXGQfu3ltEGGOXJpTCpnQfrd2HLVdlAvHenPy95iOupO8Cmr
-         PBn74O6eWXePLV/vTXrEYnI17hJeke+8jI5sVReK0ujhZA1K+rqegR+XOiFlI2eQwar3
-         5DtdOoaxLS1534l9Y27q8m4kmb4+70tpKBz0VBi14oPWRXrpoT7VWJUksHzoCkTExHT4
-         rzmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794453751; x=1795058551;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Nia/3Fejzq/8pwGFpOYXDtAfbAIiNtIbDIVtuujz/Q0=;
-        b=UIuQ8i8U0Yq+d1YsY7DOmAuYbRlfQc4vvNaZnySyOxQ48sSYypnYk4WmDZ7MLVMVCF
-         Nz4yJtaX6IycP97CuMvRHdDbgdIEhxyW4J+/hHH7ZpOqOm6HEKn8SLyhiSZf2ghcBY9s
-         D9r0kQ8WdS6YlR7HB6df71aOrZRHlpwgRTzOF2rBfMwlRss60XAkAeSYNWfg0ad6Z21z
-         rFyB+8LYkvcefEkTRjblTzRGkqsZTUv0tWDVxfEa0SySDR9VqX03NbCxlSuzRJnxW8oZ
-         4BvwHb/pLPSmZgHMD2It56nhEZTXT9WqEXnuMZ5+G1v0qpw+zggwTTLG3MJ+S6i2GUdG
-         qJOg==
-X-Forwarded-Encrypted: i=1; AL+hErE14DMiz7BOrDQ+0QDW+ZyQA0VLVzJ5Jj2ZeVPN8XX3rADRbqv4o2j929fD5yrYzi44mktbnx3CY34=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+J0pj+TmXxvNp/Gyi68lXEJKfRs52WESkzRYkJjJ243wBhfxO0
-	UMEfT5mmTCIuVcapc8t4zXSXmXnp+Ri1ikrIeGjygJDZ2tiBA3OoYZGBNl/O3XSL8SGkDkxbXT9
-	bvp05fXBc0qIuTzhGec9cdD84pVWK1e1MXzrNdYKXvdCymDWmF33CqZVKRji/iiA=
-X-Gm-Gg: AYBFou3xArDkFfhAFJISnRfsLiWo5hRH+mc6j/NCvBqAIRqD+Zckd8Ezbk9eRrdfJpU
-	db/05vky8Q8D+dkdF0X39dIOTCJkriet9f/ZaxXIdATZiSikiKvnbZxmyetNGsm0ivbLK8amJTG
-	niDGAfkBPPO6wmIF4j/FRjPtyt+Ch8zF2+jlRqZJGq39Pb8R/hvD3X+73axVALgwQ9xXQfHjJVQ
-	ehxbamyZ6CylQL0edyeXDpZLMTm7NOGE8nyayYGh0Jwk2/chlG3Z/lDi7Xa3ouFSfuub2FvEQxJ
-	9sU40dweUc+JtvybaX2411kqJbJ4RXtS4EUejExCEHNEU1zOYVz2Edxce5HUF9arRid844RNswK
-	a8YK174ieg58ht3CeX61DK8LxTm7BpuHh5btgMDRM9nSB0WJ9WEQO1ZI7UCeRCazINeUgybqh/w
-	wz6q9GU9QPtAPeHh57jJS7SNwvYdRuvGJMSJUePPG9O5ezdw==
-X-Received: by 2002:a17:903:2ad0:b0:2e9:58c5:8c68 with SMTP id d9443c01a7336-2edd7acfcd0mr38208985ad.54.1794453750545;
-        Wed, 11 Nov 2026 19:22:30 -0800 (PST)
-X-Received: by 2002:a17:903:2ad0:b0:2e9:58c5:8c68 with SMTP id d9443c01a7336-2edd7acfcd0mr38208695ad.54.1794453750048;
-        Wed, 11 Nov 2026 19:22:30 -0800 (PST)
-Received: from [10.133.33.220] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2edb6dfb58dsm26134275ad.66.2026.11.11.19.22.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Nov 2026 19:22:29 -0800 (PST)
-Message-ID: <acd476e0-fb24-4f11-b917-c4e86f86171a@oss.qualcomm.com>
-Date: Thu, 12 Nov 2026 11:22:16 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aYckdRAb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74A0E1F00A05;
+	Thu, 12 Nov 2026 03:23:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794453820;
+	bh=t0gEVkJKvgwS09FwmWOtPlKUg1VPVvbrgPzuWRKhz+s=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=aYckdRAbmQ5gMIw2CsO65pt3LM4RDIoLfyoiTBQa61P24ejEWzcfP7mAYaEk2x5yw
+	 BoJI+ljgT8LJQHlfS0lWCy3xRITlF9s5ArnotOg0x7fQLL804blJ6VaUhX2A6PUDzQ
+	 SiF06APgiVMiIyKgU2/RUpFvRQgoTqS4e+F13S6C39tfcJTyJPMxqmW7rw4VKyrZ8H
+	 wsm/abz1U0XZYFoyFfMkNStg3sQnthx8+UvdggdZW+eLbmFj4+6ERrHUW+zh0AcLq7
+	 6YL5BTGzBcNh4l2Dhgdt1ORz62Xh2bsdIKWIGIhp9LWJXJCs2LnKN5o17iuBgGRyYw
+	 IeCmdv+WvYGjg==
+Message-ID: <sashiko-outbox-210261@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 2/2] PCI/AER: Use pci_clear/set_config_dword to
+ simplify code
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hans Zhang" <18255117159@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261112031921.1255661-3-18255117159@163.com>
+References: <20261112031921.1255661-1-18255117159@163.com>
+ <20261112031921.1255661-3-18255117159@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 12 Nov 2026 03:23:39 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -115,121 +60,15 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/7] cpufreq: ondemand: Include <asm/cpu_device_id.h>
- unconditionally
-To: Pavel Popov <pavel.e.popov@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin
- <tursulin@ursulin.net>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-        Hans de Goede <hansg@kernel.org>,
-        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Peter Huewe <peterhuewe@gmx.de>, Jarkko Sakkinen <jarkko@kernel.org>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Logan Gunthorpe <logang@deltatee.com>, Arnd Bergmann <arnd@arndb.de>,
-        Len Brown <lenb@kernel.org>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>, David Airlie <airlied@gmail.com>,
-        Simona Vetter <simona@ffwll.ch>,
-        "David S . Miller" <davem@davemloft.net>, x86@kernel.org,
-        linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org,
-        linux-integrity@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-References: <20261111234821.4814-1-pavel.e.popov@intel.com>
- <20261111234821.4814-5-pavel.e.popov@intel.com>
-Content-Language: en-US
-From: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-In-Reply-To: <20261111234821.4814-5-pavel.e.popov@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEyMDAxMyBTYWx0ZWRfX2qLjE3a9y7ej
- 5/WgjBBG7nZ3hT3Xr0ysXLqb3hZ9BQ2zhgO57BZeC9h6KbjiZRXVj3CaHFPcawIR2LsiCpiiA25
- HeVKBpgETGg79YuFonCzOQwcVUHCVds=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEyMDAxMyBTYWx0ZWRfX1AHuBP19UA9s
- raLKeWliPmbS4TPxTLhBWuteVsrwbVCuDz7/dv+TGkCYhQK3VA3u2i5p4XV7o0NmTKcdh7YBDPx
- FtgkJ11dnsqyGIBItpxaglmW0TxGs6s9nXf5CfHJH/7lll+DbxXbipjVP0iefgxLJV1khzZ7fnW
- M/DixciW1Tz/AGkffIh/JEbPHQ+TSR7FS//HxQx5A+GBV7Mz25hg86LsH6crF3/ugE2ANUaUa9Z
- 7K3HTjy0y3CLOalsVUoSiprQwyA0kfeeJ4sd3v8aO/XSiqgPkxEftAoEFuKYIT8MsprQW+vPaU/
- oqI2ZZ4u7jkGnW7hldMISNI+pFEtTAVyghq3AxriEtCetut5xFCdV7EBFD8XGuImtjTWadvicrQ
- OeGzlJUfjCOqCEs0AqqvNAKGKEQuWHVSpx6Xx2PuACsmM+tpBZBNzKfz7Of8nZy+kpu0sHqABk0
- G/neK9JoZhGa891r+Jw==
-X-Proofpoint-GUID: dih2yl_BORLZmVBvbKS189QTWT1cGtOb
-X-Proofpoint-ORIG-GUID: dih2yl_BORLZmVBvbKS189QTWT1cGtOb
-X-Authority-Analysis: v=2.4 cv=BpcIUoX5 c=1 sm=1 tr=0 ts=6af530f7 cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
- a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8 a=EUspDBNiAAAA:8 a=L27Nr_72VT4YvYD4_PkA:9
- a=QEXdDO2ut3YA:10 a=uG9DUKGECoFWVXl0Dc02:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-12_01,2026-11-11_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 clxscore=1015 spamscore=0 lowpriorityscore=0 adultscore=0
- priorityscore=1501 phishscore=0 malwarescore=0 suspectscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611120013
 
-On 11/12/2026 7:48 AM, Pavel Popov wrote:
-> <asm/cpu_device_id.h> now has a generic version, so the #ifdef
-> CONFIG_X86 around the include is no longer needed.
-> 
-> od_should_io_be_busy() still needs CONFIG_X86 for boot_cpu_data.
-> 
-> Signed-off-by: Pavel Popov <pavel.e.popov@intel.com>
-> ---
-> Depends on <asm-generic/cpu_device_id.h> from [1]; please apply after
-> it is in mainline.
+> Replace manual read-modify-write sequences in multiple functions with
+> pci_clear/set_config_dword helper to reduce code duplication.
+>=20
+> Signed-off-by: Hans Zhang <18255117159@163.com>
 
+Sashiko has reviewed this patch and found no issues.
 
-Yeah, this patch strictly depends on [1] (series patch 1/3) being in
-mainline first; otherwise non-x86 builds break.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112031921.1255=
+661-1-18255117159@163.com?part=3D2
 
-Reviewed-by: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-
-> 
-> [1] https://lore.kernel.org/r/20261111234439.4098-1-pavel.e.popov@intel.com
-> 
->   drivers/cpufreq/cpufreq_ondemand.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/cpufreq/cpufreq_ondemand.h b/drivers/cpufreq/cpufreq_ondemand.h
-> index 2ca8f1aaf2e..0e33865f9d3 100644
-> --- a/drivers/cpufreq/cpufreq_ondemand.h
-> +++ b/drivers/cpufreq/cpufreq_ondemand.h
-> @@ -6,6 +6,8 @@
->    * Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->    */
->   
-> +#include <asm/cpu_device_id.h>
-> +
->   #include "cpufreq_governor.h"
->   
->   struct od_policy_dbs_info {
-> @@ -26,8 +28,6 @@ struct od_dbs_tuners {
->   };
->   
->   #ifdef CONFIG_X86
-> -#include <asm/cpu_device_id.h>
-> -
->   /*
->    * Not all CPUs want IO time to be accounted as busy; this depends on
->    * how efficient idling at a higher frequency/voltage is.
-
-
--- 
-Thx and BRs,
-Zhongqiu Han
