@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.27
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.66
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794493129;
-	b=3ohBUAQJgsM7c16sDPeDdkCcZTfK4HJeK6CilXQjAzlZyr1pshBCRihRaZtMne86mpiB
-	 IZcvnQwFAKeVumOFRWj4exiI9J31E6ISPPxwJKG4W+qfDRQMwlABCHTfibFNMvPuRsRZn
-	 6oe91uFdxB+taagURfKVSkLWXHmUU4Z/YMkOhRmneQ7MFW05iLmYhuFWuPZYrdZUbStS2
-	 BHgRKra7dvA3R0g2SEPH1+rNfr4j1TI3CUIMC3faK6xxm+oIYGX3c2wPjab3ftHmfcpOQ
-	 BISO+Rts94Nwsn2qmjuDCMyh4zUfJMdW51MGxb1CgJYiDFwbwQVmu//4VORRfxLhBjg==
+	t=1794493139;
+	b=Kf8LiMZhPIfF+BLCzTN5HmzsSrnRpAJOFCjAsLuehGayiUt/weVvS8UCFHUT6vKe3E0g
+	 qIOhhRgf45bdqki/cs1tWGskHZL3tNx30mdtcVkNm8Ih0k0qVUiPKgJcWRq0lBr7VvU/8
+	 7kQ9dzmSChLGUMRBREimgibm+mgjYMPC6nNfTbuWtycdl8egXwTyen3KNBzLoPr+u/Xm4
+	 gyeeljttTC1cTjeOnkOvjuOvFX7TLA8/C+dEpN+Mz/LNHUw7y64wpBYinzM6C4d7I7yzk
+	 8jhk3sRCJZnSD1wud+8RsvRIXh+wpxNPAG7lP1Bz4B1O2sB96iMzUYBAMCH/vvSphjA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794493129;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794493139;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
@@ -26,35 +26,35 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=67Fq/5L7ge1CUV7dGt9buYrXwDE18g0h7QAERm2fteE=;
-	b=JCU92WDX4peVnXoYVWlu7wQ7fzHKQxSPfxciRKV/i6YZ6J3N6aftNMOsvNGugB2v+Px4
-	 akx0alMao+B6pzmq27r8NwBjH30de6dUOsS53j73xQt7LNnyBqELlJJ6AuPp23/qV0CkL
-	 y2Kj3rhiTFxSJjYbu0V9pvbjU/y1wWfttaoAmCzcq2oJTrtZ0wKna7Szih9HyX4cOvTfc
-	 VNKfGbHs8O8jAHIey8/lEk398SvAu4twmGTKs8WWlzmL6Q8Z0tFSP7znFCenVEP8zqdI6
-	 1AKnUbIXG35z93hMxshVzHHy893A06HXcL9d5cdWa+kCcqpvCwZc0KKwkkiiFkp1EEg==
+	bh=0/OZ+GfsHLp6O65AJGBvR3rhF97dKhoVy53LHWAStS4=;
+	b=UMItMibUMhSde4whVX5WdBKaeC0dBpUsEDoAK9b09DO2gA7XxlXNQbPK6/JnTpzxZNUX
+	 lHk0uA7qg7rb5ZvUPoJSJ2gANM4SaDxc5+v1xeMskda3/lH8yVfoTVS4HOzE+LVYKb4jC
+	 9WHiv/VjZTz9bsorvREU7aJV4lFXEZwNS8wfMNkL52BZRf3Nt6zNU0ue29Ji1eli1z9et
+	 uToweLuUMrC9mLpXU0N2zdQXVWN0DpFqskQX2QBSqLqkJeV4VPgffrTFV97VUoMfSjyn6
+	 mAQuH5sEjGItJgUj7VHWdIxt7CbZJ7W/dYOMe9ZX+u8+Ev/vAabwt/uDzPSs5EEMtWw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Z+oXeAmn;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.27
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011027.outbound.protection.outlook.com [52.101.57.27])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=q4BKzY48;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.66
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010066.outbound.protection.outlook.com [52.101.56.66])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CC84606D54D;
-	Thu, 12 Nov 2026 14:18:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5CC84606D54D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04FE9606D54D;
+	Thu, 12 Nov 2026 14:18:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 04FE9606D54D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=Z+oXeAmn
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=q4BKzY48
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=iJujA5eZMxD5raBcTWmzrlZddx5kWZhr+RQiqytajN8za8kdjbC37xGHrIbB6VNIjnaxa//rd/uPodKxYviJTXDMEu/9eQrFcouwJUHGbQRQqmMgU1LhJJtyENHYIn0RHe6Vq8R2G2GnrdAMLAe4n1BalfJbjRnz9yPZUrYk6NbnuDiCEz7ggwLRJhAvL6gcka+43cI6EX1IwvR1bDcopMnK52BJ/ci9IwHR8UPLQn4BrHU1Y7a4NaFaUooBqhOEXMRVo7gXY45JAF58xv9Zx4uR7ZXTRvlaVWAz2/6qEqHjJvdjHYSXigbDvbN0HvxNzkstM1kXaa5IuTgDMmVvLQ==
+ b=qwQOh6yo1zaasbZrtX9oDv6yxTSTz4XTl5OPD3Ezgugtuspx7PI+nsaZytFmLrkg+EQKqfOaoC8OBi5tjm2PcTxLLEAYcWcUNrQ04+1wcQ1WDTCQAwrEq413OwIyVMYJ6QdS7049i/vzVARuGaoLkNciZ1SmjjYZI79N8UwL0yyGffgZn2j3bVvtjGwMjQSeLc4B1NHJZM5IT9CU6GBrjvCGf0r4aqZZdQQk+Hlhwzexss+ndpiXogwmo7v5IH3ScL8KSY5ZClnEHZTPEfSCpIZAQB9KGciOViDTfhPHP3Nr+dT6rZR/jqoCydX4Vde2kRbLjmUgF3XaWmD3vGcCXA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=67Fq/5L7ge1CUV7dGt9buYrXwDE18g0h7QAERm2fteE=;
- b=ivaIUSzFM41P4J2XeNK7hHwjvaP1ioopP5tBvED6/Kpdle9Fvwjk5J2l7tF0VClD2pjQw9d8ildkGDX+xzcxUADX87lloguHPATFXwNohvIW85tCV/hIVRGmRYwSRTSY7q1VoXOt+lQzVG6/THM0RzzTkBhJ4W5XxapAnjkcpGvNWUb14XaEpFOBbkxNqdheV1kAY/ro9fF6NKdkgJVF/YeLrQpKlLustsKjg/lcrHmi7PNYOT47Ce9wYMT+wCXAR0WTg7h1Sb+6oXeeN7wUzI9C7ld/xwHwjqw+DmH6P/ICZwTjkDnzzK+zbLgwkaF1r+70UGmtXgiAiWwZ8Y7zFw==
+ bh=0/OZ+GfsHLp6O65AJGBvR3rhF97dKhoVy53LHWAStS4=;
+ b=iVXhQ5VIWIyPPd7xGxrdI+bYBq59/8zFOpGDFmmBi/KWCwuh7HUCokCMqBFG7tJ0r0Sr3I4dojXgS8xv0SWXNKNRLukm3CjEf1QGl0msFuUcZrkiGWzza1VvIX7c4xx8PKMrAZEGwxXkIxt8sbgJqc9gWl3jXPgDSHLOJRbvwuQ6sxVRsgnDlBfV2rfYh63p8o096FArvkXQ0sW9tMie7waQggdRI2uvUOwYKb3SJQ0P3KPMt77gS9Y84dC1ylT1oKhfxJAVeA7+ejBQ8QTguq6UrmvfFVYdrt/LtLHg0TY0HjnQ26nclNYIbNHGdH0hnFnUFp4nvkGZqxXRGVFiZg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -62,18 +62,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=67Fq/5L7ge1CUV7dGt9buYrXwDE18g0h7QAERm2fteE=;
- b=Z+oXeAmnKyBwd0SM5xUmAA3PH373wdPnADoFeqKKHaDlGkY8wfHWe4O3+xakpwRxwRnyQ0pH7mI+8hvUgByjEWTzrlLvzKKRHHr+6YPTvuiyBPSkQCTNsFu75Lpi34Kz2g7jiAP5rCbiLfBequ4o0xNGMD9TaBcxOiy2NhcWn7h5jJbpfa/cc9MbNwy/LDe8rIzQRAADQarJ9OrikZA/JtFmH880A+vBF0yqYPtRvGCp/kRCf5wFWdkqSzbItJ7+oE7V53F+XS+6aQHh/yzEvFOI4VZ3gu/UpFjgzO/Q1a9vD2ohionY3K2aLaX+nNrWGJ0c7InNCfXcFoZhiX9w/A==
-Received: from PH7P220CA0005.NAMP220.PROD.OUTLOOK.COM (2603:10b6:510:326::22)
- by LV1PR12MB028288.namprd12.prod.outlook.com (2603:10b6:408:515::11) with
+ bh=0/OZ+GfsHLp6O65AJGBvR3rhF97dKhoVy53LHWAStS4=;
+ b=q4BKzY48xvoFzGvwEVnkmFolv/Xak5Py+v1QQgHjOtWU8GvtqWUZkJJ4quDlenEkKLm8cgsuhvD0nn3qY1ppn+J7N3CBFb9KLR+fbpltJ3kTTfkuLI0qhEAb01cbAwStsNg35c83ethlMHroqz/ltlHC4FPbyXIOjfsDNpooHjEr8LVoSZaLr9xV5AcCOrot+QuUUFMn0XiLjubGK87dQ5MPhVUde28j04kHgfRV3A0DxuS82mC7KGMdBZrqLtoRRpwAB/6vJiwdqTU7KZ4/OEyegE1p9MZOFWdfhEymzZy78HvFDAZ7VUAhZGJSWBrRR3ZjVOa5Tcu+ApCK2609ew==
+Received: from SJ0PR13CA0020.namprd13.prod.outlook.com (2603:10b6:a03:2c0::25)
+ by IA1PR12MB8222.namprd12.prod.outlook.com (2603:10b6:208:3f2::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.10; Thu, 12 Nov
- 2026 14:18:45 +0000
-Received: from BY1PEPF000264AF.namprd02.prod.outlook.com
- (2603:10b6:510:326:cafe::61) by PH7P220CA0005.outlook.office365.com
- (2603:10b6:510:326::22) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.8 via Frontend Transport; Thu, 12
- Nov 2026 14:18:44 +0000
+ 2026 14:18:50 +0000
+Received: from BY1PEPF000264B2.namprd02.prod.outlook.com
+ (2603:10b6:a03:2c0:cafe::92) by SJ0PR13CA0020.outlook.office365.com
+ (2603:10b6:a03:2c0::25) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.639.0 via Frontend Transport; Thu, 12
+ Nov 2026 14:18:50 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -81,17 +81,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- BY1PEPF000264AF.mail.protection.outlook.com (10.167.242.116) with Microsoft
+ BY1PEPF000264B2.mail.protection.outlook.com (10.167.242.118) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.615.4 via Frontend Transport; Thu, 12 Nov 2026 14:18:44 +0000
+ 15.21.615.4 via Frontend Transport; Thu, 12 Nov 2026 14:18:50 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 12 Nov
- 2026 06:18:20 -0800
+ 2026 06:18:28 -0800
 Received: from NV-2Y5XW94.nvidia.com (10.126.231.37) by rnnvmail201.nvidia.com
  (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 12 Nov
- 2026 06:18:17 -0800
+ 2026 06:18:25 -0800
 From: Shameer Kolothum <skolothumtho@nvidia.com>
 To: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -99,9 +99,9 @@ CC: <alex@shazbot.org>, <jgg@ziepe.ca>, <kevin.tian@intel.com>,
 	<kbusch@meta.com>, <michal.winiarski@intel.com>,
 	<satyanarayana.k.v.p@intel.com>, <sonangp@nvidia.com>, <ankita@nvidia.com>,
 	<nathanc@nvidia.com>, <mochs@nvidia.com>, <skolothumtho@nvidia.com>
-Subject: [RFC PATCH v3 10/20] vfio/pci: Use access ops for runtime-PM requests
-Date: Thu, 12 Nov 2026 14:16:22 +0000
-Message-ID: <20261112141632.918954-11-skolothumtho@nvidia.com>
+Subject: [RFC PATCH v3 12/20] vfio/pci: Use access ops for DMA-BUF export and restoration
+Date: Thu, 12 Nov 2026 14:16:24 +0000
+Message-ID: <20261112141632.918954-13-skolothumtho@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261112141632.918954-1-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
@@ -120,104 +120,266 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY1PEPF000264AF:EE_|LV1PR12MB028288:EE_
-X-MS-Office365-Filtering-Correlation-Id: cd257e8a-ebef-4e76-7e43-08df40c7dc16
+X-MS-TrafficTypeDiagnostic: BY1PEPF000264B2:EE_|IA1PR12MB8222:EE_
+X-MS-Office365-Filtering-Correlation-Id: 66223634-a1fc-410f-578c-08df40c7df8d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|23010399003|1800799024|36860700016|82310400026|10067099003|11063799006|56012099006|261022105027099003|261022075727099003|261028144727099003|261026140227099003|261021123027099003|261021121427099003|261102123227099003|261009223027099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|376014|36860700016|1800799024|23010399003|82310400026|10067099003|11063799006|56012099006|261021123027099003|261021121427099003|261026121527099003|261026140227099003|261022105027099003|261009223027099003|261028144727099003|261102123227099003|261102130727099003|18002099003|22082099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	eYU1UHsvW1sAs1LkvMT5oAz1Yui2qi/3TO+3/1UCxxqjBj22nS3gRZR8Kq/u84DG2aBbhjB/5tV8DPOA1qU00lCBxC/n3NYjp7iD5SUITKSkne4XyR2iTptId7ZaSeTRvez6DO0rUhFi8uc0SYNiU1ykViTecz+AM2rdeNzKKkkJ/5I2hNZ+Jgn44Y+rXHYMDc+ms5VBJ12lSWjX6jSknvaZvgKBFS1gYKgGzIXOiZHJUgVfhF/tR3gzVyXaZOPxtnMg+UItOisre6H2dluVVlNA/xKLBaVLl/uHcJ8z6aF2zaWT93YQOkhep7JE0OT7GrexfI8xFYSbPwnEMtIaHwZEgu9YOSFc8WZU1oZTEOKUbL5azeZfJ6I9l/LiJvprrEIxkX0LPW5bBr08L3KBfk9hBBGgDGchxRG5CL7T5Mrn4UWsJ/2waw9S8AkMqYN2MFurz7O4khGoKBRFMHRkmkl1fu+jz7/DliO/+5jypLbeAMVaeldsskdq2jrHS6yk5OdHRjxqM55rmu96aXSBx+7W0C6J42Qb45XVAv9eDrlXyw/7swC9SVSZrE9yXYhCMIqIWa2aNl5UFADZbPwxSqNE5Db6BCSqmAl8Wlh0PQ+jiCqipbjVrmUmJSs/NnGo92ejzyYBbw5FaswAWfobHB98xq4L4UoOgZZrkPi6X86w8wS5/fXzAg7fhy1zK6eenbfUsAEGRnrI+abBi/2DZQ==
+	ZnBPY4Pvplo86Mo3oFk3AmTB1HIpIpnxaTC841emHn+xbU5+z1x9dL54jGFIX8ZiSP/dzxl6k1zE4ilKiAiAZeFIg4Iq98Ck5SNBR86/yj8M2yMrHnwNmPdp19dJypYvYt4Xmn45Y/Yco2g43NKgbFFqzA+rjyfIUyIDKScRhSD+8WJvxIi+OTVNcksWt670mey4iVZNT7HjKwx/rHkKhlw+36DMPwknKziwUQ3SgPSiegEI8ViTd1tdMtCP2N920EGza5ySJCBzsN3FE1GU7+X8RKjW9Xf01yNXW+ia0fhPkiAQmNl/9+CIzcIPSiraI/PawDm9HwyZsURzHQVXfHo+ImxmcJKw5nXpoL+VWlzv+VW/psj5OBlqqKFUKxlDQlGh9kf5GeOQ5hPYSNy3pW3ICRu12Z28r2+fchQR+pOYo9/CxEv5xeX5fnxOdlWe5xeHt44AVLmzyJuOhnE+UnEBzuoHMNLz5pmYgiEH8l//H7f8feuOO+u1EuhOB82qw+7Ge8GhZARTd8gSYQWXcYmYCMQ40yJ++4GRu4HiO5Cd0n53Est7ti0X35i6UIz9TsjF5Ym2sZIAT4clRwcGVDE+o1RILTR5Z1rIlZ3ZE3tzrrnMEhGOIlap0c5D26XpKcR+WMGxlaS/8Gmler+5LX1pHFQVJpgaJ1eoIFLH8uRPPPOPORnhpSSN5q7QjVBnAk1XnHN8bsFp+/o0YuCHbg==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(23010399003)(1800799024)(36860700016)(82310400026)(10067099003)(11063799006)(56012099006)(261022105027099003)(261022075727099003)(261028144727099003)(261026140227099003)(261021123027099003)(261021121427099003)(261102123227099003)(261009223027099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(36860700016)(1800799024)(23010399003)(82310400026)(10067099003)(11063799006)(56012099006)(261021123027099003)(261021121427099003)(261026121527099003)(261026140227099003)(261022105027099003)(261009223027099003)(261028144727099003)(261102123227099003)(261102130727099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	AFgGOnyuQhH0uSlQ/MsK6ihdigp8P9H/puLZUBPSgRI2xnR7If631PgG9zA87k1Ik132Ncnn+6p0g5Kmwf8wrjwN8I+3vCC+12AtsYDYxeCzPFEuHEo9Rv1QEJV+dgL+x51Os83OWg5j3NDzetH41+6h5IjYsoSD1jlEg2qU/5YmKWE/8gasP+s0XwYZVsIxMw8EQ+cST/Jeea4soS3wrU+CCZiOTCa1XbmV8zys1gG88rLVHfxwAqyAx/bmrIF6JZAezayVRhNB8formi6ZATY0QJ/LofpK6R8Ql1v1UkiRiYmwreQiyDfjDc9E63ZTONmqBm8VR52/vF/UEiqdAuTAitLAXYMeeHvt/js6pIMo01/7zcWsnKwitcp0q8L6dAG9yFXwi5fYmMgKt4n8MHqOhe0MAQcbGbWMc48giyRPF7Ol3Q3xic3dxd0sXibo
+	gZnfg/X05pwvBiPkNxwd2eavYf+vHsJDaiCSJCCyaFmVNu83UrOrEYRQ/WCR7quIlbUtykWGq/zdzJKHljU6AQbnOd2FdGe30RUI75iDtpoabGLFUBInghDZ0v/JtdsZEoJjnKwZdjv+hQ+xV9UEakd29me2u2aqifxZ6zvvQVPd1AatDjwhcjcxaMxMHPjg9Y08X4h9iPDqTcT+w2FISHd6Oc7BiLtKHftZrQXOpi9WkJkxTbkpmoCOLgJkStBcUG8JCaeIs8unxBzAHHTSFPrM9A4xOoFxfH/mcUS6xzNuZ/sbViviKGGcRnw296eUuq3WhD/K7m+A5fvOyUUvT/0+LatZuLSO+xUQzewkPu8vWi6fyuIFpcdcPFsYYcEFKMJdn+uGCS6l4gvO2R9qopePToh/RleBSgZFDw8ZaxGhiQpCMN1uKPCts1lRsK6S
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2026 14:18:44.4662
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2026 14:18:50.2887
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: cd257e8a-ebef-4e76-7e43-08df40c7dc16
+X-MS-Exchange-CrossTenant-Network-Message-Id: 66223634-a1fc-410f-578c-08df40c7df8d
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BY1PEPF000264AF.namprd02.prod.outlook.com
+	BY1PEPF000264B2.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV1PR12MB028288
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8222
 
-Userspace low-power requests change PM references and device mappings.
-Run these requests through access ops so recovery can reject new
-requests and drain admitted operations.
+DMA-BUF export can race with recovery revoking device mappings.
 
-Validate userspace arguments and obtain the eventfd reference before
-entering SRCU. Release the reference if entry fails. Keep the existing
-memory_lock protection and PM reference handling.
+Keep the range lookup, export and list insertion inside SRCU so recovery
+waits for admitted exports before revoking mappings. Keep userspace
+copies and file descriptor installation outside SRCU.
+
+Select ordinary mapping restoration through access ops under
+memory_lock. Skip restoration while access is blocked. Provide an
+internal helper so recovery can restore mappings before allowing access
+again. Revocation remains available while access is blocked.
 
 Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ drivers/vfio/pci/vfio_pci_priv.h   |   8 ++
+ drivers/vfio/pci/vfio_pci_core.c   |   6 ++
+ drivers/vfio/pci/vfio_pci_dmabuf.c | 113 +++++++++++++++++++----------
+ 3 files changed, 89 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index fb7f46c2ca36..fc6b2673be88 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -454,9 +454,11 @@ int vfio_pci_try_set_power_state(struct vfio_pci_core_device *vdev,
- 					pci_set_power_state);
- }
+diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+index 0ea7c710dc38..b02fd1fbcd31 100644
+--- a/drivers/vfio/pci/vfio_pci_priv.h
++++ b/drivers/vfio/pci/vfio_pci_priv.h
+@@ -90,6 +90,8 @@ struct vfio_pci_access_ops {
+ 			vfio_pci_access_fn fn, void *data);
+ 	/* Caller holds memory_lock. */
+ 	int (*set_power_state)(struct vfio_pci_core_device *vdev, pci_power_t state);
++	/* Caller holds memory_lock. */
++	void (*restore_dmabufs)(struct vfio_pci_core_device *vdev);
+ };
  
--static int vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev,
--				     struct eventfd_ctx *efdctx)
-+static long vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev,
-+				      void *data)
+ const struct vfio_pci_access_ops *
+@@ -151,6 +153,7 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+ 				  size_t argsz);
+ void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
+ void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked);
++void vfio_pci_dma_buf_restore(struct vfio_pci_core_device *vdev);
+ #else
+ static inline int
+ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+@@ -162,6 +165,11 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+ static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
  {
-+	struct eventfd_ctx *efdctx = data;
+ }
 +
- 	/*
- 	 * The vdev power related flags are protected with 'memory_lock'
- 	 * semaphore.
-@@ -492,7 +494,7 @@ static int vfio_pci_core_pm_entry(struct vfio_pci_core_device *vdev, u32 flags,
- 	 * while returning from the ioctl and then the device can go into
- 	 * runtime suspended state.
- 	 */
--	return vfio_pci_runtime_pm_entry(vdev, NULL);
-+	return vfio_pci_core_access(vdev, vfio_pci_runtime_pm_entry, NULL);
- }
- 
- static int vfio_pci_core_pm_entry_with_wakeup(
-@@ -519,7 +521,7 @@ static int vfio_pci_core_pm_entry_with_wakeup(
- 	if (IS_ERR(efdctx))
- 		return PTR_ERR(efdctx);
- 
--	ret = vfio_pci_runtime_pm_entry(vdev, efdctx);
-+	ret = vfio_pci_core_access(vdev, vfio_pci_runtime_pm_entry, efdctx);
- 	if (ret)
- 		eventfd_ctx_put(efdctx);
- 
-@@ -552,6 +554,13 @@ static void vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev)
- 	up_write(&vdev->memory_lock);
- }
- 
-+static long vfio_pci_access_pm_exit(struct vfio_pci_core_device *vdev,
-+				    void *data)
++static inline void vfio_pci_dma_buf_restore(struct vfio_pci_core_device *vdev)
 +{
-+	vfio_pci_runtime_pm_exit(vdev);
-+	return 0;
 +}
 +
- static int vfio_pci_core_pm_exit(struct vfio_pci_core_device *vdev, u32 flags,
- 				 void __user *arg, size_t argsz)
+ static inline void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev,
+ 					 bool revoked)
  {
-@@ -568,8 +577,7 @@ static int vfio_pci_core_pm_exit(struct vfio_pci_core_device *vdev, u32 flags,
- 	 * already signaled the eventfd and exited low power mode itself.
- 	 * pm_runtime_engaged protects the redundant call here.
- 	 */
--	vfio_pci_runtime_pm_exit(vdev);
--	return 0;
-+	return vfio_pci_core_access(vdev, vfio_pci_access_pm_exit, NULL);
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index da7166669dc7..0299f5afca91 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -330,14 +330,20 @@ static int vfio_pci_power_blocked(struct vfio_pci_core_device *vdev,
+ 	return -EIO;
  }
  
- #ifdef CONFIG_PM
++static void vfio_pci_restore_dmabufs_blocked(struct vfio_pci_core_device *vdev)
++{
++}
++
+ static const struct vfio_pci_access_ops vfio_pci_live_ops = {
+ 	.execute = vfio_pci_access_live,
+ 	.set_power_state = vfio_pci_try_set_power_state,
++	.restore_dmabufs = vfio_pci_dma_buf_restore,
+ };
+ 
+ static const struct vfio_pci_access_ops vfio_pci_blocked_ops = {
+ 	.execute = vfio_pci_access_blocked,
+ 	.set_power_state = vfio_pci_power_blocked,
++	.restore_dmabufs = vfio_pci_restore_dmabufs_blocked,
+ };
+ 
+ /*
+diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+index c16f460c01d6..a9db011f0c06 100644
+--- a/drivers/vfio/pci/vfio_pci_dmabuf.c
++++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+@@ -218,14 +218,67 @@ static int validate_dmabuf_input(struct vfio_device_feature_dma_buf *dma_buf,
+ 	return 0;
+ }
+ 
++struct vfio_pci_dmabuf_access {
++	struct vfio_pci_dma_buf *priv;
++	struct vfio_device_feature_dma_buf *get_dma_buf;
++	struct vfio_region_dma_range *dma_ranges;
++};
++
++static long vfio_pci_access_dmabuf(struct vfio_pci_core_device *vdev, void *data)
++{
++	struct vfio_pci_dmabuf_access *access = data;
++	struct vfio_pci_dma_buf *priv = access->priv;
++	struct vfio_region_dma_range *dma_ranges = access->dma_ranges;
++	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
++	int ret;
++
++	ret = vdev->pci_ops->get_dmabuf_phys(vdev, &priv->provider,
++					     access->get_dma_buf->region_index,
++					     priv->phys_vec, dma_ranges,
++					     priv->nr_ranges);
++	if (ret)
++		return ret;
++
++	if (!vfio_device_try_get_registration(&vdev->vdev))
++		return -ENODEV;
++
++	exp_info.ops = &vfio_pci_dmabuf_ops;
++	exp_info.size = priv->size;
++	exp_info.flags = access->get_dma_buf->open_flags;
++	exp_info.priv = priv;
++
++	priv->dmabuf = dma_buf_export(&exp_info);
++	if (IS_ERR(priv->dmabuf)) {
++		ret = PTR_ERR(priv->dmabuf);
++		goto err_dev_put;
++	}
++
++	kref_init(&priv->kref);
++	init_completion(&priv->comp);
++
++	/* dma_buf_put() now frees priv */
++	INIT_LIST_HEAD(&priv->dmabufs_elm);
++	down_write(&vdev->memory_lock);
++	dma_resv_lock(priv->dmabuf->resv, NULL);
++	priv->revoked = !__vfio_pci_memory_enabled(vdev);
++	list_add_tail(&priv->dmabufs_elm, &vdev->dmabufs);
++	dma_resv_unlock(priv->dmabuf->resv);
++	up_write(&vdev->memory_lock);
++	return 0;
++
++err_dev_put:
++	vfio_device_put_registration(&vdev->vdev);
++	return ret;
++}
++
+ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+ 				  struct vfio_device_feature_dma_buf __user *arg,
+ 				  size_t argsz)
+ {
+ 	struct vfio_device_feature_dma_buf get_dma_buf = {};
+ 	struct vfio_region_dma_range *dma_ranges;
+-	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
+ 	struct vfio_pci_dma_buf *priv;
++	struct vfio_pci_dmabuf_access access;
+ 	size_t length;
+ 	int ret;
+ 
+@@ -274,43 +327,14 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+ 	priv->vdev = vdev;
+ 	priv->nr_ranges = get_dma_buf.nr_ranges;
+ 	priv->size = length;
+-	ret = vdev->pci_ops->get_dmabuf_phys(vdev, &priv->provider,
+-					     get_dma_buf.region_index,
+-					     priv->phys_vec, dma_ranges,
+-					     priv->nr_ranges);
++
++	access.priv = priv;
++	access.get_dma_buf = &get_dma_buf;
++	access.dma_ranges = dma_ranges;
++	ret = vfio_pci_core_access(vdev, vfio_pci_access_dmabuf, &access);
+ 	if (ret)
+ 		goto err_free_phys;
+-
+ 	kfree(dma_ranges);
+-	dma_ranges = NULL;
+-
+-	if (!vfio_device_try_get_registration(&vdev->vdev)) {
+-		ret = -ENODEV;
+-		goto err_free_phys;
+-	}
+-
+-	exp_info.ops = &vfio_pci_dmabuf_ops;
+-	exp_info.size = priv->size;
+-	exp_info.flags = get_dma_buf.open_flags;
+-	exp_info.priv = priv;
+-
+-	priv->dmabuf = dma_buf_export(&exp_info);
+-	if (IS_ERR(priv->dmabuf)) {
+-		ret = PTR_ERR(priv->dmabuf);
+-		goto err_dev_put;
+-	}
+-
+-	kref_init(&priv->kref);
+-	init_completion(&priv->comp);
+-
+-	/* dma_buf_put() now frees priv */
+-	INIT_LIST_HEAD(&priv->dmabufs_elm);
+-	down_write(&vdev->memory_lock);
+-	dma_resv_lock(priv->dmabuf->resv, NULL);
+-	priv->revoked = !__vfio_pci_memory_enabled(vdev);
+-	list_add_tail(&priv->dmabufs_elm, &vdev->dmabufs);
+-	dma_resv_unlock(priv->dmabuf->resv);
+-	up_write(&vdev->memory_lock);
+ 
+ 	/*
+ 	 * dma_buf_fd() consumes the reference, when the file closes the dmabuf
+@@ -322,8 +346,6 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+ 
+ 	return ret;
+ 
+-err_dev_put:
+-	vfio_device_put_registration(&vdev->vdev);
+ err_free_phys:
+ 	kfree(priv->phys_vec);
+ err_free_priv:
+@@ -333,7 +355,7 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+ 	return ret;
+ }
+ 
+-void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
++static void __vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
+ {
+ 	struct vfio_pci_dma_buf *priv;
+ 	struct vfio_pci_dma_buf *tmp;
+@@ -404,3 +426,18 @@ void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
+ 	}
+ 	up_write(&vdev->memory_lock);
+ }
++
++/* Recovery may restore mappings while ordinary access is blocked. */
++void vfio_pci_dma_buf_restore(struct vfio_pci_core_device *vdev)
++{
++	__vfio_pci_dma_buf_move(vdev, false);
++}
++
++void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
++{
++	lockdep_assert_held_write(&vdev->memory_lock);
++	if (revoked)
++		__vfio_pci_dma_buf_move(vdev, true);
++	else
++		vfio_pci_access_ops(vdev)->restore_dmabufs(vdev);
++}
 -- 
 2.43.0
 
