@@ -1,79 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794444014;
-	b=kZ/3/ZDVB/oSWIvRyhrcIFw68cpbRXcAt28/OsLpMwJNlMH19bY0A8r2NJ9C//loFQU3
-	 WdazFeqtxYwaFOP3x0WowqavoR1ujOJlDDYJ7QsKsufVpMgLGdjgC4Pedh1V979wrKell
-	 IYpOA6tJ9FQZUr/Z+jq+LPYW9mdIBts/8dOujcnhvtNbZdysAnsOPF+/AW72NPJIIEvkW
-	 B1GP9zadyo3Pa8a3PiZgfyAuuEUDPw900WyKxW1dhPS7MFuRAJ4JLxFHqHm+LRlv0Ay5B
-	 llDXh4pqw4MXP1jQshKfrld8/HIs+rBECEyEhSRq3AhH84PKsarfTUNN6YOMrFjOtSA==
+	t=1794444241;
+	b=eCIt+l++5F4F29oDkivYE1JnuSUIQaA29c35CKcWmurJ2fjOg0HTjK9EqgIkoR8YXVa4
+	 xIb5TzUWD/eBd2hnFg7RPKHQpCNdcqJWjEOoY4XjMDN9jlCdU3VhKHfvaoo1R8db0uNv6
+	 6RcPceVUH8JndIPdk4XilTPHqpZkF1a/yXYY7dYdhn+PqQc9r49+R0CdzqQRuReE/wvqj
+	 WXHUlmiyyaIWtB/JEHW2zMdqHbaj0BjatFpg46QJS0uaGMIW/jtqdP7rsqXzoU/o2tL3K
+	 ELjHjBXHoGUvlfm454GRC18khTpnnAeOp9Ikd6oOPeAFkdyjRoWY/zOEiCQ3Yv2w6Kw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794444014;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=LctdR/JCjxXqXaUQaTN2ULstUn/j3yJ+h0QrraA+KO8=;
-	b=UPlfktxrhSn+TrVPh1e043LARUOn6MVU5CU/lAN43E1w31n4l9TQjKGI8EL/faJXf+QU
-	 yNsbuUQpIDYibkzu4Qk/ZqlxPBNgXQ4x8u1iSgUfcVeQRGsOkq497UX7hAm2EyvfSZGLk
-	 C9yY9DfMkkHBGh5KikNEig4xA3s0RfG1ig2Y7YCEXpBT4klo+OwBowthjjhYqmAJoW2E8
-	 hDFe5mXBe/DyO7h9UseJ0P5RFD2VEGAh+OnRpNY9cSLvGa5xUY7kFWiJ0y842SoS3tNc3
-	 3Ig2+ABlHKvIxtsg+U/0pcLaAGOShP7IkVfAxyOaUqe8TsJqRw4XV/ymuL4FUQB06dA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794444241;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=lKyy0YeUB4l7r6rdgGShI84vbcAjIc+AIxEnu9KXysQ=;
+	b=3N73sKqZ+zWcla5xywN6hbxH/wJh+pdhQyVIb2541GfUdyVyX2oZ2MZJEc7f+7GcnWB/
+	 T/2M8XLOIRs4ghM8pd42COcVrOoChCMUaHpYdVtHwItQcm0G6CldPWwSXbJJfHJMF53zo
+	 UayLuSUmHLpXPEcdvqv0m6xqPJs0dm9k5KdVH3/qUQXTApYRe6bVP1HBt/a6/D/wAxJB8
+	 XSf///7RIMwmm3PfsVeQspOB1kHc56CCGPxSpVXJTJZFUlbU/9EZcQF2WsUGu61gr4ZcI
+	 DI7E7vGz+uMVKr45qDDgz4ddHtwXpVwiPg07ljNLNstBCTH1FwntjmQ9EYoVoFmqB3A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ays3K3pI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AtCtMf1X;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with UTF8SMTPS id C9D93606A335;
-	Thu, 12 Nov 2026 00:40:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DA7606A327
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 00:44:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ays3K3pI
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B06BA1F00A0F;
-	Thu, 12 Nov 2026 00:40:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AtCtMf1X
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B88521F00A06;
+	Thu, 12 Nov 2026 00:44:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794444014;
-	bh=LctdR/JCjxXqXaUQaTN2ULstUn/j3yJ+h0QrraA+KO8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ays3K3pIaLgkjHtf67+YKirgb77xzOsgoaqDmEP/g+4Qe5AaNi4B39YOWoUh1lzKI
-	 Zi7/z86Ihs4YZJJ7R6sbJJTlh5U25IRSQr2M7CbZ/l7oNky3/H7pWxOAAd114X/FkD
-	 us95OeCkgMlJcVkMHJa/dfAOSB0NI5+dzyms7qN+3irdnRQ1F1OX0RH9RxzbQMO8cp
-	 6xLiuz/R5U8PMqbIT0nhOaUPAqqSFg+K4xa9+ieDK9b2fmrnW3Kzp1B2GrWtApoU8e
-	 t2UaBe6LeHGtWas9QjH/p4y+yHYGzcFiBYW/QLy86NrTZsAr71hHZWfAUUcMexFnCv
-	 5LECeq1WSVyww==
-Date: Thu, 12 Nov 2026 02:40:10 +0200
-From: Jarkko Sakkinen <jarkko@kernel.org>
-To: Pavel Popov <pavel.e.popov@intel.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Hans de Goede <hansg@kernel.org>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Peter Huewe <peterhuewe@gmx.de>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Arnd Bergmann <arnd@arndb.de>, Len Brown <lenb@kernel.org>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	"David S . Miller" <davem@davemloft.net>, x86@kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
-	intel-gfx@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-integrity@vger.kernel.org, linux-crypto@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/7] tpm: Include <asm/cpu_device_id.h> unconditionally
-Message-ID: <avUK6uzoAJax0ZKn@kernel.org>
-References: <20261111234821.4814-1-pavel.e.popov@intel.com>
- <20261111234821.4814-7-pavel.e.popov@intel.com>
+	s=k20260515; t=1794444241;
+	bh=lKyy0YeUB4l7r6rdgGShI84vbcAjIc+AIxEnu9KXysQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=AtCtMf1Xoy08wunkrXUrqAhaqvcxSE6RYyNVW4G3/NgJlK27DbMEw82XlnnDhrIVA
+	 GUWGB8BkRmj8E4Yg3eHFx0ga7CLxTHltwKvBRYOEwZKBnpAUY2YSPs0/lWsR8xYiW+
+	 ZpRdZns2Sk6hVDJE/gThmw2OkuqF2cbpHJ/fBYQagh0Uu1/fGultsIvtijSS2muXaZ
+	 8E4O+ziGezP1181w0HNWA5N5wCWzOQHCweciSPlrh9cm/pbyXKrIRBNjdYGuhX9V+B
+	 moSIH3zzMCm/QB0W1kwbtuejx4jMxnpZjQC9rEtmmrKEn/R9geBeRAND0TyTHrgQ5F
+	 VIYN5YqgjQ1gQ==
+Message-ID: <sashiko-outbox-209978@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: Add ID@path device format for pci= parameters
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ben Cressey" <ben@cressey.dev>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261111-pci-idpath-selector-v2-1-83ea668e38f0@cressey.dev>
+References: <20261111-pci-idpath-selector-v2-1-83ea668e38f0@cressey.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 12 Nov 2026 00:44:00 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -82,19 +58,38 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261111234821.4814-7-pavel.e.popov@intel.com>
 
-On Wed, Nov 11, 2026 at 04:48:19PM -0700, Pavel Popov wrote:
-> <asm/cpu_device_id.h> now has a generic version, so the #ifdef
-> CONFIG_X86 around the include is no longer needed.
-> 
-> Signed-off-by: Pavel Popov <pavel.e.popov@intel.com>
+> The <pci_dev> grammar shared by pci=3Dresource_alignment=3D,
+> pci=3Ddisable_acs_redir=3D and pci=3Dconfig_acs=3D names a device either =
+by
+> address, with an optional path, or by ID. When one command line serves
+> more than one platform, neither form limits an entry to the intended
+> device: an address applies to whatever occupies it on each platform, and
+> an ID applies to every instance, such as all Downstream Ports of a
+> switch rather than the one that needs different ACS settings.
+>=20
+> Accept pci:<vendor>:<device>[:<subvendor>:<subdevice>]@<path>, where
+> <path> is the address format, and match only when both halves match. An
+> entry written for one platform is then inert on another where that
+> address holds a different device. For example,
+>=20
+>   pci=3Dconfig_acs=3Dxx111x1@pci:10b5:8749@0000:80:02.0/00.0/08.0
+>=20
+> configures ACS on the Downstream Port at that path only if it is a
+> PEX 8749 port.
+>=20
+> The path goes last since pci_dev_str_match_path() consumes up to the
+> next ';'. The IDs are compared first, and the path is parsed only for a
+> device that matches them. The <order>@ and <flags>@ prefixes of
+> resource_alignment and config_acs are stripped before
+> pci_dev_str_match() is called, so the callers are unchanged.
+>=20
+> Suggested-by: Wei Wang <wei.w.wang@hotmail.com>
+> Signed-off-by: Ben Cressey <ben@cressey.dev>
 
-Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
+Sashiko has reviewed this patch and found no issues.
 
-Are these expected to be picked separately by subsystems?
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111-pci-idpath=
+-selector-v2-1-83ea668e38f0@cressey.dev?part=3D1
 
-Br, Jarkko
