@@ -1,56 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794493716;
-	b=QNNnu6PzXwxlskITbXpCGQk3wkZxQNKJBth5GFFvxQTCj5HADUQPFd14D5IuvbgyGEAv
-	 WSMBuyNrnFMDPdktW+t76ATE/GskpCvJNaoKHCjzdKcZdJYGcEkMdRmAmZl39fGcOF6QN
-	 i5Ix7DQHEE3sXUw8QkAg2rkaFjuAYf88JkLP+59jlJfMESG9R/0cUw1p+VoG2mGeVQFe4
-	 SxJVV1tQyc+BRer+xYpUeyhNRCEIEUunxkn4ZnNMjNap3hRLZaeZ9YKS0L3aLUxFSNu2n
-	 Q/QXG1OtQ+1HPT1tMdfBNswZGWTVEw+dLrwZLVBH7gIO53sr6HyEBEK33ZzcbKF5Ubg==
+	t=1794493792;
+	b=GuY7wDjCkU9efwaiuIgSovcaXq2EFfoYzYFVjZHQRFAegqBJ9hTWf7+PHil+wETy2eRh
+	 8yHAd7aM606t4n14Jt937PfXf/PeYGdUrjmI6mENtDtk+26p0IyX1mTHVXZdvl2gQg1kQ
+	 6EveDeJaB4P0sMKVzWnkMZfk64TPzfEpibMTiI3gG+rNegk5C3bSJP0cDRlwiv8thP1Wz
+	 ugoVw5bKz5Gdci0lqqD2Sh6Ck8rkeTB8Zr0i/EWO5ooUyOvZsL5wP3pjOgsQcLfy0WS0P
+	 /io1ZUxIqw7uTSeipY3fHZAXZ5hMIzxlrqScMQyJ9/H9vtWIhpCqm6OXAdHf3ziQ3JA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794493716;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794493792;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=jhCmYhvRhxrDKcwFsORnoTu9FX02HKFShVjAgk48GSU=;
-	b=s1Me5i4O9/y0r7KoVbFJaW46AP22qwgflFSThOnqAW9Mkg1vORAGT6/EqSpIGfbE0TBA
-	 ZjyW4D10PixwI8bppq3d5+jEhITVrRUz36LN7r1bR4DYz/yvmCn13EEG6O6EMzCUMmNw6
-	 rjC8U6e05GqEOhyqEjjKmA9TjOCcJo9HNBCF1Vj/1HWdgWF9Okl4kbS1TZYPhTOl0JEjm
-	 JfVaVz/2LfG81ZBcInXx5CG4mkrCg3ForKfiWmv13NRmHAd/mFmmEe+lnONmYweb+pKy2
-	 yEYUby0hgOxbRsl8VvzhpFcR4KOrteT9s++7uiKoiG9dglvIoAYrGY747JBV6vr9SGg==
+	bh=2V2cwoAN8kfGPzqTjhl6pUC5fQ05bMqC8BBZ4ectDbs=;
+	b=CUfscB38XrFfaoFBOlsL3zHIvrqz2d5WLY9NrSLKrG/SKAqtxbFY7ir0+7KqsGERR+Zt
+	 15fwEYEJY2B3DwjhcGztndtjSUg+3W1Fxb2sG5DWxYLqdsSRqz6ae5pXYFpLHnlhPG7lo
+	 LzZ+85Cw0faLWiiM9djvu3SeUhHjgYT73CyZ8J9CNEMeo/2fKkzZ8vn0lRLYH5ED997fh
+	 WZZ+9moqzuvI/vfml2qXUT7dxk9VRtRzBr5GiS/iWP22aWrijNdyxkwoFIx6k5dIx6GC2
+	 fT4OdwgBTrgdLLd3c/HyYFdZn1pksGMDFuMbPPjFj8l2Qn4iqEoLFaslepKT3r8OSIQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PxE+eXY6;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BSMOynoC;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8F9E606A321
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:28:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDA7606A8B6
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:29:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PxE+eXY6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D16991F00A05;
-	Thu, 12 Nov 2026 14:28:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BSMOynoC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93D011F00A05;
+	Thu, 12 Nov 2026 14:29:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794493716;
-	bh=jhCmYhvRhxrDKcwFsORnoTu9FX02HKFShVjAgk48GSU=;
+	s=k20260515; t=1794493791;
+	bh=2V2cwoAN8kfGPzqTjhl6pUC5fQ05bMqC8BBZ4ectDbs=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=PxE+eXY6TwNUtJwrGyaohymVCyZNBdEQithJpJIC9Lik50gmE8Amk7QMnNpEDi+0Y
-	 CF30Xgrh9BdbYyb8IInAtK7y6t6B7zMmfgL4rzL1eKXtkbkmbVl2qwS1WgmdFdljk9
-	 e78Eec0vemqpBP3KqZDPEy0V1vTprRt3EP8bk6ucVHi2VWWSA7ybvsA0dcD1E+R8Z1
-	 QSFHB20mnl6g5I7KRtGAbMxC3ASWxRXP2olNy8oowiTFCTDz613dJzsl6AoqSSZH4j
-	 wPiAK3Lg6BuqvrIcHoSyL7SpJvLYB0HkHehL6UUrk9gscvcpq7aWcC8vutb5kTbYa1
-	 PKUI4AvxFheDA==
-Message-ID: <sashiko-outbox-211317@kernel.org>
+	b=BSMOynoCxAU0AksBBLa/QVvziGs2wwjRJixycwU4WghxHhQ89PuSKg76HbQlpCzR4
+	 M4rXgKu9mPG+Oh7TQKoHJBgY7OZHR6Ru7nrtsU9j4B1b7ywpVGAmfEyHn/q0rCcvIg
+	 5eH6D1J/lYgNyKX6E6PQNXmntJwcZYLPty+GGNUS8FxRSDiLXd25Iw3JbQytI0kedE
+	 wV3VU9JZ4VBZDm8LWStu2k6cEO2YwQXF7VcxakgdBoUlBv3xXdOo+kDVGo6Z2nKCe3
+	 yw8GHJ564mzu2d+2zPoEM9DsRHs4xEcSvx0jz7WJzypZie60qKF2rc8P4Or+vWDoAV
+	 C8awoIAU/45bw==
+Message-ID: <sashiko-outbox-211321@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v3 07/20] vfio/pci: Use access ops when mapping BAR
- pages
+Subject: Re: [RFC PATCH v3 01/20] vfio/pci: Add SRCU-protected access ops
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261112141632.918954-8-skolothumtho@nvidia.com>
+In-Reply-To: <20261112141632.918954-2-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
- <20261112141632.918954-8-skolothumtho@nvidia.com>
+ <20261112141632.918954-2-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 14:28:35 +0000
+Date: Thu, 12 Nov 2026 14:29:51 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,13 +59,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> A BAR page fault can race with recovery and install a mapping after
-> recovery has removed the existing mappings.
+> Before recovering a device, VFIO needs to stop new hardware accesses and
+> wait for operations already in progress to finish.
 >=20
-> Insert the mapping through the SRCU-protected access ops while holding
-> memory_lock. Recovery can then wait for pending insertions before
-> removing mappings. If access is blocked, return VM_FAULT_SIGBUS instead
-> of waiting for recovery in the fault handler.
+> Give each open device an SRCU instance to track hardware accesses.
+> Enable SRCU access tracking only for devices with
+> pci_recovery_supported set.
+> Select and call the access operation within the same SRCU read-side
+> section. Keep copies to and from userspace outside that section so a
+> page fault cannot hold up recovery.
+>=20
+> Introduce live and blocked tables. Initialize the ops pointer to blocked
+> when the device is created, and select live ops when open finishes.
+> Close uses a blocking transition that installs blocked ops and drains
+> SRCU readers before teardown. Open publishes live ops after setup.
+> Serialize these transitions with access_lock. Internal setup and cleanup
+> use their own helpers.
+>=20
+> Provide an accessor for operations that use their existing synchronization
+> instead of SRCU. The accessor only returns the selected table. It does
+> not acquire a lock or keep the device's per-open resources alive.
+>=20
+> Subsequent patches convert hardware access paths to these ops and add
+> support for host PCI error recovery using the same blocked table.
 >=20
 > Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 
@@ -74,5 +89,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112141632.9189=
-54-1-skolothumtho@nvidia.com?part=3D7
+54-1-skolothumtho@nvidia.com?part=3D1
 
