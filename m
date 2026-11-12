@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794493813;
-	b=07u43DcXYybXg2D7FSJJXPrZJ2cNRjFqb8n81DmZHvjWvcd6ziU1klSse5zp8zIffCVr
-	 5e4KoPIBymQT6AWd5BO88O/g3O/5LBtlhjEyy3ZkOHxdB3KxxBNHUZ0sUJdBkow+Dgb/p
-	 8JXlcsNMOOrls02r9RbWvb8KqMiKjaP0WgRprIBElFfTa8oh03ehe0+6zO9J3UenF12qU
-	 t24rDsMLSB/knW0VnhZN2WwnnZjQR69/wQBHjr0b61W4cuTn9zgkWBSjwbDT6x4Si9TMC
-	 SHvy8edpS8vSxZSlMsgs8W9rNWFNxDS8KLLReTDe1md+LEIyCFzO+n7GvmirPqSClbQ==
+	t=1794493829;
+	b=bN4ZYkSfgVLMxcX+QhIz41l2AzFMOnUzQM4mPjGKBqHgYb/mJpHXcfIG5YV9BcD454mE
+	 2k+eKICh72jhsQopJCYR52tpky00yc45SB8Td/AsDeSN9ILja+wrEr3hMxq7OyLkB9Lui
+	 /izkxkqneK6gXcRlfm2HNQQOU4x17mpazKOGX3ImewaqGg3iy+V8aigFP+9AssWr5zsbn
+	 GaRxMsyxRk8yk5yWKI5GRAQC9T9LJ87HZhzSHWiB/0Tq9ocawlMFAVJvSorxFhGW4Jx26
+	 ckgs9O4QusY76qFYZrtlSKBFWuB0uqJlN1Tjq0vvMk4L7qS6/N7mrlME0uhyapprKvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794493813;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794493829;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=q8rMGoU05VROAO7tOm42DrC9gyZlu5nMtXLyjJiwfzI=;
-	b=sVOgjp8P8vtYQqK+dbT6WluLEiZDJ8zWezI6ssX+3ws+ZfeYcJsLGvAoc1SI6cDGUlZC
-	 tRruFvu/k/TZozs2FFRT/GDyz0savLAoPus6aAf+e+7zFpkWXkKMIlPf2PYe4/hnkcpKX
-	 aMzj1/8CeSh5lFvwPfFYwevzvQeYEBecjhli7e3oaRztSRq9ry9QqWFNRkg5uBsvcoZrD
-	 iKwCEuoq5MBxWWUzB/Uf44eRwEJ93KHRz41Dm9VuldqgTB92hHvZKbF1dz9bKYZhqHi0m
-	 AQ8n7Ra3ZN4OWn609sxD6Ak+a3tXggKJH9G42MdEaAtI2IwW4AzjHcxk63nNq0p/wbA==
+	bh=LNEogz3icJuWNdYJTarNjgPtaTnRS3Q6Jn15TKFiXg4=;
+	b=kbTJJ5eQ6tCuHv0YsSNHoB01sK2hr2NBemZjEmRfibrVds8HD6Z5uo2i0u2cLVz2jcII
+	 v2wh0Ls/32SYf8ZRCKQffXcO1bViW1XGw6ryWOTr5Jt0xekTb86/dB7XeKMcdI4qrpHj6
+	 YHrx6HLhHpom8MG3sHVvrzcXO9lKtz7L1ry6edoUAMWq63lyiWmRpTjCOrUCTYSPAFgmp
+	 GCZJM+j3dms/MoFyN/3NLJzLKnb4phgfpnnh5UATepDUTtHXlJiyqG4zxAiDSMdHCELvu
+	 pojJOyRTm60qWJ7oj5TTciECfrqyHQlY8v+3Tc5+SaVini7YN5ml9UHKLwXn5XzN7QQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DBo1wyZG;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AnVRLrAk;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748E4606B09C
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:30:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6EDF606A337
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:30:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DBo1wyZG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D50AE1F00A05;
-	Thu, 12 Nov 2026 14:30:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AnVRLrAk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 756EE1F00A06;
+	Thu, 12 Nov 2026 14:30:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794493813;
-	bh=q8rMGoU05VROAO7tOm42DrC9gyZlu5nMtXLyjJiwfzI=;
+	s=k20260515; t=1794493828;
+	bh=LNEogz3icJuWNdYJTarNjgPtaTnRS3Q6Jn15TKFiXg4=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=DBo1wyZGQMkc1oakTIoAZe4ocphIyxMgvRYfIf/sXJ4kbm6YeuLYxi5pA3kYqqR5x
-	 bEb7vmY0CxZAQjuDSnzyl1Ui4m5yosvKoPLoxQhnbbjHt432lIPYvqe7AneqjTLSUe
-	 rA3djADiEpxYVD/ONvdvnYqI2jd+ui/WnHPmJ3JJjSVVmX52Fau4C/ezF0QMFMu5RD
-	 ILbDCx4RFCx4Yj5FoWXoEseMjfa5RFiIiqjicFIr80MuNfSLrYUhAgASS3Zk02jHvz
-	 5aYL+xxzzPoVYcBGnvnxg80xqlGyH7hNQMw+IZxaztkFxvNKp1wsXybBa83hyLYxdt
-	 O2g9yjF57Zb4w==
-Message-ID: <sashiko-outbox-211324@kernel.org>
+	b=AnVRLrAk9+vRvzGLGeBrQ20/+C9Y8HVeNVu4Qw2mliOYyIIYc+ikD+fWB3YpqtHri
+	 unV+DX19VyBqTGmysGS6yHPfH83qretug/CL5CgTvuNz9W9KlFmv7cgUN7/gSfWfbm
+	 wnb+fKkBB9cO1c7DsGp7Kl8XIzNna2s9+Sh66QqOAIfZA+ajb2skjvWLsQ3pWbczO7
+	 /yCPAIoDRToBaZjr1FsK/S3EqJ1jS5DjS9f86rA4egyotN5CDJ1JbO5JZ6QRDvFp2o
+	 sAGaFQtubujlUKV8DVGgoR/iGGCHW50a8jgeuoQD/SBWqsNSEoXSndZ09xF3c7AMmN
+	 I0rP2ORLAeKIg==
+Message-ID: <sashiko-outbox-211326@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v3 02/20] PCI/PM: Add a power-state helper that
- tries the bus lock
+Subject: Re: [RFC PATCH v3 08/20] vfio/pci: Use access ops for hardware IRQ
+ operations
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261112141632.918954-3-skolothumtho@nvidia.com>
+In-Reply-To: <20261112141632.918954-9-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
- <20261112141632.918954-3-skolothumtho@nvidia.com>
+ <20261112141632.918954-9-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 14:30:12 +0000
+Date: Thu, 12 Nov 2026 14:30:28 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,19 +60,19 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> PCI error recovery can hold pci_bus_sem for reading while waiting for a
-> lock held by a driver. If that driver also needs the bus read lock to
-> bring a device to D0, a queued writer can block it. Recovery, the driver
-> and the writer then all wait for each other.
+> IRQ queries and configuration can access PCI registers while recovery
+> resets the device or restores its configuration.
+> Use access ops when reading hardware IRQ counts and applying IRQ
+> configuration. Continue to hold igate for configuration changes.
 >=20
-> Add pci_try_set_power_state(), which returns -EAGAIN if it cannot take
-> the bus lock immediately. The caller can then release its locks. Once
-> the bus lock is held, use pci_set_power_state_locked() for the transition.
-> Keep the existing cases that need no power-state change. The transition
-> itself can still sleep.
+> Use separate SRCU read-side sections for the count query and the
+> configuration change so copies to and from userspace stay outside SRCU.
+> ERR and REQ operations do not touch hardware and remain available while
+> access is blocked.
 >=20
-> Callers that already hold the bus read lock must use the locked helper
-> instead.
+> IRQ teardown flushes the global virqfd workqueue. Waiting for an IRQ
+> operation to finish therefore also waits for that flush, including work
+> for other devices.
 >=20
 > Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 
@@ -80,5 +80,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112141632.9189=
-54-1-skolothumtho@nvidia.com?part=3D2
+54-1-skolothumtho@nvidia.com?part=3D8
 
