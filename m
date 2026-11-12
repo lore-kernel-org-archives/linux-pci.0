@@ -1,64 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.135
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794467843;
-	b=014Ll3ZFJXkqxRn8zqG60JWH0txx+N/C6OnmRzVb012cEUaYmE88YROzmfylA8hQblHg
-	 qswhv+fZAEj2ZEYe52xNGIMlxdPiP6VHoiR7CjFf7Mqe9e0x6rtIrwi9f35dFspKoBRaI
-	 X3HtXKo6yXHkQL41lMiFCZpxAXa3OSyp8uRkIbigwC5DZXVuupo3uTlYbFTjnl1BPQkEZ
-	 tSnj23VOMgDEv9pcMJYxdL62FASMwLeOfLdha6Dk/cqqcEUzZCAvQ2yTL6G+VbDnrjuNG
-	 7gOOZiUjVoji3UZ3HydXQARsXbslfqJ6PNy9JRiTsyb5RybO6nyyEuDR2eMyzpDbIPg==
+	t=1794468108;
+	b=HNFSuogqtx+3fBoX2S0zRI88rgMsJMlmAuVg799edAsjaclgIZmxH4an6Q69ot4m3Ulp
+	 hyVP6O6bYRxN8CR0azlJXKNtoyHiqZ+ZYKKvPCD6ljrgIwCt54rTAJWlNv/HaMtR0tvOE
+	 4felhCDFme2rSSmWkn9l1hJrY+KGWJq/4/2ZtUNrEc27I/6CQ4yCWmNOL6yvZvZ02HQXj
+	 TT6+Dmq8iwbz0r7z+EBBKgZLReWP6kbBgubAethwkvE9+TA6VftSEvYHomUsvqjJZdtyA
+	 UWTlBD8gCc7Yx3N7QcJ0wp87u0RuWq0KPxt02nAnevCKSS2bYu8KSAO5cJxBzzI9EOg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794467843;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=Y9mFAcJSAVxyNmz8kQNK+Ob8oGC1edSsJJjdeUbiSaY=;
-	b=IzDxKyaGy8eC8Ge582QjwbDrRcUoHT3v7pZY5X2ROu78eefPVU3ER7LpF0e0yCSpJ5cl
-	 hWb8EOiJnjCMpoqbshWCigGlpERpPvYncAwDDyjOwR7Ve1hAo3VGz8NYStzyvSRXoURQp
-	 Mh6klJEzUPdZplWIFawkUVeKSFXogxRfl2y/vMf59O1BknHd5f8yqNEyduQ+eGnThbv8F
-	 oRJ7zRZ7pHmccUrreLgzuyJh6v+cg65xPSbfD212FWwOiWE6vCiVPr5oattSmR/gZb4bH
-	 6bT+wasdP6DU2jDb8e7KBDTf1aR11THx1Os1OUlTkbGXAyYQQNQDwrlSgbEc5qYdcFg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794468108;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=q3qyb8WUYvmAmmpfmWMghvfYNdQtRy0dRBo+qCvKSrc=;
+	b=2CJfzH94ZrJwxXJ8G6bJfERud+AjO42vx8PQT8BKMTleeBCufJBo8ep0R86aefcZJ4O2
+	 YeLVKSQRLQTeczF8ZHe2k5zfdcmSSElrpyD7b7ZPul4uwv+MeMh87z0BGVplIy7hZLBSW
+	 nk/8JylCrasw/ecLAKGk59+F3aDsD/egDiwwDLLP/NHBOioM4WAkXPDXQae7Qjiwq5w3d
+	 Agp81YKoUTeQNqIE2gE2dQDfmjNQX7SIoQxoXf3rx9kzVC18cjOv1zYLi/uZ7uAguGhQz
+	 YCD4b4Re3K7KSAI5Oth8lcRigEgXlhILkEwSpQrHzLgXfjX595HSbEtffXu86deGVHQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=tnL8CcYy;
-	arc=none smtp.remote-ip=111.22.67.135
-Received: from cmccmta2.chinamobile.com (cmccmta2.chinamobile.com [111.22.67.135])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2A7C2606A332;
-	Thu, 12 Nov 2026 07:17:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A7C2606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bHi4Lzfn;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1B2606A333
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 07:21:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=tnL8CcYy
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=tnL8CcYy5pw9pEtg0NMKNSbHuvDgtECm3Wgig2M9/DSCbFGz+oLb3XjL6WIUUTNbYhKCtIH52I0n2
-	 kXp62eQx3OHOJA2I3qUUDrR+b4WqKpFBzifdvfakP6sAPATgI2KdiXfgGb6fea2XZc6m0JZxkIClw3
-	 MeNpwkavIdC2MZd4=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app03-12003 (RichMail) with SMTP id 2ee36af567fea35-ab3d8;
-	Thu, 12 Nov 2026 15:17:19 +0800 (CST)
-X-RM-TRANSID:2ee36af567fea35-ab3d8
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from devin-VMware-Virtual-Platform.localdomain (unknown[10.55.1.72])
-	by rmsmtp-syy-appsvr02-12002 (RichMail) with SMTP id 2ee26af567febf7-f70f7;
-	Thu, 12 Nov 2026 15:17:19 +0800 (CST)
-X-RM-TRANSID:2ee26af567febf7-f70f7
-From: Zhu Jun <zhujun2@cmss.chinamobile.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Zhu Jun <zhujun2@cmss.chinamobile.com>
-Subject: [PATCH] PCI: cpqhp: Release the device reference on config read failure
-Date: Thu, 12 Nov 2026 15:17:17 +0800
-Message-ID: <20261112071718.154545-1-zhujun2@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bHi4Lzfn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C0F21F00A06;
+	Thu, 12 Nov 2026 07:21:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794468108;
+	bh=q3qyb8WUYvmAmmpfmWMghvfYNdQtRy0dRBo+qCvKSrc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bHi4LzfnsVZJPCfrXXmX+dwS1aB7N7nsQfSK16XQ6fucW4Hvg1EI2+P6cDSTl1Vj1
+	 7Dtq07OBAkdzPdq+NzbxGbzefxT1OTP4WhwqvLGxGZ2jonMNzLvhFV4etlmUfmFblN
+	 PyWYfd+F9GrPZJedJyXiBO5Tc/JQVIDNuFLrwjEevBdAze3jpVGSIwbWxjSksN46l/
+	 d/TmV/f/bV/BLpYCCGJ1tsb1hlFtRcGE7Grskawqxh959HvBwWC1mJ+fAUVVebUs3U
+	 vcRpJhT4uEutrxbZFD7AM2AjNaBCdvM25zU7s+/en+zWPsluZ1XqbtjikE2cWPXPNr
+	 91vybhhSXnTAQ==
+Message-ID: <sashiko-outbox-210592@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: cpqhp: Release the device reference on config read
+ failure
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhu Jun" <zhujun2@cmss.chinamobile.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261112071718.154545-1-zhujun2@cmss.chinamobile.com>
+References: <20261112071718.154545-1-zhujun2@cmss.chinamobile.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 12 Nov 2026 07:21:47 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,39 +59,19 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-cpqhp_save_config() obtains a PCI device reference before saving its
-configuration space. If a configuration read fails, the function
-returns before reaching the matching pci_dev_put().
+> cpqhp_save_config() obtains a PCI device reference before saving its
+> configuration space. If a configuration read fails, the function
+> returns before reaching the matching pci_dev_put().
+>=20
+> Drop the lookup reference on that error path as well as on success.
+>=20
+> Fixes: 12a9da0fcb14 ("PCI Hotplug: cpqphp: don't use pci_find_slot()")
+> Signed-off-by: Zhu Jun <zhujun2@cmss.chinamobile.com>
 
-Drop the lookup reference on that error path as well as on success.
+Sashiko has reviewed this patch and found no issues.
 
-Fixes: 12a9da0fcb14 ("PCI Hotplug: cpqphp: don't use pci_find_slot()")
-Signed-off-by: Zhu Jun <zhujun2@cmss.chinamobile.com>
----
- drivers/pci/hotplug/cpqphp_pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
-index 81c58b1ec200..c24d311c8e44 100644
---- a/drivers/pci/hotplug/cpqphp_pci.c
-+++ b/drivers/pci/hotplug/cpqphp_pci.c
-@@ -409,8 +409,10 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
- 
- 			for (cloop = 0; cloop < 0x20; cloop++) {
- 				rc = pci_bus_read_config_dword(ctrl->pci_bus, PCI_DEVFN(device, function), cloop << 2, (u32 *) &(new_slot->config_space[cloop]));
--				if (rc)
-+				if (rc) {
-+					pci_dev_put(new_slot->pci_dev);
- 					return rc;
-+				}
- 			}
- 
- 			pci_dev_put(new_slot->pci_dev);
--- 
-2.51.0
-
-
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112071718.1545=
+45-1-zhujun2@cmss.chinamobile.com?part=3D1
 
