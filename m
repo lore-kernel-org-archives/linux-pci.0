@@ -1,44 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.236.53.6
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.135
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794467392;
-	b=bl4k0/jDmkDtBtXOmtqyiyvKeGcURKFRJJ3ZShLLZoKxHu7A/k6mO1rECZiLQ7z5L1MF
-	 XMqqozXU42QEF76ebkawtO956EOMbnGn+DDdCFcQeO8KkvK3rBI1+y0eDQnFcdEiki7Om
-	 hXknTq7UaD4rPQWgcFDed0dWQj9vCrHHAJ2gxMPrP5omMNK2UW0kd3tBN1HsT/ddUj+Vt
-	 1xSDQFMnVka6mnlovGz2R1Jj27wielvjJfm3rv25BiC6ezZubvHmKB9TiiHUs0dNtAAUP
-	 +8p5cr9jQ2scfxP4ocdwKSCYCWrsTgtVkGejCH8xTPxsM+gkJIg4egFgKG5VTu5dPdQ==
+	t=1794467843;
+	b=014Ll3ZFJXkqxRn8zqG60JWH0txx+N/C6OnmRzVb012cEUaYmE88YROzmfylA8hQblHg
+	 qswhv+fZAEj2ZEYe52xNGIMlxdPiP6VHoiR7CjFf7Mqe9e0x6rtIrwi9f35dFspKoBRaI
+	 X3HtXKo6yXHkQL41lMiFCZpxAXa3OSyp8uRkIbigwC5DZXVuupo3uTlYbFTjnl1BPQkEZ
+	 tSnj23VOMgDEv9pcMJYxdL62FASMwLeOfLdha6Dk/cqqcEUzZCAvQ2yTL6G+VbDnrjuNG
+	 7gOOZiUjVoji3UZ3HydXQARsXbslfqJ6PNy9JRiTsyb5RybO6nyyEuDR2eMyzpDbIPg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794467392;
-	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
-	 Subject:To:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
-	 DKIM-Signature;
-	bh=8mucxYKJYBwqJKDbsfQpDDCpVs3/pBmp8Rts+MRAkyQ=;
-	b=JaCf99W0wF55bbuSiT6caXGBQt+6Oq4FlIpeW28hm+mXM3IY/BtApQaMVoCGYCLvo1Qb
-	 ukjPbGYFd0kzTNPrmToncB7mcqsN4pdYoriuXCbxPmoARfSjdxGhuV0B6zSymqsXIT4qv
-	 X1WQHh18pG/SKZ5hDlrYMCX6E6yue8w0EvIFX1VhdcR1xuqUmQDTPvSqoF8K/TQXeRtGF
-	 la8f9OaKZCvu5DUdyoHqLn0gCcIGoKIuhPu41HOnAUDCA1rP57ZHsz1IMD8S8QRtaZ56P
-	 TUOnWB2AM3n6oSemypIrstH5Heax6EpJe0PmDqcOoberKIaccEFMlalzH+JmcrAtlAQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794467843;
+	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
+	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
+	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=Y9mFAcJSAVxyNmz8kQNK+Ob8oGC1edSsJJjdeUbiSaY=;
+	b=IzDxKyaGy8eC8Ge582QjwbDrRcUoHT3v7pZY5X2ROu78eefPVU3ER7LpF0e0yCSpJ5cl
+	 hWb8EOiJnjCMpoqbshWCigGlpERpPvYncAwDDyjOwR7Ve1hAo3VGz8NYStzyvSRXoURQp
+	 Mh6klJEzUPdZplWIFawkUVeKSFXogxRfl2y/vMf59O1BknHd5f8yqNEyduQ+eGnThbv8F
+	 oRJ7zRZ7pHmccUrreLgzuyJh6v+cg65xPSbfD212FWwOiWE6vCiVPr5oattSmR/gZb4bH
+	 6bT+wasdP6DU2jDb8e7KBDTf1aR11THx1Os1OUlTkbGXAyYQQNQDwrlSgbEc5qYdcFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=rock-chips.com;
-	spf=pass smtp.mailfrom=rock-chips.com;
-	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b="O/iMBATN";
-	arc=none smtp.remote-ip=160.236.53.6
-Received: from mail-m160236536.xmail.ntesmail.com (mail-m160236536.xmail.ntesmail.com [160.236.53.6])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853BA606A33B;
-	Thu, 12 Nov 2026 07:09:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 853BA606A33B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	dmarc=pass header.from=cmss.chinamobile.com;
+	spf=pass smtp.mailfrom=cmss.chinamobile.com;
+	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=tnL8CcYy;
+	arc=none smtp.remote-ip=111.22.67.135
+Received: from cmccmta2.chinamobile.com (cmccmta2.chinamobile.com [111.22.67.135])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2A7C2606A332;
+	Thu, 12 Nov 2026 07:17:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A7C2606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=O/iMBATN
-Received: from [172.16.12.48] (unknown [61.154.14.86])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 546ae3693;
-	Thu, 12 Nov 2026 15:09:39 +0800 (GMT+08:00)
-Message-ID: <fc0d091f-2791-4078-a986-7626b239aa02@rock-chips.com>
-Date: Thu, 12 Nov 2026 15:09:38 +0800
+	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=tnL8CcYy
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=cmss.chinamobile.com; s=default; l=0;
+	h=from:subject:message-id:to:cc:mime-version;
+	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+	b=tnL8CcYy5pw9pEtg0NMKNSbHuvDgtECm3Wgig2M9/DSCbFGz+oLb3XjL6WIUUTNbYhKCtIH52I0n2
+	 kXp62eQx3OHOJA2I3qUUDrR+b4WqKpFBzifdvfakP6sAPATgI2KdiXfgGb6fea2XZc6m0JZxkIClw3
+	 MeNpwkavIdC2MZd4=
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
+	by rmmx-syy-dmz-app03-12003 (RichMail) with SMTP id 2ee36af567fea35-ab3d8;
+	Thu, 12 Nov 2026 15:17:19 +0800 (CST)
+X-RM-TRANSID:2ee36af567fea35-ab3d8
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from devin-VMware-Virtual-Platform.localdomain (unknown[10.55.1.72])
+	by rmsmtp-syy-appsvr02-12002 (RichMail) with SMTP id 2ee26af567febf7-f70f7;
+	Thu, 12 Nov 2026 15:17:19 +0800 (CST)
+X-RM-TRANSID:2ee26af567febf7-f70f7
+From: Zhu Jun <zhujun2@cmss.chinamobile.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Zhu Jun <zhujun2@cmss.chinamobile.com>
+Subject: [PATCH] PCI: cpqhp: Release the device reference on config read failure
+Date: Thu, 12 Nov 2026 15:17:17 +0800
+Message-ID: <20261112071718.154545-1-zhujun2@cmss.chinamobile.com>
+X-Mailer: git-send-email 2.51.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -48,323 +68,38 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org,
- imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
- linux-rockchip@lists.infradead.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: Check the pme_turn_off callback return value
-To: Frank Li <Frank.li@oss.nxp.com>
-References: <20261111041821.2259326-1-shawn.lin@rock-chips.com>
- <avUrzss_VTn5m3I3@SMW015318>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <avUrzss_VTn5m3I3@SMW015318>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1ce973a4603a4kunm008730b691fe9
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZTUtIVhkZGh4YQk9LSkMaGFYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUJCSU
-	5LVUpLS1VKQktCWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=O/iMBATNR672WEFrXS+ncZ9imNCdfGIxaQ34CelqumfvPexpznonCffikf7OW2vvBO6K8xRBVx4kK1Wluis08bXaXvQBF8HaQsGcXerDnmz/OwNGM6mv2z1HOpFPSZWy3Xcq67zWHeCcgxJfoPhqr3CP379U2OEZEcY2srx3MZQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=8mucxYKJYBwqJKDbsfQpDDCpVs3/pBmp8Rts+MRAkyQ=;
-	h=date:mime-version:subject:message-id:from;
 
-Hi Frank,
+cpqhp_save_config() obtains a PCI device reference before saving its
+configuration space. If a configuration read fails, the function
+returns before reaching the matching pci_dev_put().
 
-在 2026/11/12 星期四 11:00, Frank Li 写道:
-> On Wed, Nov 11, 2026 at 12:18:21PM +0800, Shawn Lin wrote:
->> dw_pcie_suspend_noirq() invokes the optional host ->pme_turn_off()
->> callback but ignores its result, so a platform that fails to send
->> PME_Turn_Off still has the link brought down as if the handshake had
->> completed.
->>
->> Turn the callback into an int returning function and propagate its
->> error from dw_pcie_suspend_noirq(), matching how the generic
->> dw_pcie_pme_turn_off() path is already handled.
->>
->> All existing implementations return 0 except:
->>    - the Layerscape PF LUT variant, which now returns -ETIMEDOUT when
->>      the PME_Turn_Off handshake does not complete instead of only
->>      logging it;
->>    - the Rockchip host, which now returns an error only when
->>      PME_Turn_Off could not be sent at all.
-> 
-> I remember first version it is return int.
-> 
-> How do you know PME_Turn_off have not sent out at all?  I remember spec
-> require continue after timeout.
-> 
+Drop the lookup reference on that error path as well as on success.
 
-I don't know whether other dwc instances could check it, but there is a
-dedicated register for Rockchip one to know if the PME_Turn_off is sent
-successfully or not.
+Fixes: 12a9da0fcb14 ("PCI Hotplug: cpqphp: don't use pci_find_slot()")
+Signed-off-by: Zhu Jun <zhujun2@cmss.chinamobile.com>
+---
+ drivers/pci/hotplug/cpqphp_pci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Right, the spec does say to continue about a short 10ms timeout if no
-PME_TO_Ack was received from downstream port. So you could see rockchip
-driver also ignors PME_TO_Ack timeout to follow the generic path[1].
-
-[1] 
-https://elixir.bootlin.com/linux/v7.3/source/drivers/pci/controller/dwc/pcie-designware-host.c#L1262 
+diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
+index 81c58b1ec200..c24d311c8e44 100644
+--- a/drivers/pci/hotplug/cpqphp_pci.c
++++ b/drivers/pci/hotplug/cpqphp_pci.c
+@@ -409,8 +409,10 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
+ 
+ 			for (cloop = 0; cloop < 0x20; cloop++) {
+ 				rc = pci_bus_read_config_dword(ctrl->pci_bus, PCI_DEVFN(device, function), cloop << 2, (u32 *) &(new_slot->config_space[cloop]));
+-				if (rc)
++				if (rc) {
++					pci_dev_put(new_slot->pci_dev);
+ 					return rc;
++				}
+ 			}
+ 
+ 			pci_dev_put(new_slot->pci_dev);
+-- 
+2.51.0
 
 
-> Frank
-> 
->>   Its PME_TO_Ack and
->>      L23-ready wait timeouts remain non-fatal and just log, consistent
->>      with the generic path, which does not abort the suspend when an
->>      endpoint fails to respond: such timeouts are an endpoint behaviour
->>      and must not make the whole system suspend fail.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
->>
->>   drivers/pci/controller/dwc/pci-imx6.c         |  4 +++-
->>   drivers/pci/controller/dwc/pci-layerscape.c   | 22 +++++++++++++------
->>   .../pci/controller/dwc/pcie-designware-host.c |  4 +++-
->>   drivers/pci/controller/dwc/pcie-designware.h  |  2 +-
->>   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 16 ++++++++------
->>   drivers/pci/controller/dwc/pcie-eswin.c       |  4 +++-
->>   drivers/pci/controller/dwc/pcie-qcom.c        |  4 +++-
->>   drivers/pci/controller/dwc/pcie-ultrarisc.c   |  3 ++-
->>   8 files changed, 39 insertions(+), 20 deletions(-)
->>
->> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
->> index 38a59795f98f..643b591c789f 100644
->> --- a/drivers/pci/controller/dwc/pci-imx6.c
->> +++ b/drivers/pci/controller/dwc/pci-imx6.c
->> @@ -1575,7 +1575,7 @@ static void imx_pcie_host_post_init(struct dw_pcie_rp *pp)
->>    * register is reserved, so the generic DWC implementation of sending the
->>    * PME_Turn_Off message using a dummy MMIO write cannot be used.
->>    */
->> -static void imx_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->> +static int imx_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   {
->>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>   	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
->> @@ -1584,6 +1584,8 @@ static void imx_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   	regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12, IMX6SX_GPR12_PCIE_PM_TURN_OFF);
->>
->>   	usleep_range(PCIE_PME_TO_L2_TIMEOUT_US/10, PCIE_PME_TO_L2_TIMEOUT_US);
->> +
->> +	return 0;
->>   }
->>
->>   static const struct dw_pcie_host_ops imx_pcie_host_ops = {
->> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
->> index 475aea3ef58a..8bd879226971 100644
->> --- a/drivers/pci/controller/dwc/pci-layerscape.c
->> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
->> @@ -117,7 +117,7 @@ static void ls_pcie_pf_lut_writel(struct ls_pcie *pcie, u32 off, u32 val)
->>   		iowrite32(val, pcie->pf_lut_base + off);
->>   }
->>
->> -static void ls_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
->> +static int ls_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
->>   {
->>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>   	struct ls_pcie *pcie = to_ls_pcie(pci);
->> @@ -132,8 +132,12 @@ static void ls_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
->>   				 val, !(val & PF_MCR_PTOMR),
->>   				 PCIE_PME_TO_L2_TIMEOUT_US/10,
->>   				 PCIE_PME_TO_L2_TIMEOUT_US);
->> -	if (ret)
->> +	if (ret) {
->>   		dev_err(pcie->pci->dev, "PME_Turn_off timeout\n");
->> +		return ret;
->> +	}
->> +
->> +	return 0;
->>   }
->>
->>   static int ls_pcie_exit_from_l2(struct dw_pcie_rp *pp)
->> @@ -179,7 +183,7 @@ static int ls_pcie_host_init(struct dw_pcie_rp *pp)
->>   	return 0;
->>   }
->>
->> -static void scfg_pcie_send_turnoff_msg(struct regmap *scfg, u32 reg, u32 mask)
->> +static int scfg_pcie_send_turnoff_msg(struct regmap *scfg, u32 reg, u32 mask)
->>   {
->>   	/* Send PME_Turn_Off message */
->>   	regmap_write_bits(scfg, reg, mask, mask);
->> @@ -195,14 +199,17 @@ static void scfg_pcie_send_turnoff_msg(struct regmap *scfg, u32 reg, u32 mask)
->>   	 * to complete the PME_Turn_Off handshake.
->>   	 */
->>   	regmap_write_bits(scfg, reg, mask, 0);
->> +
->> +	return 0;
->>   }
->>
->> -static void ls1021a_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
->> +static int ls1021a_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
->>   {
->>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>   	struct ls_pcie *pcie = to_ls_pcie(pci);
->>
->> -	scfg_pcie_send_turnoff_msg(pcie->scfg, SCFG_PEXPMWRCR(pcie->index), PMXMTTURNOFF);
->> +	return scfg_pcie_send_turnoff_msg(pcie->scfg, SCFG_PEXPMWRCR(pcie->index),
->> +					  PMXMTTURNOFF);
->>   }
->>
->>   static int scfg_pcie_exit_from_l2(struct regmap *scfg, u32 reg, u32 mask)
->> @@ -222,12 +229,13 @@ static int ls1021a_pcie_exit_from_l2(struct dw_pcie_rp *pp)
->>   	return scfg_pcie_exit_from_l2(pcie->scfg, SCFG_PEXSFTRSTCR, PEXSR(pcie->index));
->>   }
->>
->> -static void ls1043a_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
->> +static int ls1043a_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
->>   {
->>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>   	struct ls_pcie *pcie = to_ls_pcie(pci);
->>
->> -	scfg_pcie_send_turnoff_msg(pcie->scfg, SCFG_PEXPMECR, PEXPME(pcie->index));
->> +	return scfg_pcie_send_turnoff_msg(pcie->scfg, SCFG_PEXPMECR,
->> +					  PEXPME(pcie->index));
->>   }
->>
->>   static int ls1043a_pcie_exit_from_l2(struct dw_pcie_rp *pp)
->> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
->> index f531c5b51b3c..eb11556aca72 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->> @@ -1249,7 +1249,9 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->>   		return 0;
->>
->>   	if (pci->pp.ops->pme_turn_off) {
->> -		pci->pp.ops->pme_turn_off(&pci->pp);
->> +		ret = pci->pp.ops->pme_turn_off(&pci->pp);
->> +		if (ret)
->> +			return ret;
->>   	} else {
->>   		ret = dw_pcie_pme_turn_off(pci);
->>   		if (ret)
->> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
->> index 0ece9c433229..9836ea9127bd 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware.h
->> +++ b/drivers/pci/controller/dwc/pcie-designware.h
->> @@ -440,7 +440,7 @@ struct dw_pcie_host_ops {
->>   	void (*deinit)(struct dw_pcie_rp *pp);
->>   	void (*post_init)(struct dw_pcie_rp *pp);
->>   	int (*msi_init)(struct dw_pcie_rp *pp);
->> -	void (*pme_turn_off)(struct dw_pcie_rp *pp);
->> +	int (*pme_turn_off)(struct dw_pcie_rp *pp);
->>   };
->>
->>   struct dw_pcie_rp {
->> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
->> index 525a26ee1d07..ea7ef0be1214 100644
->> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
->> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
->> @@ -464,7 +464,7 @@ static void rockchip_pcie_host_post_init(struct dw_pcie_rp *pp)
->>   	pp->bridge->broken_l1ss_resume = true;
->>   }
->>
->> -static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->> +static int rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   {
->>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>   	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
->> @@ -478,18 +478,16 @@ static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   				 status, !(status & BIT(4)), PCIE_PME_TO_L2_TIMEOUT_US / 10,
->>   				 PCIE_PME_TO_L2_TIMEOUT_US);
->>   	if (ret) {
->> -		dev_warn(dev, "Failed to send PME_Turn_Off\n");
->> -		return;
->> +		dev_err(dev, "Failed to send PME_Turn_Off\n");
->> +		return ret;
->>   	}
->>
->>   	/* 2. Wait for PME_TO_Ack, bit 9 will be set once received */
->>   	ret = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_INTR_STATUS_MSG_RX,
->>   				 status, status & BIT(9), PCIE_PME_TO_L2_TIMEOUT_US / 10,
->>   				 PCIE_PME_TO_L2_TIMEOUT_US);
->> -	if (ret) {
->> +	if (ret)
->>   		dev_warn(dev, "Failed to receive PME_TO_Ack\n");
->> -		return;
->> -	}
->>
->>   	/* 3. Clear PME_TO_Ack and Wait for ready to enter L23 message */
->>   	rockchip_pcie_writel_apb(rockchip, PME_TO_ACK, PCIE_CLIENT_INTR_STATUS_MSG_RX);
->> @@ -497,8 +495,12 @@ static void rockchip_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   				 status, status & PME_READY_ENTER_L23,
->>   				 PCIE_PME_TO_L2_TIMEOUT_US / 10,
->>   				 PCIE_PME_TO_L2_TIMEOUT_US);
->> -	if (ret)
->> +	if (ret) {
->>   		dev_err(dev, "Failed to get ready to enter L23 message\n");
->> +		ret = 0;
->> +	}
->> +
->> +	return ret;
->>   }
->>
->>   static const struct dw_pcie_host_ops rockchip_pcie_host_ops = {
->> diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
->> index 5639666d5148..ed498601312f 100644
->> --- a/drivers/pci/controller/dwc/pcie-eswin.c
->> +++ b/drivers/pci/controller/dwc/pcie-eswin.c
->> @@ -269,7 +269,7 @@ static void eswin_pcie_host_deinit(struct dw_pcie_rp *pp)
->>   	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
->>   }
->>
->> -static void eswin_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->> +static int eswin_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   {
->>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>   	struct eswin_pcie *pcie = to_eswin_pcie(pci);
->> @@ -281,6 +281,8 @@ static void eswin_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   	 * the skip_l23_ready has been set.
->>   	 */
->>   	pp->skip_l23_ready = pcie->data->skip_l23;
->> +
->> +	return 0;
->>   }
->>
->>   static const struct dw_pcie_host_ops eswin_pcie_host_ops = {
->> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
->> index eba1b2cb30f0..9548c6568c82 100644
->> --- a/drivers/pci/controller/dwc/pcie-qcom.c
->> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
->> @@ -1594,11 +1594,13 @@ static void qcom_pcie_host_post_init(struct dw_pcie_rp *pp)
->>   		pcie->cfg->ops->host_post_init(pcie);
->>   }
->>
->> -static void qcom_pcie_host_pme_turn_off(struct dw_pcie_rp *pp)
->> +static int qcom_pcie_host_pme_turn_off(struct dw_pcie_rp *pp)
->>   {
->>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>
->>   	writel(ELBI_SYS_CTRL_PME_TURNOFF_MSG, pci->elbi_base + ELBI_SYS_CTRL);
->> +
->> +	return 0;
->>   }
->>
->>   static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
->> diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
->> index ee844ff7ed55..493b6c68b42f 100644
->> --- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
->> +++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
->> @@ -77,12 +77,13 @@ static int ultrarisc_pcie_host_init(struct dw_pcie_rp *pp)
->>   	return 0;
->>   }
->>
->> -static void ultrarisc_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->> +static int ultrarisc_pcie_pme_turn_off(struct dw_pcie_rp *pp)
->>   {
->>   	/*
->>   	 * DP1000 does not support sending PME_Turn_Off from the RC.
->>   	 * Keep this callback empty to skip the generic MSG TLP path.
->>   	 */
->> +	return 0;
->>   }
->>
->>   static const struct dw_pcie_host_ops ultrarisc_pcie_host_ops = {
->> --
->> 2.25.1
->>
->>
-> 
 
