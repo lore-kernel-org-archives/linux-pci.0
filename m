@@ -1,71 +1,163 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794475412;
-	b=oNDa1IrUJ33ZOBgG43kwsyvET0LgliV1xKqMCH9ElhD/Y0Ic3Uvy/Ysf+WNseaRzWTgc
-	 p872RlPz+F5lughFbMXJqHGf3EedU4L+3Pr10rhEYHIMvtXd5/1uLJQqDPzsh6hV4ItHE
-	 /qz5PQqy+9xbrDJF88Q2Oq7CTZdawG6bnHQMI5ir24wfZXkshpYVDSGvtp1hVTnr38aux
-	 xI5AQVB+fK4F8du8faMvVqBK1LxmlvgjykSEQMPiXRHhi/fTZ4GdxJKouA5f0Yyp3H0tm
-	 faVnrpzOQCj0E4hZbjpYq6m/j8gUJcvhxr2RjIo5bR47m25+dCM4ozV8+r0VgTI9ZHQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794475412;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=Yt4A8NZadS0W5LYvptZOhNRvoJ7zuxm37iF0wtrvYzQ=;
-	b=RJvk3NdUNtQSobUQf2OIJy/h7+fYdne7s44IeHFxrDgTmcOCgzjz+i8joEtmk9IJrxnv
-	 nzQwWkv4YpD3NWH8RLgDdjLOle9Z6wgt6gkBMkzSUSK9sZwTVETQoD8Y1P2XhOQiFtFiS
-	 yqIk2GUCaaOkysrzXjQlzlqaZSU8RWFLsjIv/Vkhnl+0GEt+fSAMY01DZXV7+hlTgxCHi
-	 zvuMKlZOvcHNcOhzdrBDpsl7d5R76/Qrva0V5JIqCEWTKU4kQ0b6uM4+zmbeJ0MkWCVUC
-	 tYOCBFE8xsI7SFR6QBEfMx3UmVCRu+MxiMy+EmnT/NN5uQ1488n0vGcKhDkzunckoww==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Al8XrrSs;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.126.86
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794475814;
+	b=jdiJ9BHc/8JT2rMvpTiY8o6krzqDAr2Cu+xcHp4Cq6tQI0AV078JRCNf/5Q8fvd36grp
+	 4buvLPUzD+bZGuvqJCzZb8Ki+1noucfNqn0ljO69SiFUYVVd8WGJeqnYRb6os60ymVoz2
+	 vxuQ28Dt++v2136wNuuGh+EwQcbPKzJLBIckVe3EUMmsFD0QxXGkH9INkKV6uABPViZCO
+	 d9VZ6mo8mM9ZcbB3dmfAcWRCGW5C//4OisMDWZi9IXQeGOucGNX/cnNnJ7SPIMNgx0PBj
+	 bxmSsdd5qHyfK4WNl9o5pEVvnYJy34095dFQ3iE2BOrMI2XufuFsYmnVDFq91u2l48g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794475814;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
+	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
+	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
+	 x-ms-office365-filtering-correlation-id:x-ms-exchange-senderadcheck:
+	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
+	 X-MS-Exchange-CrossTenant-userprincipalname:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=E4q0W8Nj0PJzbTAxPbtrmvAAM1og7Y8eAIInnWABITI=;
+	b=GHrtgDMOhQLbGq1dzl42JsVwQlkQgeGz0768xdVju6v2aw0Fj/GG17TGAzaWa5nXQ252
+	 XcxoUzWxoWcc1MFOnybwNBxwo2OUKopMjFjrfMkClaZX+xf2nNSc9/jypuEp3RjaZTU4x
+	 gDPQyAcTCtgwDGdTikk2Y1DbbmEcSypINXQAMYJzX7cuATwzIUmS/T0LTBtjRMMybqshx
+	 7k+U+XWAQ+TTDIQhl4OkknokTy4ZQ94k6DxMBQ7XVRs8TChUgKodxUxe6zj0c3fOtO/hV
+	 zXSVDWMB9+8EajIja5suvn6EhpQlxEVc0Pl7Kt80EcDYrFmli4AuUMvtdjKwaMtBFnQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=genesyslogic.com.tw;
+	spf=pass smtp.mailfrom=genesyslogic.com.tw;
+	dkim=pass header.d=genesyslogic.com.tw header.i=@genesyslogic.com.tw header.a=rsa-sha256 header.s=selector2 header.b=gUvNduTF;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.126.86
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022086.outbound.protection.outlook.com [52.101.126.86])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6E25606A32E;
-	Thu, 12 Nov 2026 09:23:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9388F606A338;
+	Thu, 12 Nov 2026 09:30:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9388F606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=genesyslogic.com.tw
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=genesyslogic.com.tw
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Al8XrrSs
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B11CC1F00A05;
-	Thu, 12 Nov 2026 09:23:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794475411;
-	bh=Yt4A8NZadS0W5LYvptZOhNRvoJ7zuxm37iF0wtrvYzQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Al8XrrSs8SlF0Ee63VyaB5C5G3Uo5XX4ccMBtcpNj1/nlgPcep7aeKERTSWgnucOp
-	 MfDI/asrfWa/3CEmg6pEOW0iwUBXTbrstHK+aT1k/N2rH9Ze++0BQyE3m5E+Bsvhla
-	 Li75qTYXiN8XuLzDwXR8iTaIguGAuDTQE2CzXwvzHiWzxEQE/Ee8NN8ZEee7hLNl61
-	 N4HHHSK9uoj65Dbf4ioWvuiLsqurNOmaBgvsD1iZXXvUzX8srVURqbXYCpIx3J/ZGz
-	 +ThyHkvnZ3z8Ki/YNSmcFC2kOCj7mKH9R4pbLysLKP+MoYmyyEJ9f00YCJEhD/InKP
-	 yDI53+WDSqvfg==
-Date: Thu, 12 Nov 2026 11:23:26 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, iommu@lists.linux.dev,
-	Tushar Dave <tdave@nvidia.com>, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	linux-rdma@vger.kernel.org, kvm@vger.kernel.org,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jens Axboe <axboe@kernel.dk>, Alex Williamson <alex@shazbot.org>,
-	Ankit Agrawal <ankita@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>
-Subject: Re: [PATCH v13 00/19] PCI/P2PDMA: Route peer-to-peer DMA by TLP class
-Message-ID: <20261112092326.GU8635@unreal>
-References: <20261111121602.GQ8635@unreal>
- <20261111224136.GA754433@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=genesyslogic.com.tw header.i=@genesyslogic.com.tw header.a=rsa-sha256 header.s=selector2 header.b=gUvNduTF
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=SLLtYmqaClV+Ts22iqf9+rLiUUc4WJpeN5Mwut4ymU29utNr1aB+0L1//IDVIr2IY4QwuHvsllu2tLdslAp9CeIKDQjQagr/pn+5NwkOq7C3O2gN8x5ZwL+nNkz8byzcZwbURGXcmVgMAZPCBBzHO7XCZ/cFl+uLpJxx9NaH5mOkad5J7C7squwpe5BMArnmo0mVv2OA6ZMLK6zDu2uXgxv/Z3UeikkhSerb0mi6eZp0rU8jKqX/thv/2CDNAbB0oXHUSluNP5dsHXyEhlbFBpMtaLkW0oGF/v0okqrD+11K2XPz2wRcToGpoFo1A6sl2GrYIoCMf9gMLp4OQqp4ug==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=E4q0W8Nj0PJzbTAxPbtrmvAAM1og7Y8eAIInnWABITI=;
+ b=blky2BsdhefqR505l7MIHmwnLPKku35H2oe5IkWsWUnvcFTez8/AU7V259tSzYkyfdp5kUT+ctiQ8O3jj6zONThDbWdt40yE2bvM/03iUccZOfUpiyfST6mObpLLdNyUxB/vGtZyfreb1fTy9wwa9cRk14Q0bu55mU7x0PlqNviGsSHC2h55qi2js/Ou+RefexVaztzxy/UxSsZPRDvO+MzvNpWkMQa7LdpfYyEB2VcesEAnk+MwaNzNoMhcI298GGagezEhs9PnxuaLNDu60IKlsY2+TKNUAKhVVU4iJEBBYKX9jxVFAG7GMOcoafs3go6fCuY3oGAkz2Dw+wtu5g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=genesyslogic.com.tw; dmarc=pass action=none
+ header.from=genesyslogic.com.tw; dkim=pass header.d=genesyslogic.com.tw;
+ arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=genesyslogic.com.tw;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=E4q0W8Nj0PJzbTAxPbtrmvAAM1og7Y8eAIInnWABITI=;
+ b=gUvNduTFmrhBcEbPPL4uvZFl/L0kcG2rfSpFPM3l8QjYUGnthNzJTLnznbS7emCP/qQuOKOBzk4kjs46meMVE9XoSlXgqbQwJAehnrjFEKx6t3VQ6H+WDeBj/5ZaArIDE8uzWMppYYH2S+KDoQoKN2rb+IPB9Ol4GMJzmY3CCrtOfaZWOJf+QG6f3lWlQFjB27bE/ugDQtrebweR6lCfrM2njMkt6tYwMkwXQpYyd9+BUPZOk4bWM/7Ff8VanbBEL52SJTBgvCK7vbONA0smqZKPr2GhfVbkDlpMF4o/OVhwgC4s79bDWsJn1zXpqeosOcc9rprWP3ZTlo7us0uI9g==
+Received: from TYZPR01MB4260.apcprd01.prod.exchangelabs.com
+ (2603:1096:400:1c0::6) by TYPPR01MB7896.apcprd01.prod.exchangelabs.com
+ (2603:1096:405:381::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.9; Thu, 12 Nov
+ 2026 09:30:06 +0000
+Received: from TYZPR01MB4260.apcprd01.prod.exchangelabs.com
+ ([fe80::7c4:a145:8415:c272]) by TYZPR01MB4260.apcprd01.prod.exchangelabs.com
+ ([fe80::7c4:a145:8415:c272%6]) with mapi id 15.21.0615.008; Thu, 12 Nov 2026
+ 09:30:06 +0000
+From: =?utf-8?B?QmVuQ2h1YW5nW+iOiuaZuumHj10=?=
+	<Ben.Chuang@genesyslogic.com.tw>
+To: Kyle Baedke <kylebaedke@protonmail.com>
+CC: Adrian Hunter <adrian.hunter@intel.com>, "linux-mmc@vger.kernel.org"
+	<linux-mmc@vger.kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"rafael@kernel.org" <rafael@kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, =?utf-8?B?VmljdG9yU2hpaFvmlr3li53mlodd?=
+	<victor.shih@genesyslogic.com.tw>
+Subject: RE: [BUG] Genesys GL9750 (17a0:9750) does not respond after its PCIe
+ slot is powered back on from D3cold, on s2idle resume and at runtime (ASUS
+ Vivobook 14 Flip TP3407SA, kernel 7.3.1)
+Thread-Topic: [BUG] Genesys GL9750 (17a0:9750) does not respond after its PCIe
+ slot is powered back on from D3cold, on s2idle resume and at runtime (ASUS
+ Vivobook 14 Flip TP3407SA, kernel 7.3.1)
+Thread-Index: AQHdbOuQbSjXp9HOKkScWwQiuVLRcrcqMhjg
+Date: Thu, 12 Nov 2026 09:30:06 +0000
+Message-ID:
+ <TYZPR01MB4260A2B6599B5D98B7457628D7702@TYZPR01MB4260.apcprd01.prod.exchangelabs.com>
+References:
+ <x4G_0cgWnHWJtmgP4iX3hFfwwbWDyVuO9Ps8Pv_Rnq4VguufBRLzZex1IxGuTtaYfU7tS7U8RbKjB2I54HxfEmPk3gzKWvYDAyuZXrtWbDU=@protonmail.com>
+ <vqOfI4cXijz1Ft480-_mX3XkrTT_-oQ78Xy6CPrXD_r5R06i7H03y3szJFA7JAVs9YsW93_hUQ0hz5bTYItb7RUml3cGwxPmW9gPFIcNY-8=@protonmail.com>
+ <c6080d32-49d0-413b-8c37-74709dadd6f6@intel.com>
+In-Reply-To: <c6080d32-49d0-413b-8c37-74709dadd6f6@intel.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=genesyslogic.com.tw;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: TYZPR01MB4260:EE_|TYPPR01MB7896:EE_
+x-ms-office365-filtering-correlation-id: 7c66b2c0-b071-4054-3331-08df409f89c0
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|23010399003|366016|1800799024|22082099003|18002099003|6133799003|3023799007|4143699003|261026121527099003|261026140227099003|261022105027099003|261028144727099003|56012099006|261021123027099003|261021121427099003|261009223027099003|261102123227099003|38070700021|261022075727099003|10067099003;
+x-microsoft-antispam-message-info:
+ cVAei0X9OgaqsGrSf9ts4b/VuYK400C16cc2eNJB5j7vEwFH9Zcf8Z2md1jgdpxMvYjPY618363DsUkwWSQ2bWBefRU9MglLHYVTioaDhLhGcYtB1UEa6w+tBHbf5fLMgpec8FgUJdHOVlgRiuLa0E5C1GO0hKzNWQR7A4qVhFqCTOu+IIP3xWfXAVtnD7hJ0eMpKrpKSr7x4RdrqKRLOZOeYWr1dNqQlCBZTWUJ+yEKArD8qCEZ6m1doq9j3OojEdwuThQHGSSsmZ1QbR9KttjC0P339fvT6C4MZ6ngGCaYFDYN4F0fAxgr2ivdLKCi7EDEvgMWyPfLJ3dOfLxqm2X6PKZ7hIFF2y1kW4288VRcb+an5tsOiIOPCco407/dcSX7EZTpGFvgxv/HUbK2lyvCruuzCOlngmqq0F8SlNND80hyNofLFdw8HOYGP51RIyN7LAcAhNZiGSEGLeGxuwEybbyoZey3tNqLlM9eTiXW91TU6WZYpY31RwokJLpVqUUQjIOnLWUHa4Idl4sdwCG5AnewCOWoCwtr3cGdMmb+eF+PVrXZyavuCKG3C29uUoutdPFCAjHiZL1OsW3xAbkpZBbhPr+UxVAFthCPG28aHbHWv4ldxLTkdNtzn+jH5MmpeKzr9ZSTQEfiyiAFgR8CvheHUJyMs2lhjw5H6T4swtaGmyhKMEKFOZVKFDMbHFCMCY3NHFzip2a7IselxfbPCevJaa4Lj3cwwi7lSaA=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:zh-tw;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR01MB4260.apcprd01.prod.exchangelabs.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(366016)(1800799024)(22082099003)(18002099003)(6133799003)(3023799007)(4143699003)(261026121527099003)(261026140227099003)(261022105027099003)(261028144727099003)(56012099006)(261021123027099003)(261021121427099003)(261009223027099003)(261102123227099003)(38070700021)(261022075727099003)(10067099003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?ZzdPVS95ZlVBckZiQkpYYTFhTGVQeDdVMm1DNlhaOUdKUnBNRVJ1a0p1dFdO?=
+ =?utf-8?B?NmxsQ29aVklCc05UQXpwN1ZzVGpYREdvNDJMMzduNlJYYUVneC9HQUllYUtv?=
+ =?utf-8?B?a2E4NE5rZjQ3OEJMTjJPNmZjU3JCc0ZxWUUrR2NacmdKU3E4cVpQMVY4U0px?=
+ =?utf-8?B?blcrdW9zYkpBTTdoMjJvaTN2cWlVbGNNbi9LSm85cndRV3B0OXBxSHEwdm5z?=
+ =?utf-8?B?NlVhWFhqY1VlczkrSThNNjViV25yRitDODgvVnRpVkVsNm1WZzJmam1Lb3px?=
+ =?utf-8?B?SzdtSnNJVzd4cDRCZjVaR3RiTzVYQjFjdHZVTGFReUFTa3dVVC8yTC9FTnph?=
+ =?utf-8?B?dE1BSUdyVFMrdUo3bWZDQlE2UjBNdXB2dGVhUmNLL0w4OTVkVlZEcnVrejVR?=
+ =?utf-8?B?bE9mdlpVUmZzT3hZNHlIM0tlY3QxWlBBZUNSWC9UMUVLd2tyUzBMQzkrZ2Za?=
+ =?utf-8?B?Q2Zzam9scGxxNCtCWmU0NkZIRk5QMUIrOG80T1ROODhjWHA2N0RaUGQ2UFBU?=
+ =?utf-8?B?OU96RGQyWXJpKzRBck05WHFRZjgwNUg3MUFUNE82RHIzV0ZXYzc4cTVtcmJV?=
+ =?utf-8?B?NnN4bUJ0a2dRZVZJc1pwYkxLVjlaendZTDRZYWpIVURnZ0V0UzZMKzNzZlNC?=
+ =?utf-8?B?OStqN1NEUGVVVk95TUtOZXlIMUlGeUxQdWduUFA3QTNRUGdYN3lxYTNQQTZO?=
+ =?utf-8?B?WE5iVk5IeEpYOGdYRVFpTTJzYS9qOU80YzNiSUFzWk4zbmkxYk02NlN0VHhQ?=
+ =?utf-8?B?WUk5Mis0S2poeTRhS1dDSjJMb1QybXpURzBZaG93K1V6WlRaUnY2Y2RnOE54?=
+ =?utf-8?B?a3Y5V2p0OU5qVTBWTWsrTndRNStzSlMxdDFYblRFNU1uQ2cxVVczbCtLRzBS?=
+ =?utf-8?B?a2VVMHpxdCtYc1lHSGtqbWpVMkxabmNkK3R6WEJjVmlBcDBjWW80b2ZiMDhs?=
+ =?utf-8?B?aU50NmxWSEw2aUdyVlBLbjlwQ0Q3MmhOMlN6VlN1K2R1KzZxYlpxd25zK0hT?=
+ =?utf-8?B?K09QWmhJZFlQY3RjdlMxVURLL3ptcVdnSEE5S094ZkFla2xNeTFaOUMvM2RK?=
+ =?utf-8?B?bkx6ZzZ6d0V3WjBveTZuS001SFRSTm5ndWgySDFwRW9xTkEveHJkeDQ0VzJa?=
+ =?utf-8?B?Yk5QT0FTNlVXQzJNa25FbU9XR2EremplTHAwVzllRlhUbFFqeFh3NmRjSnhs?=
+ =?utf-8?B?cFJBaW04TzBQeFI4NW56VUJPL1kvQTV5YU1kVmZFakJybVRBdXRnNVVvbHlH?=
+ =?utf-8?B?QnloSTg3c2ZtSmJTeFVIZlhnditoQjBidlAwN3crRXRCWkxQYVNGbnVvRDBU?=
+ =?utf-8?B?SThhK01uWWZESnBSRE5ZNmxicUVzR2tWODA5UG40NDdTbGhFbndwSzNxeFI4?=
+ =?utf-8?B?bHRiNkN5M1M0SlpscVU2VWRFUXZlR0Y1VS8xeTliMDZVNTB5a0Q0d3o5Kzc1?=
+ =?utf-8?B?YlVCalIzMk5JWTJ3V1Y0VFA1Wkg4ZE9IdW5QVjBqZk1WS3lEMTUyZ25RZmZD?=
+ =?utf-8?B?YWtpT1hWaVJEQ3VtUk8xTHRxVGpPY1djeURrbjk5M0xFS21JdUJKVlBHMWxj?=
+ =?utf-8?B?Z0R4cVhMMTFnZGc1aEZETW5JM201dDJlWnczdU5ETTVWa2htL25sRy85M2FO?=
+ =?utf-8?B?RHpoUEg1SjM3ZHc2NU5jd2pmRkE3Vkw5R3lVOXl0Q3gxOVBzMU03cHdxZkhm?=
+ =?utf-8?B?WUszVE1wVWthaWI1WnBkK29Ic3I2YytmNEVWVlBrV1ZmWHNJNEp4Y00rVEc1?=
+ =?utf-8?B?QXgvVFFPcm1tOUJyNjNDR3d6ZUhpTGhKZXI3Q1JBb0lURXYwTzk5SnpUZitO?=
+ =?utf-8?B?OVhGUFF3V25pTzViYm9IRVNGUnNNa3lxMHBhV2RrNEF5eCtFNlBEallvdmNR?=
+ =?utf-8?B?N3RVMkk1SmRmL2pzdE5JaVVOUTl2djdocjZJWDRtbXRvaTZtNjBLWk10YWgv?=
+ =?utf-8?B?K1ZLUGdzS0xuRC9FV2xJMkk5SERBQTJ0UzYvRTRYNVZlcEZZdU9HY3BzTzd2?=
+ =?utf-8?B?dVlkV1kyWEJwRk5GV2hGWVBIdVlIWUlTbHNmdm14SjRLL0kyUHB2THJmMzM0?=
+ =?utf-8?B?QnJhTGY0UC9uc3N5U0ROc3Yvc1dOMG5XQzU3bFVvcldJcjdYMzViWFM3OXBB?=
+ =?utf-8?B?cDF5RUxqUFIwWEtTMDFDSEVtUmN6WTI1K0Y0TWVqZG9POWtOQ1BoYVZNNjVn?=
+ =?utf-8?B?ZzYyQnhjODZ1SVpUaFU1aXQwV3VSdkFiWnAxUC9MKzkyZDZWRnQ4VGhoU1ZI?=
+ =?utf-8?B?aSticCtndU9RZ2hBNmZ1S2U4MllWb3lZd1BEUXRuSGsxeklVMVFjZUxGTmxq?=
+ =?utf-8?B?NEFlUzJoSFFibzBxazU4R1EraFg4TXQ5L3VzeWVKUGNVS0c4VVA3cG5OcjEv?=
+ =?utf-8?Q?h15lOKsWgEenHtpc=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,132 +167,164 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261111224136.GA754433@bhelgaas>
+X-OriginatorOrg: genesyslogic.com.tw
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TYZPR01MB4260.apcprd01.prod.exchangelabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7c66b2c0-b071-4054-3331-08df409f89c0
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2026 09:30:06.4389
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e753840-bf6b-40a1-9645-185818deeb52
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: gSRJW8KCC7wuj2M8vwW2W0VBnGu79zX2Z5UpuaFXHD/PvtCzL3XzID/kiZQpwzk23bWjlL2TDMHI5joAGP6EEb6Gsa2z0H25QGkldnpqdU8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYPPR01MB7896
 
-On Wed, Nov 11, 2026 at 04:41:36PM -0600, Bjorn Helgaas wrote:
-> On Wed, Nov 11, 2026 at 02:16:02PM +0200, Leon Romanovsky wrote:
-> > On Thu, Nov 05, 2026 at 12:04:31PM +0200, Leon Romanovsky wrote:
-> > > Punch line for Linus from Jason:
-> > > "Enhance detecting if the PCI fabric can support a peer to peer path
-> > > by evaluating the full bi-directional fabric path over each of the
-> > > three traffic type ACS controls. Expand the number of fabric
-> > > configurations where the P2P algorithm makes the correct determination
-> > > of support to include non-uniform ACS and situations where translated
-> > > takes different routes from untranslated."
-> > 
-> > Bjorn,
-> > 
-> > Just a friendly reminder.
-> 
-> Thanks for the reminder.  I put this on pci/p2pdma for build testing
-> (no issues expected; I always try to get build testing before merging
-> into linux-next).
-> 
-> I'm still struggling to describe this in a way that connects to the
-> code changes and is accessible to non-experts, so please correct
-> things I get wrong here.
-
-When asked to explain what I’m working on during hallway conversations, I usually
-start with a top-down view:
-
-“In order to support P2P in VMs, the virtual PCI topology needs to know whether
-P2P is possible. However, the guest OS cannot see the physical topology because
-it is hidden by the hypervisor. Since the VM and hypervisor run the same OS, we
-need a generic way to report whether P2P is supported, rather than relying on a
-CPU-supported whitelist. This is why we need ACPI HMAT [1].
-
-However, HMAT alone is not enough: it is static and comes from firmware, the
-BIOS, or the platform. We also need to account for ACS registers and different
-traffic types.
-
-This series provides the ACS, traffic piece of the puzzle.”
-
-[1] https://lore.kernel.org/linux-pci/20260812-hmat-p2p-v1-0-75ac41380585@nvidia.com/
-
-> 
-> I had the impression that this series helps VMs by making P2PDMA work
-> with passthrough devices in cases where it currently doesn't, but
-> maybe that's not the case; I don't see any mention of that in the
-> series.
-
-It is a fundamental building block (see my explanation above), but it is also
-useful on its own. Even without VMs or HMAT, ACS and routing are important
-(see the removed patch [2]): they allow us to dynamically enable or disable
-ATS for each DMA mapping, support asymmetric PCI topologies, and more broadly
-enable P2P by checking every PCI route.
-
-This is why I didn't mention VM to the cover letter.
-
-[2] https://lore.kernel.org/all/20260920-fix-p2p-acs-v4-0-v7-19-ca0828ab697c@nvidia.com/
-
-> 
-> IIUC the P2PDMA core doesn't actually *control* any TLP routing, i.e.,
-> it doesn't change any ACS controls or change any TLP attributes that
-> affect how TLPs are routed, so to me, these subject lines suggest more
-> than is actually happening:
-> 
->   Route Relaxed Ordering Completions directly
->   Reject Translated Requests blocked by Translation Blocking
->   Route Translated Requests under Direct Translated P2P
-> 
-> It seems like we're just *learning* whether RO Completions will be
-> routed directly, whether Translated Requests will be rejected, etc?
-
-Right, the path and these bits are static.
-
-> 
-> I think the core basically looks at the ACS controls on the path
-> between two devices and decides whether:
-> 
->   (a) the devices can do P2P DMA directly (PCI_P2PDMA_MAP_BUS_ADDR),
-> 
->   (b) they can do P2P DMA but only through host bridges on the
->   allowlist (PCI_P2PDMA_MAP_THRU_HOST_BRIDGE),
-> 
->   (c) no P2P DMA is possible (PCI_P2PDMA_MAP_NOT_SUPPORTED),
-
-This is equivalent to returning -EOPNOTSUPP when the functionality is
-unavailable.
-
-> 
->   (d) PCI_P2PDMA_MAP_NONE -- I don't understand this one; the comment
->   says "not a P2PDMA transfer", and pci_p2pdma_state() returns it when
->   the page is not a p2pdma_page, I guess because
->   pci_p2pdma_add_resource() has not set MEMORY_DEVICE_PCI_P2PDMA?
->   Not sure how this is used.
-
-This means that this is regular DMA transfer which involves CPU.
-
-> 
-> I guess one benefit of this series is that a path where P2P Completion
-> Redirect is set used to mean that pci_p2pdma_map_type() would return
-> PCI_P2PDMA_MAP_NOT_SUPPORTED (unless the RC was allow-listed), and now
-> it might return PCI_P2PDMA_MAP_BUS_ADDR because if P2P Request
-> Redirect is clear, Requests can be routed directly?
-
-I'm not sure the first part (return PCI_P2PDMA_MAP_NOT_SUPPORTED) is correct,
-since callers have so far ensured that P2P is supported before calling this
-function. The second part is correct.
-
-> 
-> That sounds great as long as the Request uses Relaxed Ordering, so the
-> Completion won't be affected by P2P Completion Redirect.  But devices
-> aren't *required* to use RO even if enabled, and I'm doubtful that a
-> non-RO Completion redirected to the RC is going to work.  So I don't
-> understand how p2pdma.c can guarantee safety.
-> 
-> Translated Requests seems similar -- are we assuming that if ACS
-> Direct Translated P2P is set and ATS Enable is set, the device
-> *always* generates Translated Requests?
-
-PCI spec allows "A Function is permitted to intermix translated
-and untranslated requests" and p2p doesn't decide anything except
-if routing is possible or not.
-
-Thanks
-
-> 
-> Bjorn
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEFkcmlhbiBIdW50ZXIgPGFk
+cmlhbi5odW50ZXJAaW50ZWwuY29tPg0KPiBTZW50OiBUaHVyc2RheSwgTm92ZW1iZXIgNSwgMjAy
+NiAyOjA0IFBNDQo+IFRvOiBCZW5DaHVhbmdb6I6K5pm66YePXSA8QmVuLkNodWFuZ0BnZW5lc3lz
+bG9naWMuY29tLnR3Pg0KPiBDYzogbGludXgtbW1jQHZnZXIua2VybmVsLm9yZzsgYmhlbGdhYXNA
+Z29vZ2xlLmNvbTsgcmFmYWVsQGtlcm5lbC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
+DQo+IGxpbnV4LWFjcGlAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
+b3JnOyBLeWxlIEJhZWRrZSA8a3lsZWJhZWRrZUBwcm90b25tYWlsLmNvbT47IFZpY3RvclNoaWhb
+5pa95Yud5paHXQ0KPiA8dmljdG9yLnNoaWhAZ2VuZXN5c2xvZ2ljLmNvbS50dz4NCj4gU3ViamVj
+dDogUmU6IFtCVUddIEdlbmVzeXMgR0w5NzUwICgxN2EwOjk3NTApIGRvZXMgbm90IHJlc3BvbmQg
+YWZ0ZXIgaXRzIFBDSWUgc2xvdCBpcyBwb3dlcmVkIGJhY2sgb24gZnJvbSBEM2NvbGQsIG9uDQo+
+IHMyaWRsZSByZXN1bWUgYW5kIGF0IHJ1bnRpbWUgKEFTVVMgVml2b2Jvb2sgMTQgRmxpcCBUUDM0
+MDdTQSwga2VybmVsIDcuMy4xKQ0KPg0KPiArIEJlbiBDaHVhbmcNCj4NCj4gT24gMDUvMTEvMjAy
+NiAwNTozMiwgS3lsZSBCYWVka2Ugd3JvdGU6DQo+ID4NCj4gPg0KPiA+IE9uIFdlZG5lc2RheSwg
+Tm92ZW1iZXIgNHRoLCAyMDI2IGF0IDI6NTIgUE0sIEt5bGUgQmFlZGtlIDxreWxlYmFlZGtlQHBy
+b3Rvbm1haWwuY29tPiB3cm90ZToNCj4gPiBGaXJzdCBjb3B5IHdhcyBpbiBodG1sIG1vZGUgdGhp
+cyBzaG91bGQgYmUgaW4gcGxhaW50ZXh0DQo+ID4+IFRoZSBHTDk3NTAgU0QgaG9zdCBjb250cm9s
+bGVyIGluIG15IGxhcHRvcCBpcyBkZWFkIGFmdGVyIGl0cyBQQ0llIHNsb3QgaGFzDQo+ID4+IGJl
+ZW4gcG93ZXJlZCBvZmYgYW5kIGJhY2sgb24gdGhyb3VnaCB0aGUgcm9vdCBwb3J0J3MgQUNQSSBw
+b3dlciByZXNvdXJjZS4NCj4gPj4gVGhpcyBoYXBwZW5zIG9uIHJlc3VtZSBmcm9tIHMyaWRsZSwg
+YW5kIEkgY2FuIGFsc28gcmVwcm9kdWNlIGl0IGF0IHJ1bnRpbWUNCj4gPj4gd2l0aCBubyBzbGVl
+cCBpbnZvbHZlZC4gSW4gYm90aCBjYXNlcyB0aGUgbGluayBiZWxvdyB0aGUgcm9vdCBwb3J0IG5l
+dmVyDQo+ID4+IGNvbWVzIHVwLCBzbyB0aGUgZGV2aWNlIHJlYWRzIGFzIGFsbC1vbmVzLiBUaGUg
+c2RoY2kgZXJyb3JzIGFyZSBhDQo+ID4+IGNvbnNlcXVlbmNlIG9mIHRoYXQuIEknbSB3cml0aW5n
+IHRvIHRoZSBzZGhjaSBtYWludGFpbmVycyBiZWNhdXNlIHRoZQ0KPiA+PiBkZXZpY2UgaXMgZHJp
+dmVuIGJ5IHNkaGNpLXBjaS1nbGksIGJ1dCB0aGUgZmFpbHVyZSBvY2N1cnMgYmVmb3JlIHRoZQ0K
+PiA+PiBkcml2ZXIgY2FuIHRhbGsgdG8gdGhlIGRldmljZS4NCj4gPj4NCj4gPj4gPT0gU3lzdGVt
+ID09DQo+ID4+DQo+ID4+ICAgTGFwdG9wOiAgICBBU1VTIFZpdm9ib29rIDE0IEZsaXAgVFAzNDA3
+U0ENCj4gPj4gICBCSU9TOiAgICAgIFRQMzQwN1NBLjMwOCwgMDMvMDUvMjAyNiAodGhlIGxhdGVz
+dCBhdmFpbGFibGUpDQo+ID4+ICAgS2VybmVsOiAgICA3LjMuMSAoTml4T1MgMjYuMTEpLCB4ODZf
+NjQNCj4gPj4gICBEZXZpY2U6ICAgIDAwMDA6MmM6MDAuMCAgR2VuZXN5cyBMb2dpYyBHTDk3NTAg
+WzE3YTA6OTc1MF0gcmV2IDEsDQo+ID4+ICAgICAgICAgICAgICBzdWJzeXN0ZW0gMTA0MzoyMDJm
+DQo+ID4+ICAgVXBzdHJlYW06ICByb290IHBvcnQgMDAwMDowMDoxYy40IChBQ1BJIFxfU0IuUEMw
+MC5SUDA1KSwgbGluayAyLjVHVC9zIHgxDQo+ID4+ICAgQ21kbGluZTogICBpbnRlbF9pb21tdT1v
+biBpb21tdT1wdCBwY2llX2FzcG0ucG9saWN5PXBvd2Vyc2F2ZQ0KPiA+PiAgICAgICAgICAgICAg
+KHRoZSByZWxldmFudCBwYXJhbWV0ZXJzKQ0KPiA+PiAgIFNsZWVwOiAgICAgL3N5cy9wb3dlci9t
+ZW1fc2xlZXAgPSBbczJpZGxlXSBkZWVwLiBTZWxlY3RpbmcgImRlZXAiIChTMykNCj4gPj4gICAg
+ICAgICAgICAgIGhhbmdzIHRoZSBtYWNoaW5lIGFuZCBuZWVkcyBwb3dlciB0byBiZSBjdXQgdG8g
+cmVjb3Zlciwgc28NCj4gPj4gICAgICAgICAgICAgIHMyaWRsZSBpcyB0aGUgb25seSB1c2FibGUg
+c2xlZXAgbW9kZS4NCj4gPj4NCj4gPj4gVGhlIHJvb3QgcG9ydCdzIEFDUEkgbm9kZSBoYXMgcG93
+ZXIgcmVzb3VyY2VzIChwb3dlcl9yZXNvdXJjZXNfRDAgYW5kDQo+ID4+IHBvd2VyX3Jlc291cmNl
+c19EM2hvdCBpbiBzeXNmcykuIFRoZSBlbmRwb2ludCdzIEFDUEkgbm9kZSBoYXMgbm9uZS4NCj4g
+Pj4NCj4gPj4gT3RoZXIgZmlybXdhcmUva2VybmVsIG1lc3NhZ2VzIHNlZW4gYXQgYm9vdDoNCj4g
+Pj4NCj4gPj4gICBBQ1BJOiBcX1NCXy5QRVBEOiBEdXBsaWNhdGUgTFBTMCBfRFNNIGZ1bmN0aW9u
+cyAobWFzazogMHgxKQ0KPiA+PiAgIHBjaSAwMDAwOjAwOjFjLjQ6IG1hc2sgUmVwbGF5IFRpbWVy
+IFRpbWVvdXQgQ29ycmVjdGFibGUgRXJyb3JzIGR1ZSB0bw0KPiA+PiAgICAgICAwMDAwOjJjOjAw
+LjAgaGFyZHdhcmUgZGVmZWN0DQo+ID4+DQoNCg0KSGkgS3lsZSwNCg0KVGhhbmsgeW91IGZvciB0
+aGUgZGV0YWlsZWQgaW52ZXN0aWdhdGlvbiBhbmQgdGVzdGluZy4NCg0KQ291bGQgeW91IGFsc28g
+cHJvdmlkZSB0aGUgZm9sbG93aW5nIGZyb20gYSBrbm93bi1nb29kIGJvb3Qgc3RhdGUNCmJlZm9y
+ZSBhbnkgc3VzcGVuZC9yZXN1bWUgb3IgcnVudGltZSBEM2NvbGQgdGVzdGluZz8NCg0KR0w5NzUw
+ICgyYzowMC4wKQ0KDQogICAgc3VkbyBsc3BjaSAtcyAyYzowMC4wIC1ubnZ2diA+IGdsOTc1MF9u
+bnZ2di50eHQNCiAgICBzdWRvIHNldHBjaSAtcyAyYzowMC4wIDgwMC5sPTENCiAgICBzdWRvIGxz
+cGNpIC1zIDJjOjAwLjAgLXh4eHggPiBnbDk3NTBfY2ZnX3NwYWNlLnR4dA0KDQpVcHN0cmVhbSBS
+b290IFBvcnQgKDAwOjFjLjQpDQoNCiAgICBzdWRvIGxzcGNpIC1zIDAwOjFjLjQgLW5udnZ2ID4g
+cm9vdHBvcnRfMDBfMWNfNF9ubnZ2di50eHQNCiAgICBzdWRvIGxzcGNpIC1zIDAwOjFjLjQgLXh4
+eHggPiByb290cG9ydF8wMF8xY180X2NmZ19zcGFjZS50eHQNCg0KQUNQSSBUYWJsZXMNCg0KICAg
+IHN1ZG8gYWNwaWR1bXAgLW8gYXN1c192aXZvYm9va190cDM0MDdzYV9hY3BpZHVtcC5vdXQNCg0K
+VGhhbmtzIGFnYWluIGZvciBhbGwgdGhlIHRlc3RpbmcgYW5kIGRhdGEgeW91IGhhdmUgcHJvdmlk
+ZWQuDQoNCkJlc3QgcmVnYXJkcywNCkJlbiBDaHVhbmcNCg0KDQo+ID4+ID09IFN5bXB0b20gPT0N
+Cj4gPj4NCj4gPj4gQWZ0ZXIgdGhlIHNsb3QgaXMgcG93ZXJlZCBiYWNrIG9uLCBjb25maWcgc3Bh
+Y2UgcmVhZHMgb2YgdGhlIGRldmljZSByZXR1cm4NCj4gPj4gZmZmZiwgdGhlIHBvcnQncyBMaW5r
+IFN0YXR1cyBzdGF5cyAweDEwMTEgKERhdGEgTGluayBMYXllciBMaW5rIEFjdGl2ZSA9IDAsDQo+
+ID4+IG5vdCB0cmFpbmluZyksIGFuZCBzZGhjaSByZXBvcnRzOg0KPiA+Pg0KPiA+PiAgIG1tYzA6
+IHNkaGNpOiBWZXJzaW9uOiAweDAwMDBmZmZmICAgKHJlZ2lzdGVyIGR1bXAgaXMgYWxsIDB4ZmYp
+DQo+ID4+ICAgbW1jMDogZW5hYmxlIFBDSSBNU0kgZmFpbGVkLCBlcnJvcj0tMjINCj4gPj4gICBt
+bWMwOiBSZXNldCAweDEgbmV2ZXIgY29tcGxldGVkLg0KPiA+PiAgIG1tYzA6IDMuM1YgcmVndWxh
+dG9yIG91dHB1dCBkaWQgbm90IGJlY29tZSBzdGFibGUNCj4gPj4gICBtbWMwOiBDb250cm9sbGVy
+IG5ldmVyIHJlbGVhc2VkIGluaGliaXQgYml0KHMpLg0KPiA+Pg0KPiA+PiBPbiBhIGhlYWx0aHkg
+Ym9vdCB0aGUgcG9ydCdzIExpbmsgU3RhdHVzIGlzIDB4MzAxMS4NCj4gPj4NCj4gPj4gPT0gUmVz
+dW1lIHRyYWNlID09DQo+ID4+DQo+ID4+IENhcHR1cmVkIHdpdGggcnRjd2FrZSAtbSBtZW0gLXMg
+MTUgKHMyaWRsZSksIHBtX2RlYnVnX21lc3NhZ2VzPTEgYW5kDQo+ID4+IGR5bmFtaWMgZGVidWcg
+ZW5hYmxlZCBmb3IgZHJpdmVycy9wY2kvKiwgZHJpdmVycy9hY3BpL3Bvd2VyLmMgYW5kDQo+ID4+
+IGRyaXZlcnMvYWNwaS9kZXZpY2VfcG0uYzoNCj4gPj4NCj4gPj4gICBbICAxNDUuMzcwMjE1XSBz
+ZGhjaS1wY2kgMDAwMDoyYzowMC4wOiBQQ0kgUE06IFN1c3BlbmQgcG93ZXIgc3RhdGU6IEQzaG90
+DQo+ID4+ICAgWyAgMTQ1LjQwNjkxN10gQUNQSTogXF9TQl8uUEMwMC5SUDA1LlBYUF86IEFDUEk6
+IFBNOiBQb3dlciByZXNvdXJjZSB0dXJuZWQgb2ZmDQo+ID4+ICAgWyAgMTQ1LjQwNjk0OF0gcGNp
+ZXBvcnQgMDAwMDowMDoxYy40OiBQQ0kgUE06IFN1c3BlbmQgcG93ZXIgc3RhdGU6IEQzY29sZA0K
+PiA+PiAgIC4uLg0KPiA+PiAgIFsgIDE1OS44NjU4NDJdIEFDUEk6IFxfU0JfLlBDMDAuUlAwNTog
+UE06IFBvd2VyIHN0YXRlIGNoYW5nZTogRDNjb2xkIC0+IEQwDQo+ID4+ICAgWyAgMTYwLjI2Mzg2
+OV0gQUNQSTogXF9TQl8uUEMwMC5SUDA1LlBYUF86IEFDUEk6IFBNOiBQb3dlciByZXNvdXJjZSB0
+dXJuZWQgb24NCj4gPj4gICBbICAxNjAuMjY0MjM0XSBBQ1BJOiBcX1NCXy5QQzAwLlJQMDU6IFBN
+OiBQb3dlciBzdGF0ZSBjaGFuZ2VkIHRvIEQwDQo+ID4+ICAgWyAgMTYwLjI2NDI0MV0gcGNpZXBv
+cnQgMDAwMDowMDoxYy40OiBwb3dlciBzdGF0ZSBjaGFuZ2VkIGJ5IEFDUEkgdG8gRDANCj4gPj4g
+ICBbICAxNjAuMjc2NDU5XSBwY2llcG9ydCAwMDAwOjAwOjFjLjQ6IHJlYWR5IDBtcyBhZnRlciBw
+b3dlciB1cCBEM2hvdC0+RDB1bmluaXRpYWxpemVkDQo+ID4+ICAgWyAgMTYwLjI3Njg2Nl0gcGNp
+ZXBvcnQgMDAwMDowMDoxYy40OiB3YWl0aW5nIDEwMCBtcyBmb3IgZG93bnN0cmVhbSBsaW5rLCBh
+ZnRlciBhY3RpdmF0aW9uDQo+ID4+ICAgWyAgMTYxLjI5NzA1M10gcGNpZXBvcnQgMDAwMDowMDox
+Yy40OiBEYXRhIExpbmsgTGF5ZXIgTGluayBBY3RpdmUgbm90IHNldCBpbiAxMDAgbXNlYw0KPiA+
+PiAgIFsgIDE2MS4zMDM5NDNdIHNkaGNpLXBjaSAwMDAwOjJjOjAwLjA6IHJlc3RvcmUgY29uZmln
+IDB4M2M6IDB4ZmZmZmZmZmYgLT4gMHgwMDAwMDFmZg0KPiA+PiAgIFsgIDE2MS4zMjE0NzhdIG1t
+YzA6IGVuYWJsZSBQQ0kgTVNJIGZhaWxlZCwgZXJyb3I9LTIyDQo+ID4+ICAgWyAgMTYxLjQyMTYx
+MV0gbW1jMDogUmVzZXQgMHgxIG5ldmVyIGNvbXBsZXRlZC4NCj4gPj4gICBbICAxNjEuNzQxMTcw
+XSBtbWMwOiAzLjNWIHJlZ3VsYXRvciBvdXRwdXQgZGlkIG5vdCBiZWNvbWUgc3RhYmxlDQo+ID4+
+DQo+ID4+IFRoZSBzbG90IHdhcyBvZmYgZm9yIGFib3V0IDE1IHMgKDE0NS40MDcgdG8gMTYwLjI2
+NCksIHNvIHRoaXMgaXMgbm90IGENCj4gPj4gc2hvcnQtb2ZmLXRpbWUgcHJvYmxlbS4NCj4gPj4N
+Cj4gPj4gPT0gUmVwcm9kdWN0aW9uIHdpdGhvdXQgc3VzcGVuZCA9PQ0KPiA+Pg0KPiA+PiBGcm9t
+IGEgaGVhbHRoeSBib290IChkZXZpY2UgYWxpdmUsIG5vIFNEIGNhcmQgaW5zZXJ0ZWQpOg0KPiA+
+Pg0KPiA+PiAgIGVjaG8gMSAgICA+IC9zeXMvYnVzL3BjaS9kZXZpY2VzLzAwMDA6MmM6MDAuMC9y
+ZW1vdmUNCj4gPj4gICBlY2hvIDEgICAgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8wMDAwOjAwOjFj
+LjQvZDNjb2xkX2FsbG93ZWQNCj4gPj4gICBlY2hvIGF1dG8gPiAvc3lzL2J1cy9wY2kvZGV2aWNl
+cy8wMDAwOjAwOjFjLjQvcG93ZXIvY29udHJvbA0KPiA+PiAgICMgdGhlIHJvb3QgcG9ydCdzIHBv
+d2VyX3N0YXRlIHJlYWNoZWQgRDNjb2xkIGFmdGVyIGFib3V0IDIgcw0KPiA+PiAgIHNsZWVwIDEN
+Cj4gPj4gICBlY2hvIG9uICAgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8wMDAwOjAwOjFjLjQvcG93
+ZXIvY29udHJvbA0KPiA+PiAgICMgcG9ydCBpcyBEMCBhZ2FpbiwgYnV0IGl0cyBMaW5rIFN0YXR1
+cyBpcyAweDEwMTEgKERMQWN0aXZlID0gMCkNCj4gPj4gICBlY2hvIDEgICAgPiAvc3lzL2J1cy9w
+Y2kvcmVzY2FuICAgICAjIHJlcGVhdGVkIG9uY2UgcGVyIHNlY29uZCBmb3IgMTUgcw0KPiA+Pg0K
+PiA+PiBUaGUgZGV2aWNlIG5ldmVyIHJlYXBwZWFycywgYW5kIExpbmsgU3RhdHVzIHN0YXlzIDB4
+MTAxMSBmb3IgdGhlIHdob2xlDQo+ID4+IDE1IHMuIFRoaXMgdXNlcyBvbmx5IGEgMSBzIG9mZiB0
+aW1lLg0KPiA+Pg0KPiA+PiA9PSBXaGF0IEkgdHJpZWQgPT0NCj4gPj4NCj4gPj4gU3VzcGVuZCB2
+YXJpYW50cywgZWFjaCBydW4gd2l0aCBydGN3YWtlIC1tIG1lbSAtcyAxNSAoczJpZGxlKSwgbm8g
+U0QgY2FyZA0KPiA+PiBpbnNlcnRlZC4gQWxsIG9mIHRoZXNlIGZhaWxlZCBvbiB0aGUgZmlyc3Qg
+Y3ljbGU6DQo+ID4+DQo+ID4+ICAgLSBubyBjaGFuZ2VzDQo+ID4+ICAgLSBlbmRwb2ludCBwb3dl
+ci9jb250cm9sPW9uDQo+ID4+ICAgLSByb290IHBvcnQgcG93ZXIvY29udHJvbD1vbg0KPiA+PiAg
+IC0gZW5kcG9pbnQgbGluay9sMV8yX2FzcG0gYW5kIGxpbmsvbDFfMl9wY2lwbSBzZXQgdG8gMA0K
+PiA+PiAgIC0gZW5kcG9pbnQgbGluay9sMV9hc3BtLCBsMV8xX2FzcG0sIGwxXzJfYXNwbSwgbDFf
+MV9wY2lwbSwgbDFfMl9wY2lwbQ0KPiA+PiAgICAgYWxsIHNldCB0byAwDQo+ID4+ICAgLSBlbmRw
+b2ludCByZW1vdmVkIGJlZm9yZSBzdXNwZW5kLCByZXNjYW5uZWQgYWZ0ZXIgcmVzdW1lDQo+ID4+
+DQo+ID4+IFRoaXMgb25lIHBhc3NlZCAxMC8xMCBjeWNsZXMgKGRldmljZSBhbGl2ZSAyIHMgYW5k
+IDggcyBhZnRlciByZXN1bWUsIHBvcnQNCj4gPj4gTGluayBTdGF0dXMgMHgzMDExIGVhY2ggdGlt
+ZSk6DQo+ID4+DQo+ID4+ICAgLSBkM2NvbGRfYWxsb3dlZD0wIG9uIGJvdGggdGhlIGVuZHBvaW50
+IGFuZCB0aGUgcm9vdCBwb3J0LCBzZXQganVzdA0KPiA+PiAgICAgYmVmb3JlIHN1c3BlbmQgYW5k
+IHJlc3RvcmVkIHRvIDEgcmlnaHQgYWZ0ZXIgcmVzdW1lDQo+ID4+DQo+ID4+IFJlY292ZXJ5IGF0
+dGVtcHRlZCBhZnRlciBhIGZhaWxlZCByZXN1bWUsIHdpdGggdGhlIHJvb3QgcG9ydCBoZWxkIGlu
+IEQwDQo+ID4+IChwb3dlci9jb250cm9sPW9uKSBhbmQgdGhlIHJlc2NhbiBwb2xsZWQgZm9yIDE1
+IHMgcGVyIHN0YWdlLiBOb25lIGJyb3VnaHQNCj4gPj4gdGhlIGRldmljZSBiYWNrLCBhbmQgTGlu
+ayBTdGF0dXMgc3RheWVkIDB4MTAxMSB0aHJvdWdob3V0Og0KPiA+Pg0KPiA+PiAgIC0gcmVtb3Zl
+ICsgcmVzY2FuDQo+ID4+ICAgLSBzZWNvbmRhcnkgYnVzIHJlc2V0IG9uIHRoZSByb290IHBvcnQs
+IHRoZW4gcmVzY2FuDQo+ID4+ICAgLSBMaW5rIERpc2FibGUgLyBlbmFibGUgb24gdGhlIHJvb3Qg
+cG9ydCwgdGhlbiByZXNjYW4NCj4gPj4NCj4gPj4gPT0gUXVlc3Rpb25zID09DQo+ID4+DQo+ID4+
+IDEuIElzIHRoaXMgYSBrbm93biBpc3N1ZSB3aXRoIHRoaXMgZGV2aWNlIG9yIHRoaXMgcGxhdGZv
+cm0ncyBzbG90IHBvd2VyLW9uDQo+ID4+ICAgIG1ldGhvZD8NCj4gPj4gMi4gV2hhdCBhZGRpdGlv
+bmFsIHRyYWNpbmcgd291bGQgaGVscCAoQUNQSSBBTUwgZGVidWdnaW5nLCBHUElPL3BpbmN0cmwN
+Cj4gPj4gICAgc3RhdGUgYmVmb3JlIGFuZCBhZnRlciB0aGUgcG93ZXIgcmVzb3VyY2UgdHVybnMg
+b24sIGFueXRoaW5nIGVsc2UpPw0KPiA+Pg0KPiA+PiBJIGNhbiBidWlsZCBhbmQgdGVzdCBwYXRj
+aGVzIG9uIHRoaXMgbWFjaGluZS4NCj4gPj4NCj4gPj4gVGhhbmtzLA0KPiA+PiBLeWxlDQo+ID4+
+DQo+ID4+IFNlbnQgd2l0aCBQcm90b24gTWFpbCBzZWN1cmUgZW1haWwuDQoNCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fDQoNCkdlbmVzeXMgTG9naWMgRW1haWwgQ29uZmlkZW50aWFs
+aXR5IE5vdGljZToNClRoaXMgbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGlu
+Zm9ybWF0aW9uIHRoYXQgaXMgY29uZmlkZW50aWFsLCBwcm9wcmlldGFyeSwgcHJpdmlsZWdlZCBv
+ciBvdGhlcndpc2UgcHJvdGVjdGVkIGJ5IGxhdy4gVGhlIG1haWwgaXMgaW50ZW5kZWQgc29sZWx5
+IGZvciB0aGUgbmFtZWQgYWRkcmVzc2VlIChvciBhIHBlcnNvbiByZXNwb25zaWJsZSBmb3IgZGVs
+aXZlcmluZyBpdCB0byB0aGUgYWRkcmVzc2VlKS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVk
+IHJlY2lwaWVudCBvZiB0aGlzIG1haWwsIHlvdSBhcmUgbm90IGF1dGhvcml6ZWQgdG8gcmVhZCwg
+cHJpbnQsIGNvcHkgb3IgZGlzc2VtaW5hdGUgdGhpcyBtYWlsLg0KDQpJZiB5b3UgaGF2ZSByZWNl
+aXZlZCB0aGlzIGVtYWlsIGluIGVycm9yLCBwbGVhc2Ugbm90aWZ5IHVzIGltbWVkaWF0ZWx5IGJ5
+IHJlcGx5IGVtYWlsIGFuZCBpbW1lZGlhdGVseSBkZWxldGUgdGhpcyBtZXNzYWdlIGFuZCBhbnkg
+YXR0YWNobWVudHMgZnJvbSB5b3VyIHN5c3RlbS4gUGxlYXNlIGJlIG5vdGVkIHRoYXQgYW55IHVu
+YXV0aG9yaXplZCB1c2UsIGRpc3NlbWluYXRpb24sIGRpc3RyaWJ1dGlvbiBvciBjb3B5aW5nIG9m
+IHRoaXMgZW1haWwgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4NCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fDQo=
