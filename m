@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794443237;
-	b=nwBN1lvra2+3ImSPSweP+ZTFIQ2XJfjhIhz4q9qvN8fvXeR43QTVQIwkkb1hoxbbxJN0
-	 95aKQDqA/NbTTvLJ3lyYN5iJYbtplYbALHePzyay8U3XlQ+T5JanH8N2pzcOWxUgephwL
-	 SdakNErzW2SUdMwK0KzdIiZM3SSLaUrKA0xA6PsEviqbfzBzeX1q6EVOCQe2CIfLj/qIy
-	 ttPkHxc4X0IQ8tKmIhACwqzN94yLEqoVo9GHA6yf6vBATu3KaAMwFXNTGrkkVLuHs1Eua
-	 y6ZXO55SjYCjOqvI1g7eoEvAkuWvOy8vuHT7lwf6Z5Hof9k9gd0bZyZBNAOd/BDSPsA==
+	t=1794443366;
+	b=fEsgj3xLYfUWIlUxo+RvBImGHVswJlpY5Z50bvcASnXDW4vAUC/bPBTPIm3LfuHRRmAu
+	 vmaVmSf/BU8VYfIrQj0ScRo7IJiunK4RyEgdp5847rYDGfhw1lmp3fiMzk5u8pwSJ1GsE
+	 fXdqbBzBF133Wq3kwLhm5yKGVdD3LJ3P2FfDCFieaK70ZG3artimN8bQrNCeVH1lT8npn
+	 Y7E0q1Zfo/anTBDO5YnXrJ+kB1M8qxLBgKKTjZh1E6z+pAhcPNZeoqsvQmZu6OKnMhYJR
+	 DkgQT6RWFvAAm+nGDCNxJPRXMbcyQq2D2KNNMj7JVnrkmbee0yEu93/E43HrhKax7HA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794443237;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794443366;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=M7V6JlcrCzyTZudqacuDhkPuMB/9JCAHjE7QjRizzLM=;
-	b=O7h/g2VqZW0zMd6QDq3IMov8cPeK3tLQfiBZLPOF3KUTK8L+WsZkbBnzE9kiBo29Cj9b
-	 LCNktlvqnDs6n/i7UfyIvH0o7ytw7W8q9gFKlOOqtFhTivgBB6g64h40uvBLsrLJ5Ftg0
-	 00BeGw+bNJTy3ZgKNp8HR1vi4pGu6q1yoXjmYIuzZddW4SZeknuhvoi1ygPmyu9+pMtRH
-	 MV6zUg9EFmUUxA8TsAq71rUi5JywW5v/eBkHf1fJ61ZPxmjFNA9qQTO02lKJYF6WHgopb
-	 WmkTrvgmfiPAdinnfmSQCkR9M2sLKFEDuJcI2zO+97jpo8cUgGk7xGCexAhFcBrYB4g==
+	bh=0dHfdUeU5kkJAnQ1FS8FGfBenR6jk9I/2EW0oqMLXzA=;
+	b=W5OkoY/8cMUFG5l+81Ywjl18djHf0GSb6xjA6BjyprKUjigu6Uf52dIkpSoReHKltosm
+	 zYSicKJ3Wmh7xRRI04avCYCqIuSFM7Tq1tQX2CP+2o9px2bijN1KgM+7Vx+q9/mRlJQL8
+	 r3O7dq5DaTr9rUhnbmhZTT/zCwxB8prI3ItzuATswP4V6nWvXwnSoxC+prgEk6bGBfrNW
+	 O5aBJOGq1bnZa2wVDHVABZdhMMoTkyK0I5ITNUaO/faWmurTJYuRTzbdnpRLnqSFMj/RP
+	 7/eSU6WVfkCyHF2YljVFYHTp7RlyH2AblF9jSsEspqMHU6eKV7Szjv1inIyZx3EiUpQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hr4zu9XL;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QbCnYHr+;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CBEA606A326
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 00:27:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B30DA606A31C
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 00:29:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hr4zu9XL
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C511F00A05;
-	Thu, 12 Nov 2026 00:27:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QbCnYHr+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29BF91F00A05;
+	Thu, 12 Nov 2026 00:29:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794443237;
-	bh=M7V6JlcrCzyTZudqacuDhkPuMB/9JCAHjE7QjRizzLM=;
+	s=k20260515; t=1794443366;
+	bh=0dHfdUeU5kkJAnQ1FS8FGfBenR6jk9I/2EW0oqMLXzA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hr4zu9XLp9aS5eWNCEefMJVX2GJ+NEx8AKrFfzxt31IKkYyrW7kg15E0sUN99N7QN
-	 k6fb0KQIsKGZ6yrDznLxeNbViJcs3TZxn4n/6A897hFfCL+pJYCvkj+nUkJp7195Ro
-	 a5Fnkvs1rpKe7284/gIJfgvv2oSzAO5ZdVzY+3ZiIbPJOBAoT4D/GLfR8JYK1r6/yo
-	 DvTSMMI6Py5uk5gi74H+FELfaqVqyKBE1gL1smDMJhg4kh/WSg8ifEEjROwFNeDMcO
-	 Eefhb3NKTtlXEKxrEt7qBzoGCpHa+To7PN//Wg7JAIrxqx5g9O18uUHolChu5zttHO
-	 iu4r77/r6bWsw==
-Message-ID: <sashiko-outbox-209916@kernel.org>
+	b=QbCnYHr+BTJ7psH3NxXRKL9W5f/BxVJ6GD4srTs2qT9mzLoBM7GsQ836IDuu3wt7b
+	 w2lD5tVC2YMa7dNKJR6y7JWEGllkodZSQ9FEpqSMU5sILLy1Ylm5PrnWJPnUmlCG07
+	 ITn/JIpFBR8KFVZ/W6gPsV7roq4nrI0UdHxr60CG2dpRrafMkNeE8cW1KPBxxjQQQ8
+	 pKtRDGbxFMHu3Mn4wa3RS3tgOrt4VJRi6hRU20i7yQw8d4VUdr166weq5dyV4KtGQk
+	 ohdmTcg72mTFMIJuHS0xAMvS2kwWm1n9BIaYs3ZRuwPBDiU4ANVjBxUYJvpyRGB0sv
+	 G0Y/2dy4nBngw==
+Message-ID: <sashiko-outbox-209920@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/7] platform/x86: Include <asm/cpu_device_id.h>
- unconditionally in soc.h
+Subject: Re: [PATCH 6/7] tpm: Include <asm/cpu_device_id.h> unconditionally
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pavel Popov" <pavel.e.popov@intel.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261111234821.4814-6-pavel.e.popov@intel.com>
+In-Reply-To: <20261111234821.4814-7-pavel.e.popov@intel.com>
 References: <20261111234821.4814-1-pavel.e.popov@intel.com>
- <20261111234821.4814-6-pavel.e.popov@intel.com>
+ <20261111234821.4814-7-pavel.e.popov@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 00:27:16 +0000
+Date: Thu, 12 Nov 2026 00:29:25 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,12 +61,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
 > <asm/cpu_device_id.h> now has a generic version, so the #ifdef
-> CONFIG_X86 around the include is no longer needed. The include of
-> <linux/device-id/x86_cpu.h>, which is generic, moves out of the
-> #ifdef as well.
->=20
-> The soc_intel_is_*() helpers still need CONFIG_X86 for the INTEL_*
-> model defines.
+> CONFIG_X86 around the include is no longer needed.
 >=20
 > Signed-off-by: Pavel Popov <pavel.e.popov@intel.com>
 
@@ -75,5 +69,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111234821.4814=
--1-pavel.e.popov@intel.com?part=3D5
+-1-pavel.e.popov@intel.com?part=3D6
 
