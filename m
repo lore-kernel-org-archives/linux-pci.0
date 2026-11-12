@@ -1,100 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.172
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794512122;
-	b=x+469bq8bbMSxModaC0qQxizbk8G9adfmBvf4/NEVVso3Mj0EEBGtWd1JW5aTmxfxNZa
-	 qfXbmlPCuNMaYhWKaZyDEwnv3NqpbMvr0dF1BpBbcjSKIUZlDUkDkRSSVA/GR1Z4mqIli
-	 Gh3xIzL7XWrpWCmUjJDNUzMx4Xhrd9QjPQ3ItM5gGYEUKAuwDbfK8n8Ir1NqKEWhX8EB3
-	 Wh1NF7utgh8rYeyc2qXMILnpoBIctph2ZilHW94XzupCAi3UI/0FF7J7P5zaI9Jn/xexF
-	 eogrBPtn65pe/hmWv+Nbyx+FLQyiL6dunaFeTi6usH3PhEWcP8DKYkDI7Gz6DO51Z/A==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794512122;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=hSq411+s9NdWoKtVDUAKy0Kf3U5pcLNuZimkjP4e+Hw=;
-	b=rn8BYHxtRC4Q6pcQ1ElunXBayo/EXh+pC07uIQTG2hovzYfbj3mxWwUC0ENjfvJ3Fv9o
-	 FNhbQZ+n7DIZO5DMfIOpnyW4+MkgAGiccaRvTYqyYvUvZfp/MJVm1boXWXvycPbP7sg48
-	 xyILUzjcxGQx+WRH9U4mEKU66KVyvwbWHFfBTDD2NO5e4BZTetV6684ppP1aZNSSKCYAp
-	 5ZH2pFrh2wWW/QP4i1A1edr5a4BRUxHQwfPb9D1Ls/nLcl4+OgRiESIoUZDp3pMHL+RQU
-	 41Yuhaa8Z8p7rSAwUxxyxzxl5IYfjvy1L8i6SSjItpvmzUeoGeH0c8vLs75V61E2EcA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=TOvkPnaM;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.172
-Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=67.231.145.42
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794515830;
+	b=hDTWzC/lV8XWEgRPgrb96h4JUgRUUdIlfLK30l8+vcHT5q64ss6wnLkPPhR/hHeHBKC8
+	 34Jbebrs7g+7VIUaYBPX3jcdbsLhKWWb6DxQ3JQuMxlyYwIzONXzS6V147k51tIBZTtSx
+	 ml6eD/dMWTJ3tenYyCG6ebfrvsf1K4RrBySs1ZRBfChmKYXoH8D37pB5NYtbXpvAs2G+F
+	 80yFXCMdIp1zg6NkLrjrct4X3xoXBy87WZlXBgEVaGwG31VS5uGIx6agxpU4SgtnrtSM0
+	 dA9T3CLGlbxRqTbwAuhudwupap6fKrcMA/0g90ffrOp+tvcxAc3StTQlp/X/Mx6+p8A==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794515830;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Date:From:To:
+	 CC:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-Originating-IP:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Virus-Version;
+	bh=yS4jNiYhRfGb5QojFYxrTDAoccyphd8P5VhC9esgLP8=;
+	b=KVciakOAIXQvgff06wt2c1n0s2zyhyeV1fTCn/iGZ5qVdesQFB/V3eHxIcND8wv6r3Ec
+	 idwEXsWtl5SglbLY4/JhgLjeogSEOitEWdABgWyM/kkFG1nPTHEP6DWMbndxfn2YiN2zA
+	 T7rNETg57Px9Sj2D7fLUp9xmT+TemfT+0MMhM0yOjgzcZt7H0jmlLt4yk7SPfdiZtiWEB
+	 e574wUpG4nc9uNjSudOx/e+Gz+0mBZ7aNiqkHfMQTfp/l1bVH5B7Rc+jx2omQbhRhugaK
+	 s7XsVK0bXqz9CDd436SFnZSeR4ShhG6wTsrSLbzlMEqGIn/X6+i2yj/8hmqx0iKvwOA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=fb.com;
+	spf=pass smtp.mailfrom=meta.com;
+	dkim=pass header.d=fb.com header.i=@fb.com header.a=rsa-sha256 header.s=pps82601-s2048-2026-q3 header.b=PMJdQsUZ;
+	arc=none smtp.remote-ip=67.231.145.42
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F7E606A32E
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 19:35:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C5F7E606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16B66606A333;
+	Thu, 12 Nov 2026 20:37:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 16B66606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fb.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=TOvkPnaM
-Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-93cc1ab5f6cso17490885a.0
-        for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 11:35:21 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794512121; cv=none;
-        d=google.com; s=arc-20260327;
-        b=rnvjIXGI8qZPlHRbTpvJDfr0Z53814IsT4PyzjmxoiHvDklqXN6UBLi4q8GPD9YZy9
-         ERybc5/YrCZDfKpxbXA93QUhtsgrmjeRpxOGnZNKp/8JvCGB03H4BkICcczPMCXqXJLs
-         mIPrm/XIrEU/ctLwI4q0WMBCX/krllTxXq1iXkj5k/K00Orr1X3D+JXjA0vOs0Y4EVAa
-         rbKm56aPOKntKBcaM4ewvuxL5hiXSctN+hoHyMK5yos4XlSMMaf4Adk7jo9E/i/5T8//
-         IQSGUcxXMbgON/IEtAtR0WRs3qDVVLc3gBjSn4wE1YEkNv9QfTY0HPzxT2DJAHu35j7x
-         z0QA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=hSq411+s9NdWoKtVDUAKy0Kf3U5pcLNuZimkjP4e+Hw=;
-        fh=t1scSvpbA7bbk9tVeerzH74KpIcLCbce02a9+v6BoyA=;
-        b=mMr/fAyR/5oQs5XwGig7wbchQqma7JkjLCl3oPvr8czi4YeeeYMBgNfi/OzGi1CStu
-         m0+AXyeC86ocvYAU6XntAEJmq9CNjvopxRuY0ev74tn/xL3gijHd5ENIzPpWFYAPMuQO
-         Ep9l1ACulkBub9+sV7tqTr/R0lgc0gtLr5epM3o0lAXK6WveMQw3lpKo0uIyG9wBhyLl
-         PzPLkuA2tICGg8HQzFHxlhuYt0I3Hw90I4yM3usr1Ae87iy+FmQQHfHA5kr/YwS5fJo1
-         DfFrB1PUnoDeQGW6tCusOoWgK3c2gL1XEcuK5D74eYadSlDTd70ObvPBI010oGv40ltB
-         3LZg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794512121; x=1795116921; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=hSq411+s9NdWoKtVDUAKy0Kf3U5pcLNuZimkjP4e+Hw=;
-        b=TOvkPnaMiidIptAqmx2zbHxBFlHMqub9g0awZPe8AApCcNpJI4EHLPHNn/Btko25bN
-         yLD9q/OHcEcJXEliYbDkVyTch9+v9kpGdAyFgvsEHZfHq1c1vhkqBQ/e9hFBjt63swpc
-         5X8ISVDqpZ+LwEejsfNpLmmA3+GCryC6QocmXY0KdF7iFkmnKxGykVQw7Ro5Tm+ONneg
-         1Mja5JR791Ia5qx8inHr+7iGE/PGeHetcMCG7qdoKc529QyB0uHfQUtifQXjKpEtq1VD
-         0Rfkb2hvBiEApezIco8HGFa383afvQlTVuDOMjLy0ao617zfk160mMrKMrRGab8DP1me
-         ImuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794512121; x=1795116921;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=hSq411+s9NdWoKtVDUAKy0Kf3U5pcLNuZimkjP4e+Hw=;
-        b=b6k+Sh/phBOTui8fTpAMxJ9+u3DczxkPhkfpvOYIJs5iEKT+KAHV4p8TlE1PeR7kdY
-         ypmx/bpgPy1PzufHXJJiXqhcvre5qAUJuXHo+4r4Ee58bX8sDnjs47Tsa/NCf5F1Y7Ha
-         DSKiSh2ehQufsQXMA5bVE8kUzYCP3wZWvjf9KAGhQu8+wsLe9YlUEeFoLlWXRTs34TMi
-         UDCIV/C43TmQnvs2cBH00TX6U5VqwYWfO1xzl/lgqsQAumIhushIrg1RI+j9omEQMFqD
-         bNJioesPwOFBVmeRArRw7iEZexZ2vAywjYsBXt6PBENgShU2r6vxpDdXHN2c/nTkOynw
-         OETg==
-X-Gm-Message-State: APuU4Z/hmYzaPDpI5suVHSHHGZIz1Hi2szlXhMEqqEukTX0uEjX498h/
-	2H6aSlETmjZcrii4CONoTuX9YFa16Vtr/v49nRTq7+/bxO5OwSmRdwX3KRvS1qOZDyoU77rPXAf
-	RE7pA6MQ/MW00L9HVMtpp0DOUBdTmEzs=
-X-Gm-Gg: AYBFou3L7a0T0uIQDKrywCAFD8ILudfKJb9fog10KMxt1vtKADmgOzoFQuzug2avZ/B
-	azK/AZQQgpmdFncMWh+V1ya9xzD+jFAVoaH+otMAckr0zHvypnlWJhy8TimYZjcAdGeti9MtdmA
-	ig82dzSqCP2ZaApq0x7YkSJGtDmh7olk4YxUarqqfpH7t1eJcaxCPM3vJ+CT0Zxjuvcq0qqH6vh
-	cmf4fy/kE+dRTMOuZjRyaxC7rNFvTFC3tlWpjY0Cj/bN16cg7cW66wXDGBKc34owgVc+motesmP
-	vhA+DLOFpFrQKiR8oy3QuldBcQocXhM8JATDsOJWt/54odayJSgz095iuapYHHJiCVpFQO0YP0A
-	mTzWqIBkocIitE2XLHZ57WjMarFH7Sfd9zUerL5RfFEsLcUxLQWehIzKgWIeIQprMeqY7URystd
-	/HVzkRNZLTPJAx8WVW4Hj5OP+Lx5rhm2V1HayLtg==
-X-Received: by 2002:a05:620a:1b81:b0:93c:c405:3215 with SMTP id
- af79cd13be357-9494bbccd6dmr77956685a.44.1794512120789; Thu, 12 Nov 2026
- 11:35:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fb.com header.i=@fb.com header.a=rsa-sha256 header.s=pps82601-s2048-2026-q3 header.b=PMJdQsUZ
+Received: from pps.filterd (m0528008.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6ACJcaXd3548768;
+	Thu, 12 Nov 2026 12:35:41 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pps82601-s2048-2026-q3; bh=yS4jNiYhRfG
+	b5QojFYxrTDAoccyphd8P5VhC9esgLP8=; b=PMJdQsUZ9wFmcb1iynmoB69a2S9
+	/l6vcpkudJukcwnCYNVACZN0krn+ykO5/TIt8+EpvIbWXk/Thx5k4vZ5cgmq7W4p
+	YSdoLkzwG6uHSIzCdV+IylJorKuexJKBqUwpNz3SZ4B9WPoALoDExWQnCKXWDPRb
+	Z5/DS8vaRFuKSuzPHSYrcPHcAb99myPDRsf03Szq3cieanayPemOCovBQW9GdIeV
+	9RbFNayyQojAeuUGrtEiXtaos06zx2p1BuqvueNs74kFdqg74AT6KnsJC9/MrARK
+	c41Qbapm0737503MSI6RRWeUhYCOy69L1IbLs7qa5UjksU0IawyoORjMH9A==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4hwjg5h7ms-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Thu, 12 Nov 2026 12:35:41 -0800 (PST)
+Received: from devgpu015.cco6.facebook.com (2620:10d:c0a8:1b::2d) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.56; Thu, 12 Nov 2026 20:35:37 +0000
+Date: Thu, 12 Nov 2026 12:35:33 -0800
+From: Alex Mastro <amastro@fb.com>
+To: David Matlack <dmatlack@google.com>
+CC: <dri-devel@lists.freedesktop.org>, <iommu@lists.linux.dev>,
+        <kvm@vger.kernel.org>, <linaro-mm-sig@lists.linaro.org>,
+        <linux-kernel@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
+        <linux-media@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Alex Williamson
+	<alex@shazbot.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian
+ =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Jason Gunthorpe
+	<jgg@nvidia.com>, Josh Hilke <jrhilke@google.com>,
+        Kevin Tian
+	<kevin.tian@intel.com>, Leon Romanovsky <leon@kernel.org>,
+        Logan Gunthorpe
+	<logang@deltatee.com>, Matt Evans <mattev@meta.com>,
+        Matt Evans
+	<matt@ozlabs.org>, Mina Almasry <almasrymina@google.com>,
+        Samiullah Khawaja
+	<skhawaja@google.com>,
+        Shuah Khan <shuah@kernel.org>, Sumit Semwal
+	<sumit.semwal@linaro.org>,
+        Vipin Sharma <vipinsh@google.com>
+Subject: Re: [RFC PATCH 0/7] vfio: selftests: Add peer-to-peer DMA selftest
+Message-ID: <avYjFfqr3T/U7lvn@devgpu015.cco6.facebook.com>
+References: <20261111192411.4133780-1-dmatlack@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,72 +93,61 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261029192032.1325629-1-thepacketgeek@gmail.com>
-In-Reply-To: <20261029192032.1325629-1-thepacketgeek@gmail.com>
-From: Matthew Wood <thepacketgeek@gmail.com>
-Date: Thu, 12 Nov 2026 11:35:08 -0800
-X-Gm-Features: AclHuK_BvMs_YVdGy0WUpg4okUuBQygcvvwgCF7Igbxb1UybigcTBxXa87y20ak
-Message-ID: <CADvopvYQDLx81gDFNR8MAg9E010K3yJNEByAwawQHFahRYiXzA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] PCI/sysfs: Wait for config access lock in sysfs attributes
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, kbusch@kernel.org, 
-	Alex Williamson <alex@shazbot.org>, kvm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20261111192411.4133780-1-dmatlack@google.com>
+X-Proofpoint-ORIG-GUID: gTZbwHAPJUHvcNcTQXZoaWTbiDqc3U-y
+X-Proofpoint-GUID: gTZbwHAPJUHvcNcTQXZoaWTbiDqc3U-y
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEyMDA4MSBTYWx0ZWRfX8+QGQcJzlVZg
+ k4Zo3bVBz7pmfN3Sfd/laKYuJjmFQTltox9bHgb+vFKdRZxfPn2n0Byt7bGXetEoyIWHw2/XxUZ
+ RUghY+S0CRIP/9z9WKscp43wNcr8TSs=
+X-Authority-Analysis: v=2.4 cv=Mcb5KJ/f c=1 sm=1 tr=0 ts=6af6231d cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=kj9zAlcOel0A:10 a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=7x6HtfJdh03M6CCDgxCd:22 a=_1IyUuN4QrATX339ibzo:22 a=VwQbUJbxAAAA:8
+ a=3j4BkbkPAAAA:8 a=qjNXR0RCjIH4vnWDDyQA:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEyMDA4MSBTYWx0ZWRfX2wWt7WUyZDf5
+ D7DqzOxzzAGKashRIAA/XPJs2s1+E5sQcsUHgQu8DNi/oAjPAVl+TFoYcfJpmKo1T+SifLgmnGv
+ xX0gaGGyBdj3zBqzNmmH3Fd2JXAsfCEBPaGKMBfVskS8la626Xp/5xsN8j14N+BhVitHcuQFAnY
+ /j/Hlo5VFXrSGrLA77e8dj3bzmtM7o9GzgI7nxcQFOvkHBp5VB2jhDeyzOtxhG7DsNjj8S9xSJV
+ MQ4mjkW2fHOlYI05MAevUaRZ040NaOb9hNIRBhKLWfydQKtRmj56asgGGtHpbJU1G8GkZR5UxQW
+ bQY9UIQoU9xJOkxyJhU0roi0DoxJZwWPF6pauZPOYebzxrW256aN69ysBxfjbUieqTqqTSS6C8z
+ XUMjB16+VToOfr8zogSJU1k1HQxxg5xUIVI3PTQqSWHTIJIPK5qkJp79XjeEwbm0r/sW+xVS/9w
+ FzxCuMNv0O5AhSkJmzQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-12_03,2026-11-11_03,2025-10-01_01
 
-On Thu, Oct 29, 2026 at 12:20=E2=80=AFPM Matthew Wood <thepacketgeek@gmail.=
-com> wrote:
->
-> Many PCI sysfs attributes that read from config space are using kernel
-> accessors that don't wait for pci_cfg_access_lock() holders before readin=
-g:
->
-> - serial_number
-> - max_link_width
-> - current_link_*
-> - *_bus_number
->
-> If userspace attempts to read from these attributes while config space is=
- not
-> available (e.g. during a reset) there's no telling what values will be
-> returned: All ones, zeros, or garbage.
->
-> Looking at attribute addition history it seems like this was an oversight
-> instead of a specific decision so this series tries to resolve the attrib=
-utes
-> above to match the sysfs attributes that do use user accessors: config & =
-vpd.
->
-> Patch 1 is a prerequisite for the rest of the series. The kernel
-> accessors these attributes use today skip devices marked disconnected
-> but the user accessors don't, so switching over alone would make the
-> attributes start sending config reads to disconnected devices. Patch 1
-> adds the same pci_dev_is_disconnected() check to the user read
-> accessors.
->
-> Note: That check also affects their existing callers. On a disconnected
-> device, VPD reads and writes, VFIO config reads, and VFIO writes to
-> PCI_COMMAND now fail with -ENODEV, rather than returning ~0 data or,
-> for VPD writes, timing out with a "firmware bug" warning.
-> pciconfig_read() fails with -EIO, and the sysfs "config" file and
-> /proc/bus/pci still return ~0 data.
->
-> Changes were successfully tested by continuously reading sysfs attributes
-> while a reset was issued.
->
-> Changes in v2:
->   - Patch 5: check DSN read errors in serial_number_show() and return
->     -EIO instead of an all-ones serial number
->   - Collected Reviewed-by from Keith Busch on patches 2-4
->
-> v1: https://lore.kernel.org/linux-pci/20261025000836.58294-1-thepacketgee=
-k@gmail.com/
->
+Hey David,
 
-Hi Bjorn,
+On Wed, Nov 11, 2026 at 07:24:04PM +0000, David Matlack wrote:
+ 
+>     Is requiring userspace to re-issue IOMMU_IOAS_MAP_FILE the expected
+>     uAPI behavior? VFIO_DEVICE_RESET (and runtime PM transitions) on the
+>     target device also bracket the reset with
+>     vfio_pci_dma_buf_move(vdev, true) and vfio_pci_dma_buf_move(vdev,
+>     false), tearing down any active IOMMU_IOAS_MAP_FILE mapping of that
+>     device's BAR even though PCI_COMMAND_MEMORY remains enabled when
+>     VFIO_DEVICE_RESET returns.
 
-Checking in to see if there are any concerns with this change or if
-the premise makes sense?
+There was some discussion about this in the thread below. My understanding of
+Jason's point is that the current behavior, and differences between what
+revoking and move-capable importers see in regards to vfio-exported dma-buf is
+somewhat incidental and not necessarily desirable.
 
-Regards,
-Matthew
+https://lore.kernel.org/all/arMBqyI4XNfD+q1W@devgpu015.cco6.facebook.com/
+
+>   - Physical target devices and P2P topology checks: mem_bar_descs[]
+>     currently only matches QEMU's pci-testdev, and
+>     vfio_pci_has_p2p_path() does not yet check PCI topology or ACS to
+>     verify that P2P traffic can flow between two physical endpoints.
+> 
+>     Suggestions on physical target BARs to add to mem_bar_descs[] and on
+>     checking P2P reachability from userspace are welcome.
+
+FWIW, you can also exercise the "P2P" path with just a single device if you
+IOMMU map a device's BAR into it's own IOAS, and have the device DMA itself. For
+eventually validating aspects of Live Update, maybe you don't necessarily care
+if an actual peer device is being DMA'd?
+
+Alex 
