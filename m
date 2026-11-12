@@ -1,68 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794530335;
-	b=Yw+ShyTRkkcnkUeFkKky381KU+jyfkvlZxPQpRZ7LqvtvbGhYFgyTXLT/YzvLtU2qaOF
-	 hotCAeHCLGk2+6B4/39uWqVitN/oWmmMR88MWCGEHcHZanYVshQBrCGz3DjwTNQVjjAbS
-	 GkpfMb2EN7yJIfXtUdtvITh/IMBTkySBcLKcMw0G+33RVaT7FM5CAWQaXGylJ9O5g4Pa2
-	 NzzCUZsG80jgAsBvNBlz4js651nrhrzVd4Egsw5jSvLPMjVmV8ydx0jRtDskODcAePFR9
-	 R5L9md0IXJZLku13gmXFYC4TPBmROY5oIEjI8TLzrn64w0pHQKgaHl8T06z90Kru2rw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794530335;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=canG37aXR5mJ6g5b5cttvc/Do4ZF3im4aNWYzqLWQXA=;
-	b=JgVv7T83BOFzibJ5WVaATrt7+xxYSUnk5FaR3PHVHL+6X3fsxOZNI709Y22iQ3zmsIJ8
-	 fIKehbNDHN1ddh4Q9jN1ItFawD2J0yafTwIvrzCmTyeBemuAJ7LEFfMfUZ1yg3UPB3Lz6
-	 Mgl/3dIa2CXQUFTVDCSIpNstLm/hEwXDe/R79GJXQz17wT1LSuvZXoOJxIHui8+CGb/LD
-	 w4DvYeI8v3w6iP4rwk0SvMCyrqnkQ6for71qrMTPMpJr1O7Q35Khht6blrmI4/yJe78gE
-	 62c8DyqL5eDqjUeQy7X1z7NvNsRE6iuRazjfwzZGYeoBWG3TppKgFq0tK2k8/y+btdg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=c00IwH8z;
-	arc=none smtp.remote-ip=198.175.65.16
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.52
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794531254;
+	b=I/y72wuFpL5vtDUcv2YBYY85AGBcNKEl/upxwRMRSyRBZyiB/QfwaI6dFMxAJVfYBllU
+	 lEl5Vc6chW9kzv69M/TAjnu2ZcufYc6iI9uwX1ecejuWAJzNePk1TwvHhUHKtvrm6ErdJ
+	 6BzkwR2XSqKLbjz4XolgoPtk8m9BQErSnWwos4On9oulTJPglCPyHX9o3D5bcoR60pMJq
+	 OHTuzMatpK01+6KZZHlcCV8Bl3qhyddrG1DJqyx3VOh9xvqA9fsCSp6kcarn1CW9o9w5C
+	 1x8jKhhLfLSdWz3UFElUkvjj3BlX9MoRh18XdeQWlG/QykV+enTe7LfJah/Z+Ui7TEQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794531254;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 From:Date:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 Message-ID:References:In-Reply-To:To:CC:X-Mailer:X-Originating-IP:
+	 X-ClientProxiedBy:X-EOPAttributedMessage:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=lZ0Bz1hPv5O2qx+E5MPu+2FgjsX16i7WQUUNCqOeMv4=;
+	b=0rqiv+Ya4W3uia4+7E+SYDlKyStqDcyZODPCtw7I5mZdLdp8muuELwYdLgEiSEIrU4MB
+	 kwxVNMJMMUWskp229ntFwqZBtNInyWVATD0TIKn0pDmmKTA9AQ94XnNnNijq1NdoaZRUc
+	 Ivl9UCW7rvuQjXVADbPZIj5HyNH9gzDMHxkX05sf27FUNbXy33ksxqv7yrW6LgoJ1Nftn
+	 YyTcpuibfUXfoKhrYgGi0i4m5QHQ+S9A4icGjWWzhnHSy0bsUCSPTejhqHPxPCEX1mVwl
+	 iIEW/6OwiaPNDwqrNrDi/w0bPFV4jc2B502nAPiauyxh+/ZIk0TZMklI0gCrZBlgiMg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=amd.com;
+	spf=fail smtp.mailfrom=amd.com;
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=Vlt6wk3J;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.52
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012052.outbound.protection.outlook.com [52.101.43.52])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA530606B7C8;
-	Fri, 13 Nov 2026 00:38:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA530606B7C8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECDB606A31C;
+	Fri, 13 Nov 2026 00:54:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DECDB606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=c00IwH8z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794530335; x=1826066335;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=M1TWvgEtRHxXH+HX2eeBzztaslUSiVAUKNjFskSfCH4=;
-  b=c00IwH8z5DDgqUE25ROR4dqx596dTGte5NLOH38nnrTqiuxVBi6D3tTg
-   IkWPTgbhNcOzlr4VxOMdhqZOm64u3PFupW2r5EY6ZrZds/Rt2xFO5jjfo
-   SFKMCnns4eoOiObEwy/xF+rb1nSnKMU1lQd1nWb1Mb1q/SxzSGG2nHgMg
-   xlWcXpeyuIkPlwGzEHAXiJTOyIpGbnWvA/8/HF9lSLokfQNfzrS5BtfqN
-   p5EyFmcaUGq4Rb1LCMBT0JDTEt6vIUbCoDX6l2xMTrRhV98hCstmBqzhE
-   cGQZdI4NfQaC593un9jvcIGNgvigz36n310aTgQaBAUuHb7sGIqC9ZXlZ
-   w==;
-X-CSE-ConnectionGUID: q4y6hcGuTFqRBAxnZ+Nr/A==
-X-CSE-MsgGUID: fN4uGcVxRBucAKi1lZTtHA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11964"; a="3317360"
-X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
-   d="scan'208";a="3317360"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2026 16:38:54 -0800
-X-CSE-ConnectionGUID: C7LLPPGbSSau07vLky1Fgw==
-X-CSE-MsgGUID: s8E7UBIMTeqW99TaqSmMcA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
-   d="scan'208";a="8783891"
-Received: from jjgreens-desk24.amr.corp.intel.com (HELO [10.125.111.216]) ([10.125.111.216])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2026 16:38:52 -0800
-Message-ID: <6e795d77-081e-4c32-87ab-931d031a419c@intel.com>
-Date: Thu, 12 Nov 2026 17:38:51 -0700
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=Vlt6wk3J
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rwn2XqVec2nmAtONsQ4ItggIy1NoLD5xICURQncdi1fB9EIbSuR63plLbuBRe1N7d7MbsHjfc7qitBQfw36eRILCzTzCrhaS2ByoY1dtfOA6KuVm1y/eQB+ajBy9dzOrx13pxNQtFsqYkDFUBYT6uYRGlc2iA0wWvCkhdX0nqLA63QiOuHcbZZIAJW1tCi58SGpgNMW445fEQVQhoPQ8QZeQMwhPqWr66wWsicXG5uwKuByG5PhZm0o/nAFIh/nF822OT4wov1hChEr++c6J2nLbuYVvEEV9HF2uRBY/CUuLnWuex1OXFxaa0tYB5RXOzSW7UFbj/nb3IICgdvCUjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lZ0Bz1hPv5O2qx+E5MPu+2FgjsX16i7WQUUNCqOeMv4=;
+ b=BVGRVVMQvxU2wOuxtwNjZUTYzR2BApP7U2Nx8/B8ijlXa94hvjiVS3pHpqKFiCqfZfYChKfz13no7vLu/hMLw1K6eZcujH7Aksy6zgb+ZpaCJrqEUctLH9KS4qjx3HWvIkW/sLDjR6isdJo09z8frTHTVtRs+tkJRhP5hJ1a+8GNTk+hCRQQj5BSP+Rb59kkJct7eW4eZ/X3yaPqdgJMp6mMxD3B5lAHOs2cwapDCRJkLka/Vx/yjW88NDtfLXncGjZ87T3FmKCj/ezRLasX5wG6ZMmDkBkxOiEijYUKQ3HOh/FKQW51Cf3//r8ctmLEHFz400q7BkTMxrQzGCTmSg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=lists.freedesktop.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lZ0Bz1hPv5O2qx+E5MPu+2FgjsX16i7WQUUNCqOeMv4=;
+ b=Vlt6wk3JtNHJoAZB/GLt7UIP70iUmjNGBl57KN4lSUd5stZhi2z1guhHi5vOcsxkH8wgKiRycBh/y6DYRP2hc04dcyMTY/NsUt5fP+naFqXcaYlO6YK1kOFc5gYbkGwNsBvC188gar5uuLCFdj2a1ok/QxH327M4cqz4VQ6DuhY=
+Received: from MW4PR03CA0356.namprd03.prod.outlook.com (2603:10b6:303:dc::31)
+ by MN0PR12MB5836.namprd12.prod.outlook.com (2603:10b6:208:37b::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.9; Fri, 13 Nov
+ 2026 00:52:05 +0000
+Received: from SJ1PEPF00002323.namprd03.prod.outlook.com
+ (2603:10b6:303:dc:cafe::96) by MW4PR03CA0356.outlook.office365.com
+ (2603:10b6:303:dc::31) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.8 via Frontend Transport; Fri, 13
+ Nov 2026 00:52:04 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ SJ1PEPF00002323.mail.protection.outlook.com (10.167.242.85) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.615.4 via Frontend Transport; Fri, 13 Nov 2026 00:51:53 +0000
+Received: from [127.0.1.1] (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.53; Thu, 12 Nov
+ 2026 15:55:01 -0600
+From: Mario Limonciello <mario.limonciello@amd.com>
+Date: Thu, 12 Nov 2026 15:54:55 -0600
+Subject: [PATCH v7 3/3] drm/radeon: Match VFCT using initial PCI bus number
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -72,393 +99,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 09/19] cxl: Refresh cached PCI HDM decoder settings
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Ira Weiny <iweiny@kernel.org>, Jonathan Cameron <jic23@kernel.org>,
- Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Li Ming <ming.li@zohomail.com>, Joshua Machauer <machaujo@amazon.de>,
- Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261105185917.2667656-1-smadhavan@nvidia.com>
- <20261105185917.2667656-10-smadhavan@nvidia.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <20261105185917.2667656-10-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-ID: <20261112-vfct-regression-v7-3-69b1e0cf45c2@amd.com>
+References: <20261112-vfct-regression-v7-0-69b1e0cf45c2@amd.com>
+In-Reply-To: <20261112-vfct-regression-v7-0-69b1e0cf45c2@amd.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Alex Deucher
+	<alexander.deucher@amd.com>, =?utf-8?q?Christian_K=C3=B6nig?=
+	<christian.koenig@amd.com>
+CC: Oz Tiram <oz@shift-computing.de>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
+	<dri-devel@lists.freedesktop.org>, Mario Limonciello
+	<mario.limonciello@amd.com>
+X-Mailer: b4 0.16.0
+X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
+ (10.181.42.216)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00002323:EE_|MN0PR12MB5836:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0190b5b0-ab5b-4b64-e641-08df41204fa4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|376014|1800799024|82310400026|36860700016|10067099003|11063799006|56012099006|261022115727099003|261022075727099003|261026121527099003|261026140227099003|261022105027099003|261021121427099003|261021123027099003|261028144727099003|261102123227099003|261009223027099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	kJth+L9EaAG+vtWR/Q3HSISTAXdCGU7ry3+IPMrhWmtoiKOJquykeT/2d3ca6hOizX+Gk3tbQJkfylPDShLp1Ek5qk9D/3saQVhHeF2PZOPHkfydSdxmAYSkCy4zo1msd/J1vnQcRi178qMoxc9tHqXdpqbEkhonejFtx1fdERrpB1WaJkH9663dmF9Nv9+EDpBEami+3IZhxox2j4CoRJ9h3990SCM5ugQ8SF13bN3JtsBIJJW0Yq50oBgKQb5cFdUoRC53oXIe5otTGw7mxXkQU7kPPiAZDpZFSqvRX0Lfi7sa1WOVG89nIN51NMM0m3jvH2d0+GVPWH2m2+K7yG+qVF0a/LbxdqSpTkmlPrfbF0bhYhZAnLONZVDQKhdE4DTWu0GQvRF2Ny5p9EfDgF3JM0aR0yShFHuRuMFO3NmKHgrWi6A4g/dURYoWoS9ICJMIsdV/ogoX0TNBdQ58okUx7KicV48HSwlZ6lDPO38PmAwPdmEYKmmVIH4prWVxtDaZEIi/cACGqhBtwkbgPRC9YPh2vg2VHkn+TEZr2UT9ysHgMweei85uQ8njP0+26J5IqYRw/X5foQfQLjuh0VHRcv47Y7b1Ady8tcKAaO+Uq/m3J2H4a7wxWLZFKzX8lYEk6CrGLIQiTs3wnK28XzuZSrLKHZjVi/+mctYLQx1W+0rkLeUwQIDQc1egryJhX7EwrSHbDl1t/73YYY7T/Q==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(82310400026)(36860700016)(10067099003)(11063799006)(56012099006)(261022115727099003)(261022075727099003)(261026121527099003)(261026140227099003)(261022105027099003)(261021121427099003)(261021123027099003)(261028144727099003)(261102123227099003)(261009223027099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	+wZglADTIDM6r3S6q6qjaoQB1iaK4A+YbZFYVrAPWE9waP8SyHDzqGI8vVW3R7AA9vYLNP/2Tb6g2FsuV3AgpS95KAMWZLPwdhPjIPuYcYhfKSj+TxXpJUOrWa4JGTntD7i1MJak5qg8CW+Hgq6mGdwBeGWsewm2TrLIs++E+qIZAXJuunsCVK4AowejH9MCov94ha/iIO19d8Sto2IO8t6SnKdllCWPg/DfmRkUg+SruaQCJ1uG1CnP6Eck+ROMp49ZdBmL9vd41/0pEOVFmsn3X9y+gDgk9KiZQAhtOHkzWP1AQSYAPPLuMTW2bDssFqirjDEtY/mZzggUXsezrxFug1hr6Q5MTTUhetHImhx/oy4YS1/2q8uzT1Y5ki2Qc+84oQcUrm3vi+RTT/+rrlwu8xdMuH84qZzKKWLn8H4RIvbmVyiiWYO937pgSa69
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Nov 2026 00:51:53.9841
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0190b5b0-ab5b-4b64-e641-08df41204fa4
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ1PEPF00002323.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB5836
 
+VFCT records the PCI bus number from BIOS POST. The current bus number
+can change after PCI core renumbers the bus, while accepting a mismatch
+based only on device identity can select the wrong VFCT image when
+matching devices are present. Compare against the bus number captured
+from the firmware bus assignment before bridge renumbering.
 
+Fixes: 4059e2f02c8a ("drm/radeon: Fix VFCT bus number matching with soft filter")
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/gpu/drm/radeon/radeon_bios.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
 
-On 11/5/26 11:59 AM, Srirangan Madhavan wrote:
-> Early PCI discovery creates the HDM cache, while later CXL enumeration and
-> decoder operations provide updated programming state.
-> 
-> Refresh the PCI snapshot when decoders are enumerated, committed, or reset
-> so reset recovery need not walk the CXL topology. Keep cache access and
-> locking in the built-in HDM state helpers. Ignore updates when no cache
-> exists and reject decoder-count mismatches.
-> 
-> Use CXL_RESET for the PCI HDM cache. Shared HDM register helpers do not
-> require it.
-> 
-> Skip cache checks and updates for DVSEC-emulated decoders, which do not
-> use HDM registers. Keep cached global control when MMIO reads return all
-> ones.
-> 
-> Non-PCI mock ports have no upstream PCI device, so the cache helpers
-> ignore them. This avoids test wrappers and a circular dependency between
-> cxl_core and cxl_mock.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> Assisted-by: LLM
-> Reviewed-by: Richard Cheng <icheng@nvidia.com>
-> 
-> ---
-> Reference branch: https://git.kernel.org/pub/scm/linux/kernel/git/djiang/linux.git/commit/?id=50a88f5194e5df38590d413f925d8d5afa8a8488
-> ---
->  drivers/cxl/Kconfig          |  5 ++++
->  drivers/cxl/core/core.h      |  1 +
->  drivers/cxl/core/hdm.c       | 34 +++++++++++++++++++--
->  drivers/cxl/core/hdm_state.c | 57 ++++++++++++++++++++++++++++++++++++
->  drivers/cxl/core/pci.c       | 24 +++++++++++++++
->  include/cxl/cxl.h            |  1 +
->  include/cxl/hdm.h            | 32 ++++++++++++++++++++
->  include/linux/pci.h          |  6 ++++
->  8 files changed, 158 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-> index 80aeb0d556bd..8b08bfdc4982 100644
-> --- a/drivers/cxl/Kconfig
-> +++ b/drivers/cxl/Kconfig
-> @@ -6,6 +6,7 @@ menuconfig CXL_BUS
->  	select FW_UPLOAD
->  	select PCI_DOE
->  	select FIRMWARE_TABLE
-> +	select CXL_RESET
->  	select NUMA_KEEP_MEMINFO if NUMA_MEMBLKS
->  	select FWCTL if CXL_FEATURES
->  	help
-> @@ -244,3 +245,7 @@ config CXL_ATL
->  	depends on ACPI_PRMT && AMD_NB
->  
->  endif
-> +
-> +# CXL_BUS requires the PCI HDM cache and built-in state helpers, even when modular.
-> +config CXL_RESET
-> +	bool
-> diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-> index ea539f00e55d..e34d574f6594 100644
-> --- a/drivers/cxl/core/core.h
-> +++ b/drivers/cxl/core/core.h
-> @@ -224,6 +224,7 @@ static inline void devm_cxl_dport_ras_setup(struct cxl_dport *dport) { }
->  int cxl_gpf_port_setup(struct cxl_dport *dport);
->  
->  struct cxl_hdm;
-> +int cxl_hdm_check_decoder_count(struct cxl_hdm *cxlhdm);
->  int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm,
->  			struct cxl_endpoint_dvsec_info *info);
->  int cxl_port_get_possible_dports(struct cxl_port *port);
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index 85f9abf58a42..ec387070d7ad 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -725,6 +725,24 @@ static void cxlsd_set_targets(struct cxl_switch_decoder *cxlsd, u64 *tgt)
->  		*tgt |= FIELD_PREP(GENMASK_ULL(63, 56), t[7]->port_id);
->  }
->  
-> +static void cxl_hdm_refresh_decoder(struct cxl_hdm *cxlhdm,
-> +				    struct cxl_decoder *cxld)
-> +{
-> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
-> +	struct pci_dev *pdev __free(pci_dev_put) = NULL;
+diff --git a/drivers/gpu/drm/radeon/radeon_bios.c b/drivers/gpu/drm/radeon/radeon_bios.c
+index 1da6bf1c17ff3..707566e376d05 100644
+--- a/drivers/gpu/drm/radeon/radeon_bios.c
++++ b/drivers/gpu/drm/radeon/radeon_bios.c
+@@ -609,16 +609,17 @@ static bool radeon_read_disabled_bios(struct radeon_device *rdev)
+  * VFCT entries contain the PCI bus number as recorded during BIOS POST.
+  * On systems where the kernel renumbers PCI buses (e.g. pci=realloc or
+  * resource conflicts), the runtime bus number may differ from the POST
+- * value.  Match by device identity (vendor + device + function) and use
+- * the bus number as a preference: exact bus match is preferred, but when
+- * the bus numbers disagree we accept the entry if the device identity
+- * matches.
++ * value.  Match using the bus number captured when the device was
++ * discovered, before any bus renumbering.
+  *
+  * Returns: 0 on match, -ENODEV on no match
+  */
+ static int radeon_acpi_vfct_match(struct radeon_device *rdev,
+-				  VFCT_IMAGE_HEADER *vhdr)
++				   VFCT_IMAGE_HEADER *vhdr)
+ {
++	struct pci_dev *bridge = rdev->pdev->bus->self;
++	unsigned char initial_bus;
++
+ 	/* Vendor and device IDs must always match */
+ 	if (vhdr->VendorID != rdev->pdev->vendor ||
+ 	    vhdr->DeviceID != rdev->pdev->device)
+@@ -628,16 +629,12 @@ static int radeon_acpi_vfct_match(struct radeon_device *rdev,
+ 	    vhdr->PCIFunction != PCI_FUNC(rdev->pdev->devfn))
+ 		return -ENODEV;
+ 
+-	/* Exact bus number match - preferred */
+-	if (vhdr->PCIBus == rdev->pdev->bus->number)
+-		return 0;
++	if (bridge && bridge->fw_sec_bus_valid)
++		initial_bus = bridge->fw_sec_busnr;
++	else
++		initial_bus = rdev->pdev->bus->number;
+ 
+-	/* Bus mismatch but device identity matches (PCI renumbering case) */
+-	dev_notice(&rdev->pdev->dev,
+-		   "VFCT bus number mismatch: table %u != runtime %u, matching by device identity (vendor 0x%04x device 0x%04x)\n",
+-		   vhdr->PCIBus, rdev->pdev->bus->number,
+-		   rdev->pdev->vendor, rdev->pdev->device);
+-	return 0;
++	return vhdr->PCIBus == initial_bus ? 0 : -ENODEV;
+ }
+ 
+ static bool radeon_acpi_vfct_bios(struct radeon_device *rdev)
 
-Move the declaration to before you use the variable. This is an exception when it comes to var declarations in the kernel. The pattern above is discouraged.
-> +
-> +	if (!hdm)
-> +		return;
-> +	if (!is_endpoint_decoder(&cxld->dev))
-> +		return;
-> +
-> +	pdev = cxl_port_get_uport_pci_dev(cxlhdm->port);
-
-As mentioned above,
-struct pci_dev *pdev __free(pci_dev_put) = cxl_port_get_uport_pci_dev(cxlhdm->port);
-
-> +	if (!pdev)
-> +		return;
-> +	cxl_hdm_cache_refresh_decoder(pdev, hdm,
-> +				      to_cxl_endpoint_decoder(&cxld->dev));
-> +}
-> +
->  static void
->  cxl_endpoint_decoder_snapshot(struct cxl_endpoint_decoder *cxled,
->  			      struct cxl_endpoint_decoder_settings *settings)
-> @@ -805,6 +823,7 @@ static int cxl_decoder_commit(struct cxl_decoder *cxld)
->  	}
->  	port->commit_end++;
->  	cxld->config.flags |= CXL_DECODER_F_ENABLE;
-> +	cxl_hdm_refresh_decoder(cxlhdm, cxld);
->  
->  	return 0;
->  }
-> @@ -877,6 +896,7 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
->  	writel(0, hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
->  
->  	cxld->config.flags &= ~CXL_DECODER_F_ENABLE;
-> +	cxl_hdm_refresh_decoder(cxlhdm, cxld);
->  
->  	/* Userspace is now responsible for reconfiguring this decoder */
->  	if (is_endpoint_decoder(&cxld->dev)) {
-> @@ -1079,13 +1099,21 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
->  {
->  	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
->  	struct cxl_port *port = cxlhdm->port;
-> -	int i;
-> +	/* DVSEC-emulated decoders do not describe the cached HDM registers. */
-> +	bool emulated = should_emulate_decoders(info);
->  	u64 dpa_base = 0;
-> +	int i, rc;
-> +
-> +	if (is_cxl_endpoint(port) && hdm && !emulated) {
-> +		rc = cxl_hdm_check_decoder_count(cxlhdm);
-> +		if (rc)
-> +			return rc;
-> +	}
->  
->  	cxl_settle_decoders(cxlhdm);
->  
->  	for (i = 0; i < cxlhdm->decoder_count; i++) {
-> -		int rc, target_count = cxlhdm->target_count;
-> +		int target_count = cxlhdm->target_count;
->  		struct cxl_decoder *cxld;
->  
->  		if (is_cxl_endpoint(port)) {
-> @@ -1120,6 +1148,8 @@ static int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm,
->  			put_device(&cxld->dev);
->  			return rc;
->  		}
-> +		if (!emulated)
-> +			cxl_hdm_refresh_decoder(cxlhdm, cxld);
->  		rc = add_hdm_decoder(port, cxld);
->  		if (rc) {
->  			dev_warn(&port->dev,
-> diff --git a/drivers/cxl/core/hdm_state.c b/drivers/cxl/core/hdm_state.c
-> index c9cc019902ef..d4c2be1ef833 100644
-> --- a/drivers/cxl/core/hdm_state.c
-> +++ b/drivers/cxl/core/hdm_state.c
-> @@ -1,6 +1,8 @@
->  // SPDX-License-Identifier: GPL-2.0-only
->  /* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
->  #include <linux/export.h>
-> +#include <linux/io.h>
-> +#include <linux/pci.h>
->  #include <linux/rwsem.h>
->  
->  #include <cxl/hdm.h>
-> @@ -13,3 +15,58 @@ struct cxl_rwsem cxl_rwsem = {
->  	.dpa = __RWSEM_INITIALIZER(cxl_rwsem.dpa),
->  };
->  EXPORT_SYMBOL_FOR_MODULES(cxl_rwsem, "cxl_core");
-> +
-> +void cxl_hdm_cache_refresh_decoder(struct pci_dev *pdev, void __iomem *hdm,
-> +				   struct cxl_endpoint_decoder *cxled)
-> +{
-> +	struct cxl_endpoint_decoder_settings *settings;
-> +	struct cxl_decoder *cxld = &cxled->cxld;
-> +	struct cxl_hdm_info *info;
-> +	u32 global_ctrl;
-> +	int id;
-> +
-> +	guard(rwsem_write)(&cxl_rwsem.dpa);
-> +	id = cxld->config.id;
-> +	info = pdev->hdm;
-> +	if (!info)
-> +		return;
-> +	if (id < 0 || id >= info->decoder_count) {
-> +		pci_warn(pdev, "CXL HDM decoder %d exceeds cached count %d\n",
-> +			 id, info->decoder_count);
-> +		return;
-> +	}
-> +
-> +	/* Preserve the last good value when the device does not respond. */
-> +	global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
-> +	if (global_ctrl != U32_MAX)
-> +		info->global_ctrl = global_ctrl;
-> +	settings = &info->settings[id];
-> +
-> +	/*
-> +	 * A disabled decoder's software object may retain its old range and
-> +	 * skip state. Leave only the decoder id in the cached settings so stale
-> +	 * state is not restored as an enabled decode.
-> +	 */
-> +	*settings = (struct cxl_endpoint_decoder_settings) {
-> +		.config.id = id,
-> +	};
-> +	if (cxld->config.flags & CXL_DECODER_F_ENABLE) {
-> +		settings->config = cxld->config;
-> +		settings->skip = cxled->skip;
-> +	}
-> +}
-> +EXPORT_SYMBOL_FOR_MODULES(cxl_hdm_cache_refresh_decoder, "cxl_core");
-
-kdoc header for exported symbol
-
-> +
-> +int cxl_hdm_cache_check_decoder_count(struct pci_dev *pdev, int count)
-
-In the end we are just looking to see if there's a match right? I think returning a bool and changing the function name to be more obvious.
-
-bool cxl_hdm_cache_decoder_count_match() maybe?
-
-> +{
-> +	guard(rwsem_read)(&cxl_rwsem.dpa);
-> +	if (pdev->hdm && pdev->hdm->decoder_count != count) {
-> +		pci_warn(pdev,
-> +			 "CXL HDM cache decoder count mismatch: cached=%d hdm=%d\n",
-> +			 pdev->hdm->decoder_count, count);
-> +		return -ENXIO;
-> +	}
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_FOR_MODULES(cxl_hdm_cache_check_decoder_count, "cxl_core");
-
-kdoc header for exported symbol. Also are you sure this symbol needs to be exported?
-
-DJ
-
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index f72cd8f50e77..5272013548c7 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -6,6 +6,7 @@
->  #include <linux/delay.h>
->  #include <linux/pci.h>
->  #include <linux/pci-doe.h>
-> +#include <cxl/hdm.h>
->  #include <cxl/pci.h>
->  #include <linux/aer.h>
->  #include <cxlpci.h>
-> @@ -180,6 +181,29 @@ int cxl_await_media_ready(struct cxl_dev_state *cxlds)
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_await_media_ready, "CXL");
->  
-> +/**
-> + * cxl_hdm_check_decoder_count() - check enumeration against the PCI HDM cache
-> + * @cxlhdm: HDM capability containing the decoder count to check
-> + *
-> + * Take cxl_rwsem.dpa for read while comparing the cached count. Call only
-> + * for hardware HDM decoders, since DVSEC-emulated ranges do not describe
-> + * the HDM registers represented by the cache.
-> + *
-> + * Return: 0 if the counts match or no upstream PCI device or cache exists,
-> + * or -ENXIO if the cached and enumerated decoder counts differ.
-> + */
-> +int cxl_hdm_check_decoder_count(struct cxl_hdm *cxlhdm)
-> +{
-> +	struct pci_dev *pdev __free(pci_dev_put) =
-> +		cxl_port_get_uport_pci_dev(cxlhdm->port);
-> +
-> +	if (!pdev)
-> +		return 0;
-> +
-> +	return cxl_hdm_cache_check_decoder_count(pdev, cxlhdm->decoder_count);
-> +}
-> +EXPORT_SYMBOL_NS_GPL(cxl_hdm_check_decoder_count, "CXL");
-> +
->  static int cxl_set_mem_enable(struct cxl_dev_state *cxlds, u16 val)
->  {
->  	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
-> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
-> index 6d6e564be27a..341a7c52894a 100644
-> --- a/include/cxl/cxl.h
-> +++ b/include/cxl/cxl.h
-> @@ -26,6 +26,7 @@ enum cxl_devtype {
->  };
->  
->  struct cxl_region;
-> +struct cxl_hdm_info;
->  
->  enum cxl_decoder_type {
->  	CXL_DECODER_DEVMEM = 2,
-> diff --git a/include/cxl/hdm.h b/include/cxl/hdm.h
-> index 219b9bb67440..06e9aa4479c2 100644
-> --- a/include/cxl/hdm.h
-> +++ b/include/cxl/hdm.h
-> @@ -6,6 +6,9 @@
->  #include <linux/types.h>
->  #include <cxl/cxl.h>
->  
-> +struct pci_dev;
-> +struct cxl_endpoint_decoder;
-> +
->  /**
->   * struct cxl_endpoint_decoder_settings - endpoint HDM decoder programming
->   * @config: common decoder configuration
-> @@ -16,4 +19,33 @@ struct cxl_endpoint_decoder_settings {
->  	u64 skip;
->  };
->  
-> +/**
-> + * struct cxl_hdm_info - cached CXL HDM state for a PCI device
-> + * @decoder_count: number of entries in @settings
-> + * @hdm_bar: PCI BAR containing the HDM decoder capability
-> + * @hdm_offset: offset of the HDM decoder capability in @hdm_bar
-> + * @hdm_size: size of the HDM decoder register block
-> + * @global_ctrl: HDM decoder global control register
-> + * @dvsec_ctrl: CXL DVSEC control register
-> + * @dvsec_ctrl_valid: whether @dvsec_ctrl contains valid state
-> + * @settings: per-endpoint-decoder programming state
-> + *
-> + * Publication through pci_dev.hdm and all mutable fields are protected by
-> + * cxl_rwsem.dpa.
-> + */
-> +struct cxl_hdm_info {
-> +	int decoder_count;
-> +	int hdm_bar;
-> +	resource_size_t hdm_offset;
-> +	resource_size_t hdm_size;
-> +	u32 global_ctrl;
-> +	u16 dvsec_ctrl;
-> +	bool dvsec_ctrl_valid;
-> +	struct cxl_endpoint_decoder_settings settings[] __counted_by(decoder_count);
-> +};
-> +
-> +void cxl_hdm_cache_refresh_decoder(struct pci_dev *pdev, void __iomem *hdm,
-> +				   struct cxl_endpoint_decoder *cxled);
-> +int cxl_hdm_cache_check_decoder_count(struct pci_dev *pdev, int count);
-> +
->  #endif /* __CXL_HDM_H__ */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d31a8d107b1e..7bb37fcb556d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -339,6 +339,9 @@ struct pcie_link_state;
->  struct pci_sriov;
->  struct pci_p2pdma;
->  struct rcec_ea;
-> +#ifdef CONFIG_CXL_RESET
-> +struct cxl_hdm_info;
-> +#endif
->  
->  /* struct pci_dev - describes a PCI device
->   *
-> @@ -566,6 +569,9 @@ struct pci_dev {
->  #ifdef CONFIG_PCI_DOE
->  	struct xarray	doe_mbs;	/* Data Object Exchange mailboxes */
->  #endif
-> +#ifdef CONFIG_CXL_RESET
-> +	struct cxl_hdm_info *hdm;	/* CXL HDM decoder state */
-> +#endif
->  #ifdef CONFIG_PCI_NPEM
->  	struct npem	*npem;		/* Native PCIe Enclosure Management */
->  #endif
+-- 
+2.43.0
 
