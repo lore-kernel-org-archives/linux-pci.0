@@ -1,56 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794494633;
-	b=rIdNtqXC4OH6LzHYm6CBWQ8hxClbcfu7AhTiaNc21bSqi+BTm7WK5QZtpHFLJod9DVQQ
-	 zr9KVtQhUbcE4f6DxWyOsmeNfWYIC2AVvn2z3MbyP1Nj1e8imdTJuBCdSLtULOopFQbxB
-	 DleOCJHwtbKiq7oYTSENNGgSLEbBpXtJ3uWp1U0j1mng9l0aGg4AtY9Nq8iwhkk50nyd4
-	 cpSMSDv2eehNfNsnf1QQ7UuwMTuZJZJlLQwZ4Z+kLsLWTpzWuICADC3E2muXQqSEhWSD9
-	 Fm6g5voZuTmmYhxH6an/twz7jRg/6WM2S+bzjjZ23eI/tGsaDzyphROPQEXYQ0761YQ==
+	t=1794494724;
+	b=gC7idwFha9loCI4qGCbfxZRjC5KUkEIHZDSj50IHazvbexr0iCfjp9TTdZT4jeMH2akP
+	 i4WzJX+yX1ZhAgiD5uvefv1uKGf2WLjhUZjqcZn6+vtehb874f+Lt7ycs1+GDJBwYCxEI
+	 cFGMGoF7kvT/f7JDgsU4UkaFcu3Ye4REaPFV40ZiCktmtelkZHoRJOsd4kxsCklnI3hOg
+	 0tcQ6w10QqgzlfZRgBJoLhB80mb7/HzMqmsgtADqVU2w9Ds0rNmaGwCkiamHDABp2AI7O
+	 8lwWL/XxmhsXOSW70r4NS7GgiJX52lsG0+Jp6bFNisjszUyI85/8bDOBofZG/hpqnhw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794494633;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794494724;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ZV8REPkDiEgMvtC3oPumXcPlQwyXqO0ur30pVFMZ1Xo=;
-	b=CUqqqPphbgBqAlooUPSCD3iEfr6Qf4MR+MYZuu32VU210yEt+8wlJA8CBL7Q6CHBTPwf
-	 XQFwUFPQHL63N7SSJaNzpc0yvaK2cFN84FqD3IP71QxJOPDFysF1gkIEJKXX5rJ8ZNuH1
-	 CFJ3lIlBc/wD4Cm1iHb/FhtxEwoImJ/F+En5/gsUGXn3qnYQeFr1DgJCow+4JaEwOhkOc
-	 2YCDZNz+rsiGF96gG1U87Mi7RHvK1jpaFeWw7lTmHy3nJrjFtsyHQx1i7GZ9bVAuoKamb
-	 5tWsWsYCrZ1eLL5szNnFj/7RJKSkk+/eTNU7rNT3xcfYCln0W4ne/LbyuUS9gNXqZdg==
+	bh=kEMvp7rL1O7eTaYfmoVUkTlDy7kXYdjWoNPtMuIJZpo=;
+	b=qXw5NaRxvCD8Tr8Tys/s8R48L+djF8FZspY4AUFSDz5sDVbxLAXXwfUuPY5r2aHyT+tj
+	 LDey6dLo2sOcKoLHDd/Bftw6/I1agSEsmnoWCuiF3vcK/TkFzKKtGmaaSsHc0bz4Q5hzv
+	 n4Rx7m1pfSR0/Os19dKB5EZwOGbCak5cmsaB59pylEKa0L+s9nYWXf/DHUVD/L0uz3/Xs
+	 r2X7w0M7vLYVexAER3QnzS6Ru5Iuo4isk2J5T8XaN3UxRvvqVpcLAblF2BWSE5Sm3mJkm
+	 sQKp8Accnuckhabixai7PyigTyhW8/BLgHmWx9VANkFdfb30TBJK6UpSWkQzxpCqz2A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kCJirrti;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YIjgfv1P;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 767BF606A323
-	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:43:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78DC7606A31C
+	for <linux-pci@vger.kernel.org>; Thu, 12 Nov 2026 14:45:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kCJirrti
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEBE91F00A05;
-	Thu, 12 Nov 2026 14:43:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YIjgfv1P
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEC1C1F00A05;
+	Thu, 12 Nov 2026 14:45:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794494633;
-	bh=ZV8REPkDiEgMvtC3oPumXcPlQwyXqO0ur30pVFMZ1Xo=;
+	s=k20260515; t=1794494724;
+	bh=kEMvp7rL1O7eTaYfmoVUkTlDy7kXYdjWoNPtMuIJZpo=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=kCJirrti35Z4pezKl5wRa8FB0Sro7IVuTQNsen+7wTe5GRMhnHCRAfZJFwKknTvJp
-	 +1okYPvhblDHQXnxzur/I18BIJnizXfq34I9zopvxB4011Hu/RTJLj+aJb0w9xmpcL
-	 4rD+BUl5ggFoDMRK448EgPiPdnM/J3fFVPYU7sA2A9C2Y6Fhc6/f/iFuFAaRUpoSUY
-	 AM6uf3Ty90oBkPQY5D2M5Ksd0EFlfXmKyvi/Iiz/ZtcaKz+F1Q+Ew07EdCxquufPz1
-	 T2ExALPJcWIK4dAJjRuIQuarlXNRRJlqV4VRjeSxx6l9NYEo/HAuT/vpVAqmeldvWF
-	 pEkbdhFUxwl9A==
-Message-ID: <sashiko-outbox-211371@kernel.org>
+	b=YIjgfv1PQDoYHdfOMb0xtwUu+M4fl357FbFwNeLxjtkuNkv8lDZCDcM8obGArI7u6
+	 N7zn0H/7o/ZEBRF0zR5CXzkBDPoJ3cWj9RDu9gKBNscArNded+OGLcXxV5QkIAJtpF
+	 oZLJzms/WapKY6XBBwz6IJiPIxv+F0FSmO1G5LFdy2fiq3M6YE2rbJTWDMMuQ5LUR/
+	 xNQhf0VcLifvZen8s5dC2S3YMI61edXsVXmCWp/D2DPK3K3G7gaKOWE9uI4tIYlMiT
+	 HfDwBsI2CcdU55oPXkbthyjSF9u9QGGu/AwKo4dB3vpB4y/nYBunArex70OuXzkjgC
+	 nTQQ5k6d/FuqQ==
+Message-ID: <sashiko-outbox-211374@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v3 19/20] vfio/pci: Add
- VFIO_DEVICE_FEATURE_PCI_ERROR_RECOVERY
+Subject: Re: [RFC PATCH v3 17/20] vfio/pci: Complete recovery in resume()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261112141632.918954-20-skolothumtho@nvidia.com>
+In-Reply-To: <20261112141632.918954-18-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
- <20261112141632.918954-20-skolothumtho@nvidia.com>
+ <20261112141632.918954-18-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 14:43:52 +0000
+Date: Thu, 12 Nov 2026 14:45:23 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,26 +59,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> Userspace needs a way to enable host recovery and find out whether it is
-> still running, succeeded, reset the device or failed.
+> Add resume() to finish recovery and allow device access again. This also
+> handles recovery that did not require a reset.
 >=20
-> Add a device feature that registers a recovery eventfd and reports
-> status flags and a sequence number. SET with eventfd -1 disables
-> recovery. GET is available while hardware access is blocked. The
-> sequence number lets userspace detect recovery that finished before it
-> read the notification.
+> Complete deferred D0 requests and restore PCI_COMMAND, DMA-BUF mappings
+> and INTx state before installing live ops. Take igate before
+> memory_lock, matching IRQ configuration, and hold both through
+> restoration and live-ops installation so no deferred D0 request is
+> missed.
 >=20
-> Reject SET if access is blocked, recovery has failed or a recorded host
-> recovery is still running. This also applies if userspace had not
-> enabled recovery when the event started, so a late subscription cannot
-> report part of an older event as a new one. Updating the eventfd resets
-> status for the current open. The existing error eventfd is unchanged.
->=20
-> Add the recovery eventfd and signal it when recovery starts, completes
-> or fails. Release it during close. Signal under access_lock so SET cannot
-> replace the eventfd and reset status before notification.
->=20
-> Userspace must probe each device and restore guest state after a reset.
+> Use the locked PCI power helper because native PCI recovery already
+> holds pci_bus_sem for reading. Leave failed devices blocked.
 >=20
 > Signed-off-by: Shameer Kolothum <skolothumtho@nvidia.com>
 
@@ -87,5 +77,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112141632.9189=
-54-1-skolothumtho@nvidia.com?part=3D19
+54-1-skolothumtho@nvidia.com?part=3D17
 
