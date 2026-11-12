@@ -1,55 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794495153;
-	b=aEUEVQoaQammHwZ+J8WHwd1P/eu4+jPe7qoBvUmQNZZmPnOIdqedz7hXzwWSRHPWFg7r
-	 raEj+J79JsYPYq+B5iih/92cvHmBncQMGuzhDWVtbGFAIKQ5qZlzcffy4avn59hiYrDla
-	 F6lV70ocM3PNCMDzgGQXd2APbVzl8+kr88D3Ge/3+VSCCqxddsTrazMcvzxSvgvXsWDp3
-	 OTRUUodbClsQrZSt5zN52JJzWY3e6FGO6jsRB+MyN/vW2NjO0FrPfFWOj0QBOIpxSd0Nn
-	 jUU6/vxeYfqYjeLIrrMdENaFlrAUbBEjBdWmXf3cGF5nhlwso+fPcFJM3ekUu77OsHQ==
+	t=1794495986;
+	b=jzTRmc+WmHRD7OAKv24nsOZG/TTgY2QDDFv74X0wxNXJf65StEOXa8B0lCiwPr2eUXNm
+	 k1VS0oljmJbUBZV3U7kj6oKXh7XZ5c2z+l13Eq37D59DX2vd7vfnbTJTiw10cYcdYsUfN
+	 IW+j+27iSVjwE6nfqBEH0xCNuizZyKnnXGLTday2BzRs6WKRiHI+iKA6xFWKE025sn929
+	 hYwX31kDCbleXTXjcyJyWvdxnHq2MMrEaKWByEan9Ma75IbjrqeoKc3I1xbBMO7UC87P8
+	 XmZDfKby5QpODucgiK8EOdIiBkdmD5kFbgR4nJqLXL0ZzlYA6JtykMN0hdJmzdFOruA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794495153;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794495986;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=52vZOQ9OiQnWW/qrVv26eDLPqN6Kg1miXaQMvij+1yU=;
-	b=2LAFLaj2P5GgD0NgUbGC7L2vdNoNu4JdyF5QcmCXVCd59cogh4D6XmtkGt4gpL3L2gdR
-	 Te6vyjTa6lstAbknJhbpBJRMsheT/OChmh0C7G7Ukyif6EdG6NBx2JYVSu11dnrobTo4B
-	 QaMrf99o9cJAATPt5fb1VHdqt/lrStW0X6i+dskS+JxgfhYqENzLYg5d+eqlslDfE7xCG
-	 UZ1mpP3UImWlHG4/6L3zrlCqerzvnp5i/hsYedWCLLkqTIhjlQ8n3rx7Q0QAOfHOs7viz
-	 x0u6g5gXnUUNKGW33WRBSbcXiqGkykrJyWfqT9olmqJX7P0BDmI/qYcU9+NnyGAmmMg==
+	bh=hyy1pqhW3yzD62HRZTzYsRoU0HqVbeNhJp8+kBt+TII=;
+	b=MXpKkx6G/CaVcG8GquR1yde2Xcqi9mFs5ZdhZlXuHkcN/xF/yERmKemMsnSuH2X36vJX
+	 tMFhP8yuVuESnyWHEKOVzQ9xTd+6QKcKZJQwu5XzkXikx+0Q05lLwHIAA5HnF4f3Cihww
+	 dVxoiUESy3w07Cs0V1oQZOlmipy3Xy3AnPF0ViI0odZ/gBPQQP6nMHNy5bWdBpZOCHFbx
+	 OPeJxdjh8FtoJSBjgkX32iXXCW4Lvs+DhRvVi+IP+c8QUSKSOF/mB9l7otChW/TU4dYIJ
+	 pGguItZEZn+oAyDErXBPykXDO5EK8+jXCKx2+Ik8/ULTM4p93AjFaVQlQ2ppW24FzYg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lpT5QlZE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j+Yk2l9N;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 666DF606A887;
-	Thu, 12 Nov 2026 14:52:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D6C2606A327;
+	Thu, 12 Nov 2026 15:06:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lpT5QlZE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCDC11F00A0A;
-	Thu, 12 Nov 2026 14:52:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j+Yk2l9N
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7AB61F00A05;
+	Thu, 12 Nov 2026 15:06:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794495153;
-	bh=52vZOQ9OiQnWW/qrVv26eDLPqN6Kg1miXaQMvij+1yU=;
+	s=k20260515; t=1794495985;
+	bh=hyy1pqhW3yzD62HRZTzYsRoU0HqVbeNhJp8+kBt+TII=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=lpT5QlZEyUA4ZyfmdZeAq0UTpVG3dfgKm3ZO6keCTTy6L6yPR4mKo03p9R/aLVpXg
-	 3hnS/eNbM5P7COlW1SXPENTMT/6Fmks6MXKHWhhO4iT98TaXHF+AKQyG8TboUwJaBe
-	 /0EG1H32kVf0owehCSwbsDC4Ga+PVFZz4MU7dEH6WD2hr54V6WGMiODyVKK3sHUclM
-	 Xgq64aQJcZ3hZvCrmmQZnVBIMfkRQ8Nq2cI/ox4A9/ODCD9OuYz9Kn95nusLFqvNAw
-	 iCxayXbMSFuOmuWt2frVSaw2GHANylXPuobQ+8OON6mIatt8t2bcUdJNMy05f8fHqi
-	 cxAlocSByzTBA==
-Message-ID: <sashiko-outbox-211389@kernel.org>
+	b=j+Yk2l9N2kbXXwPSJZLmtrg+CQQON9vy/h1NoFF4kkcthz6Ei8nykI8W2aXjD23wM
+	 A+qgNvds2e+9Qx+hpqQ8otllITWcli+pwp/CdSB5JQgVBrstGfdgFFxO4rA1luHCfT
+	 GwVz6luULmj3e+l+8U4YhMQm/sGrNAnJ2kxeTWVMrImOdYsRDVyE2YaIXlRKSiEfQI
+	 yDbvYlcC+mXEDTf+fnyeehnZDJm5Tj4yJKs7LMkAbqYNKJzBX7PmU1w355uflMutD5
+	 xaheXkyLKWFetMSHi92B271OLMU++77TG2UpADTovvIReQTyK/Tag/e9ynqzotB80J
+	 mozAtg/4u24/g==
+Message-ID: <sashiko-outbox-211399@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v3 14/20] vfio/pci: Add INTx recovery operations
+Subject: Re: [RFC PATCH v3 18/20] vfio/pci: Block device access during host
+ recovery
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shameer Kolothum" <skolothumtho@nvidia.com>, kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261112141632.918954-15-skolothumtho@nvidia.com>
+In-Reply-To: <20261112141632.918954-19-skolothumtho@nvidia.com>
 References: <20261112141632.918954-1-skolothumtho@nvidia.com>
- <20261112141632.918954-15-skolothumtho@nvidia.com>
+ <20261112141632.918954-19-skolothumtho@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 14:52:32 +0000
+Date: Thu, 12 Nov 2026 15:06:25 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,221 +60,270 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential
+Thank you for your contribution! Sashiko AI review found 5 potential
 issues to consider:
-- [High] vfio/pci: permanent INTx masking in __vfio_pci_intx_mask() on
-  runtime suspend
-- [High] vfio/pci: unmasked shared INTx in
-  vfio_pci_intx_mask_for_recovery()
-- [Medium] vfio/pci: premature INTx unmask after blocked irq in
-  vfio_intx_handler()
+- [High] vfio/pci: unrestored BARs after bus reset when recovery fails
+  in err_detected()
+- [Medium] vfio/pci: TOCTOU race on pci_recovery_host_active during
+  device open
+- [Medium] vfio/pci: close during host recovery races with bus reset and
+  loses saved state
+- [Medium] vfio/pci: close clears device_open before blocking PM config
+  restore
+- [Low] vfio/pci: dead !device_open check in
+  vfio_pci_core_aer_err_detected()
 --
 
-commit 832141c440dca237115d9dc7d2fca6d1c8bdf80a
+commit f9997001c74d4f1e906c8a9ec79cb059867865ef
 Author: Shameer Kolothum <skolothumtho@nvidia.com>
 
-vfio/pci: Add INTx recovery operations
+vfio/pci: Block device access during host recovery
 
-This commit adds blocked INTx operations and recovery helpers to mask INTx,
-record pending unmask requests while access is blocked, and restore INTx
-state when recovery finishes.
+This commit blocks userspace and asynchronous VFIO device access during
+host PCI error recovery in vfio_pci_core_aer_err_detected(), coordinates
+blocked power-state and INTx handling with memory_lock and irqlock, and
+rejects device open while host recovery is active.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pc=
-i_intrs.c
-> index 64f80f64ff57a..f78c7217017d2 100644
-> --- a/drivers/vfio/pci/vfio_pci_intrs.c
-> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-> @@ -29,6 +29,8 @@ struct vfio_pci_irq_ctx {
->  	struct virqfd			*mask;
->  	char				*name;
->  	bool				masked;
-> +	bool				recovery_masked;
-> +	bool				unmask_pending;
->  	struct irq_bypass_producer	producer;
->  };
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 09923a48a5470..5e9451e082630 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+
+[ ... ]
+
+> @@ -410,10 +414,17 @@ static void vfio_pci_core_block_access(struct vfio_=
+pci_core_device *vdev)
+>  	unsigned long flags;
 > =20
-> @@ -126,6 +128,10 @@ static bool __vfio_pci_intx_mask(struct vfio_pci_cor=
-e_device *vdev)
->  	if (WARN_ON_ONCE(!ctx))
->  		goto out_unlock;
-> =20
-> +	/* An explicit mask cancels any unmask request saved during recovery. */
-> +	ctx->recovery_masked =3D false;
-> +	ctx->unmask_pending =3D false;
-> +
->  	if (!ctx->masked) {
->  		/*
->  		 * Can't use check_and_mask here because we always want to
-
-[Severity: High]
-Can __vfio_pci_intx_mask() leave INTx permanently masked if
-vfio_pci_core_runtime_suspend() runs during recovery?
-
-Unlike userspace mask paths, vfio_pci_core_runtime_suspend() is not gated
-by vfio_pci_core_access() and calls:
-
-drivers/vfio/pci/vfio_pci_core.c:vfio_pci_core_runtime_suspend() {
-    ...
-	vdev->pm_intx_masked =3D ((vdev->irq_type =3D=3D VFIO_PCI_INTX_IRQ_INDEX) =
-&&
-				vfio_pci_intx_mask(vdev));
-    ...
-}
-
-When INTx is masked for recovery (ctx->masked is true and
-ctx->recovery_masked or ctx->unmask_pending is true), a runtime suspend
-(for example when pm_runtime_put() runs after an ioctl on a device in
-VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY) clears both ctx->recovery_masked and
-ctx->unmask_pending here, skips the !ctx->masked block, and returns false.
-vfio_pci_core_runtime_suspend() then records vdev->pm_intx_masked =3D false,
-so neither vfio_pci_core_runtime_resume() nor
-vfio_pci_intx_recovery_finish() will unmask INTx again.
-
-> @@ -220,33 +245,151 @@ void vfio_pci_intx_unmask(struct vfio_pci_core_dev=
-ice *vdev)
->  	mutex_unlock(&vdev->igate);
->  }
-> =20
-> -static irqreturn_t vfio_intx_handler(int irq, void *dev_id)
-> +/*
-> + * Recovery always masks INTx and remembers whether to unmask it afterwa=
-rd.
-> + * The interrupt handler masks INTx only if this device has a pending
-> + * interrupt, since another device may share the line.
-> + */
-> +static bool vfio_pci_intx_mask_for_recovery(struct vfio_pci_core_device =
-*vdev,
-> +					    struct vfio_pci_irq_ctx *ctx,
-> +					    bool quiesce)
->  {
-> -	struct vfio_pci_irq_ctx *ctx =3D dev_id;
-> -	struct vfio_pci_core_device *vdev =3D ctx->vdev;
-> -	unsigned long flags;
-> -	int ret =3D IRQ_NONE;
-> +	lockdep_assert_held(&vdev->irqlock);
-> =20
-> -	spin_lock_irqsave(&vdev->irqlock, flags);
-> +	if (ctx->masked)
-> +		return false;
-> =20
-> +	if (!vdev->pci_2_3)
-> +		disable_irq_nosync(vdev->pdev->irq);
-> +	else if (quiesce)
-> +		pci_intx(vdev->pdev, 0);
-> +	else if (!pci_check_and_mask_intx(vdev->pdev))
-> +		return false;
-> =20
-> +	ctx->masked =3D true;
-> +	if (quiesce)
-> +		ctx->recovery_masked =3D true;
-> +	return true;
-> +}
-
-[Severity: High]
-Does the early return when ctx->masked is true prevent
-vfio_pci_intx_handle_blocked() from masking shared PCI 2.3 interrupts
-during recovery?
-
-vfio_pci_intx_recovery_start() calls vfio_pci_intx_mask_for_recovery()
-with quiesce =3D true, setting ctx->masked =3D true.  However, on a PCI 2.3
-device, PCI_COMMAND_INTX_DISABLE can still be clear in hardware if config
-space read 0xffff when error_detected ran, or after a host slot/bus reset
-clears PCI_COMMAND before state restoration.  If the device then asserts a
-shared INTx line while access is blocked, vfio_pci_intx_handle_blocked()
-calls vfio_pci_intx_mask_for_recovery(vdev, ctx, false), which returns
-false immediately because ctx->masked is true instead of calling
-pci_check_and_mask_intx(), returning IRQ_NONE and leaving the shared level
-interrupt asserted.
-
-> +
-> +irqreturn_t vfio_pci_intx_handle(struct vfio_pci_core_device *vdev,
-> +				 struct vfio_pci_irq_ctx *ctx)
-> +{
-> +	lockdep_assert_held(&vdev->irqlock);
->  	if (!vdev->pci_2_3) {
->  		disable_irq_nosync(vdev->pdev->irq);
->  		ctx->masked =3D true;
-> -		ret =3D IRQ_HANDLED;
-> -	} else if (!ctx->masked &&  /* may be shared */
-> -		   pci_check_and_mask_intx(vdev->pdev)) {
-> +		return IRQ_HANDLED;
-> +	}
-> +	if (!ctx->masked && pci_check_and_mask_intx(vdev->pdev)) {
->  		ctx->masked =3D true;
-> -		ret =3D IRQ_HANDLED;
-> +		return IRQ_HANDLED;
->  	}
-> +	return IRQ_NONE;
-> +}
-> +
-> +irqreturn_t vfio_pci_intx_handle_blocked(struct vfio_pci_core_device *vd=
-ev,
-> +					 struct vfio_pci_irq_ctx *ctx)
-> +{
-> +	lockdep_assert_held(&vdev->irqlock);
-> +	/* A shared interrupt line still needs pending INTx to be masked. */
-> +	if (vfio_pci_intx_mask_for_recovery(vdev, ctx, false) ||
-> +	    (ctx->masked && !vdev->pci_2_3))
-> +		return IRQ_HANDLED;
-> +	return IRQ_NONE;
-> +}
-> +
-> +static irqreturn_t vfio_intx_handler(int irq, void *dev_id)
-> +{
-> +	struct vfio_pci_irq_ctx *ctx =3D dev_id;
-> +	struct vfio_pci_core_device *vdev =3D ctx->vdev;
-> +	unsigned long flags;
-> +	irqreturn_t ret;
-> =20
-> +	spin_lock_irqsave(&vdev->irqlock, flags);
-> +	ret =3D vfio_pci_access_ops(vdev)->intx_handler(vdev, ctx);
+>  	lockdep_assert_held(&vdev->access_lock);
+> +	/*
+> +	 * Finish live PM restoration before blocked INTx handlers can mask the
+> +	 * device. Otherwise an old restore can undo their hardware mask.
+> +	 */
+> +	down_write(&vdev->memory_lock);
+>  	spin_lock_irqsave(&vdev->irqlock, flags);
+>  	rcu_assign_pointer(vdev->access_ops, &vfio_pci_blocked_ops);
 >  	spin_unlock_irqrestore(&vdev->irqlock, flags);
+> +	up_write(&vdev->memory_lock);
 > =20
->  	if (ret =3D=3D IRQ_HANDLED)
->  		vfio_send_intx_eventfd(vdev, ctx);
-> -
->  	return ret;
+> +	/* SRCU readers may need memory_lock to finish. */
+>  	synchronize_srcu(&vdev->access_srcu);
 >  }
 
 [Severity: Medium]
-When vfio_pci_intx_handle_blocked() returns IRQ_HANDLED,
-vfio_intx_handler() delivers the automasked interrupt to userspace via
-vfio_send_intx_eventfd(), but neither vfio_pci_intx_mask_for_recovery()
-nor vfio_pci_intx_handle_blocked() clears ctx->recovery_masked or
-ctx->unmask_pending.  Can this cause vfio_pci_intx_recovery_finish() to
-unmask INTx prematurely before userspace has processed and unmasked the
-interrupt?
+Does clearing vdev->device_open before calling vfio_pci_core_block_access()
+in vfio_pci_core_close_device() defeat this protection against PM config
+restoration unmasking INTx?
 
-CPU0                                      CPU1 (<hardirq>)
-vfio_pci_intx_recovery_start()
-  spin_lock_irqsave(&vdev->irqlock)
-  vfio_pci_intx_mask_for_recovery(..., true)
-    disable_irq_nosync(pdev->irq)
-    ctx->masked =3D true
-    ctx->recovery_masked =3D true
-  spin_unlock_irqrestore(&vdev->irqlock)
-                                          vfio_intx_handler()
-                                            spin_lock_irqsave(&vdev->irqloc=
-k)
-                                            vfio_pci_intx_handle_blocked()
-                                              ctx->masked && !vdev->pci_2_3
-                                              --> returns IRQ_HANDLED
-                                            spin_unlock_irqrestore(...)
-                                            vfio_send_intx_eventfd()
-...
-vfio_pci_intx_recovery_finish()
-  if (ctx->recovery_masked || ...)
-    vfio_pci_intx_unmask_live()           <-- unmasks before userspace
+In __vfio_pci_set_power_state(), D3hot-to-D0 restoration bypasses
+access_ops->restore_config() as soon as vdev->device_open is false:
 
-On !vdev->pci_2_3 devices, if ctx->masked was already true before recovery
-started, the (ctx->masked && !vdev->pci_2_3) check also returns
-IRQ_HANDLED and triggers a spurious eventfd signal while masked.  The same
-premature unmask happens if vfio_pci_intx_unmask_blocked() sets
-ctx->unmask_pending =3D true while ctx->masked is still false (before
-vfio_pci_intx_recovery_start() runs) and an interrupt is then masked and
-signaled by vfio_pci_intx_handle_blocked() without clearing
-ctx->unmask_pending.
+drivers/vfio/pci/vfio_pci_core.c:__vfio_pci_set_power_state() {
+    ...
+		} else if (needs_restore) {
+			pci_load_and_free_saved_state(pdev, &vdev->pm_save);
+			/* Open and close restore state without reopening access. */
+			if (!READ_ONCE(vdev->device_open))
+				pci_restore_state(pdev);
+			else
+				vfio_pci_access_ops(vdev)->restore_config(vdev);
+		}
+    ...
+}
+
+If a NoSoftRst- PCI 2.3 device entered D3hot while INTx was unmasked
+(saving unmasked PCI_COMMAND in vdev->pm_save) and then had INTx masked by
+recovery, both an in-flight runtime PM transition holding memory_lock when
+vfio_pci_core_close_device() clears vdev->device_open and the subsequent
+vfio_pci_set_power_state(vdev, PCI_D0) at the start of
+vfio_pci_core_disable() take the pci_restore_state(pdev) branch.  That
+restores the unmasked PCI_COMMAND in hardware while ctx->masked is still
+true and the IRQ handler is still registered, so a level-triggered INTx
+assertion before vfio_pci_set_irqs_ioctl() runs sees ctx->masked =3D=3D tru=
+e in
+vfio_pci_intx_mask_for_recovery() and returns IRQ_NONE without masking the
+shared interrupt line.
+
+> @@ -756,6 +767,16 @@ int vfio_pci_core_enable(struct vfio_pci_core_device=
+ *vdev)
+>  	u16 cmd;
+>  	u8 msix_pos;
+> =20
+> +	if (vdev->pci_recovery_supported) {
+> +		if (pci_dev_is_disconnected(pdev))
+> +			return -ENODEV;
+> +		mutex_lock(&vdev->access_lock);
+> +		ret =3D vdev->pci_recovery_host_active ? -EBUSY : 0;
+> +		mutex_unlock(&vdev->access_lock);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+>  	if (!vdev->disable_idle_d3) {
+
+[Severity: Medium]
+Can host recovery start after vfio_pci_core_enable() drops
+vdev->access_lock and still allow vfio_pci_core_finish_enable() to publish
+live access?
+
+CPU0                                    CPU1
+vfio_pci_core_enable()
+  mutex_lock(&vdev->access_lock)
+  /* pci_recovery_host_active is false */
+  mutex_unlock(&vdev->access_lock)
+                                        pcie_do_recovery()
+                                          vfio_pci_core_aer_err_detected()
+                                            mutex_lock(&vdev->access_lock)
+                                            vdev->pci_recovery_host_active =
+=3D true
+                                            /* !pci_recovery_enabled */
+                                            mutex_unlock(&vdev->access_lock)
+                                          reset_subordinates()
+  pci_save_state(pdev)
+  vfio_config_init(vdev)
+vfio_pci_core_finish_enable()
+  mutex_lock(&vdev->access_lock)
+  WRITE_ONCE(vdev->device_open, true)
+  rcu_assign_pointer(vdev->access_ops,
+                     &vfio_pci_live_ops) <-- live access while recovery runs
+
+Because vfio_pci_core_enable() runs without device_lock(&pdev->dev) held
+across enablement and vfio_pci_core_finish_enable() does not re-check
+vdev->pci_recovery_host_active or pci_dev_is_disconnected(pdev), the open
+succeeds while host recovery is active, vdev->pci_saved_state and
+vdev->rbar[] can capture corrupted or post-reset BAR values, and
+vfio_pci_core_aer_slot_reset() skips state restoration because
+VFIO_PCI_RECOVERY_IN_PROGRESS was never set.
+
+> @@ -999,6 +1020,10 @@ void vfio_pci_core_close_device(struct vfio_device =
+*core_vdev)
+>  			WRITE_ONCE(vdev->device_open, false);
+>  			vfio_pci_core_block_access(vdev);
+>  			WRITE_ONCE(vdev->pci_recovery_flags, 0);
+> +			/* Discard pending D0 before the next open. */
+> +			down_write(&vdev->memory_lock);
+> +			vdev->power_up_pending =3D false;
+> +			up_write(&vdev->memory_lock);
+>  		}
+>  	}
+
+[Severity: Medium]
+What happens if userspace closes the device after
+vfio_pci_core_aer_err_detected() signals err_trigger, while
+pcie_do_recovery() is resetting the bus?
+
+CPU0                                    CPU1
+pcie_do_recovery()
+  vfio_pci_core_aer_err_detected()
+    /* returns NEED_RESET */
+                                        vfio_pci_core_close_device()
+                                          WRITE_ONCE(vdev->device_open, fal=
+se)
+                                          WRITE_ONCE(vdev->pci_recovery_fla=
+gs, 0)
+                                          vfio_pci_core_disable()
+                                            pci_load_and_free_saved_state(
+                                                pdev, &vdev->pci_saved_stat=
+e)
+                                            pci_restore_state(pdev)
+  reset_subordinates()
+    /* resets bus, wiping BARs */
+  vfio_pci_core_aer_slot_reset()
+    /* !device_open -> returns NONE */  <-- BARs left zeroed in hardware
+
+pcie_do_recovery() drops device_lock(&pdev->dev) between error_detected()
+and slot_reset().  If vfio_pci_core_disable() consumes and frees
+vdev->pci_saved_state before reset_subordinates() finishes resetting the
+secondary bus without restoring config space, vfio_pci_core_aer_slot_reset()
+sees !vdev->device_open and returns early, leaving the hardware BARs zeroed
+for the next open.  If close instead runs just after reset_subordinates()
+wipes the BARs, vfio_pci_core_disable() tears down MSI-X in
+vfio_pci_set_irqs_ioctl() before restoring vdev->pci_saved_state.
+
+> @@ -2660,17 +2685,142 @@ void vfio_pci_core_unregister_device(struct vfio=
+_pci_core_device *vdev)
+
+[ ... ]
+
+> +	mutex_lock(&vdev->access_lock);
+> +	/*
+> +	 * Track host recovery even without userspace opt-in so open can reject
+> +	 * attempts while recovery is running.
+> +	 */
+> +	vdev->pci_recovery_host_active =3D
+> +		state !=3D pci_channel_io_perm_failure;
+> +	if (!vdev->pci_recovery_enabled)
+> +		goto out_unlock;
+> +
+> +	/* Keep failed devices blocked until close. */
+> +	if (vdev->pci_recovery_flags & VFIO_PCI_RECOVERY_FAILED) {
+> +		result =3D PCI_ERS_RESULT_NONE;
+> +		goto out_unlock;
+> +	}
+> +
+> +	if (!vdev->device_open) {
+> +		result =3D PCI_ERS_RESULT_NONE;
+> +		goto out_unlock;
+> +	}
+
+[Severity: Low]
+Can the !vdev->device_open check ever be reached here?
+
+Under vdev->access_lock, vdev->pci_recovery_enabled is only set when
+vdev->device_open is true and is cleared alongside vdev->device_open in
+vfio_pci_core_close_device(), so !vdev->pci_recovery_enabled always
+branches to out_unlock first (returning PCI_ERS_RESULT_CAN_RECOVER rather
+than PCI_ERS_RESULT_NONE when the device is closed).
+
+> +
+> +	vfio_pci_core_block_access(vdev);
+
+[ ... ]
+
+> +	if (!ret && !vdev->pci_2_3 && !nested)
+> +		ret =3D vfio_pci_recovery_save_and_clear_master(vdev, 0);
+> =20
+> +	if (ret) {
+> +		flags |=3D VFIO_PCI_RECOVERY_FAILED;
+> +		flags &=3D ~VFIO_PCI_RECOVERY_IN_PROGRESS;
+> +		result =3D PCI_ERS_RESULT_NONE;
+> +	} else {
+> +		flags |=3D VFIO_PCI_RECOVERY_IN_PROGRESS;
+> +	}
+> +	WRITE_ONCE(vdev->pci_recovery_flags, flags);
+
+[Severity: High]
+If recovery fails in vfio_pci_core_aer_err_detected() (or
+VFIO_PCI_RECOVERY_FAILED is already set on a subsequent frozen-channel
+error) and pcie_do_recovery() still resets the subordinate bus, will the
+device's BARs be left zeroed when vfio_pci_core_disable() later tears down
+MSI-X?
+
+Clearing VFIO_PCI_RECOVERY_IN_PROGRESS and returning PCI_ERS_RESULT_NONE
+allows pcie_do_recovery() to proceed with reset_subordinates() when a
+sibling device requests PCI_ERS_RESULT_NEED_RESET or when state is
+pci_channel_io_frozen, wiping this device's BARs in hardware.  Because
+VFIO_PCI_RECOVERY_IN_PROGRESS is not set, vfio_pci_core_aer_slot_reset()
+returns early without calling vfio_pci_recovery_restore_state() or tearing
+down IRQs:
+
+drivers/vfio/pci/vfio_pci_core.c:vfio_pci_core_aer_slot_reset() {
+	mutex_lock(&vdev->access_lock);
+	if (!(vdev->pci_recovery_flags & VFIO_PCI_RECOVERY_IN_PROGRESS) ||
+	    !vdev->device_open) {
+		mutex_unlock(&vdev->access_lock);
+		return PCI_ERS_RESULT_NONE;
+	}
+    ...
+}
+
+When userspace later closes the device, vfio_pci_core_disable() calls
+vfio_pci_set_irqs_ioctl() -> vfio_msi_disable() before loading
+vdev->pci_saved_state, which enables PCI_COMMAND_MEMORY via
+vfio_pci_memory_lock_and_enable() and writes to the MSI-X table while the
+hardware BARs are still 0x00000000.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112141632.9189=
-54-1-skolothumtho@nvidia.com?part=3D14
+54-1-skolothumtho@nvidia.com?part=3D18
