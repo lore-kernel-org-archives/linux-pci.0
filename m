@@ -1,115 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794568470;
-	b=Sw5JXFwQG7iWFoZAZJdgmGd2e+LQ233cS0CAGzBFHhbXUQB6t+QNsdPFJx1Kz+OKznA3
-	 FQjl8GyDwIWZHpBnT+O04Ewd6k6xmRHLwnqdlaLc7+ZQMmM+Pw1DyjgzoaYPlPc1CwOYi
-	 2qvbCtNwfCLzvpQ3PAAZ8vRteRgnWkr8Ss2Y10wd8MeRmEXYLINYaCBHnwQP3xyAAQZLi
-	 HMhqA8vU67GxLbl4y7Q09hZTfQwby/NhozRh3JHNWV8aNzOPiKp+YLS033jHp/w8pRU0P
-	 GX9tAF4mqycmFET2RjZrEcTVq42Yt5cOulKVso3iv79JD15S9ytVdb5SceGodI0nn3A==
+	t=1794568475;
+	b=GBPeHwZ7Aey0p4TNDkYrQbyGxibrIoSGHerZCufHrv9XBGFzs4NGihe7R61uDkuwQUBP
+	 ggPuRN4BP0miYV2Y6VRivH7VDSw67CXyTE8+Y/oyojbUHpbecrRGAhXwgzVFOKLKje3+R
+	 j8FCZQDwOdGUDgWWu0lq3wam4Dz9r7/HbHpGczq1rOuLRXFn3gZ6UDcf2tybydFWA6KPI
+	 J16RVTUA5D2+7/qHq4XjqKaaY51EFheg8Z8BIrh3EciDhroBJAK9N4GO5sIE7kQHGiXqn
+	 NdbI49rXUhLrSrWQMnpqwQZGmvaHevnBQplIDgeIsqO/jPSY2WwOArUHIqckN6Es75A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794568470;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794568475;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Type:X-Developer-Signature:X-Developer-Key:
 	 Content-Transfer-Encoding;
-	bh=uOiKjWCeIGbdcDyUIMYzJmGrVI5/CRaIXG/xuOpEkMo=;
-	b=ZkEqFpHuTEIlrcw1t0ArKe9JBnMnfaIhyfCiXqjZdD2UEYsdsSJJZZmibNFyejHKX70q
-	 yYUphfnrMImatGdHf8cffyQ8fQVz9hEfoBFaqnNv5xhHWmTgtK9w4mZTVB4q8oLy3Q9+J
-	 xD7kQC/3DcPYE5zGf75Qs6rDjBHprg1ctKku1fKV8aSPdbnZv2i3bY/LOjxUmAmTQtQXX
-	 +0oBLYNSxpFnUXzwX05DUhaQRShBCdyiVhX8t4ciVRPNzwdf9VAtx4d+4SB1qXnHb9mc+
-	 Lj+8yGs8I9fVo8a/SVRTuw8J1j4jjF5xTUSTTnJfh+BQrmaGIyfXpsoNwr7LSPe46oQ==
+	bh=CugqVWAuawrwerm7blKnvsOa3BQVmagcewjHznzs45w=;
+	b=5eIuGTWnLHXId6M3ZpVVcBHXC3/yCxZhit9pRLU3Zr3dWfNLjWuCwZQjFCvT7U9uwtrz
+	 yEJB8kcQMgGH+qyWNp+UgZEmZn0NTVzTXZ1/CR0xyphZss9eOeeRUhnVvF2Iv3xOwDRuv
+	 71woO3vJvHep+jceLUnr/rEBX2XxFsGNT+C7bia8peFe0IwHsUJdtEerh28CMYC5Wblk3
+	 H/62GWSHS98pJGrep2mHkohS7YcRd+4Eo/jzIsN9SFoJ2YBAA7rGGaUrc37xE8iA8HcHQ
+	 9jFfPLK+7uV0XwmLdvdtMe2z+bF/dBctaG5CqrcnbORsX9GsL/62dNk2PxTg1aFuzBg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=baylibre.com;
 	spf=pass smtp.mailfrom=baylibre.com;
-	dkim=pass header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=Raw2nf5j;
-	arc=none smtp.remote-ip=209.85.128.53
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	dkim=pass header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=kp+BbCqu;
+	arc=none smtp.remote-ip=209.85.221.42
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E74606A335
-	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 11:14:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 04E74606A335
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E3B260A260D
+	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 11:14:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4E3B260A260D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=Raw2nf5j
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a215e64962so14264365e9.1
-        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 03:14:28 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=kp+BbCqu
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-498f5fa5103so327720f8f.2
+        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 03:14:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1794568467; x=1795173267; darn=vger.kernel.org;
+        d=baylibre.com; s=google; t=1794568474; x=1795173274; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=uOiKjWCeIGbdcDyUIMYzJmGrVI5/CRaIXG/xuOpEkMo=;
-        b=Raw2nf5jgEGUhOfIC3Bk7UlgQxr6vewZAR5H0Z/G5cNFiD9JEuJWd7m2UGwwXzONT0
-         /8oZajuTFbO1Hba9YFhhsdjleHUbTakYdVdB73JCvEuRvMsMXLb/2dBPoiLH3Fs0pY60
-         TUlX50jZqnqkvMrcv9s4YnResgbunPBf9njeDKQXsGBk9cZwZqadK4/kkd9KaKDOTTgD
-         XTIkUGVOtWQfyuOeY7QlOTQQQSYvsWSDuFapSPrAcnpS8EIejhDU33p37A79WknMX49H
-         GdNM//6/0kQ1SV5KDFKYETVrKyDjMtmoSJSWfUJy+6aNjgwsSAzv12V8BMMA2Rkl6dEk
-         G03Q==
+        bh=CugqVWAuawrwerm7blKnvsOa3BQVmagcewjHznzs45w=;
+        b=kp+BbCqubQUG8rQrnEbUtzkBreaBNT6dGsCtStLkwZnVr7rnxMSpu2wPWXIF+STByf
+         m4EZGlxqQM6YKCNA5uHEGimCIbzMio0TGE58ytvySSmB/p9ySyjfa96YWflAimEk5F7r
+         J1dE80YpMN8xF7R/+oagKMavT6pBPF8RjSd7C/ZYFDLFFzmZwxy3ndKhTYrLX6SNh5LJ
+         iez0RdbVhSu5guo81pQX+Wfc3uwqq4mIijKuH42VBwmpNc9vc/GKPFw3xfpME2l6hnNm
+         zr7+rynVk2i4TrUXL0hZAO0341tHnmw0LlYQrFN6VUNcTvj3cUXv356OS9RyPuaDBHsT
+         IdxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794568467; x=1795173267;
+        d=1e100.net; s=20260707; t=1794568474; x=1795173274;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=uOiKjWCeIGbdcDyUIMYzJmGrVI5/CRaIXG/xuOpEkMo=;
-        b=R3gmdch/zF33ClF9WD8aMQxNo2P7mF6OWO5WAq5XGOrNkVjEW3Xj8ZugsGvf3MSsQF
-         aE7M7ocOZRA65rxFMI12iipLRaOj+zX6iBOwoywNTEmFlhsI2UpwlJAeYURKqDUQ8sWK
-         MkIAX8FDMColp1fhmejEF8GOT4ufaSjaqaf4Z1MZIyV3yb11NQuz5fP7VlI5oIs6p3oY
-         ic6FM9SJ3NOObAlwPdB0m8qUDfK82kZfsGL2D1N+WuAQQX57VQUztTM7XNuCyND8lGjW
-         zMN/vZ9C86ym2cHHt/4nf9Fq/PvJqMFJSTqUyrUOr00fecUtdREncm9ip3+I2Av0Llax
-         SQJA==
-X-Forwarded-Encrypted: i=1; AL+hErGNrY7zw/j1M4J7r0BTQl3WGgpHhUYYtTGagAYqcDIcjpKiKwOSCHvd4lmRn1Z+Psf9W9m5SxlT8/Q=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9qHvidQZWzCl+kE3zQ5y4mhGRKNS7iEfsWnhHagfuJ9/5gLuA6
-	NCgnLYQ7hj25pGhiUcnKbfLNVGSsfVtziFz1+SK7oc0ynPOwhVYWdxsZmIIDPnEyhZo=
-X-Gm-Gg: AYBFou2oO57ETKLraz2xmNOsXSG7RQFALcpQmKAEdl5vXOxYWQgYwdognJL13oJAFBD
-	MogjdiARc+vpoyPiNIb7bpJukpG9oBEFHanZ1UYNDZ7M5HNplWgTDNSY1WSFpV1bMPsEkeS+NSi
-	V+alCKwgIWC4/8+Z22WHlaDloG4cABZDmfTfQCZkPDp/rtxKvMg//6US5sype1Ue6ibwMWTZMOp
-	Iyc1gdMsk1dqINqJm8/doh2/PeJaJgdQh+4X0hRj2bWKbh4SUekHZ2t3xERWEmjUMoXA7Yybr5P
-	UnGCew5omw5l/Et9rWmCcNhflHJH19WM4X41A9F5dszhH3GvwLNnSv4G4Tg/8TJsiMJA+RVPxx1
-	VztvLEqtVem0RZsDnkwvUedHl6WD6GFfBv2D6x1B4QwIm2YaPZhOIrVlvD94udrpDHclH+M2/Td
-	xTnSTQ66DbjG7ZTn71RvcbhCkGRkk4eXaBW+EZBTUZzwT0dFuua7I+2PR6ic+HPqsJFjUFtQdIP
-	etXZ07bGBKZhZVpbtR/4+flziy4u06OwAhofuNsjd/IaPRLx9DfQfjItalLVRDUOLuMm/CyzXZW
-	GTnDCiasr/5HvjYqDDhFSQI/fpAXRNr0xS6jLm2H5CzQEzn/xxw6Zk5FnB2KgfoX08NR02W5doj
-	IrNeP3lpSzw3Q0f9hMQ==
-X-Received: by 2002:a05:600c:b86:b0:4b5:d95c:2378 with SMTP id 5b1f17b1804b1-4bb55ac4030mr44714045e9.34.1794568467188;
-        Fri, 13 Nov 2026 03:14:27 -0800 (PST)
+        bh=CugqVWAuawrwerm7blKnvsOa3BQVmagcewjHznzs45w=;
+        b=v4/VioZzldZKAjlACrQLeHflIx8H2eaDPo23Iz774oi1Tq5Rp9tHejSz6SD9GCfX5q
+         YdqoZOqM7ohnLaeI2znAtca9cERubAAUs11pgAd9bRpPJcX8Pj7l5kXaWrikASTjvrML
+         XJbR9o9+LPKLfd15+GE+wKuAa3MqJs2rB7bxbkgKTXruzGp63eKFF7pRr3Dj7xNj2Dc5
+         VFx9BySoSd0STc0pX5z4yftDuwFNvUtOQnSWlrYDQmfh3bdRKvQ99cgimbbFMaH82mpp
+         fl8Em6JWUJ+MTp5GM1aYPU7YuYffzJB4jzl97N226c5/iipov48E0iytmGfNRudSz5mU
+         Gatw==
+X-Forwarded-Encrypted: i=1; AL+hErHi8YKuCcO2ecA4NCSX8vFwrw0Tu+GatcZhyv8IRdaGHWYZs9HFhLAYwt8BWxVymiyPKy4qWgg+yMI=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9d13oyMRm+MQRcmS37fcrLsPKMAWJ+z4HIcIlQmhXZ8VHLiZ62
+	lDpfjTOP+SVO0/pdMJMSrvTkDBV5W4uqmbbACrPNuw0EOaEhpD22t970VU4cJnMcrNk=
+X-Gm-Gg: AYBFou2IywSROje7vR1A+o8Nhoh4D/dSHhzxAcmcdm+iJccMHcPkNEzkXmrmW6Klmv0
+	qDN3xrSM/wr6VzARSNSClor1TCxGxqmCRzHSiXV+vjI/35tpt8O+RSGULbode0X6QqQzseuj/kl
+	yXWvx2tN4GRyMuUVbBdxlrIGaUM/CrfPARoKN4jQTWEXDgn+a7ylYQ8IL6kfPvfrn8lSQq1so/M
+	1EcliysuVn/teUD/DmWv5+Enq1AYNqIlpleS22BMH7BFCgyEOkb48h3b6mEytsNQgCLwC4QrgrL
+	AavB0xosTo5m7kUexNRmErJI4Mx7cMDCSL1eBepJfCOu0pNrE3KUm1GkgX5o5opal/gW+XyA0xY
+	n1BGk2mnb3H/Ww8bpi5uI63Juf/1sDt/EdM9FBcFSN0YI2HQM3ZIlTt9BeEUCUPUyj8wxH1eoN+
+	SOUu9Az4aDJ9e8nPDOJwTTDNe16FG2U5W1B00XXqg7Y5WfmMS3PXQt/ISuXaBQv+q7Q1+JeS6pi
+	bpPah7/wo8kVCsC5qjlg677rMUXswgRUrPlAgdDfMlMWg642ESZnYoZtzW0CasU5dDaVnQzEN+3
+	f6Th73c7jPmyW+oSyEXXzx8a7aCqqpSECvqd8MSJO4QygQZuI7fZQdv8jzxmilLqasiEqDH5sRY
+	jTWSvzkVaL4LL3p/4nQo/Zke1gfMFUfY+yn0Geg==
+X-Received: by 2002:a05:6000:4714:b0:48d:f0e4:27a4 with SMTP id ffacd0b85a97d-49c71785315mr4684760f8f.24.1794568473546;
+        Fri, 13 Nov 2026 03:14:33 -0800 (PST)
 Received: from localhost (p200300f65f19a904278f3f81ea855105.dip0.t-ipconnect.de. [2003:f6:5f19:a904:278f:3f81:ea85:5105])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4bb4e2adf53sm144648515e9.15.2026.11.13.03.14.25
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-49c5f782396sm4858544f8f.24.2026.11.13.03.14.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2026 03:14:26 -0800 (PST)
+        Fri, 13 Nov 2026 03:14:33 -0800 (PST)
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>
 To: "Rafael J. Wysocki" <rafael@kernel.org>
 Cc: Len Brown <lenb@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Sudeep Holla <sudeep.holla@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Dan Williams <djbw@kernel.org>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Ira Weiny <iweiny@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Andy Shevchenko <andy@kernel.org>,
+	Mika Westerberg <westeri@kernel.org>,
 	Zhang Rui <rui.zhang@intel.com>,
-	"Mario Limonciello (AMD)" <superm1@kernel.org>,
-	Saranya Gopal <saranya.gopal@intel.com>,
-	Gergo Koteles <soyer@irl.hu>,
-	Jakob Riemenschneider <riemenschneiderjakob@gmail.com>,
-	Yauhen Kharuzhy <jekhor@gmail.com>,
+	Chu Guangqing <chuguangqing@inspur.com>,
 	Pawel Zalewski <pzalewski@thegoodpenguin.co.uk>,
+	Yauhen Kharuzhy <jekhor@gmail.com>,
 	linux-acpi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	nvdimm@lists.linux.dev,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v1 1/4] ACPI: Unify acpi_device_id list terminators
-Date: Fri, 13 Nov 2026 12:13:57 +0100
-Message-ID:  <b1353edf17242560d8670e6fe9b76de74a9be822.1794567577.git.ukleinek@kernel.org>
+Subject: [PATCH v1 4/4] ACPI: Unify *_device_id list terminators
+Date: Fri, 13 Nov 2026 12:14:00 +0100
+Message-ID:  <68abd7c74b17f3ff08bd825b08b99d7b77ca76ac.1794567577.git.ukleinek@kernel.org>
 X-Mailer: git-send-email 2.56.0.rc1
 In-Reply-To: <cover.1794567577.git.ukleinek@kernel.org>
 References: <cover.1794567577.git.ukleinek@kernel.org>
@@ -123,471 +110,326 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=14980; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=l+TGEeumZ/mUBt7nv7kiWmafNhx1hYIBPeLVaGdgLHI=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBq9vD3kSJPjT8ktQm5Il0eP76oxHfx6M7JIwp0k tswKEtcnm+JATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCavbw9wAKCRCPgPtYfRL+ ThGkB/9iFFrVt1kPG7QG9fFwhNNb0XIiadFldCxkWD61QQ55YGwGAeR1PGIYAkQ0P0xfGz5hc9K GcBULBRgZA2YNUxbMNTrAc9g7OEelz+VUFE3GUutWjSnjIs8dHAI8m48Wih5ELxL0k8yr2ZL8A0 bTTGUGmwfsAl7vsWbsWy0OWpsa4/qZKs07G12bSMaLAKvx8yVYjdShwAFeKrR0Qv+M23xG5Dbpm A2vxhJntAMxn6PqaLb2r7rbw91lNhCcKNKDA8hlqoCLiKurDMUM4kTs3SSLto6xg491zZIxtnyL RSKVCMVkjiar3TOym5Q2Bv3V0YzdU61nSVushUDd0f/j58eN
+X-Developer-Signature: v=1; a=openpgp-sha256; l=10266; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=+6PqnFs9xNMlcyaJnD61eEm38xx+1W6KaISepWhZ3LA=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBq9vECntQcbmqHyqMqXM6ndAzXOFB7wm6LEZuhn maJnAzthW6JATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCavbxAgAKCRCPgPtYfRL+ TvFuCACOfUmF6gLB98HOWz7U5y+WCHPZGCfevOEySB/VR4BmQLyNzYGDHlbOTeDZl+7yC620hWU gdXv4e+HGZYgCK8aM7DlUpJgH67MPSQR1vl4chxUmHRUm3zRu+JH07oAR2sK0JuYmhbRzfeIa2h L6pS9c3Xw6/rXX6VPsEVne1Xyl8igNGd6NrhEO1fOB8Ux5bTw0OAo0x6+tRPMVOPPwog7yCIMdn hSoYcOvmYW3xesKMXSkPMG4PX/CbfjBeB6yV950WyPpCeenaH6it9SMQdlXCCAjgtdCgdbQbjGL qi9BvkNMvZJilS8DpZC2AcoWIaKYEZdgqoXK8XwjyzCw9slC
 X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 
-Consistenly use an empty initializer with no trailing , for the list
+Consistenly use a single space and no trailing , for the list
 terminator. This doesn't introduce any changes to the compiled result of
-the modified drivers. Note that the first member of struct
-acpi_device_id is a char[] and not a pointer, so an explicit "" is
-eqivalent to the default initialisation.
+the modified drivers and just aligns these to the common style of the
+other device_id arrays.
 
 Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
 ---
- drivers/acpi/ac.c                 | 2 +-
- drivers/acpi/acpi_memhotplug.c    | 2 +-
- drivers/acpi/acpi_pad.c           | 2 +-
- drivers/acpi/acpi_pnp.c           | 2 +-
- drivers/acpi/acpi_tad.c           | 2 +-
- drivers/acpi/arm64/amba.c         | 2 +-
- drivers/acpi/battery.c            | 2 +-
- drivers/acpi/button.c             | 2 +-
- drivers/acpi/container.c          | 2 +-
- drivers/acpi/dptf/dptf_pch_fivr.c | 2 +-
- drivers/acpi/dptf/dptf_power.c    | 2 +-
- drivers/acpi/ec.c                 | 2 +-
- drivers/acpi/evged.c              | 2 +-
- drivers/acpi/fan_core.c           | 2 +-
- drivers/acpi/hed.c                | 2 +-
- drivers/acpi/nfit/core.c          | 2 +-
- drivers/acpi/pci_link.c           | 2 +-
- drivers/acpi/pci_root.c           | 2 +-
- drivers/acpi/pfr_telemetry.c      | 2 +-
- drivers/acpi/pfr_update.c         | 2 +-
- drivers/acpi/processor_driver.c   | 2 +-
- drivers/acpi/sbs.c                | 2 +-
- drivers/acpi/sbshc.c              | 2 +-
- drivers/acpi/scan.c               | 8 ++++----
- drivers/acpi/thermal.c            | 2 +-
- drivers/acpi/tiny-power-button.c  | 2 +-
- drivers/acpi/x86/s2idle.c         | 4 ++--
- drivers/acpi/x86/utils.c          | 4 ++--
- include/linux/acpi.h              | 2 +-
- 29 files changed, 34 insertions(+), 34 deletions(-)
+ drivers/acpi/ac.c                       | 2 +-
+ drivers/acpi/acpi_video.c               | 4 ++--
+ drivers/acpi/battery.c                  | 2 +-
+ drivers/acpi/bus.c                      | 2 +-
+ drivers/acpi/button.c                   | 2 +-
+ drivers/acpi/ec.c                       | 2 +-
+ drivers/acpi/mipi-disco-img.c           | 2 +-
+ drivers/acpi/osi.c                      | 2 +-
+ drivers/acpi/pci_slot.c                 | 2 +-
+ drivers/acpi/pmic/intel_pmic_bxtwc.c    | 2 +-
+ drivers/acpi/pmic/intel_pmic_chtdc_ti.c | 2 +-
+ drivers/acpi/pmic/intel_pmic_chtwc.c    | 2 +-
+ drivers/acpi/power.c                    | 2 +-
+ drivers/acpi/processor_idle.c           | 2 +-
+ drivers/acpi/sleep.c                    | 2 +-
+ drivers/acpi/thermal.c                  | 2 +-
+ drivers/acpi/video_detect.c             | 2 +-
+ drivers/acpi/x86/blacklist.c            | 2 +-
+ drivers/acpi/x86/lpss.c                 | 4 ++--
+ drivers/acpi/x86/utils.c                | 4 ++--
+ 20 files changed, 23 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/acpi/ac.c b/drivers/acpi/ac.c
-index 14a06c9c6380..f629fcd662f9 100644
+index 168e1d495b7b..85f1c54c9378 100644
 --- a/drivers/acpi/ac.c
 +++ b/drivers/acpi/ac.c
-@@ -33,7 +33,7 @@ MODULE_LICENSE("GPL");
- 
- static const struct acpi_device_id ac_device_ids[] = {
- 	{"ACPI0003", 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, ac_device_ids);
- 
-diff --git a/drivers/acpi/acpi_memhotplug.c b/drivers/acpi/acpi_memhotplug.c
-index 1d7dfe4ee9a6..bb1c380b1ffb 100644
---- a/drivers/acpi/acpi_memhotplug.c
-+++ b/drivers/acpi/acpi_memhotplug.c
-@@ -22,7 +22,7 @@
- 
- static const struct acpi_device_id memory_device_ids[] = {
- 	{ACPI_MEMORY_DEVICE_HID, 0},
--	{"", 0},
-+	{ }
- };
- 
- #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
-diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
-index dc6d0091d17c..edd4226a353e 100644
---- a/drivers/acpi/acpi_pad.c
-+++ b/drivers/acpi/acpi_pad.c
-@@ -439,7 +439,7 @@ static void acpi_pad_remove(struct platform_device *pdev)
- 
- static const struct acpi_device_id pad_device_ids[] = {
- 	{"ACPI000C", 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, pad_device_ids);
- 
-diff --git a/drivers/acpi/acpi_pnp.c b/drivers/acpi/acpi_pnp.c
-index da886923b008..ea9858e00238 100644
---- a/drivers/acpi/acpi_pnp.c
-+++ b/drivers/acpi/acpi_pnp.c
-@@ -301,7 +301,7 @@ static const struct acpi_device_id acpi_pnp_device_ids[] = {
- 	/* snd-opl3sa2-pnpbios */
- 	{"YMH0021"},
- 	{"NMX2210"},		/* Gateway Solo 2500 */
--	{""},
-+	{ }
- };
- 
- static bool matching_id(const char *idstr, const char *list_id)
-diff --git a/drivers/acpi/acpi_tad.c b/drivers/acpi/acpi_tad.c
-index 5fcb0bee3710..bd8bdf7b1a4f 100644
---- a/drivers/acpi/acpi_tad.c
-+++ b/drivers/acpi/acpi_tad.c
-@@ -896,7 +896,7 @@ static int acpi_tad_probe(struct platform_device *pdev)
- 
- static const struct acpi_device_id acpi_tad_ids[] = {
- 	{"ACPI000E", 0},
--	{}
-+	{ }
- };
- 
- static struct platform_driver acpi_tad_driver = {
-diff --git a/drivers/acpi/arm64/amba.c b/drivers/acpi/arm64/amba.c
-index 7ee431d9464a..34381ca72add 100644
---- a/drivers/acpi/arm64/amba.c
-+++ b/drivers/acpi/arm64/amba.c
-@@ -22,7 +22,7 @@
- static const struct acpi_device_id amba_id_list[] = {
- 	{"ARMH0061", 0}, /* PL061 GPIO Device */
- 	{"ARMH0330", 0}, /* ARM DMA Controller DMA-330 */
--	{"", 0},
-+	{ }
- };
- 
- static void amba_register_dummy_clk(void)
-diff --git a/drivers/acpi/battery.c b/drivers/acpi/battery.c
-index 1db23627addf..29432de93fc6 100644
---- a/drivers/acpi/battery.c
-+++ b/drivers/acpi/battery.c
-@@ -68,7 +68,7 @@ static const struct acpi_device_id battery_device_ids[] = {
- 	/* Microsoft Surface Go 3 */
- 	{"MSHW0146", 0},
- 
--	{"", 0},
-+	{ }
- };
- 
- MODULE_DEVICE_TABLE(acpi, battery_device_ids);
-diff --git a/drivers/acpi/button.c b/drivers/acpi/button.c
-index 91a4e9698f7a..73a9efe07160 100644
---- a/drivers/acpi/button.c
-+++ b/drivers/acpi/button.c
-@@ -65,7 +65,7 @@ static const struct acpi_device_id button_device_ids[] = {
- 	{ACPI_BUTTON_HID_SLEEPF, ACPI_BUTTON_TYPE_SLEEP},
- 	{ACPI_BUTTON_HID_POWER, ACPI_BUTTON_TYPE_POWER},
- 	{ACPI_BUTTON_HID_POWERF, ACPI_BUTTON_TYPE_POWER},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, button_device_ids);
- 
-diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-index f138a433554a..3a3b18d62a93 100644
---- a/drivers/acpi/container.c
-+++ b/drivers/acpi/container.c
-@@ -18,7 +18,7 @@ static const struct acpi_device_id container_device_ids[] = {
- 	{"ACPI0004", 0},
- 	{"PNP0A05", 0},
- 	{"PNP0A06", 0},
--	{"", 0},
-+	{ }
- };
- 
- #ifdef CONFIG_ACPI_CONTAINER
-diff --git a/drivers/acpi/dptf/dptf_pch_fivr.c b/drivers/acpi/dptf/dptf_pch_fivr.c
-index 8d7e555929d3..1e41bea6e00d 100644
---- a/drivers/acpi/dptf/dptf_pch_fivr.c
-+++ b/drivers/acpi/dptf/dptf_pch_fivr.c
-@@ -153,7 +153,7 @@ static const struct acpi_device_id pch_fivr_device_ids[] = {
- 	{"INTC106B", 0},
- 	{"INTC10A3", 0},
- 	{"INTC10D7", 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, pch_fivr_device_ids);
- 
-diff --git a/drivers/acpi/dptf/dptf_power.c b/drivers/acpi/dptf/dptf_power.c
-index 55ccbb8ddbe3..5b2f2cf13b5b 100644
---- a/drivers/acpi/dptf/dptf_power.c
-+++ b/drivers/acpi/dptf/dptf_power.c
-@@ -242,7 +242,7 @@ static const struct acpi_device_id int3407_device_ids[] = {
- 	{"INTC1101", 0},
- 	{"INTC10F7", 0},
- 	{"INTC10F8", 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, int3407_device_ids);
- 
-diff --git a/drivers/acpi/ec.c b/drivers/acpi/ec.c
-index db24a9a252a8..611c616f4927 100644
---- a/drivers/acpi/ec.c
-+++ b/drivers/acpi/ec.c
-@@ -1808,7 +1808,7 @@ ec_parse_io_ports(struct acpi_resource *resource, void *context)
- static const struct acpi_device_id ec_device_ids[] = {
- 	{"PNP0C09", 0},
- 	{ACPI_ECDT_HID, 0},
--	{"", 0},
-+	{ }
- };
- 
- /*
-diff --git a/drivers/acpi/evged.c b/drivers/acpi/evged.c
-index b79ee3f5c1c3..e8c60f902846 100644
---- a/drivers/acpi/evged.c
-+++ b/drivers/acpi/evged.c
-@@ -180,7 +180,7 @@ static void ged_remove(struct platform_device *pdev)
- 
- static const struct acpi_device_id ged_acpi_ids[] = {
- 	{"ACPI0013"},
+@@ -187,7 +187,7 @@ static const struct dmi_system_id ac_dmi_table[]  __initconst = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "32597CG"),
+ 		},
+ 	},
 -	{},
 +	{ }
  };
  
- static struct platform_driver ged_driver = {
-diff --git a/drivers/acpi/fan_core.c b/drivers/acpi/fan_core.c
-index 4324ff5d9c4c..0f128e41d3ad 100644
---- a/drivers/acpi/fan_core.c
-+++ b/drivers/acpi/fan_core.c
-@@ -46,7 +46,7 @@ MODULE_PARM_DESC(min_trip_distance, "Minimum distance between fan speed trip poi
+ static int acpi_ac_probe(struct platform_device *pdev)
+diff --git a/drivers/acpi/acpi_video.c b/drivers/acpi/acpi_video.c
+index 2a2822516665..548303bb3a14 100644
+--- a/drivers/acpi/acpi_video.c
++++ b/drivers/acpi/acpi_video.c
+@@ -92,7 +92,7 @@ enum acpi_video_level_idx {
  
- static const struct acpi_device_id fan_device_ids[] = {
- 	ACPI_FAN_DEVICE_IDS,
--	{"", 0},
+ static const struct auxiliary_device_id video_bus_auxiliary_id_table[] = {
+ 	{ .name = "acpi.video_bus" },
+-	{},
 +	{ }
  };
- MODULE_DEVICE_TABLE(acpi, fan_device_ids);
+ MODULE_DEVICE_TABLE(auxiliary, video_bus_auxiliary_id_table);
  
-diff --git a/drivers/acpi/hed.c b/drivers/acpi/hed.c
-index 48562f53d3ab..e5de7980c866 100644
---- a/drivers/acpi/hed.c
-+++ b/drivers/acpi/hed.c
-@@ -18,7 +18,7 @@
- 
- static const struct acpi_device_id acpi_hed_ids[] = {
- 	{"PNP0C33", 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, acpi_hed_ids);
- 
-diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
-index 591d2608374f..e62274b0ff38 100644
---- a/drivers/acpi/nfit/core.c
-+++ b/drivers/acpi/nfit/core.c
-@@ -3514,7 +3514,7 @@ EXPORT_SYMBOL_GPL(__acpi_nfit_notify);
- 
- static const struct acpi_device_id acpi_nfit_ids[] = {
- 	{ "ACPI0012", 0 },
--	{ "", 0 },
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, acpi_nfit_ids);
- 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 84bfcdf242dd..71ff2269e218 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -37,7 +37,7 @@ static void acpi_pci_link_remove(struct acpi_device *device);
- 
- static const struct acpi_device_id link_device_ids[] = {
- 	{"PNP0C0F", 0},
--	{"", 0},
-+	{ }
- };
- 
- static struct acpi_scan_handler pci_link_handler = {
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 89c389a8b7a3..5ca57f6c9ea8 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -42,7 +42,7 @@ static int acpi_pci_root_scan_dependent(struct acpi_device *adev)
- 
- static const struct acpi_device_id root_device_ids[] = {
- 	{"PNP0A03", 0},
--	{"", 0},
-+	{ }
- };
- 
- static struct acpi_scan_handler pci_root_handler = {
-diff --git a/drivers/acpi/pfr_telemetry.c b/drivers/acpi/pfr_telemetry.c
-index 458cb99ae216..818359e21d1a 100644
---- a/drivers/acpi/pfr_telemetry.c
-+++ b/drivers/acpi/pfr_telemetry.c
-@@ -416,7 +416,7 @@ static int acpi_pfrt_log_probe(struct platform_device *pdev)
- 
- static const struct acpi_device_id acpi_pfrt_log_ids[] = {
- 	{"INTC1081"},
+@@ -518,7 +518,7 @@ static const struct dmi_system_id video_dmi_table[] = {
+ 		DMI_MATCH(DMI_PRODUCT_NAME, "EasyNote MZ35"),
+ 		},
+ 	},
 -	{}
 +	{ }
  };
- MODULE_DEVICE_TABLE(acpi, acpi_pfrt_log_ids);
  
-diff --git a/drivers/acpi/pfr_update.c b/drivers/acpi/pfr_update.c
-index 459c2938b975..993ab5a479f5 100644
---- a/drivers/acpi/pfr_update.c
-+++ b/drivers/acpi/pfr_update.c
-@@ -595,7 +595,7 @@ static int acpi_pfru_probe(struct platform_device *pdev)
+ static unsigned long long
+diff --git a/drivers/acpi/battery.c b/drivers/acpi/battery.c
+index 8b1b66cf5369..c1f36e6dfab4 100644
+--- a/drivers/acpi/battery.c
++++ b/drivers/acpi/battery.c
+@@ -1387,7 +1387,7 @@ static const struct dmi_system_id bat_dmi_table[] __initconst = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "Surface Go 3"),
+ 		},
+ 	},
+-	{},
++	{ }
+ };
  
- static const struct acpi_device_id acpi_pfru_ids[] = {
- 	{"INTC1080"},
+ static void acpi_battery_wakeup_cleanup(void *data)
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index 1d6867dec925..3cf1719b5246 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -66,7 +66,7 @@ static const struct dmi_system_id dsdt_dmi_table[] __initconst = {
+ 		DMI_MATCH(DMI_PRODUCT_NAME, "Satellite"),
+ 		},
+ 	},
 -	{}
 +	{ }
  };
- MODULE_DEVICE_TABLE(acpi, acpi_pfru_ids);
+ #endif
  
-diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
-index bdd1529d79f0..adde2a441373 100644
---- a/drivers/acpi/processor_driver.c
-+++ b/drivers/acpi/processor_driver.c
-@@ -38,7 +38,7 @@ static int acpi_processor_stop(struct device *dev);
- static const struct acpi_device_id processor_device_ids[] = {
- 	{ACPI_PROCESSOR_OBJECT_HID, 0},
- 	{ACPI_PROCESSOR_DEVICE_HID, 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, processor_device_ids);
- 
-diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
-index 861739b18e01..d528ae5606a6 100644
---- a/drivers/acpi/sbs.c
-+++ b/drivers/acpi/sbs.c
-@@ -46,7 +46,7 @@ MODULE_PARM_DESC(cache_time, "cache time in milliseconds");
- 
- static const struct acpi_device_id sbs_device_ids[] = {
- 	{"ACPI0002", 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, sbs_device_ids);
- 
-diff --git a/drivers/acpi/sbshc.c b/drivers/acpi/sbshc.c
-index c0ffa267f96c..bfc6098b5fed 100644
---- a/drivers/acpi/sbshc.c
-+++ b/drivers/acpi/sbshc.c
-@@ -35,7 +35,7 @@ static void acpi_smbus_hc_remove(struct platform_device *pdev);
- static const struct acpi_device_id sbs_device_ids[] = {
- 	{"ACPI0001", 0},
- 	{"ACPI0005", 0},
--	{"", 0},
+diff --git a/drivers/acpi/button.c b/drivers/acpi/button.c
+index 66a57eea2280..c41fba556030 100644
+--- a/drivers/acpi/button.c
++++ b/drivers/acpi/button.c
+@@ -167,7 +167,7 @@ static const struct dmi_system_id dmi_lid_quirks[] = {
+ 		},
+ 		.driver_data = (void *)(long)ACPI_BUTTON_LID_INIT_OPEN,
+ 	},
+-	{}
 +	{ }
  };
  
- MODULE_DEVICE_TABLE(acpi, sbs_device_ids);
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 9218264f8da1..7cd13e77497e 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1077,7 +1077,7 @@ static bool acpi_wakeup_gpe_init(struct acpi_device *device)
- 	static const struct acpi_device_id button_device_ids[] = {
- 		{"PNP0C0D", 0},	/* Lid */
- 		{"PNP0C0E", 0},	/* Sleep button */
--		{"", 0},
-+		{ }
- 	};
- 	struct acpi_device_wakeup *wakeup = &device->wakeup;
- 	const struct acpi_device_id *match;
-@@ -1801,7 +1801,7 @@ static bool acpi_is_indirect_io_slave(struct acpi_device *device)
- 	struct acpi_device *parent = acpi_dev_parent(device);
- 	static const struct acpi_device_id indirect_io_hosts[] = {
- 		{"HISI0191", 0},
--		{}
-+		{ }
- 	};
- 
- 	return parent && !acpi_match_device_ids(parent, indirect_io_hosts);
-@@ -1848,7 +1848,7 @@ static bool acpi_device_enumeration_by_parent(struct acpi_device *device)
- 	 */
- 		{"BCM4752", },
- 		{"LNV4752", },
--		{}
-+		{ }
- 	};
- 
- 	if (acpi_is_indirect_io_slave(device))
-@@ -2356,7 +2356,7 @@ static void acpi_default_enumeration(struct acpi_device *device)
- 
- static const struct acpi_device_id generic_device_ids[] = {
- 	{ACPI_DT_NAMESPACE_HID, },
--	{"", },
+ static int acpi_button_probe(struct platform_device *pdev);
+diff --git a/drivers/acpi/ec.c b/drivers/acpi/ec.c
+index d947118657a8..da7f35a42dd4 100644
+--- a/drivers/acpi/ec.c
++++ b/drivers/acpi/ec.c
+@@ -2017,7 +2017,7 @@ static const struct dmi_system_id ec_dmi_table[] __initconst = {
+ 			DMI_MATCH(DMI_SYS_VENDOR, "SAMSUNG ELECTRONICS CO., LTD."),
+ 		},
+ 	},
+-	{}
 +	{ }
  };
  
- static int acpi_generic_device_attach(struct acpi_device *adev,
+ void __init acpi_ec_ecdt_probe(void)
+diff --git a/drivers/acpi/mipi-disco-img.c b/drivers/acpi/mipi-disco-img.c
+index ea4bffe3c02d..86df7dc25339 100644
+--- a/drivers/acpi/mipi-disco-img.c
++++ b/drivers/acpi/mipi-disco-img.c
+@@ -736,7 +736,7 @@ static const struct x86_cpu_id dell_broken_mipi_disco_cpu_gens[] = {
+ 	X86_MATCH_VFM(INTEL_RAPTORLAKE, NULL),
+ 	X86_MATCH_VFM(INTEL_RAPTORLAKE_P, NULL),
+ 	X86_MATCH_VFM(INTEL_RAPTORLAKE_S, NULL),
+-	{}
++	{ }
+ };
+ 
+ static const char *strnext(const char *s1, const char *s2)
+diff --git a/drivers/acpi/osi.c b/drivers/acpi/osi.c
+index 9470f1830ff5..0fcb0d006065 100644
+--- a/drivers/acpi/osi.c
++++ b/drivers/acpi/osi.c
+@@ -473,7 +473,7 @@ static const struct dmi_system_id acpi_osi_dmi_table[] __initconst = {
+ 		     DMI_MATCH(DMI_PRODUCT_NAME, "1015PX"),
+ 		},
+ 	},
+-	{}
++	{ }
+ };
+ 
+ static __init void acpi_osi_dmi_blacklisted(void)
+diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+index 33a123074071..e5cf81b6c8e1 100644
+--- a/drivers/acpi/pci_slot.c
++++ b/drivers/acpi/pci_slot.c
+@@ -178,7 +178,7 @@ static const struct dmi_system_id acpi_pci_slot_dmi_table[] __initconst = {
+ 		DMI_MATCH(DMI_BIOS_VERSION, "PRIMEQUEST"),
+ 		},
+ 	},
+-	{}
++	{ }
+ };
+ 
+ void __init acpi_pci_slot_init(void)
+diff --git a/drivers/acpi/pmic/intel_pmic_bxtwc.c b/drivers/acpi/pmic/intel_pmic_bxtwc.c
+index c332afbf82bd..99c05b62df43 100644
+--- a/drivers/acpi/pmic/intel_pmic_bxtwc.c
++++ b/drivers/acpi/pmic/intel_pmic_bxtwc.c
+@@ -395,7 +395,7 @@ static int intel_bxtwc_pmic_opregion_probe(struct platform_device *pdev)
+ 
+ static const struct platform_device_id bxt_wc_opregion_id_table[] = {
+ 	{ .name = "bxt_wcove_region" },
+-	{},
++	{ }
+ };
+ 
+ static struct platform_driver intel_bxtwc_pmic_opregion_driver = {
+diff --git a/drivers/acpi/pmic/intel_pmic_chtdc_ti.c b/drivers/acpi/pmic/intel_pmic_chtdc_ti.c
+index ecb36fbc1e7f..5424cf72fb1b 100644
+--- a/drivers/acpi/pmic/intel_pmic_chtdc_ti.c
++++ b/drivers/acpi/pmic/intel_pmic_chtdc_ti.c
+@@ -127,7 +127,7 @@ static int chtdc_ti_pmic_opregion_probe(struct platform_device *pdev)
+ 
+ static const struct platform_device_id chtdc_ti_pmic_opregion_id_table[] = {
+ 	{ .name = "chtdc_ti_region" },
+-	{},
++	{ }
+ };
+ 
+ static struct platform_driver chtdc_ti_pmic_opregion_driver = {
+diff --git a/drivers/acpi/pmic/intel_pmic_chtwc.c b/drivers/acpi/pmic/intel_pmic_chtwc.c
+index 81caede51ca2..f4c90907b020 100644
+--- a/drivers/acpi/pmic/intel_pmic_chtwc.c
++++ b/drivers/acpi/pmic/intel_pmic_chtwc.c
+@@ -275,7 +275,7 @@ static int intel_cht_wc_pmic_opregion_probe(struct platform_device *pdev)
+ 
+ static const struct platform_device_id cht_wc_opregion_id_table[] = {
+ 	{ .name = "cht_wcove_region" },
+-	{},
++	{ }
+ };
+ 
+ static struct platform_driver intel_cht_wc_pmic_opregion_driver = {
+diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+index c77342a584f0..e97eb73bb2fe 100644
+--- a/drivers/acpi/power.c
++++ b/drivers/acpi/power.c
+@@ -1093,7 +1093,7 @@ static const struct dmi_system_id dmi_hp_elitebook_gp12pxp_quirk[] = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "HP EliteBook 855 G7 Notebook PC"),
+ 		},
+ 	},
+-	{}
++	{ }
+ };
+ 
+ static const struct dmi_system_id dmi_leave_unused_power_resources_on[] = {
+diff --git a/drivers/acpi/processor_idle.c b/drivers/acpi/processor_idle.c
+index e113bcbbb882..9238e12e37fd 100644
+--- a/drivers/acpi/processor_idle.c
++++ b/drivers/acpi/processor_idle.c
+@@ -105,7 +105,7 @@ static const struct dmi_system_id processor_power_dmi_table[] = {
+ 	  DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK Computer Inc."),
+ 	  DMI_MATCH(DMI_PRODUCT_NAME,"L8400B series Notebook PC")},
+ 	 (void *)1},
+-	{},
++	{ }
+ };
+ 
+ 
+diff --git a/drivers/acpi/sleep.c b/drivers/acpi/sleep.c
+index 641056e0252b..7c1fb5b844be 100644
+--- a/drivers/acpi/sleep.c
++++ b/drivers/acpi/sleep.c
+@@ -407,7 +407,7 @@ static const struct dmi_system_id acpisleep_dmi_table[] __initconst = {
+ 		DMI_MATCH(DMI_PRODUCT_NAME, "20GGA00L00"),
+ 		},
+ 	},
+-	{},
++	{ }
+ };
+ 
+ static bool ignore_blacklist;
 diff --git a/drivers/acpi/thermal.c b/drivers/acpi/thermal.c
-index 13e9a3a79d92..b6808eee1e69 100644
+index da631bbe8ea2..3d06744924b6 100644
 --- a/drivers/acpi/thermal.c
 +++ b/drivers/acpi/thermal.c
-@@ -926,7 +926,7 @@ static const struct dev_pm_ops acpi_thermal_pm_ops = {
- 
- static const struct acpi_device_id  thermal_device_ids[] = {
- 	{ACPI_THERMAL_HID, 0},
--	{"", 0},
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, thermal_device_ids);
- 
-diff --git a/drivers/acpi/tiny-power-button.c b/drivers/acpi/tiny-power-button.c
-index 92516ef84b02..4dcaf6a96f84 100644
---- a/drivers/acpi/tiny-power-button.c
-+++ b/drivers/acpi/tiny-power-button.c
-@@ -16,7 +16,7 @@ MODULE_PARM_DESC(power_signal, "Power button sends this signal to init");
- static const struct acpi_device_id tiny_power_button_device_ids[] = {
- 	{ ACPI_BUTTON_HID_POWER, 0 },
- 	{ ACPI_BUTTON_HID_POWERF, 0 },
--	{ "", 0 },
-+	{ }
- };
- MODULE_DEVICE_TABLE(acpi, tiny_power_button_device_ids);
- 
-diff --git a/drivers/acpi/x86/s2idle.c b/drivers/acpi/x86/s2idle.c
-index b79bf0fa9a7f..74e36c6365dc 100644
---- a/drivers/acpi/x86/s2idle.c
-+++ b/drivers/acpi/x86/s2idle.c
-@@ -123,7 +123,7 @@ MODULE_PARM_DESC(check_lps0_constraints, "Check LPS0 device constraints");
- 
- static const struct acpi_device_id lps0_device_ids[] = {
- 	{"PNP0D80", },
--	{"", },
-+	{ }
- };
- 
- /* Microsoft platform agnostic UUID */
-@@ -524,7 +524,7 @@ static const struct acpi_device_id amd_hid_ids[] = {
- 	{"AMD0005",	(kernel_ulong_t)&amd_picasso,	},
- 	{"AMDI0005",	(kernel_ulong_t)&amd_picasso,	},
- 	{"AMDI0006",	(kernel_ulong_t)&amd_cezanne,	},
+@@ -1014,7 +1014,7 @@ static const struct dmi_system_id thermal_dmi_table[] __initconst = {
+ 		DMI_MATCH(DMI_BOARD_NAME, "7ZX"),
+ 		},
+ 	},
 -	{}
 +	{ }
  };
  
- static int lps0_device_attach(struct acpi_device *adev,
+ static int __init acpi_thermal_init(void)
+diff --git a/drivers/acpi/video_detect.c b/drivers/acpi/video_detect.c
+index 2050b8ff5384..997794d3b3d6 100644
+--- a/drivers/acpi/video_detect.c
++++ b/drivers/acpi/video_detect.c
+@@ -986,7 +986,7 @@ static const struct dmi_system_id video_detect_dmi_table[] = {
+ 		DMI_MATCH(DMI_PRODUCT_NAME, "Mipad2"),
+ 		},
+ 	},
+-	{ },
++	{ }
+ };
+ 
+ static bool google_cros_ec_present(void)
+diff --git a/drivers/acpi/x86/blacklist.c b/drivers/acpi/x86/blacklist.c
+index 55214d0a12b1..553291330f39 100644
+--- a/drivers/acpi/x86/blacklist.c
++++ b/drivers/acpi/x86/blacklist.c
+@@ -134,7 +134,7 @@ static const struct dmi_system_id acpi_rev_dmi_table[] __initconst = {
+ 		},
+ 	},
+ #endif
+-	{}
++	{ }
+ };
+ 
+ #endif /* CONFIG_DMI */
+diff --git a/drivers/acpi/x86/lpss.c b/drivers/acpi/x86/lpss.c
+index 50b6db40bb18..fa0f1b61614d 100644
+--- a/drivers/acpi/x86/lpss.c
++++ b/drivers/acpi/x86/lpss.c
+@@ -340,7 +340,7 @@ static const struct lpss_device_desc bsw_spi_dev_desc = {
+ static const struct x86_cpu_id lpss_cpu_ids[] = {
+ 	X86_MATCH_VFM(INTEL_ATOM_SILVERMONT,	NULL),
+ 	X86_MATCH_VFM(INTEL_ATOM_AIRMONT,	NULL),
+-	{}
++	{ }
+ };
+ 
+ #else
+@@ -493,7 +493,7 @@ static const struct dmi_system_id i2c1_dep_missing_dmi_ids[] = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "T200TA"),
+ 		},
+ 	},
+-	{}
++	{ }
+ };
+ 
+ /*
 diff --git a/drivers/acpi/x86/utils.c b/drivers/acpi/x86/utils.c
-index 418951639f51..3444b96a2c20 100644
+index e723575399b8..b6ef5dfb662a 100644
 --- a/drivers/acpi/x86/utils.c
 +++ b/drivers/acpi/x86/utils.c
-@@ -47,7 +47,7 @@ struct override_status_id {
- };
- 
+@@ -49,7 +49,7 @@ struct override_status_id {
  #define ENTRY(status, hid, uid, path, cpu_vfm, dmi...) {		\
--	{ { hid, }, {} },						\
-+	{ { hid, }, { } },						\
+ 	{ { .id = hid }, { } },						\
  	{ X86_MATCH_VFM(cpu_vfm, NULL), {} },				\
- 	{ { .matches = dmi }, {} },					\
+-	{ { .matches = dmi }, {} },					\
++	{ { .matches = dmi }, { } },					\
  	uid,								\
-@@ -470,7 +470,7 @@ static const struct acpi_device_id i2c_acpi_known_good_ids[] = {
- 	{ "INT33FD", 0 },  /* Intel Crystal Cove PMIC */
- 	{ "INT34D3", 0 },  /* Intel Whiskey Cove PMIC */
- 	{ "NPCE69A", 0 },  /* Asus Transformer keyboard dock */
+ 	path,								\
+ 	status,								\
+@@ -458,7 +458,7 @@ static const struct dmi_system_id acpi_quirk_skip_dmi_ids[] = {
+ 					ACPI_QUIRK_SKIP_ACPI_AC_AND_BATTERY),
+ 	},
+ #endif
 -	{}
 +	{ }
  };
  
- bool acpi_quirk_skip_i2c_client_enumeration(struct acpi_device *adev)
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 9d3f039ebd94..aed3ddb388c0 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -831,7 +831,7 @@ int acpi_mrrm_max_mem_region(void);
- 	{ "PNP0B00", },		\
- 	{ "PNP0B01", },		\
- 	{ "PNP0B02", },		\
--	{ "", }
-+	{ }
- 
- extern bool cmos_rtc_platform_device_present;
- 
+ #if IS_ENABLED(CONFIG_X86_ANDROID_TABLETS)
 -- 
 2.56.0.rc1
 
