@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794548999;
-	b=eic1KbWdu2yU+IufpTmLfzXpKSkMs/C+unULU3utQuRnHjGcgJxA3eK5rLnpfFP4QA0y
-	 c5F5yLVttM7MDr8plxxzK+d06B2ZDgm6yOPRrAzTE5LG571vQZzlBlNV2efFU3FW7RjkV
-	 vYNDqglvD/2kIm6jW4IFv0DkEPrAx2EDN5RA0tzUCYnkPulgtnc3dcphccmDT6yMn+7jx
-	 KFZ8N76fCa+1R0fsoD8DA2hCDzGdWbb/p7c3V1RMHhXHPLgY0Xmgu5oJNBeqW+hbvGGOX
-	 qfXtMZ/lT+NCsNQsgy6SSU6bAZV1oOAZ8A3EC3qQzfYXK7cg8k3adW51DYpOd89fo9w==
+	t=1794549901;
+	b=QhWmYOh2tvRZuF7E9PjFgNvkAToU2fT4BHSGbPJVKruARjfMENfgQbQiegFPh3Fzt2Ob
+	 sDIcx1f1mM46mTMG9yy5AsPJbKuso1XEIgpAeS2VRVlasFfx1NYfjf0Xh9rtvPik0C8pR
+	 8svCp5pOawIRRz2rm5F6p7fjXwW+Vme8v6awF1QMQZRZFqpaiEw8PpPYxM+aa4vxWCRPS
+	 OBQ4fggTD9NoTs7W2ijp3B6rE4HuTZ15tqo6v1omDWSq5IRCKH+M/iyo5nkvTx3WRMPrJ
+	 1jMMZewOjWJVSVeltabln2ReTSRKjE3jY/NdREo7Tz27l/NPdATr7F4o+iDpZ8iXeAg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794548999;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794549901;
 	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
 	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=1QCHCXTpwhaXOHfzz5l15bpjdkFUiznzxAOCYs8/1D0=;
-	b=tPwp9jUs9ypXgFTNorDrTFFVWxnlPxGW2loTel60SRHCfHNGCWAoqNbh/MW1a7FezTmJ
-	 cekm66ohFho2r2s15PxHDBJF+WZAtr9IjzJuwxzzB9E6rkqVT1n97tYpV2gIZ1UnbcC2r
-	 Sy8WYCoEbJ/ZnXcXAAi5D7l3/GSQS5wDUupzbyGQXYf5t/Ag3lnVjo7RYB8CPcIlXuSLT
-	 qqqbFfQWZ+IDfcSUN0yyDosISuoa+DjFe+jzCizCJi/m4FLM/NhKUNLeV8gJkWrfxkomm
-	 ZJecprt5F+jvxIv2M1uUCFx7xfDf/bXXw3E8fPERMwpwnwONvvN2nJ411OLjD7ukEpQ==
+	bh=2Q0Kw6VKjPJ4bBmVqAq5ZaWu4zc0H8m2mSoY9o/wgk0=;
+	b=El1wWPga4DJZF4RjFD0IMUyeYLxGJoRXQzSt1D0+EDcEevpjnC6ZOqdVrdu6WxGvmTK5
+	 JOdtrQU130Cs4v0IsPSnJSv9TK1J5oLOyedeanf1i1oEG7OwE+kM0In8WbK/jBIKiDWBl
+	 nFUFAaI7x+xgCTZP7roGgr426LAFUYkRkAHcT4HQ6HCxEGrpB55igymp6WHdTWJ4vhurf
+	 uVVZ4qvjN6pGVeUhSgZ284EqEy+81fnR6kE9irfHm9ggo81hQ19hKa8N/BexBgI3z85xh
+	 f0xQcnscdlx11Pdk8azAvI9EpgNRYOo1zns6l3UljzfQgELycrgMllx19O2aNp6/xkw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n+IV7MCg;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=REIrOkJz;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BFD606A31C;
-	Fri, 13 Nov 2026 05:49:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16964606A31C;
+	Fri, 13 Nov 2026 06:05:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n+IV7MCg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C2A01F000C6;
-	Fri, 13 Nov 2026 05:49:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=REIrOkJz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C26F61F000C4;
+	Fri, 13 Nov 2026 06:04:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794548998;
-	bh=1QCHCXTpwhaXOHfzz5l15bpjdkFUiznzxAOCYs8/1D0=;
+	s=k20260515; t=1794549900;
+	bh=2Q0Kw6VKjPJ4bBmVqAq5ZaWu4zc0H8m2mSoY9o/wgk0=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=n+IV7MCgQdlJEEHAi6QKi/kWy8yzp/3uca4izpMGuczcmGYuWXP3sYO6HEulgaSBr
-	 jiPtYks0VWhhv6b2H6VteZ5IaAhh5Zd1R7Q4rLovkGkISG7tPg3bxeb2G1DXjlB6qP
-	 VDyDvwuF4X1U7cRFjeD2owWdYNi28hs7F7wxcGqpCUmQtrw4osKtcRuZM/NooYos0O
-	 sJd4CYmm5Y50NXab3eCYjqRnjvTWUiEw4GDByC7PDQE+k0Q4B6nt+VDWI6ysFMK5zr
-	 /KLvD3AiUaFTwd3rQgKN4RRszouPPgU26Q/Db8U6YHBXoV5XrhRsmcRCyb/Io6mwFw
-	 l2Ohtqal/D2+Q==
+	b=REIrOkJz2AHn01Jmb34bj98BYasFg8BqbFiumMW4g2v27buVo7lZVCCUbaiZW3RuM
+	 +wxBJ3/gX4+BELRdWdNU/J6PCzSOCrnZ2IYYh1A2ba4YSznn84fKf9sjN+D9wF4QHM
+	 SvSMtf7+mrJ13TBMzOObc8QfHQSTE5vcrsg2P1RmXkJF0g5vPmFE7R+/836jM3RdJi
+	 TzgoEtGCv25Lk+l6gF0k+8wxuzvl7lHKBraB7e32jqTKlGJ4O5Q7j1CSPzLdUvrLN9
+	 TNkSDm8aEPPw+MSqEDh6WgmRs0zAuMxpqzrInD6NnrBYPRGuHiYCIIX3C/vf+TCuxV
+	 RFWMNY2pAu6Nw==
 X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
 From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
 To: Alexey Kardashevskiy <aik@amd.com>, iommu@lists.linux.dev
@@ -67,14 +67,14 @@ Cc: Alex Williamson <alex@shazbot.org>,
 	linux-arm-kernel@lists.infradead.org, linux-coco@lists.linux.dev,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v8 02/15] virt: coco: tsm: Remove the device from lookup
- before PCI teardown
-In-Reply-To: <9eb572d7-fa3a-4734-9773-44a3fb465b6a@amd.com>
+Subject: Re: [PATCH v8 03/15] virt: coco: tsm: Complete PCI registration
+ before publishing the device
+In-Reply-To: <9773f2fa-f80a-449c-9e9e-722d1c71f989@amd.com>
 References: <20261104161632.3547423-1-aneesh.kumar@kernel.org>
- <20261104161632.3547423-3-aneesh.kumar@kernel.org>
- <9eb572d7-fa3a-4734-9773-44a3fb465b6a@amd.com>
-Date: Fri, 13 Nov 2026 11:19:45 +0530
-Message-ID: <yq5ajymhmgau.fsf@kernel.org>
+ <20261104161632.3547423-4-aneesh.kumar@kernel.org>
+ <9773f2fa-f80a-449c-9e9e-722d1c71f989@amd.com>
+Date: Fri, 13 Nov 2026 11:34:48 +0530
+Message-ID: <yq5ah5hlmflr.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -89,59 +89,15 @@ Content-Type: text/plain
 Alexey Kardashevskiy <aik@amd.com> writes:
 
 > On 5/11/26 03:16, Aneesh Kumar K.V (Arm) wrote:
->> PCI connect looks up a TSM by ID under pci_tsm_rwsem. Previously,
->> tsm_unregister() released that lock after tearing down PCI state while
->> the TSM was still in the class lookup. 
->
-> tsm_unregister() is not touching that lock, what do I miss?
->
 
-pci_tsm_unregister(). It uses guard(rwsem_write)(&pci_tsm_rwsem), so the
-lock is released when pci_tsm_unregister() returns. We previously called
-device_unregister() only after that.
+ [ ... 97 lines skipped ... ] 
 
 >
->> A racing connect could then
->> attach a new PCI context that the teardown would never see.
->> 
->> Remove the device from the class lookup first, then take the PCI write
->> lock to drain in-flight operations and destroy their contexts. Drop the
->> device reference only after PCI teardown completes.
->> 
->> Fixes: 3225f52cde56 ("PCI/TSM: Establish Secure Sessions and Link Encryption")
->> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
->> ---
->>   drivers/virt/coco/tsm-core.c | 22 ++++++++++++++--------
->>   1 file changed, 14 insertions(+), 8 deletions(-)
->> 
->> diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
->> index e784993353d8..f79135986102 100644
->> --- a/drivers/virt/coco/tsm-core.c
->> +++ b/drivers/virt/coco/tsm-core.c
->> @@ -56,26 +56,25 @@ static struct tsm_dev *alloc_tsm_dev(struct device *parent)
->>   	return no_free_ptr(tsm_dev);
->>   }
->>   
->> -static struct tsm_dev *tsm_register_pci_or_reset(struct tsm_dev *tsm_dev,
->> -						 struct pci_tsm_ops *pci_ops)
->> +static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops)
->
-> Why changing a pointer to an int here as later tsm_register() converts
-> it back to a pointer?
+> Why do we do this only when pci_ops!=NULL? Also, why do we even allow
+> pci_ops==NULL? [a minute later] ah 04/15 does just that. Make it first
+> in the series so following patches get simpler?
 >
 
-At the end of the series we have
-static int tsm_register_pci(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops)
-
-
->
-> And I never understood what is _reset for here (so +1 for that) but
-> now we have tsm_register_pci() and pci_tsm_register() which is weird.
-> May be just open code it? Thanks,
->
-
-How about rename that to 
-__tsm_register(struct tsm_dev *tsm_dev, struct pci_tsm_ops *pci_ops)
-
+Sure, I'll move it to the beginning of the series.
 
 -aneesh
