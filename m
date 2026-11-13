@@ -1,58 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794535413;
-	b=jyG+omOJ+RWOzwHF28Uh/mmrEkjmmjgeVRdZyVMvl3c/PJCHSQdq8ZpYSFLXS6L9UqWB
-	 rPLz20ILZ/pYa6Etj04TariTOlvUqsVskLyfQ+ONPGbgyRJhsQiz07vG1skEwWpLC68UG
-	 L6hWSSTnk0n5YocuXQY37jchFoV1iA93x08X3VfqE7pSRA8WIed6Wn+5HHypABxwhWzlf
-	 w4oD5Gs0BhJyRa9n22vPTBo8Unhlt/Mq5NmD2iVBCKtUVrBKB4V6Yfdy3/yE/Xm3lP3s3
-	 7cWEwY9fq/mJEkKOQ0+R+BcOqvFihvcaBYU4lvY//qUk6SLn3mawVm5bKm0JSsRVkxg==
+	t=1794535951;
+	b=fVQIRYTYb4uIJgD4NLrsOM+XDbPHTEFurxo+NWfqq4PepYbAE24n7YLqJLhQj6o8DEA+
+	 9ETP0m4RXKZYZgR14I7sahLQ3dxNDfS4DOtlQnkYb3XiWDMS8R4AqIa1NWH5sZ3rv3A91
+	 pY3Cyv91AJobs52FXN26TrurYDGoKoisdth6h2wl5tpHjPe+rOC5lXnKlicNeXS1qkW8L
+	 LMidrbpPekJLLRvzreJYtS6zb7Sa94gQ+z7UvTXFQhpcGl97jUTa6YUm2rd6LFGFIiStY
+	 3vSRo0i8vcOHeATdTFLrPAMQvIWKVpxJtE4cbf7mbZ0k1RojovXlLgEK56u+rW9emMg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794535413;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:To:Cc:References:From:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-SA-Exim-Connect-IP:
-	 X-SA-Exim-Rcpt-To:X-SA-Exim-Mail-From:X-Spam-Checker-Version:
-	 X-Spam-Level:X-Spam-Status:Subject:X-SA-Exim-Version:
-	 X-SA-Exim-Scanned;
-	bh=WGp60iebrceeykw5z9ks0STNk2un0gKAwGb3SyzUjH0=;
-	b=Suc+o41ff4SBYEN1GYQqNnIsRaqK/Rv1c4NISzuRREnE9kHHgB8BCyWczArYI6o1sTGg
-	 2CufY4bURV9MrmnxKpyicUPOKwXB9WKKOCkJgJgI1sYTnrNkNOkwDSZtwMuOxsT2equxa
-	 Bychh8PODWb07XUXsO5cInLANuiYyecJEThUGYhfwc3F4Lk/iuAgkaE4QjyP4yJmIYtEA
-	 b96lzKazBC2cH6AEUKmUzhTi1M0Q0ExnDNAKgOVbc7894EadMTZy3xq7y2Henh8XYqlXv
-	 psZXJApU7DRylYoMGuM2lizgNOsCU5OWVv+DFn70kcUY9OAWQrEDQbcQk5G8NsDT0gA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794535951;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=QNjZ2czQKubTiROPrGQO3TA2OQ1C0AKWAIPYpsD16Vo=;
+	b=fljU6qoVmk2+z4urPAre7RfqvCd/KpVsNauqKuNbo4BpFvV514fwfuYn+vPzlhZ/iGiC
+	 +TMaoglE0g3/4XqOoz8LFbU34ypKM95gpHojPOcBGmmWDGa5lp/p9MxUOvy4o186Vmnvo
+	 /GGm6Lxshw+aCGlyWN41ZTQrKjayc0JGdCWb/TZak7SfHoESbOL8HPuN9N9u8DXg9KYya
+	 RP/79p5LBVXosO3jFls1lELMzoe/ICHG9uoiCBAk/XPdMKzSGarxiyfc0jxHQf9QaTfqs
+	 zKmoVVbVbP9jw+7QFove5I9SNcUIxurZ+wXmLj8wHJn5ZUzLz1hzTwh4/igWmNtRcIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=deltatee.com;
-	spf=pass smtp.mailfrom=deltatee.com;
-	dkim=pass header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=I1cJaawp;
-	arc=none smtp.remote-ip=204.191.154.188
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i+X7blCD;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6639606A321;
-	Fri, 13 Nov 2026 02:03:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B6639606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED744606A31C
+	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 02:12:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=I1cJaawp
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=WGp60iebrceeykw5z9ks0STNk2un0gKAwGb3SyzUjH0=; b=I1cJaawpaQh/eqik9UCP6jlcV+
-	+ff2nbpYP/YhCSCiPSviiivDaU1gSLMMWauYCgv5Oluq4obD8slgaHK48V5Jgj2/QAXFJajhUcXRH
-	WgH3787xsl1fWBLE/qO5uqxVUXAUMgzK6WuZyA5HknUUaekzaBrmb729wRbktI6WljU95iQA+YSWC
-	NlA0cONSDNFzMBE5+vxYyMnxyQ3IobzCgntDbcklSx8s7he2B/vXKl7sXJCP1vXJAOdbu/leNFdkZ
-	k1iX0hBRmB6dO93Kcb9vc15bSJy5YoVJGrUkuLMCB1cFB6+Znk6j4jtKNltZ9NRjHYq/qSqDj1iN4
-	sWecGjJA==;
-Received: from [104.157.31.28] (helo=[192.168.1.251])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1xRgdP-00000002R98-2ZLr;
-	Thu, 12 Nov 2026 20:03:24 -0600
-Message-ID: <1a07c926-d710-4922-a4a1-be235df7c74c@deltatee.com>
-Date: Thu, 12 Nov 2026 20:02:53 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i+X7blCD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61ECE1F000C5;
+	Fri, 13 Nov 2026 02:12:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794535950;
+	bh=QNjZ2czQKubTiROPrGQO3TA2OQ1C0AKWAIPYpsD16Vo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=i+X7blCDnxLJRGMP3xNd2u5wjBStLSfzEl3U26gw1dD6ApyAe08eBDG6FFdH/EIgg
+	 r3AtK2l04cDUpkZUVW+T7ihCDNRsQr/A6CvUNgQbuQVXdxSlV4yWIOEcqOAHdMPCOr
+	 IZL6NagYpPN5/YVZdCGuSTcg1/V4eX62fYpq24ouCatRFYV5O3b83JvANNRTTWItVB
+	 koQuw8Z6gGXaSv6PTiJ9xVei+F8wYgn6IBPiDLnktT9b1DYiL0lHlWv3a9AFr3QZZM
+	 gMbi0s9hVSoMGlIkPxeqRtoNV3OF/xKxJ0VSq7wkt222LDZIQxWXCSENOth1Csmctf
+	 Uk7yBDIKC72zw==
+Message-ID: <sashiko-outbox-212080@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: Disable spurious s2idle wake from the NVMe root
+ port on ThinkPad P1 Gen 9
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Kean Ren" <rh_king@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261113014824.2396883-1-rh_king@163.com>
+References: <20261113014824.2396883-1-rh_king@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 13 Nov 2026 02:12:30 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,60 +59,73 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Ben Cressey <ben@cressey.dev>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
- <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Alex Williamson <alex@shazbot.org>,
- Wei Wang <wei.w.wang@hotmail.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- "Anthony Vardaro (Anthropic)" <me@anthonyvardaro.com>
-References: <20261111-pci-idpath-selector-v2-1-83ea668e38f0@cressey.dev>
-From: Logan Gunthorpe <logang@deltatee.com>
-Content-Language: en-CA
-In-Reply-To: <20261111-pci-idpath-selector-v2-1-83ea668e38f0@cressey.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 104.157.31.28
-X-SA-Exim-Rcpt-To: ben@cressey.dev, corbet@lwn.net, skhan@linuxfoundation.org, rdunlap@infradead.org, bhelgaas@google.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, kwilczynski@kernel.org, alex@shazbot.org, wei.w.wang@hotmail.com, jgg@ziepe.ca, me@anthonyvardaro.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v2] PCI: Add ID@path device format for pci= parameters
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] PCI: p1g9_rp05_wakeup_dmi matches single SKU 21UFZE0PCN
+  instead of 21UF model
+--
 
+commit 75de6a519b5eeaae2e4b61c8891c8afd3aa3c727
+Author: Kean Ren <rh_king@163.com>
 
-On 2026-11-11 5:36 p.m., Ben Cressey wrote:
-> The <pci_dev> grammar shared by pci=resource_alignment=,
-> pci=disable_acs_redir= and pci=config_acs= names a device either by
-> address, with an optional path, or by ID. When one command line serves
-> more than one platform, neither form limits an entry to the intended
-> device: an address applies to whatever occupies it on each platform, and
-> an ID applies to every instance, such as all Downstream Ports of a
-> switch rather than the one that needs different ACS settings.
-> 
-> Accept pci:<vendor>:<device>[:<subvendor>:<subdevice>]@<path>, where
-> <path> is the address format, and match only when both halves match. An
-> entry written for one platform is then inert on another where that
-> address holds a different device. For example,
-> 
->   pci=config_acs=xx111x1@pci:10b5:8749@0000:80:02.0/00.0/08.0
-> 
-> configures ACS on the Downstream Port at that path only if it is a
-> PEX 8749 port.
-> 
-> The path goes last since pci_dev_str_match_path() consumes up to the
-> next ';'. The IDs are compared first, and the path is parsed only for a
-> device that matches them. The <order>@ and <flags>@ prefixes of
-> resource_alignment and config_acs are stripped before
-> pci_dev_str_match() is called, so the callers are unchanged.
-> 
-> Suggested-by: Wei Wang <wei.w.wang@hotmail.com>
-> Signed-off-by: Ben Cressey <ben@cressey.dev>
-Looks pretty straightforward and the reasoning all makes sense to me.
+PCI: Disable spurious s2idle wake from the NVMe root port on ThinkPad P1 Ge=
+n 9
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+This commit adds a DMI-based PCI quirk to disable ACPI wakeup on PCIe root
+port 00:1c.4 on the Lenovo ThinkPad P1 Gen 9 (21UF) to prevent spurious
+PMEs from aborting s2idle suspend.
 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index f7cd4149f8130..ead7a6c456986 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -6610,3 +6610,55 @@ static void pci_mask_replay_timer_timeout(struct p=
+ci_dev *pdev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer=
+_timeout);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer=
+_timeout);
+>  #endif
+> +
+> +/*
+> + * Lenovo ThinkPad P1 Gen 9 (21UF): the firmware enables the ACPI wake
+> + * capability of PCIe root port 00:1c.4, which is the root port of the
+> + * primary NVMe SSD.  When the NVMe controller is put into D3 during
+> + * system suspend, a spurious PME is raised on that root port, which in
+> + * turn fires ACPI GPE 0x6F (SCI) and aborts s2idle before the system
+> + * reaches the low-power state.  The NVMe device itself is not a wake
+> + * source (its own ACPI wake is disabled), so disable the root port's
+> + * wake capability as well.
+> + *
+> + * No firmware with a fix is available: the issue reproduces with BIOS
+> + * N4SET31W (1.10) and N4SET32W (1.11), the latest version at the time
+> + * of writing.  Match the model only; if a fixed BIOS is released later,
+> + * this quirk can be removed or restricted to the affected BIOS
+> + * versions.
+> + */
+> +static const struct dmi_system_id p1g9_rp05_wakeup_dmi[] __initconst =3D=
+ {
+> +	{
+> +		.ident =3D "Lenovo ThinkPad P1 Gen 9 (21UF)",
+> +		.matches =3D {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "21UFZE0PCN"),
+> +		},
+> +	},
+> +	{ }
+> +};
+
+[Severity: Medium]
+Should p1g9_rp05_wakeup_dmi match "21UF" instead of "21UFZE0PCN"?
+
+On Lenovo ThinkPads, DMI_PRODUCT_NAME holds the 10-character Machine Type
+Model string, where the first four characters ("21UF") identify the model
+and the remaining six ("ZE0PCN") identify a specific factory configuration
+and regional SKU.  Matching the full "21UFZE0PCN" string leaves the quirk
+inactive on all other 21UF configurations running the same BIOS, so s2idle
+suspend will still abort on those machines.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261113014824.2396=
+883-1-rh_king@163.com?part=3D1
