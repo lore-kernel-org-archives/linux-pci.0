@@ -1,102 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.72.10
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794592219;
-	b=y9t7MQD/X9EJL3ecttYmxvVTko3612AH3fGmycQLKbOOciRhsQuqO2M2Q/vhzfsq8j9z
-	 RfxOCo+RsKiUJn5FUjUb39quiH0ziv/IhZpRgb8IRvtswuraSoXJgt5ZYr0D9bOzKpLSh
-	 uSbh767RynFi23wsKsEPcZ+hI9uF+snBbiLpyvmBhT3Z3TugilR3TxxXhcNSvu8AH0Xo/
-	 JA34qdtWRMoYMavQuGagKZQ8ZvtWO2rJ8MId1RyGMDJB+VjrPtRx7v5+TZDnw1QZrMuIq
-	 PMDekBznzOPUgTaYoHCw+qofu4Oe5iCk12eWNbn9OPvGyuTsdcZ/J6uVNx1COS1oU0A==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794592219;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=Dt+ji8sd8nM1vmQBG/dBACEOsg14d0UUVH8o79hqlxI=;
-	b=tGZHSp/6OwfIVlHRjl9t+GJYu/QeA7VMPNJFgnU9toL9JTky3Tc4fCOEeNC8QO3zSpJo
-	 H4n+X8yp23q5o6s5nTzWrr0g3P75syW+3uQBbk6tPqAdXA0Wq3NKzXyZ8L5Kth67U1/1b
-	 6dKgvkLTXYwpz90SeutE5tBWOrmhUB0UMXd3Pg5nCOuPL5+KltXUNKUh73gXBne4ECspz
-	 ++L6luB76phYVoGrhu0wA3Su4qvD185lDvTn+/PJGm9KsnaPEMkbamLsFQKfhumquU9iU
-	 2gWawYHQuzTZhLmhFldHTH9o9dca7jJ5/Ex+QWdngQd2K7d3JhVfLFnK9nC8RBpAPlQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=Em2NO1wS;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.72.10
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013010.outbound.protection.outlook.com [52.101.72.10])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.16
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794592938;
+	b=F1CvxMI4dk6onbIzX4Jno4CZlkRLai9IjY1gQyVDylL6U9XldB0nXzEozbvacX9B5PQi
+	 K1Ti81OK3/UU0fHbp5jDx8QU59hLHyKWCCA1jXb0cdltOfJuexMugmUS/miU2SqxFvs0W
+	 dvhgxj/ax3id96GJ0gsh5SlOLQSM6qWa4/v+RnWBQzkjSsFtEe8/5DNR/vkJopLujffJA
+	 IewIzzlHs/lyz/+HQqaVIx63Ov81KczYo4eKGchcQVy9qCbG/s9RUVBFgK5526Rci3PJ2
+	 tVYmR91/j7lC3AJ9dprXrLW/ejUPnHqhLvRzExw/yJZSxPwdTc222kUaSmuGQq1bqdA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794592938;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=FLDB5pDlTBVxUsUsGFkW1bI/BY3fQv1VTeioFmQJmvE=;
+	b=s9rLc/ePNXyQtsMYws2yRJ6pxb1J7aWv2LFTVv/0ZyYndysaqZMU8AlK2gabxvW5ypU6
+	 yJy57CVjsgA5b5TS3Ivc+RnPwbPz/60O2uqKvezNtCuNwCs3+LV554Ul1apIbmf2a/tMm
+	 RoBnmOZglHRrRhaHx0kdvFDoYFHxeRX/1wuouIR3jPTz2lz//dCvX+VegHaLz8MrfhIPx
+	 bP2fAej1V8RpaKQbnxubje01SkC1bxKRCjwJ4HMmjjP8qen7IS0NgWqrOnylN+pDmWUFA
+	 dm1z13cU1VkAlwcjSkh+wRQx2SAJwFFhlx+ln+fYX4WhqFgX58QcrJMkuG3/BFT2jTQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=i9CWb5xc;
+	arc=none smtp.remote-ip=192.198.163.16
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7473606E202;
-	Fri, 13 Nov 2026 17:50:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D7473606E202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9421606A33D;
+	Fri, 13 Nov 2026 18:02:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E9421606A33D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=Em2NO1wS
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ePca871bwiPSkhwMO4D0H38ihLOqDJ1AG5jxtho36isWl39kpCutwoKe8IoPU9mmKHUM3ZtbSVVx2ZLeP8qd+84Ohvcli8I0JucOQ0Dimso9SbDrWg6qpdlODNvQPzfM6B9pn8VJs3b3Znher3tzBcXBMixwQA6e6Zv0XfTTmpile49TGzWvJ6zSuQFY3MZTPvOZkextl78UT7puLQo84eTigaZKrj2HNmRQBgwbvdFaccSwGRTOkcAo9PzmgnJNkgiKJX+p+d2AvDwRU8gzZUbq7RE/fxCJq0kCF4CYxfCSbIDeIsJhaE8gIcK7ENTvgh5LKcPz/o4vvWZHzZ6l2Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Dt+ji8sd8nM1vmQBG/dBACEOsg14d0UUVH8o79hqlxI=;
- b=IUoG39oS59SUFRGWyKhcsXQvsIuCUoy8lZ8tavc07EZsCLUQLxpdvBNfO8qD/CBY6FrMvL1h1hFyWijZXXzN8XW0Eb2avtaZ0DFpPt1JYFTQw6TjPklOnn7QISACw7iiJoTYL5Eg5ye05u2p8Wqg5oChurxdQf/aWuv7mlOqNjX7xv7CJ6AHWpMJAa1VFoWnHRC8dHiIcUYHOLRPsxVwIxKz73GfQsLbGNkbs50rwzzNnJ0kq+UpMwjEHqOAvLnl5rCjOWJetUluwwt3EihzbJXMhCFoVNJAWsXo8ok1sOPRpyJ56LGKTWzdd+yNI+Uu9RVqMeB2RyMVOcacRUJCmw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Dt+ji8sd8nM1vmQBG/dBACEOsg14d0UUVH8o79hqlxI=;
- b=Em2NO1wSfR3icHXmyGUkpr+J2eIAxUUZzl0BaWYyaTztnzl+139Akvn18heVpo23alRL5gyuhLs7Gh5RJgzv6Ad60RPPPVDPadefLWI0Wl22OU+RlVf541twzzzyZZ3xIOhfQGMLAtnlKiJ420HoFDmEZReFYcybEIroqzxXzxbo9hMhd1GXBm/JE3TKxUZxnvWjUCCU6FZVXwartL9aX8zMo9amePtxk5nCaeLiB5zh1/kCygIemtDnxGkG5ZcQch1nulsgTsjUraRCKVcZo3Y0JXC90HBpvtYmu2eyRv/uQGXTXApXtfOLx3Coz1o8eMqznmL5YgObv5K9BZXm7Q==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
- by AM0PR04MB11915.eurprd04.prod.outlook.com (2603:10a6:20b:701::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.10; Fri, 13 Nov
- 2026 17:50:14 +0000
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b%4]) with mapi id 15.21.0615.009; Fri, 13 Nov 2026
- 17:50:14 +0000
-Date: Fri, 13 Nov 2026 12:50:06 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Nathan Lynch <nathan.lynch@amd.com>
-Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Rientjes <rientjes@google.com>, John.Kariuki@amd.com,
-	Jonathan Cameron <jic23@kernel.org>,
-	Kinsey Ho <kinseyho@google.com>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	PradeepVineshReddy.Kodamati@amd.com,
-	Shivank Garg <shivankg@amd.com>,
-	Stephen Bates <Stephen.Bates@amd.com>,
-	Tycho Andersen <tycho@kernel.org>, Wei Huang <wei.huang2@amd.com>,
-	Wei Xu <weixugc@google.com>, dmaengine@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 25/25] dmaengine: sdxi: Add DMA engine provider
-Message-ID: <avdNzgMDdDrcioVf@lizhi-Precision-Tower-5810>
-References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-25-3668ccc7aab8@amd.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261103-sdxi-base-v4-25-3668ccc7aab8@amd.com>
-X-ClientProxiedBy: DM6PR04CA0006.namprd04.prod.outlook.com
- (2603:10b6:5:334::11) To MI3PR04MB12438.eurprd04.prod.outlook.com
- (2603:10a6:290:76::14)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=i9CWb5xc
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794592937; x=1826128937;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=JU8v7QLVsxSJAm5rcv+VDpYojpjJMkR+WhiIM3lQ4dA=;
+  b=i9CWb5xcHNDQEHOj+nV0r8IC12zbTkI627pUEC4tOpHvEFA2Q3WAvroc
+   mBgkhOyB2F2nLr5NfLUjWBTOduC/MCriBkb6lz83SMTC8Ul+BpRoWKzdj
+   sseH5zNYiWNSwqztaqbfNceGxNMPPsaWG7o9gfLb//bv+XrP92Ns+KHgV
+   h7nPYvyoIS9fmR3HZLbwZZbLHkSCmrM+XQicQ7Kpd8t3qq7UQB5sUpiJB
+   WwsNuBO9m7yqzuzTwIGold7Nj1Cj9srN6mNYN1/kcgI0XqNUaGWBvxZZc
+   aOlTQLaJgtPFDjCc5L46auqpvRSN70MSwDeAe+B19WZP5+cUebGbK81+w
+   w==;
+X-CSE-ConnectionGUID: 6QX7wfpCQIixH/9VbiQdlA==
+X-CSE-MsgGUID: JxqdI3lDQ/KjHnVIv9mPvg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11965"; a="3436608"
+X-IronPort-AV: E=Sophos;i="6.27,212,1787036400"; 
+   d="scan'208";a="3436608"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2026 10:02:17 -0800
+X-CSE-ConnectionGUID: jvWr4LadS/CRmZ4F+1IJbw==
+X-CSE-MsgGUID: 8dWcEGPXT0yxBSfNzxGwfg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,212,1787036400"; 
+   d="scan'208";a="10760617"
+Received: from schen9-mobl4.amr.corp.intel.com (HELO [10.125.108.6]) ([10.125.108.6])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2026 10:02:15 -0800
+Message-ID: <8f06ddfa-1c8d-4421-a830-8429b9e5ee88@intel.com>
+Date: Fri, 13 Nov 2026 11:02:13 -0700
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -106,670 +72,223 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|AM0PR04MB11915:EE_
-X-MS-Office365-Filtering-Correlation-Id: c25b19de-db08-483d-9573-08df41ae9273
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|23010399003|366016|1800799024|19092799006|261021133027099003|10067099003|4143699003|11063799006|56012099006|261022105027099003|261021130227099003|261022075727099003|261026140227099003|261026135527099003|261026121527099003|261022115727099003|261021135927099003|261021121427099003|261026130827099003|261028144727099003|261022113327099003|261102123227099003|261021123027099003|261009223027099003|18002099003|22082099003|6133799003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	D+/Z1CO3+e8x9eyMT+oQdNxG4SBo+Ix5FMrLey0I0GRi76m7bLFPQOFAihLBG0SyqYDean5lfNcOZnxBbVNEFJ2GBLMbfhLtbTJfKCJInkI+lb2Cow/qXqGmP6lbOQpnXoOCYwKEVk9/gEIa4fRNcn0dL7Ec2nEsiLJNeMOgnxIE2Anbgx+vh24XSQMfnndSBtUeoEtPEyjPWlDSfJBH4o7kaTMVzBBu7+UKsCB8usddP/VyLeO+iAH36NrzcPvQt0k/nX3MwoPjzJiqW1TYjN6UpWPLjwpQZT75s9y6vMI/0xlgH2fycMNYfdlEHI05G9tYN0nH2Y80ySSzoodSQcX0KLdQkPM2ZR5xajvTQrcPafqJFlQpg+t31bKxzRhCKA6CAP9HkmvtBx0/PCAhFKVhTi8qn+dSS83s/QnPxqK+KGvBbIOr/h4/r7R8Yb0mDErWXZyLkF+WKsWzAZPNp3sP4NG2GY7xpd8fmS1msKi1hM86nUvH5ktyC3+5w0/dHHS/k2o5DYMUlP+Mnf1XdzUNw9Y3y0wXQAu5lcPm09DU6l2UycxJVEjRfD+45jTBhdwVj8htiyo+L0PNCmE1cRLfKVVI68CJv9Z1fJcth+pylxS12Iu3KE59vsX6wOT0zhGUHdSikaPGmZBkwglnX/XevCCb2RuSmEVdnkjY8pI=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(366016)(1800799024)(19092799006)(261021133027099003)(10067099003)(4143699003)(11063799006)(56012099006)(261022105027099003)(261021130227099003)(261022075727099003)(261026140227099003)(261026135527099003)(261026121527099003)(261022115727099003)(261021135927099003)(261021121427099003)(261026130827099003)(261028144727099003)(261022113327099003)(261102123227099003)(261021123027099003)(261009223027099003)(18002099003)(22082099003)(6133799003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?+ST8afYnnh8abhcVQlw90hSINyS6cMcvyFViAB9sHJkHB277WjCFhBbSXIDO?=
- =?us-ascii?Q?uLXok0LMffjV2B9ry9f/zyP6Se7/kniLpdDu7RJ7Tr3eAQDi2i9gUXph26xM?=
- =?us-ascii?Q?4I796HH3ZdaU+7PCffjxTIPb2zKGrPB0kqqqDN1KiY9EmDLeiEEptJpmZIrC?=
- =?us-ascii?Q?a6vSxcJO5JfiH8vyntnVyLzPrBgiUhc2zhWqncpjq5UAvUK922Wlzm0viGy9?=
- =?us-ascii?Q?azx9FU/GgHANxHvJkPhLaRVbTF8EDXnjohowxUmAFPNUOpyfFJHbURzzI0hd?=
- =?us-ascii?Q?2NjhYr7CmEX5v2fd/kmY4wEN24kpm7GTdm5QJxn9wqd9d+TouX+8FHFCD6bm?=
- =?us-ascii?Q?RMQjFnZQ+JW+TCwY6TfY7NgvRnOmwg73JRbVcM40sxDoVGOdg7dxS/JHyG2L?=
- =?us-ascii?Q?Mc8rEHlQ7m1aMqwgAObwhP/23Qq6H3sdK1uAtzYekGK7rQTtkAgpVjM3aJo7?=
- =?us-ascii?Q?wBjXM64vVbSV6EUx694uEoQs5JI2LI9byTGSR2MlSVehqYaNj4jpwOxxNdso?=
- =?us-ascii?Q?9M/74k9gG8HitJvt/PlbH689K56mRPLhuF3cW9jozSGNNUC1WfMLfgSkghvC?=
- =?us-ascii?Q?dC5RDugF21ruZ9IHK/92zgFgRoCfW52P2bhuh87NXH2P6OQ4mFIX2bsWoiLC?=
- =?us-ascii?Q?AdaJPqJFFT0Kv2zSILj6qJvmbNm4Z6Ncxm87cn3ITR0CVclCgSPVkzlERHed?=
- =?us-ascii?Q?UN5G86eKe/Xtu0jfLm4YElNHB7Kh1JFIkayEVeThRmXZ6R0/4ymoOH2kwL4M?=
- =?us-ascii?Q?E3mKOr3ufW7wWPDOzOG+Jo7ihr5i7ZJxjfdIk1RpZq6cIbNFiTzjIOgFvi6p?=
- =?us-ascii?Q?UQ+fEz7mOJO0lnkGekS3lFJjvyiuKzSeE/uI8KMwiRv5Q+UMA5auPGgda2nv?=
- =?us-ascii?Q?v7ROPY8o66H3mhjUtQKsc3O5r18zoyyYEiAdFrQ5ZpAAbeMpXkQj3RUU8cwh?=
- =?us-ascii?Q?jV6J/a9aK8JyCba5rnhvrpaRNd3W1Bm6aV/LtaXaeOXbCsB9GTyJ6TLOBCjz?=
- =?us-ascii?Q?iYsEnarnaxLF389DSE/E3AogQFfuqMvFMVSM2j37oGE8rYU7061N2L9AqyrH?=
- =?us-ascii?Q?wafucgUnEqMXGfv+nIHHJMFZTSzTkkImHBS0uTNkKRaH1stU5RYsdfeHphZZ?=
- =?us-ascii?Q?/CtoYYme4VHjYmipuCJ0yyGKSqQhNJ2NKZvE0pSdNauP83OPumiKAtjVAb5e?=
- =?us-ascii?Q?BSVlFIAdSS2dK/A/GU/Bs7KGX0E6QEWgj8c2iU49vJ2binzbkGuLJ+Bbgrlq?=
- =?us-ascii?Q?KPufrHwdcCZFD0eHHVcrlTkkfw8cNYUBZ2LOwnZIPYpuMnYMOAO7ndn3ZPmL?=
- =?us-ascii?Q?/3HftmNHsvCV7e4GOCVPN+G4j9pEX53sykpSmK7hn2gteCTHwIjFiiu5NxxF?=
- =?us-ascii?Q?eiG2gyVEYpjgxlcuEND60QzT9+wj1TKWIk1qGqNKdby1CUq2MFwlZiEjKL9d?=
- =?us-ascii?Q?EpDxCK4MBb9JglfprqlsDaCjOJYgNKE3L5x0FzhNzQfoppx8lulW6BqHoiB3?=
- =?us-ascii?Q?4aFeW/XSLSEyfn0SUoJWrJZ3/BVjsJkD6rIgIC4L+i/cknLxIvup9tolTm5s?=
- =?us-ascii?Q?DvDdGNrTzkE9ojhLk58MA9tlEFkG3QDrWfAuQLwRb1AcVNf8WO9yxHayTEtu?=
- =?us-ascii?Q?UHQq/FImbkKha8G/Gn5RN4sWJGQ5Vj7zqKr+nWTM6kUb9jD+h9OC/mkhCXt1?=
- =?us-ascii?Q?J9YFyvsZojK0B8DM9MNmGuE8nqp282Tt1pH4OapomYLaTGevMez5BoNal9yq?=
- =?us-ascii?Q?MZyJtj0wlEn5T3Vnkana181+TWC8fqjTHjk9DhmjNMo7lhbC0SJm?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c25b19de-db08-483d-9573-08df41ae9273
-X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Nov 2026 17:50:14.7905
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 275j+3MHFUMsxb9ITofbsjUoXTtrGjOt5HSn/qnCCGCviWLdybjT1FFZ0LpSQHN8R6QWA0cj7jnc45f8rEx7hRU1cQqB8hJpDH3lsLl5mnEiQ/rXP08Qu84DZi5f2bQ2
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB11915
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v17 10/19] cxl: Build register block helpers into the
+ kernel
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Ira Weiny <iweiny@kernel.org>, Jonathan Cameron <jic23@kernel.org>,
+ Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Li Ming <ming.li@zohomail.com>, Joshua Machauer <machaujo@amazon.de>,
+ Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20261105185917.2667656-1-smadhavan@nvidia.com>
+ <20261105185917.2667656-11-smadhavan@nvidia.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20261105185917.2667656-11-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 03, 2026 at 08:50:06PM -0600, Nathan Lynch wrote:
-> Register a virt-dma memcpy provider with a configurable number of channels
-> per function. Publish transactions in cookie order, batching copies behind
-> fenced completion interrupts. Keep transactions pending when ring slots or
-> completion blocks are unavailable.
->
-> Published descriptors cannot be withdrawn. Termination frees submitted and
-> pending transactions and retains published transactions for reaping without
-> completing cookies or invoking callbacks.
->
-> Synchronize by polling and reaping transactions under the channel lock,
-> then flushing virt-dma callbacks. The wait is uninterruptible and bounded
-> to ten seconds. On timeout, suppress remaining callbacks and retain unreaped
-> status blocks until context teardown; this timeout path does not establish
-> hardware quiescence for client buffers.
->
-> Co-developed-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
+
+
+On 11/5/26 11:59 AM, Srirangan Madhavan wrote:
+> Build register discovery with the built-in HDM helpers so PCI enumeration
+> can use it even when cxl_core is modular. Export the interfaces used by
+> cxl_core and preserve the BAR and offset in the register map.
+> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> Reviewed-by: Richard Cheng <icheng@nvidia.com>
+
+This patch does what the first sentence claims, but then a bunch of misc stuff tagged along with it. Please keep commits to one logical change per commit.
+
+Move the bar and bar_offset changes to when they are needed.
+
+Move cxl_dvsec_hdm_count_valid() to where it's being used.
+
+the 'struct pci_dev' forward declare, is this needed?
+
+Also the exports can use EXPORT_SYMBOL_FOR_MODULES(..., "cxl_core") I think?
+
+DJ
+
 > ---
->  drivers/dma/sdxi/Kconfig  |   1 +
->  drivers/dma/sdxi/Makefile |   1 +
->  drivers/dma/sdxi/device.c |   2 +
->  drivers/dma/sdxi/dma.c    | 509 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/dma/sdxi/dma.h    |  11 +
->  5 files changed, 524 insertions(+)
->
-> diff --git a/drivers/dma/sdxi/Kconfig b/drivers/dma/sdxi/Kconfig
-> index 314b3e725ccb..85e23608405c 100644
-> --- a/drivers/dma/sdxi/Kconfig
-> +++ b/drivers/dma/sdxi/Kconfig
-> @@ -4,6 +4,7 @@ config SDXI_CORE
->  	# SDXI 1.0 9 MMIO Control Registers.
->  	depends on 64BIT
->  	select DMA_ENGINE
-> +	select DMA_VIRTUAL_CHANNELS
->  	help
->  	  Enable support for Smart Data Accelerator Interface (SDXI)
->  	  Platform Data Mover devices. SDXI is a vendor-neutral
-> diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-> index 1e261fb03225..3a1d36997b44 100644
-> --- a/drivers/dma/sdxi/Makefile
-> +++ b/drivers/dma/sdxi/Makefile
-> @@ -5,6 +5,7 @@ sdxi-core-y := \
->  	context.o     \
->  	descriptor.o  \
->  	device.o      \
-> +	dma.o         \
->  	ring.o
->
->  obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
-> diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
-> index 30c4e687cedf..265ebea1e350 100644
-> --- a/drivers/dma/sdxi/device.c
-> +++ b/drivers/dma/sdxi/device.c
-> @@ -23,6 +23,7 @@
->  #include <linux/xarray.h>
->
->  #include "context.h"
-> +#include "dma.h"
->  #include "hw.h"
->  #include "mmio.h"
->  #include "sdxi.h"
-> @@ -424,6 +425,7 @@ static int sdxi_device_init(struct sdxi_dev *sdxi)
->  	if (err)
->  		return err;
->
-> +	sdxi_dma_register(sdxi);
->  	return 0;
+>  drivers/cxl/core/Makefile |  3 +--
+>  drivers/cxl/core/regs.c   |  9 +++++++++
+>  drivers/cxl/cxl.h         |  3 ---
+>  include/cxl/cxl.h         |  5 +++++
+>  include/cxl/pci.h         | 13 +++++++++++++
+>  tools/testing/cxl/Kbuild  |  1 -
+>  6 files changed, 28 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> index 9971efb237fb..9a77e68d44ce 100644
+> --- a/drivers/cxl/core/Makefile
+> +++ b/drivers/cxl/core/Makefile
+> @@ -1,6 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> -obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o hdm_state.o
+> +obj-$(subst m,y,$(CONFIG_CXL_BUS)) += hdm_regs.o hdm_state.o regs.o
+>  obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+>  
+>  ccflags-y += -I$(srctree)/drivers/cxl
+> @@ -8,7 +8,6 @@ CFLAGS_trace.o = -DTRACE_INCLUDE_PATH=. -I$(src)
+>  
+>  cxl_core-y := port.o
+>  cxl_core-y += pmem.o
+> -cxl_core-y += regs.o
+>  cxl_core-y += memdev.o
+>  cxl_core-y += mbox.o
+>  cxl_core-y += pci.o
+> diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c
+> index 20c2d9fbcfe7..def3c20d1a7a 100644
+> --- a/drivers/cxl/core/regs.c
+> +++ b/drivers/cxl/core/regs.c
+> @@ -200,6 +200,7 @@ void __iomem *devm_cxl_iomap_block(struct device *dev, resource_size_t addr,
+>  
+>  	return ret_val;
 >  }
->
-> diff --git a/drivers/dma/sdxi/dma.c b/drivers/dma/sdxi/dma.c
-> new file mode 100644
-> index 000000000000..512855c83da2
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/dma.c
-> @@ -0,0 +1,509 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
+> +EXPORT_SYMBOL_FOR_MODULES(devm_cxl_iomap_block, "cxl_core");
+>  
+>  int cxl_map_component_regs(const struct cxl_register_map *map,
+>  			   struct cxl_component_regs *regs,
+> @@ -285,6 +286,8 @@ static bool cxl_decode_regblock(struct pci_dev *pdev, u32 reg_lo, u32 reg_hi,
+>  	}
+>  
+>  	map->reg_type = reg_type;
+> +	map->bar = bar;
+> +	map->bar_offset = offset;
+>  	map->resource = pci_resource_start(pdev, bar) + offset;
+>  	map->max_size = pci_resource_len(pdev, bar) - offset;
+>  	return true;
+> @@ -309,6 +312,7 @@ static int __cxl_find_regblock_instance(struct pci_dev *pdev, enum cxl_regloc_ty
+>  	*map = (struct cxl_register_map) {
+>  		.host = &pdev->dev,
+>  		.resource = CXL_RESOURCE_NONE,
+> +		.bar = -1,
+>  	};
+>  
+>  	regloc = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
+> @@ -339,6 +343,8 @@ static int __cxl_find_regblock_instance(struct pci_dev *pdev, enum cxl_regloc_ty
+>  	}
+>  
+>  	map->resource = CXL_RESOURCE_NONE;
+> +	map->bar = -1;
+> +	map->bar_offset = 0;
+>  	if (index == CXL_INSTANCES_COUNT)
+>  		return instance;
+>  
+> @@ -518,6 +524,7 @@ u16 cxl_rcrb_to_aer(struct device *dev, resource_size_t rcrb)
+>  
+>  	return offset;
+>  }
+> +EXPORT_SYMBOL_NS_GPL(cxl_rcrb_to_aer, "CXL");
+>  
+>  static resource_size_t cxl_rcrb_to_linkcap(struct device *dev, struct cxl_dport *dport)
+>  {
+> @@ -634,6 +641,7 @@ resource_size_t __rcrb_to_component(struct device *dev, struct cxl_rcrb_info *ri
+>  
+>  	return component_reg_phys;
+>  }
+> +EXPORT_SYMBOL_NS_GPL(__rcrb_to_component, "CXL");
+>  
+>  resource_size_t cxl_rcd_component_reg_phys(struct device *dev,
+>  					   struct cxl_dport *dport)
+> @@ -642,3 +650,4 @@ resource_size_t cxl_rcd_component_reg_phys(struct device *dev,
+>  		return CXL_RESOURCE_NONE;
+>  	return __rcrb_to_component(dev, &dport->rcrb, CXL_RCRB_UPSTREAM);
+>  }
+> +EXPORT_SYMBOL_NS_GPL(cxl_rcd_component_reg_phys, "CXL");
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 688350c7c5fb..ad4e80be2bd7 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -239,9 +239,6 @@ enum cxl_regloc_type;
+>  int cxl_count_regblock(struct pci_dev *pdev, enum cxl_regloc_type type);
+>  int cxl_find_regblock_instance(struct pci_dev *pdev, enum cxl_regloc_type type,
+>  			       struct cxl_register_map *map, unsigned int index);
+> -int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
+> -		      struct cxl_register_map *map);
+> -int cxl_setup_regs(struct cxl_register_map *map);
+>  struct cxl_dport;
+>  int cxl_dport_map_rcd_linkcap(struct pci_dev *pdev, struct cxl_dport *dport);
+>  
+> diff --git a/include/cxl/cxl.h b/include/cxl/cxl.h
+> index 341a7c52894a..ea23bc15d00e 100644
+> --- a/include/cxl/cxl.h
+> +++ b/include/cxl/cxl.h
+> @@ -27,6 +27,7 @@ enum cxl_devtype {
+>  
+>  struct cxl_region;
+>  struct cxl_hdm_info;
+> +struct pci_dev;
+>  
+>  enum cxl_decoder_type {
+>  	CXL_DECODER_DEVMEM = 2,
+> @@ -150,6 +151,8 @@ struct cxl_pmu_reg_map {
+>   * @base: virtual base of the register-block-BAR + @block_offset
+>   * @resource: physical resource base of the register block
+>   * @max_size: maximum mapping size to perform register search
+> + * @bar: PCI BAR containing the register block
+> + * @bar_offset: register block offset relative to @bar
+>   * @reg_type: see enum cxl_regloc_type
+>   * @component_map: cxl_reg_map for component registers
+>   * @device_map: cxl_reg_maps for device registers
+> @@ -160,6 +163,8 @@ struct cxl_register_map {
+>  	void __iomem *base;
+>  	resource_size_t resource;
+>  	resource_size_t max_size;
+> +	int bar;
+> +	resource_size_t bar_offset;
+>  	u8 reg_type;
+>  	union {
+>  		struct cxl_component_reg_map component_map;
+> diff --git a/include/cxl/pci.h b/include/cxl/pci.h
+> index 3e0000015871..b15d7e415e27 100644
+> --- a/include/cxl/pci.h
+> +++ b/include/cxl/pci.h
+> @@ -4,6 +4,8 @@
+>  #ifndef __CXL_CXL_PCI_H__
+>  #define __CXL_CXL_PCI_H__
+>  
+> +#include <linux/types.h>
+> +
+>  /* Register Block Identifier (RBI) */
+>  enum cxl_regloc_type {
+>  	CXL_REGLOC_RBI_EMPTY = 0,
+> @@ -19,4 +21,15 @@ struct pci_dev;
+>  
+>  int cxl_pci_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
+>  		       struct cxl_register_map *map);
+> +int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
+> +		      struct cxl_register_map *map);
+> +int cxl_setup_regs(struct cxl_register_map *map);
 > +/*
-> + * SDXI dmaengine provider
-> + *
-> + * Copyright Advanced Micro Devices, Inc.
+> + * CXL r4.0 sec 8.1.3.1: a CXL.mem capable device reports one or two HDM
+> + * ranges. 00b is illegal when Mem_Capable is set and 11b is reserved.
 > + */
-> +
-> +#include <linux/cleanup.h>
-> +#include <linux/delay.h>
-> +#include <linux/dev_printk.h>
-> +#include <linux/container_of.h>
-> +#include <linux/dma-mapping.h>
-> +#include <linux/dmaengine.h>
-> +#include <linux/iopoll.h>
-> +#include <linux/list.h>
-> +#include <linux/lockdep.h>
-> +#include <linux/module.h>
-> +#include <linux/overflow.h>
-> +#include <linux/spinlock.h>
-> +
-> +#include "../dmaengine.h"
-> +#include "../virt-dma.h"
-> +#include "completion.h"
-> +#include "context.h"
-> +#include "descriptor.h"
-> +#include "dma.h"
-> +#include "ring.h"
-> +#include "sdxi.h"
-> +
-> +static unsigned short dma_channels = 1;
-> +module_param(dma_channels, ushort, 0644);
-> +MODULE_PARM_DESC(dma_channels, "DMA channels per function (default: 1)");
-> +
-> +/*
-> + * Each channel owns an SDXI context. Transactions enter the ring in cookie
-> + * order. Each transaction produces one copy descriptor with its own completion
-> + * block, and batches end with a shared fenced interrupt descriptor. Each copy
-> + * owns its completion block until reaped. Transactions awaiting capacity remain
-> + * pending. Termination retains published transactions for reaping while
-> + * suppressing their callbacks.
-> + */
-> +
-> +struct sdxi_dma_chan {
-> +	struct virt_dma_chan vchan;
-> +	struct sdxi_cxt *cxt;
-> +	unsigned int vector;
-> +	unsigned int irq;
-> +	struct sdxi_akey_ent *akey;
-> +	/*
-> +	 * Transactions awaiting ring slots or completion blocks; protected by
-> +	 * vchan.lock.
-> +	 */
-> +	struct list_head pending;
-> +};
-> +
-> +struct sdxi_dma_txd {
-> +	struct virt_dma_desc vdesc;
-> +	struct sdxi_copy copy;	/* Copy operation parameters */
-> +	/* Completion ownership is acquired at issue and released after reaping. */
-> +	struct sdxi_completion completion;
-> +};
-> +
-> +static void sdxi_dma_reap_locked(struct sdxi_dma_chan *sdchan);
-> +
-> +struct sdxi_dma_dev {
-> +	struct dma_device dma_dev;
-> +	size_t nr_channels;
-> +	struct sdxi_dma_chan sdchan[] __counted_by(nr_channels);
-> +};
-> +
-> +static struct sdxi_dma_chan *to_sdxi_dma_chan(const struct dma_chan *dma_chan)
+> +static inline bool cxl_dvsec_hdm_count_valid(unsigned int hdm_count)
 > +{
-> +	const struct virt_dma_chan *vchan;
-> +
-> +	vchan = container_of_const(dma_chan, struct virt_dma_chan, chan);
-> +	return container_of(vchan, struct sdxi_dma_chan, vchan);
+> +	return hdm_count == 1 || hdm_count == 2;
 > +}
-> +
-> +static struct sdxi_dma_txd *
-> +to_sdxi_dma_txd(const struct virt_dma_desc *vdesc)
-> +{
-> +	return container_of(vdesc, struct sdxi_dma_txd, vdesc);
-> +}
-> +
-> +static void sdxi_dma_txd_free(struct virt_dma_desc *vdesc)
-> +{
-> +	struct sdxi_dma_txd *txd = to_sdxi_dma_txd(vdesc);
-> +
-> +	kfree(txd);
-> +}
-> +
-> +static struct dma_async_tx_descriptor *
-> +sdxi_dma_prep_memcpy(struct dma_chan *dma_chan, dma_addr_t dst,
-> +		     dma_addr_t src, size_t len, unsigned long flags)
-> +{
-> +	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
-> +	struct sdxi_cxt *cxt = sdchan->cxt;
-> +	u16 akey_index = sdxi_akey_index(cxt, sdchan->akey);
-> +	struct sdxi_dma_txd *txd;
-> +	struct sdxi_copy copy = {
-> +		.src = src,
-> +		.dst = dst,
-> +		.src_akey = akey_index,
-> +		.dst_akey = akey_index,
-> +		.len = len,
-> +	};
-> +
-> +	/*
-> +	 * Validate now, with a throwaway encode onto the stack. The real
-> +	 * encode into the ring happens at issue.
-> +	 */
-> +	if (sdxi_encode_copy(&(struct sdxi_desc){}, &copy))
-> +		return NULL;
-> +
-> +	txd = kmalloc_obj(*txd, GFP_NOWAIT);
-> +	if (!txd)
-> +		return NULL;
-> +
-> +	*txd = (typeof(*txd)) {
-> +		.copy = copy,
-> +	};
-> +
-> +	return vchan_tx_prep(&sdchan->vchan, &txd->vdesc, flags);
-> +}
-> +
-> +static enum dma_status sdxi_tx_status(struct dma_chan *chan,
-> +				      dma_cookie_t cookie,
-> +				      struct dma_tx_state *state)
-> +{
-> +	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(chan);
-> +	struct virt_dma_desc *vdesc;
-> +
-> +	/* Under the lock for a consistent cookie snapshot; the IRQ reaps. */
-> +	guard(spinlock_irqsave)(&sdchan->vchan.lock);
-> +
-> +	/* vchan_find_desc() only returns issued txds, which own a completion. */
-> +	vdesc = vchan_find_desc(&sdchan->vchan, cookie);
-> +	if (vdesc) {
-> +		struct sdxi_dma_txd *txd = to_sdxi_dma_txd(vdesc);
-> +
-> +		if (sdxi_cst_blk_check(txd->completion.cst_blk) == SDXI_COMPLETION_ERROR)
-> +			return DMA_ERROR;
-> +	}
-> +
-> +	return dma_cookie_status(chan, cookie, state);
-> +}
-> +
-> +/*
-> + * Fill capacity with complete, fenced batches in cookie order. Return true
-> + * if descriptors were published; the caller kicks once with the lock held.
-> + */
-> +static bool sdxi_dma_drain_locked(struct sdxi_dma_chan *sdchan)
-> +{
-> +	struct sdxi_cxt *cxt = sdchan->cxt;
-> +	struct sdxi_ring_state *rs = cxt->ring_state;
-> +	bool pushed = false;
-> +
-> +	lockdep_assert_held(&sdchan->vchan.lock);
-> +
-> +	while (!list_empty(&sdchan->pending)) {
-> +		struct virt_dma_desc *vdesc;
-> +		struct sdxi_ring_resv resv;
-> +		struct sdxi_desc *desc;
-> +		size_t claimed = 0, copies, i = 0;
-> +
-> +		/* Claim a pending prefix, stopping at a flag boundary or capacity limit. */
-> +		list_for_each_entry(vdesc, &sdchan->pending, node) {
-> +			struct sdxi_dma_txd *txd = to_sdxi_dma_txd(vdesc);
-> +
-> +			if (!sdxi_cst_pool_get(cxt->cst_pool, &txd->completion))
-> +				break;
-> +			claimed++;
-> +			if (vdesc->tx.flags & (DMA_PREP_INTERRUPT | DMA_PREP_FENCE) ||
-> +			    claimed == rs->sq->count - 1)
-> +				break;
-> +		}
-> +		if (!claimed)
-> +			break;
-> +
-> +		/* Ring reservations cannot be undone; acquire completions first. */
-> +		copies = 0;
-> +		if (!sdxi_ring_try_reserve_range(rs, 2, claimed + 1, &resv))
-> +			copies = sdxi_ring_resv_count(&resv) - 1;
-> +
-> +		/* Return claims not covered by this (possibly failed) reservation. */
-> +		list_for_each_entry(vdesc, &sdchan->pending, node) {
-> +			struct sdxi_dma_txd *txd = to_sdxi_dma_txd(vdesc);
-> +
-> +			if (i == claimed)
-> +				break;
-> +			if (i++ < copies)
-> +				continue;
-> +			sdxi_cst_pool_put(cxt->cst_pool, txd->completion.cst_blk);
-> +			txd->completion = (struct sdxi_completion) {};
-> +		}
-> +		if (!copies)
-> +			break;
-> +		for (size_t i = 0; i < copies; i++) {
-> +			struct sdxi_dma_txd *txd;
-> +			struct sdxi_slot slot = sdxi_ring_resv_slot(&resv, i);
-> +
-> +			vdesc = list_first_entry(&sdchan->pending,
-> +						struct virt_dma_desc, node);
-> +			txd = to_sdxi_dma_txd(vdesc);
-> +			desc = sdxi_slot_desc(slot);
-> +			(void)sdxi_encode_copy(desc, &txd->copy); /* validated at prep */
-> +			sdxi_cxt_attach_cst(slot, &txd->completion);
-> +			sdxi_desc_make_valid(desc);
-> +			list_move_tail(&vdesc->node, &sdchan->vchan.desc_issued);
-> +		}
-> +
-> +		/*
-> +		 * FE waits for all copies before notifying and before parsing
-> +		 * subsequent copies (SDXI 1.0a 5.3, steps 7-9). One terminator
-> +		 * satisfies both flags and supplies internal completion IRQs.
-> +		 */
-> +		desc = sdxi_slot_desc(sdxi_ring_resv_slot(&resv, copies));
-> +		sdxi_encode_intr(desc, &(const struct sdxi_intr) {
-> +			.akey = sdxi_akey_index(cxt, sdchan->akey),
-> +		});
-> +		sdxi_desc_set_fence(desc);
-> +		sdxi_desc_make_valid(desc);
-> +		pushed = true;
-> +	}
-> +
-> +	return pushed;
-> +}
-> +
-> +static void sdxi_dma_issue_pending(struct dma_chan *dma_chan)
-> +{
-> +	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
-> +
-> +	guard(spinlock_irqsave)(&sdchan->vchan.lock);
-> +
-> +	list_splice_tail_init(&sdchan->vchan.desc_submitted, &sdchan->pending);
+>  #endif
+> diff --git a/tools/testing/cxl/Kbuild b/tools/testing/cxl/Kbuild
+> index 2be1df80fcc9..e80500f457a9 100644
+> --- a/tools/testing/cxl/Kbuild
+> +++ b/tools/testing/cxl/Kbuild
+> @@ -55,7 +55,6 @@ obj-m += cxl_core.o
+>  
+>  cxl_core-y := $(CXL_CORE_SRC)/port.o
+>  cxl_core-y += $(CXL_CORE_SRC)/pmem.o
+> -cxl_core-y += $(CXL_CORE_SRC)/regs.o
+>  cxl_core-y += $(CXL_CORE_SRC)/memdev.o
+>  cxl_core-y += $(CXL_CORE_SRC)/mbox.o
+>  cxl_core-y += $(CXL_CORE_SRC)/pci.o
 
-why not use vchan's desc_issued?
-
-Frank
-
-> +	if (sdxi_dma_drain_locked(sdchan))
-> +		sdxi_cxt_kick(sdchan->cxt);
-> +}
-> +
-> +static int sdxi_dma_terminate_all(struct dma_chan *dma_chan)
-> +{
-> +	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
-> +	struct virt_dma_chan *vchan = &sdchan->vchan;
-> +	LIST_HEAD(head);
-> +
-> +	/*
-> +	 * Prepared descriptors remain caller-owned. Free submitted and pending
-> +	 * transactions, and move published transactions to desc_terminated in ring
-> +	 * order for callback-free reaping.
-> +	 */
-> +	scoped_guard(spinlock_irqsave, &vchan->lock) {
-> +		list_splice_tail_init(&sdchan->pending, &head);
-> +		list_splice_tail_init(&vchan->desc_submitted, &head);
-> +		list_splice_tail_init(&vchan->desc_issued, &vchan->desc_terminated);
-> +	}
-> +	vchan_dma_desc_free_list(vchan, &head);
-> +
-> +	return 0;
-> +}
-> +
-> +/* Bound the wait for issued and pending copies to complete. */
-> +#define SDXI_DMA_SYNC_TIMEOUT_US	(10 * USEC_PER_SEC)
-> +
-> +/*
-> + * Reap without relying on the completion IRQ, and report whether the
-> + * device is done with every txd that has been or may be placed in the
-> + * ring. Pending txds count because dma_chan_put() synchronizes without
-> + * terminating first.
-> + */
-> +static bool sdxi_dma_idle(struct sdxi_dma_chan *sdchan)
-> +{
-> +	struct virt_dma_chan *vchan = &sdchan->vchan;
-> +
-> +	guard(spinlock_irqsave)(&vchan->lock);
-> +
-> +	sdxi_dma_reap_locked(sdchan);
-> +	if (sdxi_dma_drain_locked(sdchan))
-> +		sdxi_cxt_kick(sdchan->cxt);
-> +
-> +	return list_empty(&vchan->desc_terminated) &&
-> +	       list_empty(&vchan->desc_issued) &&
-> +	       list_empty(&sdchan->pending);
-> +}
-> +
-> +static void sdxi_dma_synchronize(struct dma_chan *dma_chan)
-> +{
-> +	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
-> +	struct virt_dma_chan *vchan = &sdchan->vchan;
-> +	LIST_HEAD(head);
-> +	bool idle;
-> +	int err;
-> +
-> +	/*
-> +	 * Callers cannot handle failure, so the wait is not interruptible.
-> +	 * Every completion was reaped under vchan.lock, so the tasklet that
-> +	 * runs its callback is already scheduled for vchan_synchronize().
-> +	 */
-> +	err = read_poll_timeout(sdxi_dma_idle, idle, idle, 100,
-> +				SDXI_DMA_SYNC_TIMEOUT_US, false, sdchan);
-> +	if (err) {
-> +		/*
-> +		 * Suppress callbacks for outstanding transactions. Completion blocks
-> +		 * not released by the reaper stay claimed until context teardown.
-> +		 */
-> +		scoped_guard(spinlock_irqsave, &vchan->lock) {
-> +			list_splice_tail_init(&vchan->desc_issued,
-> +					      &vchan->desc_terminated);
-> +			list_splice_tail_init(&sdchan->pending, &head);
-> +		}
-> +		vchan_dma_desc_free_list(vchan, &head);
-> +		dev_err(dma_chan->device->dev,
-> +			"timed out waiting for DMA channel %d to drain\n",
-> +			dma_chan->chan_id);
-> +	}
-> +
-> +	vchan_synchronize(vchan);
-> +}
-> +
-> +static void sdxi_dma_reap_locked(struct sdxi_dma_chan *sdchan)
-> +{
-> +	struct virt_dma_chan *vchan = &sdchan->vchan;
-> +	struct virt_dma_desc *vdesc, *tmp;
-> +
-> +	lockdep_assert_held(&vchan->lock);
-> +
-> +	/*
-> +	 * Terminated txds are still in the ring. Release them once the device
-> +	 * is done, without completing their cookies or invoking callbacks.
-> +	 */
-> +	list_for_each_entry_safe(vdesc, tmp, &vchan->desc_terminated, node) {
-> +		struct sdxi_dma_txd *txd = to_sdxi_dma_txd(vdesc);
-> +
-> +		if (sdxi_cst_blk_check(txd->completion.cst_blk) == SDXI_COMPLETION_PENDING)
-> +			break;
-> +
-> +		list_del(&vdesc->node);
-> +		sdxi_cst_pool_put(sdchan->cxt->cst_pool, txd->completion.cst_blk);
-> +		sdxi_dma_txd_free(vdesc);
-> +	}
-> +
-> +	/* Reap completed transactions in cookie order. */
-> +	while ((vdesc = vchan_next_desc(vchan))) {
-> +		struct sdxi_dma_txd *txd = to_sdxi_dma_txd(vdesc);
-> +		enum sdxi_completion_state state;
-> +
-> +		state = sdxi_cst_blk_check(txd->completion.cst_blk);
-> +		if (state == SDXI_COMPLETION_PENDING)
-> +			break;
-> +
-> +		if (state == SDXI_COMPLETION_ERROR)
-> +			txd->vdesc.tx_result.result = DMA_TRANS_ABORTED;
-> +
-> +		list_del(&vdesc->node);
-> +		sdxi_cst_pool_put(sdchan->cxt->cst_pool, txd->completion.cst_blk);
-> +		txd->completion = (struct sdxi_completion) {};
-> +		vchan_cookie_complete(&txd->vdesc);
-> +	}
-> +
-> +	sdxi_ring_wake_up(sdchan->cxt->ring_state);
-> +}
-> +
-> +static irqreturn_t sdxi_dma_cxt_irq(int irq, void *data)
-> +{
-> +	struct sdxi_dma_chan *sdchan = data;
-> +
-> +	guard(spinlock_irqsave)(&sdchan->vchan.lock);
-> +
-> +	sdxi_dma_reap_locked(sdchan);
-> +	/* Consumed completion blocks may let stalled pending txds proceed. */
-> +	if (sdxi_dma_drain_locked(sdchan))
-> +		sdxi_cxt_kick(sdchan->cxt);
-> +
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static int sdxi_dma_alloc_chan_resources(struct dma_chan *dma_chan)
-> +{
-> +	struct sdxi_dev *sdxi = dev_get_drvdata(dma_chan->device->dev);
-> +	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
-> +	int vector, irq, err;
-> +
-> +	sdchan->cxt = sdxi_cxt_new(sdxi);
-> +	if (!sdchan->cxt)
-> +		return -ENOMEM;
-> +	err = vector = sdxi_alloc_vector(sdxi);
-> +	if (vector < 0)
-> +		goto exit_cxt;
-> +
-> +	sdchan->vector = vector;
-> +
-> +	err = irq = sdxi_vector_to_irq(sdxi, vector);
-> +	if (irq < 0)
-> +		goto free_vector;
-> +
-> +	sdchan->irq = irq;
-> +
-> +	/*
-> +	 * Note this akey entry is used for both the completion
-> +	 * interrupt and source and destination access for copies.
-> +	 */
-> +	sdchan->akey = sdxi_alloc_akey(sdchan->cxt);
-> +	if (!sdchan->akey) {
-> +		err = -ENOMEM;
-> +		goto free_vector;
-> +	}
-> +
-> +	*sdchan->akey = (typeof(*sdchan->akey)) {
-> +		.intr_num = cpu_to_le16(FIELD_PREP(SDXI_AKEY_ENT_VL, 1) |
-> +					FIELD_PREP(SDXI_AKEY_ENT_IV, 1) |
-> +					FIELD_PREP(SDXI_AKEY_ENT_INTR_NUM,
-> +						   vector)),
-> +	};
-> +
-> +	err = request_irq(sdchan->irq, sdxi_dma_cxt_irq,
-> +			  IRQF_TRIGGER_NONE, "SDXI DMAengine", sdchan);
-> +	if (err)
-> +		goto free_akey;
-> +
-> +	err = sdxi_start_cxt(sdchan->cxt);
-> +	if (err)
-> +		goto free_irq;
-> +
-> +	return 0;
-> +free_irq:
-> +	free_irq(sdchan->irq, sdchan);
-> +free_akey:
-> +	sdxi_free_akey(sdchan->cxt, sdchan->akey);
-> +free_vector:
-> +	sdxi_free_vector(sdxi, vector);
-> +exit_cxt:
-> +	sdxi_cxt_exit(sdchan->cxt);
-> +	return err;
-> +}
-> +
-> +static void sdxi_dma_free_chan_resources(struct dma_chan *dma_chan)
-> +{
-> +	struct sdxi_dma_chan *sdchan = to_sdxi_dma_chan(dma_chan);
-> +	LIST_HEAD(head);
-> +
-> +	sdxi_stop_cxt(sdchan->cxt);
-> +	free_irq(sdchan->irq, sdchan);
-> +	sdxi_free_vector(sdchan->cxt->sdxi, sdchan->vector);
-> +	sdxi_free_akey(sdchan->cxt, sdchan->akey);
-> +	/* virt-dma does not know about the driver's pending list. */
-> +	scoped_guard(spinlock_irqsave, &sdchan->vchan.lock)
-> +		list_splice_tail_init(&sdchan->pending, &head);
-> +	vchan_dma_desc_free_list(&sdchan->vchan, &head);
-> +	vchan_free_chan_resources(to_virt_chan(dma_chan));
-> +	sdxi_cxt_exit(sdchan->cxt);
-> +}
-> +
-> +int sdxi_dma_register(struct sdxi_dev *sdxi)
-> +{
-> +	struct device *dev = sdxi->dev;
-> +	struct sdxi_dma_dev *sddev;
-> +	struct dma_device *dma_dev;
-> +	unsigned int nr_channels = dma_channels; /* writable module param; snapshot it */
-> +	int err;
-> +
-> +	if (!nr_channels)
-> +		return 0;
-> +	/*
-> +	 * TODO: Require IntrGrp support before registering the DMAengine provider
-> +	 * (SDXI 1.0a Table 6-1).
-> +	 */
-> +
-> +	sddev = devm_kzalloc(dev, struct_size(sddev, sdchan, nr_channels),
-> +			     GFP_KERNEL);
-> +	if (!sddev)
-> +		return -ENOMEM;
-> +
-> +	sddev->nr_channels = nr_channels;
-> +
-> +	dma_dev = &sddev->dma_dev;
-> +	*dma_dev = (typeof(*dma_dev)) {
-> +		.dev                 = dev,
-> +		.src_addr_widths     = DMA_SLAVE_BUSWIDTH_64_BYTES,
-> +		.dst_addr_widths     = DMA_SLAVE_BUSWIDTH_64_BYTES,
-> +		.directions          = BIT(DMA_MEM_TO_MEM),
-> +		.residue_granularity = DMA_RESIDUE_GRANULARITY_DESCRIPTOR,
-> +
-> +		.device_alloc_chan_resources = sdxi_dma_alloc_chan_resources,
-> +		.device_free_chan_resources  = sdxi_dma_free_chan_resources,
-> +
-> +		.device_prep_dma_memcpy = sdxi_dma_prep_memcpy,
-> +
-> +		.device_terminate_all = sdxi_dma_terminate_all,
-> +		.device_synchronize = sdxi_dma_synchronize,
-> +		.device_tx_status = sdxi_tx_status,
-> +		.device_issue_pending = sdxi_dma_issue_pending,
-> +	};
-> +
-> +	dma_cap_set(DMA_MEMCPY, dma_dev->cap_mask);
-> +	INIT_LIST_HEAD(&dma_dev->channels);
-> +
-> +	for (size_t i = 0; i < sddev->nr_channels; ++i) {
-> +		struct sdxi_dma_chan *sdchan = &sddev->sdchan[i];
-> +
-> +		sdchan->vchan.desc_free = sdxi_dma_txd_free;
-> +		vchan_init(&sdchan->vchan, &sddev->dma_dev);
-> +		INIT_LIST_HEAD(&sdchan->pending);
-> +	}
-> +
-> +	err = dmaenginem_async_device_register(dma_dev);
-> +	if (err)
-> +		return dev_warn_probe(dev, err, "failed to register dma device\n");
-> +
-> +	return 0;
-> +}
-> diff --git a/drivers/dma/sdxi/dma.h b/drivers/dma/sdxi/dma.h
-> new file mode 100644
-> index 000000000000..d38870ea7d91
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/dma.h
-> @@ -0,0 +1,11 @@
-> +/* SPDX-License-Identifier: GPL-2.0-only */
-> +/* Copyright Advanced Micro Devices, Inc. */
-> +
-> +#ifndef DMA_SDXI_DMA_H
-> +#define DMA_SDXI_DMA_H
-> +
-> +struct sdxi_dev;
-> +
-> +int sdxi_dma_register(struct sdxi_dev *sdxi);
-> +
-> +#endif /* DMA_SDXI_DMA_H */
->
-> --
-> 2.56.0
->
