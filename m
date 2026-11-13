@@ -1,44 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.209.128.108
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794563743;
-	b=fXwABgk1hBg0bBr6hyW1J87ZERSAztCLXbM+ztAj4XNhiGym4v+GM9kf1AoEXhev5IC4
-	 cgAxqqOr6efowgbjXwkj3ZFO3xQjM5DXJTP9xigRbzpWy2FcIHVfDkzmjmfmbIEpmyqKu
-	 d6FhN/d0VhU79QE0xZSdAsJoWfTlJt9eWqVJdI0DNDnyk/whwAxflHTsxd7/RIdIOgO4Y
-	 BDViOdnx4DBLMzIJxNj1ByBsZJApxss9DljyA5l8Svu6RQ3xjEKonaaDcRrodpsOA/S0N
-	 og414hgcZ/oOvHWeLLa5d8vcKhX7n9Ra5OJ+EOwl13SUBqkYbVdcSu27GgswscUlcdA==
+	t=1794568464;
+	b=x28acHhIT88jUDgVQJkp4PfqcyTH1/3m7pGYl3QkzP9921j28kC1ufXKYyLTRx4tQqQj
+	 0uySGCbywsNmN88bN+Z87EYO++fosTOaL0Bui5L5Si1F7YLTSBukDmJYTBOt5RKmlzWZG
+	 ETno1IdqZIuw6NkAJmGg821bK+DILWzvcOs1W9NuSZztmzsxOX05zy5+6fUsUync+r88I
+	 ynV/W06+JJcwb2Dzs4W47O2QkruVAXlSyWI8INCYpCUizwKvB2PPaF7xEOvg5JbZ4IHIo
+	 ysXH4aQWfE0MQDhZYUMb8fsbSXuRuKjA1cW0YZ9LnkrODDLwPQggdXWKVaMWlqwCCQg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794563743;
-	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
-	 Subject:To:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
-	 DKIM-Signature;
-	bh=O7SKCVB4PMXbdqrNEiBDGYQ9dYqNfd/aoujObYmzbmg=;
-	b=KV93QCmS5AmDmmbfG53C5e/x5IwyRp1ksdpKZSiG2wAIbeWAuSpSs9lHBvaKeHzdqTaU
-	 DFmfqZBxFqYKcpuBQjV35iXAR224HXwlkiY8AaOphJ2Ul9+q0d+cBzlmMr5G71sVb3zmz
-	 uqQHtPQRf3Pf0ZoTB2oQ3bVNaxtxVMjtcIPwc/eJBVzsO00bV2AQUWUEGeulgdL9ceJXr
-	 L7crO2G++C6Nb3/14Igmsh24tE4SCzgCmfXplALFICB2zmj6ep/8mZ3JWzijf8u994Whw
-	 9yZkdR53BFVajNytmGqNUxo5TwiZZQxKsQtcbkog8b5z1AFF/hs1echDMJH3xOBndtA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794568464;
+	h=Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Type:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=5uCHaY+d+EreOr4KjJ27to6WGWTyNXNqphjNuVoJ+lo=;
+	b=FMXm5VAHH+NbviqSn0yfaiQeZqodPHhaYTtDEZay9tNuhqofM0jokVdjeFuNdOugIoQ0
+	 8gqJ+F80j8rm7tiBZo25ia/aQk63+Gp7okz7V4FrqK7MX0SfbLnrM25V91JZKORWz6nNW
+	 33+p4F5E3isVxTBuUDzmaxx31lmTcSEZB/GegHJ2RSsS7k5VTUPbgL9B2GNLDaRdKCVmK
+	 T4tJYvgwA0VFM6hIYm5bdCBlXopd5OLkVSZLFHqZGVc1stGyX8CjNal0cFKsSWunukV/7
+	 aIjUmA4mEjL4Pl/GVTByFqI5dm+UtohIvTCIn9tbY7GQeW8OVuftO18uowDNosHooww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=rock-chips.com;
-	spf=pass smtp.mailfrom=rock-chips.com;
-	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=hBCS76Q+;
-	arc=none smtp.remote-ip=103.209.128.108
-Received: from mail-m128108.netease.com (mail-m128108.netease.com [103.209.128.108])
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE731606A321
-	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 09:55:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BE731606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=hBCS76Q+
-Received: from [172.16.12.48] (unknown [61.154.14.86])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 5495af5ba;
-	Fri, 13 Nov 2026 17:55:30 +0800 (GMT+08:00)
-Message-ID: <4fb5e43c-93c7-4284-8e9c-af403cfe16d1@rock-chips.com>
-Date: Fri, 13 Nov 2026 17:55:27 +0800
+	by smtp.subspace.kernel.org (Postfix) with UTF8SMTPS id D10A5606A323;
+	Fri, 13 Nov 2026 11:14:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D16931F000C4;
+	Fri, 13 Nov 2026 11:14:23 +0000 (UTC)
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Sudeep Holla <sudeep.holla@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>,
+	Dan Williams <djbw@kernel.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Ira Weiny <iweiny@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Zhang Rui <rui.zhang@intel.com>,
+	"Mario Limonciello (AMD)" <superm1@kernel.org>,
+	Saranya Gopal <saranya.gopal@intel.com>,
+	Gergo Koteles <soyer@irl.hu>,
+	Jakob Riemenschneider <riemenschneiderjakob@gmail.com>,
+	Yauhen Kharuzhy <jekhor@gmail.com>,
+	Pawel Zalewski <pzalewski@thegoodpenguin.co.uk>,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	nvdimm@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	Kai-Heng Feng <kaihengf@nvidia.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Shuai Xue <xueshuai@linux.alibaba.com>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Chu Guangqing <chuguangqing@inspur.com>,
+	Andy Shevchenko <andy@kernel.org>,
+	Mika Westerberg <westeri@kernel.org>
+Subject: [PATCH v1 0/4] ACPI: Use named initializers for acpi_device_id arrays
+Date: Fri, 13 Nov 2026 12:13:56 +0100
+Message-ID: <cover.1794567577.git.ukleinek@kernel.org>
+X-Mailer: git-send-email 2.56.0.rc1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -48,112 +77,103 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Manivannan Sadhasivam <mani@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
- linux-phy@lists.infradead.org, Heiko Stuebner <heiko@sntech.de>,
- Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH 4/5] phy: rockchip-snps-pcie3: Check more sram init status
- for RK3588
-To: Alexey Charkov <alchark@flipper.net>,
- Sebastian Reichel <sebastian.reichel@collabora.com>
-References: <1766560210-100883-1-git-send-email-shawn.lin@rock-chips.com>
- <1766560210-100883-5-git-send-email-shawn.lin@rock-chips.com>
- <CAKTNdwFfQyMGJQnFU5cwQyOsXvEx4NowOT6n-jPkM4b0zGX50w@mail.gmail.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <CAKTNdwFfQyMGJQnFU5cwQyOsXvEx4NowOT6n-jPkM4b0zGX50w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4135; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=6g9eJPIna9nXlYz5oY9GDvVOE+uQvQq1cCDAUQqIBMY=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBq9vD1Kg2jK4rH2lmPt2M0Te8a2xic+vqtitA1M MvIAFTTaT6JATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCavbw9QAKCRCPgPtYfRL+ TjduB/9LBwdKRfEgL0Z71JbSxfnKjG4cK1gLHWsDCCiAyYAXixAp/0bThuLUukIoPUgCEpNSKK1 wcy1HvRlRjngb8u209KeEXLpyb3g3IoKuJNwjdfa1tzl1fSRnEI5qlEZHE4p5PAtjiN1hYGFH/u IFTavpxOlQDmTwnXqJogxdEXwDZO4BvsgXIh8100Q+/9Mv2gq1PPmor0KU6Y78OyoznaHmvr++0 6PyWE0lXRx2PO9ePuKFx/79xvcpzWQ2lltsYtpZ4ksnFGHTIeN0RJotAmYPoHA/CwK5xkPOh3Kl yempOaPt5ZHdPuiA6EY3eM2i+VNfN+79E9tIE6qyV3ikyaoX
+X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1d4556b3903a4kunm237a15301760be
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCHUtIVkxOSB1NHk8fShpJGFYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUJCSU
-	5LVUpLS1VKQktCWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=hBCS76Q+d8V4O4Z3p5xbAYHQNvimilnBft09vdrZ6Of7g3VHStYkGDR2mEgv1HILwMravYvVXplN/vTWdczG7acQm7JzzBO8YLJCCFrp1vx4WaE3RpT9SzQcAJ3bc54azR4o5m6ceEhMmXlNKm05QhbBiCfSpw/6h9jz4+ImO6s=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=O7SKCVB4PMXbdqrNEiBDGYQ9dYqNfd/aoujObYmzbmg=;
-	h=date:mime-version:subject:message-id:from;
 
-Hi Alexey
+From: Uwe Kleine-König <ukleinek@kernel.org>
 
-在 2026/11/13 星期五 16:46, Alexey Charkov 写道:
-> Hi Shawn,
-> 
-> On Wed, Dec 24, 2025 at 11:10 AM Shawn Lin <shawn.lin@rock-chips.com> wrote:
->>
->> All the lower 4 bits should be checked which shows the mpllx_state.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
->>
->>   drivers/phy/rockchip/phy-rockchip-snps-pcie3.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c
->> index f5a5d0af..6cc38e3 100644
->> --- a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c
->> +++ b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c
->> @@ -43,7 +43,7 @@
->>   #define RK3588_PCIE3PHY_GRF_PHY0_LN1_CON1      0x1104
->>   #define RK3588_PCIE3PHY_GRF_PHY1_LN0_CON1      0x2004
->>   #define RK3588_PCIE3PHY_GRF_PHY1_LN1_CON1      0x2104
->> -#define RK3588_SRAM_INIT_DONE(reg)             (reg & BIT(0))
->> +#define RK3588_SRAM_INIT_DONE(reg)              ((reg & 0xf) == 0xf)
-> 
-> This breaks PCIe3x4 on my Radxa ROCK 5B, which then cannot find its
-> NVMe root filesystem. Sebastian's rockchip-devel branch carries this
-> series, and kernels built from it fail with:
-> 
->    phy phy-fee80000.phy.13: lock failed 0x7, check input refclk and power supply
->    rockchip-dw-pcie a40000000.pcie: phy lock failed
->    rockchip-dw-pcie a40000000.pcie: probe with driver rockchip-dw-pcie
-> failed with error -110
-> 
-> The RK3588 TRM (V1.0, Part 1) describes PCIe3PHY_GRF_PHY{0,1}_STATUS1
-> as follows:
-> 
->    bit 0     sram_init_done
->    bit 1     pcs_pwr_en     (reset value 1)
->    bit 2     pma_pwr_en     (reset value 1)
->    bit 3     mplla_state
->    bits 5:4  reserved
->    bit 6     mpllb_state
-> 
-> So the lower four bits are not all PLL states: bits 1 and 2 are power
-> switch enables, and the only PLL among them is MPLLA, while MPLLB is
-> bit 6.
-> 
-> On this board MPLLA is off even on a working link. With this patch
-> reverted, PHY0_STATUS1 and PHY1_STATUS1 both read 0x47 once the link
-> has trained at 8 GT/s x4: SRAM initialised, MPLLB running, MPLLA off.
-> When the check fails they read 0x7, so neither PLL is running yet at
-> that point, and checking for MPLLB instead would fail too.
-> 
-> Reverting only this patch, with the rest of the series applied
-> (rockchip-devel at d7436346fc31, v7.4-rc2), brings PCIe3x4 and the
-> NVMe back.
-> 
+Hello,
 
-Each port has a MPLLA + a MPLLB. In aggregation mode, MPLLA should
-always be 1 once done for both of port0 and port1. But in bifurcation
-mode, MPLLB will change. So basiclly, Rockchip PHY team suggests to
-check mplla instead of mpllb for differnt use cases, during calibration.
-That was done for vendor kernel for quite a long time. So I was
-surprising to know in your case, rock 5b using it in aggregation mode,
-it didn't work that way. Please let me ask interanlly...
+this series is about preparing drivers/acpi for a change to struct
+acpi_device_id. The idea is to replace .driver_data by an anonymous
+union, see
+https://lore.kernel.org/all/cover.1780048925.git.u.kleine-koenig@baylibre.com/
+for more details. (The linked example is about platform_device_id, I
+intend to apply it acpi_device_id and several others, too.)
 
-> What is the check meant to catch? If it is PLL lock, which bits, and
-> at what point, would be right for a link that runs on MPLLB?
-> Otherwise, sram_init_done (bit 0) alone looks like the right condition
-> here.
-> 
-> Best regards,
-> Alexey
-> 
-> _______________________________________________
-> Linux-rockchip mailing list
-> Linux-rockchip@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-rockchip
+Before this union can be added, all initializers must use named
+initializers (C99 calls them designated initializers), which IMHO is a
+nice cleanup that can stand for itself as it makes the code easier to
+read.
+
+Pawel sent a similar series earlier, find it at
+https://lore.kernel.org/all/20260727-acpi-refactor-v1-0-ff900aa326ee@thegoodpenguin.co.uk/.
+Compared to that the patch splitting is done differently and the base
+here is newer.
+
+I checked for the other *_device_id and for these there is nothing to do
+below drivers/acpi because the few instances already use named
+initializers.
+
+The last patch in this series is just some cosmetic to align the coding
+style. If you consider it churn, just drop it.
+
+It would be great to get this series in soon, as keeping it up to date
+for a later resend is an annoying effort. Thanks for your cooperation.
+
+Best regards
+Uwe
+
+Uwe Kleine-König (The Capable Hub) (4):
+  ACPI: Unify acpi_device_id list terminators
+  ACPI: Drop unused .driver_data initializers in acpi_device_id arrays
+  ACPI: Use named initializers for acpi_device_id arrays
+  ACPI: Unify *_device_id list terminators
+
+ drivers/acpi/ac.c                       |   6 +-
+ drivers/acpi/acpi_apd.c                 |  46 +--
+ drivers/acpi/acpi_memhotplug.c          |   4 +-
+ drivers/acpi/acpi_pad.c                 |   4 +-
+ drivers/acpi/acpi_platform.c            |  12 +-
+ drivers/acpi/acpi_pnp.c                 | 514 ++++++++++++------------
+ drivers/acpi/acpi_processor.c           |   6 +-
+ drivers/acpi/acpi_tad.c                 |   4 +-
+ drivers/acpi/acpi_video.c               |   4 +-
+ drivers/acpi/apei/ghes-nvidia.c         |   2 +-
+ drivers/acpi/arm64/amba.c               |   6 +-
+ drivers/acpi/battery.c                  |   8 +-
+ drivers/acpi/bus.c                      |   2 +-
+ drivers/acpi/button.c                   |  14 +-
+ drivers/acpi/container.c                |   8 +-
+ drivers/acpi/dptf/dptf_pch_fivr.c       |  14 +-
+ drivers/acpi/dptf/dptf_power.c          |  38 +-
+ drivers/acpi/ec.c                       |   8 +-
+ drivers/acpi/evged.c                    |   4 +-
+ drivers/acpi/fan_core.c                 |   2 +-
+ drivers/acpi/hed.c                      |   4 +-
+ drivers/acpi/mipi-disco-img.c           |   2 +-
+ drivers/acpi/nfit/core.c                |   4 +-
+ drivers/acpi/osi.c                      |   2 +-
+ drivers/acpi/pci_link.c                 |   4 +-
+ drivers/acpi/pci_root.c                 |   4 +-
+ drivers/acpi/pci_slot.c                 |   2 +-
+ drivers/acpi/pfr_telemetry.c            |   4 +-
+ drivers/acpi/pfr_update.c               |   4 +-
+ drivers/acpi/pmic/intel_pmic_bxtwc.c    |   2 +-
+ drivers/acpi/pmic/intel_pmic_chtdc_ti.c |   2 +-
+ drivers/acpi/pmic/intel_pmic_chtwc.c    |   2 +-
+ drivers/acpi/power.c                    |   2 +-
+ drivers/acpi/processor_driver.c         |   6 +-
+ drivers/acpi/processor_idle.c           |   2 +-
+ drivers/acpi/sbs.c                      |   4 +-
+ drivers/acpi/sbshc.c                    |   6 +-
+ drivers/acpi/scan.c                     |  48 +--
+ drivers/acpi/sleep.c                    |   2 +-
+ drivers/acpi/thermal.c                  |   6 +-
+ drivers/acpi/tiny-power-button.c        |   6 +-
+ drivers/acpi/video_detect.c             |   2 +-
+ drivers/acpi/x86/blacklist.c            |   2 +-
+ drivers/acpi/x86/cmos_rtc.c             |   2 +-
+ drivers/acpi/x86/lpss.c                 |  58 +--
+ drivers/acpi/x86/s2idle.c               |  14 +-
+ drivers/acpi/x86/utils.c                |  22 +-
+ include/linux/acpi.h                    |   8 +-
+ 48 files changed, 466 insertions(+), 466 deletions(-)
+
+
+base-commit: 6d582d78fad9d828e575ca0cdcff8ea47a77220b
+-- 
+2.56.0.rc1
 
