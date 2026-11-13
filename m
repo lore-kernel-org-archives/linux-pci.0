@@ -1,58 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=65.109.113.108
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794543519;
-	b=j4i3qWZ4miWhsaNqNUSSxizbNlQZ4cw0/vjgbiXJ3m2Kyn4wnZXVY9LkiwCiDNyVj9eK
-	 o0yxVUmaDA3+yRw9YMJt/Eczw+k+1hq49gXbepp99uPNEEdRPAhicstT03XGXiEsvEx66
-	 Jdk+G1vLJ+YBN2cSDFH7jgN8TtAvLvuC3A0Au/KKzeiuILWbyPqiy0k3nEqj2Mk/2b+dg
-	 SLtuxM2jcs9K6pV+jOd9F/oryeikSnRt374Ts0r185qyowSjpN6hg8UkFbtYQtL6Sy/Rz
-	 QN+aJjO7fhU6rwgnmDZg9+j1uuch0h9Oi/RKs5qrqYEb9t7XDYglsy+w8WHGFWRQSwQ==
+	t=1794547408;
+	b=c3i86X1sQikEMR+UKxzeZiNmXKq2BOPHgftsKulN+v/y+27VCo70zX/vke4loxzabgaU
+	 6FyQfymCuWSKXeACct5wYIiaH5WBRCQSCevB11hUvzjd6L0IDH8cx0bEfLKmm+IHYNjz1
+	 IuH1Pfon4a9pJ+8EanuROpaSl9gv4w0ezF1tEX/+Ez9Phb54xMQ6lROP6yUIgzvHSo/6D
+	 uUuwyJ+ztejuB+S3H939nA5bfjVa1x4dRekyLR3pADBcK2MiRHO2ZDy5qoPiXhYJB6/wj
+	 WzEoRyq/UXsZ4PpUTsm1BYVEO1QfVb6KgczTFOISAjGEH8A/B+P1Z9u4SFt5QgOm6hg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794543519;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:To:Cc:References:From:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-SA-Exim-Connect-IP:
-	 X-SA-Exim-Rcpt-To:X-SA-Exim-Mail-From:X-Spam-Checker-Version:
-	 X-Spam-Level:X-Spam-Status:Subject:X-SA-Exim-Version:
-	 X-SA-Exim-Scanned;
-	bh=ZiYALzwBjI65tTTQSXY2U+ySmJs1lqd9md75ReSDjlI=;
-	b=RVEVr5DUf2Hx/aHS2/7ac/TmC9EP9RYaf8loOb2FZAoouX2mhrv+jnJRU+HggH8MXTXS
-	 ezifIhjMMi+DE4cOHOPA+DfZXBlbuRMkIzsu+7eyFaP5Ln6fIFmUPJJ87WPg6G0tIyj9b
-	 7ZuitI+hLO493+fOWR4iDtF+T84LW4Kr1bOKqMxbKkjeZzBiAAyY7+/neOYBtRYlF7P/Q
-	 semkonf34IiRC2ZjCintLtvS74tUnUEkNrjcZHBza6HiNSynxaniYY2e9GIj72iTvmDHE
-	 SswSmHCU4+modtSOCcSWiZm5GRMwD2yz6E3m6NnjrInkbmEZjL1lz81a0asuriJrJHA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794547408;
+	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=oAxy74l9NqEKCof3pNxvq823Cwf06nSN8L9r4dpI3is=;
+	b=FKMP3BlCNX7U85pRS7ZDSAst5EL4MO19sxW05x6606kjSRniLwjUuS8gwG7f/edduNwL
+	 oqQ7HDClG34MwqGzWH0ElGrw4ZsLxx2sQyRR+GcCnz52l3uizb5A6wq9l/SjSJw2ParQD
+	 WsDK78a1RNvwOwhSl3fzPbZB3lOA3eDfTBWvYNcjI5CPSZe2c24rxl6+mMSCyl0wKGR+j
+	 65Yl+7cWVcHhXud9MqQ4w0cAz1KUQfTzIbwY46ZJhyOmqrkHw4wwuYSZrUPOhfsht+WeU
+	 D9JBdJLtMJXEp+PSDskSb8Sq4vMu3LYSlouZwDd4A+pHKBNQlgmMA95PiJjSuWoIcpA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=deltatee.com;
-	spf=pass smtp.mailfrom=deltatee.com;
-	dkim=pass header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=sqJVO9Oh;
-	arc=none smtp.remote-ip=204.191.154.188
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	dmarc=pass header.from=alien8.de;
+	spf=pass smtp.mailfrom=alien8.de;
+	dkim=pass header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=awOSaWIo;
+	arc=none smtp.remote-ip=65.109.113.108
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 420B7606A31C;
-	Fri, 13 Nov 2026 04:18:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 420B7606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E662B606A32A;
+	Fri, 13 Nov 2026 05:23:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E662B606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.a=rsa-sha256 header.s=20200525 header.b=sqJVO9Oh
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=ZiYALzwBjI65tTTQSXY2U+ySmJs1lqd9md75ReSDjlI=; b=sqJVO9OhFJFFp5d+CorT0gFFwx
-	gQHtm0rP9jBKdo5gtNhPuLDVJFyS5i84cybGKtUoyz1fhqHNy/GRDTRJWNgzdqFTWEyGhMkX/IdYX
-	1gczl9YxmBvNI3QYA9KvCiNAWLYKnpgv/dbGuxQdmfjTnj+SrMaiu9Ge6b2Zzu3cJj3uIAscyiV2Z
-	gGz+MjtR0Ub8ypP0wa3inb778TZZgjDpL3fgNIJjKwllEUMLxQ7GC61J0NW/qoFJgAi8vPToPSlrb
-	Ptdylv4aBTXI6DXk9fq3Si66BLJQ8a5feCTMk2q9JmLUpH879Zp+OriFt9ucCWJscZvyIYeC/6V5J
-	pp72RlUg==;
-Received: from [104.157.31.28] (helo=[192.168.1.251])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1xRik9-00000002SeY-3ZkQ;
-	Thu, 12 Nov 2026 22:18:32 -0600
-Message-ID: <029ccd27-68df-4e0a-bf27-3b40f68e91c6@deltatee.com>
-Date: Thu, 12 Nov 2026 22:17:50 -0600
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=awOSaWIo
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id DD77440E0184;
+	Fri, 13 Nov 2026 05:23:25 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id 4Ex88StL6t4X; Fri, 13 Nov 2026 05:23:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1794547396; bh=oAxy74l9NqEKCof3pNxvq823Cwf06nSN8L9r4dpI3is=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=awOSaWIocn/SfDur/ly8h7zKwHLzuXNRtqIXrzkhH1qy9I5uEBz/5co/Z4zNu/oBs
+	 tBNmqkG7rSqBEbLDWCdaFHPa+X/Z4Gajnz8EzP6TOFcbmaaOYoCrLH74rgHt1Xfn0J
+	 X0QjUVsMM8ZfKSMEqe+OPHZKU0UkoFeX1mPnONlrf8FFiox82xyVK6z3EivugWwT+x
+	 2KrSj8UQX0MKRearWI4+H2/yc9AmnIlzurQqpCapfXzFe0JDhkaoAJDfRz/2vdlQ5O
+	 C+A4gXU+9dRXDmXzU/EGDbcN7FKATMRzJVqA6gj14xOcjdFqxziBAPc8Bwcn6Qh0IM
+	 vki49QAhcfTgMN6pdWXDnhIOzyTH4cA2yuOmPKeq+xezzVqzTOcJzd4AXzFw2yDou5
+	 TWn0/Zn/OamFez81QAl3cgvb/sgFUkF8lIcj7VmyC33PhkXiM6u7rt3QITXXhmykEH
+	 v9GUSC9NKn/cNReg2s9DEphoRsx6yITDE5b1FkL6N9SECxVYHZPMBIeDikAQASjbHy
+	 LjLbaydMGjpmGsMVc/FnesDdsScMxtjpvopfIrEQAVjrOFnh6pOpd8luqoh/bUYqvH
+	 bnY5QOJsY9guw2rh9Vi/n5j4JGqVtbSFrA9OrSIBWMifL5HluTkjR2cXwQChYwhNcr
+	 atqxLS5WGDYZ4VbJYJQGZUog=
+Received: from stx.tnic (unknown [209.52.143.85])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 5A6B440E015B;
+	Fri, 13 Nov 2026 05:23:03 +0000 (UTC)
+Date: Thu, 12 Nov 2026 21:22:59 -0800
+From: Borislav Petkov <bp@alien8.de>
+To: Josh Triplett <josh@joshtriplett.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Support preferring MMCONFIG for all config space
+ accesses
+Message-ID: <20261113052259.GEavaes_QlX4T9vD_Q@fat_crate.local>
+References: <a7d2b402784a409f5564c1fdce77a41e09f29280.1793087687.git.josh@joshtriplett.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,79 +85,23 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Pavel Popov <pavel.e.popov@intel.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Viresh Kumar <viresh.kumar@linaro.org>,
- Jani Nikula <jani.nikula@linux.intel.com>,
- Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>, Tvrtko Ursulin
- <tursulin@ursulin.net>, Alex Deucher <alexander.deucher@amd.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Hans de Goede <hansg@kernel.org>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Peter Huewe <peterhuewe@gmx.de>, Jarkko Sakkinen <jarkko@kernel.org>,
- Tom Lendacky <thomas.lendacky@amd.com>,
- Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Arnd Bergmann <arnd@arndb.de>, Len Brown <lenb@kernel.org>,
- Sakari Ailus <sakari.ailus@linux.intel.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- "David S . Miller" <davem@davemloft.net>, x86@kernel.org,
- linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
- intel-gfx@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org,
- linux-integrity@vger.kernel.org, linux-crypto@vger.kernel.org,
- linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20261111234821.4814-1-pavel.e.popov@intel.com>
- <20261111234821.4814-4-pavel.e.popov@intel.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Content-Language: en-CA
-In-Reply-To: <20261111234821.4814-4-pavel.e.popov@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 104.157.31.28
-X-SA-Exim-Rcpt-To: pavel.e.popov@intel.com, rafael@kernel.org, viresh.kumar@linaro.org, jani.nikula@linux.intel.com, joonas.lahtinen@linux.intel.com, rodrigo.vivi@intel.com, tursulin@ursulin.net, alexander.deucher@amd.com, christian.koenig@amd.com, hansg@kernel.org, ilpo.jarvinen@linux.intel.com, peterhuewe@gmx.de, jarkko@kernel.org, thomas.lendacky@amd.com, herbert@gondor.apana.org.au, leon@kernel.org, bhelgaas@google.com, arnd@arndb.de, lenb@kernel.org, sakari.ailus@linux.intel.com, jgg@ziepe.ca, airlied@gmail.com, simona@ffwll.ch, davem@davemloft.net, x86@kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, intel-gfx@lists.freedesktop.org, amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org, linux-integrity@vger.kernel.org, linux-crypto@vger.kernel.org, linux-arch@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH 3/7] drm/amdgpu: Include <asm/cpu_device_id.h>
- unconditionally
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <a7d2b402784a409f5564c1fdce77a41e09f29280.1793087687.git.josh@joshtriplett.org>
 
+On Tue, Oct 27, 2026 at 12:14:45AM -0800, Josh Triplett wrote:
+> This *should* be safe everywhere. It seems exceedingly unlikely that any
+> systems need this. Despite that, this patch makes it `default n` out of
+> an abundance of caution.
 
+I'm no PCI guy but my gut feeling is telling me, drop the CONFIG option and
+add only a nommconf option which is an opt-out and goes back to the old
+behavior. And then we can see what breaks.
 
-On 2026-11-11 5:48 p.m., Pavel Popov wrote:
-> <asm/cpu_device_id.h> now has a generic version, so the #ifdef
-> CONFIG_X86 around the include is no longer needed.
-> 
-> <asm/intel-family.h> is included by <asm/cpu_device_id.h>.
-> 
-> Signed-off-by: Pavel Popov <pavel.e.popov@intel.com>
-> ---
-> Depends on <asm-generic/cpu_device_id.h> from [1]; please apply after
-> it is in mainline.
-> 
-> [1] https://lore.kernel.org/r/20261111234439.4098-1-pavel.e.popov@intel.com
-> 
->  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> index 19a566187df..fc4e7273630 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> @@ -88,10 +88,7 @@
->  
->  #include <drm/drm_drv.h>
->  
-> -#if IS_ENABLED(CONFIG_X86)
-> -#include <asm/intel-family.h>
->  #include <asm/cpu_device_id.h>
-> -#endif
->  
-I don't see the corresponding addition of adding the cpu_device_id.h.
-The commit message doesn't mention that. Am I missing something here?
+But maybe Bjorn has a different idea here...
 
-Logan
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
