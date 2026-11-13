@@ -1,59 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.67.36.66
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794577068;
-	b=Vp5/UIgDNWsklyS4GBd1sViZOmw73mwa0+zISRbw/1HbVEu/79Zq3swtzKcApKsWHSh7
-	 JAwY5U9O/xFplX3lYJqS6+HUBMOMVi/uCLVjJTLmR7/r38aRGuITGdsF1JkQVeHK/b0p2
-	 OgBpPQ/YliKUaW2NA0lzIiuzu8hk5fhrXzdeodiqfLdfVyMy4f4tRhqrkJ59d9roZKwkb
-	 HRDqdKH7won5pMEgM/oiMJkzYkCoolJA0b3A9rEdFOa1jBXB43H2sP+48OT0uibl6sgET
-	 cG86HWjZyus7mDSoolhw47SilPkZ2ap2HpKgsS4Y4vGhQ+QVi2gfcoKgU6Vg6TthLqQ==
+	t=1794577065;
+	b=ubOKQpZl7il2jnTEGoT1xFwqkCIGt5pSswh/4z4MiSzAiWtFhsi+KglyIIDA1ihNITMS
+	 fzCmoqwdqFSQP6nMs7JjB/CkEbfhJEKt1kD+dlaO2mdOW9nKU3/16+smaQl08POtqxjso
+	 zjPqOEPZLXrBxiPJLFGht57tlcbdcHO9Myo+KfhXI/heldudPbzoDAu7BlE+KJn2M+zKq
+	 fF0ZJkLTTlp8d6Au+Dx/Cta6DP39fTyCcWGGhlBa2gDqnE4NP9thxxOcL7FZZJz/S+Z3d
+	 BDhGlX191NFWtfd+bpr+VFOEOiamkk2djlfjTLOdblxJ/sgZAKTiumsMNhSQIFjHrOg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794577068;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:From:Date:Subject:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
-	 References:In-Reply-To:To:Cc:X-Developer-Signature:X-Developer-Key:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794577065;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:From:Subject:Date:
+	 Message-Id:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-B4-Tracking:X-Change-ID:To:Cc:X-Developer-Signature:X-Developer-Key:
 	 Autocrypt:OpenPGP;
-	bh=AQhO4t6IshX2EjLlYJ/abj8dRXiVupVwuZDYUut6ED4=;
-	b=pYN5VqkseadbXRwuLTvaOTf9K6aOqpEWCLHGyjRTN4maMvsQXSrzcg1jaU7GIIBvLDeR
-	 NrHrtX0u5g6x5RR8NLuvA1f6f3SPsGgKgghFVz5aWDRXLz6gTpl/IATWvAw7JYYiHIvsw
-	 cT3gR+XNw9vq2dQDNppqArs/7kAUU0GogJLIjHyzlZYP/FmlvWwaoxkqj9vTG8X/wpZ9L
-	 lzQzeRoG7V49Jaj5VU+uNg0+/YhQLFxg9XKJW49FqQ70ymX/7i0lFNz+oiB8KQGp1HhVP
-	 lAiLBfuLRnxhr0KYlMxpnWTVQ8Bzznbijf4mgwl0Y4LlIfOdoh/UeQcd+CPTxThqokA==
+	bh=rmNlezMqD6pQuxX1PgwHMgUdHR5PyYixRlH4XSvYqPY=;
+	b=n32rthOCjp6IAfwkbqSwQKqQQpthrVwETnqN9xloPQAP4QYDu6X4B3cDzDnNSgHfOImT
+	 nJ8Dvo5aSNIHJxbE7oCm5XKF0xBmgkcfrl5HybcxzmXulS5raCwhDGJmrdm6qOHHUabcD
+	 r+mqnfwzSKXkz5uqFIWp2+81t0npgZhd5FpjwSI/W91PAdJflUbfekjv8R4ArinXccdtD
+	 wGEANoH/x7Q6/5VWA4p4EOsCXIGPxPeyDizVxmXGFSiP9jfuNWLG4wtmXVAapAde4DzIS
+	 nwYeHeTMJ5CmiL8uwya+ZfkCuM+9MU5C3dDxHead+DEC+hD+iuWoa8osUYnpTsQgUvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=posteo.de;
 	spf=pass smtp.mailfrom=posteo.de;
-	dkim=pass header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=XvjCgwmb;
-	arc=none smtp.remote-ip=185.67.36.65
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+	dkim=pass header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=SP6cC2yA;
+	arc=none smtp.remote-ip=185.67.36.66
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4379C606A334
-	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 13:37:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4379C606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 774CD606A32E
+	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 13:37:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 774CD606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=XvjCgwmb
+	dkim=pass (2048-bit key, unprotected) header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=SP6cC2yA
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id B134E240032
-	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 14:37:46 +0100 (CET)
+	by mout02.posteo.de (Postfix) with ESMTPS id BBCCD240105
+	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 14:37:42 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1794577066;
-	bh=AQhO4t6IshX2EjLlYJ/abj8dRXiVupVwuZDYUut6ED4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:To:Cc:Autocrypt:OpenPGP:From;
-	b=XvjCgwmbgi/+8jZaznqNdURfcZ9Irn0XKAtJeEHaKvWhHJ+tvb1cQJbL4My5udlJJ
-	 XrS+74n9P+h3A8Fr3NYvxyFUKLfrfoRHiPpWqt1AOckCVYKTaFVW7r/fNDJ5CUHPQR
-	 XJMe8sYClmtzE67OK2ryZ72Sk77aAs7oamp8XUm7EOOfQqfyY52oeEy6MHaUXarrTN
-	 BO+JMpJkSUEHbOLzUpxELBeJa6FB38dmpfkWbsx31jCAQjwjj5WQnJ78T+hvo7Xzh6
-	 CoES5hyibOByR67a7lqSyR1VfnBb3cHdOddNtPd7B0Mnqlo+BGXZb9v1ZpvpFlA1s4
-	 Pa8C+U1KpX1Zg==
+	s=1984.8680eb; t=1794577062;
+	bh=rmNlezMqD6pQuxX1PgwHMgUdHR5PyYixRlH4XSvYqPY=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
+	b=SP6cC2yAhsBKk0mYNKmGkFuInUMDyHhYsoTmZYzxjtZtTeBmrj1qKyhvWycv9q07Z
+	 Gc8kqlXb0Zs8iRXKswyeBhLFz/NqQtltsejJNuQdqwnDSunI9F3HnAcBQDMykU9sjK
+	 lk1Hn4IMdy+8k/QicaE1SpPPufCZAh7Do33JFiaAkIb+WxwBNCoHDBJmzYR2Jxew7O
+	 7ztehEziimO04UtBf4w0qgsroKqXmMgFZ0ojFbVwJrOKIRnM3UY3Be6Xn8WLVD3jKH
+	 weMect7v0799b70EYtHqD3Cv4llxE2Gd1joWqsNL6HWJJ7Oh+RD6zxlYJNFGd7QTcb
+	 HBWJ2kUQRjVaw==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4jQyxM55bmz6v12;
-	Fri, 13 Nov 2026 14:37:43 +0100 (CET)
+	by submission (posteo.de) with ESMTPSA id 4jQyxG69d3z6twP;
+	Fri, 13 Nov 2026 14:37:38 +0100 (CET)
 From: Markus Probst <markus.probst@posteo.de>
-Date: Fri, 13 Nov 2026 13:37:45 +0000
-Subject: [PATCH v28 2/4] rust: leds: Add Mode trait
+Subject: [PATCH v28 0/4] rust: leds: Add led classdev abstractions
+Date: Fri, 13 Nov 2026 13:37:41 +0000
+Message-Id: <20261113-rust_leds-v28-0-b8cf2f74fa57@posteo.de>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,10 +65,18 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261113-rust_leds-v28-2-b8cf2f74fa57@posteo.de>
-References: <20261113-rust_leds-v28-0-b8cf2f74fa57@posteo.de>
-In-Reply-To: <20261113-rust_leds-v28-0-b8cf2f74fa57@posteo.de>
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/3XU227cIBAG4FdZ+bqOZgYGmFz1Paqq4thYarKpv
+ Vm1ivLuxRtFhqDeWAL5G8zwm9dpy+uSt+n+9Dqt+bpsy/mpDsh9OU3xwT/9zPOS6sREQIyIel5
+ ftsuPXzltsxeWYiMVW2Sq7z+vuSx/bsW+fa/jh2W7nNe/t9pXt89+VOGmytXNMCfxGotiZuW+P
+ p+3Sz7fpTztVa7SSmmlVOlMRE4eBYz6LBE+qAEE01KEajN4ZKOd00UGi4etj85itew4YXQhE8T
+ BUmttZ6nakgKj02iD5cGqwyrqtouqWkLPIpEDJRysPqymfl1drS46oM2cGM1gubX9ulyt2Cw2k
+ M0hjN9sDsuAnTW7LXUnJeUU09hn21gFnbXVRjDiolbGZRqsa22/7i1VYBEoeEYLg5XD1k53ds8
+ V+WrrGWefh1xRkyvT94r2XBUtyof6SUGXweL/Ld7OCAoKW0ljn6nJlcUuk7TnCpgDaBYPdugzq
+ dZ2/wLtucqChYMBF3jIBjW5kr5XtOfKJck6gk7BjOs2uRLs7Z4r9AjKYrIujn1uciV9NmjPlVN
+ OWaXqGUMe7JErhE/73XNFkcQk513m0Nq394tszb9f6mV4eb/NpuC3PMfz4+NyuT9d7V29BiPVl
+ 9/+AdJpGg5BBQAA
+X-Change-ID: 20251114-rust_leds-a959f7c2f7f9
 To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
  Dave Ertman <david.m.ertman@intel.com>, Leon Romanovsky <leon@kernel.org>, 
@@ -88,21 +97,21 @@ To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
 Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
  Markus Probst <markus.probst@posteo.de>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4103;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6259;
  i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=F2SZAVj++qO6M17yqoRRpw77iquvkpy2UzcZXzVH7Q8=;
- b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBq9xKi4TwjxSDBRbHedmbVXKzIClbf7ktDdpR4o
- 4n+BRveqa6JAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCavcSohsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9JZGw//W3vjAAzbrReHyvIcq0pckciGvwnQNuW
- M8kUxHUndg3uqg7aIAfc6PteiFIc2uQswcVBWI5ghfyGFw4UsSmFEE8BgcJ5u1I9a0KWubbKHxK
- tDKTgUuI/CTenSDx7XAPu3XAIhY9GpRJHsaDak1O6Q60EyQpissoUHu7WID2Tw0DQt8bkqnunV1
- 82RARVP6J1B4ye06RTfeHHITGnKZBLbbyW7HYv1K6RpaYwp+7dm3AxlikSqC+hQtTexkqo/VxHp
- qLH5yQR7fq3s1Bh7quRAOA0BdWvTw9RnHRlzdHSztwvGNbEBm6moSuJozYXUxuGc3rXCiLKSz4a
- tHUVjWeCnPQWbPaa0m5CPvgEYt/79X+qehVKGIczDKiqna+Z0nmUyUJlHT0UUMmz9N+eDxqW++z
- /V80H0vXM/DpdnI2RWFuBMxMD5c3yXJcWja3SY46tqGtmTcER26tCjUzAUALbHWMRWFTYWx54ix
- 2aP//M9/7xwQGjNZiGkVayrYXY2+kKSI1hbMGiHJiuQ4lFz7U3+QHqeZpluZZEDkpJ1XYjxHAX9
- eqDh2Ffn2p7XxbS1uCgJ6I8VZ086rxnTdpimAPBHof5BOBA1gDxKit7u7AUhxOzo7kVQyiIjUca
- cWsGYb6pNiHtnObrb4wiE68h9amhvzo8/NXeez/3TrqdI/O+M9KQ=
+ bh=rMr+dOE26m7zQsJ7lZCIAQymN0uCefIhx6nHyuBVe4Q=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBq9xKhxozWWjPqj91FvszEiHYOgrnIHc1raoNab
+ aNerukitYaJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCavcSoRsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9IiXhAAo1bChXABAL3q56FlBf404eK5jzaCEdz
+ u7EbeE+7jihjlTNjg+NWzf52fvuBalIenY1cUXuYWDamyUtjdJqX7Rqoc55Ww6hoZp/z98vceZI
+ 2A1YJgpGmPZ9qow0wPkWF5fI6XGJQbCfyG3+x8pLulM7+wghYxxQQAM3CPMj6XLWumw5GccAXZm
+ EQd7CRERGJyG67CNS48NgSHbM9N2iwtcAmKLu5yInlJL0MGwHVrwce2yBFmETG1+2LstQkd4hwa
+ 3Z17SvQhGEoXNormxZyqfLUd4OgSjDrSNDRiaBtKdsycooJNVlT/ujZHHpoccI2SBPFJDaiiioC
+ dbpLVKiNoRTHX3AzHimlZyzRs+Xql2Pc4M47h+/h49617LH436I9yHE1XjqPK5Pe3ItXLCJ/mzV
+ fL007g+EfyJJDpSl3Je/gto5anvwQxYC7oNHopSKYDoQdh5uMcbXxPTYs4ZKmgPbHlOxBP0Mw02
+ g3pATNGp4TvMenBiILyGLqdbibbb4BKbzRcStJP24yormsZ/6fIoG5uJAeiobcsxOdMUxHDGRvo
+ EqPdFzpH2SswteIoiDOZS58MP29m6WB4l2nHR1jMrA2z0VeivNgXwR5JlbbUT6KJPV3BlH0bxqy
+ eyYjD4aY9AlEa28H04gfLvUpmcrNYfD4QmVd3sdIwlKDpkBraDkw=
 X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
  fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
 Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
@@ -148,137 +157,189 @@ Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
   aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
 OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Add the `led::Mode` trait to allow for other types of led class devices
-in `led::LedOps`.
+The abstraction is used by
+https://lore.kernel.org/rust-for-linux/20260724-synology_microp_initial-v18-0-fb2f49f10e77@posteo.de/
+.
+
+The following changes were made:
+* add basic led classdev abstractions to register and unregister leds
+
+* add basic led classdev abstractions to register and unregister
+  multicolor leds
+
+Changes since v27:
+* rebase onto v7.4-rc2
+
+Changes since v26:
+* use Atomic (Boqun)
+
+Changes since v25:
+* fix issues reported by Sashiko:
+  * fix vertical import
+* add drivers/leds/*.rs to MAINTAINERS file (Kari)
+* s/add/Add/ in commit message
+
+Changes since v24:
+* remove `LedOps::Bus` (Gary)
+* support type-erased `Device` and `MultiColorDevice` types (Gary)
+* use `Device` and `MultiColorDevice` as arbitrary self types in
+  callbacks. Remove separate `classdev` argument (Gary)
+* remove unnecessary imports in doc example
+
+Changes since v23:
+* add separate patch for MAINTAINERS file update
+
+Changes since v22:
+* readded CStrExt import, because it is imported with `as _` in prelude.
+  A `# CONFIG_RUST is not set` sneaked into my .config while
+  development, so the compile error was unnoticed.
+
+Changes since v21:
+* use 'init for lifetime that is only alive during initialization
+* remove unnecessary CStrExt import
+
+Changes since v20:
+* resolve Sashiko regressions:
+  * fix typo
+  * fix fwnode refcount decremented too early
+
+Changes since v19:
+* rebase on v7.2-rc1:
+  * Add `max_intensity` to `MultiColorSubLed`
+* use safer `KBox::pin_slice` instead of `KVec`
+  (len might not equal capacity)
+* explicitly call `FwNode::dec_ref` instead of dropping a reconstructed
+  `ARef<FwNode>`.
+* remove direct access to `intensity` and `brightness` fields,
+  which may get mutated concurrently by the C side
+* fix safety comments pointing to functions from previous revisions
+
+Changes since v18:
+* add inlines
+* fix invalid documentation
+* improve led color duplicate checking
+
+Changes since v17:
+* use lifetimes instead of Devres
+
+Changes since v16:
+* use for loops for duplicate checking
+
+Changes since v15:
+* fix issues reported by Sashiko bot:
+  * fix returning error not possible on `brightness_get` callback
+
+Changes since v14:
+* fix issues reported by Sashiko bot:
+  * add missing inlines
+  * add missing Sync trait bound
+  * fix vertical import layout for public export of private types
+  * fix potential memory leak, if a multicolor led device with over
+    `u32::MAX` subleds is registered
+* remove default_trigger option
+* fix missing CAST doc
+
+Changes since v13:
+* rebased onto v7.1-rc1
+
+Changes since v12:
+* add `led::DeviceBuilder::name()` and `DeviceBuilderState'
+* add `led::Color::as_c_str`
+
+Changes since v11:
+* use `led::DeviceBuilder` instead of `led::InitData`
+* use static_assert instead of const { assert!(...) }
+* restructured patches to avoid moving `led::Device` from
+  rust/kernel/led.rs to rust/kernel/led/normal.rs in the 2. patch
+
+Changes since v10:
+* allow in-place initialization of `LedOps`
+* run rustfmt for code inside `try_pin_init!`
+
+Changes since v9:
+* add missing periods in documentation
+* duplicate `led::Device` and `led::Adapter` instead of using a complex
+  trait
+* fix imports not using prelude
+* adapt to CStr change
+* documented `led::Color::Multi` and `led::Color::Rgb`
+
+Changes since v8:
+* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
+* make functions in `MultiColorSubLed` const
+* drop the "rust: Add trait to convert a device reference to a bus
+  device reference" patch, as it has been picked into driver-core
+
+Changes since v7:
+* adjusted import style
+* added classdev parameter to callback functions in `LedOps`
+* implement `led::Color`
+* extend `led::InitData` with
+  - initial_brightness
+  - default_trigger
+  - default_color
+* split generic and normal led classdev abstractions up (see patch 3/4)
+* add multicolor led class device abstractions (see patch 4/4)
+* added MAINTAINERS entry
+
+Changes since v6:
+* fixed typos
+* improved documentation
+
+Changes since v5:
+* rename `IntoBusDevice` trait into `AsBusDevice`
+* fix documentation about `LedOps::BLOCKING`
+* removed dependency on i2c bindings
+* added `AsBusDevice` implementation for `platform::Device`
+* removed `device::Device` fallback implementation
+* document that `AsBusDevice` must not be used by drivers and is
+  intended for bus and class device abstractions only.
+
+Changes since v4:
+* add abstraction to convert a device reference to a bus device
+  reference
+* require the bus device as parent device and provide it in class device
+  callbacks
+* remove Pin<Vec<_>> abstraction (as not relevant for the led
+  abstractions)
+* fixed formatting in `led::Device::new`
+* fixed `LedOps::BLOCKING` did the inverse effect
+
+Changes since v3:
+* fixed kunit tests failing because of example in documentation
+
+Changes since v2:
+* return `Devres` on `led::Device` creation
+* replace KBox<T> with T in struct definition
+* increment and decrement reference-count of fwnode
+* make a device parent mandatory for led classdev creation
+* rename `led::Handler` to `led::LedOps`
+* add optional `brightness_get` function to `led::LedOps`
+* use `#[vtable]` instead of `const BLINK: bool`
+* use `Opaque::cast_from` instead of casting a pointer
+* improve documentation
+* improve support for older rust versions
+* use `&Device<Bound>` for parent
+
+Changes since v1:
+* fixed typos noticed by Onur Özkan
 
 Signed-off-by: Markus Probst <markus.probst@posteo.de>
 ---
- rust/kernel/led.rs        | 32 ++++++++++++++++++++++++++------
- rust/kernel/led/normal.rs | 12 ++++++++++--
- 2 files changed, 36 insertions(+), 8 deletions(-)
+Markus Probst (4):
+      rust: leds: Add basic led classdev abstractions
+      rust: leds: Add Mode trait
+      rust: leds: Add multicolor classdev abstractions
+      MAINTAINERS: rust: leds: Add rust abstraction entry
 
-diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
-index deda8cc548a8..c17f8ef75006 100644
---- a/rust/kernel/led.rs
-+++ b/rust/kernel/led.rs
-@@ -7,6 +7,7 @@
- use core::{
-     marker::PhantomData,
-     mem::transmute,
-+    ops::Deref,
-     ptr::NonNull, //
- };
- 
-@@ -31,7 +32,10 @@
- 
- mod normal;
- 
--pub use normal::Device;
-+pub use normal::{
-+    Device,
-+    Normal, //
-+};
- 
- /// The name of the led is determined by the driver.
- pub enum Named {}
-@@ -156,6 +160,7 @@ pub fn name(self, name: &'init CStr) -> Self {
- ///
- /// #[vtable]
- /// impl led::LedOps for MyLedOps {
-+///     type Mode = led::Normal;
- ///     const BLOCKING: bool = false;
- ///     const MAX_BRIGHTNESS: u32 = 255;
- ///
-@@ -176,16 +181,21 @@ pub trait LedOps: Send + Sync + Sized {
-     const BLOCKING: bool;
-     /// The max brightness level.
-     const MAX_BRIGHTNESS: u32;
--
-     /// Sets the brightness level.
-     ///
-     /// See also [`LedOps::BLOCKING`].
--    fn brightness_set<'bound>(self: &Device<'bound, Self>, brightness: u32) -> Result<()>;
--
-+    fn brightness_set<'bound>(
-+        self: &<Self::Mode as Mode>::Device<'bound, Self>,
-+        brightness: u32,
-+    ) -> Result<()>;
-     /// Gets the current brightness level.
--    fn brightness_get<'bound>(self: &Device<'bound, Self>) -> Result<u32> {
-+    fn brightness_get<'bound>(self: &<Self::Mode as Mode>::Device<'bound, Self>) -> Result<u32> {
-         build_error!(VTABLE_DEFAULT_ERROR)
-     }
-+    /// The led mode to use.
-+    ///
-+    /// See [`Mode`].
-+    type Mode: Mode;
- 
-     /// Activates hardware accelerated blinking.
-     ///
-@@ -196,7 +206,7 @@ fn brightness_get<'bound>(self: &Device<'bound, Self>) -> Result<u32> {
-     ///
-     /// See also [`LedOps::BLOCKING`].
-     fn blink_set<'bound>(
--        self: &Device<'bound, Self>,
-+        self: &<Self::Mode as Mode>::Device<'bound, Self>,
-         delay_on: &mut usize,
-         delay_off: &mut usize,
-     ) -> Result<()> {
-@@ -260,6 +270,16 @@ fn try_from(value: u32) -> core::result::Result<Self, Self::Error> {
-     }
- }
- 
-+/// The led mode.
-+///
-+/// Each led mode has its own led class device type with different capabilities.
-+///
-+/// See [`Normal`].
-+pub trait Mode: private::Sealed {
-+    /// The class device for the led mode.
-+    type Device<'bound, T: LedOps<Mode = Self> + 'bound>: Deref<Target = T>;
-+}
-+
- mod private {
-     pub trait Sealed {}
- }
-diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
-index a22c29cfd262..992353319522 100644
---- a/rust/kernel/led/normal.rs
-+++ b/rust/kernel/led/normal.rs
-@@ -8,6 +8,14 @@
- 
- use super::*;
- 
-+/// The led mode for the `struct led_classdev`. Leds with this mode can only have a fixed color.
-+pub enum Normal {}
-+
-+impl Mode for Normal {
-+    type Device<'bound, T: LedOps<Mode = Self> + 'bound> = Device<'bound, T>;
-+}
-+impl private::Sealed for Normal {}
-+
- /// The led class device representation.
- ///
- /// This structure represents the Rust abstraction for a led class device.
-@@ -22,7 +30,7 @@ pub struct Device<'bound, T: 'bound = ()> {
- 
- impl<'init, S: DeviceBuilderState> DeviceBuilder<'init, S> {
-     /// Registers a new [`Device`].
--    pub fn build<'bound: 'init, T: LedOps + 'bound>(
-+    pub fn build<'bound: 'init, T: LedOps<Mode = Normal> + 'bound>(
-         self,
-         parent: &'bound device::Device<Bound>,
-         ops: impl PinInit<T, Error> + 'init,
-@@ -120,7 +128,7 @@ struct Adapter<T: LedOps> {
-     _p: PhantomData<T>,
- }
- 
--impl<T: LedOps> Adapter<T> {
-+impl<T: LedOps<Mode = Normal>> Adapter<T> {
-     /// # Safety
-     /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-     /// `led::Device`.
-
--- 
-2.56.1
+ MAINTAINERS                     |   9 +
+ rust/bindings/bindings_helper.h |   1 +
+ rust/kernel/led.rs              | 317 ++++++++++++++++++++++++++++
+ rust/kernel/led/multicolor.rs   | 442 ++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/led/normal.rs       | 230 +++++++++++++++++++++
+ rust/kernel/lib.rs              |   1 +
+ 6 files changed, 1000 insertions(+)
+---
+base-commit: fd9230005e85472b81c1c7c16afe93dd878996b1
+change-id: 20251114-rust_leds-a959f7c2f7f9
 
