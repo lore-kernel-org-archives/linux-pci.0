@@ -1,99 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.43
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794557928;
-	b=VSIhgFERiaVcHkzqcGasXNl75+eyrP8cGxkhn3xjNPnn78JE+iWiCgXCnZPisORELbbN
-	 mK9LF539oxFntA478NtDNTo7bCElEcgpyzm2PXY1afN4kRNz88MgmLFw+/tcQBbpxEC1+
-	 2KAuSw3za223D4gloRWPR4BcfriwCLwbbF/NJ/zvFpyp4cww+Wd9naa9FjwdZSg+H9OaE
-	 HvqG6r3jG/UGiZzMwer2ifDHd51l2e21LoG3hLleVwKuLMoGDBhOFnyR9BLBH8aFevY2D
-	 VCAcD0zJUplHgiQn5Y3ViE0nhk9Uyowihpd+FoWd+8P00P1IRFHWtYv0Meajhh6f+Bw==
+	t=1794559625;
+	b=I9kNEs9BEnxjq0JPZu/Jj8Xg6JoL/y6uSezek+ypX2FM+niHeV698eLNgrRyBXl+eGFl
+	 xpH4mU/4uD4VScnga+y5bLlLpYi986aMqyje9ASLF2EX3G78PEW+8pZRugBnUSEeatCQv
+	 OM5VoTA1yREdLmCuNP/cDqHjBpUcJtzMw4sGhFeURAbFwN4LfQe436Pm1EUuwhjrB6tA+
+	 uRsCY5Ya2vIcwhl5UH79oLsqaWq1U0+/SC11hwqviMGDTf+1PN6RDUTnUYqQDFw68oHot
+	 i9yqv0zzhb9yopSOYr0eji6nYVrYkRnnVyh4bqhGzO8S088aKwReinslJNXp+Xd4N/w==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794557928;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794559625;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:MIME-Version:
-	 From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
-	bh=xd+/2V9dVSgcQCcfh0x4nJopin8BfKQSMmEPRbkonzA=;
-	b=ev6ljTNq4dQ7xZcsZLD79MTECSgpUQg4q7ZtZqhf4TQt3hpDCtzR6KtlxapOzWxQODuh
-	 5w1LHf7EzaoPq+dSJMi8pXFrulJdE89kiTPPXLTratxPmTgZse48WLGxl7Yd8pPTYPGcD
-	 BdQxCYu2FXIF+ORg0WYE982CrLhPEirV8mfrzuBSLeDEiEOFLmM64rd0ohLum9rxcx4Xn
-	 QVHmVTn3Rlti1th7yRUw6jrJG1v4xiTOoyS/9d4LQwGubWM3VwjMKj96axMc2BJiBhWqW
-	 Bsrvy0a0YeVgNg8cuUe0ZlDddkiOUkWvH/WpNkgd9tQYurmRb9EpvyK8sb0e7x2Wjdw==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=qhNHjf1SdugrZ5BSNouBIP0FOeW62fEzpK61bFfdG/8=;
+	b=V5wZfrR52yJuV6lVo3y6aYlnSd6svv2WTOHPg9ZlIi9q48t4ZtvPkB8fnCRQ7OlJ91JO
+	 GySFZNnJQ74+WU9dunHBVUCQBtjji4a/h0kuCfRJ4PCY/kTaX8RLTweAvOc+EpjTU5Q5C
+	 r1FUuGl6O9/Y5OM7fYihNvGIi7F4hEuxMGurXVye+FRsYK4cKuX0qQw2QmjuOHkMyvMir
+	 8iJoHxs7XysjJav8z7Ft0lro/UF3J8wwtFjPR1RQT3sYNd/7OKYgpkQXTtebia8/JsLUf
+	 An+42/fBozmSINeB7FjOFexwJ0ZgByuCQvn6fmaCQcrl9e1lEf0MJRdgIcZ+MoWD0Pg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LcGnlyZb;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.210.175
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	dmarc=pass header.from=flipper.net;
+	spf=pass smtp.mailfrom=flipper.net;
+	dkim=pass header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=P9HefTdG;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.43
+Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 464E8606A323
-	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 08:18:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 464E8606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 921AB606A33B
+	for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 08:47:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 921AB606A33B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LcGnlyZb
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-8a594d313a3so791400b3a.1
-        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 00:18:48 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794557927; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=P9HefTdG
+Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-c4203bbb1e9so152850966b.3
+        for <linux-pci@vger.kernel.org>; Fri, 13 Nov 2026 00:47:04 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794559623; cv=none;
         d=google.com; s=arc-20260327;
-        b=IRdmFi4ML1u1TuOg5FPRkipRkJP5hwzPDPLEpgcFFRbXUDtTPZL733IpMG+HxPCTFP
-         rPbBo+y0BlC0flMTC1OVS+/9dBVvIidhtS0oNCXnf15FwIOn1faFKCl8jzB1j1xmp/na
-         bqa+JkzQ5kDGaVU7m28s+nQPctKQR+6P3gv/hQ3EmznUglDT8nGvL248vI+JYAcd8cRn
-         r/iEom5IpHz7vOS3Tu71Ekkn+fMfoab31h0qjhUWc02W/t2z5fcwKaR/6PZJtq6Q4y7w
-         8/PJb4VtJwNaQELm1zFg/LD3FFc6p2ijncxYsEcj34jskvMwEvuNvHRflKfy3tsSv31+
-         KfOA==
+        b=OiFGr+vi7YopIQH2cDbhQaIVAgvSFSFL4hKmMXRjAipn7nNcSrxojYB6va23/IcAJg
+         c9hgt5ModUiyhoqG3kxJMlLEHeImrTaC/dSU/7kyXfpnWXteAxg3b43hwC3+nitNrpeY
+         bAR12HCF0E81ISfzsgjHhlN2sDDTH3SBaUrIbL7Mp3j0HmcdGD9QdragDuTQJzvdUkvB
+         74RbMpDaRIsv28v2dlH0R+6ZG9um4iYgP9hLgbkFJK3Z8qUMnuoCWXCEkrG5axvSM1GB
+         TtTEn9ANWuAJi2h8JXVEd1p5jkyHuxO0t13XzvvdIITq7I420ZAV+RJbBty4DUch8qiB
+         ScLg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=xd+/2V9dVSgcQCcfh0x4nJopin8BfKQSMmEPRbkonzA=;
-        fh=RRKBNNs4nsthXB9WDOG+vTWIH2rBD3mVmQncs/8q3d4=;
-        b=Lrud+QT+zeBFg/D6Ch6vc3/Set3qN+i9P1pNYXscRwarC6ITng/AxFx5fAhXAv6i30
-         Xqp4o3gdjsImiNwkXZ/pv/GqsDFE+SsoND21xTQ4rlsXMd9ch56Cm4mFX24KByRK2VqX
-         utvv304I4iwa3Bxwj0TOpvb59kMhCQGfDDxgvxtblVS2x/xR/18G1aRE09Ev/YBH42i9
-         oBGOZLvJcDyIhtndDWsRnSsJncZV7A2/dybl11zDmcvDoykbL+vdYDVi+7fslrE4dRya
-         2cGDZlQ3Y15EQft7QedC5xajKuR5GJUzS93a+YmfoKAq+/H+82w702PEDihSoQGxR0Kq
-         Kvng==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=qhNHjf1SdugrZ5BSNouBIP0FOeW62fEzpK61bFfdG/8=;
+        fh=wP8+fRVU/cDqNXkm4n28QO0qbAM26r9oMJ7JhzAuseA=;
+        b=m7yZsUlOBx2NeTPA1oTkSvEmgULQ3aASKWb6JQ4omca2ELJSNup/neK37E7oy94Hc8
+         dGOQPjdQmfa7lxfNEz9cnHP/7i5eAr4Ezi4Ugb7Qpc2Ab1LCWTCs93BvNpOa0E72F8cB
+         ZJx16x1XRmtUGtYycKoXN6ugLRxtW4WeJvIwj7qyJp0O1HepPUjq1e6xdFtinIj2jPyk
+         T0eKPtOGWtqVxZj7IkiEE5afaO8YsWtn3YxWF6V43AFFRq+/1IRkXqCyUyiA8n9vV8cD
+         FxS+uluMS7Mb3uGD+E+cMziq1assqEzfW0qA+FsgJxF8z7HxZGs6nFOTeMzAdEOWDd1v
+         Cotw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794557927; x=1795162727; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xd+/2V9dVSgcQCcfh0x4nJopin8BfKQSMmEPRbkonzA=;
-        b=LcGnlyZbAGynNuw00EbyMtmhBGuQHUi5jq0peV3XxKnaaXPSbHADFLoyvL54MLibYw
-         5n1XvWC8PqlNNp7TqiBKqA0eTIleLfdcnn+CJgtO5SKAUQrXUSFsjZ8N/3fzEZtf64YH
-         dF+5KHWyFOutT3HYCZwEjaeIx4YHN2bKO8WGZT+TW/JbE9eCI91X8b7KXxjTVvxRr1M7
-         +dGaZ/sF1Zve9xugvyf9qwqoozob2v7XZAYPuAcUP1hDE1tzWJVQN/ycf8VVS0Ezz7vG
-         41u87zWu3JPav+YPjnj5oSzRz3/rfQkrmH68t4S6ZAVPxrq3y0aMsphKZEq/TN5IuQ1o
-         Tygw==
+        d=flipper.net; s=google; t=1794559623; x=1795164423; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=qhNHjf1SdugrZ5BSNouBIP0FOeW62fEzpK61bFfdG/8=;
+        b=P9HefTdGbOr3Cjx77WP/gONEScRFpMiSJdQhqlqAdbnzA9Cb49WtvT/xdoRlOKJt3K
+         tF9lhpjLgfHYP3FeCYmS0DK+TqIIkmoVqW/RR7QDH/ywMAvHbFJlNr1UzLxKR48Yt8TN
+         SjvmhPdm7vO6ZhfMPSSEfifIl1J5D1hCpTzLqJb0DC1wtYL0Y/B8Jgs1jW4xqrykALYs
+         GXS7PBIPBKpbhmjYWJxlkG5U/8f9HrLA4Lvz6WBRffI5x9hFgAyL3/yiN9sc28wSlzNe
+         HKQH8R+gU3pNiIgqsXfyp3p3Xdc9dbkcbmSwAkSQpSEkcIFkoU6ZT8MBMOrGSA7gqW4c
+         HWFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794557927; x=1795162727;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=xd+/2V9dVSgcQCcfh0x4nJopin8BfKQSMmEPRbkonzA=;
-        b=KyUY28gn8gHktue2TjG+u4HoKJPXhpP8iQx2XVpmOaNmDPwDJV0Ch14AHgmfrrazEF
-         qDKn46kWk/fCNMbDPOKmiRLk1NpcVZhzQt33G6vy2FRdkFb8iTHxKJlrLQh3V1qm/ybv
-         ObVw+a30RZN0SVXvVoj3J1sWZClwHM9PnARlwgfOzyCCgfcRXMmFY+LMBjIdRDp1iIKL
-         1tI+0F2YQ0CH7g9rO0xp6ih/cZHBfGtgvNz96qc7574JHxKrRiTesPJToIErXjf4Ndfl
-         xdik/AtSQiGrZUxdFvaTmmTl3KlxDjaiOkgz5F8zlaaGEeTBGvkIuw8CH2TFaYKgNT2S
-         SooQ==
-X-Gm-Message-State: APuU4Z8TgrNTIQJ/xIXBURnyu9Eb/gA/SYvG8g2wj9EqYVOM8qnz6+sE
-	iOp8aIzL/RX26Dy8uUCpT0NC7KKdus5aot1ZBxQO0GULpzRne9jldgSJuqadu5aklf7sPy/Zvvx
-	7WtJN3xgPGUmVaRBeaIkXr86dlRQUFuLuzSwD12A=
-X-Gm-Gg: AYBFou1EoN7/vcUWDwQnt//mA7jTnMIlu7hxIM0TgxF3HWH3qw8drZpFMZWfN+BiPNT
-	S/qHW/U++ZG5SYlfgtG3BkR7hEGifTiewfIZfwn9v6e01s2NddPMxY0vNonhuD2KKnhdU3Szvs5
-	R5UvUBwZqM0vWEk9USNiEDJKGS5xIVyDWb+/tv+aC7juy0u7xEJ61C2CFcKBefLBip4yxKGSyBs
-	5kZOYlAcdZEEsSXj7GbkbMsxow2vOP11DA43/D8BnEd+O8bxUoSqNF4H1Zh1S9Uxhp8mBdWZnET
-	JEYK86t9KPosIcqB/7r5qEw3g+KzCsSfgKO0zYkxxgCOtvykoPVi3xf1DFn2Piwaic9OEXjUHWV
-	7G3FOVko/7YEiRFm02EBafraWcNQoJi7zxw==
-X-Received: by 2002:a05:6a21:8cc3:b0:3e2:86b6:9beb with SMTP id
- adf61e73a8af0-3f7a86d3e52mr1508354637.74.1794557927394; Fri, 13 Nov 2026
- 00:18:47 -0800 (PST)
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Fri, 13 Nov 2026 03:18:46 -0500
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Fri, 13 Nov 2026 02:30:03 -0500
+        d=1e100.net; s=20260707; t=1794559623; x=1795164423;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qhNHjf1SdugrZ5BSNouBIP0FOeW62fEzpK61bFfdG/8=;
+        b=iLoHMQTqK6u+S8yQvIDcDfRPlGx8eAWQ7zSMIss4us3Wr9DWZcHuxLiJfkvxiQ9wnP
+         cPbw7fzjvjpAE91Y/D/lP6Y0jtzdtIawLSg25jobAGSKMsiXPlIOOZb8fU0P8dNbI+tA
+         0lCDfVS2/XuSqhmCn3290GukobGUC+DCaBsnrstk89tJlPotAGt9NuquoXKhI5eeOywv
+         3gvQ/Hza5KjyzhZN6I6IRlG5z/bJxMe3l9SWq57bD/aDFyT7qjmXWhvJMYO/7xDwjb7C
+         awnDNzIPlaxKQtg/3xMH2JmHofiFymLhK+2m2LYoKuO/M26yl4lLSh2x0TFuhTyT5m9q
+         /hsQ==
+X-Forwarded-Encrypted: i=1; AL+hErFZH7W8Bk333yxKfmnHWGhhXAYTnUagWzKwidwiIrSymB40qt2E3wjn2jUhNb9xAlPUXPn4TX+fYKA=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+pq8C1s6/3v9jDZduVFeTjtR+kvYEaS2uDqIDsUyKV4CvceDqy
+	pMmKqGaYuoZ4l6M1DH+vRpVazDq6+Mg6E2hZ2bNWMLlbfKjmMVIJnbrjJmGdrhwc9vrx2sIunrm
+	/h+rftiYVAoppqiHgfwoFL1hBwKofHzKmQB26pH63JQ==
+X-Gm-Gg: AYBFou3fvJBZpsXQkgWAZDsQE0yo4GEVOKlpM5T5mlHLl0s4Jve1DRg0yUxqWUPqTkY
+	ovgfjUvUdSy+OHy7mHTuMl2mNcUxAE/GMvpGVxdSUz2K6yP1GkwnGS8JIohVXOM6pwsF89QJBNm
+	8T43wBATNX1BWOE42QN3SgfW0ZPS+focZ6+bwbaowgbwOALJAI0yi2faFGX+K7shWLYPJIwG2fC
+	LZ47h9Qk3fpTUk0KQgSIImbwlRAzebR0fozn50VfSmQqRp2cFOGBLWKWmF27y0KOVv/WhiIzWX0
+	0PTPuQfnrzn6/aQwDk/SKsMFTgB7o6ZHqp64s9BK1CF7CBmikfGCvNXBemfwv1HmKwPAQyPQH1X
+	5GGbg7Q7lfLEEGvMPEmNvhpOrQ7iNyRDzAeoEo/mbZjqBCD+cIuKBmV6ae5fTJ2Xmjfgk
+X-Received: by 2002:a17:907:3e13:b0:c2e:3ed7:7db4 with SMTP id
+ a640c23a62f3a-c5096340feamr135396666b.23.1794559622820; Fri, 13 Nov 2026
+ 00:47:02 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -103,90 +104,86 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: lionel margueritat <margueritat.lionel@gmail.com>
-Date: Fri, 13 Nov 2026 03:18:46 -0500
-X-Gm-Features: AclHuK_vRbanoXsfRd3nMKnKHSC9WBzSr18OdL9kAndDRvjkGPKIyGfiSYMImsA
-Message-ID: <CAL0aDZ_HOq1Sof90GJoBDzPo7Gmr7P_rSnYJaN75QH4K+iodpw@mail.gmail.com>
-Subject: [PCI/Thunderbolt] Intel Titan Ridge DD (8086:15ef): ACSViol on
- link-local LTR Msg (route 100b), possible ACS Source Validation false positive
-To: linux-pci@vger.kernel.org
-Cc: linux-usb@vger.kernel.org, bhelgaas@google.com, mathias.nyman@intel.com, 
-	westeri@kernel.org
+References: <1766560210-100883-1-git-send-email-shawn.lin@rock-chips.com> <1766560210-100883-5-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1766560210-100883-5-git-send-email-shawn.lin@rock-chips.com>
+From: Alexey Charkov <alchark@flipper.net>
+Date: Fri, 13 Nov 2026 12:46:51 +0400
+X-Gm-Features: AclHuK-fnCfqep89v60X_1kiVQLyjf-ZvvNw6LylrxXymHR-bVpgT9BeqYnaapI
+Message-ID: <CAKTNdwFfQyMGJQnFU5cwQyOsXvEx4NowOT6n-jPkM4b0zGX50w@mail.gmail.com>
+Subject: Re: [PATCH 4/5] phy: rockchip-snps-pcie3: Check more sram init status
+ for RK3588
+To: Shawn Lin <shawn.lin@rock-chips.com>, 
+	Sebastian Reichel <sebastian.reichel@collabora.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>, 
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+	linux-phy@lists.infradead.org, Heiko Stuebner <heiko@sntech.de>, 
+	Neil Armstrong <neil.armstrong@linaro.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello Linux PCI, USB xHCI and Thunderbolt maintainers,
+Hi Shawn,
 
-I am requesting review of a reproducible Intel Titan Ridge DD PCIe ACS
-Source Validation violation on a link-local LTR Message TLP. The goal
-is to identify and correct the first rejection without disabling ACS,
-AER or IOMMU.
+On Wed, Dec 24, 2025 at 11:10=E2=80=AFAM Shawn Lin <shawn.lin@rock-chips.co=
+m> wrote:
+>
+> All the lower 4 bits should be checked which shows the mpllx_state.
+>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+>
+>  drivers/phy/rockchip/phy-rockchip-snps-pcie3.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c b/drivers/phy=
+/rockchip/phy-rockchip-snps-pcie3.c
+> index f5a5d0af..6cc38e3 100644
+> --- a/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c
+> +++ b/drivers/phy/rockchip/phy-rockchip-snps-pcie3.c
+> @@ -43,7 +43,7 @@
+>  #define RK3588_PCIE3PHY_GRF_PHY0_LN1_CON1      0x1104
+>  #define RK3588_PCIE3PHY_GRF_PHY1_LN0_CON1      0x2004
+>  #define RK3588_PCIE3PHY_GRF_PHY1_LN1_CON1      0x2104
+> -#define RK3588_SRAM_INIT_DONE(reg)             (reg & BIT(0))
+> +#define RK3588_SRAM_INIT_DONE(reg)              ((reg & 0xf) =3D=3D 0xf)
 
-Hardware: GEEKOM A7 Max AMD USB4, BIOS 1.26 (2025-09-15); ACASIS
-TBU405Pro Intel JHL7540 Titan Ridge DD, NVM 69.84, 40 Gb/s. Ubuntu
-24.04 HWE 7.0.0-43-generic.
-Both reproduced boots use AMD PCIe tunnel root 0000:00:03.1 -> Intel
-upstream bridge 0000:06:00.0 -> downstream 0000:07:01.0 -> NVMe
-0000:08:00.0, plus downstream 0000:07:02.0 [8086:15ef] -> Intel xHCI
-0000:09:00.0 [8086:15f0]. Earlier privileged data showed ACS Source
-Validation enabled on the xHCI-side bridge; current non-privileged
-lspci -vv does not expose PCIe extended capability registers.
+This breaks PCIe3x4 on my Radxa ROCK 5B, which then cannot find its
+NVMe root filesystem. Sebastian's rockchip-devel branch carries this
+series, and kernels built from it fail with:
 
-Current boot (signed experimental Thunderbolt timeout module; kernel
-timestamps in seconds since boot):
-[1532.142389] AMD 00:03.1 pciehp Link Up
-[1532.273384] Intel 06:00.0 bridge configuration invalid ([bus
-00-00]), reconfiguring
-[1532.280...] Bus and BAR assignment completed for endpoints
-[1532.282964] xhci_hcd 09:00.0: xHCI Host Controller
-[1532.824413] Intel 07:01.0: Correctable Data Link Layer BadTLP [6]
-(NVMe-side bridge)
-[1533.779213] Intel 07:02.0: Uncorrectable (Non-Fatal), Transaction Layer
-[1533.779233] Intel 07:02.0: [21] ACSViol (First)
-[1533.779243] Intel 07:02.0: TLP Header 0x34000000 0x00000010
-0x00000000 0x00000000
-[1533.790681] xhci_hcd 09:00.0: AER: can't recover (no error_detected callback)
-[1533.790732] Intel 07:02.0: AER: device recovery failed
+  phy phy-fee80000.phy.13: lock failed 0x7, check input refclk and power su=
+pply
+  rockchip-dw-pcie a40000000.pcie: phy lock failed
+  rockchip-dw-pcie a40000000.pcie: probe with driver rockchip-dw-pcie
+failed with error -110
 
-The Correctable BadTLP was observed approximately 0.955 sec before the
-ACSViol, but on the separate NVMe downstream branch; causality is NOT
-established and an analogous pre-ACS BadTLP has NOT been observed on
-the previous stock-driver run.
+The RK3588 TRM (V1.0, Part 1) describes PCIe3PHY_GRF_PHY{0,1}_STATUS1
+as follows:
 
-On the previous boot with the STOCK Ubuntu Thunderbolt driver, the
-same xHCI-side switch port reported first ACSViol at t=2459.768614 and
-the identical LTR TLP header. Across different observation windows:
-stock 75 identical ACSViol headers / 74 xHCI recovery failures,
-experimental 39 headers / 38 failures. Counts cannot be compared as an
-improvement.
+  bit 0     sram_init_done
+  bit 1     pcs_pwr_en     (reset value 1)
+  bit 2     pma_pwr_en     (reset value 1)
+  bit 3     mplla_state
+  bits 5:4  reserved
+  bit 6     mpllb_state
 
-The packet appears to be a link-local routing 100b Message TLP with
-code 0x10 (LTR) and Requester ID 0000. PCI-SIG ECN of 15 April 2026,
-'Access Control Services (ACS) - Source Validation Clarification',
-discusses false Source Validation errors for locally routed Msg TLPs
-(100b, 110b, 111b):
-https://pcisig.com/PCIExpress/ECN/Base/AccessControlServicesACSSourceValidationClarification
-This is a strong hypothesis, NOT a confirmed Intel silicon erratum.
+So the lower four bits are not all PLL states: bits 1 and 2 are power
+switch enables, and the only PLL among them is MPLLA, while MPLLB is
+bit 6.
 
-Unbinding only Intel xHCI stopped new ACSViol while the NVMe continued
-to enumerate; no new ACSViol since 12 Nov 19:30:05 CET. Sustained NVMe
-I/O has not been validated. ACS/AER/IOMMU have NOT been disabled or
-masked, and no firmware has been flashed. Both USB4 domains report
-iommu_dma_protection=0. Please do not suggest wholesale ACS disabling
-on this Thunderbolt topology.
+On this board MPLLA is off even on a working link. With this patch
+reverted, PHY0_STATUS1 and PHY1_STATUS1 both read 0x47 once the link
+has trained at 8 GT/s x4: SRAM initialised, MPLLB running, MPLLA off.
+When the check fails they read 0x7, so neither PLL is running yet at
+that point, and checking for MPLLB instead would fail too.
 
-Questions:
-1. Is the LTR TLP with route 100b and Requester ID 0000 valid on this
-downstream switch port, and should ACS Source Validation exempt it?
-2. Is there a known Intel Titan Ridge DD JHL7540 NVM/silicon
-limitation, or a device-specific signed firmware correction? ACASIS
-support has been contacted.
-3. Could an init-time software quirk or firmware correction handle
-this without weakening device isolation?
-4. What passive pre-reject tracing/register evidence would you want
-gathered during a future supervised maintenance window?
+Reverting only this patch, with the rest of the series applied
+(rockchip-devel at d7436346fc31, v7.4-rc2), brings PCIe3x4 and the
+NVMe back.
 
-I can provide sanitized full dmesg/lspci/topology evidence. This is
-not a claimed mainline regression; no clean upstream reproduction has
-been done, and the experimental build is tainted.
+What is the check meant to catch? If it is PLL lock, which bits, and
+at what point, would be right for a link that runs on MPLLB?
+Otherwise, sram_init_done (bit 0) alone looks like the right condition
+here.
 
-Regards
+Best regards,
+Alexey
