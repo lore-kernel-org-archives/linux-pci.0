@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.65.41
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.159.26
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794589463;
-	b=dKt7HGCj9rSADnzX55PK5NkIsVAoWjREdXAQ2Am1udtJojmStsiU1HzUW5UMioRvTsGA
-	 ggoh2E4oSphOksYKwww9bPwpbhp68OT3m44LkbiIe2lfzlFx+iVi80pzgrYFTlhUDwrz3
-	 QYGiu/X7m4b5VmNIraC84Eo12GogtxyhjkfVjQ0rfuQnSNWRQgXGiZ5IbVIOELMCtBizi
-	 0M5HbKvLhKGs+vPNNT7o8jlc6vJMTTYyK9QffEUstgAeJgpLFcR/gi4AtNHFn8L9UuBa4
-	 zqlcIAlEgVVf/ftVTHJl2oDhODBZJ5lZORA3Ie0dhpB0P/B/RKj1C3Wz3GX2hZBxTUg==
+	t=1794589666;
+	b=DzaJp+VhE6v7p0Ms1spamthldw9e/3rbfAaJEFWhskiQVaCZqIw5Oy9tytSQK5EMaR9h
+	 hzksqqR2DN8Ehm9ZQKmqzWLclPhHOGajgcGrpC3+RN0tSSjVFy+YnbuxOMGZ97fhUnSKu
+	 cbjscwPQCnRjny+nNIW39MwYHg4b9Gf7sYPtszS4zHmtZuTaAavxUE+/ubSiWaZ86V6Bq
+	 kHhr9fa0yonajemnistCBY6sRdKZnxS6Df4iibTh23QiKidxME7k7iH1weQALfUKKCbA9
+	 ksNFnZ4Dg46MG9a8Hunc+24GUuG9r2aYEDjlrMT2FNWBvOheJn473YN8sfoKLU97NMg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794589463;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794589666;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:Content-Type:Content-Disposition:
 	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -24,55 +24,55 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=AlTXAQrliJ7+nUV8fZVzTVNZkneNfRRkqfNR7al8Vgs=;
-	b=NBLepR1H21MmHIvDxEv1xrZ4d6X8zLxGbK8a6rom8veZyKz1fpZtqHrn00Y4sgIvIGbX
-	 bkcOjqQ0MIrRNdnSMT5EWDljfZELtcyXqeM5/0NYc56/JIINoVQK9JWniHAUfzZX1d9hv
-	 gh1eOEquO5Ih++J2K32BA+bxBBBhKCaPpv5sDr9C28kD2tNoaRQn6O2i2hJtV9qLlI9Bb
-	 uAAEFcYKmPCt9TToh4chgIM/rr2EbUwm7r5vpjHhmhLbkMmKZQVhT2R0a6WS6xSKnUfUF
-	 9FdeIP2KNABee9FhAKUzLN5IVIdMmgMN6QTKLMKOS6PAF5AAfsiieBVKMhj+0p7ftcw==
+	bh=jnA4MIlxtqzgDDWSwyL5/KqzIvm6wNl9Ef1FslO5GiQ=;
+	b=Z81zJHhmPobkHh0wKb0VOOzBgOn/W1Qznh1YHwfc6iNbB05l/cFQYXjRQTrWXd9anyPY
+	 tHvGye5yfQuGxKowFpmIMNXwL0VGcXwZhMj6ETmnqv5dnCfy4mhBNL+Ue2Rc1bFF/hrWR
+	 aR5Q7Yr7mkCc4fqEUz4Y9xScUWe6Y1k5gKZp/zgizkIM5mu24OHX+hLZx/vHcT1a/2nG8
+	 4nYgUgCg6dhMwzw+I1crsGsp5s9gnmUreCXDP9iPLDbnANEHJaCcWwxYujI+9jUzt2j7j
+	 IczpI59scsr4I2TWkR+MXFUoh0deMQyAsFreV7SHDLMw1iWle1/5lwQ73APqfT7vFFw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.nxp.com;
 	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=YDz4RduX;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.65.41
-Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011041.outbound.protection.outlook.com [52.101.65.41])
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=dffoD3lU;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.159.26
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013026.outbound.protection.outlook.com [40.107.159.26])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 789DD606A332;
-	Fri, 13 Nov 2026 17:04:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 789DD606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B4DC606A882;
+	Fri, 13 Nov 2026 17:07:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2B4DC606A882
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=YDz4RduX
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=dffoD3lU
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=E11PhFY1nZ0vfHLL712hGh42zlYDm/XA7XX9N5DKIA4EFNHerC70PZeFfVs3/Zc6nFbxvDZNHX8ggsP17fpoVzy9FTRt12SMl4pAwuDAUwLeM898ZN+02BToon7H5l6vn/S7pN0ZUOkQXajso8dC40hd8F+S7iDsmJmSyRiNv2PqMF6MCXiKnSyzjg009JvTA0gucWxsPPFPczxpfNczIEgyYqJ8Pw05VFxUUt8YJG2hGXGTwS8iGREWKCQx2lIlxOu7p4fTKGDUmhuFVGWXi1G71o3QTImko9oeBUs1YKj99DJKIFcONpjJmjt+SV/JZGO2uiRf1tScnHOUx1tYLQ==
+ b=T6u1rH90+xw+6wLIvcxURxz4YjHlpCAWtmrnxcua+ndviF9fuBmIMmoB0iQ2C8phDOnR5rtuwLhn6cDIJeWc2+c3rxinROV9E7bYEzknH5eh60OaWyj5Ulk1ZbuP5qhRopx91+46silDuh63k+y/M2MyWc6I4eh/eEqauLKYdT7AZA4eImRKixBL/px4WAaUI9cuYltg2wKO7a7Z3fSCycRqpVkB/fVkXbQjhH/pUbrkv+Vpj2pXj/7n8AtHqp0ZC7KPPrifiXDSWzcqd9QZDv03clIBusd7OF+ob5+TAmDdFH4SBWSxvCQXzKORwbuqEtuskXnLtmzt752nuuzJIQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AlTXAQrliJ7+nUV8fZVzTVNZkneNfRRkqfNR7al8Vgs=;
- b=o2696hCqexLtttXGCIraUs6voCgbFxG+6bdUuyB4fPbDnIE32USNh54CNAxBLrSpDuIAos5wyUghGLU1LCoMh8rBvOs/ylByLji9YVipkT0Kyr6JkwkC0s65v3qSt8WZfPvQmBrbh5aNpDgP8l1naF5XMKEq8EHX2I3/NEyAodqM/cAyCIlKuzSqXkwSraVlVLZbBje/Ubs+oERXA6Fv/vS0LXuUYzEIIHSseH8NJdiWxuZVxHkAeAN9Pu/ai4QpGgEyvDMl0lel6LKJjCE7GMGLzbmnGpv0Gxe9hlBFCB1MyjZJ3vGHKnUE7OTCowyPXZydfNHwrchg/3re5sLDig==
+ bh=jnA4MIlxtqzgDDWSwyL5/KqzIvm6wNl9Ef1FslO5GiQ=;
+ b=CAa+3+kE0Ug7VxFSy8GxqAquv6uNjRpp4k4W6Hj9N81M6pUxWAN3NfTGdOdPkBUds0HPx3fNO5sXGEholQ21/qocvUXGfnhlV5/IsCGUZHuc1drnOzbBFbKHSeOF1Jwbja8e9rJA2QITsjsiqzlWaKzt0SqW54KidgDWNPy6z/9i4K5WKNDiB3vDyahuK6CqFfZzqWS9Q3PasJz5bP74KsCGO8hkIEFlJGMXjYafbS7Bs0NhBewpzuxDncC0l44AuL1WpNNrLxgSF/ii5Wr+URqr/9/wztO52BjKb9g/H/94/gn62ozKcvlowwZawQWtHMF/hc8wJch9DSYbBZ0W2Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AlTXAQrliJ7+nUV8fZVzTVNZkneNfRRkqfNR7al8Vgs=;
- b=YDz4RduX1FfVRI2AKzQpl7OW/BuLe51MQhaiSgh8qhfHLIUzp70upk8h5TfSg7tP3t+bs9Z5KG3dOy9ejdqjwTlHnJRQo3R1XIDBwfTeeNsdYckvXoVvckLyFu6AADqRrbGbezmk/jwRf3fqH9enLLBw4UkaZUnJPUY8jaDMa5m1OSA87kjoJr65i9KU417q04wxI5DcFOppoIxeptVbR4YTZCXyM7CYc+vJu+blhRB6QeVbfHVgIB0xhtecQdvAPrZ4KKHMK+8RuPVk6uaujnDAuvWntNngwrNYjEBmDB+iygAWL2rr/lG70tQQosTcl8s/yre3DDBfMIKPP6rxYA==
+ bh=jnA4MIlxtqzgDDWSwyL5/KqzIvm6wNl9Ef1FslO5GiQ=;
+ b=dffoD3lUtQOHf010ja76E2LvJWVyRcydU9+aQ5TztJHENyuRqJgydUfSNiEsAoY+kYSwKJmUFcmJY31uYunjYCC7fWksCI/WCgRuUjPO/vMHuDG9iC0eVii5Z8ZEBc+giQD7QmxUGSBTPILHNhwDgBjAUf9M+BovMyNBh86V2YKn5XoXWnwLVIzQrEbjpGkWBiW+9GS7BUn4Rf80qPL68b/vuNxVuBnHIPS45vxxCPRZau7l1rZLxpymeXLRHeCiiTgV+dz9TbNr8Mh9952uCEJ+wkJkR8APRPv0ivkwB4U1Divd3kPOWchThFRLknfbpPTfhYcYwYtyLjgtX+mmNA==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
- by PA4PR04MB9640.eurprd04.prod.outlook.com (2603:10a6:102:261::21) with
+ by PA4PR04MB7599.eurprd04.prod.outlook.com (2603:10a6:102:ea::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.10; Fri, 13 Nov
- 2026 17:04:19 +0000
+ 2026 17:07:41 +0000
 Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
  ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
  ([fe80::c715:c32:8bb1:b70b%4]) with mapi id 15.21.0615.009; Fri, 13 Nov 2026
- 17:04:19 +0000
-Date: Fri, 13 Nov 2026 12:04:11 -0500
+ 17:07:41 +0000
+Date: Fri, 13 Nov 2026 12:07:33 -0500
 From: Frank Li <Frank.li@oss.nxp.com>
 To: Nathan Lynch <nathan.lynch@amd.com>
 Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
@@ -87,15 +87,16 @@ Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
 	Tycho Andersen <tycho@kernel.org>, Wei Huang <wei.huang2@amd.com>,
 	Wei Xu <weixugc@google.com>, dmaengine@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 16/25] dmaengine: sdxi: Add completion status block API
-Message-ID: <avdDC1vEqInjEhvR@lizhi-Precision-Tower-5810>
+Subject: Re: [PATCH v4 17/25] dmaengine: sdxi: Add unit tests for completion
+ pool ownership
+Message-ID: <avdD1faSh_kDUWpA@lizhi-Precision-Tower-5810>
 References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
- <20261103-sdxi-base-v4-16-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-17-3668ccc7aab8@amd.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261103-sdxi-base-v4-16-3668ccc7aab8@amd.com>
-X-ClientProxiedBy: DS1P223CA0007.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:8:453::11) To MI3PR04MB12438.eurprd04.prod.outlook.com
+In-Reply-To: <20261103-sdxi-base-v4-17-3668ccc7aab8@amd.com>
+X-ClientProxiedBy: DS1PR07CA0006.namprd07.prod.outlook.com
+ (2603:10b6:8:456::6) To MI3PR04MB12438.eurprd04.prod.outlook.com
  (2603:10a6:290:76::14)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -107,397 +108,306 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|PA4PR04MB9640:EE_
-X-MS-Office365-Filtering-Correlation-Id: 39e793a7-bb0e-4168-45b7-08df41a8282e
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|PA4PR04MB7599:EE_
+X-MS-Office365-Filtering-Correlation-Id: 68594ecc-d6b2-4385-9492-08df41a8a05c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|23010399003|7416014|366016|376014|1800799024|22082099003|18002099003|261009223027099003|11063799006|56012099006|10067099003|4143699003|261102123227099003|261028144727099003|261022105027099003|261021121427099003|261021123027099003|261022075727099003|261026121527099003|261026140227099003;
+	BCL:0;ARA:13230040|19092799006|1800799024|376014|23010399003|7416014|366016|18002099003|22082099003|6133799003|261009223027099003|56012099006|11063799006|5023799004|4143699003|261102123227099003|261102130727099003|261026140227099003|261026121527099003|261022105027099003|261022075727099003|261028144727099003|261021121427099003|10067099003;
 X-Microsoft-Antispam-Message-Info:
-	iHc5XiGZpsHDYj/VODA/BxkXQhXKs5gvx07pLwizodc9vxID0eq4SOn4bV41nRMjjSIwhvHIMh0b2WR4QTL6bW5SA6J65O3hBK2+EFZtd7v1a8Y8ep7yFMAPx+FW+h0OLFk06qk9BJn4A04DUvfIZ76Xfk3eWVc3CTl12dYc0PLuQh6mJXHgmHmwIe4NBJEZX02jPO/ij0dzewXkOz196JlONtU35lFjRyfE+Ju72kVsZmYeL8TvpsYeGQUvly5N9e+VudCPmEfMvpbdp+KRPfhUuxgPh2XrdSk0kVoPkhNpOfg34X+P7KTGDBdJXe3ZwPFAeRxref7jetcHzuzrQdugENZ4oeecb4gEYyfmNov8a8/SvZdui6r5dZSAFMOxpiQ1fg0cSFWGDRKv+WGGZBiS8XlBGcEpH8mlFNXnTWNfkLDkr+gxHlBd3FCi5ISEYI0dQzHze3wXDwjYUXEKj45T5PWrgC1e7weUEpygnxgaPmvtAM+offM28PssgBnjZMK0pzM/POfcvPKe7GSTkyxxbnnz7CwvPnFG07tstR3i/TGHWK+LY191fCtwJ49jUqU8KBW+D4gKAc6jhis9KS3iCS5yRluevs1w8k6ygeRP+mubkf8Wj13243S3WarFn33mvKYPZ6gTbP/SXjwx3ocvQywmmMVxLIBAAxTMPJk=
+	jyAwOD0hotEZT5PYboMGmDzqeb2lC8bLwJyhxgqANnCEKh4bpuEgP4ecpgnGSSPwwic4QcAIkh2BHvB9jCVTiww4wcaNwwjnl1j7jXpLeUsFH6QdRrGlEAJ57AiqgGUR32tY0dgUTtMhKdmVuScfsZsCkEOaLQpodjIqbr4eZ3mI7DObXnOwq7/EycjgdK/Cf22oPC3b5P6cvDTxBtvABr3m90OMJ8iDkHlQlpYJ1yP7G9zLQgiBukR3t6RhmxX81P+8qImwPXdj1fOaOYCZqhveTkcEkHfxU3tc+4LUimzv6+FtfdxY9zbYeLHbMvlvhbgRFHlD5Od7nnmSaqO4SuKFdqscA9PMj2HClG4+/MJbztvHyB4rsFepeZ5H7rRMdUONZc7+7agbbVarWeBMElCjhcGVOCqYrKED6ZHD2ivHMQz6Gp2k1P54Uzr6/otc455nWKOanj2/IpBg2IQoeeaUgV2+p/Rl+DQwis7dXJ4Fd6dFDQKeOtTnxIE5lxc3fhw4Md9x2Tjp8Ddia9e8ZhkVco6ehZuCs47cNV2eabfPnkjujAF7yTfF5p1CRejBTruZcdTVQMgxkWq5UEt9+H7hKBIA0Vymj53P7J77fURQevST/YWcgv1nQauXfi5S66tjFCPhrdMMkrGLjlCYbhMjcXkcHXIkyxnkE1aTqBc=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(23010399003)(7416014)(366016)(376014)(1800799024)(22082099003)(18002099003)(261009223027099003)(11063799006)(56012099006)(10067099003)(4143699003)(261102123227099003)(261028144727099003)(261022105027099003)(261021121427099003)(261021123027099003)(261022075727099003)(261026121527099003)(261026140227099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(376014)(23010399003)(7416014)(366016)(18002099003)(22082099003)(6133799003)(261009223027099003)(56012099006)(11063799006)(5023799004)(4143699003)(261102123227099003)(261102130727099003)(261026140227099003)(261026121527099003)(261022105027099003)(261022075727099003)(261028144727099003)(261021121427099003)(10067099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?247nXXA3flMS70ly1nUHviZUleNRv8H8bXaO4tjcDaGCs/WX/aMPPFpj19+V?=
- =?us-ascii?Q?pBoh6rTVGtqaiD+86XaUVwOLelGGkrkCJsNM3UWtQ1XjfDgauBrXd+IdLC5U?=
- =?us-ascii?Q?gc+EQReNoBE3TyTHbfLUabmQo8PW3EMpYFhZ+iEerEAJtGgEKX46FMqnyGS6?=
- =?us-ascii?Q?U76th6fixqDFrMhXAqd7+rjMt3HnftjfKX1hJyeJHTCVHBmwu6dDkH7Nk3qA?=
- =?us-ascii?Q?8FiuNOqYd6DwPXJODZkVqlE+9BbyN8IlWKp6JgW3Dq3lkKjvpIpdd2ksxmBi?=
- =?us-ascii?Q?gi2jFRZ+7D7G653viNwUbpNPllE6hE55FwdvOahHrXQuKnjhcBjEhn7uw+XL?=
- =?us-ascii?Q?Dwz8kSQNtQ52AJvCpy59SFrXLCbhxVxnJuDo+39jDsyRfwY/RFtFt8DCeAvn?=
- =?us-ascii?Q?uM0BGkLQcYaic7jI+xZw39/WqQFMpBAiXhdRmW14v2Ie5Jm+Kru3zB3yQ1s4?=
- =?us-ascii?Q?azCB57658AGcDo77Pc3UfbUzO8wXYIIl6SRjDp3BCuDNdj4Ux6F3EfkRbQyu?=
- =?us-ascii?Q?iBO6Df1e7zUoVwuY6zvI9V5SE+mXIWWosFCAuScL1JQUC6zrLJ8UOBs9/7kX?=
- =?us-ascii?Q?V8AtioPLPxbR9ccUBNMC8xjc0My8+nIs28sNF7RDpvYDN2oVysdEcyFTqbkp?=
- =?us-ascii?Q?q8FczoJAvziXLXVv0HjIH+80Tqk4H1aKKQaevyqhLxf8CXfTACe9TMyFmcnU?=
- =?us-ascii?Q?MqrorWsWysN7FQfFWWZT8UUR6+X65fXPnqA8WcqNAtNVSKP1QVru4Xq94FR4?=
- =?us-ascii?Q?mg54fiM5YaRP8me74RN9iyOyb8XJuba5Isjk5KDBrQcmysNNRNNiZ+72Zyte?=
- =?us-ascii?Q?SCsc5NTXRHLyUMOzoRT8rVFeHfbCuedj1K6dLdi5l8WvkUlZZxnit36MuOu+?=
- =?us-ascii?Q?j56IYhvNwpt6/5V7eySEgAs5jyh4MLZytYTOb0G0ZyvYJtgtFcVyylEfALcT?=
- =?us-ascii?Q?P1+/sU3cKE6+/qfl+pfbsyX4cOzI2juYnZSZMWvZq7ryVpncLLgleNVLGcf3?=
- =?us-ascii?Q?eR65T0B7HCUfcY3bluR/nmzOF3znVjxhQ+OQVEA1ilz06WwtKpIJpLYZ6Mj2?=
- =?us-ascii?Q?1Z7VQ2Vzyg8bU1xpfPI3Z0TqRHyE1hSOgCU3OdDIeGdDQOSyXzk2K7sP62S5?=
- =?us-ascii?Q?O9hb06wr/wQ0BQ6j9V7TQbKv1qualQsfuuPVRDl5v6VvddnMIZCy8LZy07hf?=
- =?us-ascii?Q?DGXa3wr4uRiPJtbEeLv3ytsyAalzaS10euAn55oboyFNzuY2EA5ctK1KTJAx?=
- =?us-ascii?Q?LNdiMjEmPeHlWBGV63v/HwRZZCEMoEkvt1gwAaUXwO/JuEk/wrGHlAcU8ZDz?=
- =?us-ascii?Q?fyASCy3reN9AjOgz+jgEOdadCL8SyoZK2cKw1sqzWxv7QWU33ttirvvhUezT?=
- =?us-ascii?Q?21iqOtx4bj9GWQAinlXhS6lLzO+n0InjxTM45GqfN3o6o5Sy4vRlVu42NtNg?=
- =?us-ascii?Q?qnyov6WiA4Zo9T+TBx9p5Pj6Dv64qJqfuxkG6q/u+DzqYpf7oqXPIWnJAApy?=
- =?us-ascii?Q?ndzX70Nww0HIZ7MLa53dhBeqU9YYZ1j4bEVzFGi/bl2jOMfusA1SUsh/Wflr?=
- =?us-ascii?Q?r1/efsGmknyvIv6LiDtzwENP66o2EWFAKIcnUmP7My2QFlJIwZcQSwK73Vi3?=
- =?us-ascii?Q?N2PVUtvKzNXq/TEWx8JI2RJlKP4LzVZModROSC89Ia4/ooCfi2r+++EzWiN8?=
- =?us-ascii?Q?8dfk2a0Je2p1ee+XzEoitgbWNIj+5PpjYngl2ShdcsQEDDHElGxG+WZBSdtR?=
- =?us-ascii?Q?WTJjor8AFsK6ku9rei42atQA0WJcqk47cz6e5SrmbbJtSwqavxfC?=
+	=?us-ascii?Q?4efONOVn5a/F4XvZt6q0ME7TgsPLwFEaM82IFLWVQRIX20LGncZmVDVm3Hpu?=
+ =?us-ascii?Q?jx1nLXsFIcitDzFjSyj1WT5b04TYBeUtBOHQTTCayeWMgx7jvcidh4Tsj6Q+?=
+ =?us-ascii?Q?UO6ycFUgiNU8nFwPZ1C/s4Kk5vvEIrbJ2Y9rInwmglbn7TM3raLM8ndQ0m3Q?=
+ =?us-ascii?Q?4GMiQbjZnXrvbOwYSI2NXl9hyB6E0YHylyYjX+MZNSjHBDMhp+r7KhL2ghil?=
+ =?us-ascii?Q?m0Vd7vnU92vRFbmiDf44sA5gSlMh1RHrUL5KuiKe2hGmF0qd8fF7ZYx+nG2L?=
+ =?us-ascii?Q?SYSp9LZRuMFrKCE3MUvSm2oxjWGV2TnNH3FH9zlHIG6THb9zsyQ80plxEibK?=
+ =?us-ascii?Q?9f8Wx/qQ/jWjUhRKHf8I528r9FMphPproBzUC0n7rBIH13lZh3a8Y2S0J66T?=
+ =?us-ascii?Q?XxTy46Itxr7Nce7hVph5ctwSYhcCe/afEEwi4tZ0VoqVUNFNT6vX2+Wpt7dH?=
+ =?us-ascii?Q?dpuxpB5fpDvGPUS7+Ss4hDN+9MNrRTJC3f/kp48FAtJ7APqPCjOVwrNVybQa?=
+ =?us-ascii?Q?WAtNeUCnjGGkxBXRij6SosiLGTKs6cCxt/hhZndSEC3tAE2n6hN89vqK0+5Y?=
+ =?us-ascii?Q?6ATAnDcQmV/3xmNy4xcZZyQwyVrCxYWoOSWJ9sctuSnX+UF1TJAaKLjXbcXu?=
+ =?us-ascii?Q?gsqMM0FxiPk6Z5SSuf/wgwTdSCAcygWf+otiXRhb3m5aorI3kEX8d7aBLdxx?=
+ =?us-ascii?Q?TxQVOaQN/vPFzuO1yeKv7QboYFK9BHNAzVN5bu2Txeu/EP/w9Fo6yvxU9uwf?=
+ =?us-ascii?Q?9P/XgX9nF+nKay/fXR8cn2JDx3RuUe/SNyn0IZ2ZjP4uNEjhAvgjNuYXFQYw?=
+ =?us-ascii?Q?kRy0GWNy6yR1lTc9VlvYQCq7XdROxkGqFDKPj9kyMIa5HAOMZF5oPGON5d1Q?=
+ =?us-ascii?Q?HCriQYugztEPAhlNvEPZfmsFJBpDjJ8cLA/Dy5rC5Tqu1Ef8NHSBZCqSNayC?=
+ =?us-ascii?Q?mNMFjaLCc01EXXCbb/ZfzgRys79HXRWDe4uoxR2I6Bv5e2OQUNwdgr6QjR03?=
+ =?us-ascii?Q?A4V1OWqVOUcEHIb4XLTDLHtrDUjn2IJnHFG0Yz0KAI0TSeKDz422hkoPKpCL?=
+ =?us-ascii?Q?76uszpjgn7nDfZJ6PqFO9gLI4TbKkg6eRoeMbszwXzCakUnF8NPFTFbhByXN?=
+ =?us-ascii?Q?Nfbj/TsKuNLWai3/gO7WfM48rQhCybrG4WauPD2csSf7ldU5rE6BueC5/WTV?=
+ =?us-ascii?Q?WwYhc5tjJg9hNvzAjApAa8kY3Ay1Kh45VG9dXzQGXC6TPhYYCEPFVUEDpAEI?=
+ =?us-ascii?Q?jZdfVtlkVB5YTCBgrLVuiV+MDLY3SwBnk02hLxTS1FOp7eZqdrPMAlBS+C6X?=
+ =?us-ascii?Q?kaS9U643pkJon4tJlbutDvUSrlw3OMcT/SfGxueAKSxno//8nMtR+2dXtvn/?=
+ =?us-ascii?Q?j3YajKGc+wR/C7q1ybhDuvYv07eGImsazuRlmbfQpZm2OTiamgOllZ57adX1?=
+ =?us-ascii?Q?3EymMVoSHU/eZp1uz0rSWgImTKLXoxPSE879eGcYj5hrGvkooqd1Rfavwqe8?=
+ =?us-ascii?Q?clKH4UVi8AkMu6llGbddCwQmY0yVjmlu17o9Ee8+INeLu9zP6MNIzDVs7CnQ?=
+ =?us-ascii?Q?UWbYWfXZBrEwA2P3jrcQnQnUMNq2wDvgXiyPunyt6RYniKyrMmhftCKTV8XY?=
+ =?us-ascii?Q?38nifnX852qz+kbiqIal7NyCpbJzDdkug34PzjU652l3YqFA69rHu+pThyOk?=
+ =?us-ascii?Q?G8Vih25oOLe/5IApixhJnmTImGN00oLUsUm58DQLngNgojPHo95BmdG/sUhF?=
+ =?us-ascii?Q?cMy3oKCxJsdvNM1TgTTJS2OgfyJquldKdgCqflPuiUlxvqzyf5SC?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 39e793a7-bb0e-4168-45b7-08df41a8282e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 68594ecc-d6b2-4385-9492-08df41a8a05c
 X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Nov 2026 17:04:19.6333
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Nov 2026 17:07:41.1505
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5NBqF3fq58tIV4+GwIktIwap1eaoyNlICIgN1/iTE43j1WmtigPRpWrmgYtX1lGRSPenqk1fs2Yx1XkcpTAfC+YkyeyRZYTXOvS9OwAMXyiroiHR7jAa3u+XD3d2PPZC
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB9640
+X-MS-Exchange-CrossTenant-UserPrincipalName: TDhOd5hq7ausE9bULNXdxfZ53h4roMgHdLCYoFkCm8zh8kXbmgK3YAtHj3tTKlymEDKalh5XMMaoLy3gdQi4d6fK2Kt7bGxxnRPLurMTB3bEO8nvpkqGWPo3TTJ/6F8X
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7599
 
-On Tue, Nov 03, 2026 at 08:49:57PM -0600, Nathan Lynch wrote:
-> Introduce completion status handling and a fixed-capacity pool owned by
-> each context. Only the 32-byte-aligned status blocks are DMA-visible;
-> a private bitmap and spinlock track claims independently of descriptor
-> ring indices.
+On Tue, Nov 03, 2026 at 08:49:58PM -0600, Nathan Lynch wrote:
+> Add hardware-independent KUnit coverage for completion-pool exhaustion
+> across a bitmap word boundary, arbitrary release and reuse, reinitialization
+> of reused status blocks. Verify that a claimed block remains unavailable
+> until explicitly released, including after a simulated late device completion.
+> Also cover release of an unpublished claim.
 >
-> Preallocate storage during context allocation. Claiming and initializing
-> a block cannot allocate memory and fails only when capacity is exhausted.
-> Provide a bounded, killable wait for administrative callers, and wake
-> waiters when blocks are returned. Release blocks only after consumption,
-> unpublished rollback, or hardware quiescence; destroy the pool only when
-> hardware and software no longer access it.
+> Provide test allocation helpers and KUnit-only exports so the tests exercise
+> the production claim and release paths without a coherent-DMA device.
 >
-> Represent a completion-status block by its CPU pointer and DMA address.
-> Check the little-endian signal with READ_ONCE(), then use dma_rmb() before
-> consuming error status or operation results. Polling returns success,
-> -EIO for a terminal error, or -ETIMEDOUT without relinquishing ownership.
->
-> Co-developed-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Wei Huang <wei.huang2@amd.com>
 > Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 > ---
 
 Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
->  drivers/dma/sdxi/Makefile     |   1 +
->  drivers/dma/sdxi/completion.c | 152 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/dma/sdxi/completion.h |  48 +++++++++++++
->  drivers/dma/sdxi/context.c    |   7 ++
->  drivers/dma/sdxi/context.h    |   4 ++
->  drivers/dma/sdxi/hw.h         |  15 +++++
->  6 files changed, 227 insertions(+)
+>  drivers/dma/sdxi/Makefile           |   1 +
+>  drivers/dma/sdxi/completion.c       |  37 ++++++++++
+>  drivers/dma/sdxi/completion.h       |   4 ++
+>  drivers/dma/sdxi/completion_kunit.c | 131 ++++++++++++++++++++++++++++++++++++
+>  4 files changed, 173 insertions(+)
 >
 > diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-> index 00e3f1cb0808..eacad504a816 100644
+> index eacad504a816..d12eebe03870 100644
 > --- a/drivers/dma/sdxi/Makefile
 > +++ b/drivers/dma/sdxi/Makefile
-> @@ -1,6 +1,7 @@
->  # SPDX-License-Identifier: GPL-2.0
->  obj-$(CONFIG_SDXI_CORE) += sdxi-core.o
->  sdxi-core-y := \
-> +	completion.o  \
->  	context.o     \
->  	device.o      \
->  	ring.o
+> @@ -10,4 +10,5 @@ obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
+>  sdxi-pci-y := pci.o
+>
+>  obj-$(CONFIG_SDXI_KUNIT_TEST) += \
+> +	completion_kunit.o    \
+>  	ring_kunit.o
 > diff --git a/drivers/dma/sdxi/completion.c b/drivers/dma/sdxi/completion.c
-> new file mode 100644
-> index 000000000000..c07a0fc101c8
-> --- /dev/null
+> index c07a0fc101c8..dacd1cac6303 100644
+> --- a/drivers/dma/sdxi/completion.c
 > +++ b/drivers/dma/sdxi/completion.c
-> @@ -0,0 +1,152 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * SDXI Descriptor Completion Status Block handling.
-> + *
-> + * Copyright Advanced Micro Devices, Inc.
-> + */
-> +#include <linux/bitfield.h>
-> +#include <linux/bitmap.h>
-> +#include <linux/dma-mapping.h>
-> +#include <linux/iopoll.h>
-> +#include <linux/slab.h>
-> +#include <linux/spinlock.h>
-> +#include <linux/wait.h>
-> +
-> +#include "completion.h"
-> +#include "hw.h"
-> +
-> +/* Only the status blocks themselves are visible to hardware. */
-> +struct sdxi_cst_pool {
-> +	struct sdxi_cst_blk *blocks;
-> +	dma_addr_t dma;
-> +	unsigned int count;
-> +	spinlock_t lock;
-> +	wait_queue_head_t wait;
-> +	unsigned long *allocated;
-> +};
-> +
-> +static void sdxi_cst_pool_init(struct sdxi_cst_pool *pool, unsigned int count)
-> +{
-> +	pool->count = count;
-> +	spin_lock_init(&pool->lock);
-> +	init_waitqueue_head(&pool->wait);
-> +}
-> +
-> +struct sdxi_cst_pool *sdxi_cst_pool_create(struct sdxi_dev *sdxi,
-> +					unsigned int count)
+> @@ -4,6 +4,7 @@
+>   *
+>   * Copyright Advanced Micro Devices, Inc.
+>   */
+> +#include <kunit/visibility.h>
+>  #include <linux/bitfield.h>
+>  #include <linux/bitmap.h>
+>  #include <linux/dma-mapping.h>
+> @@ -90,6 +91,7 @@ bool sdxi_cst_pool_get(struct sdxi_cst_pool *pool, struct sdxi_completion *comp)
+>  	sdxi_cst_blk_init(comp->cst_blk);
+>  	return true;
+>  }
+> +EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_get);
+>
+>  int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
+>  			 struct sdxi_completion *comp)
+> @@ -116,7 +118,42 @@ void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst)
+>  	spin_unlock_irqrestore(&pool->lock, flags);
+>  	wake_up_all(&pool->wait);
+>  }
+> +EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_put);
+>
+> +#if IS_ENABLED(CONFIG_SDXI_KUNIT_TEST)
+> +/* Exercise allocation without requiring a device capable of coherent DMA. */
+> +struct sdxi_cst_pool *sdxi_cst_pool_test_create(unsigned int count)
 > +{
 > +	struct sdxi_cst_pool *pool;
-> +
-> +	if (!count)
-> +		return NULL;
 > +
 > +	pool = kzalloc_obj(*pool, GFP_KERNEL);
 > +	if (!pool)
 > +		return NULL;
-> +
 > +	pool->allocated = bitmap_zalloc(count, GFP_KERNEL);
 > +	if (!pool->allocated) {
 > +		kfree(pool);
 > +		return NULL;
 > +	}
-> +
-> +	/* SDXI 1.0a 6.1.1 requires a 32-byte-aligned completion block. */
-> +	pool->blocks = dma_alloc_coherent(sdxi->dev,
-> +					 array_size(count, sizeof(*pool->blocks)),
-> +					 &pool->dma, GFP_KERNEL);
+> +	pool->blocks = kcalloc(count, sizeof(*pool->blocks), GFP_KERNEL);
 > +	if (!pool->blocks) {
 > +		bitmap_free(pool->allocated);
 > +		kfree(pool);
 > +		return NULL;
 > +	}
-> +
+> +	pool->dma = 0x1000;
 > +	sdxi_cst_pool_init(pool, count);
 > +	return pool;
 > +}
+> +EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_test_create);
 > +
-> +void sdxi_cst_pool_destroy(struct sdxi_dev *sdxi, struct sdxi_cst_pool *pool)
+> +void sdxi_cst_pool_test_destroy(struct sdxi_cst_pool *pool)
 > +{
-> +	dma_free_coherent(sdxi->dev, array_size(pool->count, sizeof(*pool->blocks)),
-> +			  pool->blocks, pool->dma);
+> +	kfree(pool->blocks);
 > +	bitmap_free(pool->allocated);
 > +	kfree(pool);
 > +}
-> +
-> +bool sdxi_cst_pool_get(struct sdxi_cst_pool *pool, struct sdxi_completion *comp)
-> +{
-> +	unsigned long flags;
-> +	unsigned int index;
-> +
-> +	spin_lock_irqsave(&pool->lock, flags);
-> +	index = find_first_zero_bit(pool->allocated, pool->count);
-> +	if (index < pool->count)
-> +		__set_bit(index, pool->allocated);
-> +	spin_unlock_irqrestore(&pool->lock, flags);
-> +	if (index == pool->count)
-> +		return false;
-> +
-> +	comp->cst_blk = &pool->blocks[index];
-> +	comp->cst_blk_dma = pool->dma + index * sizeof(*pool->blocks);
-> +	sdxi_cst_blk_init(comp->cst_blk);
-> +	return true;
-> +}
-> +
-> +int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
-> +			 struct sdxi_completion *comp)
-> +{
-> +	long ret;
-> +
-> +	ret = wait_event_killable_timeout(pool->wait,
-> +					 sdxi_cst_pool_get(pool, comp), HZ);
-> +	if (ret < 0)
-> +		return ret;
-> +	return ret ? 0 : -ETIMEDOUT;
-> +}
-> +
-> +void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst)
-> +{
-> +	unsigned int index = cst - pool->blocks;
-> +	unsigned long flags;
-> +
-> +	if (WARN_ON_ONCE(index >= pool->count))
-> +		return;
-> +
-> +	spin_lock_irqsave(&pool->lock, flags);
-> +	WARN_ON_ONCE(!__test_and_clear_bit(index, pool->allocated));
-> +	spin_unlock_irqrestore(&pool->lock, flags);
-> +	wake_up_all(&pool->wait);
-> +}
-> +
-> +
-> +enum sdxi_completion_state sdxi_cst_blk_check(const struct sdxi_cst_blk *cst)
-> +{
-> +	u64 signal = le64_to_cpu(READ_ONCE(cst->signal));
-> +
-> +	if (signal != SDXI_CST_BLK_SIGNAL_TERMINAL)
-> +		return SDXI_COMPLETION_PENDING;
-> +	/*
-> +	 * The final ER state (and the operation's effects) are
-> +	 * guaranteed visible only after a cleared signal is observed.
-> +	 * See SDXI 1.0 5.6 Memory Consistency Model.
-> +	 */
-> +	dma_rmb();
-> +
-> +	if (FIELD_GET(SDXI_CST_BLK_ER, le32_to_cpu(cst->flags)))
-> +		return SDXI_COMPLETION_ERROR;
-> +
-> +	return SDXI_COMPLETION_DONE;
-> +}
-> +
-> +int sdxi_cst_blk_poll(const struct sdxi_cst_blk *cst)
-> +{
-> +	enum sdxi_completion_state state;
-> +	int ret;
-> +
-> +	ret = read_poll_timeout(sdxi_cst_blk_check, state,
-> +				state != SDXI_COMPLETION_PENDING,
-> +				10, USEC_PER_SEC, false, cst);
-> +	if (ret)
-> +		return ret;		/* -ETIMEDOUT */
-> +
-> +	return state == SDXI_COMPLETION_ERROR ? -EIO : 0;
-> +}
+> +EXPORT_SYMBOL_IF_KUNIT(sdxi_cst_pool_test_destroy);
+> +#endif
+>
+>  enum sdxi_completion_state sdxi_cst_blk_check(const struct sdxi_cst_blk *cst)
+>  {
 > diff --git a/drivers/dma/sdxi/completion.h b/drivers/dma/sdxi/completion.h
-> new file mode 100644
-> index 000000000000..f91f44b9b516
-> --- /dev/null
+> index f91f44b9b516..18c89701d1d6 100644
+> --- a/drivers/dma/sdxi/completion.h
 > +++ b/drivers/dma/sdxi/completion.h
-> @@ -0,0 +1,48 @@
-> +/* SPDX-License-Identifier: GPL-2.0-only */
+> @@ -34,6 +34,10 @@ int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
+>  /* Release only after consumption, unpublished rollback, or hardware quiescence. */
+>  void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst);
+>
+> +#if IS_ENABLED(CONFIG_SDXI_KUNIT_TEST)
+> +struct sdxi_cst_pool *sdxi_cst_pool_test_create(unsigned int count);
+> +void sdxi_cst_pool_test_destroy(struct sdxi_cst_pool *pool);
+> +#endif
+>
+>  static inline void sdxi_cst_blk_init(struct sdxi_cst_blk *cst)
+>  {
+> diff --git a/drivers/dma/sdxi/completion_kunit.c b/drivers/dma/sdxi/completion_kunit.c
+> new file mode 100644
+> index 000000000000..326e3d84da0d
+> --- /dev/null
+> +++ b/drivers/dma/sdxi/completion_kunit.c
+> @@ -0,0 +1,131 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
 > +/* Copyright Advanced Micro Devices, Inc. */
-> +#ifndef DMA_SDXI_COMPLETION_H
-> +#define DMA_SDXI_COMPLETION_H
+> +#include <kunit/test.h>
+> +#include <linux/module.h>
 > +
-> +#include <linux/compiler_attributes.h>
-> +#include "sdxi.h"
-> +#include "hw.h"
+> +#include "completion.h"
 > +
+> +MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
 > +
-> +/* A completion status block and the device address the hardware needs. */
-> +struct sdxi_completion {
-> +	struct sdxi_cst_blk *cst_blk;
-> +	dma_addr_t cst_blk_dma;
-> +};
-> +
-> +struct sdxi_cst_pool;
-> +
-> +/* Software completion states derived from CST_BLK. */
-> +enum sdxi_completion_state {
-> +	SDXI_COMPLETION_PENDING,
-> +	SDXI_COMPLETION_DONE,
-> +	SDXI_COMPLETION_ERROR,
-> +};
-> +
-> +struct sdxi_cst_pool *sdxi_cst_pool_create(struct sdxi_dev *sdxi,
-> +					unsigned int count);
-> +/* Hardware and software must no longer access any blocks before destruction. */
-> +void sdxi_cst_pool_destroy(struct sdxi_dev *sdxi, struct sdxi_cst_pool *pool);
-> +/* Claims and initializes a block; false means the fixed pool is exhausted. */
-> +bool sdxi_cst_pool_get(struct sdxi_cst_pool *pool, struct sdxi_completion *comp);
-> +int sdxi_cst_pool_get_wait(struct sdxi_cst_pool *pool,
-> +			 struct sdxi_completion *comp);
-> +/* Release only after consumption, unpublished rollback, or hardware quiescence. */
-> +void sdxi_cst_pool_put(struct sdxi_cst_pool *pool, struct sdxi_cst_blk *cst);
-> +
-> +
-> +static inline void sdxi_cst_blk_init(struct sdxi_cst_blk *cst)
+> +static void destroy_pool(void *pool)
 > +{
-> +	*cst = (typeof(*cst)) {
+> +	sdxi_cst_pool_test_destroy(pool);
+> +}
+> +
+> +static struct sdxi_cst_pool *alloc_pool(struct kunit *test, unsigned int count)
+> +{
+> +	struct sdxi_cst_pool *pool = sdxi_cst_pool_test_create(count);
+> +
+> +	if (!pool || kunit_add_action_or_reset(test, destroy_pool, pool))
+> +		return NULL;
+> +	return pool;
+> +}
+> +
+> +static void exhaustion(struct kunit *test)
+> +{
+> +	/* Cross a bitmap word boundary without filling the final word. */
+> +	const unsigned int count = BITS_PER_LONG + 3;
+> +	struct sdxi_completion *held, extra = {};
+> +	struct sdxi_cst_pool *pool;
+> +
+> +	pool = alloc_pool(test, count);
+> +	KUNIT_ASSERT_NOT_NULL(test, pool);
+> +	held = kunit_kcalloc(test, count, sizeof(*held), GFP_KERNEL);
+> +	KUNIT_ASSERT_NOT_NULL(test, held);
+> +	for (unsigned int i = 0; i < count; i++) {
+> +		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &held[i]));
+> +		KUNIT_EXPECT_EQ(test, held[i].cst_blk_dma % 32, 0);
+> +		KUNIT_EXPECT_EQ(test, le64_to_cpu(held[i].cst_blk->signal),
+> +				(u64)SDXI_CST_BLK_SIGNAL_INIT);
+> +		for (unsigned int j = 0; j < i; j++) {
+> +			KUNIT_EXPECT_PTR_NE(test, held[i].cst_blk, held[j].cst_blk);
+> +			KUNIT_EXPECT_NE(test, held[i].cst_blk_dma, held[j].cst_blk_dma);
+> +		}
+> +	}
+> +	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &extra));
+> +	KUNIT_EXPECT_PTR_EQ(test, extra.cst_blk, NULL);
+> +	for (unsigned int i = 0; i < count; i++)
+> +		sdxi_cst_pool_put(pool, held[i].cst_blk);
+> +}
+> +
+> +static void arbitrary_release(struct kunit *test)
+> +{
+> +	struct sdxi_completion held[5], comp;
+> +	struct sdxi_cst_pool *pool;
+> +	const unsigned int order[] = { 3, 1, 4, 0, 2 };
+> +
+> +	pool = alloc_pool(test, ARRAY_SIZE(held));
+> +	KUNIT_ASSERT_NOT_NULL(test, pool);
+> +	for (unsigned int i = 0; i < ARRAY_SIZE(held); i++)
+> +		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &held[i]));
+> +
+> +	/* A released block is reusable while all other owners retain theirs. */
+> +	for (unsigned int i = 0; i < ARRAY_SIZE(order); i++) {
+> +		unsigned int index = order[i];
+> +
+> +		sdxi_cst_pool_put(pool, held[index].cst_blk);
+> +		KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &comp));
+> +		KUNIT_EXPECT_PTR_EQ(test, comp.cst_blk, held[index].cst_blk);
+> +		KUNIT_EXPECT_EQ(test, comp.cst_blk_dma, held[index].cst_blk_dma);
+> +		KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &comp));
+> +	}
+> +	for (unsigned int i = 0; i < ARRAY_SIZE(held); i++)
+> +		sdxi_cst_pool_put(pool, held[i].cst_blk);
+> +}
+> +
+> +static void reuse_initializes_status(struct kunit *test)
+> +{
+> +	const struct sdxi_cst_blk initial = {
 > +		.signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_INIT),
 > +	};
+> +	struct sdxi_completion first, second;
+> +	struct sdxi_cst_pool *pool;
+> +
+> +	pool = alloc_pool(test, 1);
+> +	KUNIT_ASSERT_NOT_NULL(test, pool);
+> +	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &first));
+> +	memset(first.cst_blk, 0xff, sizeof(*first.cst_blk));
+> +	first.cst_blk->signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_TERMINAL);
+> +	sdxi_cst_pool_put(pool, first.cst_blk);
+> +	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &second));
+> +	KUNIT_EXPECT_PTR_EQ(test, first.cst_blk, second.cst_blk);
+> +	KUNIT_EXPECT_MEMEQ(test, second.cst_blk, &initial, sizeof(initial));
+> +	sdxi_cst_pool_put(pool, second.cst_blk);
 > +}
 > +
-> +int __must_check sdxi_cst_blk_poll(const struct sdxi_cst_blk *cst);
-> +enum sdxi_completion_state sdxi_cst_blk_check(const struct sdxi_cst_blk *cst);
+> +static void retained_completion(struct kunit *test)
+> +{
+> +	struct sdxi_completion timed_out, other;
+> +	struct sdxi_cst_pool *pool;
 > +
-> +#endif /* DMA_SDXI_COMPLETION_H */
-> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-> index 956bb06f9499..60cc812df204 100644
-> --- a/drivers/dma/sdxi/context.c
-> +++ b/drivers/dma/sdxi/context.c
-> @@ -22,6 +22,7 @@
->  #include <asm/barrier.h>
->  #include <asm/rwonce.h>
->
-> +#include "completion.h"
->  #include "context.h"
->  #include "hw.h"
->  #include "ring.h"
-> @@ -56,6 +57,8 @@ static void sdxi_free_cxt(struct sdxi_cxt *cxt)
->  	if (cxt->akey_table)
->  		dma_free_coherent(sdxi->dev, sizeof(*cxt->akey_table),
->  				  cxt->akey_table, cxt->akey_table_dma);
-> +	if (cxt->cst_pool)
-> +		sdxi_cst_pool_destroy(sdxi, cxt->cst_pool);
->  	if (cxt->sq)
->  		sdxi_sq_free(sdxi, cxt->sq);
->  	ida_destroy(&cxt->akey_ida);
-> @@ -85,6 +88,10 @@ static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
->  	if (!cxt->sq)
->  		return NULL;
->
-> +	cxt->cst_pool = sdxi_cst_pool_create(sdxi, DEFAULT_DESC_RING_ENTRIES);
-> +	if (!cxt->cst_pool)
-> +		return NULL;
+> +	pool = alloc_pool(test, 1);
+> +	KUNIT_ASSERT_NOT_NULL(test, pool);
+> +	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &timed_out));
+> +	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &other));
+> +	/* Even a late completion remains allocated until its owner releases it. */
+> +	timed_out.cst_blk->signal = cpu_to_le64(SDXI_CST_BLK_SIGNAL_TERMINAL);
+> +	KUNIT_EXPECT_FALSE(test, sdxi_cst_pool_get(pool, &other));
+> +	sdxi_cst_pool_put(pool, timed_out.cst_blk);
+> +	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &other));
+> +	/* A never-published claim can be returned without a terminal signal. */
+> +	sdxi_cst_pool_put(pool, other.cst_blk);
+> +	KUNIT_ASSERT_TRUE(test, sdxi_cst_pool_get(pool, &other));
+> +	sdxi_cst_pool_put(pool, other.cst_blk);
+> +}
 > +
->  	cxt->akey_table = dma_alloc_coherent(dev, sizeof(*cxt->akey_table),
->  					     &cxt->akey_table_dma, GFP_KERNEL);
->  	if (!cxt->akey_table)
-> diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
-> index cad5a153ec22..94e0fc45f281 100644
-> --- a/drivers/dma/sdxi/context.h
-> +++ b/drivers/dma/sdxi/context.h
-> @@ -16,6 +16,9 @@
->  #include "sdxi.h"
->  #include "submission.h"
->
-> +struct sdxi_completion;
-> +struct sdxi_cst_pool;
-> +
->  /* Use a 4 KiB AKey table, the minimum architectural size. */
->  struct sdxi_akey_table {
->  	struct sdxi_akey_ent entry[SZ_4K / sizeof(struct sdxi_akey_ent)];
-> @@ -40,6 +43,7 @@ struct sdxi_cxt {
->  	dma_addr_t akey_table_dma;
->
->  	struct sdxi_sq *sq;
-> +	struct sdxi_cst_pool *cst_pool;
->
->  	struct sdxi_ring_state *ring_state;
->  };
-> diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
-> index b333e091c583..c1bff631a5ae 100644
-> --- a/drivers/dma/sdxi/hw.h
-> +++ b/drivers/dma/sdxi/hw.h
-> @@ -110,6 +110,21 @@ struct sdxi_akey_ent {
->  } __packed __aligned(16);
->  static_assert(sizeof(struct sdxi_akey_ent) == 16);
->
-> +/* SDXI 1.0 Table 6-4: CST_BLK (Completion Status Block) */
-> +struct sdxi_cst_blk {
-> +	__le64 signal;
-> +	__le32 flags;
-> +#define SDXI_CST_BLK_ER BIT(31)
-> +	__u8 rsvd_0[20];
-> +} __packed __aligned(32);
-> +static_assert(sizeof(struct sdxi_cst_blk) == 32);
-> +
-> +/* SDXI 1.0 4.4.2 Completion-Status Modes */
-> +enum sdxi_cst_blk_signal {
-> +	SDXI_CST_BLK_SIGNAL_TERMINAL = 0,
-> +	SDXI_CST_BLK_SIGNAL_INIT     = 1,
+> +static struct kunit_case completion_testcases[] = {
+> +	KUNIT_CASE(exhaustion),
+> +	KUNIT_CASE(arbitrary_release),
+> +	KUNIT_CASE(reuse_initializes_status),
+> +	KUNIT_CASE(retained_completion),
+> +	{}
 > +};
 > +
->  struct sdxi_desc {
->  	union {
->  		/*
+> +static struct kunit_suite completion_tests = {
+> +	.name = "SDXI completion pool",
+> +	.test_cases = completion_testcases,
+> +};
+> +kunit_test_suite(completion_tests);
+> +
+> +MODULE_DESCRIPTION("SDXI completion pool tests");
+> +MODULE_LICENSE("GPL");
 >
 > --
 > 2.56.0
