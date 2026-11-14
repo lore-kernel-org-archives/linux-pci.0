@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794622395;
-	b=Nk86+5nOd42mynYAaQ/rAC+EOmrpAgI+A/DvfbwaLgqr0U0sZa0l70JXaHmdwDlqujyV
-	 E1bdqe95iM2PgVU8eBG12PytN+0BbLdG+IknTMgnv1C9zn/+GNxOF2+XPt1hrDcCyyThF
-	 rwVc4UDlqd89rvFWUCQXyQjgBS29bLwdKBC3Dzo+xz3jtqe8+XXepnaI3gJ0OZuA0elJL
-	 YiNpTjq6sMcBMyzJOkLXpiJmxJLewrfe2OHWvAOBJKA2eMAnWzA4iJ4OPMsRrqSwM+iap
-	 bCve+Ir8y25V7POvjDfzOKfcj/d8gY9SWQy7AzJ/IVVcgk365O/xD1K4waqNt4Wc62Q==
+	t=1794622651;
+	b=Fs7LBvei24AylOCgsySgsVOhwLeIfxHClDcGxzdWl0lVb51SHHmsuiQobCM4ptHZW93I
+	 sGkPhO/61iHPNgYOiq/0p1Pc4Z0uIOX8wl095pkJLpNxbITktYxcSNVYMlxPCVlBnby5f
+	 ZxnEkT30fdiTf6BjgostLivYLFe29gmdxrlNSXkkCiiRWSIm3BtGqAG+V8HpoGLxdxz4V
+	 zNSt1IxOQLJytv11UHQmbjqAyxN3EsxzRvbpE2rzjR4h7iX8jOdopFlqleokBZMW296Lf
+	 t4THDBSsiDgGZOOZTYnrcAczyLcUE9C4KH9V89C5C6KihcyT5rGCxLiumynJW5h5Z9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794622395;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794622651;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=CQMxZfqsFf75Vn5A1IqsrJ+ZSPsszUSfkVllroejaAw=;
-	b=EQgvGV8ND9mmugCbROkVZVBboTHPLbwfnds+q2WO0Cd2cJIcU7D2ewwC+pU9dLh8ceuP
-	 vCxpuLAV3dcPZr0Y9//Gd4HZTVTWx5u1FvXDEOZfVis7KXjMUM29jVg6pGlJ7Zr3QRli0
-	 izyA5fvfBsqxTD/rPScRn5FCxV/82dDXu5zHM/6S+znFMuM3nKJBuxzRX5dXyGojQ5+P+
-	 Mxcjq3knP8XOLXMVSaH/Fn0tuvgM+/fgsExE7sKTFYB4W1A7NtnTHA1vnagnB3q4NwpcT
-	 wXcJ4VNwFXSKyeU+fiTzv/RHWwt6f6RfbuU5F/r9pmQlC8Vd/y6555VLwKr5oT84nXg==
+	bh=/0PPi8HgOWwIYA6DTpAtpiOs8DnZtX8Uk3deaRG/IQ0=;
+	b=q/mZwg3HFExZpKIn85PFqcGxB6qus2+wzcq1aOH9HBMWc5H9W18hKiGV+hWflrIbdItf
+	 cvQHojtjQlKkxqZpA4mNJliQDFOBfK3llyWXx9ZZtBy4XEk5wUFvHpzAdHbcd0hoeg1mX
+	 auMUJt3Zg7Oxu591JfCgTX5/aNDS/PiB5iEWIcVfcZq34pS8wmFFc8Jz02voBYsGltH5K
+	 DtsXMliEoRAri2Uajo90zKrdhEyZmdngApKICt1Opt6qVvakYnRkUiF8bBd3lsnLQcb/v
+	 mzX55ZFYI6EUQEQDXki6KX/Gk+WF9flAoUtBAUUrnUwQYjvH4jbN7BQ/39FHEx8gTmQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ETjLCxHq;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iGM4hQ3X;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC83606A336
-	for <linux-pci@vger.kernel.org>; Sat, 14 Nov 2026 02:13:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02004606A332
+	for <linux-pci@vger.kernel.org>; Sat, 14 Nov 2026 02:17:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ETjLCxHq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3FCB1F000C4;
-	Sat, 14 Nov 2026 02:13:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iGM4hQ3X
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 597E51F000C4;
+	Sat, 14 Nov 2026 02:17:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794622395;
-	bh=CQMxZfqsFf75Vn5A1IqsrJ+ZSPsszUSfkVllroejaAw=;
+	s=k20260515; t=1794622650;
+	bh=/0PPi8HgOWwIYA6DTpAtpiOs8DnZtX8Uk3deaRG/IQ0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ETjLCxHqg7n/xe0u6FbD2o4RyhBcxlKQtl+TnMZIia+Kavaf51cC5gVKzlyqQGgv8
-	 qo/unHNFQqZAFVnTe+jB1hux7VUZKODaKvEl9gKxX8mwHCw849hcSScXvzH7EI+jmG
-	 f5BCU/4l+Cn452ygDZql0+ZTlJwI2IZp5HBibO7584tL3N3L0A56dwy3ZB6KT85V+h
-	 SEol2kETZJ/wJzEYjY0xRqhGOnMhQDvfTk7Ftd0Is7DNdPONGe4VnxgdcK5fIPAbvr
-	 lIJIZfKv6vNnT6ZssHqHwAzsS8p/XH/X67bvjJ82VNklvbzTnZDnt8EKK4IEbGUnVk
-	 D6kvg7DJipYPQ==
-Message-ID: <sashiko-outbox-214045@kernel.org>
+	b=iGM4hQ3XIXezBGbBAazazQKICQtPX5YuyU09UrKXBHAfX2X+gZsaTvLOgqSVos2vr
+	 WpcL8/B2mbrdg16nhjfudOLzbEPJ+cua3PksHWKw3y+XotCjoVM92fVPmTaTeNZ6OH
+	 U/cRk0z0L5x9ScEgDrmbOm62L3vh6eMHRdUh+N50NjSqtspP2WMI4H/3khK24UUkzo
+	 RolZQtXbzUnVKVafm8Zb0TI0ivOQHa7e8Xp6FKYCtr6Egbt5r63b6P5NPjRCne9vkX
+	 6EY70ZRdZy3MAsHyDETaSIusgTAaQ1Ag05jFkmRvIXkyTNVfxnbwmP7DO2e5xtR3WW
+	 VUjnPdPgVO92g==
+Message-ID: <sashiko-outbox-214048@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 2/4] PCI: dwc: Force L2 link entry on shutdown/reboot
- without D3cold check
+Subject: Re: [PATCH v9 4/4] PCI: qcom: Implement shutdown() callback
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261114-shutdown-v9-2-5430c9f242ed@oss.qualcomm.com>
+In-Reply-To: <20261114-shutdown-v9-4-5430c9f242ed@oss.qualcomm.com>
 References: <20261114-shutdown-v9-0-5430c9f242ed@oss.qualcomm.com>
- <20261114-shutdown-v9-2-5430c9f242ed@oss.qualcomm.com>
+ <20261114-shutdown-v9-4-5430c9f242ed@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 14 Nov 2026 02:13:14 +0000
+Date: Sat, 14 Nov 2026 02:17:29 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,63 +62,73 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [High] PCI: dwc: unupdated dw_pcie_suspend_noirq() call in
-  rockchip_pcie_suspend()
+- [Medium] PCI: qcom: chained MSI IRQs left unmasked by
+  dw_pcie_mask_msi() in shutdown
 --
 
-commit bf9695dc1baada77eb514fb928ceb40aa4b4b9f7
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+commit 4909e5bc39d1622646337d65d38a92d3c39b97f5
+Author: Manivannan Sadhasivam <mani@kernel.org>
 
-PCI: dwc: Force L2 link entry on shutdown/reboot without D3cold check
+PCI: qcom: Implement shutdown() callback
 
-This commit adds a force parameter to dw_pcie_suspend_noirq() so callers
-can force L2 link entry regardless of whether downstream endpoints support
-D3cold, and updates callers across the DesignWare controller drivers.
+This commit implements the platform driver shutdown() callback for the
+Qualcomm PCIe host controller to mask interrupts, transition the link to
+L2, and disable runtime PM during system shutdown.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/c=
-ontroller/dwc/pcie-designware.h
-> index 0ece9c4332297..f774fc6d2a248 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -902,7 +902,7 @@ static inline enum dw_pcie_ltssm dw_pcie_get_ltssm(st=
-ruct dw_pcie *pci)
->  const char *dw_pcie_ltssm_status_string(enum dw_pcie_ltssm ltssm);
-> =20
->  #ifdef CONFIG_PCIE_DW_HOST
-> -int dw_pcie_suspend_noirq(struct dw_pcie *pci);
-> +int dw_pcie_suspend_noirq(struct dw_pcie *pci, bool force);
->  int dw_pcie_resume_noirq(struct dw_pcie *pci);
->  void dw_handle_msi_irq(struct dw_pcie_rp *pp);
->  void dw_pcie_msi_init(struct dw_pcie_rp *pp);
-> @@ -915,7 +915,7 @@ int dw_pcie_allocate_msi_domains(struct dw_pcie_rp *p=
-p);
->  void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int=
- devfn,
->  				       int where);
->  #else
-> -static inline int dw_pcie_suspend_noirq(struct dw_pcie *pci)
-> +static inline int dw_pcie_suspend_noirq(struct dw_pcie *pci, bool force)
->  {
->  	return 0;
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
+ler/dwc/pcie-qcom.c
+> index 5327792957340..0f548c6ce6a88 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+
+[ ... ]
+
+> @@ -2467,6 +2478,24 @@ static int qcom_pcie_probe(struct platform_device =
+*pdev)
+>  	return ret;
 >  }
+> =20
+> +static void qcom_pcie_shutdown(struct platform_device *pdev)
+> +{
+> +	struct qcom_pcie *pcie =3D platform_get_drvdata(pdev);
+> +	struct dw_pcie *pci =3D pcie->pci;
+> +
+> +	if (pcie->global_irq)
+> +		disable_irq(pcie->global_irq);
+> +
+> +	if (pci->pp.use_imsi_rx)
+> +		dw_pcie_mask_msi(&pci->pp);
+> +
+> +	if (!pcie->cfg->firmware_managed && !pci->suspended)
+> +		dw_pcie_suspend_noirq(pci, true);
+> +
+> +	pm_runtime_put_sync(&pdev->dev);
+> +	pm_runtime_disable(&pdev->dev);
+> +}
 
-[Severity: High]
-Does rockchip_pcie_suspend() in drivers/pci/controller/dwc/pcie-dw-rockchip=
-.c
-also need to be updated to pass the new force parameter?
+[Severity: Medium]
+Does dw_pcie_mask_msi() actually mask or detach the chained MSI handler
+before DBI clocks are turned off?
 
-drivers/pci/controller/dwc/pcie-dw-rockchip.c:rockchip_pcie_suspend() {
-    ...
-	if (rockchip->data->mode =3D=3D DW_PCIE_EP_TYPE)
-		return 0;
+dw_pcie_msi_host_init() registers each pp->msi_irq[ctrl] as a chained
+handler via irq_set_chained_handler_and_data() with dw_chained_msi_isr(),
+and dw_pcie_mask_msi() only calls disable_irq() on those interrupts.  On
+interrupt controllers whose irq_chip does not implement .irq_disable (such
+as GICv3 on Qualcomm SoCs) and when unlazy disable is not set,
+__irq_disable() only marks the descriptor disabled in software without
+calling mask_irq().
 
-	ret =3D dw_pcie_suspend_noirq(pci);
-    ...
-}
+Because generic_handle_irq_desc() invokes desc->handle_irq directly for
+chained interrupts, dw_chained_msi_isr() does not check
+irqd_irq_disabled().  If a late or spurious MSI arrives after
+dw_pcie_suspend_noirq() or pm_runtime_put_sync() cuts DBI clocks and
+power, dw_chained_msi_isr() will still call dw_handle_msi_irq() and read
+unclocked DBI registers, causing an SError or NoC fault.
 
-Leaving that caller with a single argument breaks the build when
-pcie-dw-rockchip.c is compiled.
+Clearing the chained handler via irq_set_chained_handler_and_data() (as
+dw_pcie_free_msi() does) would shut down and mask the parent IRQ line at
+the interrupt controller while leaving the MSI domain and mappings intact.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261114-shutdown-v=
-9-0-5430c9f242ed@oss.qualcomm.com?part=3D2
+9-0-5430c9f242ed@oss.qualcomm.com?part=3D4
