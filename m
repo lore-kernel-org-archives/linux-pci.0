@@ -1,59 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794673999;
-	b=rX92DHJCaIyxw9QFxtggA3926R/E1G0FrQf4CYEnGIw5DPOh3OmXa4oXx3SpKM8AyQx/
-	 O5GRH3Y7gh2ovZjGGQFDD8IhPgDGZE9/JPWTh8yoT3Rb39ke8P789GvPd0hi7Z+gMPmTR
-	 3kMjnICgypEezeMQMdGGiDt7fvb9igXMdViUiRAYNU1vZjOUMP+7JBoie+BcF8xL/M+Q1
-	 ur+qGSFCgvdcfZ8lUWLJLgWG+U3seOAVXf3hOcVMeqCXjFz0h9+DXtoIMIzXDKG4HhV55
-	 BPjrhWF/gb/uYBbDseI0eHW3dVuYh4MBkieYkRsDwEFQMgZiQmKsRgWDqyEENXGEHqA==
+	t=1794674070;
+	b=yA8ZW1rb/V4jKHC7mS0eApGoCHD71w/HuNbGFNnRqYMAMUbbSRslYooQsFUXrotLSuTY
+	 /tzMJky96mBeCPGwgqQqQ6chRABXFDXagBKDdFgCuY2RGP4GTqb5fydrmNmv2QJuM9rxZ
+	 i/J3jZk6RMSCXJq1IHEyOvpvFSBJ/D8hJOPYufaz/PD50V3gkQ3xxCoASFHMkE+IHM39o
+	 wmW2Nsayci6SBAvFjxAGlZZrRspV4AZFdcCxDPSyETT97NvcTcRpem/MBybLnMsGxgoVQ
+	 AL9tvDCyD553AUi+PZLsWdavBa9QGGOgrluDcmIXkaAmAb0hZ3eeg/o9EhcTwim0A+w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794673999;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794674070;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=FyQe9jL1Zwv63S3BHn0HTk4v8HLzH6ONbMmKcl9iA20=;
-	b=va59x3gJZt9oTansyhFMdEbDYD3KdInOnnyQLW61DY6n4RPwyc3edLp8P3SVKYp0yBrA
-	 sCo1VhH01g5iA9ZbGKrwIXaUlrusyi2zB4dXEuc82GUz7h4aU3D6C/FZISnAqP8eLpYo2
-	 PS8hn/flQrQYzt48C7HGgM7cNwb2p+hZPmAl/ef5wZ5txotMXEKr6Fd/w5+gEHFIIz2Xf
-	 lqKTu5yyzNNvDSwh4gpkcE98clono0H/X+yMK58uX0xXywpUZeqP9JNKH09jvYH+aNbGW
-	 xG3xm+tDJ9Xv6K5/bHKI3D8Zn7RAP4Be76Co9AOl/VdRLC23r5NGRvmeUr2kIFA6a1g==
+	bh=153KEwy2rYQSi6UdJ27uwP/UbojbxTfBxXyRoK0tsns=;
+	b=GZZTNCjOp6K1qnU4J6FeudFAoiwKGdv58hLfjbrRc73a9+WhqC7s18hFtjXG4Agsf5zx
+	 Nz6r5B+zPzl867r6dHbelQNkPef2yU7D+4DaZ4azCcKpXumElGzpdL0b+ABSlS/fzEcbR
+	 adp6YCPeyJDMRnFuHmy0MFwh4fcpf0ikcnaW1OpP9brnyNjz4Mw4c94tDvTDAAJndah5G
+	 wC3NlLe7C+mkJkb5NydLmEt4z5IwXU1u7vv/rBuxqsc93HQIhviimSkABwox+Ul91Iqjd
+	 rPaWCx/lmgTeDv8eyEoVXFWK/JShKnOhNKxTYLi1gQCaGByQqA1jhDgDh9ASrMUqKuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c1XdZ3yj;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=orcqhncc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA9F1606A327
-	for <linux-pci@vger.kernel.org>; Sat, 14 Nov 2026 16:33:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBA56606A899
+	for <linux-pci@vger.kernel.org>; Sat, 14 Nov 2026 16:34:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c1XdZ3yj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5362D1F000C4;
-	Sat, 14 Nov 2026 16:33:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=orcqhncc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25AF51F000C8;
+	Sat, 14 Nov 2026 16:34:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794673999;
-	bh=FyQe9jL1Zwv63S3BHn0HTk4v8HLzH6ONbMmKcl9iA20=;
+	s=k20260515; t=1794674070;
+	bh=153KEwy2rYQSi6UdJ27uwP/UbojbxTfBxXyRoK0tsns=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=c1XdZ3yj5WDve0mfvHbyMK0db2s7PaiMiqbRaT4l/WahcgTvqu6hswoQ+/Y6NpIA2
-	 4khfO/l4FqBzCcuzJJKMetUy7cgwj3+DtIHv16YtRFaPL6v/sflidQ5iOlPhPbqlHf
-	 sbTpoFeOWh7Hh3+Lbo6y8mC35Xu8H1QXx3+ct6vL3mSrDNRGsgT1TBiqXm7iqCx9X+
-	 c1F91ErF9kdUxqyv42NNcm6wz5XUADqmAdDhtiqwZqBQdeBIVSvxSlUcoMDazkxA3r
-	 Q1OX5ZUi/gBC9Jxzn0whp7ZDpKutuWnsSWUpPfRaWr6wscRo45CmDYrPOdc4asX56P
-	 ibTCa/X+tfFsA==
-Message-ID: <sashiko-outbox-214755@kernel.org>
+	b=orcqhncc6CKyYKJ4SnVC40jxnwu5UOarnXG7tr714cDTdm2Toal/kpTpC0T3sua/T
+	 fKkjSpWu0RDpBgdDcv+MA8CDLYSATNmi//GmsXYzfrOGF1AfLvL2sUxmo2cI/0yYpc
+	 i8cHJLbOQTDCSUFbXlNFUVJAf/9LeA3FFPeL8Mpl8P5Ql6YySRJj/mOY6yu5hPoUXu
+	 y9rVWyERX8jterVCufMEYa4FHwwbqMOfL6QKJZ2j5/Q0weQteUIOyZecIcxV72qRcB
+	 4nfIjlOdurw7wWBAxVRvVRt/stPy7/hibToQdtu5gyuxx54JSLRq6ydUg67oJfii2/
+	 Feml9ZhOW5ZkA==
+Message-ID: <sashiko-outbox-214756@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 09/12] drm/amdgpu: Catch register access while GMUX
- keeps the GPU off
+Subject: Re: [PATCH v2 02/12] PCI: Disable pcie port on specific amd devices
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
 Cc: =?utf-8?b?b3BlbiBsaXN0OlBDSSBTVUJTWVNURU0=?= <linux-pci@vger.kernel.org>,
  =?utf-8?b?b3BlbiBsaXN0OlJBREVPTiBhbmQgQU1ER1BVIERSTSBEUklWRVJT?= <amd-gfx@lists.freedesktop.org>,
  =?utf-8?b?b3BlbiBsaXN0OkRSTSBEUklWRVJT?= <dri-devel@lists.freedesktop.org>
-In-Reply-To: <20261114160731.3756-10-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261114160731.3756-3-atharvatiwarilinuxdev@gmail.com>
 References: <20261114160731.3756-1-atharvatiwarilinuxdev@gmail.com>
- <20261114160731.3756-10-atharvatiwarilinuxdev@gmail.com>
+ <20261114160731.3756-3-atharvatiwarilinuxdev@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 14 Nov 2026 16:33:18 +0000
+Date: Sat, 14 Nov 2026 16:34:29 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,117 +64,137 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 2 potential
 issues to consider:
-- [High] drm/amdgpu: adev->runpm_active initialized after
-  amdgpu_virt_init()
-- [Medium] drm/amdgpu: premature runpm_active set and missing unwind on
-  resume
+- [High] PCI: no_pcie_port leaves D3cold bridges exposed in suspend and
+  sysfs
+- [Medium] x86/PCI: quirk_disable_pcie_port() disables pcieport on
+  Thunderbolt eGPUs
 --
 
-commit 720e36a43938e97cb3f99b288c561e7448e2fbc3
-Author: Andre Eikmeyer <dev@deq.rocks>
+commit ceffb6c4c39f628d202fdc8e2a5f341d822f54ff
+Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
 
-drm/amdgpu: Catch register access while GMUX keeps the GPU off
+PCI: Disable pcie port on specific amd devices
 
-This commit adds a runpm_active flag to struct amdgpu_device and checks it
-in amdgpu_device_skip_hw_access() and the indirect register accessors to
-skip and warn on register accesses while the GPU is runtime suspended via
-GMUX.
+This commit adds a no_pcie_port flag to struct pci_dev and sets it via an
+early PCI fixup on the upstream bridges of certain AMD GPUs on Apple
+MacBookPro models so pcie_portdrv does not bind to them.
 
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm=
-/amd/amdgpu/amdgpu_device.c
-> index ac336594bf055..ed205352f0f0a 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> @@ -947,6 +947,10 @@ bool amdgpu_device_skip_hw_access(struct amdgpu_devi=
-ce *adev)
->  	if (adev->no_hw_access)
->  		return true;
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 795d81c7a4de4..b1697cc4aed56 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -1094,6 +1094,48 @@ static void asus_disable_nvme_d3cold(struct pci_de=
+v *pdev)
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x9a09, asus_disable_nvme_d=
+3cold);
 > =20
-> +	if (unlikely(!READ_ONCE(adev->runpm_active))) {
-> +		WARN_RATELIMIT(1, "%s: register access while powered off\n", dev_name(=
-adev->dev));
-> +		return true;
+> +static const struct dmi_system_id quirk_disable_pcie_port_dmi_table[] =
+=3D {
+> +	{
+> +		.matches =3D {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,1"),
+> +		},
+> +	},
+> +	{
+> +		.matches =3D {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro15,3"),
+> +		},
+> +	},
+> +	{
+> +		.matches =3D {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,1"),
+> +		},
+> +	},
+> +	{
+> +		.matches =3D {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Apple Inc."),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro16,4"),
+> +		},
+> +	},
+> +	{}
+> +};
+> +
+> +static void quirk_disable_pcie_port(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *upstream =3D pdev;
+> +
+> +	if (dmi_check_system(quirk_disable_pcie_port_dmi_table)) {
+> +		while ((upstream =3D pci_upstream_bridge(upstream)))
+> +			upstream->no_pcie_port =3D 1;
 > +	}
->  #ifdef CONFIG_LOCKDEP
->  	/*
->  	 * This is a bit complicated to understand, so worth a comment. What we=
- assert
-> @@ -2029,6 +2033,7 @@ static int amdgpu_device_ip_early_init(struct amdgp=
-u_device *adev)
->  	int i, r;
-> =20
->  	amdgpu_device_enable_virtual_display(adev);
-> +	adev->runpm_active =3D true;
-> =20
->  	if (amdgpu_sriov_vf(adev)) {
->  		/*
-
-[Severity: High]
-Is adev->runpm_active initialized too late during device probe?
-
-In amdgpu_device_init(), amdgpu_virt_init() runs before
-amdgpu_device_ip_early_init():
-
-drivers/gpu/drm/amd/amdgpu/amdgpu_device.c:amdgpu_device_init() {
-	...
-	/* detect hw virtualization here */
-	amdgpu_virt_init(adev);
-	...
-	/* early init functions */
-	r =3D amdgpu_device_ip_early_init(adev);
-}
-
-Inside amdgpu_virt_init() -> amdgpu_virt_init_detect_asic(), the driver
-calls RREG32(mmRCC_IOV_FUNC_IDENTIFIER) (or mmBIF_IOV_FUNC_IDENTIFIER on
-Tonga/Fiji).  Because adev is zero-allocated and adev->runpm_active is
-still false at that point, amdgpu_device_skip_hw_access() fires a
-WARN_RATELIMIT splat on every probe of those GPUs and makes RREG32()
-return 0, which also prevents SR-IOV VF detection from setting
-AMDGPU_SRIOV_CAPS_IS_VF.
-
-Setting adev->runpm_active =3D true in amdgpu_device_init() before
-amdgpu_virt_init() would avoid this regression.
-
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/am=
-d/amdgpu/amdgpu_drv.c
-> index 3978ed284048f..d1b0c6c7301ea 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-> @@ -2935,6 +2935,9 @@ static int amdgpu_pmops_runtime_suspend(struct devi=
-ce *dev)
->  		amdgpu_device_baco_enter(adev);
->  	}
-> =20
-> +	if (adev->pm.rpm_mode =3D=3D AMDGPU_RUNPM_GMUX)
-> +		WRITE_ONCE(adev->runpm_active, false);
-> +
->  	dev_dbg(&pdev->dev, "asic/device is runtime suspended\n");
-> =20
->  	return 0;
-> @@ -2963,6 +2966,8 @@ static int amdgpu_pmops_runtime_resume(struct devic=
-e *dev)
->  	if (adev->pm.rpm_mode =3D=3D AMDGPU_RUNPM_NONE)
->  		return -EINVAL;
-> =20
-> +	WRITE_ONCE(adev->runpm_active, true);
-> +
->  	/* Avoids registers access if device is physically gone */
->  	if (!pci_device_is_present(adev->pdev))
->  		adev->no_hw_access =3D true;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x67ef, quirk_disable_pcie_po=
+rt);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x69af, quirk_disable_pcie_po=
+rt);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7340, quirk_disable_pcie_po=
+rt);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x7360, quirk_disable_pcie_po=
+rt);
 
 [Severity: Medium]
-Should amdgpu_pmops_runtime_resume() set adev->runpm_active only after
-restoring PCI power and config state, and clear it again if resume fails?
+Can quirk_disable_pcie_port() also disable pcieport on a Thunderbolt
+hierarchy when an external GPU with one of these retail AMD PCI device IDs
+(such as Radeon RX 460/560 0x67ef or Radeon RX 5500 XT 0x7340) is attached?
 
-In the AMDGPU_RUNPM_GMUX branch right below, the device is still in
-PCI_D3cold with PCI memory decoding disabled until pci_set_power_state(),
-amdgpu_device_load_pci_state(), and pci_enable_device() complete.  If
-pci_enable_device() fails, or if amdgpu_device_resume() fails and calls
-pci_disable_device(pdev), amdgpu_pmops_runtime_resume() returns an error
-with adev->runpm_active left set to true while the PCI device is disabled,
-allowing subsequent register accesses to bypass
-amdgpu_device_skip_hw_access().
+Walking every upstream bridge without checking
+!pci_is_thunderbolt_attached(pdev) sets no_pcie_port =3D 1 on the Thunderbo=
+lt
+Root Port and switch bridges, breaking pciehp, PME, AER, and bridge runtime
+D3 across that hierarchy.
+
+> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> index a9cbfc1d2bc75..d2f19e5666022 100644
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -688,7 +688,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  	int type =3D pci_pcie_type(dev);
+>  	int status;
+> =20
+> -	if (!pci_is_pcie(dev) ||
+> +	if (!pci_is_pcie(dev) || dev->no_pcie_port ||
+>  	    ((type !=3D PCI_EXP_TYPE_ROOT_PORT) &&
+>  	     (type !=3D PCI_EXP_TYPE_UPSTREAM) &&
+>  	     (type !=3D PCI_EXP_TYPE_DOWNSTREAM) &&
+
+[Severity: High]
+Does returning -ENODEV here leave the upstream bridges exposed to config
+space accesses while powered off by apple-gmux via PWRD(1)?
+
+Without pcie_portdrv bound, each upstream bridge has dev->driver =3D=3D NULL
+(so pm =3D=3D NULL) and remains in RPM_ACTIVE with runtime PM forbidden.  W=
+hen
+apple-gmux powers off the discrete GPU in gmux_set_discrete_state(), it
+saves state, sets pdev->current_state =3D PCI_D3cold on the bridges, and cu=
+ts
+power via PWRD(1).
+
+During system suspend while the bridges are off, pci_pm_prepare() sees
+!pm_runtime_suspended(dev) and skips direct_complete, and then
+pci_pm_suspend_noirq() accesses the dead bridge directly:
+
+drivers/pci/pci-driver.c:pci_pm_suspend_noirq() {
+    ...
+	if (!pm) {
+		pci_save_state(pci_dev);
+		goto set_unknown;
+	}
+    ...
+}
+
+pci_pm_resume_noirq() similarly accesses config space and PCIe capabilities
+on the dead bridges before gmux_resume() restores power.
+
+At runtime, any userspace read of /sys/bus/pci/devices/.../config (such as
+lspci) calls pci_read_config() -> pci_config_pm_runtime_get(), where
+pm_runtime_resume(dev) is a no-op because the unbound bridge is still in
+RPM_ACTIVE, so pci_user_read_config_*() reads directly from the powered-off
+bridge and triggers a CPU CATERR.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261114160731.3756=
--1-atharvatiwarilinuxdev@gmail.com?part=3D9
+-1-atharvatiwarilinuxdev@gmail.com?part=3D2
