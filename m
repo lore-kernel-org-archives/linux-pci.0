@@ -1,59 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794673662;
-	b=LJzscMYnPPtQy6sw2qnfjAa0PF+zWp6wbzHH0Ul08ogiHreC+YiibmjROXsC3xRknDf8
-	 X/r6FU/zMDCj2ISP7fTGeLJDBcHNH4fIUxo2KJjWX5f599h++CSaI7bsdHgpl0ShwLaP5
-	 b1Al9e6XKUWYNTqNgh5qOobV+3j0byw/j0txaWYk2ZNOb7UYrpOkVRZ2PewRrtKVqpQr0
-	 0j9VkCxo//SQV1bLjB+itq2gPNVmwjKfWn4Nt1k9dPt7/2aAlLOzSWt5V5Ao6cPoCtK1u
-	 SSsqFB8upl+X60+rvM47sdaKYuesqpYQsYvVtVaxIQfpMDBXTYVGy60uILEV3SKnu5w==
+	t=1794673999;
+	b=rX92DHJCaIyxw9QFxtggA3926R/E1G0FrQf4CYEnGIw5DPOh3OmXa4oXx3SpKM8AyQx/
+	 O5GRH3Y7gh2ovZjGGQFDD8IhPgDGZE9/JPWTh8yoT3Rb39ke8P789GvPd0hi7Z+gMPmTR
+	 3kMjnICgypEezeMQMdGGiDt7fvb9igXMdViUiRAYNU1vZjOUMP+7JBoie+BcF8xL/M+Q1
+	 ur+qGSFCgvdcfZ8lUWLJLgWG+U3seOAVXf3hOcVMeqCXjFz0h9+DXtoIMIzXDKG4HhV55
+	 BPjrhWF/gb/uYBbDseI0eHW3dVuYh4MBkieYkRsDwEFQMgZiQmKsRgWDqyEENXGEHqA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794673662;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794673999;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=JIMqjJN7uWfxZXf3ja3gSxgNvVnLxh2xWdm0XNbASpY=;
-	b=1UqJjfihaEke9Dc7Ue0/fVtwCxSJ8BUlFq+CemtRN8bXul7yZ2aavciHH/F83nFs8o6E
-	 qcePAb3r5nXNwaDH304GOoTTE91EcncgFoHIbCsOR0laR+/Auu3kkzaOQCn5WHoN9PIqM
-	 /45Fj28j+aT5On0WExjeezkfFj3YGA3PiBAy56BMh/A9tjN6+XeuK3ADftA75hhdkfvMn
-	 HvKAJntrlVEAH9AUr4/YsDkW8+6L3BsnsujzEwN1y4tXdlCJ51iX70edwROPpACMC84Fv
-	 1lpAaJG1NLWlswXD2crtWsZ0LQ2CE1a8C+xiIUIewAfMxmiDJNQyEpLBUkabIvBJsOw==
+	bh=FyQe9jL1Zwv63S3BHn0HTk4v8HLzH6ONbMmKcl9iA20=;
+	b=va59x3gJZt9oTansyhFMdEbDYD3KdInOnnyQLW61DY6n4RPwyc3edLp8P3SVKYp0yBrA
+	 sCo1VhH01g5iA9ZbGKrwIXaUlrusyi2zB4dXEuc82GUz7h4aU3D6C/FZISnAqP8eLpYo2
+	 PS8hn/flQrQYzt48C7HGgM7cNwb2p+hZPmAl/ef5wZ5txotMXEKr6Fd/w5+gEHFIIz2Xf
+	 lqKTu5yyzNNvDSwh4gpkcE98clono0H/X+yMK58uX0xXywpUZeqP9JNKH09jvYH+aNbGW
+	 xG3xm+tDJ9Xv6K5/bHKI3D8Zn7RAP4Be76Co9AOl/VdRLC23r5NGRvmeUr2kIFA6a1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QPT084sA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c1XdZ3yj;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B35B6606A329
-	for <linux-pci@vger.kernel.org>; Sat, 14 Nov 2026 16:27:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA9F1606A327
+	for <linux-pci@vger.kernel.org>; Sat, 14 Nov 2026 16:33:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QPT084sA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 135C41F000C4;
-	Sat, 14 Nov 2026 16:27:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=c1XdZ3yj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5362D1F000C4;
+	Sat, 14 Nov 2026 16:33:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794673662;
-	bh=JIMqjJN7uWfxZXf3ja3gSxgNvVnLxh2xWdm0XNbASpY=;
+	s=k20260515; t=1794673999;
+	bh=FyQe9jL1Zwv63S3BHn0HTk4v8HLzH6ONbMmKcl9iA20=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QPT084sA7QSAQ6ESHHFUMVcBs5C9FL+qlndjCyw2OtWnt1W0uuUscuMMygyHsTit2
-	 SqrroIRgOnlqEkrOf2IvE+mFqS6WFkGOXdh2y2XNRQJH5q3XPfyIA1JcTy0MYyEPsb
-	 0PMTjQl8C56VRyGY7+jZWh0j91PSu3DzczhIJQeEQkmSL9Y4hsQSEGd35Vppr57Xdo
-	 J332a6Ig234ffdR83uy8gGE7lRoz/rJ2ZCnuh4jv5EmG4lKQF0EsadsRPultV3oZUZ
-	 7Rg9uSBoix7b7D64TYCdRPgcgaOrSD8o2hjcy17FqpYw3RMSs7m31Vt6uE70tLG1y2
-	 7IsTD2LAvhxWQ==
-Message-ID: <sashiko-outbox-214749@kernel.org>
+	b=c1XdZ3yj5WDve0mfvHbyMK0db2s7PaiMiqbRaT4l/WahcgTvqu6hswoQ+/Y6NpIA2
+	 4khfO/l4FqBzCcuzJJKMetUy7cgwj3+DtIHv16YtRFaPL6v/sflidQ5iOlPhPbqlHf
+	 sbTpoFeOWh7Hh3+Lbo6y8mC35Xu8H1QXx3+ct6vL3mSrDNRGsgT1TBiqXm7iqCx9X+
+	 c1F91ErF9kdUxqyv42NNcm6wz5XUADqmAdDhtiqwZqBQdeBIVSvxSlUcoMDazkxA3r
+	 Q1OX5ZUi/gBC9Jxzn0whp7ZDpKutuWnsSWUpPfRaWr6wscRo45CmDYrPOdc4asX56P
+	 ibTCa/X+tfFsA==
+Message-ID: <sashiko-outbox-214755@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/12] platform/apple-gmux: Fix Interrupts for MMIO
- systems
+Subject: Re: [PATCH v2 09/12] drm/amdgpu: Catch register access while GMUX
+ keeps the GPU off
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Atharva Tiwari" <atharvatiwarilinuxdev@gmail.com>
 Cc: =?utf-8?b?b3BlbiBsaXN0OlBDSSBTVUJTWVNURU0=?= <linux-pci@vger.kernel.org>,
  =?utf-8?b?b3BlbiBsaXN0OlJBREVPTiBhbmQgQU1ER1BVIERSTSBEUklWRVJT?= <amd-gfx@lists.freedesktop.org>,
  =?utf-8?b?b3BlbiBsaXN0OkRSTSBEUklWRVJT?= <dri-devel@lists.freedesktop.org>
-In-Reply-To: <20261114160731.3756-5-atharvatiwarilinuxdev@gmail.com>
+In-Reply-To: <20261114160731.3756-10-atharvatiwarilinuxdev@gmail.com>
 References: <20261114160731.3756-1-atharvatiwarilinuxdev@gmail.com>
- <20261114160731.3756-5-atharvatiwarilinuxdev@gmail.com>
+ <20261114160731.3756-10-atharvatiwarilinuxdev@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 14 Nov 2026 16:27:41 +0000
+Date: Sat, 14 Nov 2026 16:33:18 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,225 +63,119 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 4 potential
+Thank you for your contribution! Sashiko AI review found 2 potential
 issues to consider:
-- [Medium] platform/apple-gmux: uninitialized interrupt_work in
-  gmux_probe() and remove
-- [Medium] platform/apple-gmux: gmux_notify_work() races with suspend
-  and teardown
-- [Medium] platform/apple-gmux: lost interrupt bits and unbounded loop
-  in gmux_notify_work()
-- [Medium] platform/apple-gmux: early GPE enable in gmux_probe() and
-  unhandled status=3D0 GPEs
+- [High] drm/amdgpu: adev->runpm_active initialized after
+  amdgpu_virt_init()
+- [Medium] drm/amdgpu: premature runpm_active set and missing unwind on
+  resume
 --
 
-commit 77837b33a80099f01ff89538d43f85130095f9ea
-Author: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+commit 720e36a43938e97cb3f99b288c561e7448e2fbc3
+Author: Andre Eikmeyer <dev@deq.rocks>
 
-platform/apple-gmux: Fix Interrupts for MMIO systems
+drm/amdgpu: Catch register access while GMUX keeps the GPU off
 
-This commit moves MMIO gmux interrupt handling to a workqueue, checks for
-failed interrupt status bits, and requests a runtime resume of the discrete
-GPU on display hotplug interrupts.
+This commit adds a runpm_active flag to struct amdgpu_device and checks it
+in amdgpu_device_skip_hw_access() and the indirect register accessors to
+skip and warn on register accesses while the GPU is runtime suspended via
+GMUX.
 
-> diff --git a/drivers/platform/x86/apple-gmux.c b/drivers/platform/x86/app=
-le-gmux.c
-> index 9625551e54bfa..37ba207793a2e 100644
-> --- a/drivers/platform/x86/apple-gmux.c
-> +++ b/drivers/platform/x86/apple-gmux.c
-
-[ ... ]
-
-> @@ -806,23 +819,78 @@ static void gmux_clear_interrupts(struct apple_gmux=
-_data *gmux_data)
->  	/* to clear interrupts write back current status */
->  	status =3D gmux_interrupt_get_status(gmux_data);
->  	gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, status);
-> -	/* Prevent flood of status=3D0 interrupts */
-> -	if (gmux_data->config =3D=3D &apple_gmux_mmio)
-> -		acpi_execute_simple_method(gmux_data->dhandle, "GMSP", 0);
->  }
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm=
+/amd/amdgpu/amdgpu_device.c
+> index ac336594bf055..ed205352f0f0a 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> @@ -947,6 +947,10 @@ bool amdgpu_device_skip_hw_access(struct amdgpu_devi=
+ce *adev)
+>  	if (adev->no_hw_access)
+>  		return true;
 > =20
-> +static void gmux_notify_work(struct work_struct *work)
-> +{
-> +	struct apple_gmux_data *gmux_data =3D
-> +		container_of(work, struct apple_gmux_data, interrupt_work);
-> +	u8 status;
-> +	bool turn_on_gpu =3D false;
-> +
-> +	status =3D gmux_interrupt_get_status(gmux_data);
-> +	if (!status)
-> +		return;
-> +
-> +	gmux_disable_interrupts(gmux_data);
-> +	pr_debug("Notify handler called: status %d\n", status);
-> +	acpi_execute_simple_method(gmux_data->dhandle, "GMSP", 0);
+> +	if (unlikely(!READ_ONCE(adev->runpm_active))) {
+> +		WARN_RATELIMIT(1, "%s: register access while powered off\n", dev_name(=
+adev->dev));
+> +		return true;
+> +	}
+>  #ifdef CONFIG_LOCKDEP
+>  	/*
+>  	 * This is a bit complicated to understand, so worth a comment. What we=
+ assert
+> @@ -2029,6 +2033,7 @@ static int amdgpu_device_ip_early_init(struct amdgp=
+u_device *adev)
+>  	int i, r;
+> =20
+>  	amdgpu_device_enable_virtual_display(adev);
+> +	adev->runpm_active =3D true;
+> =20
+>  	if (amdgpu_sriov_vf(adev)) {
+>  		/*
 
-[Severity: Medium]
-Does returning early when status is 0 leave status=3D0 GPE floods uncleared=
- on
-MMIO systems?
+[Severity: High]
+Is adev->runpm_active initialized too late during device probe?
 
-Previously, gmux_clear_interrupts() called GMSP(0) unconditionally, even wh=
-en
-status was 0.  Now, if a GPE fires while GMUX_PORT_INTERRUPT_STATUS reads 0
-(for example, during system resume before gmux_resume() runs, or in
-gmux_probe() between acpi_enable_gpe() and gmux_enable_interrupts(gmux_data,
-1)), gmux_notify_work() returns before calling GMSP(0) to reset the GPIO
-polarity.
+In amdgpu_device_init(), amdgpu_virt_init() runs before
+amdgpu_device_ip_early_init():
 
-In addition, gmux_probe() enables the notify handler and GPE before
-initializing gmux_data->external_switchable and gmux_data->powerchange_done:
-
-drivers/platform/x86/apple-gmux.c:gmux_probe() {
+drivers/gpu/drm/amd/amdgpu/amdgpu_device.c:amdgpu_device_init() {
 	...
-		status =3D acpi_enable_gpe(NULL, gmux_data->gpe);
+	/* detect hw virtualization here */
+	amdgpu_virt_init(adev);
 	...
-	gmux_data->external_switchable =3D
-		!bus_for_each_dev(&pci_bus_type, NULL, NULL, is_thunderbolt);
-	if (!gmux_data->external_switchable)
-		gmux_write8(gmux_data, GMUX_PORT_SWITCH_EXTERNAL, 3);
-
-	apple_gmux_data =3D gmux_data;
-	init_completion(&gmux_data->powerchange_done);
-	gmux_enable_interrupts(gmux_data, 1);
+	/* early init functions */
+	r =3D amdgpu_device_ip_early_init(adev);
 }
 
-If a GPE fires in that window, gmux_notify_handler() or gmux_notify_work() =
-can
-call complete(&gmux_data->powerchange_done) before init_completion() runs,
-causing a NULL pointer dereference in swake_up_locked(), or read
-gmux_data->external_switchable before it is set.
+Inside amdgpu_virt_init() -> amdgpu_virt_init_detect_asic(), the driver
+calls RREG32(mmRCC_IOV_FUNC_IDENTIFIER) (or mmBIF_IOV_FUNC_IDENTIFIER on
+Tonga/Fiji).  Because adev is zero-allocated and adev->runpm_active is
+still false at that point, amdgpu_device_skip_hw_access() fires a
+WARN_RATELIMIT splat on every probe of those GPUs and makes RREG32()
+return 0, which also prevents SR-IOV VF detection from setting
+AMDGPU_SRIOV_CAPS_IS_VF.
 
-> +
-> +	status =3D gmux_interrupt_get_status(gmux_data);
-> +	while (status) {
-> +		gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, status);
-> +		if (status & GMUX_INTERRUPT_STATUS_FAILED) {
-> +			pr_warn_ratelimited("interrupt failed: status: 0x%x\n", status);
-> +			status =3D gmux_interrupt_get_status(gmux_data);
-> +			continue;
-> +		}
+Setting adev->runpm_active =3D true in amdgpu_device_init() before
+amdgpu_virt_init() would avoid this regression.
 
-[Severity: Medium]
-Can this drop GMUX_INTERRUPT_STATUS_POWER or GMUX_INTERRUPT_STATUS_HOTPLUG
-events when GMUX_INTERRUPT_STATUS_FAILED is set at the same time?
-
-Writing status to GMUX_PORT_INTERRUPT_STATUS clears all set bits in hardwar=
-e,
-so jumping to the next iteration with continue skips the POWER and HOTPLUG
-checks for bits that were just cleared, causing gmux_set_discrete_state() to
-time out waiting on powerchange_done or missing a hotplug wakeup.
-
-Also, while (status) has no retry limit; if a status bit fails to clear in
-hardware, gmux_notify_work() spins forever on system_percpu_wq and hangs
-cancel_work_sync() on teardown.
-
-> +		if (status & GMUX_INTERRUPT_STATUS_POWER)
-> +			complete(&gmux_data->powerchange_done);
-> +
-> +		if (status & GMUX_INTERRUPT_STATUS_HOTPLUG) {
-> +			/*
-> +			 * We get an interrupt every time a display connects or disconnects, =
-but
-> +			 * the GET_DISPLAY port only tells us if a display is connected or no=
-t,
-> +			 * so we resume every time a display is connected or disconnected.
-> +			 */
-> +			u8 external_state =3D gmux_read8(gmux_data,
-> +						GMUX_PORT_SWITCH_GET_DISPLAY);
-> +			if (external_state !=3D gmux_data->external_state) {
-> +				gmux_data->external_state =3D external_state;
-> +				if (external_state)
-> +					pr_debug("A display has been connected\n");
-> +				else
-> +					pr_debug("All displays has been disconnected\n");
-> +			}
-> +			turn_on_gpu =3D true;
-> +		}
-> +		status =3D gmux_interrupt_get_status(gmux_data);
-> +	}
-> +
-> +	gmux_enable_interrupts(gmux_data, 0);
-> +
-> +	if (turn_on_gpu && !gmux_data->external_switchable && gmux_data->discre=
-te_pdev &&
-> +			    pm_runtime_enabled(&gmux_data->discrete_pdev->dev))
-> +		pm_request_resume(&gmux_data->discrete_pdev->dev);
-> +
-> +}
-
-[Severity: Medium]
-Can gmux_notify_work() race with gmux_suspend() and driver teardown to
-re-enable interrupts and wake the discrete GPU after interrupts were disabl=
-ed?
-
-CPU0                              CPU1 (kworker)
-gmux_notify_handler()
-  schedule_work(&interrupt_work)
-gmux_suspend()
-  gmux_disable_interrupts()
-                                  gmux_notify_work()
-                                    ...
-                                    gmux_enable_interrupts(gmux_data, 0)
-                                    pm_request_resume(&discrete_pdev->dev)
-
-gmux_suspend() does not cancel or flush gmux_data->interrupt_work, so a que=
-ued
-work item can re-enable gmux interrupts and request a runtime resume of
-discrete_pdev during system suspend.  Similarly, gmux_remove() and the
-err_register_handler path in gmux_probe() call gmux_disable_interrupts()
-before disabling the GPE, removing the notify handler, and calling
-cancel_work_sync(), so an in-flight gmux_notify_work() will re-enable hardw=
-are
-interrupts before cancel_work_sync() returns.
-
-[ ... ]
-
-> @@ -1072,6 +1140,8 @@ static int gmux_probe(struct pnp_dev *pnp, const st=
-ruct pnp_device_id *id)
->  			goto err_notify;
->  		}
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/am=
+d/amdgpu/amdgpu_drv.c
+> index 3978ed284048f..d1b0c6c7301ea 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+> @@ -2935,6 +2935,9 @@ static int amdgpu_pmops_runtime_suspend(struct devi=
+ce *dev)
+>  		amdgpu_device_baco_enter(adev);
+>  	}
 > =20
-> +		if (type =3D=3D APPLE_GMUX_TYPE_MMIO)
-> +			INIT_WORK(&gmux_data->interrupt_work, gmux_notify_work);
->  		status =3D acpi_enable_gpe(NULL, gmux_data->gpe);
->  		if (ACPI_FAILURE(status)) {
->  			pr_err("Cannot enable gpe: %s\n",
-
-[ ... ]
-
-> @@ -1124,6 +1194,9 @@ static int gmux_probe(struct pnp_dev *pnp, const st=
-ruct pnp_device_id *id)
->  		acpi_remove_notify_handler(gmux_data->dhandle,
->  					   ACPI_DEVICE_NOTIFY,
->  					   &gmux_notify_handler);
+> +	if (adev->pm.rpm_mode =3D=3D AMDGPU_RUNPM_GMUX)
+> +		WRITE_ONCE(adev->runpm_active, false);
 > +
-> +	if (gmux_data->type =3D=3D APPLE_GMUX_TYPE_MMIO)
-> +		cancel_work_sync(&gmux_data->interrupt_work);
+>  	dev_dbg(&pdev->dev, "asic/device is runtime suspended\n");
+> =20
+>  	return 0;
+> @@ -2963,6 +2966,8 @@ static int amdgpu_pmops_runtime_resume(struct devic=
+e *dev)
+>  	if (adev->pm.rpm_mode =3D=3D AMDGPU_RUNPM_NONE)
+>  		return -EINVAL;
+> =20
+> +	WRITE_ONCE(adev->runpm_active, true);
+> +
+>  	/* Avoids registers access if device is physically gone */
+>  	if (!pci_device_is_present(adev->pdev))
+>  		adev->no_hw_access =3D true;
 
 [Severity: Medium]
-Can cancel_work_sync() and schedule_work() be called on an uninitialized
-gmux_data->interrupt_work?
+Should amdgpu_pmops_runtime_resume() set adev->runpm_active only after
+restoring PCI power and config state, and clear it again if resume fails?
 
-INIT_WORK(&gmux_data->interrupt_work, gmux_notify_work) is only called insi=
-de
-the if (ACPI_SUCCESS(status)) branch for GMGP, and after
-acpi_install_notify_handler() has already registered gmux_notify_handler().
-If evaluating GMGP fails on an MMIO system, gmux_probe() sets gmux_data->gp=
-e =3D
--1 and continues without initializing interrupt_work, but both gmux_remove()
-and the err_enable_gpe path in gmux_probe() unconditionally call
-cancel_work_sync(&gmux_data->interrupt_work), triggering WARN_ON(!work->fun=
-c)
-in __flush_work().  In addition, if an ACPI notification arrives between
-acpi_install_notify_handler() and INIT_WORK(), gmux_notify_handler() schedu=
-les
-interrupt_work while its func pointer is still NULL.
-
-Initializing interrupt_work before evaluating GMGP in gmux_probe() would
-avoid both issues.
+In the AMDGPU_RUNPM_GMUX branch right below, the device is still in
+PCI_D3cold with PCI memory decoding disabled until pci_set_power_state(),
+amdgpu_device_load_pci_state(), and pci_enable_device() complete.  If
+pci_enable_device() fails, or if amdgpu_device_resume() fails and calls
+pci_disable_device(pdev), amdgpu_pmops_runtime_resume() returns an error
+with adev->runpm_active left set to true while the PCI device is disabled,
+allowing subsequent register accesses to bypass
+amdgpu_device_skip_hw_access().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261114160731.3756=
--1-atharvatiwarilinuxdev@gmail.com?part=3D4
+-1-atharvatiwarilinuxdev@gmail.com?part=3D9
