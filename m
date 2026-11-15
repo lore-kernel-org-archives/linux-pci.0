@@ -1,57 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.95.204
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794764462;
-	b=Fp4XUMZVvHKZ6MtmjhkGChla8OK2jjkC16NGsmjBWkInZTReNg3o0IYvObpXsAQuM00z
-	 f4ingWLM7oVEGOxAuJVuJr8OEKdZNnRUbADnf3yihWlmLZdeIQ5KPRwqLDzdao68MlERy
-	 XCaO+bEWomHnM1DfQmDFcgMSxtuhikGLdXId1j0jYcf8scQ5zd0Gbpg7lHJ0HfwlrT8JR
-	 mwGDehZlVErNOEWy6bluq44vv1QzqGbyRIgahoU+p9TOQ7WTEO7Pe1K60DG2ySdugEdy/
-	 CROUcDK/WBpsd4lLQqOIY6gr9yX71Lfb4m8SC8toiYr98rWa6Cs2R4OBORnSmkrRHpg==
+	t=1794764971;
+	b=WaOuOkbHMc07T+6JAIZo56yeqx7xsoguKeACSsqJpp+UKy4lMGMSEBwUTDCRuh/98JGc
+	 YAB3rY63lSYXf99cJb9BTrNR2sn9Z5+kTBTARh9cn8eXkBsyKb3FdyVzAmH9D3RqS+TsX
+	 OtcYXTlEa/E2U+XA/NNX/Qb+L0gUTJDFI+xncNtQlW0xMriBWFed7Yn96dmX1HGcb5Hdq
+	 xF+sk6RHmLlLh866DxLwbDxf1vSMGDqUQ2WVqz8aD0JyKNzgcwqYcSM4v/eQz+OOAqH+H
+	 LiI+h+vgUEOi8srsTITqeLZQebyBjoFsOoOU/Ls0qkAzoKyc4NZBJQo5/SLiiSmwM7w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794764462;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=L/Uv10MXpeqrXJrer64YsQeT7c/yMyL7dcLkFM4ek1c=;
-	b=A8Af9JFXmhELX1IDVGjeIJqcGfMVJlsurlzw9mDpKtE/Oi7oFgh23XqYgS3YKTrXRkGY
-	 F+jJy889ikfO8eDIlEbwgUTOx1cO4jIDUj/etpKJfr7uNNKyAOBEau+SlfMc/gqGW3hnK
-	 tUXDMYT7VBXyvvD0KmFT9ZB5VT44jTj4o3oM6K2nKqp+ytRG75gma4CEEVjmQ3X3kVPUP
-	 t+9xxc2PUh0kmPyVq7mcAxnHNXMNTioMEt+eN1Ii5b/n/9F7UWKXe986rfQh+MJGIXZZ1
-	 ZUxUmaVLQHmfiHEEcedXXNcWGdW70l6sbxMc1OrFxCHT2N0XFFUJMipAYO0uxTzR9Jg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794764971;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=pZAgF01SM5lIexqBmUoxE9oWzEW7iDQOMWgBWjnXcuw=;
+	b=tDZu9QS1xhvgO65Jiqh7hC9yur+uq2neix3u28iJIYZNHzBK5lK2E/YiRF2BruPn9W0s
+	 ufJO8izkh02HjOuG7marHc+DUIdgomZoHHQZgYCa5F2eNJCzJlvjIeDp7Y6PDOhjmUMRy
+	 rbruHcizApx690FcqJwaDUvI8dK5AuWv45BXZD66H6EC+dGQRVcrKBIVCdaql1Tqr+I2Q
+	 qiFnb9OvqTWaFzF6rVfeo8MnV/yYZBBGFBFkdkHIFIoXPfMYLv3xBXSEKgzyDQyYAzami
+	 gFuz03D5aYA0VCa4Do8DPPk/n9x9Dr67wyvXM2UaGu84nzXv5RzklLSlwndnBPgYDPg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C1chKifg;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=83.223.95.204
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CD1F606A31F
-	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 17:41:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C1chKifg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FBBC1F000CC;
-	Sun, 15 Nov 2026 17:41:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794764462;
-	bh=L/Uv10MXpeqrXJrer64YsQeT7c/yMyL7dcLkFM4ek1c=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=C1chKifgbYdhJfLsrdeR6skwoP5SURNqsgha5377q2iho5CYcm5sbr0sb3O9H6yxF
-	 Op1d5oZSDefJE14aDwAsR1u0BKtBfwCEkW8t88aabNvGGA4OCvWeuPQfFE2M1NCU39
-	 QIlG+4NQISq/maSl9ITz2adGcx/Mhj5DIoY83xCJ5ctM0KaTBddhF+BW/+K5N2+q/L
-	 zMBVv66ZQEf27HJHB4FbTurfIVzfDgOJmmk/yC601eZyOPHWgPtW6d4Jnq9W+6OovX
-	 0wC6jpmizzC2XC6ElydqeRFpcEDHgn1+0cn6ZnF/WCsxxeNa1kcloETRDIW/cZYi4s
-	 Ce7b7IYKLd0/Q==
-Message-ID: <sashiko-outbox-215687@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] PCI/PM: Keep hotplug ports out of D3 if they can't
- signal PME from D3hot
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Aviv Bakal" <avivb@amazon.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261115171831.1498006-4-avivb@amazon.com>
-References: <20261115171831.1498006-1-avivb@amazon.com>
- <20261115171831.1498006-4-avivb@amazon.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 15 Nov 2026 17:41:01 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1AD4606A31E
+	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 17:49:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B1AD4606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 2BAD5F62;
+	Sun, 15 Nov 2026 18:49:23 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 14ECF6024661; Sun, 15 Nov 2026 18:49:23 +0100 (CET)
+Date: Sun, 15 Nov 2026 18:49:23 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Raag Jadav <raag.jadav@intel.com>,
+	Riana Tauro <riana.tauro@intel.com>,
+	Yury Murashka <yurypm@arista.com>,
+	Matthew W Carlis <mattc@purestorage.com>, linux-pci@vger.kernel.org,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
+	Aravind Iddamsetty <aravind.iddamsetty@intel.com>,
+	Srinivasa Adatrao <srinivasa.adatrao@intel.com>,
+	Terry Bowman <terry.bowman@amd.com>,
+	Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH 1/7] PCI/DPC: Avoid access to non-existent AER capability
+Message-ID: <avnwo7TeDBimPwWG@wunner.de>
+References: <cover.1790531238.git.lukas@wunner.de>
+ <ae05fe2df3a3182594c4a9638daba1c72cf40358.1790531238.git.lukas@wunner.de>
+ <74fe0d79-dc90-4c05-ba9c-9a0eec1ada48@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,23 +64,38 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <74fe0d79-dc90-4c05-ba9c-9a0eec1ada48@linux.intel.com>
 
-> On runtime suspend pciehp masks the hotplug interrupt and relies on
-> PME to resume the port on a slot event. pci_bridge_d3_possible() does
-> not check whether the port can signal PME from D3hot, so a port that
-> cannot is not resumed by slot events.
->=20
-> Return false from pci_bridge_d3_possible() for such native hotplug
-> ports. pci_pm_init() computes bridge_d3 before it reads PME_Support,
-> so move that assignment after dev->pme_support is set.
->=20
-> Co-developed-by: Zeev Zilberman <zeev@amazon.com>
-> Signed-off-by: Zeev Zilberman <zeev@amazon.com>
-> Signed-off-by: Aviv Bakal <avivb@amazon.com>
+On Tue, Sep 29, 2026 at 11:49:40AM -0700, Kuppuswamy Sathyanarayanan wrote:
+> On 9/27/2026 11:02 AM, Lukas Wunner wrote:
+> > Downstream Port Containment does not mandate presence of an Advanced Error
+> > Reporting capability, so a Downstream Port may support DPC, but not AER
+> > (PCIe r7.1 sec 6.2.11.2).
+[...]
+> > - dpc_get_aer_uncorrect_severity() uses it to discern whether a Fatal or
+> >   Non-Fatal Error triggered DPC.  Access the Device Status Register
+> >   instead, in accordance with PCIe r7.1 sec 6.2.5.
+> 
+> This changes behavior not only for AER-incapable ports, but also for
+> the AER-capable ones.  PCIe r7.1 sec 7.5.3.5 says for the Fatal/
+> Non-Fatal Error Detected bits:
+> 
+>   "For Functions supporting Advanced Error Handling, errors are logged
+>    in this register regardless of the settings of the Uncorrectable
+>    Error Mask register."
+> 
+> The old code only considered unmasked errors, the new code also picks
+> up masked ones.  So a masked Fatal error (e.g. Surprise Down) alongside
+> the unmasked Non-Fatal error which triggered DPC is now reported as
+> Fatal.  Stale bits from earlier masked errors can have the same effect.
+> 
+> Since this is tagged for stable, how about keeping the AER-based logic
+> when dev->aer_cap is present and using DEVSTA only as a fallback?
 
-Sashiko has reviewed this patch and found no issues.
+An excellent observation, I've changed it as you've suggested.
+Thanks for the thoughtful review!
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115171831.1498=
-006-1-avivb@amazon.com?part=3D3
-
+Lukas
