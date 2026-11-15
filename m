@@ -1,66 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.78.233
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794765711;
-	b=yaYsJE+3gC8/1grEcOVNp3UIzD734tpSFQD1JLZV1amYKUlVZZeUVEGcH20XTik/n8/q
-	 kV/fv9ZQPzXtEARPvkA6Y2ss8W+8gVtZ/GREsG7fi/YooyBzGZdUuYAKM1VwrJcPhYvg/
-	 fWshIGs0AOUpbF8/EQUERNg6NvqICLytNCCX6W7KLxz7O+RIMxjy8TTkVnObeIBMCREkm
-	 Lzeunv3HykuwEhaeR26lv+6sTOK8MQVtYUUA45Z7x2cyw6zp+CbRgX1ETl5uq9Zubiw1V
-	 j4qxZELgJy+EiNIIb8gBMGVu5Ip3OuaFrsJagSe9T/pDuREuCtOLjWoT3hmA9gNS3oQ==
+	t=1794766034;
+	b=MRoqofWma1FXA3aMT/6OYhAdwV6PouPJ9JnMuiozavV/svxIOOwjTrFMriYsNPQZMh44
+	 4UPAE0Ac8nd58VIA3qkym9+WdLGwEu48yRtQBIC7NdZuFZxG+4yRQ6bvfBFPATEBFR1L3
+	 AyKOsVATY6YF4JtYOIwykX0EJkisQyW7EXfrJQ2svPSJ3Zo6H+5U2iuB46ExAdniHR6wf
+	 r6Gs9Lf4jWxdnSk4+vOgIaFk9sFGyAeBhHEn50u/e9IwPBNTMLCzc6GHWE7Hav2ys5Mm3
+	 bH8cbuuJSrNFFyUQv35J3tvEY6i6Hi6SxKaph3XVuXH2CHSY5sI7hL2x7Ae+GdjO/DQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794765711;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794766034;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=E5e8BJEiuZ4whbgu1Hr+6JPc8nqHGgyY0u0a+RokHVQ=;
-	b=OGx1C2faWBV3SR8KCgQOGhCGknhl1iEvNz6lAcY67vK7QOjOvnvfRPdyzHDUPC1Xcz1I
-	 SYOQ+kiWRt9vQV+JuMkh+oLrbq0DvLPl4PF3iZPxJnoc0cxQwroRGWe17/kvSjcz1n71n
-	 ibJ2hp7HlXXhi9pAK41jVN6qZPmKOxtIhB47fTW7gV0P/3ANAYbdDIiWL+VFFmW1p9kTq
-	 xVT3fA2+5ZdZ61kNp3N5KFhetpjNhcwAJtCbqoRFSqk8eoGNdPa01qaXr5kq3jxeBHcJQ
-	 obG5ioKIoLfOsOqoWfM9B5IPetgsKcPsdw4PqJwRNyfQqc7fEqLEIPP3kvrJYch+AfQ==
+	bh=EQ6kRznTinREoIuzVBbxmzS9hOEhoTl38G8AURcRJc4=;
+	b=o9uJbKwIaiA7oJs9TM49BscqkTdhVFjnZXKplk+b1C8DGG4aGKudpvmP/u5f9fzweKCQ
+	 YVkoG5pKHOLqsI5mJqLkHTkDJRBf7CXOr+Ju/iQilBPnWycQve/vqHLo0F2Dyt0wOMvG6
+	 gEy9ooA+9vjgnK0nF/e3RKHL6aH7XDCqc1tkXo5qq0cNxahU0NFD+HvnGjbeS2nFRwpEa
+	 jA7q5q+ytI8GUX6DxnddfsyS9t6K7QGV4am/32d4PAc83km4ZlErXyH52+CFk7IPNJ6Uw
+	 FiZpAZ4wTsnFGfvVtj7aDFlS1HCPubzXBMFc+vM54yqpdQK3nAmGlYkccbkSpgHpvTw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=o2aAKF9+;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=83.223.78.233
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B75E2606A31A;
-	Sun, 15 Nov 2026 18:01:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=o2aAKF9+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24FBC1F000C4;
-	Sun, 15 Nov 2026 18:01:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794765711;
-	bh=E5e8BJEiuZ4whbgu1Hr+6JPc8nqHGgyY0u0a+RokHVQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=o2aAKF9+YecDzzGk4bV1bgV0jRjVUpJLhAYO7F+KOkCHqua5bwkkqaIW2TcKzIbVH
-	 8RrypZah37W8SoLFH+cHTWDJSt7g97GkpFDUJwpOa8fXEP+C7Fk6eZGhN5bZ5QIWGv
-	 rNolRUfDXYPxamX3x3K99oNFg+prs8oECrVd82aJgQ4n1vZ2k1l/hIbRyzuBfF8uiT
-	 SP3N1MJ5SlYTbuy72JItmaVx0qM0W054SYKcPl3aN0rEaY1nttQPHOG1KwcWmsiT9y
-	 t6SsJiUY3zhw8E+wDnL4kBJBk7lTf7M92W7m9dew6fxdbCTR+FrT6wxWeM+LVgDM2r
-	 6NmZ515+KqNWw==
-Date: Sun, 15 Nov 2026 20:01:37 +0200
-From: Mike Rapoport <rppt@kernel.org>
-To: Tarun Sahu <tarunsahu@google.com>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, robin.murphy@arm.com,
-	maz@kernel.org, will@kernel.org,
-	David Matlack <dmatlack@google.com>,
-	Alexander Graf <graf@amazon.com>, seanjc@google.com, jgg@nvidia.com,
-	loganodell@google.com, arnd@arndb.de, dwmw2@infradead.org,
-	baolu.lu@linux.intel.com, Bjorn Helgaas <bhelgaas@google.com>,
-	oupton@kernel.org, alex@shazbot.org, gle.com@google.com,
-	pbonzini@redhat.com, Andrew Morton <akpm@linux-foundation.org>,
-	kevin.tian@intel.com, joro@8bytes.org, kvmarm@lists.linux.dev,
-	linux-pci@vger.kernel.org, Pratyush Yadav <pratyush@kernel.org>,
-	kexec@lists.infradead.org, kvm@vger.kernel.org,
-	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-	skhawaja@google.com, sagis@google.com, linux-arch@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
- compatibility
-Message-ID: <avnzgVJic77yKMoh@kernel.org>
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-6-tarunsahu@google.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D81F0606A31A
+	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 18:07:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D81F0606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 5B0793A2B;
+	Sun, 15 Nov 2026 19:07:06 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 33E276024661; Sun, 15 Nov 2026 19:07:06 +0100 (CET)
+Date: Sun, 15 Nov 2026 19:07:06 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Raag Jadav <raag.jadav@intel.com>,
+	Riana Tauro <riana.tauro@intel.com>,
+	Yury Murashka <yurypm@arista.com>,
+	Matthew W Carlis <mattc@purestorage.com>, linux-pci@vger.kernel.org,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
+	Aravind Iddamsetty <aravind.iddamsetty@intel.com>,
+	Srinivasa Adatrao <srinivasa.adatrao@intel.com>,
+	Terry Bowman <terry.bowman@amd.com>,
+	Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH 2/7] PCI/DPC: Reinstate support for AER-incapable ports
+Message-ID: <avn0yqCrX0uZl_a1@wunner.de>
+References: <cover.1790531238.git.lukas@wunner.de>
+ <2ce502e5caa57db01e0a7bbc781210b66b73bec8.1790531238.git.lukas@wunner.de>
+ <02a33171-b901-400b-921a-c40fe167b424@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -72,51 +67,70 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261110050202.529473-6-tarunsahu@google.com>
+In-Reply-To: <02a33171-b901-400b-921a-c40fe167b424@linux.intel.com>
 
-On Tue, Nov 10, 2026 at 05:01:48AM +0000, Tarun Sahu wrote:
->
-> Each subsystem registers its serialized structure with:
-> 
->         DECLARE_KHO_SER(name, payload_size, nr_required, nr_optional)
-> 
-> This establishes compile-time assertions and provides type-checked
-> helpers: kho_ser_size() for total allocation size, kho_ser_init() to
-> initialize the header, kho_ser_payload() to access the typed payload at
-> its dynamic offset, and kho_ser_validate() to validate required features
-> during restoration. DECLARE_KHO_SER_HDR(name, *fhdr) declares a struct
-> kho_ser_hdr pointer while verifying at compile time that name was
-> registered with DECLARE_KHO_SER(), allowing callers to document which
-> structure a feature header pointer represents.
-> 
-> An example demonstrating how a hypothetical structure defines its
-> features:
-> 
->   enum foo_ser_required {
->           FOO_SER_REQ_BAR,
->           __FOO_SER_NR_REQUIRED,
->   };
-> 
->   enum foo_ser_optional {
->           FOO_SER_OPT_BAZ,
->           __FOO_SER_NR_OPTIONAL,
->   };
-> 
->   struct foo_ser {
->           __u64 base;     /* base fields, always present */
->           __u64 bar;      /* FOO_SER_REQ_BAR */
->           __u64 baz;      /* FOO_SER_OPT_BAZ */
->   };
-> 
->   DECLARE_KHO_SER(foo_ser, 24,
+On Tue, Sep 29, 2026 at 12:04:32PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> On 9/27/2026 11:02 AM, Lukas Wunner wrote:
+> > Downstream Port Containment does not mandate presence of an Advanced Error
+> > Reporting capability, so a Downstream Port may support DPC, but not AER
+> > (PCIe r7.1 sec 6.2.11.2).
+> > 
+> > Commit 708b20003624 ("PCI/AER: Remove HEST/FIRMWARE_FIRST parsing for AER
+> > ownership") seemingly inadvertently constrained DPC to AER-supporting
+> > Downstream Ports by inserting a call to pcie_aer_is_native() in
+> > dpc_probe(), which implicitly checks for presence of an AER capability.
+> > 
+> > Drop the call.
+[...]
+> I don't think 708b20003624 changed behavior here.  At the time,
+> get_port_device_capability() only instantiated the DPC service if
+> pcie_ports_dpc_native was set or the AER service was instantiated,
+> and the latter required dev->aer_cap and native AER control
 
-The example should have included 7 fields total to make it 42 ;-)
+There are two separate issues preventing DPC on non-AER-capable ports:
 
-Seriously, this magic number show must stop.
+- Commit 4e5fad429bd1 ("PCI/DPC: Do not enable DPC if AER control
+  is not allowed by the BIOS") inserted a problematic check in
+  get_port_device_capability().  This was fixed by 97ca178c899d
+  ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER"),
+  which is tagged for stable but missing a Fixes tag.
 
->                   __FOO_SER_NR_REQUIRED, __FOO_SER_NR_OPTIONAL);
-> 
+- Commit 708b20003624 ("PCI/AER: Remove HEST/FIRMWARE_FIRST parsing
+  for AER ownership") inserted a problematic check in dpc_probe().
+  This is fixed by the present patch.
 
--- 
-Sincerely yours,
-Mike.
+You're right that 708b20003624 did not change behavior, but I still
+think that it is the correct commit to cite in the Fixes tag.
+
+If I would instead reference 97ca178c899d (as you suggest), it would
+be picked up by stable maintainers for all stable kernels containing
+97ca178c899d.  The combination of both patches would then reinstate
+DPC on non-AER-capable ports.  Great.  However that commit did not
+actually break anything, so it doesn't feel right to put it in a
+Fixes tag.
+
+So I tend to keep the Fixes tag as it is.  Let me know if you disagree.
+
+> Also, for stable kernels, is there any way to note that this patch needs
+> to be picked with patch 1. Otherwise DPC driver might access AER config
+> without aer_cap.
+
+The syntax specified in Documentation/process/stable-kernel-rules.rst
+looks like this:
+
+    Cc: <stable@vger.kernel.org> # 3.3.x: a1f84a3: sched: Check for idle
+    Cc: <stable@vger.kernel.org> # 3.3.x: 1b9508f: sched: Rate-limit newidle
+    Cc: <stable@vger.kernel.org> # 3.3.x: fd21073: sched: Fix affinity logic
+    Cc: <stable@vger.kernel.org> # 3.3.x
+
+However the SHA-1 hash of the first patch in the series isn't known
+until the patch is applied and the maintainer would then have to
+manually update the referenced SHA-1 in the second patch when
+applying it, which is tedious.  In practice, I've found that this
+doesn't work and the best one can do is keep an eye on Sasha's
+and Greg's e-mails when they apply patches and alert them whenever
+something is wrong or missing.
+
+Thanks,
+
+Lukas
