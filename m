@@ -1,66 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794764364;
-	b=da2LrAfV1PbgiBtx41oIX07baUWoRqa/q82714v1Qf2+ZOOedDkoUg+f7fxgPEzFjJrd
-	 T/L5LhnGTCK5jDwdV1uO9wZcoI5AnRFskpoKoO8IeOmymTOqt5M1eMxJFlALc35yvquR5
-	 pVOhvzgPRGoXV5wm4qd6N7cciO4BT6Qp6GX/aB50p7iv66RFlTUGiBeEAa1LftIOCxsjO
-	 PVPnFSnIukkDQ21xihX6GitWjhn5IQ53uc4ZflSrzcDo3mOeHOZiTFOeE6JzSsvZAhKSB
-	 fc7YJqQOEdconYg/udtGDv2Kn8q+JbXkR+oZAt500Yox2suobpj16ojY9Q5VL+iAnkw==
+	t=1794764462;
+	b=Fp4XUMZVvHKZ6MtmjhkGChla8OK2jjkC16NGsmjBWkInZTReNg3o0IYvObpXsAQuM00z
+	 f4ingWLM7oVEGOxAuJVuJr8OEKdZNnRUbADnf3yihWlmLZdeIQ5KPRwqLDzdao68MlERy
+	 XCaO+bEWomHnM1DfQmDFcgMSxtuhikGLdXId1j0jYcf8scQ5zd0Gbpg7lHJ0HfwlrT8JR
+	 mwGDehZlVErNOEWy6bluq44vv1QzqGbyRIgahoU+p9TOQ7WTEO7Pe1K60DG2ySdugEdy/
+	 CROUcDK/WBpsd4lLQqOIY6gr9yX71Lfb4m8SC8toiYr98rWa6Cs2R4OBORnSmkrRHpg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794764364;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=LuvMmI09I/yZkcgOAhuxB6XI4+QcFoSXXJuVeZFzzgs=;
-	b=rSqJepcOQAuxIJtk4XW+8VJIyPltADMeKHPTNN6YyUNGyH4x/Gi4O96IAp17LCd0Oeah
-	 9sFtlNeV/xe60oMzcDv2dTS7om0pXBgOVXXdiZb9Ae4oc8wwPmygWhRgL5CF2F6z5QjIi
-	 7NAUoAenUsI1k5ZInCWeKEegypYBb7nSLWN/lQ/hpD4ebkqVvys5Zi4Bqhi2Hks6Eys5c
-	 vgcWlp/O73IeLTttKXOv4Go1kq2VqQkgXyXn3BVHCuli4mN9iffDqeF250B928QTnkg1d
-	 MZbiD2BkYTAR3OeAJOok7D2ap7BLUbhPOg1aXihEXeOtwoPdnM7Jour45FpBJ1ZB27A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794764462;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=L/Uv10MXpeqrXJrer64YsQeT7c/yMyL7dcLkFM4ek1c=;
+	b=A8Af9JFXmhELX1IDVGjeIJqcGfMVJlsurlzw9mDpKtE/Oi7oFgh23XqYgS3YKTrXRkGY
+	 F+jJy889ikfO8eDIlEbwgUTOx1cO4jIDUj/etpKJfr7uNNKyAOBEau+SlfMc/gqGW3hnK
+	 tUXDMYT7VBXyvvD0KmFT9ZB5VT44jTj4o3oM6K2nKqp+ytRG75gma4CEEVjmQ3X3kVPUP
+	 t+9xxc2PUh0kmPyVq7mcAxnHNXMNTioMEt+eN1Ii5b/n/9F7UWKXe986rfQh+MJGIXZZ1
+	 ZUxUmaVLQHmfiHEEcedXXNcWGdW70l6sbxMc1OrFxCHT2N0XFFUJMipAYO0uxTzR9Jg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b3Kdmzc6;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C1chKifg;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA972606A31A;
-	Sun, 15 Nov 2026 17:39:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CD1F606A31F
+	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 17:41:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b3Kdmzc6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A394A1F000C4;
-	Sun, 15 Nov 2026 17:39:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C1chKifg
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FBBC1F000CC;
+	Sun, 15 Nov 2026 17:41:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794764364;
-	bh=LuvMmI09I/yZkcgOAhuxB6XI4+QcFoSXXJuVeZFzzgs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=b3Kdmzc6zR6q5nTMEJclWpKxjsTP9FwKcjQ6sFBtEe5xoLu9qJ3i50GmOc5B1CkvX
-	 c1kMrJw4q0qcpsIl0N/hXXvW+2McnXnOTPE8+W6jQxVPNrGJuONKHN93QErv5/3CJV
-	 vISHCxyh/xuGazEgvKNhjg0MST+QnVNVfdZ57rqZAly759IX/47XSXDxl3ylzs023E
-	 L8muKtVeMxSKoK5CtHTU2DkEqG6x+hf9wYETsjoxfFCWCcBB4J47qvljIHE+NNoyPq
-	 uLcmqgjdOgghfHC5P+qQ4Ye3O2579I1aexcft9YfG4EwaYJPWkQ+rpvDGV1WnYXDhn
-	 J35YsOgs06Vgg==
-Date: Sun, 15 Nov 2026 19:39:11 +0200
-From: Mike Rapoport <rppt@kernel.org>
-To: Tarun Sahu <tarunsahu@google.com>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, robin.murphy@arm.com,
-	maz@kernel.org, will@kernel.org,
-	David Matlack <dmatlack@google.com>,
-	Alexander Graf <graf@amazon.com>, seanjc@google.com, jgg@nvidia.com,
-	loganodell@google.com, arnd@arndb.de, dwmw2@infradead.org,
-	baolu.lu@linux.intel.com, Bjorn Helgaas <bhelgaas@google.com>,
-	oupton@kernel.org, alex@shazbot.org, gle.com@google.com,
-	pbonzini@redhat.com, Andrew Morton <akpm@linux-foundation.org>,
-	kevin.tian@intel.com, joro@8bytes.org, kvmarm@lists.linux.dev,
-	linux-pci@vger.kernel.org, Pratyush Yadav <pratyush@kernel.org>,
-	kexec@lists.infradead.org, kvm@vger.kernel.org,
-	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-	skhawaja@google.com, sagis@google.com, linux-arch@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 02/19] kho: block: Record the entry size in the block
- header
-Message-ID: <avnuP7SWE2BdBFBL@kernel.org>
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-3-tarunsahu@google.com>
+	s=k20260515; t=1794764462;
+	bh=L/Uv10MXpeqrXJrer64YsQeT7c/yMyL7dcLkFM4ek1c=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=C1chKifgbYdhJfLsrdeR6skwoP5SURNqsgha5377q2iho5CYcm5sbr0sb3O9H6yxF
+	 Op1d5oZSDefJE14aDwAsR1u0BKtBfwCEkW8t88aabNvGGA4OCvWeuPQfFE2M1NCU39
+	 QIlG+4NQISq/maSl9ITz2adGcx/Mhj5DIoY83xCJ5ctM0KaTBddhF+BW/+K5N2+q/L
+	 zMBVv66ZQEf27HJHB4FbTurfIVzfDgOJmmk/yC601eZyOPHWgPtW6d4Jnq9W+6OovX
+	 0wC6jpmizzC2XC6ElydqeRFpcEDHgn1+0cn6ZnF/WCsxxeNa1kcloETRDIW/cZYi4s
+	 Ce7b7IYKLd0/Q==
+Message-ID: <sashiko-outbox-215687@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 3/3] PCI/PM: Keep hotplug ports out of D3 if they can't
+ signal PME from D3hot
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aviv Bakal" <avivb@amazon.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261115171831.1498006-4-avivb@amazon.com>
+References: <20261115171831.1498006-1-avivb@amazon.com>
+ <20261115171831.1498006-4-avivb@amazon.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 15 Nov 2026 17:41:01 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,74 +60,23 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261110050202.529473-3-tarunsahu@google.com>
 
-On Tue, Nov 10, 2026 at 05:01:45AM +0000, Tarun Sahu wrote:
-> Subsystems using the KHO Serialization Blocks framework currently do
-> not record the serialized entry size in the block header. The entry size
-> is only known to individual callers, which must track and store it in an
-> owning serialized data structure. If a newer source kernel adds fields
-> to an entry, the changed entry size breaks the stride when an older
-> target kernel iterates over blocks.
-> 
-> Add an entry_size field to struct kho_block_header_ser. On the outgoing
-> side, record bs->entry_size into every block header during allocation.
-> During restoration, derive the entry stride directly from the block
-> header instead of relying on caller-supplied dimensions. The
-> kho_block_set_init() interface remains unchanged. A zero entry size,
-> or one that differs between blocks of a set, is rejected during
-> restoration.
-> 
-> This change modifies the serialized layout of struct kho_block_header_ser
+> On runtime suspend pciehp masks the hotplug interrupt and relies on
+> PME to resume the port on a slot event. pci_bridge_d3_possible() does
+> not check whether the port can signal PME from D3hot, so a port that
+> cannot is not resumed by slot events.
+>=20
+> Return false from pci_bridge_d3_possible() for such native hotplug
+> ports. pci_pm_init() computes bridge_d3 before it reads PME_Support,
+> so move that assignment after dev->pme_support is set.
+>=20
+> Co-developed-by: Zeev Zilberman <zeev@amazon.com>
+> Signed-off-by: Zeev Zilberman <zeev@amazon.com>
+> Signed-off-by: Aviv Bakal <avivb@amazon.com>
 
-Imperative voice please.
+Sashiko has reviewed this patch and found no issues.
 
-> and shifts the offset of serialized entries within preserved blocks.
-> Bump KHO_FDT_COMPATIBLE from kho-v4 to kho-v5 so that pre-v5 and post-v5
-> kernels cleanly reject mismatched handover state during boot. Also
-> update the stale compatible string example in the documentation.
-> 
-> Suggested-by: Pratyush Yadav <pratyush@kernel.org>
-> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
-> ---
->  include/linux/kho/abi/block.h          | 10 ++++----
->  include/linux/kho/abi/kexec_handover.h |  6 ++---
->  kernel/liveupdate/kho_block.c          | 32 +++++++++++++++++++++++---
->  3 files changed, 38 insertions(+), 10 deletions(-)
-> 
-> @@ -264,8 +274,21 @@ int kho_block_set_restore(struct kho_block_set *bs, u64 head_pa)
->  	}
->  
->  	while (next_pa) {
-> +		u64 capacity;
-> +
->  		ser = phys_to_virt(next_pa);
-> -		if (!ser->count || ser->count > bs->count_per_block) {
-> +		if (!ser->entry_size || (entry_size && ser->entry_size != entry_size)) {
-> +			pr_warn("Block contains invalid entry size: %llu\n",
-> +				ser->entry_size);
-> +			err = -EINVAL;
-> +			goto err_destroy;
-> +		}
-> +		entry_size = ser->entry_size;
-> +		bs->entry_size = entry_size;
-> +		capacity = (KHO_BLOCK_SIZE - sizeof(*ser)) / bs->entry_size;
-> +		bs->count_per_block = capacity;
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115171831.1498=
+006-1-avivb@amazon.com?part=3D3
 
-Nit: can't we just initialize bs->count_per_block directly and drop
-'capacity' and the change of the following line?
-
-We are not very strict with 80-chars limit in kho/luo anyway.
-
-> +
-> +		if (!ser->count || ser->count > capacity) {
->  			pr_warn("Block contains invalid entry count: %llu\n",
->  				ser->count);
->  			err = -EINVAL;
-
--- 
-Sincerely yours,
-Mike.
