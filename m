@@ -1,55 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=44.246.68.102
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794762421;
-	b=llK2RBszX4zKGQqBuA84GtKhVZfrxeIF7J/J1tKJGZa9JwXE0uMpJK+BE608Qxj4ZOmg
-	 Ey0z8AquqXSMvSCgcZSdMrI7dCu5UK1r9+czMqcwV5rWfgneqtluN2wixaTz61+QPzIGX
-	 C1UEksWka8f94U9eLmglYouzAhGGKr3NeBwkizsYrDkTKKkLO6H5dSaRjrFBSzHTW9Ek5
-	 y1+dRIG5oZ8KWkqNHh7vbGAKopg5rXP5aWneHmU6v+qGiJJezyXqHesG6U23hS4CeZ5E7
-	 FhUBBhhg6+JPkcDhcsKdKlUxdQjIHLGZ4O0uen0+D04XOpSGuezWB/74o6dvIZwW9CQ==
+	t=1794763122;
+	b=ND5NCtPGF34/xfhOTl5rfQmQE13PhLwdUy7cByrkEi++P/4T2gLncMCeSD8E03Ns8YQk
+	 f0S9SB1hDA7Vzj068rfekY8ZFgPpqhbAkaJOof5dCjxtjoGzAu6PagOYTU2bmIWZmuAii
+	 qbLgadjqiOaEz9rAz0z74WX277CLvCPFjp3mkjDHeCxqflS50mUqYIvDA2PrLmJfBaBbB
+	 ehmj6IpcekVToDM8q35uvBBW1HDzqiW6fR3EK+Yc+at1M4fGw5pdnYIT1OSYFi8K/63YF
+	 xAR/P4evOD49SnEU1BIug326lFtN/sHee66E1updkuTQnWW7860M1CRO4PdS24lq/uQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794762421;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=94l3N9AWBADZVlj1Q/uea2ritj8vF6vyqwsDKMg7bls=;
-	b=g/fT4gi+DmxUTbkNhwEkeO/702B0bTY4KSTn1oheVDrlFVn1dbFheiBMXWnKyhiFO+mN
-	 Mf2pnROfbBsdkvluUbBI+fXv1T8iZFOrcZGuQ6jbbDeXdQujuHcAHpp0DhGtPtNHLNpST
-	 04J3Rvf10JSfUVNZWmYbHJUO8Nri4cKxmkNCH4dDhTRPgMGWNqOZrYl9X7ufjLObVI5/4
-	 ZeK7wJDRw5xuc5BsfxBwllpzdUXRlkoOo3fIAEIp97Kz+CoJcOE8Fpqt/FqPm0NGiOEYe
-	 NupBWw+c9n9lqiEnCBjoFu1sl5FM/8t67nINxwRp3tOjIxiTpl48pZByPCz6e0/5qbw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794763122;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
+	 From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
+	 X-ClientProxiedBy;
+	bh=W52FgCC87EH4hTxaBSBXsIORfGazek+ZlRVLcV8AdGI=;
+	b=xUUhg5jW5XqQIojBf6ZfRMbu3Pw4DaYV//SuRyoHJjpcOfi7+4aPM00u052MHPiI4+7T
+	 ezE+FACHQZn4MBv9PBNOsWAx2CrVmQ6yhceiodhfou0nG4IvGmdN/lgfciRdZGMjNEUsg
+	 hsbVJ52hRg5OQkPGYXrXhrqN3AwmFkqjcWLgs8dmpcPZthmHSaAjQ/uHdDPEHT2ltRqQd
+	 NpYV3x72MMdftZuqZ3/KvYpKRd0ax8QTY7I5SzRJcpfYu+nwzyNupuE6EI0AnnMMvmXBC
+	 K6Axjje2PnLtbc6Mx1lNFLWFXOBcG0M6iIAxoiOLfYBuCTgl0Fs46JrWkQpibv0vjSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=A3pJ73Lj;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=amazon.com;
+	spf=pass smtp.mailfrom=amazon.com;
+	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=O6n4gR78;
+	arc=none smtp.remote-ip=44.246.68.102
+Received: from pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.246.68.102])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5125606A31F
-	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 17:07:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B3CB606A31A;
+	Sun, 15 Nov 2026 17:18:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5B3CB606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=A3pJ73Lj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A83D1F000C7
-	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 17:07:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794762421;
-	bh=94l3N9AWBADZVlj1Q/uea2ritj8vF6vyqwsDKMg7bls=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=A3pJ73LjdREijtEM8PpzpLcnagufO0XvuKAPCVVqv6qXZUveQOEN3VlrZu7PXq9KA
-	 WRsK0Od/OeiQgz+gKc36Ekztx48AArPysXXpOCk1G5Ww99NzQ79fowPBjCLerDhI/p
-	 y6YaALTmEis1m60RhWIUXz8PoRQjWr0V2NPgox43P3wWV0rqX9H3K5ahqLJMIxWRoB
-	 znPT44qaTVlkt5Dit/TaTDlTv3wdV6/UXcU1g5wl2588gFZtf8bdO0NSY7lV62rmCG
-	 P1VOQwkgDr7fVTgcHHG1fAqpQxzgNUHDA5Efv9Qt4jBD/kk5yJb2pFjpCgWBL3aDff
-	 2urqqBgU9Rwxw==
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5c14470729eso2316965e87.2
-        for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 09:07:01 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErG3Q4gTYFx3BPi76uWgx5E/WluDhHVCa5TQJFRTB6Fd9bz3sPieo/5z+JEptcjhpk4r4UlfhW/17jg=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8mXUr23ckaSu4Zyxc5iUwl6dS9v9YfwtjklovvCEsRtu6jkuo8
-	lq9GhgaGfjMCZExAd+yIMOiaEQBFmPocpT9+gU80m/Bu/dSq6Vy/HimIfkbRC9LG/uzZQQ+W0q7
-	y0zqBJ3aOhSnG1ofKphcRZBmc9cwqcL0=
-X-Received: by 2002:a05:6512:220b:b0:5bf:d226:8c41 with SMTP id
- 2adb3069b0e04-5c170b365bdmr3199074e87.29.1794762419642; Sun, 15 Nov 2026
- 09:06:59 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=O6n4gR78
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1794763122; x=1826299122;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=W52FgCC87EH4hTxaBSBXsIORfGazek+ZlRVLcV8AdGI=;
+  b=O6n4gR78S/wbhYVstY9DweFDwz2QTCJhTLfaGi2CSZ+7JQBJoH89xx60
+   xNgPd7GrtFi/UJvjKHkIJvH1zA1QK3uaAc1hZ72kIWOO6DwZITh6LkhsT
+   kJDrz3OhqcFFhG7vzYiwX95gcLk6q5bnZiWwIebMUhzmOnky/m/7WXwjb
+   A/kR13l1OhYrEzgcOfTfunyw/efZl4VoDOYAHkDqqZGTfmeE94Nh7vreH
+   dF6ojcbWWtqKyS1SgKr39iyTYtHaTW0F62bgXGrGt+K8ZZQ1R5UFoEze/
+   qennzh0BV2GKJ5Oc8qXxXVpirnFAI2bk5pPDxWgha+Zi9H1ju8GmwTxWZ
+   A==;
+X-CSE-ConnectionGUID: 0iCgtbAEQbuVsXb8VeqmZg==
+X-CSE-MsgGUID: r5MlY1BFROa3SOw2xlwvwQ==
+X-IronPort-AV: E=Sophos;i="6.27,215,1787011200"; 
+   d="scan'208";a="33971370"
+Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
+  by internal-pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2026 17:18:39 +0000
+Received: from EX19MTAUWC001.ant.amazon.com [205.251.233.53:23374]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.34.255:2525] with esmtp (Farcaster)
+ id c8eb6874-bd1d-4a7b-9dcd-48f77fea8dab; Sun, 15 Nov 2026 17:18:39 +0000 (UTC)
+X-Farcaster-Flow-ID: c8eb6874-bd1d-4a7b-9dcd-48f77fea8dab
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC001.ant.amazon.com (10.250.64.174) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
+ Sun, 15 Nov 2026 17:18:39 +0000
+Received: from dev-dsk-avivb-1a-8cc559d6.eu-west-1.amazon.com (172.19.102.34)
+ by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
+ Sun, 15 Nov 2026 17:18:38 +0000
+From: Aviv Bakal <avivb@amazon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Zeev Zilberman
+	<zeev@amazon.com>
+Subject: [PATCH 0/3] PCI/PM: Keep hotplug ports that can't wake from D3hot out of D3
+Date: Sun, 15 Nov 2026 19:18:28 +0200
+Message-ID: <20261115171831.1498006-1-avivb@amazon.com>
+X-Mailer: git-send-email 2.50.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,69 +83,37 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261115091221.2217-1-lirongqing@baidu.com>
-In-Reply-To: <20261115091221.2217-1-lirongqing@baidu.com>
-From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
-Date: Sun, 15 Nov 2026 18:06:47 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0hBVwOksptV2ThK9iCpHbSZDh0Z+R3dtojCtkze4_0eQg@mail.gmail.com>
-X-Gm-Features: AclHuK9XPcUJ0mrDHIaDue0lT0yDTr2aABBQOGeL_rqJ2XyI8JCYu-HCtCU78iE
-Message-ID: <CAJZ5v0hBVwOksptV2ThK9iCpHbSZDh0Z+R3dtojCtkze4_0eQg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI/ACPI: Check the found handle in acpi_get_rc_resources()
-To: lirongqing <lirongqing@baidu.com>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D031UWC001.ant.amazon.com (10.13.139.241) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On Sun, Nov 15, 2026 at 10:12=E2=80=AFAM lirongqing <lirongqing@baidu.com> =
-wrote:
->
-> From: Li RongQing <lirongqing@baidu.com>
->
-> acpi_get_devices() returns AE_OK even when the namespace walk finishes
-> without a match, in which case the return_value argument is not written.
-> The caller passes an uninitialized acpi_handle and hands it to
-> acpi_fetch_acpi_dev(), which dereferences it as an ACPI node.
->
-> Initialize the handle and reject a missing match.
->
-> Fixes: 169de969c018 ("PCI/ACPI: Provide acpi_get_rc_resources() for ARM64=
- platform")
-> Signed-off-by: Li RongQing <lirongqing@baidu.com>
-> ---
-> Diff with v1: add fixes tag
->
->  drivers/pci/pci-acpi.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index e260089..e90e749 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -82,7 +82,7 @@ int acpi_get_rc_resources(struct device *dev, const cha=
-r *hid, u16 segment,
->  {
->         struct acpi_device *adev;
->         acpi_status status;
-> -       acpi_handle handle;
-> +       acpi_handle handle =3D NULL;
->         int ret;
->
->         status =3D acpi_get_devices(hid, acpi_match_rc, &segment, &handle=
-);
-> @@ -92,6 +92,9 @@ int acpi_get_rc_resources(struct device *dev, const cha=
-r *hid, u16 segment,
->                 return -ENODEV;
->         }
->
-> +       if (!handle)
-> +               return -ENODEV;
+d4c79b63d82d ("PCI: Allow D3 for native hotplug-capable Root Ports on
+non-x86 platforms") lets native pciehp ports runtime suspend to D3hot
+on non-x86. The PCIe switch ports on AWS instances advertise PME from
+D3hot but do not send it, so hotplug events such as an ENI attach are
+lost on Graviton. x86 keeps the old logic, so the problem does not show
+up there.
 
-acpi_fetch_acpi_dev() will return NULL if handle is NULL, won't it?
+Patches 1-2 handle existing switch devices, which advertise PME:
+patch 1 makes pci_bridge_d3_possible() honor PCI_DEV_FLAGS_NO_D3, and
+patch 2 sets that flag on the Amazon switch ports.
 
-> +
->         adev =3D acpi_fetch_acpi_dev(handle);
->         if (!adev)
->                 return -ENODEV;
-> --
+Patch 3 handles switch devices that advertise no PME from D3hot: such
+hotplug ports are kept out of D3.
+
+Aviv Bakal (3):
+  PCI/PM: Honor PCI_DEV_FLAGS_NO_D3 in pci_bridge_d3_possible()
+  PCI: Avoid runtime D3 on Amazon PCIe switch ports
+  PCI/PM: Keep hotplug ports out of D3 if they can't signal PME from
+    D3hot
+
+ drivers/pci/pci.c    | 16 +++++++++++++++-
+ drivers/pci/quirks.c | 12 ++++++++++++
+ 2 files changed, 27 insertions(+), 1 deletion(-)
+
+
+base-commit: 23c62304dde29abe92013d85910d03a77dada35d
+-- 
+2.50.1
+
