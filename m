@@ -1,78 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=35.162.73.231
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=52.13.214.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794763125;
-	b=epb/eNFSfdP0jcnveqKYIMkjiG9o+fK8W5R9Jl49ZUma9Dhqn5IJhcfKk17sMwSZEyh4
-	 Avz+vv4O/hTM6YvXSlaCUpj4VrvdybS8Xu5hsSWNRfHqKv1j2wmYu+F9ZUhSK4CDsfSA1
-	 +315guuUDYEbgX03liMkOFvwsvsxG+LW5SQySsgwwKrX/WIv0D6dcLZ0viIusniGG11hi
-	 S/c9nPimyOXIci4Wte/lM7iqyV7pf+cUGitclt4BBOIrPK+gknbETD/CvSrt5OW80mOeg
-	 BbwaSyJwZsy6AkkBLWsYU3wIrhq4A08vDWdv+WZIDcdnKFrtrJTozI3jq+rYiTjd88A==
+	t=1794763126;
+	b=O/WFpZBUdN5PyOYcTTouS0+dBY3SBeAcbI6gf7oWlb6vwjhzr2d9UPGGCAFoK8bMYFmo
+	 r6AaWSkamBXAVrjcXtxN0zrJOmU6dIMhmvG3Pea1q0F0Fajit+GDgGIr0pjqxtLE3dB7G
+	 LcmaqCbMMTtxPNfVc8fp4NfhR3RPPkBitSZJ6GFIRHFjhwlkuK/en4O/fgXPmU37NXBK3
+	 WNEsVzvb8w8YwJ6YQJFiVKnOIfcfKIqxidNNbJlpBsfluL5vTBHQyxeDoERhT09gHE7Op
+	 +hyNi3yhKLIZMtJupSyXTxdHqWjvX7exwIHODbz8hcM3/kHEvl8ejh9iVsf19TQCErQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794763125;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794763126;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
 	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type:X-Originating-IP:
 	 X-ClientProxiedBy;
-	bh=YNzPy9WIGKzk5Mhl2eWjAAhHu9EFIi0yUenQI3Z81r4=;
-	b=MszRmN1gnS2Q784GRwVY6vW8pvDgBxwSiwOxbZ1ql4YMSVgpb0UdFTbtmjgz560Hvx5q
-	 rAz/0S2+/cmIN/oqExdzWyXGvHqfC1pZ1MlJ7IIxSTmBadsOAsMPuePCWccV93yHGMH91
-	 WQapRKabJEk2DdtkPnThE7lhhYG0NLz3OQXb/uOSjnx2zOPx+VUB5BKS/yqMn4oRGXWoJ
-	 ibjIlbYT5WXJLE9nYGUwIySXrHJH3o5GcygrDcamyljqUxzp4eoV77zrgdcXvzJUIZkrz
-	 K3f2IQz3aKGHpUo3KjlBzNIEoRtUn9Y4Lpp3R1NGaSDHTuXxIKGw3f3my9LX87uAxMg==
+	bh=2uoxnOxXtTyDxInRVJmAbE2Rgc4pJQApEsm4Nsf3Nrs=;
+	b=bdePRm8muodVe+o4wGyxNPDBU2S+M9zcCU5DfvJSD4jcmsjTP66G3RI7rMDzdL19f4DG
+	 kgxQsUw6AnIvqBXUG6PDsDkx59giGlKpRy/tY3xUQAMvnYtbg2N0Mhf4if+Cvp/iWBrjx
+	 9Jaw22CN3JBkO0tWJ+i8EiONcgV2DzkNPmERsaTvuQ/U+9sxYCwtb0+/5ISP2AxtFzcTh
+	 2WfGTKphzfg1d7I+2ggLhFT5WsDmxErac/UThg17r4xwJf6F2MgfJFDKVcHQYWZdcSxIW
+	 N1JhRAL5mdhXJg5g9ExM36q43nHJCY9bkHgJfcKjc2YjJrFKMk0zSfBour0X4EsHxLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amazon.com;
 	spf=pass smtp.mailfrom=amazon.com;
-	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=BU0avgyx;
-	arc=none smtp.remote-ip=35.162.73.231
-Received: from pdx-out-012.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-012.esa.us-west-2.outbound.mail-perimeter.amazon.com [35.162.73.231])
+	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=Fr5O9JLo;
+	arc=none smtp.remote-ip=52.13.214.179
+Received: from pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.13.214.179])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F39E606A88B;
-	Sun, 15 Nov 2026 17:18:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2F39E606A88B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 178A0606A895;
+	Sun, 15 Nov 2026 17:18:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 178A0606A895
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=BU0avgyx
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=Fr5O9JLo
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1794763125; x=1826299125;
+  t=1794763126; x=1826299126;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=YNzPy9WIGKzk5Mhl2eWjAAhHu9EFIi0yUenQI3Z81r4=;
-  b=BU0avgyxCgBnBDOJtHhybasFpkn+Gh6SvU4TdKDcuUQjfLN7UZez/9Oe
-   1LlrLJF11rUC8bY8oO0sg90PVmc9xbKcXrjoP6IVyDuNgRdH7js68Ta7X
-   zzVKCAnlLrh52rOqwaAPW2TDcWWnA7t/zVXCV2UOFq/2Y3qMSKIL1ME5/
-   xm1wKyxUpyadUkG544zW3nb9cKm6gM1jRQM4NorM7Lx82Es5lwqTva0h4
-   mVoL81hp8Cff0p72wFMwu0J77WgFFFgnWvoQqtNJMQejWCoYvwpzME2sh
-   tdWm/N8i7vrvpPaAjPEPLySJ94ogDhXHNPZ+uWHLRrH4taRtLbGL0qeAT
-   g==;
-X-CSE-ConnectionGUID: yX/U3VgzSuSRLsGcL61osg==
-X-CSE-MsgGUID: cie6R9sSRvmY8ykNRJV09g==
+  bh=2uoxnOxXtTyDxInRVJmAbE2Rgc4pJQApEsm4Nsf3Nrs=;
+  b=Fr5O9JLoU7SJwi26p8aOP2iPvLqbS/iyb8wAv4K9RrhrxY2mssHAITiw
+   UMWj7kca+E4Wn7b4YO2YbMM1wibLMODoom9Hkk3+qpoLpydjSXQU85OSp
+   uk+kFEQniAWqlJ7iBzVRwbbS477uzNNOUpBTARrfW6cKKg56zKxHM7bVP
+   Zbf4MCBfOmW57zdh3AMxrIy3AixKiYM33qN9x4PCvIIVyC/u3fwRgu2yp
+   tOEYbJvxzbptiA0X0FidLDGhMm9YSYKXI6uDuo57SVfOG6BqalJ75TXkv
+   lA+korJvGqoSexdxyQLHdKcOM94S/aaDOAVm31MJn8BT8nh8mcbtBQwBz
+   w==;
+X-CSE-ConnectionGUID: Aw50QroNTZe5RIeTsSOEaQ==
+X-CSE-MsgGUID: Z12sUJwZQ5mEifLdaA8kWg==
 X-IronPort-AV: E=Sophos;i="6.27,215,1787011200"; 
-   d="scan'208";a="33868730"
-Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
-  by internal-pdx-out-012.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2026 17:18:42 +0000
-Received: from EX19MTAUWA002.ant.amazon.com [205.251.233.178:1465]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.34.255:2525] with esmtp (Farcaster)
- id 5ec6dabf-735a-49b8-b405-60cf754ab77d; Sun, 15 Nov 2026 17:18:42 +0000 (UTC)
-X-Farcaster-Flow-ID: 5ec6dabf-735a-49b8-b405-60cf754ab77d
+   d="scan'208";a="34033631"
+Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
+  by internal-pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2026 17:18:43 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.104:20718]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.10.61:2525] with esmtp (Farcaster)
+ id f8c09929-feb9-424e-92d5-7f55c9db1653; Sun, 15 Nov 2026 17:18:43 +0000 (UTC)
+X-Farcaster-Flow-ID: f8c09929-feb9-424e-92d5-7f55c9db1653
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWA002.ant.amazon.com (10.250.64.202) with Microsoft SMTP Server
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
- Sun, 15 Nov 2026 17:18:41 +0000
+ Sun, 15 Nov 2026 17:18:43 +0000
 Received: from dev-dsk-avivb-1a-8cc559d6.eu-west-1.amazon.com (172.19.102.34)
  by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
- Sun, 15 Nov 2026 17:18:40 +0000
+ Sun, 15 Nov 2026 17:18:41 +0000
 From: Aviv Bakal <avivb@amazon.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 CC: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
 	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Zeev Zilberman
-	<zeev@amazon.com>, <stable@vger.kernel.org>
-Subject: [PATCH 2/3] PCI: Avoid runtime D3 on Amazon PCIe switch ports
-Date: Sun, 15 Nov 2026 19:18:30 +0200
-Message-ID: <20261115171831.1498006-3-avivb@amazon.com>
+	<zeev@amazon.com>
+Subject: [PATCH 3/3] PCI/PM: Keep hotplug ports out of D3 if they can't signal PME from D3hot
+Date: Sun, 15 Nov 2026 19:18:31 +0200
+Message-ID: <20261115171831.1498006-4-avivb@amazon.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20261115171831.1498006-1-avivb@amazon.com>
 References: <20261115171831.1498006-1-avivb@amazon.com>
@@ -90,46 +90,59 @@ Content-Type: text/plain
 X-ClientProxiedBy: EX19D031UWC001.ant.amazon.com (10.13.139.241) To
  EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-The PCIe switch ports on AWS instances (vendor 0x1d0f) advertise PME
-from D3hot but do not send it. Since commit d4c79b63d82d ("PCI: Allow
-D3 for native hotplug-capable Root Ports on non-x86 platforms") these
-ports runtime suspend to D3hot on non-x86 platforms, and hotplug events
-such as an ENI attach are lost.
+On runtime suspend pciehp masks the hotplug interrupt and relies on
+PME to resume the port on a slot event. pci_bridge_d3_possible() does
+not check whether the port can signal PME from D3hot, so a port that
+cannot is not resumed by slot events.
 
-Mark them PCI_DEV_FLAGS_NO_D3.
+Return false from pci_bridge_d3_possible() for such native hotplug
+ports. pci_pm_init() computes bridge_d3 before it reads PME_Support,
+so move that assignment after dev->pme_support is set.
 
-Fixes: d4c79b63d82d ("PCI: Allow D3 for native hotplug-capable Root Ports on non-x86 platforms")
-Cc: stable@vger.kernel.org # 7.3.x
 Co-developed-by: Zeev Zilberman <zeev@amazon.com>
 Signed-off-by: Zeev Zilberman <zeev@amazon.com>
 Signed-off-by: Aviv Bakal <avivb@amazon.com>
 ---
- drivers/pci/quirks.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/pci/pci.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7f1f47ea2ee4..292047804b09 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1476,6 +1476,18 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID,
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
- 				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1a23be4b6a07..0b2e20e781e6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3081,6 +3081,14 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 		if (platform_pci_bridge_d3(bridge))
+ 			return true;
  
-+/*
-+ * Amazon 1d0f PCIe switch ports (e.g. 1d0f:cec2) on AWS instances
-+ * advertise PME# from D3hot but never assert it, so hotplug events on
-+ * a port in D3 are lost.
-+ */
-+static void quirk_amazon_bridge_no_d3(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
-+}
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMAZON, PCI_ANY_ID,
-+			      PCI_CLASS_BRIDGE_PCI, 8, quirk_amazon_bridge_no_d3);
++		/*
++		 * pciehp masks the hotplug interrupt on runtime suspend and
++		 * relies on PME to resume the port on a slot event. A port
++		 * that cannot signal PME from D3hot is not resumed.
++		 */
++		if (bridge->is_pciehp && !pci_pme_capable(bridge, PCI_D3hot))
++			return false;
 +
- /*
-  * This was originally an Alpha-specific thing, but it really fits here.
-  * The i82375 PCI/EISA bridge appears as non-classified. Fix that.
+ 		/*
+ 		 * Hotplug ports handled natively by the OS on x86 platforms
+ 		 * were not validated by vendors for runtime D3 at least until
+@@ -3247,7 +3255,6 @@ void pci_pm_init(struct pci_dev *dev)
+ 	dev->pm_cap = pm;
+ 	dev->d3hot_delay = PCI_PM_D3HOT_WAIT;
+ 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
+-	dev->bridge_d3 = pci_bridge_d3_possible(dev);
+ 	dev->d3cold_allowed = true;
+ 
+ 	dev->d1_support = false;
+@@ -3283,6 +3290,9 @@ void pci_pm_init(struct pci_dev *dev)
+ 		pci_pme_active(dev, false);
+ 	}
+ 
++	/* pci_bridge_d3_possible() looks at pme_support */
++	dev->bridge_d3 = pci_bridge_d3_possible(dev);
++
+ poweron:
+ 	pci_update_current_state(dev, PCI_UNKNOWN);
+ 	if (dev->current_state == PCI_D0) {
 -- 
 2.50.1
 
