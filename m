@@ -1,92 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.46.2
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.49
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794700713;
-	b=esu6QbD6q/GOzB/FOyb6eUIfO6ty2SNcHAzeurOHPWu0ZFsSIfHsr+iWm3H29wJWssQF
-	 EPG+ZmXTe10tSUJXlsgBYFe1jae2pgClgWhw4PsxilBjKjXPPgkBMmBKvQmBtEkkJjyar
-	 PWqGWhWtePxaaIbtMsdROpxqZZJ+y67VjjwovdmIGsPrXF8LXnvSpdgGDGQtJwJ86IvTd
-	 VJR+P3yyq3h6D7vawzVzV0wd1uL3X3D2LFhxLRrPaihAxgtSzQ7zIS5ZdTGowK3OzyeH1
-	 DWpJ9ayHH69Tf8dueJZx3ComNJ+WawJ/lEZWf7GDXcfZUvbVGUUGNBHZJHSR3aqDA3A==
+	t=1794707273;
+	b=I8+9HXBZf9xGM2/NSD79gc0SJxcL42w9ffGkaB2R6OJOoWyVFjB/FR0nvT37ryFwH32O
+	 Krooiny2c/LGy9ez6Y5Q+hHUJ+VrsDvCdHGaR9kgR3M3eRoa6ZxSWjP+ApXKr3xkzbVD8
+	 WuICHfmW9sjjsgpVh0ZN3fIMsyzhZ6hDXLvVcbyUOhF+PjSMMu4tm9Occ2QNBwVo/ZU4/
+	 +NMk2TxbxdiPKIxOsWwUGMTNqXVQjFecbmNkmXkdPbVca3XrnO1GWO/dT6/XyRFukw/s6
+	 pmyVS6oF3IgSjvJPHydQFLzNg9z+zVlAR8pRJo4wHw9EGpu2astm7l6NcqQwBiRkUIA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794700713;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=bpeeawqXAwXe8hvlJopUeaTMWg2WHuyiLKNJWkrx+f4=;
-	b=u/nEg07VXOOJQxLDw9XbbcTTaVMNoQB6DaCnEjvFCpSRY5n8dOA+SOzaJMG0b+bKT7S3
-	 D4VrDBlY0o1z1cbcYceL0y5brQ7vKomd0203/nEUr/h1tVlBe0V0RayT9/oN9IFzi1eee
-	 1MlQYOJ6GmY1GY+maXAJdF7V50Z3JaWlxxci1pBcCUiUv8969dqYFMl9vUc/pAQG5GyJi
-	 hyEksQG4oM+VECWwFhncMaczSJ/VQ6roZUB9njVBzO66fS29ypQAL/vAYuCg/q6D+xGj1
-	 SKSF4RLmkFIG7FgDv1T3KuXM3yUEo8FUcXEpk+P9o6LwUq/iWRFbwNLulhf37QxaI0Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794707273;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=OE0V4hDYj6rciPValeql+PDftw1T5fn9De/8GtPo6aI=;
+	b=BQ6oksjOeet8y/sRNGGbDjMP8fc/K3gMDJ3LGnsXr68HJZ75/rE4Rt++DRC1s6UTWskh
+	 Ee247gp/yfZhXFeCV47cNIvhMY/8cY0HLNNOna9xaSvKfR4cT7hQcLgPEm7PEQDtp76hT
+	 lGT4GXXeS9sijO4T4IUlOUyj2el2yT44Ijx39UyxQ2CUtCBBZ7QYOPXosk/9lyqD2IclB
+	 dGSFYxCZIxtobfrN4ew1vtYU3ZuHYfkULyVrkTRRCpvklnbgTWP193O63B8kyjZQy+vqu
+	 8UjktEiYRJx/GoRIA4J8iJg1bnoN/VaHkqmVQY6D0IBHq3pNML1rpnHFIlqyf7pynzQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=gnQX0JSf;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.46.2
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010002.outbound.protection.outlook.com [52.101.46.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=z2gVAHL2;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.49
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D311606A323;
-	Sat, 14 Nov 2026 23:58:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8D311606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4476606A327
+	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 01:47:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B4476606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=gnQX0JSf
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RPYuQiX7nVQF6jjTls2JJ3dWYsqMTYMXgj9VJT0rqq+yERB9PaV50OeZu4A9Qu3ZPnnbjnRsZTsgJdJJsvfoNHrQ8onpPuknUYCZSopTzHzkdipU0YFV8/WEUKFzlwtnYSNXbcK6i+HRt2TkgEFitVeVLgccGp4NJUpmOWfaIHKmzH9C+q32WaEYxjs0NyQLogOI3Blr/3GK9tTaeE0peWUfK90mhO4WM+bm0C1tPbCsb+o/V840fcURV80gueKGR4efK27/Qe7ELFkd6JgBe4y6qmvyNUWGki2WImIcKhFP6LWlVs5bMqroMzNM1Kj/DzgZxySzu/KyDtj/PPyg2g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bpeeawqXAwXe8hvlJopUeaTMWg2WHuyiLKNJWkrx+f4=;
- b=phlFpl3CphybGUtGR42SzP2r3OansBies9l2kTtnZAlXWtUXBTMJySNkCIBExCNy6MNck91miINysetyW4jRJkBh3iqPdY4KsyKYsuzKcPR613Y61gY1C/yn9LKRpNLwPmZOctP3s5nAlyP91vr6uvTyuAFVxUhQKt5WuIB9PzQGFq4AxI6r8qtN/1VvFpvMDB6J6ups56LSa1L0Bm29VXkgQA/MYgaP5Qf4bTYO3g1xzLkr2ksH8QR9z7KI07zaUXshjZfyw/tl89A6s9BfwPgGabEc2/wSJ9P+ruw3Ebu4FxRXjYtPmgF8dju3pYRiipaX4YsfIqNlvBioqe9CJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bpeeawqXAwXe8hvlJopUeaTMWg2WHuyiLKNJWkrx+f4=;
- b=gnQX0JSfaWIThT5puKLnGEzubVl7uJiV8PQo8McKIAkp/w6Hj12wRI74nOmPmByqufWPNCZY/xBj9kVZ4q3pO5WK9bPdbGmaXubxdY93ESwhMsfCORaBH6S/jZEy3EcJg9pjysGF4y0OyBJrsZfXCPK34R8yjV3nsKPTpzqraoHhq4C7fyzvhFgdUAeC3ljtInuA2qT437ZZaRA20LP4tdo4klSxgf5l7SiZWN5QwlfqlB/uo4RSWlgrEZ3Dkf/I9kyvE9xPJ1fb/4Haq+mWe6t86O0vRjQC4jyyIdudODa4GdkGx2723N1P5334SO3/9GkXw1bV71wvbJ3kzgZLdA==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12) by LV2PR12MB966079.namprd12.prod.outlook.com
- (2603:10b6:408:3a9::10) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.13; Sat, 14 Nov
- 2026 23:58:30 +0000
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0615.012; Sat, 14 Nov 2026
- 23:58:29 +0000
-Date: Sat, 14 Nov 2026 19:58:28 -0400
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: "Gustavo A." <gustavogyn@gmail.com>
-Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/1] vfio/pci: Wait for GB202 firmware after reset
-Message-ID: <20261114235828.GF3706007@nvidia.com>
-References: <CAPZV9qUk3-eKOGEjVc7f0QzZcjb3L5QwUceAEUV0nuCdo90eGw@mail.gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPZV9qUk3-eKOGEjVc7f0QzZcjb3L5QwUceAEUV0nuCdo90eGw@mail.gmail.com>
-X-ClientProxiedBy: YT4PR01CA0258.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:10f::20) To CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=z2gVAHL2
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c4d473cfff6so327674166b.0
+        for <linux-pci@vger.kernel.org>; Sat, 14 Nov 2026 17:47:52 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794707271; cv=none;
+        d=google.com; s=arc-20260327;
+        b=YpS1PaavZIGNwJCQ3Ss0q5Ix7YH535A8vcHe9l3QFRmY5AxBQm/v/rOxP/pfwr7Shx
+         ZO493uBR6a4c1R2VmlsnaOzBEQntmKEmm+UcYQGwAoTG2puj3zJyBUMwS4gCoZw5/jhe
+         YbU+fB3aO8C1UlnbsM7tYcRfjWDlbnnh3LzdMnnztEbDqAx8gIaBB7CSpGRP21LRPKHs
+         e9Lqw1CopyL6X8RQMWwchuWfH3Kncrc1yiPIu52m3/kg/N0GYTwQo+UPXXw1rwiJ4K9Y
+         rCctzbq1YGwT66VlX8AjEtCp2uAwrWm1TLCF14Gm1jeMY179EreqnhNn1FPtyyJv5GdJ
+         gLMw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=OE0V4hDYj6rciPValeql+PDftw1T5fn9De/8GtPo6aI=;
+        fh=gDtuP35fP591LHH9bzYF0D1iMKn2PAw3yj1SNNdKSlM=;
+        b=fFJJxfqXm5+1SKGi/Q4a1UKAXKK9j4P6z+V9sVB+9RF2Y81CJTtm3dBcbnDrtaXNs3
+         lkPpj/Smx8vDxQ1j8mjBgIbWlrw7SZEc4HAHxFOJ5eorPOmIRpRJ2vSXUgJoJoSTeTZz
+         5MulEpZBFcRF+a/lIcKkp1iHC5BC1b9AoqN49li6iDbB8ul5vG2FEtSgdyWDZ6g+IGgP
+         xL7EjCknDR0F5Az2d2RhGcl9qSabWlJPWZK989LYUpVr1oUQQ4uN6VcRgmDazYYk52ec
+         WObsf77pDGKihdoImv3hb3BLOEmlm4c/Z8lkHZHxiUJFe5rN1e144cyl2CAY1QHI3Qfe
+         61cw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794707271; x=1795312071; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=OE0V4hDYj6rciPValeql+PDftw1T5fn9De/8GtPo6aI=;
+        b=z2gVAHL2z+x8knWv91TPYYOz6MOsnsUKca8jKwGhSeucc+ZXvt1GALAUWo1aWaFcI5
+         ng3uFS3yt//zqgciRT/DBMTOx1x5hPkA5DkQSK6bPTzS7Q+nwvtz+BqWv7Ef+1B8vEBJ
+         oTxO+lsUQED7F8x1UKB3uU+wrZf7DWSN76v23rINlQwzuLU8WwhM+PejbCtbeMzh4rk+
+         Ajs3d/7o+QxOnfL5aOtmX6IVez1+1FcNy4cT0z2L/kKY/5kg16k/jFs6D71/mKgpnkME
+         vGPj9Op5uNNQcDMHWSkbIl+fyPd/DSBFTYZHoShZY3+Br9aVFpoVTEtTkdTrKokbYFkW
+         wI4w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794707271; x=1795312071;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=OE0V4hDYj6rciPValeql+PDftw1T5fn9De/8GtPo6aI=;
+        b=uifvR/murawmx55hYJVtJhhhf5iAacjUhaP1L+jMW8aW5CnQky1OwII4UZwRWyuXfr
+         i90ZSwRm7TqakchTzSsjrJi+aLjA6/PPYcogbP0goteG1ZeErLX+k9v6WMAkj3NwbztI
+         uJ5Fg0Nxlva3TCUhMbGW9NsELKUjQq3UvgF78mQa8ZNm2dLP+UDR9uNbNPYweTLVE6iO
+         nn1dx+UtDTqqTDRv1I4BbsoYxfZA67QYFkpAlfhvDR5ZDzJUCifLweWSHvMglC7/bj/i
+         O3+hKtcb2o4hI5ZtDC7vwoEMnvJVaMIVCLL2DBygNe96/QBteLaWHxs93NFWu2bs5q9V
+         4k8w==
+X-Forwarded-Encrypted: i=1; AL+hErH225TAT3kPJWl/sigFAyR+y1dVVT6oSXsXXe7F0S8Yl2QWpxHR2hw/SjNH4HV5FK8vLQOZx76F9+I=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/eHIOa6KkzKSb3WAJjhhlVAqxcJDuIaXfrWwr1u22y2v6j9P2e
+	h0cjAgwI214XGbFgqlpha4N2MZit/VM8dCVOPYRl1J64HBmZyNAxEmp4vHSj5PP0NIF/NQz7el6
+	7Y5RKK+yjVEqrHlR/8uKzvuvrrsrzTvo=
+X-Gm-Gg: AYBFou3zN1J3ilfIkubifvNe+eDiwrmNAxAbuMNudapKoy2rylQqP3X/o5FxFQyyUVB
+	6+UbSlXHceL6Gi0rPvEhEjaCVWJ2n3CILHwDGh46kuVnYFqx6SofuCWbcVQaup7M+0U0mxV/Sch
+	Q9K37k9GfhwnEYF1AHJqbJu6e85nY7VhBpl5ml94gDtno86ZVkmwiUHlCqQk7xpW2WHF4i2NffD
+	oZWZ9A2pFuqdOMYw+oJbJ4pKiUAluElLPgo49vjkkeVjIyg25GwgeIXLzN0ysNk4tsYTFL8PECy
+	qc3XD/VlM6z2RiaC6T40kEhO1O2PANzWv09HwEAnwLYer22gPiU8R2jZwMoTMrcFGgxi649pRmR
+	/VT1w0dPnqydvHghAEjo5srBHQa0IIMWDSxkDrwlF2uwKiNEvg6EaHKK8MynaIYDdgSDHV7CeWT
+	ZuS/+kxw8fRec=
+X-Received: by 2002:a17:907:9443:b0:c46:75e7:25af with SMTP id
+ a640c23a62f3a-c50963446c5mr535005266b.11.1794707271041; Sat, 14 Nov 2026
+ 17:47:51 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -96,74 +105,72 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|LV2PR12MB966079:EE_
-X-MS-Office365-Filtering-Correlation-Id: 89250432-0d3d-4650-c1eb-08df42ab2e74
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|366016|1800799024|10067099003|11063799006|56012099006|261026121527099003|261026140227099003|261028144727099003|261022105027099003|261021121427099003|261102123227099003|18002099003|22082099003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	30TQXdawrUHQb0c/Dc4EDp9F8mkt9/XnyJjrSNA/m3A5NZMPdN5UijqN080uVwnIQ5k0vPn1cpnshopgbJs2A7ymaHkFAIREk1jD3WG3VC/SOpxVxmkT8pDzhjBOS+R3d1FCmYZZtYjvVFy8xEzPhT4wlH5vu2l80v/GJcUzcO3qghhE7NQ4u9A9umJWiksCO0E9DfHsvYjY3vKebmNPhJ7Z3KtaJhnbmABtJN8yxhbfx9yLgBv6EdeUaSN+4ujhUQ8Dw05YXQScMXVt+8CGQ/eLZp4eqj6bjJE8lIp4YhgqXQBE3NaAqT3RGJDEyh1hO6U2yf7exO9KvMXeTjrDJSG3Y8UF9Mvb2Le1H+v07DayOyJdXUbRX+48Fcys6XXh6kkLVNtxU72G1bM08skhGJJDtVJxXRfChhgvMMAMszMyOkLSn4ueWtQc47lDK5DvacV0hZMcvGua32MSeV8klAKdDyQQE/djyLyi1Jw1F5MZv90zTrkoMNneLEMBmkfndXdwo0fCen/moCOnBPdbQNACejur6IsVRFWTShxILAkSnfX/BgV/04Jzhtz2AA5O/Fhuh2jOCpmqJ6hTRh3iVeoOeqLZB77L+v5BrMISqXiryiIzxdL75mgDVEWh8u6SW1ITQ9VnAX95pK7XVDtnZrO+wQL5ndVJdgVQJYCdWI0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(366016)(1800799024)(10067099003)(11063799006)(56012099006)(261026121527099003)(261026140227099003)(261028144727099003)(261022105027099003)(261021121427099003)(261102123227099003)(18002099003)(22082099003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?ZerEi3rYKFysHkeTB3ffQvD7eIpXPOB5DnWvWGKShGEDycO2bHpy5ccZAhIB?=
- =?us-ascii?Q?veDWjdhdZ0ujFnjvyzBI6GXhK983Xnkbeusd8oBKKTblKcN1SrC2Lcd7FoKF?=
- =?us-ascii?Q?Wy0ekRqoO7+SF067K04SurT8yko1Mm+3Xj6RP0wld2Ld0k+gNvdf+t/GP1Nt?=
- =?us-ascii?Q?hMbvGAU/yV43wtG8bYPnQGuJ0HfAvosYXehiHRc23u4qSLEZmCjan1ReaPRi?=
- =?us-ascii?Q?uA8Tp18EymkJHSuq9p91e5wYzN5Z9VUr5bYuYLgEW8VlUxvCXo5zDbYG1FgB?=
- =?us-ascii?Q?nIRLHMuwTqHkG7FI4s032KoCfnP1RHJETkijFx1hULK8LuQrH3iRlRq+Njgv?=
- =?us-ascii?Q?gtu1qne/+puZadoc5gsC1COaTIYC9MDe+Ek7xXNuzYjtl61geYv3d5O6qLac?=
- =?us-ascii?Q?BkWibYHE5CUqdp1OKZ0pYyO/zzxWBtOt0JX9pjYWRkvzaGCEx3UG4V2rkI+A?=
- =?us-ascii?Q?gmKBAtyHy0OKYitQXL4ZTiaRlrz2IehBa1z/WGfgOfKlNiQXdEhUsKqw2JWf?=
- =?us-ascii?Q?oV5j1pCdtFFsQ1PAsAwktMTM4QI2RbHU+jCh45yqtKRn7s7QDlqGR3JumAxD?=
- =?us-ascii?Q?cBlem5at2GFJcQeSMyA2G2gyC3xr0RlYwKmI8dZh3ofNl8TJEyH2aA0no2CI?=
- =?us-ascii?Q?HmAH7gsw7j2vFpWuAfiPGJ4YR2iYEW/3UIpD+P7nx70lf9L2AKm5BbHdD+kY?=
- =?us-ascii?Q?bokJM63MC4A0riZ3EcVusZMyHPYpf2BCmGzhl5eJg0E+fKRW1ouSeWPHN8Fy?=
- =?us-ascii?Q?6p4IE8oKD6dZFV4Mf5+A6qpUp1MjUrc0ojYnEwCPP45eM24Jj0jaraiRTaGf?=
- =?us-ascii?Q?ME2FWzTjqc+spWXq72yO3RKgN5XnBqmLfbHDNapdNVeGfP19wufkCYlDdt5X?=
- =?us-ascii?Q?hGIwnNlBWFs4TGHHcr/KCgAC6wjf9yeuZxPrakEsGIuOGaX3LTrWucKHKMgl?=
- =?us-ascii?Q?WXyp5ofnLGRxiTo/UPrRUr80HstzDRzWWKqyNDipvVI7QcrkCP2ca0VngH1F?=
- =?us-ascii?Q?ifw33hvfbmisHxDT8gvrSku+Lt8cbZZAGOH4AArIIY9cNg19XbqVA45/Uerx?=
- =?us-ascii?Q?Wa6CV7b9pgWC+V8dIjW+5HtvjEuSZ0a/I0yyCKE9a3rBjeb09fM1IidseNBB?=
- =?us-ascii?Q?QkzTVcSpVJ2F1bFlAgNqnSbUG9dlD0D/CMHB9IJ6VWw8kKzuRgZQf65P8Y5N?=
- =?us-ascii?Q?zuxSrGfLUFFf4TzB4dGxY+B0X8sx/tQfO0A9YiIF3jhFQk1PWS/jVEweQfey?=
- =?us-ascii?Q?/XTHbjrh7a+Xuhs2wxT5G8kEIAbgOdiBFz3vgY3NjzkbW28KwbdrI6V186ej?=
- =?us-ascii?Q?WsszYT5OulotIAYFtVwxvPkU/of8HHJ9gaYto2vFiTtfJQ2eGvGUqHz/alvx?=
- =?us-ascii?Q?qM58F208bp4kKAcA/QQT3v8x6gz0VCsInlhpE/Np+6eBmty3+os5Bt5L+I9s?=
- =?us-ascii?Q?g5pjJGoRRYmTH4n2gBmxpSoUcvW/mi6mh/4g6r/TtsgM3EofIC+Hh+oAX2Kc?=
- =?us-ascii?Q?5LfBS3krDE1jbmKfge9293CytdW0Y9MprBdBL93ISorRnR4IfBXTmvdryrOb?=
- =?us-ascii?Q?6y5sXnq5G3PqwOWTXFGMAL9ycpDYxiRaWXiC1m0pVAGW18OiJuZvf260H5BB?=
- =?us-ascii?Q?gIsMbFydf0b4lmrkdAOiW74D77O53NFTbtpDCOFZjRiR9AIypfqEf4rdfunn?=
- =?us-ascii?Q?jjiTnPzyuabwJ+INQqM/wC2TyTfuwSjQPr4SN7crLu1vsBMZ?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 89250432-0d3d-4650-c1eb-08df42ab2e74
-X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Nov 2026 23:58:29.7309
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: KO2jAZofPRq7Y4vrWGCsNEXfFiU2olO5d2dpg69lFp4W/eyalNFsG2ZGwROzQVnw
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB966079
+References: <CAPZV9qUk3-eKOGEjVc7f0QzZcjb3L5QwUceAEUV0nuCdo90eGw@mail.gmail.com>
+ <20261114235828.GF3706007@nvidia.com> <CAPZV9qUvgKjoBXGjYXJzwnCmqzSfu781ZSG8zW6Fn4PokUN2uQ@mail.gmail.com>
+In-Reply-To: <CAPZV9qUvgKjoBXGjYXJzwnCmqzSfu781ZSG8zW6Fn4PokUN2uQ@mail.gmail.com>
+From: Gustavo Andrade <gustavogyn@gmail.com>
+Date: Sat, 14 Nov 2026 22:47:34 -0300
+X-Gm-Features: AclHuK-T0Xx18CWBs0ljRBJr9OWFzUd844AH_e8W_0A95quNMuvEFSNR0XQKFu0
+Message-ID: <CAPZV9qUMZcwVF=CUK4LY4G6Qoqd5ykCXE5ocX8VCy_f1c6+aBw@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/1] vfio/pci: Wait for GB202 firmware after reset
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Nov 14, 2026 at 02:48:53AM +0000, Gustavo A. wrote:
+Hi Jason,
 
-> PCI reset returns successfully while the Firmware Security Processor (FSP)
-> is still initializing. Restricting BAR1 to 4 KiB mappings masks the problem.
-> Waiting for FSP completion after reset restores normal output with stock
-> KVM and verified 1 GiB BAR1 mappings.
+Thanks for the feedback. I submitted this as an RFC because, while the
+workaround solved the issue for me, it seemed unusual that only my
+card required it, since I haven't seen recent reports of this issue.
 
-That doesn't really make any sense, you are probably hitting a race
-condition somewhere since 1G/4k changes the timing. And possibly
-because your new kernel versions boot VFIO faster than older ones.
+How would you suggest I proceed? I am currently running the latest
+VBIOS available for my card (Palit RTX 5090 GameRock, version
+98.02.2E.80.10), which is also the most recent version listed in the
+TechPowerUp database.
 
-IIRC there was some VBIOS bug in old versions that caused issues with
-vfio.
+Best regards,
+Gustavo Andrade
 
-VFIO should definately not be doing things like this.
 
-Jason
+On Sat, Nov 14, 2026 at 10:44=E2=80=AFPM Gustavo Andrade <gustavogyn@gmail.=
+com> wrote:
+>
+> Hi Jason,
+>
+> Thanks for the feedback. I submitted this as an RFC because, while the wo=
+rkaround solved the issue for me, it seemed unusual that only my card requi=
+red it, since I haven't seen recent reports of this issue.
+>
+> How would you suggest I proceed? I am currently running the latest VBIOS =
+available for my card (Palit RTX 5090 GameRock, version 98.02.2E.80.10), wh=
+ich is also the most recent version listed in the TechPowerUp database.
+>
+> Best regards,
+> Gustavo Andrade
+>
+>
+> On Sat, Nov 14, 2026 at 8:58=E2=80=AFPM Jason Gunthorpe <jgg@nvidia.com> =
+wrote:
+>>
+>> On Sat, Nov 14, 2026 at 02:48:53AM +0000, Gustavo A. wrote:
+>>
+>> > PCI reset returns successfully while the Firmware Security Processor (=
+FSP)
+>> > is still initializing. Restricting BAR1 to 4 KiB mappings masks the pr=
+oblem.
+>> > Waiting for FSP completion after reset restores normal output with sto=
+ck
+>> > KVM and verified 1 GiB BAR1 mappings.
+>>
+>> That doesn't really make any sense, you are probably hitting a race
+>> condition somewhere since 1G/4k changes the timing. And possibly
+>> because your new kernel versions boot VFIO faster than older ones.
+>>
+>> IIRC there was some VBIOS bug in old versions that caused issues with
+>> vfio.
+>>
+>> VFIO should definately not be doing things like this.
+>>
+>> Jason
