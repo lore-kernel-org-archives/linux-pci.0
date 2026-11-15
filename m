@@ -1,66 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794764143;
-	b=idFao+XZppSgvhpGPAUIn9o27Fpl7NuUGqBg/pdgFwtNZq6HO5136e3SINu2XGea6Dz0
-	 s9eNCJHPONYNNxz60tmIVp9xGUhB9jzfFjWZs0gwcQs1hcm/V8UdPUos4UvmVsZ7zWCg7
-	 PfG+yCnUJeDxXuKtFvP+GYnxBnTvSE/xC6NfvlrFbFXd/rSHk2rhgxNyKMTBPUjIO40PF
-	 7aHS5UkCI3C2FlQhMwmkeHH8O2EcvvaQxVnqqJb6PTyVW4pmtXsjW9CrDRx649s/yZAtO
-	 i+BDCGGVIDsJxcHIinGzc/7azR/BlcPlm8Ps54K8WKPHLhBnlfC7Un9UQknf0VkC3Jg==
+	t=1794764365;
+	b=i8h+w/kYSN4OJs3Fe5mT7H7R2WuHLe6I+0C6tXLhOrRXOtW2z3hXajZ3K05KF4U8HXhI
+	 ZI0cJ0DK5DV/IzkU8wfP0h2iEfn0jN4wykQZMV9hSOkrlVZsCn+3pko1WXpw1iV6Reb1N
+	 bW+uQKawEJrNJW4S5BhAtVhU4RT5+L4zZ/vG4VFaUw70yhPu5Zy+lpjYRPCCn4j5Un3n2
+	 eORBCO08LDFPrJomlNCy6U6WKet7BBXdP6jKTn2nBaSTFTrZEauVkok2USkzWNi9Wc+Kk
+	 0edNJrrTVvj6gq5iLkVrUG0flDRdoKwWTFI+EtNZDamgaTr7BogRBMi9NWTzTbWKsRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794764143;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=fcvhgN18/XYE74JlLdDetDkiu4aCL1FUsX9bNl85AkY=;
-	b=fNo/U1ljXr8yfOjSPQ4/lh4zjxqIb3lWLQZpddO6y35Txbpn6D3veHT00mSWWfvaWxh+
-	 JhgI+431rvcaVbpx78TdXu+0/GguawW18XFlo9RpPvwlkSbLoneqTvajPyo0T5ChozMBH
-	 xttxK+3II+1JvohqE1HY5Z0xWn8vC+DgmDIjhpZn3uh2trcOIQLPBdlOgRmPdkn6EieOb
-	 OIjWPDwpa43eGMjxzNu0SRFBRLbzZl+fw9AB7pAsiLh99MwTlWzBjyX4ROdReEVSJqDRh
-	 lGKAr8GgeNXWqFizZ9R+SlzaMEeysQb09hyhUTfY68xJkNPQRM5qs02R4KLQqJxuW+g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794764365;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Br7a4NMZTIn/3qu4MmLTLPE+0zvvvnVjOghs59wniEs=;
+	b=s3IEpS6TYsTSyBzWrMPEGeBx0k8ZzEuw62u0MVo1oRqoDQoK6zuhx3wKnS2eXVEwav1s
+	 1mCpmG80J5bQumeoNuIXp7Xwttee8HOPzKzq015pMcEVFbO6Yyl1AeNY+9k4TUJONFvLF
+	 2n6bRQE4qZgwBfLeiFGSkxVe/yENQ8USkOTTOWKxgc7yB0MApk2HzuQZYqXR8acK2WRYh
+	 9XwEiM5Q9VlrhddUpj7R2d0/go3KhnCGlRGqmvU13vHDawG/ySu5e/09/6485Rs+IVKEa
+	 bEyIEXSz2luIaMU8iDrHmXnKbq5y5DmS7jVHfaL0+gWdbu90UrynGpt8MeLwyx08zrg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ddU/m/1O";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IzT0MUts;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 406BB606A31F;
-	Sun, 15 Nov 2026 17:35:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A7D606A31D
+	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 17:39:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ddU/m/1O
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C20351F000C7;
-	Sun, 15 Nov 2026 17:35:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IzT0MUts
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0EA1F000C9;
+	Sun, 15 Nov 2026 17:39:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794764142;
-	bh=fcvhgN18/XYE74JlLdDetDkiu4aCL1FUsX9bNl85AkY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ddU/m/1Ov9hH52C17Sf1BxhZx39khyeZ73nswpSZtY3X610LZRBj0Idbdtnd8O4T/
-	 EN4L7mJHIP90IjKjPaVbuRABJRbCOFNs789jv1X/5x2xRUJV9rkbUsZCBa9T1q7cIu
-	 mXovLK/9jRwlwDkMfLKVRB6VcXBPkMhFXDlxbOv54EPM9joTvwF761sm+dzD5jiPKA
-	 ku00S0Tc0YtsZmBVrp36zvAcqfUSnx0FPUQpd4J20hQkwHNyXRghC2rIG3RrOXVC5u
-	 MOVkj0NIqYJuFV43NNl2an85+Dbj/v1rVbrpoXoYLzDFTOHSo1H/UsUmcXwD1o8oaK
-	 9mR1epb9dYlUQ==
-Date: Sun, 15 Nov 2026 19:35:29 +0200
-From: Mike Rapoport <rppt@kernel.org>
-To: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: Tarun Sahu <tarunsahu@google.com>, robin.murphy@arm.com, maz@kernel.org,
-	will@kernel.org, David Matlack <dmatlack@google.com>,
-	Alexander Graf <graf@amazon.com>, seanjc@google.com, jgg@nvidia.com,
-	loganodell@google.com, arnd@arndb.de, dwmw2@infradead.org,
-	baolu.lu@linux.intel.com, Bjorn Helgaas <bhelgaas@google.com>,
-	oupton@kernel.org, alex@shazbot.org, gle.com@google.com,
-	pbonzini@redhat.com, Andrew Morton <akpm@linux-foundation.org>,
-	kevin.tian@intel.com, joro@8bytes.org, kvmarm@lists.linux.dev,
-	linux-pci@vger.kernel.org, Pratyush Yadav <pratyush@kernel.org>,
-	kexec@lists.infradead.org, kvm@vger.kernel.org,
-	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-	skhawaja@google.com, sagis@google.com, linux-arch@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 02/19] kho: block: Record the entry size in the block
- header
-Message-ID: <avntYdLF2xvDh47A@kernel.org>
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-3-tarunsahu@google.com>
- <DMRK0PU0VCN3.15F59WLOQ05P4@soleen.com>
+	s=k20260515; t=1794764364;
+	bh=Br7a4NMZTIn/3qu4MmLTLPE+0zvvvnVjOghs59wniEs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IzT0MUtsOdsT6wnofkVEbFGBALsRkVM38J2O3ajpkhdiUBrwgLMZGcMAUBaJc0J/c
+	 XNHCu/PKR8Z0wqvLTP0nenXDXLLA/eHiJr93LrtJeoQANU7HVpBdIODURm5kUqX8Cr
+	 SzkXF2OnYwGt5GuHhr2PydSMBzz3engrcpKqeEovJz707+fPzuKvrae/VCSlyYPWop
+	 er8MRL1PJ78gEM38mtm4Tv8eg0F4OqIgOyYRq/FOY9jv4D02R4cjKTH8RqZzBEPGfx
+	 XM5BlmIZMIX3DZ6v7XbYo0NoSqC6cCW+cc6BC8J9IIfefh9u96hp78CZCtU57beE+i
+	 RK1Ohi/th91pg==
+Message-ID: <sashiko-outbox-215685@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/3] PCI/PM: Honor PCI_DEV_FLAGS_NO_D3 in
+ pci_bridge_d3_possible()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aviv Bakal" <avivb@amazon.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261115171831.1498006-2-avivb@amazon.com>
+References: <20261115171831.1498006-1-avivb@amazon.com>
+ <20261115171831.1498006-2-avivb@amazon.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 15 Nov 2026 17:39:24 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,133 +60,60 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DMRK0PU0VCN3.15F59WLOQ05P4@soleen.com>
 
-On Tue, Nov 10, 2026 at 08:10:32AM -0500, Pasha Tatashin wrote:
-> On Tue Nov 10, 2026 at 12:01 AM EST, Tarun Sahu wrote:
-> > Subsystems using the KHO Serialization Blocks framework currently do
-> > not record the serialized entry size in the block header. The entry size
-> > is only known to individual callers, which must track and store it in an
-> > owning serialized data structure. If a newer source kernel adds fields
-> > to an entry, the changed entry size breaks the stride when an older
-> > target kernel iterates over blocks.
-> >
-> > Add an entry_size field to struct kho_block_header_ser. On the outgoing
-> > side, record bs->entry_size into every block header during allocation.
-> > During restoration, derive the entry stride directly from the block
-> > header instead of relying on caller-supplied dimensions. The
-> > kho_block_set_init() interface remains unchanged. A zero entry size,
-> > or one that differs between blocks of a set, is rejected during
-> > restoration.
-> >
-> > This change modifies the serialized layout of struct kho_block_header_ser
-> > and shifts the offset of serialized entries within preserved blocks.
-> > Bump KHO_FDT_COMPATIBLE from kho-v4 to kho-v5 so that pre-v5 and post-v5
-> > kernels cleanly reject mismatched handover state during boot. Also
-> > update the stale compatible string example in the documentation.
-> >
-> > Suggested-by: Pratyush Yadav <pratyush@kernel.org>
-> > Signed-off-by: Tarun Sahu <tarunsahu@google.com>
-> > ---
-> >  include/linux/kho/abi/block.h          | 10 ++++----
-> >  include/linux/kho/abi/kexec_handover.h |  6 ++---
-> >  kernel/liveupdate/kho_block.c          | 32 +++++++++++++++++++++++---
-> >  3 files changed, 38 insertions(+), 10 deletions(-)
-> >
-> > diff --git a/include/linux/kho/abi/block.h b/include/linux/kho/abi/block.h
-> > index 36bdbaf9b3b8..a40b0906c821 100644
-> > --- a/include/linux/kho/abi/block.h
-> > +++ b/include/linux/kho/abi/block.h
-> > @@ -40,9 +40,10 @@
-> >  
-> >  /**
-> >   * struct kho_block_header_ser - Header for the serialized data block.
-> > - * @next:  Physical address of the next struct kho_block_header_ser.
-> > - * @count: The number of entries that immediately follow this header in the
-> > - *         memory block.
-> > + * @next:       Physical address of the next struct kho_block_header_ser.
-> > + * @count:      The number of entries that immediately follow this header in the
-> > + *              memory block.
-> > + * @entry_size: The size in bytes of each serialized entry in the block.
-> >   *
-> >   * This structure is located at the beginning of a block of physical memory
-> >   * preserved across a kexec. It provides the necessary metadata to interpret
-> > @@ -51,9 +52,10 @@
-> >  struct kho_block_header_ser {
-> >  	u64 next;
-> >  	u64 count;
-> > +	u64 entry_size;
-> >  };
-> >  
-> > -static_assert(sizeof(struct kho_block_header_ser) == 16);
-> > +static_assert(sizeof(struct kho_block_header_ser) == 24);
-> >  static_assert(!IS_ENABLED(CONFIG_64BIT) ||
-> >  	      __alignof__(struct kho_block_header_ser) == 8);
-> 
-> The above change goes away once my comment on the previous patch 
-> is addressed.
-> 
-> >  
-> > diff --git a/include/linux/kho/abi/kexec_handover.h b/include/linux/kho/abi/kexec_handover.h
-> > index 2f4fb9c63942..6f12f5037ea5 100644
-> > --- a/include/linux/kho/abi/kexec_handover.h
-> > +++ b/include/linux/kho/abi/kexec_handover.h
-> > @@ -41,7 +41,7 @@
-> >   *   restore the preserved data.::
-> >   *
-> >   *     / {
-> > - *         compatible = "kho-v3";
-> > + *         compatible = "kho-v5";
-> >   *
-> >   *         preserved-memory-map = <0x...>;
-> >   *
-> > @@ -62,7 +62,7 @@
-> >   *     };
-> >   *
-> >   *   Root KHO Node (/):
-> > - *     - compatible: "kho-v3"
-> > + *     - compatible: "kho-v5"
-> 
-> These are just examples, don't update them.
-> 
-> >   *
-> >   *       Identifies the overall KHO ABI version.
-> >   *
-> > @@ -90,7 +90,7 @@
-> >   */
-> >  
-> >  /* The compatible string for the KHO FDT root node. */
-> > -#define KHO_FDT_COMPATIBLE "kho-v4"
-> > +#define KHO_FDT_COMPATIBLE "kho-v5"
-> >  
-> >  /* The FDT property for the preserved memory map. */
-> >  #define KHO_FDT_MEMORY_MAP_PROP_NAME "preserved-memory-map"
-> > diff --git a/kernel/liveupdate/kho_block.c b/kernel/liveupdate/kho_block.c
-> > index 0d2a342ef422..9b148009085e 100644
-> > --- a/kernel/liveupdate/kho_block.c
-> > +++ b/kernel/liveupdate/kho_block.c
-> > @@ -16,6 +16,12 @@
-> >   * array of serialized entries. Multiple blocks are linked together via a
-> >   * physical pointer in the header, forming a linked list that can be easily
-> >   * traversed in both the current and the next kernel.
-> > + *
-> > + * Each block header also records the size of its entries. A newer kernel may
-> 
-> "newer kernel" does not make sense in the documentation comment, as any 
-> kernel can do that. I would suggest "outgoing kernel." 
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] PCI/PM: pci_bridge_d3_possible() checks NO_D3 before final
+  quirks
+--
 
-My understanding that here "newer" kernel refers to a newer kernel version
-rather than incoming or outgoing. So the docs should say something like
-"different kernel versions may have different size of the entry"
+commit 5fefa5fbcbd02246d38adb690d51a8862ddc1cd4
+Author: Aviv Bakal <avivb@amazon.com>
 
-> By the way, in this series you use the terms "source" and "destination"
-> kernel, whereas traditionally we have used "outgoing" and "incoming."
-> While both conventions work, it would be preferable to maintain
-> consistency.
+PCI/PM: Honor PCI_DEV_FLAGS_NO_D3 in pci_bridge_d3_possible()
 
--- 
-Sincerely yours,
-Mike.
+This commit returns false from pci_bridge_d3_possible() when
+PCI_DEV_FLAGS_NO_D3 is set on the bridge.
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7c6f2aba81443..1a23be4b6a073 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3055,6 +3055,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  		if (pci_bridge_d3_disable)
+>  			return false;
+> =20
+> +		/* The port is known not to work correctly in D3 */
+> +		if (bridge->dev_flags & PCI_DEV_FLAGS_NO_D3)
+> +			return false;
+
+[Severity: Medium]
+Can this leave bridge->bridge_d3 stuck at true when PCI_DEV_FLAGS_NO_D3 is
+set by a DECLARE_PCI_FIXUP_FINAL quirk?
+
+During enumeration, pci_device_add() -> pci_init_capabilities() ->
+pci_pm_init() initializes dev->bridge_d3 =3D pci_bridge_d3_possible(dev)
+before final quirks run in pci_bus_add_device() or pci_apply_final_quirks().
+When a final quirk such as quirk_plx_pex_no_d3() or quirk_tuxeo_rp_d3()
+later sets PCI_DEV_FLAGS_NO_D3 on a port, pci_bridge_d3_possible() flips
+from true to false, causing pci_bridge_d3_update() on child devices to retu=
+rn
+early without ever clearing bridge->bridge_d3:
+
+drivers/pci/pci.c:pci_bridge_d3_update() {
+	bridge =3D pci_upstream_bridge(dev);
+	if (!bridge || !pci_bridge_d3_possible(bridge))
+		return;
+    ...
+}
+
+In addition, when a child device's final quirk (like quirk_tuxeo_rp_d3())
+sets PCI_DEV_FLAGS_NO_D3 on its parent Root Port after pcie_portdrv_probe()
+has already bound to the port, pci_bridge_d3_possible() returns true during
+probe and false during pcie_portdrv_remove() and pcie_portdrv_shutdown(),
+leaving runtime PM enabled and skipping the matching pm_runtime_forbid() and
+pm_runtime_get_noresume() calls on removal.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115171831.1498=
+006-1-avivb@amazon.com?part=3D1
