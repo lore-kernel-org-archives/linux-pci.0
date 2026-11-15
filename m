@@ -1,93 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794758565;
-	b=t7lOaWeGodza8tRyz2BU+2EXt0/32c/1JLvXwwoll6Cog0iRPPuR34oYPEmQ29Bg4t++
-	 s2vHhZgyGoQZRqPKXIsLkICbLnqEwYo7ZdqOPYBjlsjGBO/QQICpU2kRiWarLHvnNHHmR
-	 7bnTviTcVDGv50hWGptg9vf/msAOPf37I6bZ6oUo+Jo7ODCMp6qZdzjsHUvnQzbIjQ02C
-	 aG8yv84h5XWOK0yNa24BjDp/NI8quRjoBtf0LFvcEitaCYC+rN8E6hhrjD2yfwdxtT2kW
-	 OQ5JT34SroTcoayZYeuKX08txCDyglbjoDzryVddrPrV4TcYVUZegq9HIR6GMBqV2Rg==
+	t=1794759836;
+	b=DRJ+vtESf+OIQxkHtlJ+nGp5bqHj2GdJ4gXl+g3lYgiq1IoTAbU/2PXQyYgBC5o739B5
+	 zqCBcqjoa5Hg4UpzijZubdv1hAj7aCgA0qOFxeqJnzjwwRdpfSOofSyWMg4qTKW5S2QZo
+	 Zmrj83L8REx/XJLdA6tFaNS+WkUn+dubkVJB2oRRs1opHwvMeX4MGwDREsy1LRe1eO/CC
+	 Q/mJ2k+6NpzWI43xlXLTxkaVR2NvvytdjzogWWkVqNI+QzMXcGoDNFh9lQWKtEfY1SWe9
+	 IvjBtTEeX8D0Uy2k9Xmgoq63t3DmZBAYO30t7WnZ4gOQcRvqwQj9EyCpCf3aQezFHyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794758565;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=NHZIeryU1J/9Tg4kQWcesLp+ZRL5MdN2PYnUzIdJe2U=;
-	b=k83h4MZl3WYcZGU1fGYTZkKSL6t1ss+09PYJbtiC5/t1E65hoMC0+vqBTuIYyCxlBrn0
-	 BSKRqt8WEweka2t/fouKbMh4OqdJewM+Kpc8vHjz1vGZOaBG21qTNWm/shQcOh/7OunzJ
-	 SGBmXtQM6yJyBxxSxs+QEH0pFdps88j4UeHOb1goppoNfUCUKbsAJp+o622hC0jAuGpfo
-	 OGHehkzZ8tzRybxwXsU2A1AgROYavfk1+PXpRlIwjfEDHPh2s6wADQiliaAfk3RhR3+1I
-	 zr0ODiHSuUpAIYljzMYXMflajG9fu5GonkHvLMzBEyb5bcDUg+el0n20DNXUvmbfLxQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794759836;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=NCd7gUU6HGHaZLtUO73+KIOy/CnHOnCqa5r0SPBNmTU=;
+	b=RvNRLtlwPXSNKcvOZU1Bb1k6756ZdycfzMRZWPZTPQHSDzzXXC2oYt46lThV8LTKl5hN
+	 tJFIIegpD8osekJxhoGJNe1736yd9UrKSfID14oLv8FQtDzZicxjpyYY8pfqM0fNaJuaV
+	 fOpomIOrp3JAr25y3DGk6Gf/DioycUxpikKIZthTufQLkeZEgTR9e24hpxWtfRBS396JD
+	 uqhAA31BX0jdKDnxKSH67CPgZbwc6KWAiYG6543UqEB0f3YfZQae44rS33hFD+8ycw9NP
+	 ovCnv6u2I1V5gjcAIxAEebbKndvjxxhopJNrIHiTQd/1Yyo6K1EjTIV4n0uVzeZmf6g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=d0CvdoTu;
-	arc=none smtp.remote-ip=209.85.128.45
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="UM/RNRGo";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68E19606A31E
-	for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 16:02:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 68E19606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B90AA606A31A;
+	Sun, 15 Nov 2026 16:23:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=d0CvdoTu
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4a210470b49so20759995e9.2
-        for <linux-pci@vger.kernel.org>; Sun, 15 Nov 2026 08:02:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794758564; x=1795363364; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=NHZIeryU1J/9Tg4kQWcesLp+ZRL5MdN2PYnUzIdJe2U=;
-        b=d0CvdoTuIvE++rWcm5VTuDMedIWzBhDY2Ecca18KGLJnmD5yqtq8OL2LZilAYTIz8q
-         yqfjUjDP4qq1gxPaFSPMSCcagtNBQSTPKDqERthyk2fPovKH8ZN69wlacZ27A55Rsw7W
-         K54MlsENIWsPcjsk71AwQdKkxcGDQxRD+RnHwXmRHf17IqXWQHj5tsl50Wp0lC773MHt
-         bLNf8/iGWYdrME3iRJ8OfBpQc6GYUsyr+BleFLvD+216hxgooo3PaymDo0JYSmzznqdf
-         6DKOlMMVO8MA9y8hFbmmhrYXftgbkqgZm6/jsGaw0lmFsELH3R1SnFsmYKXsqyMrGOoQ
-         6r6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794758564; x=1795363364;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=NHZIeryU1J/9Tg4kQWcesLp+ZRL5MdN2PYnUzIdJe2U=;
-        b=ws6sZsfKd6vhirCNoT3AkPNNiUfOEZc/NP4+45BWwq6tcblw5wE+J8F4vutSvHSJE8
-         NulwT5fwJGcHJ5PShavDBNBFUgtnTiSqVNqnu7/U3/bdayORv5s0ah4Uso6GjY05ypQ8
-         td5Y3W8PMf+5S/8QbMjTInzehLEEp8njM4MBvIhlfszUDKsa1CafVl1u0bFyXDcWUx0J
-         UM2j5esiSG+7MqwYqheL+HMHoK4w3buM8AFvHeV7yqc6lBKbHnx6tubU+BZbFjx1Drrd
-         wIqHlJli4eOinrRTSi8uJAsGsAD/xvIklfwCF36KRAHwyFemn603LuDMj+n1WUJVlX2q
-         5knA==
-X-Forwarded-Encrypted: i=1; AL+hErFYDHNAluEm8cvUzQbE3pbNCc6WcL+c2pbqANytDppjfdyfkt1Yb8yTSeJBjLxw+E4dRPl3BpMf/98=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9FUW2bqbJ5nSDv7XNZ/3kNCU38zvNzeHncVvH/MCok1+Oy/nnK
-	vmK2HDjVpOPU1uBMHyA+ot8gH8crp2KWxwl+jqpEuu/wAtKmiZkd+2xA
-X-Gm-Gg: AYBFou2qAi+1CY3Bz5ewrK6GOWqykxCF5hD1lX32hQNJw3LWQbhHsHKE9Ev72a0r9P8
-	ScqkvlPW+hHkGjc3T+MKy4wXNCZcmbwfon2TLD6vbOdzaErlyFLGna5VwZ4r3qC7eG/OnhkInaG
-	yvzl5cmNlvCBD4FoLXChZc1VlOqfL1wwOKiO0SgytjSL21EBd99y62kSz8DfUBQzIUyM955p5lo
-	IpQ3Q2FpbhcLRVqe5YD6jKHsjaAI5WLHiyQ7O4UAanBn3zwm46EPcZTV4ExOXa0lpN2I382FnAS
-	AV6YdemK3/9ymJBWKR6IPACdcU+fd0RRzD2EkKQ+QcRsYcOjhH2DBez0BNiIHlliT5xAeEoA8Np
-	NCQ2pH0G1gp/8fXBaYetH5tZxt9zvEukD0FAqPMFHKeeEr3LvhZkAqMLM7WV8bdnoDM4Z8jp+FY
-	ymboSQTsY2M0N6pptbHz4+88OvUgD1z+ItCWn9AtOahMIIqIfb6aVBv6ZbzeODjSk79NmUM+41m
-	DEF6rC8A2HZKqAuzOgVZEwfG2RPmZpJ4VkYvOA8Xg9T121gCzuDP+/1DU11z5mkHN5GlvyziV20
-	sLEwLeItE5lr0+nQBOK1tQ7BrKREuiQYovqtt0g9bGBWgnqQzfxiXHk0E4WmkO1Snu7Mp65PNN5
-	DHew2bIRQZXtuldHQq2SL+aNKHOvVp+5wlxs191INbBM=
-X-Received: by 2002:a05:600c:a0b:b0:4bb:6847:7927 with SMTP id 5b1f17b1804b1-4bb68477b90mr76007525e9.7.1794758563469;
-        Sun, 15 Nov 2026 08:02:43 -0800 (PST)
-Received: from rebar-v3-testedby.eml (host86-185-73-183.range86-185.btcentralplus.com. [86.185.73.183])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb56689bc2sm132025125e9.2.2026.11.15.08.02.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2026 08:02:42 -0800 (PST)
-From: James R Taylor <jrtaylor11@gmail.com>
-To: Geramy Loveless <gloveless@jqluv.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org
-Subject: Re: [PATCH v3] PCI: Reserve prefetchable window headroom for Resizable BARs
-Date: Sun, 15 Nov 2026 16:02:23 +0000
-Message-ID: <1794758543.190740.rebar.hermes@gmail.com>
-In-Reply-To: <10fb16fb-2069-4d89-b473-1006ae5abfbc@jqluv.com>
-References: <10fb16fb-2069-4d89-b473-1006ae5abfbc@jqluv.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UM/RNRGo
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD02E1F000C4;
+	Sun, 15 Nov 2026 16:23:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794759836;
+	bh=NCd7gUU6HGHaZLtUO73+KIOy/CnHOnCqa5r0SPBNmTU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=UM/RNRGo6lEAU1ZmUJhXH07ppVCefYyTsmrrSDGR94znDL/OTXxidPBXk3JosHgXR
+	 UAzJe+b04n9PNxERO7MokrRJvBp5dorTY4N8aLUtLN4P0JDGvq7jhcNKwgw9UCQaC7
+	 u9Sgrhmamo/flZ/AEttZN/nS6FNa06nde9sJ0oZCeVuXqlNZyjEw1441M8dqAYly8+
+	 bv3Z+3/vVmxno0ipvMFj1PPmeA7lbdw8uWhP7LgDqykpGINt0JeA5ZqE9PW5uV9l7r
+	 z7mzSkIDfmTSBtwyMu3A2g5v9zeVfNnJ7bZbSqqFH+UoyJ5dPOEkzxvvdmho0tNGxS
+	 BpnA5gGOXm7/Q==
+Message-ID: <68bacdb1-41e8-41b7-96b8-22169c6e78ee@kernel.org>
+Date: Sun, 15 Nov 2026 17:23:50 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -97,58 +51,44 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/7] dt-bindings: PCI: apple,pcie: Add M3 generation
+ compatibles
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>, Neal Gompa <neal@gompa.dev>,
+ Janne Grunau <j@jannau.net>, asahi@lists.linux.dev,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ Michael Reeves <michael.reeves077@gmail.com>,
+ Joshua Peisach <jpeisach@ubuntu.com>, Mark Kettenis <kettenis@openbsd.org>,
+ Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>
+References: <20261108-apple-m3-pcie-v2-0-0e5ffec71da4@jannau.net>
+ <20261108-apple-m3-pcie-v2-2-0e5ffec71da4@jannau.net>
+Content-Language: en-US
+From: Sven Peter <sven@kernel.org>
+In-Reply-To: <20261108-apple-m3-pcie-v2-2-0e5ffec71da4@jannau.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Geramy,
+On 08.11.26 15:22, Janne Grunau wrote:
+> The PCIe controller on Apple M3, M3 Pro, Max and Ultra SoCs are
+> compatible with the one on M2 Pro and Max. Add their per SoC compatibles
+> "apple,t8122-pcie" (M3), "apple,t6030-pcie" (M3 Pro) and
+> "apple,t6031-pcie" (M3 Max/Ultra) to the bindings.
+> 
+> Signed-off-by: Janne Grunau <j@jannau.net>
+> 
+> ---
 
-On Sat, Aug 29, 2026, Geramy Loveless wrote:
-> Firmware typically sizes prefetchable bridge windows for the boot-time
-> BAR size. Behind a fixed (non-hotplug) PCIe switch fabric, there is then
-> no room for a driver to grow a Resizable BAR afterwards
+Do you guys want to take this patch through the pci tree or should I 
+just pick it up with the rest and route it through apple-soc since there 
+are no driver changes here?
 
-I've been running v3 since 27 October on a different kind of fabric from
-yours, a USB4/Thunderbolt eGPU, and it gives the GPU its full BAR there
-too. In case the data point is useful:
 
-  Host:  Minisforum UM890 Pro (AMD Ryzen 9 8945HS, Hawk Point),
-         BIOS 1.06
-  Dock:  Minisforum DEG2 (Intel JHL9480 Barlow Ridge TB5 switch) over
-         USB4, link 2 x 10 Gb/s
-  GPU:   Intel Arc B580 12 GB, xe driver
-  Kernel: 7.3.4 with v3 applied (it applies cleanly)
+Thanks,
 
-The firmware gives the USB4 root port 0000:00:03.1 a 64 GiB prefetchable
-window, but the tunnel is enumerated as a hotplug event about 12 seconds
-after boot, and without the patch the switch windows below it were sized
-at 256 MiB, so the B580's BAR2 stayed at 256 MiB and a manual resize
-failed.
 
-With v3 the headroom is reserved down the chain:
-
-  pci 0000:6a:01.0: bridge window [mem 0x400000000-0x40fffffff 64bit pref] to [bus 6b] add_size 3f0000000 add_align 400000000
-  pci 0000:69:00.0: bridge window [mem 0x400000000-0x7ffffffff 64bit pref] to [bus 6a-6c] add_size 3f0000000 add_align 400000000
-
-and xe then resizes the BAR when it binds:
-
-  xe 0000:6b:00.0: [drm] Attempting to resize bar from 256MiB -> 16384MiB
-  xe 0000:6b:00.0: [drm] BAR2 resized to 16384MiB
-
-Both bridges above the GPU (69:00.0 and 6a:01.0) end up with 16 GiB
-prefetchable windows, and the whole 12 GB of VRAM is CPU-visible. It has
-been stable as a daily VAAPI/compute card since then. On 31 October I
-also unplugged and re-plugged the dock while the system was running: it
-re-enumerated, xe re-bound and BAR2 came back at 16 GiB.
-
-One interaction that may be worth knowing about: with
-pci=hpmmioprefsize=16G also on the command line, the TB5 switch's three
-empty downstream (daisy-chain) ports each reserved 16 GiB as well. That
-overflowed the 64 GiB root-port window, and the B580's BAR2 was briefly
-assigned at 16 GiB and then rolled back with -ENOSPC. Without that
-parameter it works as described above.
-
-Tested-by: James R Taylor <jrtaylor11@gmail.com>
-
-Thanks for the patch,
-James
+Sven
 
