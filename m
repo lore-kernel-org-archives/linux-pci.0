@@ -1,80 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794842779;
-	b=PNqqCeCVRTEIs1bDGdvSVRJDI5jfJ4Q18QoJFx3Eb0jhyIV0jHr2cIRACfeSZFmXvw4a
-	 JFUCmQ08m4cnc7444uY0lkINln2wQfIwxzElp41tn3csrrYuPEjuZkqOX90nYnrlq13wf
-	 wJp/726CQXb+wsgF4KCoSyiCm7Jl9EZmffsp504OAa95HAb5C62k7JVZTwCoCf1d3VEjF
-	 ct6rlhEJNQdsrRDIjWgNXyTQ0hjy+PzvRNEf2v9kQ/RtPCOBtzipO4hzlYKQsseVNUhSj
-	 397fny5+jOsHPv7wDr0CKWMg4HWgKg+qEBMBuOJuqQPM/SDzNhAQAklr6PewJXUPgwg==
+	t=1794842953;
+	b=XiSNtJAAJU02J66UME885nLz2HaerktBNP1rqTtb7+n6CWkNMsM1vpw7g0ekCG8Z59dO
+	 4R85Z14gqiSSnEkNH6c3W/ajhmpjobb4epKSpJKdq2Dp+nY9pwElhcH/UCrnLISF7ANSN
+	 1bzexT9pT9+V/s3UrKiETs0cgA0WueEebMz5rqgwWP9qN3CwVeAf/xnq4esIC7pjWeVCf
+	 rSF78kATn/tvByZbXW25AdBcmFto46nMxoxUP30H26x+J6ni9cTcDQzjb/xAMs9v+kOHG
+	 SYXUciGxK+iSdiJs9LNozDO8wRj6r17thiW1zDQ5bO1d504sfX+qyPMRuCOZVyvB8Iw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794842779;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=mgH4R7B/B7UL3kVmlTJYLWidiBNciAWNe4D+qCoXewE=;
-	b=qZigh9N2uDe7xgPdvcL/fAY0k4S3A9TAqtGUZFXtEnGbiBup9SfVJocJUA10etJk/Qw0
-	 jgDUgwO+7yLCl96D5o0IyIfZbKBFKunk8ZcPTWuW7sxyFW0rlCU3XbGuGvL6ExRc/i97a
-	 s63EtIy9k8/YRXtlsXKjizDbGum0yn7Ki1x8UMRUii5aeoCX+roZaLKrXlGjQMR2Z+ES2
-	 PdEkHg0U3EdJNjdfOoOnqEmZ8GhjP44c+59ExvrnBHVNM0kk5S7UsJQRNMMckwv2OGpWd
-	 TZBiVqd8qvl2ilzTA9iAeXr1g42YhYvIaafqSEf5n4NKO40boRPwDzUy6RmmM6uG8RA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794842953;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=7RVcy7n5tSjpgBaWfnfRw/WKmcUzznYWwN47iMlcxF4=;
+	b=TNCSK/frxY6hlp/GMVZRZulwGAKGYxGeL3Vg9+NUy1UXj+tbeJcW8aqtoKmjbB8Y+99w
+	 /QZnhlOjyj6tCGQKZ6TW/HFBJFst7IBKn/pFAxCtLuPH9nuJGI1IRi9nx8S9ZTUuCygYB
+	 2fNs14m8PrqIMVTICAk/dXdh1+yoKXsEdN1x+b9EwRttxaUKygaGHU09ssCBTCJp5P63v
+	 xmua8+SN5bJmLJ1YxUPWS2bpMvejmBMLtMwOCMfs4ZZIukW/UivB5Qn3jdZ82heAU9Hty
+	 qYdW1h05JS8eDJCJEPxmS0j9bCBll2NYgWrdESpEwBYGrWmRSXmJR2vDzf0xhVBqniw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="e+XEWA8/";
-	arc=none smtp.remote-ip=192.198.163.18
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="n/SoUugx";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F1B606A322;
-	Mon, 16 Nov 2026 15:26:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D9F1B606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBDE606A33A
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 15:29:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=e+XEWA8/
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794842779; x=1826378779;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/XGgUUp5Cp+6vo1XMG5uxdlFzPP8UloQOwt0PdpOt5g=;
-  b=e+XEWA8/gzdRM/nfylMdmuKkJDTIQylRLA3MB75f/CzWgMStue+pQzv5
-   FF9WEUF7TvsVowaPNt6cuj0+N1PkzPE4jj3+9gMPykyYvD/Sxx/CP1ud7
-   FmzY9x5Ahp6nmf0tNKJ2G3Rq/GBM6+HXY/adMu1ZgNjZXq9sOCoHaGAEE
-   NqIMSB01jjrZr4CeZWNYjlaq8xkNj6g9Lk0KKEbUHwOkw0aQk1q/2zD0R
-   jfr29G9u6Cgpa3zV0p/kNdfJ6gBY9DzWBtuAbqAaJQ3xAzZFPydHncR2w
-   fgeC8bPskr8I0eW698helmfxug0bJLI6FTyWu3oM1KY/18WytCBlgTJuY
-   w==;
-X-CSE-ConnectionGUID: PQBEYZAORvqDJ88jOQWlmw==
-X-CSE-MsgGUID: u9Hh+0/GSTS7olfZWlaubg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11968"; a="3614267"
-X-IronPort-AV: E=Sophos;i="6.27,216,1787036400"; 
-   d="scan'208";a="3614267"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 07:26:18 -0800
-X-CSE-ConnectionGUID: Xk5kW3R9TIegzQ1RNvHBWw==
-X-CSE-MsgGUID: ksZYac7lQFencKsROnkNNQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,216,1787036400"; 
-   d="scan'208";a="9504969"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.151])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 07:26:16 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 13/13] PCI: Remove pci_bus_assign_resources()
-Date: Mon, 16 Nov 2026 17:23:58 +0200
-Message-ID: <20261116152403.2672-14-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n/SoUugx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B3971F000C4;
+	Mon, 16 Nov 2026 15:29:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794842953;
+	bh=7RVcy7n5tSjpgBaWfnfRw/WKmcUzznYWwN47iMlcxF4=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=n/SoUugxH/+/bxprE3oFdQsJURHskhlQJhpws7ZB8CevQYLg91FaaXGR70mf2HCxA
+	 9umx8nPivoTo+KArgI1ptDXo0MuhsdFQpcbQNZIcL+nlbZrnHJcGBwNwh9yWCA+Omh
+	 1clTIyFJPK/E91mXY51OFqAD5OXYvPWOZc5nQ/AhfnoQl0TGTA7jGV7aZq1+kKIhSZ
+	 vXeUsMxmysvbqEzSeYZOMxfXq3n4MEhh+k5RmGNF5METC4Tbn/uk883S7u7BfD4980
+	 wPeSms1gJMGRG0Rn/CgJsYxBMYiGSeUSynB9F9P/p3z6n5ZPT1OQIwiLrcq/OD48ly
+	 b0IOal29sLrvA==
+Message-ID: <sashiko-outbox-217275@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 08/13] platform/x86: eeepc-laptop: Convert to
+ pci_assign_unassigned_bus_resources()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
+In-Reply-To: <20261116152403.2672-9-ilpo.jarvinen@linux.intel.com>
 References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
+ <20261116152403.2672-9-ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 16 Nov 2026 15:29:12 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,52 +59,21 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-The pci_bus_assign_resources() interface is problematic because it
-makes bridge window sizing disjoint from assignment phase.
+> The eeepc-laptop driver scans single device and then attempts to assign
+> its resource using pci_bus_assign_resources(). That function makes
+> bridge window sizing disjoint from the assignment phase and is going to
+> be removed.
+>=20
+> Convert pci_bus_assign_resources() to
+> pci_assign_unassigned_bus_resources() which is likely no-op in this case
+> as it looks like bridges are not involved here.
+>=20
+> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
-pci_bus_assign_resources() is now unused so remove it.
+Sashiko has reviewed this patch and found no issues.
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/pci/setup-bus.c | 8 --------
- include/linux/pci.h     | 1 -
- 2 files changed, 9 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 314c649c648f..547d0f920360 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1575,14 +1575,6 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
- 		pci_dev_res_free_list(add_list);
- }
- 
--void pci_bus_assign_resources(const struct pci_bus *bus)
--{
--	guard(mutex)(&pci_res_setup_lock);
--	guard(rwsem_read)(&pci_bus_sem);
--	__pci_bus_assign_resources(bus, NULL, NULL);
--}
--EXPORT_SYMBOL(pci_bus_assign_resources);
--
- static void pci_claim_device_resources(struct pci_dev *dev)
- {
- 	int i;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d89aeb7c9ff7..7d71ad6d89af 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1566,7 +1566,6 @@ ssize_t pci_write_vpd_any(struct pci_dev *dev, loff_t pos, size_t count, const v
- 
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
--void pci_bus_assign_resources(const struct pci_bus *bus);
- void pci_bus_claim_resources(struct pci_bus *bus);
- void pci_bus_size_bridges(struct pci_bus *bus);
- void pci_bus_size_and_assign_resources(struct pci_bus *bus);
--- 
-2.47.3
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116152403.2672=
+-1-ilpo.jarvinen@linux.intel.com?part=3D8
 
