@@ -1,82 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794842734;
-	b=XeQkvHrZAEgAAte9nC1eHEr7/CWC64zYa4mIfknIjIoUsF2HE2ePHCf3kv2P4OM7q0gI
-	 +n3NjSasWrNYpwmh1So3IK5ufTqq1Rx9u+gAyzj/EUutyTGRJirRkrJaaQY2HVGNS9uHd
-	 tKZaSoPDmiLzilTS+iBobcZVZ+BlUvi1nZ4RKKarqKUzS0iblPx9fIwbxpIC45y2t8px3
-	 c+bjMLU9luCaEhRPZ6aCAiuJyKUUzk27zj6TA8MgE0VmEK/cpwVwOuwEoNA5AK5BrQO6M
-	 RorDyW10nFU6qEeR5Pp1JLphFuKrQgsRtTTCm4zuiIt2cZY1AqvHOorsrmNMx3LXL/Q==
+	t=1794842746;
+	b=nY6/bPGUemN8/F6WMP9TThXmfus3Eotlq00T43a1/YJzWsPp6UyFi3UrKjpYItWQmZuF
+	 70hrBH+D1tvSMdTsLAQCBNqj5OU82sDVgm6beF9vTLsghOEfBAE4v0vPpy/5S2DSAe8j2
+	 A1Z+9ABuAGX/3gQ02+xBiGl6RYYKHOE2d71Ur1Xs00/vOP1s+G8G9Pn2XIta+06BeVeSP
+	 QfHfHEb9GCzNwf59uMNMASN20rAbuiTlz+pi4i7puryJrEtQUBY+qYagqpaD93Idy0FW6
+	 MqiZfitcMlJZtA6kMDHpP3TF9vg8EAEQPmNp0BatNSkOpJlhYBfcZ47zEnKR0Cby7RA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794842734;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794842746;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=U95hWLaXh//DahU5mMfEups0YHwavHNdx0fU+yaf6uE=;
-	b=AtjRYiFeMg9Jd/WrIjDculCrNDbXo/2ywJrnway4p6mUHhV7sHytPRW26umrDteIBqJf
-	 kN1UMaPCTlmAPBP2YYlbEkxuMC/QuQe9Z+DIHrDkVgAe+Xgfy2gSLJ01qx1xh6OADnBYd
-	 A4CAfmUvYwafDYgo+6tct/+yiNcPoKFARsF3108goAUscp87ITiwz4/LIPbaTPhP1UXqN
-	 uI08DvP97fefAXQ1LNOPbSZlnWO2vqfXHhuFc1mLWZZ6M/y0uSMIttSzB8vEx2/1eORzR
-	 /BBHcQ6FAze/y577oFu5pk6Sigf5pXulc5IxDmGbu7y+xbm6DR0UdiY21PvWaQ0BsoA==
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=9t+gW5+PgVNVCSGyw3+XjVZjooDytRRIe9tFdE/GzTc=;
+	b=clus9MebRoc2cRWI6L1FvADKzUUwglPO6MUUAD32OD9D3n0yUhvhYj6ygbs7JjmPP8aB
+	 ho6ktlkPzomQYTq+oEAa5qAM4r0BX3SzLQjDI+Ps1TqSRG8a39Kbkz+xWPfv86vjnEgfJ
+	 wNzHfpmQx/OvOa/vS1mOkmB810Xoq1aP9HTEWrd0jMJ7kT5QZ9vb0Sxe+KO85A8JVqGSK
+	 RgavdkRzYbtbQ5/h+vooHo6G7P5XxlUyIlHc7fvsMWDTzzD4HRhmCP/9+PbljWEi7jrov
+	 0TuLzPuMscpLKedwPaSXWS+nfqqN54fd5TxmHbEXJn25Y/36pcxQ9VUf6y8fywkcXcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=izlRBF4F;
-	arc=none smtp.remote-ip=198.175.65.13
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="Jzig/px+";
+	arc=none smtp.remote-ip=192.198.163.9
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E1C1606A8A2;
-	Mon, 16 Nov 2026 15:25:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E1C1606A8A2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3686F606A33D;
+	Mon, 16 Nov 2026 15:25:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3686F606A33D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=izlRBF4F
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Jzig/px+
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794842734; x=1826378734;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=OJiLllQnSpPaZbXS1/FuwdBJuz8qcVSRSn5MsNzxFNw=;
-  b=izlRBF4Ft3bAyyFPBTzQlhJ6UBxms3UrQnd5BLbPI58svfsHY465MHfx
-   W1EKn5e5XrVXMLQKdDa2PnhwGr0rXhkjagT/qHEVlah5F151krPCxqAEU
-   yYYl3A/CTsXkhVZVSkV1xveymB5Lv9lqK3pM1BxkZVorCg8xIfYxJpCDT
-   UFjMhrL0CBvVr+GGPcXHUbGC88P3y2d6TF1Os4qkQHLksnky+Z7c7NVJQ
-   kx8HsnK6co4Gf8bq0E8aRVy3O6d4eHh2+NObtWDD22P0rr/etgznEjKGi
-   flqWbr7HrP0Hqr7wXrwJCBKx8L/gMECbwqtxpGeVDw8P1wHvMHG4f+TOp
+  t=1794842743; x=1826378743;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=KmT8vqdVUbnWi9Y0d8GPpEiqDL/JVQ2iamK3snq5PfI=;
+  b=Jzig/px+fQ7zExzB7BZadFIRWBs9YjVm0bbm1W3Md2roLJ3fGSZwn57L
+   2AOB702kqDX9+IYN2ruciJjOhFlhcgc1TN+Svs08ZnL3+vrZTh6yZeaHw
+   YR8ZiZhrcHVFDKtyzdhe+y6OfXmlc85OF6zZ5tU24+3vwzKPWaGe01rts
+   hZ6kcykP4CigKY8cIB0cPJrJo+AVvAmg+wgB1K3n97al7Zu6JAI5NvBQm
+   csWrnJEIdzrQWJwKZQ1fTBvXrEH7I5TiIK/6eFH8nva3KsNBctbLcXABd
+   C2JfOmrJLFOOCaF+9CgYTzzLIfY8jTyEeXzWgoNEASjc7meAgkflnWmTp
    w==;
-X-CSE-ConnectionGUID: hSca5uGQRwCmgrT1a5xUNw==
-X-CSE-MsgGUID: SVIBQyU2Roq0XcjsvlKscw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11968"; a="3457432"
+X-CSE-ConnectionGUID: UrvywOSATBqbg2eIyM9UkQ==
+X-CSE-MsgGUID: SRdBl8I9TVGf7xv2okNfuQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11968"; a="3461288"
 X-IronPort-AV: E=Sophos;i="6.27,216,1787036400"; 
-   d="scan'208";a="3457432"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 07:25:34 -0800
-X-CSE-ConnectionGUID: ipXfrt0wTLCR2j/6SW7m7Q==
-X-CSE-MsgGUID: YLHJ3GlWSd677DtiJkl6zQ==
+   d="scan'208";a="3461288"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 07:25:42 -0800
+X-CSE-ConnectionGUID: NmE1oGkgQiOlydVwA39KqQ==
+X-CSE-MsgGUID: fPKCPOmFQyC9QUkfR2hP6g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,216,1787036400"; 
-   d="scan'208";a="9769646"
+   d="scan'208";a="9826695"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.151])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 07:25:30 -0800
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 07:25:39 -0800
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Rob Herring <robh@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Corentin Chary <corentin.chary@gmail.com>,
-	"Luke D. Jones" <luke@ljones.dev>,
-	Denis Benato <denis.benato@linux.dev>,
-	Hans de Goede <hansg@kernel.org>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	platform-driver-x86@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Helge Deller <deller@gmx.de>,
+	linux-parisc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 08/13] platform/x86: eeepc-laptop: Convert to pci_assign_unassigned_bus_resources()
-Date: Mon, 16 Nov 2026 17:23:53 +0200
-Message-ID: <20261116152403.2672-9-ilpo.jarvinen@linux.intel.com>
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 09/13] parisc/PCI: Convert to pci_assign_unassigned_bus_resources()
+Date: Mon, 16 Nov 2026 17:23:54 +0200
+Message-ID: <20261116152403.2672-10-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
 References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
@@ -92,33 +90,32 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The eeepc-laptop driver scans single device and then attempts to assign
-its resource using pci_bus_assign_resources(). That function makes
-bridge window sizing disjoint from the assignment phase and is going to
-be removed.
+The Dino PCI bus driver performs assignment of resource using
+pci_bus_assign_resources(). That function makes bridge window sizing
+disjoint from the assignment phase and is going to be removed.
 
 Convert pci_bus_assign_resources() to
-pci_assign_unassigned_bus_resources() which is likely no-op in this case
-as it looks like bridges are not involved here.
+pci_assign_unassigned_bus_resources(). If no other bridges are involved,
+the extra sizing should be no-op.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/platform/x86/eeepc-laptop.c | 2 +-
+ drivers/parisc/dino.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
-index 8a640c25830a..7394221cbad1 100644
---- a/drivers/platform/x86/eeepc-laptop.c
-+++ b/drivers/platform/x86/eeepc-laptop.c
-@@ -609,7 +609,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
- 		}
- 		dev = pci_scan_single_device(bus, 0);
- 		if (dev) {
--			pci_bus_assign_resources(bus);
-+			pci_assign_unassigned_bus_resources(bus);
- 			pci_bus_add_device(dev);
- 		}
- 	} else {
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index 286f4f75dba7..da75ba15faf4 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -1050,7 +1050,7 @@ static int __init dino_probe(struct parisc_device *dev)
+ 	 * if it isn't, this global bus number count will fail
+ 	 */
+ 	dino_current_bus = max + 1;
+-	pci_bus_assign_resources(bus);
++	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ }
 -- 
 2.47.3
 
