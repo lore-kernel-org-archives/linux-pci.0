@@ -1,58 +1,86 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794839690;
-	b=l17UJGMEYsVL2EZBmAkN69im6bOUaDJ7bhmf9bS3l3W9lTba3lNOdPCgolmxiIzIw5HA
-	 PfROdoDADczswrPOK2lRiPhmnOQ7QPQFVT6qbilqCfq/b9SsAW8MO1os++NduaZdloR7m
-	 hNN/uq/6I+2MEgA1z0ltPOWKfZSdv3sD+qtuo1vQt8Ff3MkjOM/Bmrnp2PZBfOkZ0w2uR
-	 MPUn/KA2/Cl22OL5CnKGTn5A0sSMKmPdhjwkO9bd0Nli4F7j5K2uCMGO4u8ufTorblBKf
-	 7TH+OWort1Qb2oTuadnkbRUA0t5tVMWX3aUPEnEl2iOJvRiS12spsG02DPAGXBeZa1g==
+	t=1794840066;
+	b=15YnUcdo6n7stjxezg4je0yIEtEcRp6PqHcFQI3mSPYWAPmF8ykCKn0YioDdux32SwBO
+	 rxXpSob16mz2SoVasThlGi6N1d6U2UkUQ4NvseAk82ygypWbptUo79904T8NmBMaTIf1i
+	 St3+tqcjoGemOn1V4wwrFrQpwFuAIu/gi16Xz6tHEEIR79dfLJFkQRP8v8OsbbmgHGEc8
+	 rkMvNYXa9nWAPzd9YD1exisb0eRVKwBY+rugwf861yUKy4+P5WN5tAzhnU4SjtzajD5f/
+	 YpVy4X6bu133y3Riepy6aEbCuCyRGAr6BPt+Y6OrC132dlMIAGky5XgMilAUb2NtjtQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794839690;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=eyWOu1WuUUAiws0oDF5CqX3ZuoMFxLBuLN+S2LNKOls=;
-	b=Dlb2vMjh/p+Nf6n79uEId5NHsJJTumVbdqh++rFaDh7cfRgcVPHfKVrDV0hrbRBIe8dI
-	 Xl02vNjWbMn/f3yyxycH9bO5EeTAQFfOEGGTRW9nBvT+wjYrTeHFhqY169yWG1m/OyEL5
-	 4vcsmZ+42l2rVjN2XcuWjHkV9A7d1AvYqGrRymvuI8vjbV16o3Y3Ior/dnEL+Rk8osbvf
-	 TthB+T8hPrRN7hc9IGCuLVEhtLF68D9zV1DT0IvObnh3xwhi7jvgSSpQ7sSt065orXIGQ
-	 w+vjpfioDy9WczZ/4GwudHiIx5Pn05vNeUoMEyvuqP2We2BjW10HB8chtIbGjDAAH9Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794840066;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=rck2Y3eqNJgd+mBW5P64Rjy+9DMOjDHBgfT6pXds1IU=;
+	b=wZ3o6u96dM0yK6ap2YbvJaC+zUpnRE7gNJOJ1o8y3kRj9UpKLeiAro7i2QjW6g5PQkKo
+	 jx2uf9DVwZy2keQeHDZ+QaURBRSm82O4XDMxSRRCqDgPk0cBTv0YcD1lFfV75b21GRKxs
+	 W3LPLUwrBCoi+NIy6I/jnN0zSXzLNWHbyjWs+rM3rgxkjpe/0PYEoJpZRoCQwZ9sSOsCE
+	 6JON9QhJs4RKOQTO2w6dvHwup3R/bR0Ihu1cKE/Qjtw46nYcgjQCUu70E7+l4tqLVqBmI
+	 kJFI/TgNL+E2euGyYpvz2tGzblMK8N/orDq8PNUgspHucw+J3ndTe6a/t5vO1TvhR4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="DmLY/noi";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hOouaY1x;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91255606A32A;
-	Mon, 16 Nov 2026 14:34:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA2B606A33E;
+	Mon, 16 Nov 2026 14:41:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DmLY/noi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6D0D1F000C4;
-	Mon, 16 Nov 2026 14:34:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hOouaY1x
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C6861F000C5;
+	Mon, 16 Nov 2026 14:41:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794839690;
-	bh=eyWOu1WuUUAiws0oDF5CqX3ZuoMFxLBuLN+S2LNKOls=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=DmLY/noip31/hQQ04YKMY86Tf1uda4HsWYWB4V/UcdmwcyvRXYWn5ZMjgHDQfh2G5
-	 yWqEptfyP51PU0JsbeGYXdmHoI4Xgfi2eAnPtefZ/cQNYyuqI4G62BphBWHeTN43wo
-	 1iCt753BWhvLRKahmt4G2EF+FO9mcavVUYsshGyTpaab/qjRvwwqSeh5o6mr1PAwGc
-	 SVH2bj/YjiLAqf3mi5+AMtvUMW9mUO5wEY0vkt1fSsGazXD6uVYjm+Rcx2t/bV4Bla
-	 1zkuSgAbQxAOsWXapaYN4baBORpZp3BRBfg7lYUjLQjEjFNyYn2yq33+czCjWfpCmK
-	 Kei2FwFlgtKiA==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/TSM: Move core code into its own directory
-In-Reply-To: <20261116131959.GD1850935@nvidia.com>
-References: <20261116075420.76205-1-aneesh.kumar@kernel.org>
- <20261116075420.76205-2-aneesh.kumar@kernel.org>
- <20261116130055.GB1850935@nvidia.com> <yq5ajymcyl2g.fsf@kernel.org>
- <20261116131959.GD1850935@nvidia.com>
-Date: Mon, 16 Nov 2026 20:04:44 +0530
-Message-ID: <yq5aecckyhdn.fsf@kernel.org>
+	s=k20260515; t=1794840066;
+	bh=rck2Y3eqNJgd+mBW5P64Rjy+9DMOjDHBgfT6pXds1IU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hOouaY1xsoh6wz7OkDEV9jecC1eeHdUzuBJ4iKZos36b0fe+StWs/XSmsTjHsGMfp
+	 e0tnBNKEzYBk5ocKoScl5rfojtpjaAq04YxAl9To16QUfCpYwnFZC1O4/NOMYIyx/J
+	 6krsbqGk+aiylgCRzdnezjfMkr6lvaqVy59IDh4S8336RQTcF1BHCaLRWdCsPSIOp+
+	 VVzuE3RLFUwu6bn36UH7ayClXyqoBHEqh0EEwT5lbksAWLyI95yck3v703WGi3w5hJ
+	 rBBp+t1wYkX1vn71MylXuHgsWdIYHoEXqOW4MLAWG3JYv7ky1boG/BvH4HGhBbkddM
+	 lkYNAFSJRMfOQ==
+Date: Mon, 16 Nov 2026 16:41:03 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev
+Subject: Re: [PATCH 17/17] PCI: Replace untrusted state with device trust
+Message-ID: <20261116144103.GU11319@unreal>
+References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
+ <20261105-device-trust-core-v1-17-1e536825b4eb@nvidia.com>
+ <yq5amrr8yldi.fsf@kernel.org>
+ <20261116132046.GI2532299@ziepe.ca>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,31 +90,76 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261116132046.GI2532299@ziepe.ca>
 
-Jason Gunthorpe <jgg@nvidia.com> writes:
+On Mon, Nov 16, 2026 at 09:20:46AM -0400, Jason Gunthorpe wrote:
+> On Mon, Nov 16, 2026 at 06:38:25PM +0530, Aneesh Kumar K.V wrote:
+> > > +static inline bool
+> > > +pci_dev_default_is_restricted(const struct pci_dev *pdev)
+> > > +{
+> > > +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
+> > > +
+> > > +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
+> > > +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
+> > > +}
+> > > +
+> > 
+> > Could you clarify how this series will work alongside device acceptance
+> > and private-memory access?
+> > 
+> > In particular, what should callers of device_cc_accepted() use under
+> > this model?
+> 
+> Who is calling device_cc_accepted? I thought we were keeping that
+> internal to the DMA PI?
+> 
+> > My understanding is that trust describes the operating
+> > policy, not TDISP acceptance or DMA access to private memory.
+> 
+> Right.
+> 
+> > Therefore,
+> > neither FULL nor ADVERSARY alone indicates whether a device can access
+> > private memory?
+> 
+> Right.
+> 
+> Once you turn on TDISP you effectively activate DMA, just like turning
+> on the IOMMU.
+> 
+> Userspace then gets to choose how the rest of the system behavess. You
+> can still run a strict viommu with an adversarial driver even if you
+> enabled TDISP and can DMA to all memory.
+> 
+> I don't know if many people would choose that combination, but it is
+> there.
+> 
+> > You also mention that once a trust level other than DISABLED is set, it
+> > cannot be changed during the device's lifetime. If a device initially
+> > operates in ADVERSARY mode and later attestation justifies FULL
+> > operation, is that transition intentionally unsupported for the existing
+> > device object? As documented, unbind/rebind and reset preserve the
+> > committed level.
+> 
+> I think it should only be for the duration of a bound driver?
 
-> On Mon, Nov 16, 2026 at 06:45:03PM +0530, Aneesh Kumar K.V wrote:
->
->> The complete CCA patch series adds the following files:
->> 
->> attestation.c  core.c  ctlv_attestation_pci_gen.c  ctlv_attestation_pci_gen.h  internal.h  Makefile  spdm.c
->
-> Why would any of this go under drivers/pci ?
->
-> The whole point here is to make an 'attestation subsystem', so that
-> all belongs under
->
->   drivers/attestation/
->
+For now, I decided to disallow state changes because the IOMMU may outlive the
+bound device. Unbinding does not fully reset the device, so we must quiesce it
+to ensure complete security.
 
-So the attestation evidence would be fetched via drivers/coco/tsm/ and
-stored by drivers/pci/tsm.c:pci_tsm_evidence. I would expect
-drivers/attestation/ to provide helpers, like other core kernel
-components, allowing different subsystems to register as attestation
-backends, with PCI/TSM being one of them.
+Thanks
 
-If this is not how you foresee it working, we can defer this patch, and
-I can carry it in my tree until the PCI attestation design is clear.
-
--aneesh
+> 
+> > It would help to describe how the trust framework fits together with
+> > those separate mechanisms, including which pieces are left for follow-up
+> > series.
+> 
+> The main thing it brings is the pause to allow userspace to measure
+> the device and put it into RUN if it so chooses before any driver is
+> bound.
+> 
+> It doesn't change how any of the DMA or TDSIP flows work.
+> 
+> Jason
