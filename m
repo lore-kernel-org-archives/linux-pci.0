@@ -1,58 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794793351;
-	b=BwVZkJYCceBHdnNl/Oc2NQfab7Oh+yghGXayl7ib7XnkWyuSS9YE0d2lIKmnVDtbNj8e
-	 Fo5zxlRqZlyN0I/xowvwNzHe1SlzFhIUnXQ/upqoweBCqvlH3PMP+epRZf12EgKFgzkif
-	 RpTDmJ0jck1X4ywhATUkqnIZeHTgWyepc2BgtORz6DdrbBuHfhSgXt/HPI+NjcSuJ6WrU
-	 xBXgDf4P6JvOZQorudTiSvKG8SQZHb8ZkVrXDdV2nrcI64xLSX+VqJgNT16jWREiLLOqq
-	 9I/YqmwNaSQLh2dXa6DIgT8Yttlu6NXF5hLCQEbRzPfLDjmTI95iJ/M8mCX48KJIgUQ==
+	t=1794794925;
+	b=d4j3Dxeq5YCoxgEjHtC9p2B8NShshA/K3cGjfupXthszP4cKGXO6r1XiwLIUyhu4DMxA
+	 by8P7CviHAbpQ/vxVRuBABsfsDhmlAYT9h3fRgUi7Hp0Q6ZEjg3EMrGYJR/OM1u0uLqZT
+	 TOizcGW8/0FBMEDaw0uQULE1L9CX6yPgbUNsh4CFdCBLDvoz9wL60wGY1IH7rJslkt16B
+	 3zkAAVzGWV5cYX9dWB2eEY56k74ePWIXNwej6SuEu5dgeSy6FdwUZyLq62lgZQN6S0We3
+	 82xpYVLn/5LlUsQNJ0PnLj2gE9B5Lz2ApUP4Z98SCWd+YOWF6yAPAT6YCeil/1kNtIQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794793351;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo;
-	bh=c9uHdlqrKsh0zgGsa5+22iZSmPYjqw3jpLcyzLQGrFI=;
-	b=SyVY0cd00ummQInPe6Dm8O2y8H+2lRrK5QWFSrhkYTbtS7gy64t1gouk2i7OS6rSlYDV
-	 go2bs2YeSbL++maN/LPwLhUL7JTjwxuidxj35hb426IOBaDmrQ+R7knQ8lD5VYz3Azd9u
-	 D4U8BWf8eOj5SPG9/UHIdL1Q2PN/5infqbhrJEMoWsBqaT6B9p2JmF4KgZaSb+acMJkuY
-	 t11yLrAsO3ZDc2V4Mna8vhQ4Kn/u80hNQN6MOTE+ovk2FLndj3BLrZLS6lCm2aks34AMW
-	 Iz3X/Tlz6oEd2aH5TcHYrRwGGtkXjHTWea2G2daSXGi34FuzIekGVs+Gqr8Yp1H61Wg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794794925;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=V2uKCe0Y1sT6EhZyzPfTC2bGhmyKY3LG7M5p5d4qQRQ=;
+	b=yNRLbwKfIxfE3l+VR+y31gZ2ydrSJLdhdUoolvHv0dBl6j3Fco+acLFTFfOhL0RNmsRg
+	 FX4Gmt/g8bvKhk+7upYUeKvEqaCS+GqerKUQhXh5z7vqw23cD/5P/5KU2mcGvfu6H2BY9
+	 L+BLcfLqo968Zu3FOM34qCj+GCXHXzh1G+/rDPIUf+dNXxQwfRl13swgVUqoC/pFQX8mI
+	 u9KyJZaMJPwClA+SSgRwwTqZ9WoDJqJft5vLTFJBanqPD5KlBL6bh+2QSFkm6lH4aYdb4
+	 OIuDUW1UugzKjuGqvppfJEdrKPYE0mcVaf6eoJEgUIDzquJm7IYnS1SFDTnPUKiZ2Eg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=V+hEkqUL;
-	arc=none smtp.remote-ip=220.197.31.4
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="czq/zSle";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6526606A31C;
-	Mon, 16 Nov 2026 01:42:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6526606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ED89606A31C
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 02:08:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=V+hEkqUL
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=c9
-	uHdlqrKsh0zgGsa5+22iZSmPYjqw3jpLcyzLQGrFI=; b=V+hEkqULaBCtg+T+dN
-	SI6YQ2NKE/7HYXATpDZEk3yfMQoc+3rcqJQwy2wHuI+41GaiYHMumoMPC2SvM4HU
-	5UknbXTOz/f+v3FtJLsnUUL1jibrZ2MEzuzZeVuCbPoAO9WWt+nQ+nGgv61rD+Fd
-	WgTpDmYnKAE+YN5AEaz2rXztk=
-Received: from oc-ThinkStation-P7.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3P753X_pqj33vIQ--.46208S2;
-	Mon, 16 Nov 2026 09:42:18 +0800 (CST)
-From: Kean Ren <rh_king@163.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: Disable spurious s2idle wake from the NVMe root port on ThinkPad P1 Gen 9
-Date: Mon, 16 Nov 2026 09:42:14 +0800
-Message-ID: <20261116014214.102524-1-rh_king@163.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261113014824.2396883-1-rh_king@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=czq/zSle
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1F291F000C4;
+	Mon, 16 Nov 2026 02:08:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794794925;
+	bh=V2uKCe0Y1sT6EhZyzPfTC2bGhmyKY3LG7M5p5d4qQRQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=czq/zSleNf9LBTU2OeTuBTIVw5u0XfzJkx5HWGOtY+aSG4BvbgM1UVyztgTwoOwcx
+	 RzNjBKIbPf6X/pSb7WY/H9amBFCqRFT+d3NHDzKwRK+5NQXHe8pLjn/n2KyBsFFceS
+	 gs9aTddYtE8Taa/pK4RnupWVStfLzowkiEIyIj07Lwcy413JwbbCWZb4CKusyCULrV
+	 lDnlIx2n9GZiD64fyTlQHj5UAa0hbxeVfCH5J/MA/Oa0z3SCQwTzET5m/aW/wggsrr
+	 KcamUgwOmgc2smDHqhnB/taGyK+mOOCTUgI9N20qwjhBDnEKMTvxcKFJNXxzl1KCtJ
+	 cp28MTi2dgxnA==
+Message-ID: <sashiko-outbox-216065@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: Disable spurious s2idle wake from the NVMe root
+ port on ThinkPad P1 Gen 9
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Kean Ren" <rh_king@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261116014214.102524-1-rh_king@163.com>
 References: <20261113014824.2396883-1-rh_king@163.com>
+ <20261116014214.102524-1-rh_king@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 16 Nov 2026 02:08:44 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,114 +60,63 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3P753X_pqj33vIQ--.46208S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWrykZryDuF1xuFyfXF1kKrg_yoWrAr47pr
-	W5Jr95tr4kWrW2qF4fAr4UWFn5Ars5K34rKrs7C3s0y3Z8Ar15KFWxKryaqFy7JFZ3Ww4a
-	qa18tF1DuFWkGaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UP8nOUUUUU=
-X-CM-SenderInfo: 5ukbyxlqj6il2tof0z/xtbC4BtP-Wr6X3tCfQAA3C
 
-On Lenovo ThinkPad P1 Gen 9 (21UF, Panther Lake), firmware enables the
-ACPI wake capability (_PRW) of PCIe root port 00:1c.4, which is the root
-port of the primary NVMe SSD.  When the NVMe controller is put into D3
-during system suspend, a spurious PME is raised on that root port, which
-sets ACPI GPE 0x6F (SCI).  The SCI fires during the noirq suspend phase
-and aborts s2idle before it reaches the low-power state: every suspend
-is followed by a wake within ~2.5 seconds with practically zero s2idle
-residency.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Low] PCI: quirks: pci_fixup_p1g9_rp05_wakeup() checks
+  device_can_wakeup()
+--
 
-The downstream NVMe device is not a wake source (its own ACPI wake is
-disabled), so the spurious event comes from the root port's wake/PME
-path.  Disable the root port's wake capability as well.
+commit 214973074b1cd82e39015c9a8ebdc8afb6fbe7d3
+Author: Kean Ren <rh_king@163.com>
 
-No firmware with a fix is available: the issue reproduces with BIOS
-N4SET31W (1.10) and N4SET32W (1.11), the latest version at the time of
-writing.  Match the 21UF model prefix; all 21UF SKUs share the same
-platform and firmware, and the remaining MTM characters encode the
-factory configuration and region.  If a fixed BIOS is released later,
-this quirk can be removed or restricted to the affected BIOS versions.
+PCI: Disable spurious s2idle wake from the NVMe root port on ThinkPad P1 Ge=
+n 9
 
-Verified on 21UFZE0PCN:
- - gpe6F increments by one per suspend/resume on both BIOS versions;
- - masking gpe6F, or disabling RP05 wake via /proc/acpi/wakeup, makes
-   s2idle stay asleep;
- - with this quirk, /proc/acpi/wakeup reports RP05 as disabled and
-   gpe6F no longer increments across repeated suspends.
+This commit adds a DMI quirk for Lenovo ThinkPad P1 Gen 9 (21UF) laptops
+to disable wakeup on PCIe root port 00:1c.4 and prevent spurious PMEs
+from aborting s2idle when the primary NVMe SSD enters D3.
 
-Signed-off-by: Kean Ren <rh_king@163.com>
----
-Changes in v2:
-- Match the 21UF model prefix instead of the full 21UFZE0PCN MTM so the
-  quirk also covers the other ThinkPad P1 Gen 9 factory configurations
-  that share the same platform and firmware.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index f7cd4149f8130..d37d225f7f082 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -6610,3 +6610,57 @@ static void pci_mask_replay_timer_timeout(struct p=
+ci_dev *pdev)
+[ ... ]
+> +static int __init pci_fixup_p1g9_rp05_wakeup(void)
+> +{
+> +	struct pci_dev *rp;
+> +
+> +	if (!dmi_check_system(p1g9_rp05_wakeup_dmi))
+> +		return 0;
+> +
+> +	/* Root port of the primary NVMe SSD (05:00.0). */
+> +	rp =3D pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0x1c, 4));
+> +	if (!rp)
+> +		return 0;
+> +
+> +	if (device_can_wakeup(&rp->dev)) {
+> +		device_set_wakeup_enable(&rp->dev, false);
+> +		pci_info(rp, "disabled spurious s2idle wake (BIOS %s)\n",
+> +			 dmi_get_system_info(DMI_BIOS_VERSION));
+> +	} else {
+> +		pci_warn(rp, "wakeup not enabled, cannot disable spurious s2idle wake\=
+n");
+> +	}
 
- drivers/pci/quirks.c | 54 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 54 insertions(+)
+[Severity: Low]
+Should this check device_may_wakeup(&rp->dev) instead of
+device_can_wakeup(&rp->dev)?
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7f1f47ea2ee4..5bf55413a68f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -6595,3 +6595,57 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
- #endif
-+
-+/*
-+ * Lenovo ThinkPad P1 Gen 9 (21UF): the firmware enables the ACPI wake
-+ * capability of PCIe root port 00:1c.4, which is the root port of the
-+ * primary NVMe SSD.  When the NVMe controller is put into D3 during
-+ * system suspend, a spurious PME is raised on that root port, which in
-+ * turn fires ACPI GPE 0x6F (SCI) and aborts s2idle before the system
-+ * reaches the low-power state.  The NVMe device itself is not a wake
-+ * source (its own ACPI wake is disabled), so disable the root port's
-+ * wake capability as well.
-+ *
-+ * No firmware with a fix is available: the issue reproduces with BIOS
-+ * N4SET31W (1.10) and N4SET32W (1.11), the latest version at the time
-+ * of writing.  Match the 21UF model prefix (the remaining MTM
-+ * characters encode the factory configuration and region); if a fixed
-+ * BIOS is released later, this quirk can be removed or restricted to
-+ * the affected BIOS versions.
-+ */
-+static const struct dmi_system_id p1g9_rp05_wakeup_dmi[] __initconst = {
-+	{
-+		.ident = "Lenovo ThinkPad P1 Gen 9 (21UF)",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
-+			/* 21UF = ThinkPad P1 Gen 9 model; suffix is the SKU. */
-+			DMI_MATCH(DMI_PRODUCT_NAME, "21UF"),
-+		},
-+	},
-+	{ }
-+};
-+
-+static int __init pci_fixup_p1g9_rp05_wakeup(void)
-+{
-+	struct pci_dev *rp;
-+
-+	if (!dmi_check_system(p1g9_rp05_wakeup_dmi))
-+		return 0;
-+
-+	/* Root port of the primary NVMe SSD (05:00.0). */
-+	rp = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0x1c, 4));
-+	if (!rp)
-+		return 0;
-+
-+	if (device_can_wakeup(&rp->dev)) {
-+		device_set_wakeup_enable(&rp->dev, false);
-+		pci_info(rp, "disabled spurious s2idle wake (BIOS %s)\n",
-+			 dmi_get_system_info(DMI_BIOS_VERSION));
-+	} else {
-+		pci_warn(rp, "wakeup not enabled, cannot disable spurious s2idle wake\n");
-+	}
-+	pci_dev_put(rp);
-+
-+	return 0;
-+}
-+late_initcall(pci_fixup_p1g9_rp05_wakeup);
--- 
-2.43.0
+pci_pm_init() and pcie_pme_probe() unconditionally set can_wakeup =3D true
+on PCIe root ports advertising PME support, independent of whether ACPI
+_PRW and pci_acpi_setup() enabled wakeup on the port.  When wakeup is
+not enabled (for example, on a future fixed BIOS that drops _PRW on
+RP05), device_can_wakeup(&rp->dev) still returns true, so the quirk
+falsely logs that spurious s2idle wake was disabled and the else warning
+is never reached for disabled wakeup.
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116014214.1025=
+24-1-rh_king@163.com?part=3D1
