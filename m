@@ -1,56 +1,90 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794843914;
-	b=D8ZU37xiAgoc8LskCkSxoolk6e9pao6TZ+TXRS9wq2QAxTeZrlxen772KE0mIobbPWRI
-	 01t7tftiz2sCtjOxBtkZQHyObHo2O03/EYZm5i9Sfgzp7BEyOLpZ9gITDCuSrMuPC0g/Q
-	 FEfNT9yypOEfOlnV63sc1t2Dt+O8axBSYIXIS9G3wynBrr81ftZ2aePhqpmnlWaMI3fNV
-	 YAyPwhgLSpLIhW3aiIu4E5Mq1vA2BLboYWrqIok7HtvvO1csT8UrIIrWGydp3Y2VudN6H
-	 q8fEisESJfreYW47pQtXFsxHb134IbViav/dPJeYV+XE2k09CzA0x3/bptZDbKYCG9A==
+	t=1794844349;
+	b=rhcY1zE8CSWH1jaNMcNwEPN1I8vk2VrMHXHBYcJg5p/wzoAvfQwWjZSHmWTmj9NM3R9v
+	 tYkh39G5vLCTfs/q/s8RaZSkLAPdU74t1hbd5ZmKaogVq/gOGtYu1Ua2OyP+ZAwDbE8rN
+	 HBdorplwXh8crIRaEW51GtgZkg4csim81PIURQwF9OO4RbeT41o65OG3HVAJI9UWg6Dtv
+	 wiJIc24PqaFonJdq8U4+z5Fqze1O+bnk2qgs4yewrd5V1IGsvotPtyHxY6R9z9AGufk1p
+	 ua6/7pcEWt1TSCwkBHRTF2+FbIrCCo36U0oiFydq/SNw0IkcUJrUPF7jaQZO11VGfHQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794843914;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=pDlO8cWhG6zI5yaC2Wr5JrA/d8a8XQHIqkGXqj6nTw0=;
-	b=rkO/RK4RATKJMB6SYL78KE/nS7YCPzGwoN9sf5d5lVhYEtnzD1dnla5wp1KO44hUMbiX
-	 1gfUEQcBOOIZlpsN3xIO7HJSzCD6AcWyZvv7H3u+pP9rybbV9IrtJoUOO1hXK013ZaKJA
-	 j1e6AI4J8jnOaCCYQv0gWNkf23mXQc+NUmFk8qNHtpUdHrWKYBRCwRe16mg4GoI2vZqET
-	 /hJibALQxkyGFzuvQjyn33qZ9FU+P4TkHgv/zH441ho8ug8502tAKjk+yt5zK0ZMAZqTc
-	 NYUGvwe978gWAtnDdgKAceVKASoq85OLP2WZaISlkmYe81jkbSQmBjqaYDow6WSx72A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794844349;
+	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=nMJerJcoZ1Adnfr1+PAoZtyg0oa83iJzpuYf4Q3jisk=;
+	b=fABsnlHXQk8e4METhwNMhBff3k4luca2UiAXEj+2UN/MqTrhaV+2W9WXEzSsS2GzZ4qW
+	 XXafhpTacetKjdGLuQQWGKhVZnr3t6/ivX9F6CR4pUKin94amNQsoLQWTt1b+lZ9UyGS+
+	 w83x1RrDwoVD1PLCifJFMq8XnIJhuKy7BJw0RTiTGsNwJVt8HNuO961PQNIUX6AGacrzR
+	 nRr55dfeSc2D0lt/vma0RREIIfqtVx30Mrj6V3R27FZqfc+N2ptiftYTI9FrF2KCYKq4T
+	 7N3Ohw93cdc/gwNgFDA0nQGo+YA/rggpI2O+TJG1IfMwbezWtvHqvP7spDHQxKESeJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="df50oCz/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Cqf/PBWs";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B478606A329
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 15:45:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C198606A31C;
+	Mon, 16 Nov 2026 15:52:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=df50oCz/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C61FB1F000C4;
-	Mon, 16 Nov 2026 15:45:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Cqf/PBWs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CD2F1F000CA;
+	Mon, 16 Nov 2026 15:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794843914;
-	bh=pDlO8cWhG6zI5yaC2Wr5JrA/d8a8XQHIqkGXqj6nTw0=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=df50oCz/9iKs7HdoEwj2/7kJ6m+muUxWiejtWM56vYoyHIoQpaSJSd9ZAaVLoUDM5
-	 zvJB/IqFnm/+AZ72DNUTSThoTU8XoUtW7Pl7ZarHmyh2+X6VXkzME41nwud1W/zLVX
-	 xoWv9guikR38kNWPcOxHHlJRWGhPBXWQP7JGy50VQc/esTGful/Qoe9nsRSQqTKT9B
-	 XkNO8oG7A1WlSKm96Z/8xx5A8v3wG2/I2U5tp+HevDSgHirwH+TsyaiBgr03guwSb7
-	 FMo1cQpnuUZ+qN9Qjo+3LfE6238bjcDZACkE+ApAQhWBWzjN6fay12sGSCHVAVKZU4
-	 lG0lcPX85PIog==
-Message-ID: <sashiko-outbox-217314@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 09/13] parisc/PCI: Convert to
- pci_assign_unassigned_bus_resources()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261116152403.2672-10-ilpo.jarvinen@linux.intel.com>
-References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
- <20261116152403.2672-10-ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 15:45:13 +0000
+	s=k20260515; t=1794844348;
+	bh=nMJerJcoZ1Adnfr1+PAoZtyg0oa83iJzpuYf4Q3jisk=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=Cqf/PBWsD5IxBgQxvgBiY9kTywVx12SlTwTmXTT8ukWkQsTUR+izYk5U8YFXU36Ny
+	 VuKt687MkawSeh2PId4bqFbRWi9sMgwfnI/JSJjTIU/6KxVcy/AK8qf7rn+hv6trfk
+	 Ee1pyTLlidS19SxOPSpjOIH4gugO1s5gd0mmAVUM5KUUf9dnwJ+bAvl3mUcDP9cXGz
+	 X00xd/pchyAyodSkPV0qGH695K9NxXc1WkmuaQ+sFB/uhm3L44RMtQbd4LJlTnKyog
+	 9tmHrt1kljrQB9N0o1IIRZoyH9U1+vjGQIjU/c8DxKA/xTbNd2EoCf0s7ezT62PTkl
+	 Ppm6trUfqKBRQ==
+X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Leon Romanovsky <leon@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev
+Subject: Re: [PATCH 17/17] PCI: Replace untrusted state with device trust
+In-Reply-To: <20261116132046.GI2532299@ziepe.ca>
+References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
+ <20261105-device-trust-core-v1-17-1e536825b4eb@nvidia.com>
+ <yq5amrr8yldi.fsf@kernel.org> <20261116132046.GI2532299@ziepe.ca>
+Date: Mon, 16 Nov 2026 21:22:11 +0530
+Message-ID: <yq5aa4n8ydsk.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,20 +93,53 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain
 
-> The Dino PCI bus driver performs assignment of resource using
-> pci_bus_assign_resources(). That function makes bridge window sizing
-> disjoint from the assignment phase and is going to be removed.
->=20
-> Convert pci_bus_assign_resources() to
-> pci_assign_unassigned_bus_resources(). If no other bridges are involved,
-> the extra sizing should be no-op.
->=20
-> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+Jason Gunthorpe <jgg@ziepe.ca> writes:
 
-Sashiko has reviewed this patch and found no issues.
+> On Mon, Nov 16, 2026 at 06:38:25PM +0530, Aneesh Kumar K.V wrote:
+>> > +static inline bool
+>> > +pci_dev_default_is_restricted(const struct pci_dev *pdev)
+>> > +{
+>> > +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
+>> > +
+>> > +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
+>> > +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
+>> > +}
+>> > +
+>> 
+>> Could you clarify how this series will work alongside device acceptance
+>> and private-memory access?
+>> 
+>> In particular, what should callers of device_cc_accepted() use under
+>> this model?
+>
+> Who is calling device_cc_accepted? I thought we were keeping that
+> internal to the DMA PI?
+>
+>> My understanding is that trust describes the operating
+>> policy, not TDISP acceptance or DMA access to private memory.
+>
+> Right.
+>
+>> Therefore,
+>> neither FULL nor ADVERSARY alone indicates whether a device can access
+>> private memory?
+>
+> Right.
+>
+> Once you turn on TDISP you effectively activate DMA, just like turning
+> on the IOMMU.
+>
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116152403.2672=
--1-ilpo.jarvinen@linux.intel.com?part=3D9
 
+We considered two options for doing this:
+
+1. Via the ->accept() callback in pci_tsm_ops.
+2. Via pci_dma_configure(), based on a combination of device trust and device acceptance.
+
+If I understand correctly, you are suggesting that we stick with the
+former?
+
+-aneesh
