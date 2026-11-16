@@ -1,83 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=34.218.115.239
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794848196;
-	b=YQMjsNVh7k6V9NzexPoNoD15HD/YG5bPYLvGad6rRhcNo7KHf7PC261KKsNMrWfe+aog
-	 OlGLb0NZHj8EPA2hXiKnNCamlXRzLM5/cAdFjdL4pkhBvpd/LGwVeNAs1s6aGvuNbUiuw
-	 le6HMnxqVlPrpB9UXzpcW8LaM/WQxm91XXqTTaxJ5cCabxZh3Hij2LSjStX94wOoVNEHd
-	 28KOwh1OmHrahX8KloE9Y/Ut+AlPs0puOp0U+KhNSrb55cz741ld4kJktB9XaSiBKjDBy
-	 yv1+gaXIIMxt9yoR3hV2gJNXswzUBy4/xA2LeYLETPbrCUfyHL9bg6W8fxvPGWBDDVw==
+	t=1794848329;
+	b=EzxWwaL3ZVKeypD+I4424+Oca6TLdUT+e8bn6bC1VeNAw/TDVFyCml71OoViiGpWkGn5
+	 ZwlMdRceu006tGBfoVknEh7jH7FGXh/31HV9rZ4Dml7p4v+Ku7+VxMDEhFhkRoZ9TIvJv
+	 Udj7dTa1By1iPv7oSww7d+oOVxFS5ukVENEZV1AZvbNEW2rvGulWMHf3A4yrJ+eau7LQy
+	 aMVW6+Vl9BE41dcfWz95PPjN+Eo9/eJS0sNezt5mBUiKuzB2g5oIYh5vYn8gIMQtCoGk8
+	 MPwBSH4loezGr1zBfy9L6VDCLOI9XMaVIv+Q8ZtuiPHh4RaJsGJi5mIVLP6cfiJmeEw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794848196;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
-	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type:X-Originating-IP:
-	 X-ClientProxiedBy;
-	bh=nGtKkqWe9UgPpr5+w33nzRYd1BYTGY4QmLZE2nVpS+Q=;
-	b=YJy1ZKwYLXRoqQyX3oTtxtGAiQeanu+2x71BY4YjBWGpA8fVJIBbSQ3x+faQ7Eiq7tYK
-	 omZWMBAxnbroSTA10NJFYBtHx9ryPCGI/o6+pMiTLLDoV6+T3iv8QbtSjHytCJkjSbkiS
-	 NR+VHneRFQVHGFHUt63VuUl0te23Rk6sr8YjbT2RYSEmxnWYTd4f8Y/rW8OhPvCRPA+TU
-	 /kJHWBNEGNiUpf57uxNAQJpWAoZuqfgxEJvjVXBAhG4G2/U+qzkBy+t6z97keX7TYil7E
-	 Rl2MrI/lE+vTZSF8wvY5UCRxUekg1JwxGYyzHIAF/XTbnt2rQn2/oMgyfd1wW50CrSA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794848329;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=ews1IsOntmplwjUxQR0FhDki/YYWz1j6sP1oPz6TD8Q=;
+	b=K3D+m8Ol8YhASCZ7yk2Lef1vCQMCNWCXNk4zbKYf0rx3qhANPyCg5e/o+YlZXzwCewqp
+	 fBwg+4sa/SNuvtEFgAKWfh/Gd2wpv6A6Gs06rSDHii5uxV98brUZp7B5ZyY6ELti+2iqq
+	 x9Kye/Qm9IM5Vtwp7ovTu09gTtd3x/7Rd9xPgWhXHxOh22Zhwk8iZOx+ktscyOJ2LLFzP
+	 dEc/c7RduHMBb5gahi8goRdEg1dNFPKmW9GdFSj1Urp2q/mY3kouv0Wr3XxYDlFxj/W9n
+	 xDtjsfZlvM69eIYepTfJYKGZbNHBtM7zqs1yI6BMF7nibCDBEV5Pu9VBlAfpBZU041g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amazon.com;
-	spf=pass smtp.mailfrom=amazon.com;
-	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=ohcFigdh;
-	arc=none smtp.remote-ip=34.218.115.239
-Received: from pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com [34.218.115.239])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="LAhw/W7k";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59C07606A883;
-	Mon, 16 Nov 2026 16:56:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59C07606A883
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C21606A322
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 16:58:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=ohcFigdh
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1794848196; x=1826384196;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=nGtKkqWe9UgPpr5+w33nzRYd1BYTGY4QmLZE2nVpS+Q=;
-  b=ohcFigdh3dwvAcbzegXsTgUoFwxlldPuqKl+jOlFHvF1rgpPD0m9TLlY
-   6Z74R1TvdyzXpdCwm89ujYnMl7L3SSHIxuPt023BVGDDSXqOpLkIS9aoK
-   GLFVXyDXO2L942AdnEfq7tMj6ICO81qeA+qhvBEWuGSdE7TUcneh/y4mL
-   uktl7IFk5Dj4vSs0sBVdBQKflFMkUiJtXBdRiSWrN44hNPTvWohxCheeq
-   9gxoFWUq6wY50KnHt4FOakld4MTuD5hbGm8WIPPwCYNfDqAKWmNlTYq/H
-   lmmtxSXxZHtyvek+ruNGn4YQFzgvj6a/9Us53gkVIkC9yUy+N78NiQv62
-   g==;
-X-CSE-ConnectionGUID: OAg241cfSXOTosfqpRuRvg==
-X-CSE-MsgGUID: 7IbTfab9SLSOmksQINR+kw==
-X-IronPort-AV: E=Sophos;i="6.27,217,1787011200"; 
-   d="scan'208";a="34067159"
-Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
-  by internal-pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 16:56:35 +0000
-Received: from EX19MTAUWA001.ant.amazon.com [205.251.233.182:6090]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.24.250:2525] with esmtp (Farcaster)
- id 53290bc3-64a4-4e73-bba7-410ba37a59a5; Mon, 16 Nov 2026 16:56:35 +0000 (UTC)
-X-Farcaster-Flow-ID: 53290bc3-64a4-4e73-bba7-410ba37a59a5
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWA001.ant.amazon.com (10.250.64.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
- Mon, 16 Nov 2026 16:56:35 +0000
-Received: from dev-dsk-avivb-1a-8cc559d6.eu-west-1.amazon.com (172.19.102.34)
- by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
- Mon, 16 Nov 2026 16:56:34 +0000
-From: Aviv Bakal <avivb@amazon.com>
-To: Lukas Wunner <lukas@wunner.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@oss.qualcomm.com>, Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>, Zeev Zilberman
-	<zeev@amazon.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/3] PCI/PM: Keep hotplug ports that can't wake from D3hot out of D3
-Date: Mon, 16 Nov 2026 18:55:22 +0200
-Message-ID: <20261116165627.2775780-1-avivb@amazon.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <avnqWd1gVH-i2Jkk@wunner.de>
-References: <20261115171831.1498006-1-avivb@amazon.com> <avnqWd1gVH-i2Jkk@wunner.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LAhw/W7k
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77CE21F000C4;
+	Mon, 16 Nov 2026 16:58:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794848329;
+	bh=ews1IsOntmplwjUxQR0FhDki/YYWz1j6sP1oPz6TD8Q=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=LAhw/W7kN2YNR5RVBLpoNBEihjU/+AGOdckgq8fttj/OD72VStaHtZfnmCJE3COls
+	 nrgYjp5IkwUW/eqUBOst1QD0Eja8eDu+f4sWIaEQHSwWjZ0VsbOB9XSBAfSb0C8sgH
+	 vd7lEPvZqYJUtUVfcwP3Kt8zgLLLtYXix2aAuLcWuRHgE+2xxayjlEFfGQiEwdVhS6
+	 uXkoS3v2NdZSNdRmouiZyTM71hVUkxCgo9Dobdazk6XRaY5IGq3AX4nR9RMCduLrsr
+	 UiZLKIGP3d5aeh37vYR6jGUEW2kJb9+nLVZf1pSo49hGIA3xEi76oz4P0kMUAyfb+X
+	 ux6lfrWSBd84Q==
+Message-ID: <sashiko-outbox-217399@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/3] PCI: Avoid runtime D3 on Amazon PCIe switch
+ ports
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aviv Bakal" <avivb@amazon.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261116165110.2773301-3-avivb@amazon.com>
+References: <20261116165110.2773301-1-avivb@amazon.com>
+ <20261116165110.2773301-3-avivb@amazon.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 16 Nov 2026 16:58:48 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,28 +60,26 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EX19D031UWC002.ant.amazon.com (10.13.139.212) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On Sun, Nov 15, 2026 at 07:22:33PM +0100, Lukas Wunner wrote:
-> Intel Catlow Lake suffers from a similar issue:
->
-> https://lore.kernel.org/all/20261103193136.2410148-1-sathyanarayanan.kuppuswamy@linux.intel.com/
->
-> Please try to follow the approach taken there.
+> The PCIe switch ports on AWS instances (vendor 0x1d0f) advertise PME
+> from D3hot but do not send it. Since commit d4c79b63d82d ("PCI: Allow
+> D3 for native hotplug-capable Root Ports on non-x86 platforms") these
+> ports runtime suspend to D3hot on non-x86 platforms, and hotplug events
+> such as an ENI attach are lost.
+>=20
+> Mark them PCI_DEV_FLAGS_NO_D3, reusing quirk_no_ata_d3() renamed to
+> quirk_no_d3().
+>=20
+> Fixes: d4c79b63d82d ("PCI: Allow D3 for native hotplug-capable Root Ports=
+ on non-x86 platforms")
+> Cc: stable@vger.kernel.org # 7.3.x
+> Co-developed-by: Zeev Zilberman <zeev@amazon.com>
+> Signed-off-by: Zeev Zilberman <zeev@amazon.com>
+> Signed-off-by: Aviv Bakal <avivb@amazon.com>
 
-Thanks Lukas. In the Catlow Lake case the Root Ports still signal the
-hot-add with a PME interrupt, and only PME Status is unreliable. Our
-ports are switch downstream ports that advertise PME from D3hot but
-never send a PM_PME message, so the Root Port gets no interrupt and a
-pcie_pme_irq() hook would never run. Keeping these ports out of D3
-looks like the only option for the existing devices.
+Sashiko has reviewed this patch and found no issues.
 
-I sent a v2 that fixes a runtime PM imbalance in patch 1 when NO_D3 is
-set by a FINAL fixup.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116165110.2773=
+301-1-avivb@amazon.com?part=3D2
 
-Thanks,
-Aviv
