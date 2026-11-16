@@ -1,88 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794834522;
-	b=qYHWbcj4z8WImWhy53t+R3uRL9JesMam8zp4slv6kPuSDFtS4xtHNwUR0JeJO22D2eLa
-	 O6qPgJhGfpTk9D+BkNNAdv1fGlizhHDiQiQzG0tKsQlP87hfPFMzAsn6C+VI+0FpCnAJB
-	 BHOQwawzgNX4lqyfHdwaOTLoagWAnlm3qzjM8xV2FHLE+SxW8W9Z1N0AgJjMad3MHDelG
-	 j85Ti+rNvG0MyfHZLT7vLTjKu1J7eXwTVB928Wab4aXlssViIQ0bUgP/es2Oy7E3NVkCp
-	 xVaotvife7iQJquxfVsGN1I84Ws64Mr994TNZwNcpHL0k//Ev7Hhf0fhhwu6ZmMbN5w==
+	t=1794834910;
+	b=jVJK1v7FB4mbhmE1uxXoy82tR6rJrQTCvdpAF7FYzqjfkpZtQKGR9k8X7ceZkpF7I1Gd
+	 fvh8gNuDH5B+1gwa9AZJu5s9EYaW7d2PUkqY/yf+HOlQBBEqordi7oIv4fLDRwFNGXyr8
+	 1ontqlivIDRb+PdtdGO3V8VRauezqqNZTwt7KBbsWZaLSo/bawFYiIApfJ8M+tJDaQLuR
+	 X6iv8Ztf/jwpLEXVMaQQ6xfGEMY/s+sKsQnTx2i2wuNX9TrDj/XpzIyU8qa8H/gTSKVRT
+	 LUmDXl14xjgpcuDfAVDsMiR0LWCzMxJzkmUPSulRZIHh0tFEhYPUMDRBx4J/5YO0cHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794834522;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794834910;
 	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
 	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=FwoCPPpdO8j0QQzLogIM9E8IgkHPKoUE54w1Plha5dw=;
-	b=g5T2LIQhBkTcsMozvcwrUyP+MygohRJqOAd5/pHxuV6GYHgVaX9agEodLoUFvRvJD145
-	 32F+rkLvBLHeJAtKAejr/AycEFr63qb9YQKot8lcsnXAyRJeKyHcpOE2XooxbblIiYkDb
-	 y8KgUrus4Y2xq+bYmtcB4hx/8+4dGSUZehDBmwgNCyRezRg0E3f5CHFwVoggdpLnxKG7Y
-	 ujQmZzq29Q6MsLnIz/CZMUiaPvY1Z4JJInTPaK00F080DNEcVacjQXG4dRKDd8k7lJFmq
-	 zHynIvoMJJwx1BHPvZXPcu+A2fzfd4vs1tMNrI3MF+6wELsvxIcxUnguDXvcIDUJF7w==
+	bh=IfCxZHy69bdPZ8Ej4wC+oPq+4aCQEr7V+YYajwUncTs=;
+	b=T1a3itiXL+XG8AWootvmRJCz/FxCRsNKU7dCs/vj+ahMM/sXNvpckfVR1/F26bb4vujR
+	 NcHLCvCPhUGbhabSjhjXWUK4lzm90TdpTlT9x80AnrSY7Ek+1JaFrYjjSkpoXt5/XDLEM
+	 720Q+7Vg2bdvkCK7SFTP1XCpRL+2BH0FrCsz3/8eSV+NB46K/B0NZd6jtYiZ1rKvLM8ca
+	 QitJ6n+FZmHeo5/zHKYpMOyF1jmeetDrYBbohlXsIMa1BPtZeNxcSR3cboixRpmcSoaIC
+	 NnTQXRwJC1EJAFRtUvweh4mEcPYtZP3U968I5yvuyQBOombp3N3UgA8FhJPf5Z7wKGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LIc5lPy1;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dDx5LTt7;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D07606A33B;
-	Mon, 16 Nov 2026 13:08:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDCF4606A899;
+	Mon, 16 Nov 2026 13:15:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LIc5lPy1
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 612A41F000C5;
-	Mon, 16 Nov 2026 13:08:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dDx5LTt7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 589361F000C4;
+	Mon, 16 Nov 2026 13:15:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794834522;
-	bh=FwoCPPpdO8j0QQzLogIM9E8IgkHPKoUE54w1Plha5dw=;
+	s=k20260515; t=1794834909;
+	bh=IfCxZHy69bdPZ8Ej4wC+oPq+4aCQEr7V+YYajwUncTs=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=LIc5lPy1D71RQN2xAbDw2oXaH5IV6pJ32H0KUZEqe8L249TmRi2WTJNQxKcuU1wEO
-	 oLm11Z/jqifv9rpcqf6oDFERa929d+JDfwRjC64Lnedd+EABh/BlgjMO2vcuLflph1
-	 8ElRVqEMjm7Be2V+wkEQvCuB9EDMcj/MMyH7AM8kqurVjgwf5jK5SAvnQJxVfCyPce
-	 WrnayG/saturD08cn49YyfcaDZzfKPuzx0jRt56/DImYkW4CmT1Kyp50jL+nYJU21v
-	 MsNp1ZjKlC00n397AZiiTcJm11MwJ1MeO9np8vdTOwAxjjQ4K/7vmluasP5XB0SeNC
-	 zhGRJWHaUOOpw==
+	b=dDx5LTt7GLsxbJtkcvvnQWmq9YXgl93SjNgbiKVNAff40Udc0uUilmUpNsrs/CnJr
+	 ZKgncSFTEa9QL7Uat+IIZbuHFTasffqHv95IFS5WuWO0CV6dnmhZ+Pt8GvDd/RTiZL
+	 enhEaEuqSH2Q6BsUIPm0moqEbyxMxMJPSE5lZvoPj/T+vRkM6h16o2IdkZKN9pgu7Q
+	 1kJV8TfehzoX6spiBN9tyEzweQ6ZW8H3j0m69SJLEHKM0fn/exw3QDwH0ODGQkdZ65
+	 xFwLMrS0PJQVOfJkA6ocSzNSHvjNQVotZZD/TcferKI89bmNhXKI9rBDCD3rz/XONR
+	 xiFnzoDXasHGw==
 X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
 From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Leon Romanovsky <leon@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>
-Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 17/17] PCI: Replace untrusted state with device trust
-In-Reply-To: <20261105-device-trust-core-v1-17-1e536825b4eb@nvidia.com>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-17-1e536825b4eb@nvidia.com>
-Date: Mon, 16 Nov 2026 18:38:25 +0530
-Message-ID: <yq5amrr8yldi.fsf@kernel.org>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/TSM: Move core code into its own directory
+In-Reply-To: <20261116130055.GB1850935@nvidia.com>
+References: <20261116075420.76205-1-aneesh.kumar@kernel.org>
+ <20261116075420.76205-2-aneesh.kumar@kernel.org>
+ <20261116130055.GB1850935@nvidia.com>
+Date: Mon, 16 Nov 2026 18:45:03 +0530
+Message-ID: <yq5ajymcyl2g.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -94,110 +63,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Leon Romanovsky <leon@kernel.org> writes:
+Jason Gunthorpe <jgg@nvidia.com> writes:
 
-> From: Leon Romanovsky <leonro@nvidia.com>
+> On Mon, Nov 16, 2026 at 01:24:20PM +0530, Aneesh Kumar K.V (Arm) wrote:
+>> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm/core.c
+>> similarity index 99%
+>> rename from drivers/pci/tsm.c
+>> rename to drivers/pci/tsm/core.c
 >
-> Convert the PCI specific untrusted to use the common device trust
-> level. Adversarial means the same thing untrusted does.
+> What's the point of a subdirectory if there is onle one file?
 >
-> PCI discovery keeps the logic that set untrusted: it looks for removable
-> PCI devices with arch_pci_dev_is_removable() and defaults them to an
-> adversarial policy. Treat a disabled policy the same way when choosing
-> the IOMMU domain. Do not record the ATS capability of such a device, as
-> pci_ats_supported() rejected untrusted ones. Let the Intel write-buffer
-> quirk apply, as it only adds flushing.
+> If you were to move it to drivers/virt/coco/tsm-pci.c or something
+> that would be more interesting..
+>
+> I think we are going to delete most of this file, right?
+>
+> I'm also seriously wondering if adding sysfs to pci devices is even a
+> good idea. If there is only one left we can just not do that. Then we
+> don't need most of the file..
 >
 
- [ ... 28 lines skipped ... ] 
+The complete CCA patch series adds the following files:
 
-> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-> index 78742aeba932d..a48fb511bfe6f 100644
-> --- a/drivers/iommu/dma-iommu.c
-> +++ b/drivers/iommu/dma-iommu.c
-> @@ -589,16 +589,11 @@ static int iova_reserve_iommu_regions(struct device *dev,
->  	return ret;
->  }
->  
-> -static bool dev_is_untrusted(struct device *dev)
-> -{
-> -	return dev_is_pci(dev) && to_pci_dev(dev)->untrusted;
-> -}
-> -
+attestation.c  core.c  ctlv_attestation_pci_gen.c  ctlv_attestation_pci_gen.h  internal.h  Makefile  spdm.c
 
- [ ... 244 lines skipped ... ] 
-
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index 65ea07c9ac35b..870ce14924905 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -934,6 +934,11 @@ static inline bool device_iommu_mapped(struct device *dev)
->  	return (dev->iommu_group != NULL);
->  }
->  
-> +static inline bool device_policy_is_adversarial(const struct device *dev)
-> +{
-> +	return READ_ONCE(dev->trust_policy) == DEVICE_TRUST_POLICY_ADVERSARY;
-> +}
-> +
->  /* Get the wakeup routines, which depend on struct device */
->  #include <linux/pm_wakeup.h>
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index aa3765a20a96c..087c63b177c85 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -490,14 +490,6 @@ struct pci_dev {
->  	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
->  	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
->  	unsigned int	is_cxl:1;               /* Compute Express Link (CXL) */
-> -	/*
-> -	 * Devices marked being untrusted are the ones that can potentially
-> -	 * execute DMA attacks and similar. They are typically connected
-> -	 * through external ports such as Thunderbolt but not limited to
-> -	 * that. When an IOMMU is enabled they should be getting full
-> -	 * mappings to make sure they cannot access arbitrary memory.
-> -	 */
-> -	unsigned int	untrusted:1;
->  	/*
->  	 * Info from the platform, e.g., ACPI or device tree, may mark a
->  	 * device as "external-facing".  An external-facing device is
-> @@ -616,6 +608,28 @@ static inline struct pci_dev *to_pci_dev(const struct device *dev)
->  {
->  	return container_of(dev, struct pci_dev, dev);
->  }
-> +
-> +static inline bool
-> +pci_dev_default_is_restricted(const struct pci_dev *pdev)
-> +{
-> +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
-> +
-> +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
-> +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
-> +}
-> +
-
-Could you clarify how this series will work alongside device acceptance
-and private-memory access?
-
-In particular, what should callers of device_cc_accepted() use under
-this model? My understanding is that trust describes the operating
-policy, not TDISP acceptance or DMA access to private memory. Therefore,
-neither FULL nor ADVERSARY alone indicates whether a device can access
-private memory?
-
-You also mention that once a trust level other than DISABLED is set, it
-cannot be changed during the device's lifetime. If a device initially
-operates in ADVERSARY mode and later attestation justifies FULL
-operation, is that transition intentionally unsupported for the existing
-device object? As documented, unbind/rebind and reset preserve the
-committed level.
-
-Some of these details are discussed in this thread:
-https://lore.kernel.org/all/20260708143153.GH118978@ziepe.ca/
-
-It would help to describe how the trust framework fits together with
-those separate mechanisms, including which pieces are left for follow-up
-series.
+The final implementation is spread across multiple series, and the
+attestation series creates drivers/pci/tsm/. I suggested making that
+split early to avoid conflicts while these series are being developed.
 
 -aneesh
