@@ -1,79 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794821747;
-	b=bU63fDMGBqk+ZpM7zIQhtZYinSAIOzjfy2e+Zc2f55aAGAB5gU2q2I1HMyL5HSOoSLqh
-	 CgXbLmCPd+cl22G4nwgGZIHt87p+wAqbp7hwakXh3N2ZQrwqecN8GVEbFiOYZumcOrsj2
-	 xm88z9nwoLbl+2099eBa7Jtw7IgolTvdU5j9J4iv0L4ydccMeLDB0X8k1dTpmssQNkj+s
-	 m8wFZNmwFWjN7HGWdp8F0Oq62bKz+NCbtpPpsfRIL3YVYWrmZL15v1jKEOpeUzWWcr55x
-	 viPSV2iw4OY0zwKmZ6CPp0krsSHXwfuDQ5r+zeCRw3iqQOPCoXe3FXuD332vso8s9ng==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794821747;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=oOWMbyn+xjdjjIrDX/w15MfmyYi+VOxzKvNZodzOTtU=;
-	b=VxoydVHV2AB6JDfBHPbrMJmaA39QfhL/J+4B54TVCLjCEHQlhpa/Pal83f/nuxF1h3qT
-	 rAj0vXDW60rb7CiCXWfQ7QfSJUD2pstg5r9FYkG1aDIZ/kJKtQB31DFaypvfe5FiJlVsm
-	 yJa8PiJynZEZT96/Ft0tnKtgqwRpWvxIPUEKNlKrrNQJPoyidvOrmwQoxeuPULqSV9DVy
-	 N9Kn1/XMiPCDYxBtCcYaMlj5AqHx9TXJC9SRF+7cMgPXrJsYuDRyEruJDfRqAzuTUKSbb
-	 ER0yLBHyw2f37UMLiLGyHaEeqbgHYEe90trHeeRr2WFH4xHw8/oQqzH6M94WG8BNggA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TMl25YwK;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8429606A88D;
-	Mon, 16 Nov 2026 09:35:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=218.76.62.146
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794822152;
+	b=xaC4sJY+O1sVr1kC/URzo32WomWe10VvZ5XJtlEDjuZnleUDJilw11PC3CyX9D4edXZ0
+	 KEpRfeopD2RwooF51me7Vl4CLNb9YfAsWJ2VV95cfhEbxv0hIR+fhcJvg+yChxM6uQOgS
+	 HpsBiIKnnnFVrY23VgmnJ6ci5HK5XrLXD+tp7NjpECnrZiSYPxPlu1GyM+/DsVW1vqxg5
+	 36DjppC4UIXIvhoAI8jOHdRp+53cK7kucJbAqiv0q5YPNs/LDLBNCnaUn4R+iUGuunfl6
+	 JnSQlyEpLVDJDU19jcI+OT+fY+kdj+TFyS0I3S30tf0WDw/NJMSC0BhTGiLgIPvANXA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794822152;
+	h=DMARC-Filter:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=An7UuIxp03IASJQVhCkrJ11j5LJvQXg6N+oWMG7q8QQ=;
+	b=F60g6BydugNe5jL8lJk7h/JZwt56ZE+Oaj8HQNkkn6WfeMEeLVF6H0275x1URgomGWJu
+	 aozA6lxtytiAA5qJQDSx8gBOWnzw1WUo49Y1sIXJS99/UplwwETi/7jKI4Oq5RkBSGnsR
+	 hPE+ytxEXTxLnie3ckvQJ2ho5XHcckQkgTX7oPObAx2XTEeKjfkXvU70BNv7Uj4uRjLk/
+	 abZCYEEXiQ8m9pOI8JiLfdWsL7IiPAl78CZiovpDMAvGdNFjl/SpF60ss4CuOavVrSAjg
+	 LLfJRfrkGk2nxv0lLunNTHIgsbhRKEKOzVk19iBfZcZt6j67lHfwFO0jAwsInMu96GQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=ultrarisc.com;
+	spf=pass smtp.mailfrom=ultrarisc.com;
+	dkim=pass header.d=ultrarisc.com header.i=@ultrarisc.com header.a=rsa-sha256 header.s=dkim header.b=f9ipurVX;
+	arc=none smtp.remote-ip=218.76.62.146
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C40C5606A31C;
+	Mon, 16 Nov 2026 09:42:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C40C5606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TMl25YwK
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1794821747;
-	b=SjHKn6OZuNI8DyzBng4lgnFfkVJO5VP3vbszWaLXJMyrwelz9vT4t5ojYL4ZCEe+bTrI
-	 LGxM1qNLc3i60WtNYKjwswdlZ/Ocyc9Iv3wEhir9eROUI3zELhQJcF9Z4AthPMReoXld9
-	 +l2i/01jL54hFRXp68BfKOmlDNIyIOMAsPadYMXDs2Y+RGLRAm7AImgRaOjdGHXdrf7zw
-	 y46vk3jkXCxQneHhIAIt2EazVTGs34To4LjASd8Vo/17Kuw1KAKYMsaWU6OZ824bVtceL
-	 8P8Yd4xcVz1x8Hyb84JTdl7j++7mOQilCsvrlD3EWQZjZhYLQdtkj6i+yViDNn0CcbQ==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1794821747;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=oOWMbyn+xjdjjIrDX/w15MfmyYi+VOxzKvNZodzOTtU=;
-	b=rxqSiELe5IHFi7mQsnVCVkkS28xSm6LYU/y6fXsPk3QKbVLsUlZK6Z1WmAXkSmZtzrYk
-	 ELHktE6t0O1iwGcVwlBCW8XJmlph/1N7XM/pzQE1l/hHeVe+SVi66VXIrDcIQsu7UYa6s
-	 1+AfZ4FYkk3N1L+7WrCw/uxSbJEYml7Khe1bSX1ieBWNrTW+1Bwonnv+thqTyKeCGM1Oy
-	 kxaD3RWI0qVx2hJH1A5ww2l7VlpOa2oYF/ZHWKlMIs7/k6HYBL/p6ArLKfwws6dGVn1RO
-	 mSKNbT3lMi7CB90dZCIoMY1Z3Aff5NNyV+wfmKcHVU7LdBsvoQb1BcHo9U9LjwD8BeA==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id F37DC1F000CB;
-	Mon, 16 Nov 2026 09:35:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794821747;
-	bh=oOWMbyn+xjdjjIrDX/w15MfmyYi+VOxzKvNZodzOTtU=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=TMl25YwKN49t+AU8jAOFg3rxSfYcAhQWkttdcbGW+QDctHcmupMaV6xWCo2wUgr4W
-	 wa/dAyLOL2S+WS08reF3OGlL16B9Kruwl3CfMbvo6CH+DrjUWDEcZYzqBAs/fpPU4l
-	 j6B4P4o7UF3o0vEiR7PFYTgABbkJxbMg9BTu57YOsrIAnCPRctoisemgCRbbf1X6hf
-	 XNwdxs/6Q1GSNdxd9QLPMARRx/24AZo8082PI/IgghIWRDzO5a72GIM8nxxCTRI6qv
-	 8vj+ylFNJyAhSLMStqV987bbRAtESoHIBHA0k/b1XYVAnnKiOKVDplZI+sQDbZnwkj
-	 ygojJ2swuaL2Q==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id AF6654A412;
-	Mon, 16 Nov 2026 09:35:45 +0000 (UTC)
-From: Matt Thompson via B4 Relay <devnull+matt.boondocker.io@kernel.org>
-Date: Mon, 16 Nov 2026 02:35:48 -0700
-Subject: [PATCH RFC v3 6/6] PCI: rockchip-host: Mask the client correctable
- error interrupt
+	dkim=pass (1024-bit key, unprotected) header.d=ultrarisc.com header.i=@ultrarisc.com header.a=rsa-sha256 header.s=dkim header.b=f9ipurVX
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:From:Date:Subject:
+	MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	To:Cc; bh=An7UuIxp03IASJQVhCkrJ11j5LJvQXg6N+oWMG7q8QQ=; b=f9ipur
+	VX/UghcfN/mb558IYBHJS+c63qswbFranYLmCjgbj/iokuRDa0D2fMmMXEZueWi8
+	4eBZKfLOqSYxXm8kMIeCMGHRmkhN+xGSgrLDdOQiMs/VbJBY5KpGBlRni+TMjA33
+	K+NLZ9kXCoIvYrziIQsGg88KXVcP/SPVFS4sg=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwDnrwbGz_pqSvUDAA--.1734S2;
+	Mon, 16 Nov 2026 17:41:26 +0800 (CST)
+From: Xincheng Ji <jixincheng@ultrarisc.com>
+Date: Mon, 16 Nov 2026 17:41:31 +0800
+Subject: [PATCH] MAINTAINERS: Update UltraRISC driver maintainers
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,72 +54,139 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261116-rfc-b4-v3-6-0bf052b68f2a@boondocker.io>
-References: <20261116-rfc-b4-v3-0-0bf052b68f2a@boondocker.io>
-In-Reply-To: <20261116-rfc-b4-v3-0-0bf052b68f2a@boondocker.io>
-To: Shawn Lin <shawn.lin@rock-chips.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>
-Cc: Rob Herring <robh@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- Igor Velkov <iav@iav.lv>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794821744; l=1536;
- i=matt@boondocker.io; s=rk3399-rfc-20261113; h=from:subject:message-id;
- bh=ce3FAgQbXHJSx+KdqASGBJHjnYp6SNCbhPb8KwijOGQ=;
- b=Roa8HS4rvXHjevx86m6SGHzFE/Uvg8ZIdOKnCckQyQAhP/T2bbAmFPtUYp+bBt/mQYp8z/z+f
- Q3cGA20Dji+DvKbDPqSCsiGW2i2ULWqy5FZQpt8sDp0OfoYQJDvjq1k
-X-Developer-Key: i=matt@boondocker.io; a=ed25519;
- pk=WMnh3kwFFRkrqamL/FbDcdl1/9rBF2uT03VdvGGP40k=
-X-Endpoint-Received: by B4 Relay for matt@boondocker.io/rk3399-rfc-20261113
- with auth_id=1517
-X-Original-From: Matt Thompson <matt@boondocker.io>
-Reply-To: matt@boondocker.io
 Content-Transfer-Encoding: 7bit
+Message-Id: <20261116-ultrarisc-maintainer-v1-1-f58706ae438c@ultrarisc.com>
+X-B4-Tracking: v=1; b=H4sIAMrP+moC/yXMQQqDMBCF4avIrBtwIkr1KqWLGEc7oqnMRCmId
+ 2/UxVt8i/fvoCRMCk22g9DGyt+QgI8M/MeFgQx3yWBzWyFibtYpihNWb2bHIaaRmLoqu2dZo3V
+ FC+m6CPX8u7Kv921d25F8PFtwHH+phzXFeAAAAA==
+X-Change-ID: 20261110-ultrarisc-maintainer-965d85912a3b
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Stephen Boyd <sboyd@kernel.org>, 
+ Brian Masney <bmasney+clk@redhat.com>, 
+ Jerome Brunet <jbrunet+clk@baylibre.com>, 
+ Maxime Chevallier <maxime.chevallier@bootlin.com>, 
+ Andrew Lunn <andrew+netdev@lunn.ch>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@kernel.org>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Linus Walleij <linusw@kernel.org>, Paul Walmsley <pjw@kernel.org>, 
+ Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+ Alexandre Ghiti <alex@ghiti.fr>
+Cc: Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
+ linux-clk@vger.kernel.org, netdev@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, Fei Chen <chenfei@ultrarisc.com>, 
+ Conor Dooley <conor@kernel.org>, linux-riscv@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Xincheng Ji <jixincheng@ultrarisc.com>
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794822092; l=3017;
+ i=jixincheng@ultrarisc.com; s=20260922; h=from:subject:message-id;
+ bh=ISg1g4ONyICVsyMrVHbkY7NCHgvfTE297DDq/TSYiOU=;
+ b=nczyInXsPH5sXfo1MLZNPno9PuLSKd3gFkJQMiE/xCgmrwPeQuSEY8uiC49TYcn3m9dHbb7IP
+ QWW6JkKynTlAaOBT2GxoeMmkYPYBFn/kkvxpTc/A8PIQFWZtE/f5n+S
+X-Developer-Key: i=jixincheng@ultrarisc.com; a=ed25519;
+ pk=n848dcS5D6g0vLad/rjp4Gf/1eedTe1a3pYUrkt2260=
+X-CM-TRANSID:AQAAfwDnrwbGz_pqSvUDAA--.1734S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxAFy8ZFWDKrW5JFWxuw1rZwb_yoW5Cw1fpr
+	45CF15Cr97Jr13Wan7Ka4fZas5X3W0krWUCasrKw1jyF1Fkw18Jrs5Kw15u3Wq9F48AFZI
+	yw13urnrta109a7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRM6wCDUUUU
+X-CM-SenderInfo: pml0x0xfkh0wg6xo325dul2uoofrz/1tbiAQAKDmr2s7AAAQALsQ
 
-From: Matt Thompson <matt@boondocker.io>
+Jia Wang and Xincheng Zhang have left UltraRISC and are no longer
+maintaining its drivers. Jia's listed company email address is
+no longer available.
 
-On RockPro64 the PCIe client correctable-error bit stayed asserted
-during link bring-up despite acknowledgment. Its level interrupt
-fired at roughly one million interrupts per second on CPU 0 and
-starved RCU.
+Replace Jia Wang with Xincheng Ji and add Fei Chen as a co-maintainer
+for the DP1000 PCIe, clock, DWMAC and pinctrl drivers. Remove
+Xincheng Zhang from the PCIe maintainer entry.
 
-Mask the controller-local notification, which the driver only uses
-for a debug message. Standard PCIe AER uses root port status and its
-separate interrupt.
+Having two maintainers provides continuity for maintenance and
+patch review when either maintainer is unavailable, as suggested
+by Conor Dooley during the UltraRISC maintenance handover.
 
-Signed-off-by: Matt Thompson <matt@boondocker.io>
+Link: https://lore.kernel.org/all/20261112-legend-outcast-c2226b5e02a1@spud/
+
+Signed-off-by: Xincheng Ji <jixincheng@ultrarisc.com>
 ---
- drivers/pci/controller/pcie-rockchip-host.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Hi all,
 
-diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
-index d6c494f..a8c2575 100644
---- a/drivers/pci/controller/pcie-rockchip-host.c
-+++ b/drivers/pci/controller/pcie-rockchip-host.c
-@@ -746,8 +746,14 @@ err_out:
+Jia Wang and Xincheng Zhang have left UltraRISC and no longer
+maintain these drivers. Jia's listed company email address is
+no longer available.
+
+Fei Chen and I will share maintenance and patch review for the
+UltraRISC DP1000 PCIe, clock, DWMAC and pinctrl drivers. Having two
+maintainers provides continuity when either of us is unavailable,
+as suggested by Conor Dooley during the maintenance handover.
+
+Thanks,
+Xincheng
+---
+ MAINTAINERS | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ccbcdc0799b9..994c3555c423 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -21869,8 +21869,8 @@ F:	Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
+ F:	drivers/pci/controller/plda/pcie-starfive.c
  
- static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
- {
--	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) &
--			    (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
-+	/*
-+	 * Leave the client correctable-error notification masked. On RK3399
-+	 * it can remain asserted after acknowledgment during link bring-up
-+	 * and monopolize the CPU. PCIe AER uses the root port's own status
-+	 * and interrupt, which are independent of this client mask.
-+	 */
-+	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) |
-+			    PCIE_CLIENT_INT_CORR_ERR, PCIE_CLIENT_INT_MASK);
- 	rockchip_pcie_write(rockchip, (u32)(~PCIE_CORE_INT),
- 			    PCIE_CORE_INT_MASK);
+ PCIE DRIVER FOR ULTRARISC DP1000
+-M:	Xincheng Zhang <zhangxincheng@ultrarisc.com>
+-M:	Jia Wang <wangjia@ultrarisc.com>
++M:	Xincheng Ji <jixincheng@ultrarisc.com>
++M:	Fei Chen <chenfei@ultrarisc.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
+@@ -28749,7 +28749,8 @@ F:	drivers/usb/common/ulpi.c
+ F:	include/linux/ulpi/
  
+ ULTRARISC DP1000 CLOCK DRIVER
+-M:	Jia Wang <wangjia@ultrarisc.com>
++M:	Xincheng Ji <jixincheng@ultrarisc.com>
++M:	Fei Chen <chenfei@ultrarisc.com>
+ L:	linux-clk@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/clock/ultrarisc,dp1000-clk.yaml
+@@ -28757,13 +28758,15 @@ F:	drivers/clk/ultrarisc/*
+ F:	include/dt-bindings/clock/ultrarisc,dp1000-clk.h
+ 
+ ULTRARISC DP1000 DWMAC GLUE LAYER
+-M:	Jia Wang <wangjia@ultrarisc.com>
++M:	Xincheng Ji <jixincheng@ultrarisc.com>
++M:	Fei Chen <chenfei@ultrarisc.com>
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/net/ultrarisc,dp1000-gmac.yaml
+ F:	drivers/net/ethernet/stmicro/stmmac/dwmac-ultrarisc.c
+ 
+ ULTRARISC DP1000 PINCTRL DRIVER
+-M:	Jia Wang <wangjia@ultrarisc.com>
++M:	Xincheng Ji <jixincheng@ultrarisc.com>
++M:	Fei Chen <chenfei@ultrarisc.com>
+ L:	linux-gpio@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pinctrl/ultrarisc,dp1000-pinctrl.yaml
 
--- 
-Git-155)
+---
+base-commit: aebb7274476403040d582c61478df8f4a7bf9cd3
+change-id: 20261110-ultrarisc-maintainer-965d85912a3b
 
+Best regards,
+--  
+Xincheng Ji <jixincheng@ultrarisc.com>
 
