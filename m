@@ -1,80 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794821746;
-	b=U/6JBU293XsLJgE1QGRDml4x3/faqyo/QUXEiVY+a0hhnF2Wr7KssWfnwpX0pxwQIotB
-	 h5EHikNwemP/GTfWL6IxjH/6gQfztyFmwqVKJZAEGeed9EJgeemV+4RP1TPNZOZ/ZD1Rn
-	 sDJZEQe4DeTezOfExeg4Eggxc4y+TiIZb2gdXlVsnnDLwge1yPRE+RETjpOzUS2fl/4rG
-	 9eilGhToqWPnRiQnPynUKxxZLhlTEOb5hPpEMWFsIzl4PoNjuh6j3DLhEs6cxKCveaH9X
-	 rmbRxAFjGdbEGLXCXf+gF0vLBn9EAECEkPn/8yVE7UhRtK1chzfFYn7818wy49epNqQ==
+	t=1794821747;
+	b=HQEV1GkEfR3rEOIYYIdpcV8lRxoaPqAjbyS4o9BCK3eC82elu2R43TOvkFpKFMyBJViJ
+	 DejY2oTCvuGFmE47a3xhn3DSUcBSjzUd/A+ULAy2iEmRNeR75n0yMiRXgJV/lBkiEiOE5
+	 M554gOoM5Lb5dNuxqbESPBK9amjNQrVFwXawSNhr48xPQYuWKBHG1Evt+IjY6yTH+AQLa
+	 7i25BUEWXP4MpSmmAUoDeMS3x5YqhzVF+DZXQ1dxkvM00V3rjakWIlLEmigGCeHVKWcOX
+	 cOeI7bki3akVd8c10g58VYOkX4/WKhx8rrYTbOAPiIJzGE1EAzQK/zOvmwmUfq9TevQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794821746;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=67t8X9YkkIO4lw48UIdCWlUnsRh72tPEIwgW229HRC4=;
-	b=BEfCW6r6IDn4Wq4kUnwFoYiMlrYp6aGClF8EkTwayexuQJbKkf6HDmFQLIy8XXHUU5s2
-	 F3GC3j+TaokvBKD+0h4sNDGg3KiHMor6pW5bWbPNjcvuqOVbnx7D/7718CVqzRYcKVM0C
-	 wKg3Lf5jxY9DgVg9A6AwGmVmoltWwQXUtNmKm7ifkSpk/3B3GtRjjGIk51SjWc973ZYA8
-	 nD0LirK1UgLLGSSBSDWkTD/v3ZPP00FyWHhOAS9Ya/dQHYLF10/J6O1cNy66JAdW8K+Hn
-	 f5PdjT9HjIvvbunVuI06UH8vx1o4cO1W+jl3YAhz4SWRMUhhxuZkjyQy/R2dTCfjgaQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794821747;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=6Zh+XulnPd/nR+IMT1WxzCnxZlOn4xssX41WPzE9FKU=;
+	b=bRk+bEjscl63Q+dIfpBEInLA5QMfVYQ1rKpkRxrEB0//W3sml6Dx1Ao3FwCJvT4vM9FG
+	 Ob51rdMu1VPfjadzyXKxpK+JXdCPtV+xmP18k3PrC/8e5Qupt1AR8bLXMJRGZ2dsrPCRS
+	 8hbfZBPqStM7u+g+YIgNkXm/0UBzAU+/hQM1P6qGd5S4/lna4lLRqQA8uLhVWWsaL04l4
+	 GU0zfWNmKT2GuJAI6nBlxs1ZzFQ0WT3ivKZIOIrA2AcIT5gpB+T517F+3wULmDV5AIF0U
+	 ESWxyVNZTyP3pIH4BHYNhzdg2ePpcCdyzsQiSGba2xO+5iJ3b8N3Xlm7E/ApjyLtaow==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i016sYou;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h6c3cS6d;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCFAE606A32C;
-	Mon, 16 Nov 2026 09:35:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29FC7606A332;
+	Mon, 16 Nov 2026 09:35:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i016sYou
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h6c3cS6d
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1794821746;
-	b=tVNWDSAgNFcmLbCMGc5M0HvVlbaW6JLapa9Tg/23EY/HxVCIarVZHpNoFbtsBVzwC5q9
-	 aEeidaErhdWL6HdoG30Mhp3C2gGhpW/nxwrOnYNjvsIXYuS8h19+D9op3pZwy83AO9zyU
-	 2E73F7iePVTotppI9D8+2AVDfrdol0JdRU6vYRGU8MBbXqelrCb+WpDmX+FAfnCu2CGtY
-	 ZNgT2WNGGVEUXIKKkwq0RNpjeVp3GpRcjnaNY0WlOC5aWs8+SPLW2MiDaC0SUeulOFPub
-	 zoR+NCaWO3msnKxAqhy4jwQXwspBKbyhL0YpMpMFTVC1KGrJKb3dAdhp/QMuhcOdLMQ==
+	t=1794821747;
+	b=BB9yxXXJwVc8Vk8MLP3nsX8IG2GvRWt6dIKlpilDzPODo+I+D8tiLGGiu5ROJtyr7cY+
+	 xnsZd41Gb57H7P/FAiJ6wDa/cozMm1h45GE3TngxyBMWPArKArV7t1srewiJD1nonscSz
+	 AQLjiMxi6j/C5/AyvgRE3tSeK595cOEoZJkwu656+zrea9u34E6TsaMlh0tW0VVUMOySn
+	 Hs50Nt+HTklGFN2hI/XuDb69MnZJiL4YmTMvYs3MjgC2IMzLvx2g+8mP9mE8Hq2t5b+ee
+	 uPkNjzwgOxj+8zgJ7BpJhdT3w8TnWlZd/U+R8mUYEVRA7q09vFkwmF67jMSB6YqJvSw==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1794821746;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=67t8X9YkkIO4lw48UIdCWlUnsRh72tPEIwgW229HRC4=;
-	b=xcSK0fVWhswHrC+fz6zQqi4pSxp9KSU3liom8DQWZiH/DeyenSW/Gs6ghuNQhuSGEdv8
-	 NDjlMuzzg5TjNd/iq6x6DO+K/7eYsLza2YpEPg9gn8zsttESUQ/yLKXFZQmjhdWqaP79/
-	 I5IuP5VQBlyR4G6nj8BLnXcRk+AP25qGkseKFbYLhhCbRenkZWArcky4PD8ZLhzSzHfkB
-	 BCW2EvSxhBM346GRi9mwI0QwlUn4wzp50SsRjidejcGPM/9H7ySPKEnHvKMSrqr5RfCrq
-	 0V/APLOExjKj74+X2Acvcz6JlZ+nTqRaGOcAjdrWh8AR+JTLIpbqfdeYFLK2VpB72/Q==
+	c=relaxed/relaxed; t=1794821747;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=6Zh+XulnPd/nR+IMT1WxzCnxZlOn4xssX41WPzE9FKU=;
+	b=zbOjBRQvum4E25D7nrV2IIFmTMq6VjgKLysQ2DMbIeU8CygscQoaQVIWjdxBCGAXyFzl
+	 n0/gzWCcdVMhd1LSFRaZ+5bzMN20WqCMpSJanWkgSD3lg9PpHv5f9INxFaLXo4UV/0E4x
+	 dzs4OixV8EJhhNYcFFdUxadCB92Q+EO3XEgqLD5dn75vtZgC/kYOYxKku2+YQCQymEtm3
+	 YJoBIPgSKk54UkbwLaG5lTXT3siKhqerGKrCfsBVgRRowYXGPZB5hXtN7axyWlG7WdUAk
+	 uWrVCW7FH6Zj3osJHmq43ZvcNbkXmwKLjoRB7z2PO+w4xqqSjB9fU/k0YWCeGfzM74Q==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id D0E491F000C5;
+	by smtp.kernel.org (Postfix) with ESMTPS id D3B601F000C6;
 	Mon, 16 Nov 2026 09:35:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794821746;
-	bh=67t8X9YkkIO4lw48UIdCWlUnsRh72tPEIwgW229HRC4=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=i016sYouLfI6zFT99kapTmxvyKJ/1WuIVdUs8wbVThCiOPU8HsI28rRQ8xcncu8yR
-	 58PdaDxq6GQO/+CnHls+S1TmUVdaplxbuhj7mi0AMyDDgZJb+3ybVfuvIIbTGElD9q
-	 vXgOAVCGDNNOirMsU8Xhco0Gm/kSwSj8eKIFZRF28OteSKboMO1J6GHewFWsUgABVJ
-	 wLNrbXjYlY2cixcKPDfYVsMaUMSXdiNVhsf/zxtbDMk8j8SXH6VFuiB8OrXifj7VA4
-	 52iLjxYJl+y+5l3Zxn/oa7VZ1OHUKBtW7Cimops6hfK+uVJN54gw79lwVmsRDQpnnG
-	 WKjk4JQN+S4Lg==
+	s=k20260515; t=1794821747;
+	bh=6Zh+XulnPd/nR+IMT1WxzCnxZlOn4xssX41WPzE9FKU=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=h6c3cS6dEiVHuSu/acrM84Rt9838k3HHJXs//6NE4KChiWO2D239ZPdgIKD4FY6O7
+	 wFe6b9MFa9HfiXtpRkt+7gcBcA+g11Wf+ZgMuW7VwR87tFZOaK+zxkFPh9fPsH6WXV
+	 5fpnoXX9DFYqXU4oOys1HnORkByJeR9MTRpzQ1reXrdOt5JsGmS2rN1UUbsGhSgKmA
+	 knynY6MCfxNTSSd+i4tgBr6YnbyYrreCgP4LVJeyg/meelWkG63uNdqszPaIlt6xGw
+	 1kxqH+q8V+xtk1rX3sl+qTbqt4Z0RGLV0NEr/y3VXsI/8NStiQRCzcCtO4JrAxY10L
+	 i0frPRV10yX7w==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 3011F4A3FE;
+	by lkml.kernel.org (Postfix) with ESMTP id 608494A402;
 	Mon, 16 Nov 2026 09:35:45 +0000 (UTC)
 From: Matt Thompson via B4 Relay <devnull+matt.boondocker.io@kernel.org>
-Subject: [PATCH RFC v3 0/6] PCI: rockchip-host: Handle unavailable
- downstream config space
-Date: Mon, 16 Nov 2026 02:35:42 -0700
-Message-Id: <20261116-rfc-b4-v3-0-0bf052b68f2a@boondocker.io>
+Date: Mon, 16 Nov 2026 02:35:44 -0700
+Subject: [PATCH RFC v3 2/6] arm64: Allow synchronous abort fixups for
+ guarded MMIO reads
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,12 +84,9 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAG7O+moC/22NzQrCMBAGX6Xs2Ug2bSLxJAg+gFfx0PzURqGRp
- Aal9N1N4614/JaZ2QmiDc5G2FcTBJtcdH7Io95UoPt2uFniTN7AKBOIWJPQaaIaItROcsVrYWQ
- LGX4G27l3CV3gfDrC9XeML3W3elwSC9a7OPrwKe8SFnhdTkgoURKNVpwyxulBeT8Yrx82bJ0v4
- cT+qyyrRihsOsk1GrFW53n+AqD9x87yAAAA
-X-Change-ID: 20261113-rfc-b4-6b795b536d9a
+Message-Id: <20261116-rfc-b4-v3-2-0bf052b68f2a@boondocker.io>
+References: <20261116-rfc-b4-v3-0-0bf052b68f2a@boondocker.io>
+In-Reply-To: <20261116-rfc-b4-v3-0-0bf052b68f2a@boondocker.io>
 To: Shawn Lin <shawn.lin@rock-chips.com>, 
  Bjorn Helgaas <bhelgaas@google.com>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -102,95 +98,142 @@ Cc: Rob Herring <robh@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
  linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
  Igor Velkov <iav@iav.lv>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794821744; l=3925;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794821744; l=3957;
  i=matt@boondocker.io; s=rk3399-rfc-20261113; h=from:subject:message-id;
- bh=32ugxZ9YhRZmQLH1EfOQDSlBHTw79cq4a8bA5dFZ1lQ=;
- b=UODUueP6aJsGykruLNX++bgYLoLqRjAPAex3aYOzj24x9UodGmKQ8UXcyoxw5Mh6O/Yl2msMi
- /dH+q0SZmyqBqj1VV4NU71XxHOkZAw/HjjWqqymrT9IF6aa4iJvbc6t
+ bh=O2LbMV/iAQG9voycLpkvTk5xx5a7660O6hR4aIZ4gWk=;
+ b=oIwmQLQEfkvjG3fwx1Oix4dLW8HQso+6ytYvjcn5izVk500rqVfftQDITyY7UZ1vr92siqtBt
+ stlGgmnS3w2DzNTYnE2R9PN0Ym9LpCcfUuUgrTkLvFVoG5vJO88clfA
 X-Developer-Key: i=matt@boondocker.io; a=ed25519;
  pk=WMnh3kwFFRkrqamL/FbDcdl1/9rBF2uT03VdvGGP40k=
 X-Endpoint-Received: by B4 Relay for matt@boondocker.io/rk3399-rfc-20261113
  with auth_id=1517
 X-Original-From: Matt Thompson <matt@boondocker.io>
 Reply-To: matt@boondocker.io
+Content-Transfer-Encoding: 7bit
 
-On a RockPro64 v2.1 with a Kintex-7 FPGA endpoint, a downstream vendor
-ID read during a PCI rescan raised a synchronous external abort
-(ESR 0x96000210). The rescan task exited with IRQs disabled and the
-watchdog reported a lockup.
+From: Matt Thompson <matt@boondocker.io>
 
-Patches 1 through 3 retain the downstream link check, the guarded
-arm64 read fixup, and the AXI link-down latch handling. The fixup
-handles current-EL synchronous external read aborts at the annotated
-instructions.
+An RK3399 PCI configuration read can raise a synchronous external data
+abort if it does not get a usable response. Allow an explicitly annotated
+MMIO load to return an error in this case.
 
-Testing repeated re-enable, retrain, and rescan exposed three further
-failures:
+Match only a current-EL synchronous external abort on a read instruction
+with the new exception table type. Keep existing handling for other
+faults, including asynchronous SError and translation table walk aborts.
 
-- PCI runtime resume replayed a saved Link Disable bit after userspace
-  cleared it. Patch 4 resumes the port before a sysfs write to Link
-  Control while holding the configuration access runtime PM reference.
-- The PHY could reach L0 while the data link stayed in initialization.
-  Patch 5 retains an early retrain request and issues it once if a
-  later downstream access finds initialization still pending.
-- The Rockchip PCIe client correctable-error interrupt fired at about
-  one million interrupts per second on CPU 0 and starved RCU. Patch 6
-  masks that controller-local notification. The standard AER service
-  remains on the root port's separate interrupt.
-
-Validation used upstream commit 97d73c825122, these six patches, and
-Igor Velkov's separately posted probe and resume retry patch [1]. The
-combined source matches the audit branch [2]. The clean kernel
-completed 600 disable, re-enable, retrain, and rescan cycles with
-runtime PM set to auto. Each cycle found the FPGA without a driver
-rebind or a second userspace retrain request. The board stayed on the
-same boot, the client IRQ count remained zero, and the kernel logged
-no stall or SError. This test did not reproduce the asynchronous SError
-that Igor reported on Helios64 [3].
-
-[1] https://lore.kernel.org/r/20261116-rockchip-pcie-resume-v2-1-a633e279be97@iav.lv
-[2] https://github.com/boondocklabs/linux/commit/bb7c4f9ee7ed33fc32832060fdecb9115c8e9630
-[3] https://lore.kernel.org/r/20261116-rockchip-host-rfc-v2-test-1@iav.lv
-
+Signed-off-by: Matt Thompson <matt@boondocker.io>
 ---
-Changes in v3:
-- Add the Fixes tag to the downstream link-state check.
-- Resume a suspended downstream port before sysfs Link Control writes.
-- Defer early retrain requests when the PHY is still training.
-- Mask the Rockchip client correctable-error interrupt.
-- Record the 600-cycle RockPro64 test with Igor's separate patch applied.
-- Link to v2: https://lore.kernel.org/r/20261113-rfc-b4-v2-0-d6b14f95c1d6@boondocker.io
+ arch/arm64/include/asm/asm-extable.h | 15 +++++++++++++++
+ arch/arm64/mm/extable.c              | 20 ++++++++++++++++++++
+ arch/arm64/mm/fault.c                |  4 ++++
+ 3 files changed, 39 insertions(+)
 
-Changes in v2:
-- Restrict the MMIO read fixup to the SEA path and exclude its
-  exception-table type from user-access classification.
-- Look up the guarded instruction once on the SEA path.
-- Use the standard arm64 register-number encoding helpers in
-  the exception-table macro (Sashiko review).
-- Link to v1: https://lore.kernel.org/r/20261113-rfc-b4-v1-0-b91dcb502250@boondocker.io
+diff --git a/arch/arm64/include/asm/asm-extable.h b/arch/arm64/include/asm/asm-extable.h
+index d67e2fd..ac78167 100644
+--- a/arch/arm64/include/asm/asm-extable.h
++++ b/arch/arm64/include/asm/asm-extable.h
+@@ -11,6 +11,7 @@
+ #define EX_TYPE_KACCESS_ERR_ZERO	3
+ #define EX_TYPE_UACCESS_CPY		4
+ #define EX_TYPE_LOAD_UNALIGNED_ZEROPAD	5
++#define EX_TYPE_MMIO_READ_ERR_ZERO	6
+ 
+ /* Data fields for EX_TYPE_UACCESS_ERR_ZERO */
+ #define EX_DATA_REG_ERR_SHIFT	0
+@@ -80,6 +81,11 @@
+ #else /* __ASSEMBLER__ */
+ 
+ #include <linux/stringify.h>
++#include <linux/types.h>
++
++struct pt_regs;
++
++bool fixup_sea_exception(struct pt_regs *regs, unsigned long esr);
+ 
+ #define __ASM_EXTABLE_RAW(insn, fixup, type, data)	\
+ 	".pushsection	__ex_table, \"a\"\n"		\
+@@ -111,6 +117,15 @@
+ 			    EX_DATA_REG(ZERO, zero)			\
+ 			  ")")
+ 
++#define _ASM_EXTABLE_MMIO_READ_ERR_ZERO(insn, fixup, err, zero)		\
++	__DEFINE_ASM_GPR_NUMS						\
++	__ASM_EXTABLE_RAW(#insn, #fixup,				\
++			  __stringify(EX_TYPE_MMIO_READ_ERR_ZERO),	\
++			  "("						\
++			    EX_DATA_REG(ERR, err) " | "			\
++			    EX_DATA_REG(ZERO, zero)			\
++			  ")")
++
+ #define _ASM_EXTABLE_UACCESS_ERR(insn, fixup, err)			\
+ 	_ASM_EXTABLE_UACCESS_ERR_ZERO(insn, fixup, err, wzr)
+ 
+diff --git a/arch/arm64/mm/extable.c b/arch/arm64/mm/extable.c
+index 299a244..dcb84d8 100644
+--- a/arch/arm64/mm/extable.c
++++ b/arch/arm64/mm/extable.c
+@@ -28,6 +28,8 @@ bool insn_may_access_user(unsigned long addr, unsigned long esr)
+ 		return false;
+ 
+ 	switch (ex->type) {
++	case EX_TYPE_MMIO_READ_ERR_ZERO:
++		return false;
+ 	case EX_TYPE_UACCESS_CPY:
+ 		return cpy_faulted_on_uaccess(ex, esr);
+ 	default:
+@@ -101,6 +103,8 @@ bool fixup_exception(struct pt_regs *regs, unsigned long esr)
+ 	case EX_TYPE_UACCESS_ERR_ZERO:
+ 	case EX_TYPE_KACCESS_ERR_ZERO:
+ 		return ex_handler_uaccess_err_zero(ex, regs);
++	case EX_TYPE_MMIO_READ_ERR_ZERO:
++		return false;
+ 	case EX_TYPE_UACCESS_CPY:
+ 		return ex_handler_uaccess_cpy(ex, regs, esr);
+ 	case EX_TYPE_LOAD_UNALIGNED_ZEROPAD:
+@@ -109,3 +113,19 @@ bool fixup_exception(struct pt_regs *regs, unsigned long esr)
+ 
+ 	BUG();
+ }
++
++bool fixup_sea_exception(struct pt_regs *regs, unsigned long esr)
++{
++	const struct exception_table_entry *ex;
++
++	if (ESR_ELx_EC(esr) != ESR_ELx_EC_DABT_CUR ||
++	    (esr & ESR_ELx_FSC) != ESR_ELx_FSC_EXTABT ||
++	    (esr & ESR_ELx_WNR))
++		return false;
++
++	ex = search_exception_tables(instruction_pointer(regs));
++	if (!ex || ex->type != EX_TYPE_MMIO_READ_ERR_ZERO)
++		return false;
++
++	return ex_handler_uaccess_err_zero(ex, regs);
++}
+diff --git a/arch/arm64/mm/fault.c b/arch/arm64/mm/fault.c
+index b227368..ebe8054 100644
+--- a/arch/arm64/mm/fault.c
++++ b/arch/arm64/mm/fault.c
+@@ -30,6 +30,7 @@
+ #include <linux/hugetlb.h>
+ 
+ #include <asm/acpi.h>
++#include <asm/asm-extable.h>
+ #include <asm/bug.h>
+ #include <asm/cmpxchg.h>
+ #include <asm/cpufeature.h>
+@@ -879,6 +880,9 @@ static int do_sea(unsigned long far, unsigned long esr, struct pt_regs *regs)
+ 	const struct fault_info *inf;
+ 	unsigned long siaddr;
+ 
++	if (fixup_sea_exception(regs, esr))
++		return 0;
++
+ 	inf = esr_to_fault_info(esr);
+ 
+ 	if (user_mode(regs) && apei_claim_sea(regs) == 0) {
 
----
-Matt Thompson (6):
-      PCI: rockchip-host: Skip downstream config access while link is down
-      arm64: Allow synchronous abort fixups for guarded MMIO reads
-      PCI: rockchip-host: Recover downstream configuration access
-      PCI: Resume downstream ports before sysfs Link Control writes
-      PCI: rockchip-host: Defer retraining during initial link training
-      PCI: rockchip-host: Mask the client correctable error interrupt
-
- arch/arm64/include/asm/asm-extable.h        |  15 ++++
- arch/arm64/mm/extable.c                     |  20 +++++
- arch/arm64/mm/fault.c                       |   4 +
- drivers/pci/controller/pcie-rockchip-host.c | 119 +++++++++++++++++++++++++++-
- drivers/pci/controller/pcie-rockchip.h      |   4 +
- drivers/pci/pci-sysfs.c                     |  16 ++++
- 6 files changed, 176 insertions(+), 2 deletions(-)
----
-base-commit: 97d73c8251226cf27cc6656b4c542869bb8c69fa
-change-id: 20261113-rfc-b4-6b795b536d9a
-
-Best regards,
---  
-Matt Thompson <matt@boondocker.io>
+-- 
+Git-155)
 
 
