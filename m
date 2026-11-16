@@ -1,95 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.9
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.43.86
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794835270;
-	b=gu9y0McCWhlAaTT5yz8Y1WP3fN8T2lPEkVtKy97eK7IXbDfqmtyzqzjjpTnkRtBqIKo9
-	 k4U55hpMz9MGsRbH9IK3elWqRV+OcvSpSKZRvXw7Uq4aJtX0x9smlxS3rn56oDJzYfZob
-	 I6ven+D1LZnnM99fs42BcI1hNYA9OStQaiSrhHkjIU0q7H+32odkHa7CeCBE782FpIhSp
-	 NEwZVnwmdPCwKkrG4GtjetqcMmQ5RmoNHE9NOYtWMYafNdPzTuiqKqbjdMu/LZzUmk1Jw
-	 5WSzr9l9rUbariy5rORxzubosGQUFNc7bHm8JzOOU9f/e9M9/akU0Vfuz97mOa1P4Dg==
+	t=1794835286;
+	b=plYaHknBR1IiHst7fQeLFpXpKuUbfprqJFE9d2id9RPkoPFg/ogkGVdIvU8q9UrrkH6z
+	 m9Z9ANMfCMpOD2hIow7+JR5xRE/1pMG9YHgL88MNwFXY/H/T9heQnRljj2llkZit2ffmS
+	 oZeRlqmoOSL8yqspSGcAU4EvaUPpm8turO21oF/Hpez30oCc7KByo4ouCzaUpRZNBQNVB
+	 Fteb58y63jsF1EVHJVu0EOv4UQb1EIVfW0jW/VJr3mfmG55p4EKXdFiw3Ixy3b0WuEE2C
+	 gjECivsvM50fwc8CbhhrAMn6GM8PjiuOpG8XuaakVZNHFteqA9HW0QGoAD89QGaqZCw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794835270;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794835286;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:X-ClientProxiedBy:X-Microsoft-Original-Message-ID:
+	 MIME-Version:X-MS-Exchange-MessageSentRepresentingType:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:
 	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
 	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
 	 X-MS-Exchange-CrossTenant-Network-Message-Id:
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=TKtg+hCnmq42BF25g6dM2aS/tTun9Y1xgbOmY9LH+mE=;
-	b=GT/SPxdIVp9yoBmXKS940VDDgK2ICzFxSlHX13lAX1t441V78oOLsLX7QVcNC2wRu7Jm
-	 yq7Mk91DIFolvSCXQS3LRCbqLmn+NPAesZ+pmB6hSW0kMYRlWgfZVHTOlALdRpiOM4KOu
-	 aURlD2PDdJwzcWq6MuJyh93ny16NqJ5xVCbGQwZD/Sk38ifTWHGCYTCN77QKmWUeicQaP
-	 4E8eMgAJoQapK86qpA1/KcV8TvhotYxvHTbHx87eqUaHUdfKhUaQOOUBTwLJcEd9opcQp
-	 rjFDSghxYVoHoLUGe5kfwOELN218VsNd5MP7q98x/C233ZCAu2CN1n+U95ixj4NcoxQ==
+	bh=czGVo6sc/VLLyDCkaUbXfNRdbjC3jiOvnk7B0Mk8jno=;
+	b=EfNi0U2Po1LHUm3D9uaJ3nslHqwx/1jej3a9eevFUWCO01R3YJPkFq7wqk3OvmA8qWPd
+	 ApdwY0QQGFzboHi5nAUI7TilSSQF82L9D6Us6oqyZw1tPoxBnJ6Ov38uSY1MZirq1tOtA
+	 IDHI2ieygH30cBWsd7endBioCw63v3orwEJzAPn3euvorl+CslL4lmLFpkK55ga+6Vze4
+	 tCO5oX2nYE6++DaKbnGEqBK7DIhmZLSD/QQ5sBr8ZqPlCZPRyG+m+IkdBreH+OY7jQIO4
+	 H2Febxp10mbp32+kLyhOlsKpuyiEnJKPwEOuDDkDRr84RsF5XSzSd0tZ5Erp9f5G1SQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="RBPETet/";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.9
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010009.outbound.protection.outlook.com [52.101.193.9])
+	dmarc=pass header.from=hotmail.com;
+	spf=pass smtp.mailfrom=hotmail.com;
+	dkim=pass header.d=hotmail.com header.i=@hotmail.com header.a=rsa-sha256 header.s=selector1 header.b="Wy/HAWSA";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.43.86
+Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazolkn19013086.outbound.protection.outlook.com [52.103.43.86])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BC8606A31C
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 13:21:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 17BC8606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F611606A31C;
+	Mon, 16 Nov 2026 13:21:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6F611606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=RBPETet/
+	dkim=pass (2048-bit key, unprotected) header.d=hotmail.com header.i=@hotmail.com header.a=rsa-sha256 header.s=selector1 header.b=Wy/HAWSA
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Mj4by8s8H0LYer5hbLAKnYH2WzaNOwfDdX2vqI3zj4IECT2JFhvr25uwXq8bLK+LsLNssPjjvROdN9ZjYiodL1g+GJ/Y2qHkvWuNVwNzOOiFn6kD5t6uwgJwKYD5cUs1o0UAzmnMn1x4+evVHs9ef0w+6ddfymT7gwuRd+9T383WXdXQf3aCuKOR1RLOVilSKTMF1RsoveAlKZXq1o+j2YH72eaBzDHxHsHbOCUpWk5jcUnlt9FPn8+IyT7FVQiz7L2vHPydgAESG7PtcmsAu7VgboV5y4jkLbjlwDb6uYWb7MRKxNqtTMmVF91KzXaJGTI+9e/QegEDhB57k3cEBg==
+ b=PDg8fykwhbXdwwYJIaUUWSB4cykwoJrPRR4rLzpR1K1dei0InUJtAMPsYb1fHobKkiIGWhqJOg2bdQLWNRGb/zZSqkIdIcGMNTSqZOHedZKq96qDEKOzcuEgQwUJ/LgxtAsEJJNzRNx0ps0vzMx/1FqeU4EPVQnEGfRAaCIgl/R/uyvcuPn/hXTE6pmOlGCeQODUdFV5HEaLp3tdSa4sngtviVoesrH0OmEplFN1LXPuiwZbMgV4+qhec0dTAesOeCjgzlN7HogSixZRWr2PhJW52U23AN3INQfmXG1V8j9PcFN3Js/HD7sWRGa8OfD+aFPb+xxRvJw6ZjxNLBuDRg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=TKtg+hCnmq42BF25g6dM2aS/tTun9Y1xgbOmY9LH+mE=;
- b=ymWgQKcLk7Y8FiLphfO1jyAou81oflBUz3HlUDB47YXOMZSiZCOTfMPdhMGyJCFFnDURfOSEAC1azR95yqvC7XfW8dgyi8FR8hUSqK69agVwJeSM7dpA6/zoy7G9DYuoDSmyuQeP8tsRs/AYkVIsQayUXUrgeb7c+v5y1Pdj+nnmyD5wkz4uGarFfpq2RdB1Ni2atxMiQEu7+5oQf9mtOWxB9GrFP2XscxVoOKc+Idy67xWa35vrI4z9P/6lHt+HhoTuWzieGRnt4Fqt+bKhJ3ISKoU78L21rx23ayf0Erq+fKnRxp3RdE5IenHthBu+zyd/FFHcNabJTB1ydwe+0A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=czGVo6sc/VLLyDCkaUbXfNRdbjC3jiOvnk7B0Mk8jno=;
+ b=KHqWHKdjs8LXSlxjhS28fNgBpCjSRtb+nF5HEH/dUVN+HONde+KR83OoyB8jHVE5UaVWONjkepsMzBHRIHyv4NMOhBagkHLPOINJpky8r4UWJ7Xs2C8PH1k75S6ARLy/9T21NOOdJSz9QGX9DYLaF6WZX+SXISjHqtzAr683VAuiRdkFE0fX5AfbRE7XwgxX8PEqz/hmRNnONyU0wRA0zDLmt/bVZrzH/OgzVSkBrA01/EeM37jID5Em+EyRgcZL8wHNBET3olpdOTqPD488Ir09HbfakGUcvKI+Y7MQutM6vhtbyNVKRFJXILSS+hNvb9jPO4tobo2RRhT6M7i+6w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TKtg+hCnmq42BF25g6dM2aS/tTun9Y1xgbOmY9LH+mE=;
- b=RBPETet/iqI0Jo5r2R1pUw7WxTscr9lNiAqcDk1mErWmmDSgxzzfNj8SfmKH7vcQDqTRnbhtgKXrj/lf7oHEH3bGZyDFcvpkVSDtgqaQ5qUm1CgpBerxnko48cK287ZifAjdkSf1S06gVSZAsasOBvF17X1pTjsIYQKzZQ6bGLQr/WfbViMjRjlgWKxfxi2OXAdqSzjsRObg5gPonyTUliY4Wmmo63c1+KTtE4DK7aRhwYlSK/bB3Za1Wz8l6dmsxTXwf4j6KEneRuNvdsc5G1+CktxSRRRTJEwUhXQWJ5fhbPXXwxxpUXKkLBapN99VMD9p8x6jMgQrLhBM5vp9kg==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12) by IA1PR12MB6163.namprd12.prod.outlook.com
- (2603:10b6:208:3e9::22) with Microsoft SMTP Server (version=TLS1_2,
+ bh=czGVo6sc/VLLyDCkaUbXfNRdbjC3jiOvnk7B0Mk8jno=;
+ b=Wy/HAWSAAvLKyVg63Bej0iYMBA9Ne74WC29aM1LMby/bcqwiUfRKNVxOl4L8Dxl3GS2QTYMwqn1a+0Q3zcj12r4Ok0tYBeYoT+98Gvj2gtaMRRChD9V9UZQeOvXBEKumTsTuD3dGhCG5weL/fzW4WdUSBb33Bmua5/aMeg3cuP1ShG9lFgluDTFHY8HuvmVIGHwMKIT/JsBQShS5oH+KPsf3TOPj0Xj/NTNXViZWroiaQAXzPpwG/07HY3JsYoFKeBt8Usj5I3safbbbyAWDT4nxzNiID94gvM+rXPYGS9WvWYKEHuqejWdu0ezbCHQXuwouW5x6BE55bpnYdrQvJg==
+Received: from JH0PR01MB5779.apcprd01.prod.exchangelabs.com
+ (2603:1096:990:49::9) by TYNPR01MB8269.apcprd01.prod.exchangelabs.com
+ (2603:1096:405:3c5::8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Mon, 16 Nov
- 2026 13:20:00 +0000
-Received: from CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
- ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0615.013; Mon, 16 Nov 2026
- 13:20:00 +0000
-Date: Mon, 16 Nov 2026 09:19:59 -0400
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
-	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/TSM: Move core code into its own directory
-Message-ID: <20261116131959.GD1850935@nvidia.com>
-References: <20261116075420.76205-1-aneesh.kumar@kernel.org>
- <20261116075420.76205-2-aneesh.kumar@kernel.org>
- <20261116130055.GB1850935@nvidia.com>
- <yq5ajymcyl2g.fsf@kernel.org>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5ajymcyl2g.fsf@kernel.org>
-X-ClientProxiedBy: BL1PR13CA0223.namprd13.prod.outlook.com
- (2603:10b6:208:2bf::18) To CHBPR12MB731189.namprd12.prod.outlook.com
- (2603:10b6:610:33d::12)
+ 2026 13:21:17 +0000
+Received: from JH0PR01MB5779.apcprd01.prod.exchangelabs.com
+ ([fe80::1d17:30a3:e2ff:4f45]) by JH0PR01MB5779.apcprd01.prod.exchangelabs.com
+ ([fe80::1d17:30a3:e2ff:4f45%6]) with mapi id 15.21.0615.009; Mon, 16 Nov 2026
+ 13:21:17 +0000
+Message-ID:
+ <JH0PR01MB57796AD53E6089D3254A76D6DC7C2@JH0PR01MB5779.apcprd01.prod.exchangelabs.com>
+Date: Mon, 16 Nov 2026 21:21:00 +0800
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: Add ID@path device format for pci= parameters
+To: Ben Cressey <ben@cressey.dev>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
+ <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Logan Gunthorpe <logang@deltatee.com>,
+ Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ "Anthony Vardaro (Anthropic)" <me@anthonyvardaro.com>
+References: <20261111-pci-idpath-selector-v2-1-83ea668e38f0@cressey.dev>
+Content-Language: en-US
+From: Wei Wang <wei.w.wang@hotmail.com>
+In-Reply-To: <20261111-pci-idpath-selector-v2-1-83ea668e38f0@cressey.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+X-ClientProxiedBy: SE2P216CA0115.KORP216.PROD.OUTLOOK.COM
+ (2603:1096:101:2c9::16) To JH0PR01MB5779.apcprd01.prod.exchangelabs.com
+ (2603:1096:990:49::9)
+X-Microsoft-Original-Message-ID:
+ <40dd25b9-2b80-462a-9be1-b8daaf4dba30@hotmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -99,76 +101,256 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|IA1PR12MB6163:EE_
-X-MS-Office365-Filtering-Correlation-Id: 494ed551-41f5-4012-f96c-08df43e45130
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
+X-MS-TrafficTypeDiagnostic: JH0PR01MB5779:EE_|TYNPR01MB8269:EE_
+X-MS-Office365-Filtering-Correlation-Id: 061dd9bf-f5d9-4224-079d-08df43e47e47
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|1800799024|23010399003|10067099003|4143699003|11063799006|5023799004|56012099006|261021121427099003|261102123227099003|261009223027099003|18002099003|22082099003;
+	BCL:0;ARA:14566002|51005399006|8060799015|37011999003|12121999013|19110799012|41001999006|23021999003|15080799012|6090799003|5072599009|25010399006|4140399003|19101099003|440099028|4302099013|3412199025|1602099012|10035399007|40105399003;
 X-Microsoft-Antispam-Message-Info:
-	UswNyO0TWrhVVSZrXRyldPZ8MHgqicGHifVwzQfSSSNQysDyK3Hek5U+lKWIQy8H59DuY3JLWdWmfpeZmn+qJOGVq0mJEfU2fyMzObHhP+JnzbenbWoP3v7PBiEY13vlmKyjTHVBfN1zSVUj0ymmrMFnpGGrJUuYTLYzk4IJjasmCOwvOVGifFb6nwCo+NCO4imtzPaphG4xoEkf7zQgTEmHkVtXNM7riDrAQXmidtzmHIEEU3I+EDVQyxK45WYzPAhCXzgM5l2P/ym6E/+dcR7B7NLKFXC+X3grUNnwrbQ5N/QwSDow7G0N9FpPaKP6iCfs1cAtWQillJHGZwUlk63AXMjzkVI+SkocNKKpUWPLlPNbttQ9weggFMotvtPJSqbAF5xg1j31q5yzs/tNBw8Hto+YyKUy6u1OE3fcuAoycRMMgbJQrbmy8bJ44Yn7xvPJdBQUKhQ8AmmIun4mTLgagyN8OT8hHZV7xMYnHT+pdiOsERun/eHUTxba1mLL579wu7jvxBy4npi8kCYpo4YUWxYnXNaD8oQ1b14YdIQ66gMK7gR55AMWL9LKIWiNi3fKtrttqb0KyeadrUriksYPKxBhi+DJLB74skxPWUQrm/LrSXHwOalFjYPpg8GNJnQJKubzPSrx8MKAUIGjCIut73xXAeOgXBJF6dT3XG8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(23010399003)(10067099003)(4143699003)(11063799006)(5023799004)(56012099006)(261021121427099003)(261102123227099003)(261009223027099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	=?utf-8?B?ZzVrUHVWeVZnemFybTRpOENHdzY1azZ0R0lzckxvZm91UGhVdVJOb2NGU0Zi?=
+ =?utf-8?B?RGxLMmpDajB0aTlPY0QxSEMyaUZlR2FTYVlmZGJsQkxycnlaaWpUbkpxTVFk?=
+ =?utf-8?B?R0owcU9ZT0ZLVVFwQUs2VHdBN2VFUkVDcHFyT2xSMUFjcGN3QXhqektGTlZ0?=
+ =?utf-8?B?WEV4cnBRcjBwYVFBRmVoSnNvWktGbTlCbForckoxMGZRd01VK0VjTEFNeWZJ?=
+ =?utf-8?B?TGFIVlVoZ1FtNktZUnh5Q1VaWHhJcWplUDQyOUZBbzZrd3BBODVFNGd2dzg2?=
+ =?utf-8?B?bE0xTnB2eUthbTBrT1ZGRG9ib2UwajR1OE43cDJNRFMrVDNCRnNsS1RBandC?=
+ =?utf-8?B?NzFnR1A5dWlQQkNaVHFPY1JTWUJIUHZZMXVXK0dHNHZTVlNqY1J1aFhnMTdQ?=
+ =?utf-8?B?Y3M0VzY2VjdZdlIxVnJVUXpKSUtuRnJhY0Zhakp2dVRQa0QxSG9oN1RGSzNz?=
+ =?utf-8?B?eVIrUUlGMEo0UXI4U1B2VnpDQzRzbGd5dGFDWXZtQVpnK0tvVC9lcFEra1Nn?=
+ =?utf-8?B?ak5FeTc4bWVMNVhUVGNEcFBBcUpHL096NkFOQnRjUk1IRjNveW4zd1dTZkVo?=
+ =?utf-8?B?OWZuZ3l2OXhhVkFPampSaDlWUnZZdFJIQ2pzVlpWTG1JRldtbUJxMFJVWmVF?=
+ =?utf-8?B?SHMyL2dxajA0eFJyb2ZhQjNSMElOTlVReFpLSXpFRVFkTWdjdm9SVTVBTWtt?=
+ =?utf-8?B?cGFTM3lwc3pkL3RlLzViTk1qZUpJRTd6elNYcGVFczBWZXpVRDRtT3pnSHVa?=
+ =?utf-8?B?VC85RVBURjdyQm9uWWtGcm5aU3N5WFBXelZLRzhKbndDVUt6SmJPVHNUdWtM?=
+ =?utf-8?B?cUcwUEp5dTNQcEswcWhydTcwUE9yVVdXSFJlMkFEZ3VicVhITDl2aDAzQzR2?=
+ =?utf-8?B?a1lqK3A5aTFtZXUxN0ZHVUp1S3ZDN2hoaklOV09oVmNXL2JXT1ZtWk4rMm10?=
+ =?utf-8?B?S2JiRTg3TTl3Q2pTQkdoQzZIWVFHVEt0ZUF4MlkxZnN0YU5sTVZXeGRsclg5?=
+ =?utf-8?B?ckRFTitabk5lTVhwNVRsQjVubWZSN0dJbnZ2aUIrNDZMMmFtZjJjVXI5Q0Rz?=
+ =?utf-8?B?L29Ya2JHT3hLRzVSbTdVNVozOWlqVE5WaFhZRkwzdEsrSE9LWXUySTBYOVRx?=
+ =?utf-8?B?YVBnZGhJYkd3UVoxMG1WWGFTaDdHRC9mT29xTzBPNmJOOExVRDFLS1BGQlVx?=
+ =?utf-8?B?bmFkeVlqd1NJYjY3UENnekpmMXY0Z3pqd0J3NDdzeFdvL1BJM25HaGJWZXp6?=
+ =?utf-8?B?SG1nY0UzY1U5c0FTVHVhd2xpK0w3WXd4K0RYcXZkd1ZNZWRVaFJVMGszQTIv?=
+ =?utf-8?B?UWFvUnhkd3BESkxJZ1E2WVR1SHYzOTNRejZzeEx3TkM4WkY2RmVydjRzM1JF?=
+ =?utf-8?B?aVc1SmQ1WEZQNStWNUlkS2c4a0VWcVlVUWNXWHFTU0xjdHVRSEJjTWp4OHNV?=
+ =?utf-8?B?WTIzV21lNEJNZG9ldVNjUG5DbWtrL3NHM3VWOUF5UlM4ZG5scXJNWHVsUkdV?=
+ =?utf-8?Q?ejLpE0=3D?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?8PXq/Csg+DfDW0JS98mBPj4ssZWE92s70pNwiWaDuToXJ7bagEkZuRLzb/D2?=
- =?us-ascii?Q?1P+MPv5xFB5Z7IwmW5uCWzNW+gqVF7L4r8gJY+WwwqS8vhxmMMuBy3jhF9rc?=
- =?us-ascii?Q?B9ase4NUoN+z6AJg6S9WLE033peg7qnKbVRAWdwVwmxLCHu8W/gzUGhWNxxt?=
- =?us-ascii?Q?KSwpqgz053ehex58zh5UXqt7EYcqEhvOZbEkfPLyw/i4GObHo2QTNDFaQ8V4?=
- =?us-ascii?Q?Z61PP0PV2VFNRCXQs05ll+OXsnu9oL1Hks4xyIW9ZhPlj9TwU9RMDDOMKJ7T?=
- =?us-ascii?Q?72bAgy6dUZGQTcI6glNFSg7EV+OZfPfUn5+EQm09lElokcn0KvidGnJW7scH?=
- =?us-ascii?Q?DDNYJKRvyHWhPYpeJhcLQMfeOMrdW7nqPxm/BNQdvhvvG6S9IYGzOqfMYVMn?=
- =?us-ascii?Q?ZCQSueuZu3ryDFPOU7/2FUMW9pnU/KJPHt2XYpE/fw2UaY3ZXRG8CO9/6vF1?=
- =?us-ascii?Q?aeZ9P7ag7st1b9qiHy1Em0zS0Sgr7PDGENNHN0zQNkD1O4SNM6JMws8/N3++?=
- =?us-ascii?Q?i3UE+DPwEJrRrkPRfRN/hxd126I4NkWoMEotsZuAxgPwY7tGtj3HuVli3a8e?=
- =?us-ascii?Q?HyMYzX+Tk1Mh3qzgYRkcYkkvE84FywOOrf03mbVmjuKfHr4PlKwE42fxF3ul?=
- =?us-ascii?Q?K/bDvDauQZrU2hEvctNxfAfrQ5DoS0Nz4gdlLuFdj+UfP5Cpwr3OKd19kwUc?=
- =?us-ascii?Q?sSGdBR5qLfDZxj+gDkyPFGCGxbNY9CKOxwwH0x3v9/p88S9z7pwNAybW3BEn?=
- =?us-ascii?Q?GyLKyfcBpWSLD8UVxf8kF3ZLxdmIDjUSDXuuaHXFIiYI7ydk5L0GnEuhMulM?=
- =?us-ascii?Q?qw4Drt7GI5M3uzlNH/59k21Ok3UNlQi7Tb0rzfooMc1GuafujWLbttdA4s9u?=
- =?us-ascii?Q?Kn8uX5haDTDzR9uSMNB291syUSPqc5MQnCmzVb+YKH7nIdDm8giJ5unqoHd9?=
- =?us-ascii?Q?thAw18y/2FviKKS5+Ux0AMAREb9WtHiRsh+TQr33iD1cZKL49Xs+z4bdWglf?=
- =?us-ascii?Q?TC3UPMsKazPt8DskA3oplByna/GXSQqx2gcs5aGMgJbDj/KGDJOolqqkV8Ki?=
- =?us-ascii?Q?JOuGADaD+NoL5f61bdR9T1gJQRUn/qJH3a/PfZLIPvj4lcaiVjbgv455CmIG?=
- =?us-ascii?Q?0HE99X+cYj8HpoG1zqCrhyN8SeB7+XAN+xrH2BdfTSM5UqL10RlbVkeclA7p?=
- =?us-ascii?Q?tIz0x9GQZmUiMBlsJZKtFLaNSIHxylZfNBGX99UjwSdFxU2mD1lD14cD1ecu?=
- =?us-ascii?Q?O0BHs/G0ehErJwjJN7Bcmj9S0FW8KAERphtVVvkjIK1qr8apmMOfxIVoJu7p?=
- =?us-ascii?Q?xiwhu+3YF8BI55Ki5vSdVc1vKjVhAoSqUlZ+XD4q+0Kqa9HxGk97jN29BxGl?=
- =?us-ascii?Q?HKWAUoUSe7+mzQCpZeM+4rOyypKwvL1FvzHDXFRxs0FioWxQ8FIDI/sFTEIK?=
- =?us-ascii?Q?3zm9mOQSyYj8OPNQPwKDoXmi4qMtRDxZKjIinu2TcuhDKGpu3VuxpJ760Moc?=
- =?us-ascii?Q?6wBrKbX8YbSvlmUf1m0SP+U86xuA5Q208Iyi+Guz1XC50dehcWXcjP5jpk6x?=
- =?us-ascii?Q?1bN1ciFGyWh0NuRtAbvVHizeCHJ+x96vJEN97asF/pWE9xiwZpNBakAr3+Sc?=
- =?us-ascii?Q?MvzItLQnuh5VJwqVIQhEcfAvS4DsVcD3MPW13EhvFsgcQ2nzxLJZgBsl9IGE?=
- =?us-ascii?Q?gGmYw/s+Qh4BhuCZox7rYFfAAL6F7vBOxP4/GLgJaR8H/SDP?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 494ed551-41f5-4012-f96c-08df43e45130
-X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
+	=?utf-8?B?NE5lWVBFSlZxcG9ya2ZJanJ4Rk52YXVLWGhRcGxQL0ZPTU91dmFhdXdielBY?=
+ =?utf-8?B?MTlvNEg2cWI5N0ZDSHdoQXQ1U1Z0aUxzRUpVN29KQk9TeTBlM2t4dTU0Z0x3?=
+ =?utf-8?B?cmhTSzQ0T2FIM3pET3VFS0pTWnJ1Zi9ldmkrakRab1NKY25IMlNoRWZ6R2cx?=
+ =?utf-8?B?eUUzbEM0aC9taC9jV3NiS1BKYkVVbkJQZFVLQWFoMVpsSVk0MG5EU0tpRytT?=
+ =?utf-8?B?NlozYTZ4QUUyOHdTYlBUbWxKYlYzVTd1TVhjQWdoVlkwdGFwOXZXU0VTTlpv?=
+ =?utf-8?B?K3lQbkRKaDR5K1RxZlNZMlRqSTdXTU4xTmxlNmI2SllhQldkZ1IyMTBsUFF2?=
+ =?utf-8?B?UWxIaTAyTTFveVViSE8raTJGUE40eDRIR3o5UGdrSTc5Z2NKZGw4a1p3T1JS?=
+ =?utf-8?B?TVlwSXpSRVhLcXBpMGtQVmd3dGdFY1dack5ZeGN4RVJKVmwzNExPeFV3c3BC?=
+ =?utf-8?B?TW05Sm95OG02MklxUjBPNTJVZ3Y1ZktvbG81b2t6QUpZTHZHVkhaMnUyenlu?=
+ =?utf-8?B?U0VWTnBuL20xWW4zWXV0WXZWTjJ6eVgrM3kzQVBRUjBWV014VTFuTWxaMWdG?=
+ =?utf-8?B?ZE9jVi95VVMzT29IUWZzNzRVbDZueHp1VEl2UklYWFFJemhhNmxENWFUU3Iz?=
+ =?utf-8?B?bmdBcS91eWZpbGUwVktpUU9SZWNkOGhZYkh4MDZyTlVzUWdUR05KNkh5V1A1?=
+ =?utf-8?B?bTFVbDVXUU1xMDlBaVZJcG8wdXBBZ3h5Z3JOQXRwTDRraDJoY0VuRy91K0d2?=
+ =?utf-8?B?ZXhRWWIrYmVnRkVic1VKM0J3SjFVRTFnaTBxQ1BYVXJJbExCSWpKb21Pbjd0?=
+ =?utf-8?B?TUF5a3Y3aW9Xa2duTnNIQXIrZk9POS9ZeXdkVVZPVkJyZC9EaFZ4bVhkSnhE?=
+ =?utf-8?B?RElSNEJMaDBqcmRyRk9DVlg5SCs4UWtFSUh3Uko1NUY3U1lrNjR1MVdYSU1R?=
+ =?utf-8?B?NVpBZ3AweVB4cXRiSUFHd0NaaC9ncVR1Ym44SnY3UWFFSCtZN2x4ZWUwaXFX?=
+ =?utf-8?B?RmMyTk43WWRkNlJPY2JwSG1RWDdDdEZNWGRSdUZ0VWJSQTBPU1FsVnZ6RTdH?=
+ =?utf-8?B?ZEsrV1JwbmVFSHdmL0lZNUVQVllPTUdKNk91K2ZDbjRQYmVJdDdRYytyUzZl?=
+ =?utf-8?B?dzJvRWxKYjZEWUFtVmo5RU5Ga25zUWlLcTdlbkgzc3Jmc2g3OEtZNm51akpF?=
+ =?utf-8?B?OHpaSEdvVlJkdG44Qkt6SmphUDhEUHZpa3FyeU84c29mcm9DaVFFVVlCMmZG?=
+ =?utf-8?B?b282RmtIQkdvWXRRWllDaTNSQVFDSTcvMUJGdzZybUtON1JGOW1Cd24rRXlU?=
+ =?utf-8?B?N0g2Mk9ST0pYK05OM0RRaUJGbjZqWTZjUkdXRVIxU2M5Qk5WWnpVLzl3ZnpK?=
+ =?utf-8?B?Y2F6TXZMa3pNSWdqeEZjcFhMUStSSmJzempib1hLNlN1SUEvanBtdjJ1QlRa?=
+ =?utf-8?B?Z25FakJhRDladzYyaEZSbkdSVzkyLzYzVUFiUDJQa0g2TUZUd0U3a2xVcG9P?=
+ =?utf-8?B?N3BESDJiNnJQNS84WlRkVkVVWVhJVzV5WHU1MU91c2lTcEN2N08yNzZoenEz?=
+ =?utf-8?B?NjVUOStoMzRzYkRiSUFUdVpIclNMNmNqSFlhbFNXekFZNklqMG9GbkxSbUU0?=
+ =?utf-8?B?eG90N0hZb2RTVXYvQlNaa3ZXMXZvblRzaEhEY0xKbW1JTHplSDRrOW5XczQ5?=
+ =?utf-8?B?V1ZBeXkrdkthcng5YTVVdFZBWlc0dmhZZHh0dW1jbjdSbVIxWnRtbWR3RzJK?=
+ =?utf-8?B?clVHQis4SThlMUtmS2ZBcWlHbHJmNGM3cTBiOHRqU0QxWE5VMHJzakhoS3Fn?=
+ =?utf-8?B?ZEdyL1YvZlh6c0hNV2hvWENhUVlkZmNCUzBvRVh1QlJRWnFtZWlUSERYWHFa?=
+ =?utf-8?B?em5JTFQvUkYrRW9mZGZxa29laUhSdU9rdExkRzllYnJBTVZXMFBYL1BlRTZR?=
+ =?utf-8?Q?vO7wGVnEW6c70T1FGF6iJtCMBzmnTNIO?=
+X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-3e488.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: 061dd9bf-f5d9-4224-079d-08df43e47e47
+X-MS-Exchange-CrossTenant-AuthSource: JH0PR01MB5779.apcprd01.prod.exchangelabs.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Nov 2026 13:20:00.4562
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Nov 2026 13:21:17.2729
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: J1DK6F8IIbjP3UTB0P+UU/T1JfG2EqeiOjlQfydBctTIHq7uKnkHS3l5BdvO7Mom
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6163
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYNPR01MB8269
 
-On Mon, Nov 16, 2026 at 06:45:03PM +0530, Aneesh Kumar K.V wrote:
-
-> The complete CCA patch series adds the following files:
+On 2026/11/12 7:36, Ben Cressey wrote:
+> The <pci_dev> grammar shared by pci=resource_alignment=,
+> pci=disable_acs_redir= and pci=config_acs= names a device either by
+> address, with an optional path, or by ID. When one command line serves
+> more than one platform, neither form limits an entry to the intended
+> device: an address applies to whatever occupies it on each platform, and
+> an ID applies to every instance, such as all Downstream Ports of a
+> switch rather than the one that needs different ACS settings.
 > 
-> attestation.c  core.c  ctlv_attestation_pci_gen.c  ctlv_attestation_pci_gen.h  internal.h  Makefile  spdm.c
+> Accept pci:<vendor>:<device>[:<subvendor>:<subdevice>]@<path>, where
+> <path> is the address format, and match only when both halves match. An
+> entry written for one platform is then inert on another where that
+> address holds a different device. For example,
+> 
+>    pci=config_acs=xx111x1@pci:10b5:8749@0000:80:02.0/00.0/08.0
+> 
+> configures ACS on the Downstream Port at that path only if it is a
+> PEX 8749 port.
+> 
+> The path goes last since pci_dev_str_match_path() consumes up to the
+> next ';'. The IDs are compared first, and the path is parsed only for a
+> device that matches them. The <order>@ and <flags>@ prefixes of
+> resource_alignment and config_acs are stripped before
+> pci_dev_str_match() is called, so the callers are unchanged.
+> 
+> Suggested-by: Wei Wang <wei.w.wang@hotmail.com>
+> Signed-off-by: Ben Cressey <ben@cressey.dev>
+> ---
+> Changes in v2:
+> - Compare the IDs first and walk the path only for a device that matches
+>    them. An entry whose IDs do not match skips its path up to the next
+>    ';', so that later entries are still read. Thanks to Wei Wang for the
+>    review and the suggestion.
+>    https://lore.kernel.org/r/SI2PR01MB4393779B4E590C6D76FD12A3DC822@SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+> - A malformed path is now an error only for a device that matches the
+>    IDs. Any other device skips it.
+> - Rebase onto v7.4-rc1.
+> - Drop Anthony Vardaro's Reviewed-by, since the matching logic moved.
+> - Drop the Assisted-by tag. The notes below say how tools were used.
+> - Link to v1: https://lore.kernel.org/r/20260919-pci-idpath-selector-v1-1-5881de83f248@cressey.dev
+> 
+> The ID comparison is assigned to ret with the same lines as Wei Wang's
+> "[PATCH v10 3/6] PCI: Consolidate delimiter handling into
+> pci_dev_str_match()". The two conflict in that hunk, whichever is
+> applied second; on top of 3/6 the hunk is an 8-line insertion.
+> https://lore.kernel.org/r/SI2PR01MB4393A855D592C1F484DEF778DC832@SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+> 
+> Tested under QEMU (TCG). Each of the three options selected only the
+> intended one of several devices with the same ID, and a later entry
+> still applied after one that did not match. The two ACS options were
+> tested on Root Ports, since QEMU's switch ports have no ACS capability.
+> v2 has not been run on hardware; the test on two server models in v1's
+> notes was of v1.
+> 
+> An LLM wrote the patch, the changelog and these notes, wrote and ran
+> the QEMU test, and ran W=1 builds of drivers/pci/ for x86_64 and arm64.
+> ---
+>   Documentation/admin-guide/kernel-parameters.txt | 10 ++++++++-
+>   drivers/pci/pci.c                               | 28 +++++++++++++++++++------
+>   2 files changed, 31 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 0b3c140babd9..12b91186a1ec 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -5038,6 +5038,7 @@ Kernel parameters
+>   
+>   				[<domain>:]<bus>:<dev>.<func>[/<dev>.<func>]*
+>   				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+> +				pci:<vendor>:<device>[:<subvendor>:<subdevice>]@<path>
+>   
+>   				Note: the first format specifies a PCI
+>   				bus/device/function address which may change
+> @@ -5052,7 +5053,14 @@ Kernel parameters
+>   				renumbering issues).  The second format
+>   				selects devices using IDs from the
+>   				configuration space which may match multiple
+> -				devices in the system.
+> +				devices in the system.  The third format
+> +				combines the first two: the device must
+> +				match the IDs and also be at the address
+> +				given by <path>, which takes the first
+> +				format.  This allows an entry written for a
+> +				device on one system to have no effect on
+> +				another system where the same address is
+> +				occupied by a different device.
+>   
+>   		earlydump	dump PCI config space before the kernel
+>   				changes anything
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7c6f2aba8144..cd5b627da88d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -343,6 +343,7 @@ static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
+>    *
+>    *   [<domain>:]<bus>:<device>.<func>[/<device>.<func>]*
+>    *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+> + *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]@<path>
+>    *
+>    * The first format specifies a PCI bus/device/function address which
+>    * may change if new hardware is inserted, if motherboard firmware changes,
+> @@ -359,6 +360,12 @@ static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
+>    * legacy reasons and convenience so users don't have to specify
+>    * FFFFFFFFs on the command line.)
+>    *
+> + * The third format combines the first two: the device must match the IDs
+> + * and also be at the address given by <path>, which takes the first
+> + * format.  This allows a parameter written for a device at a known
+> + * address on one system to have no effect on another system where that
+> + * address is occupied by a different device.
+> + *
+>    * Returns 1 if the string matches the device, 0 if it does not and
+>    * a negative error code if the string cannot be parsed.
+>    */
+> @@ -385,12 +392,21 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+>   
+>   		p += count;
+>   
+> -		if ((!vendor || vendor == dev->vendor) &&
+> -		    (!device || device == dev->device) &&
+> -		    (!subsystem_vendor ||
+> -			    subsystem_vendor == dev->subsystem_vendor) &&
+> -		    (!subsystem_device ||
+> -			    subsystem_device == dev->subsystem_device))
+> +		ret = (!vendor || vendor == dev->vendor) &&
+> +		      (!device || device == dev->device) &&
+> +		      (!subsystem_vendor ||
+> +		       subsystem_vendor == dev->subsystem_vendor) &&
+> +		      (!subsystem_device ||
+> +		       subsystem_device == dev->subsystem_device);
+> +
+> +		/* Third format: the device must also be at <path> */
+> +		if (ret && *p == '@')
+> +			ret = pci_dev_str_match_path(dev, p + 1, &p);
+> +		else if (*p == '@')
+> +			p = strchrnul(p, ';');
+> +		if (ret < 0)
+> +			return ret;
+> +		if (ret)
+>   			goto found;
 
-Why would any of this go under drivers/pci ?
+Nit: I think this is more readable with a single '@' check:
 
-The whole point here is to make an 'attestation subsystem', so that
-all belongs under
+                 /* Third format: the device must also be at <path> */
+                 if (*p == '@') {
+                         if (ret) {
+                                 ret = pci_dev_str_match_path(dev, p + 1, &p);
+                                 if (ret < 0)
+                                         return ret;
+                         } else {
+                                 /* IDs don't match: skip <path> without parsing it */
+                                 p = strchrnul(p, ';');
+                         }
+                 }
 
-  drivers/attestation/ 
+                 if (ret)
+                         goto found;
 
-Send a series to move tsm-report.c and tsm-mr.c to drivers/attestation
-to kick it off.
+Either way:
+Reviewed-by: Wei Wang <wei.w.wang@hotmail.com>
 
-Then we can extract the AMD and Intel drivers
 
-Jason
+>   	} else {
+>   		/*
+> 
+> ---
+> base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+> change-id: 20260919-pci-idpath-selector-2847a8afe92c
+
+
+
+
+
