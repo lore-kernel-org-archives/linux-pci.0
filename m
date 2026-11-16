@@ -1,114 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=217.140.110.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794849175;
-	b=Q8+QdB+MpPfj5N+BOSmVtx6vl90r3tcJib/e/yAVRiFC3SL+JJhco0Y9F65zNKGa2SuO
-	 GS1ADb47bSklBuQyv2Dijq3Iu3GYz72GpxcL6eBmV26j+Uzyr39JYNPcrX1IVn8JVroOd
-	 71ErAgpwbX/nhPKcvTM3ccWozkcR8glm1df/zNWVwiS0Jh6zP0IlIDg2DAXm8gl566lka
-	 NB+FYo1OS51I0AwgwmSPsYzrseYS5d3V844Oz1PWKe2DdyJ6byWCdUiTfj7oqSIv+CZ54
-	 6N3xYZxQJ4U0jgoVHSLqURdrXVVCzcILCtGMWJ69YmW1I0ZzuCGJE3a2uBpheixKryw==
+	t=1794849251;
+	b=e4rurydjca4ohEAOuRhjsBqf3Laihd+G++1rlFP4Z5mHVNRsTSbls8l/Ca0SfDAtFJrM
+	 nElpX/yUjYb5e0xmmw4h0c9lBUR4nVk/FX5SKufy5dFsLqhv4gkrpyfHEaE3DBE9ZOhXv
+	 VHZkOwH24WPz6+UYF/YxVc4sEwpCUirK3P0FIfs6094LBE7tgUlOsL+oC20QFwy0cX28q
+	 bx796WC/l8cQbdGh2X/Rh2PRP2xW6iPed63wvjw1cZdpvgabPBJ2zDhZnSDhLy3F4GAMx
+	 gKOOL2HiV7goCxra7LGP3zFnbaXsF79oRVf8JGGfoCIevU+eNCj0zW8llc+cd9ursHQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794849175;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=ND6MCiJs7gVtLtVEYGeGji4z+whT+xiFpU4NkGoFN1U=;
-	b=RLG4c02m0TWzsnHwjhwghxAReigVdxJZNrEKgVzyDokeDDSNh53nNFiSQTAe/LKGRsIA
-	 g54iWz2OJ/x6XjY1hFzL1Yu3HVHggaBIUZJiii+u6VK7kgUMHL+o4nGS123zK7jBPDCF2
-	 jWTUGb9rMdinEDPyQqdWqmIoySiClYBjkD53m8xvKng27hsSsZlItJ8fBfdMzNtifo2pN
-	 HxT5zc8cxYD+3VUffAvsu3J2dl7m9um/JpLkUbDj9da/N1GCGHw1i42XeXhOq8a4YsJwa
-	 RPX056uyrs8fWHue5LScTkHmUoGiTP8N9CXYxLPnD/93blBq9vGBqwsIZRXINP2uPuQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794849251;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=oD6xjLGP1p1QO/KyzSmaklpRQQCQt5kNwZ1vxWq45Wo=;
+	b=4Pc+qsfGngv9X4UvHXQ9Mihlystl5siIzCPUaeCr3bRZlpukHKu0h0IQ+3bv2IWPSiiW
+	 H7rUZToK9ymVMJpapjbIrl29Id1wCN9xFADGEsw9Q8AmqVZo9RIu0ieE2iU+2F/Kx1gnM
+	 xk/sVaoTVveE+zIM0lI+w7rxLWzNbICnCdrRo32P6KrfZbO8Ff86ox9nnt9dk+Tvj64Qj
+	 n5zDwexF3Hb9rxgWiqvosE4CAUnjGa2Dv2rsRd2k0GG+G5uDQhYIWgUjgbNpHN8DiBTP5
+	 Bua/xFK3mE2kNd6yqDeTRypWk2Os+VfXAhfqCsUa0B88hJeIF1RtBzkwoeR3zeNPETQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=F4c357ey;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=D3Fk5c7l;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F48606A339
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 17:12:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 94F48606A339
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	dmarc=pass header.from=arm.com;
+	spf=pass smtp.mailfrom=arm.com;
+	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=t766+NIJ;
+	arc=none smtp.remote-ip=217.140.110.172
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 194FA606A322;
+	Mon, 16 Nov 2026 17:14:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 194FA606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=F4c357ey;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=D3Fk5c7l
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794849170;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ND6MCiJs7gVtLtVEYGeGji4z+whT+xiFpU4NkGoFN1U=;
-	b=F4c357eyZMyXP/UMEu653zKsFyb8PybU1JnViyC9CC0D0jqdcFEKBW9pWnG4OjCwgBvbbY
-	iJ7Pi9KctpCk4YseCv2zye82vspsvy65r076yFMjfB6eRT1zM4Psgy9uNt9SmJfyGaZQ3z
-	TIjlWlq7MZ5t/xBGEgPDZLOaA6MHLdQ=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-10-LYl3630VNBGcUUQ5GulKuA-1; Mon, 16 Nov 2026 12:12:48 -0500
-X-MC-Unique: LYl3630VNBGcUUQ5GulKuA-1
-X-Mimecast-MFC-AGG-ID: LYl3630VNBGcUUQ5GulKuA_1794849167
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4ba078abd78so22769825e9.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 09:12:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794849167; x=1795453967; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ND6MCiJs7gVtLtVEYGeGji4z+whT+xiFpU4NkGoFN1U=;
-        b=D3Fk5c7l6VjK/qUkqONm/a+t4xd5potOFEOUoLKPIiy7eyVMImHaiKaXITcScN+7/Q
-         vTQ5GFsHjY0zZG+X568mauTZbf44Bqjy+yx4m6auYW/uQAqf5hKEsujKhA99mwhymodq
-         96zOTX7AoOKDjBeq/u/a1EkfzsLOYVZU9LYu+zqzOD1qBJa+QMHmNfZfGAQZ0yvBJg7+
-         rOcojbfBOXwz45V0lka0TfyOTPSDnioM8B1vR6ENT4wdsS5CchYcQV2BW12ka0B9IfpW
-         KCU+YqZq0azWuY0YHsWFOf6kmnpc/thByH3t+UIKLBP8C/VOLS8ynGoGmwhlHRTPBUy1
-         +zUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794849167; x=1795453967;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ND6MCiJs7gVtLtVEYGeGji4z+whT+xiFpU4NkGoFN1U=;
-        b=YIcXyCL2pilZW3pT/sOtFiuyhLJCmxHjq0351cMLo1MAsckAjzIWVikKDdHjkF5loa
-         TB4kVGGsvL7JRN802AKlUhmCIELe+Mk5R5KI3K4za5FK6VFKkB+kyt9WKcY403llqE1n
-         K5WR6LeBvl8YBVqfF4AXdlcjgww/OGW+t8DTOXnsP6qNfZONIow72hhWACBWcigmv1Zq
-         RFuO7thn9ENawWjHUUBhdB/30+UdR8Eane0O2sRryJpn0KMZLKvjseqEb2OMH4kaFScY
-         qcIAOaumHGjOWIWgld9jOAyQTptDDf9sf8RMaNbGpSWzAJJAnX4ERcrBmSWoXBr6ZWNQ
-         ISXA==
-X-Forwarded-Encrypted: i=1; AL+hErEQHqL8o9+cUldCu1ScJWX72Er2vzl69s7F4B2WdRqX1MyCkUQH0jpWFXO6JzWMacC68k9iRIGF5DE=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/f+6FETl24KzoN6nOlMfdfDxr+HxqMgnIFy8BvPSuuEn9XeIzR
-	8KD2gIyJo/qz4vVhpCeuO1ed10R4nREHrHjBFoibCdjQfih0iDzJvHXrszUoOMhcBqjztegABj4
-	b6KoCCuMs9athp2fPPEttXmAEmcFDWgiVM5EkVdCntkQGN8AhxMnWOBJ3BRmP1Q==
-X-Gm-Gg: AYBFou0MQDka/4Y/royW/W9IIAJs/yo7Mijkh4ftQWqs7IgGk333/UFygX8Fq6AeJ3j
-	If9Ch1xyAvw9bRgdfi9tKnHMHFwRz5O7B8ytId29AmC+8pr9FINYJ2qJbx/b+OH1aWzJJkKPam1
-	WvlE90484xPnG76y1t1oCK4730zeawlycqlsClHPWeMwqqd4DsF8l3cvOXx2Cw6vcLFi37jF7rz
-	SJ8CPNwsFdw9QJI/+5aBTbqntisqmlvndqq+EFAW7QYG4+lcsYg5FbJ41nX90IgbdSUPWyuif/B
-	3NUUEnjrxL56T0g3vZTdqrNKnb2UpZlfMiwaBqqJvHm3YJSHT0n7CY5NMxTPdeDa3a55YRx5b1T
-	Zg2Fv3KyU+EY8ojt1rrLc3T6vLAhTHQRBT5gRHiI6DA==
-X-Received: by 2002:a05:600c:e555:20b0:4ba:761:97a1 with SMTP id 5b1f17b1804b1-4bb55a50f1cmr158546535e9.14.1794849167278;
-        Mon, 16 Nov 2026 09:12:47 -0800 (PST)
-X-Received: by 2002:a05:600c:e555:20b0:4ba:761:97a1 with SMTP id 5b1f17b1804b1-4bb55a50f1cmr158546165e9.14.1794849166849;
-        Mon, 16 Nov 2026 09:12:46 -0800 (PST)
-Received: from redhat.com ([2a0d:6fc0:151e:a200:7a96:1b15:81f:ebed])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb7813fa23sm7270025e9.2.2026.11.16.09.12.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 09:12:45 -0800 (PST)
-Date: Mon, 16 Nov 2026 12:12:43 -0500
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Sebastian Ott <seott@redhat.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Igor Mammedov <imammedo@redhat.com>,
-	Fiona Ebner <f.ebner@proxmox.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC] Unrevert "PCI: acpiphp: Reassign resources on bridge if
- necessary"
-Message-ID: <20261116121123-mutt-send-email-mst@kernel.org>
-References: <c7f58d1f-3dd6-1456-31bf-7b62641c6e5c@redhat.com>
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=t766+NIJ
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 114891476;
+	Mon, 16 Nov 2026 09:14:05 -0800 (PST)
+Received: from [10.2.212.23] (e121345-lin.cambridge.arm.com [10.2.212.23])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3AADC3F632;
+	Mon, 16 Nov 2026 09:14:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
+	t=1794849248; bh=Y/LDVkPRdojFVdWdZuy7hYb3sZ13M4Qo5KKpMgZclts=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=t766+NIJWk5CeADE62+AhYQCjogseUG8qdQVHJYyj6KD3epFwb8pvhsiozOg7ow0G
+	 5dFAk4nz9rFqs7YbyhEGy+PpBCzFEWertlgn27JbNZYVynM8CKOlSXtLGr+b5sU4x6
+	 ZROeUlBRlr3SWPygTZwemQ1XL0y6Vhs3ScVuxo6U=
+Message-ID: <b4c2538f-8021-4abc-be2e-fcd1596f84ca@arm.com>
+Date: Mon, 16 Nov 2026 17:13:59 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -118,53 +53,194 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c7f58d1f-3dd6-1456-31bf-7b62641c6e5c@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
+ Heiner Kallweit <hkallweit1@gmail.com>, Russell King
+ <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Johannes Berg <johannes@sipsolutions.net>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
+ <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>, Lu Baolu <baolu.lu@linux.intel.com>,
+ Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+ Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Nipun Gupta <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
+ Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+ linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+ linux-input@vger.kernel.org, netdev@vger.kernel.org,
+ linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, iommu@lists.linux.dev,
+ Jason Gunthorpe <jgg@ziepe.ca>
+References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
+ <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com> <20261110122237.GG8635@unreal>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <20261110122237.GG8635@unreal>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Nov 16, 2026 at 05:52:23PM +0100, Sebastian Ott wrote:
-> Hej Folks,
+On 10/11/2026 12:22 pm, Leon Romanovsky wrote:
+> On Mon, Nov 09, 2026 at 01:53:02PM +0000, Robin Murphy wrote:
+>> On 09/11/2026 7:33 am, Leon Romanovsky wrote:
+>> [...]
+>>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+>>> index b486b8bbd1fcd..8be2a246d4903 100644
+>>> --- a/drivers/iommu/iommu.c
+>>> +++ b/drivers/iommu/iommu.c
+>>> @@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
+>>>    static int iommu_get_default_domain_type(struct iommu_group *group,
+>>>    					 int target_type)
+>>>    {
+>>> -	struct device *untrusted = NULL;
+>>> +	struct device *restricted = NULL;
+>>>    	struct group_device *gdev;
+>>>    	int driver_type = 0;
+>>> @@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
+>>>    		driver_type = iommu_get_def_domain_type(group, gdev->dev,
+>>>    							driver_type);
+>>> -		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
+>>> +		if (dev_is_pci(gdev->dev) &&
+>>> +		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
+>>
+>> I think this should be the generic device_is_adversarial(gdev->dev) now - in
+>> fact probably all the dev_is_pci()/to_pci_dev() stanzas aren't conceptually
+>> PCI-specific, just an artefact of the current "untrusted" flag being so.
 > 
-> using ACPI PCI hotplug with qemu on ARM for a device with a
-> BAR > 2M fails because of a resource allocation failure in the
-> guest kernel.
+> I wanted to do the same, but iommu_get_default_domain_type() may be called
+> before the PCI device's trust level has been set. At that point, we are
+> still in "disabled" mode, whereas device_is_adversarial() checks for
+> "adversarial" mode.
 > 
-> Without ACPI hotplug the same usecase works because the native
-> PCIe hotplug controller would increase the resource window of
-> the parent PCI bus.
+> The below is from AI, I asked to present me the path for that:
+> --------------------------------------------------------------------------------
+> For a newly discovered PCI device with an available IOMMU and a new IOMMU group:
+> pci_scan_single_device()
+>    pci_device_add()
+>      device_add()
+>        bus_notify(dev, BUS_NOTIFY_ADD_DEVICE)
+>          blocking_notifier_call_chain()
+>            notifier_call_chain()
+>              iommu_bus_notifier()
+>                iommu_probe_device(dev)
+>                  __iommu_probe_device(dev, NULL)
+>                    iommu_setup_default_domain(group, 0)
+>                      iommu_get_default_domain_type(group, 0)
 > 
-> X86 shows the same behavior but default resource window sizes
-> are different and qemu can use ACPI DSM #5 to hint the guest
-> to keep larger (predefined) resource windows.
+> For a device whose initial policy is adversary, its state during that call is:
+> dev->trust_policy          = DEVICE_TRUST_POLICY_ADVERSARY
+> dev->trust_level           = DEVICE_TRUST_DISABLED
+> dev->trust_committed_level = DEVICE_TRUST_DISABLED
+> dev->driver               = NULL
 > 
-> Efforts to adapt that behavior in qemu on ARM failed [1]
-> because they've caused regressions elsewhere and maintainers
-> thought that Linux hotplug controller should be changed.
+> device_is_adversarial(dev) = false
 > 
-> But this also has been tried before:
-> 40613da52b13 ("PCI: acpiphp: Reassign resources on bridge if necessary")
-> 
-> Unfortunately that led to regressions as well [2] and the patch was
-> reverted:
-> 5df12742b7e3 ("Revert "PCI: acpiphp: Reassign resources on bridge if necessary"")
-> 
-> I've tried the reproducer mentioned in [2] using recent kernels for a
-> couple 1000 times and didn't ran into issues.
-> 
-> Could we give this patch another shot? Or does someone have another idea
-> on how to make ACPI PCI hotplug work with large BARs without breaking
-> something else.
-> 
-> [1] https://lore.kernel.org/qemu-arm/0de640a2-8807-69cf-4429-672263e3e759@redhat.com/
-> [2]
-> https://lore.kernel.org/all/9eb669c0-d8f2-431d-a700-6da13053ae54@proxmox.com/
-> 
-> Thanks,
-> Sebastian
+> The active level changes later, during binding:
+> really_probe()
+>    device_trust_prepare()
+>      __device_trust_prepare()
+>        WRITE_ONCE(dev->trust_level, DEVICE_TRUST_ADVERSARY)
+>    dev->bus->dma_configure()
+>    call_driver_probe()
 
-Why would trying the same thing again lead to a different outcome?
-At a minimum, I'd expect an explanation what changed.
+OK, that seems less than ideal. Feels like it would be better if bus 
+code set the initial device state prior to device_add, so then it only 
+ever changes later as a result of an explicit attestation/acceptance 
+process. If the initial IOMMU probe still has to poke into bus-specific 
+code to avoid always making a worst-case assumption, doesn't that rather 
+defeat the point of having a generic abstraction?
 
--- 
-MST
+Even with the slightly dubious argument that this series only intends to 
+shuffle the existing PCI code around rather than fully introduce the 
+generic abstraction that it claims to, if the PCI behaviour is still 
+just based on propagating the internal "untrusted" flag plus the new 
+global override, both of which *are* known at add_device time into the 
+common trust state, then there seems little excuse for not doing that 
+up-front so that the new API *can* just work as expected.
 
+>>
+>>>    			/*
+>>> -			 * No ARM32 using systems will set untrusted, it cannot
+>>> -			 * work.
+>>> +			 * No ARM32 using systems select a restricted trust
+>>> +			 * policy; it cannot work.
+>>>    			 */
+>>>    			if (WARN_ON(IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU)))
+>>>    				return -1;
+>>> -			untrusted = gdev->dev;
+>>> +			restricted = gdev->dev;
+>>>    		}
+>>>    	}
+>> [...]
+>>> @@ -616,6 +608,28 @@ static inline struct pci_dev *to_pci_dev(const struct device *dev)
+>>>    {
+>>>    	return container_of(dev, struct pci_dev, dev);
+>>>    }
+>>> +
+>>> +static inline bool
+>>> +pci_dev_default_is_restricted(const struct pci_dev *pdev)
+>>> +{
+>>> +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
+>>> +
+>>> +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
+>>> +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
+>>> +}
+>>
+>> Unless I've wildly misunderstood, I'm not sure this is right - if the user
+>> has set DEVICE_TRUST_POLICY_DISABLED to explicitly override the bus-default
+>> behaviour, but that leads to the IOMMU layer special-casing all PCI devices
+>> as adversarial and thus force-*enabling* all their trust-model restrictions,
+>> isn't that pretty much the complete opposite of what was asked for?
+> 
+> We have two levels: policy - that describes the default of all devices
+> for that bus. level - actual decision on how that device is going to be
+> operated.
+> 
+> "Disabled" prevents driver probing until the device is authorized,
+> "Adversary" permits probing and requests the available protections
+> for operating an untrusted device.
+> 
+> Both need conservative initial IOMMU setup: a disabled device may later
+> be authorized as adversary, and authorization does not rebuild its IOMMU
+> domain.
+
+Urgh, I can be absolutely certain I'm not the only one who is going to 
+be confused this way... I see "disabled" and instinctively take it to 
+mean disabling the device_trust *mechanism*, as the logical thing that 
+people will reach for in terms of "I don't care what this new thing is, 
+just get it out of my way and let my drivers work like they always used 
+to; I want to disable the new thing."
+
+ From there it then also makes perfect self-consistent sense that 
+"device_trust=full" would be the opposite end of the scale as in "Apply 
+the explicit trust model 'fully', to all devices regardless of their 
+bus-level default."
+
+Now I guess you could name it something like 
+"device.default_trust_level" to attempt to make it clearer that it 
+represents a value the value represents the "trust" *of* each individual 
+device itself, but TBH it's still liable to look backwards to many users 
+- similarly it's hard to guess that FOO_POLICY_DISABLED might mean 
+something entirely different from "don't enforce the policy for FOO.", 
+thus rather than try to contort the naming of everything, I'd still be 
+much more inclined to just flip the meanings to be more intuitive from 
+the outsider perspective.
+
+Say you upgrade your kernel and find your boot is broken because it now 
+flibbles, but at least there is a "flibble" parameter whose values are 
+"disabled", "wibble" and "frobble". Are you really going to spend time 
+straight off reading up on what flibbling is to understand what wibbles 
+and frobbles mean? Or is your instinct just going to be to try the 
+seemingly obvious way of disabling flibbling, and then getting 
+positively annoyed if that only makes it flibble harder?
+
+Robin.
