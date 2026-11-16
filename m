@@ -1,101 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.41
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794866906;
-	b=TbLoNl+ZSdd6z/3VXfOiJVgj5+RL+np9GBtL397GfgIYScnMjuXXjzKBf9OnqrkQa8MO
-	 h7kJud/86foPO7Nm/WACSHm2API/CD7BSg11u6JuH0fsOJ8WVjyCe/qyms1I4/aK05zX9
-	 K9SdkIqKfw+ANOPf8+p10tLLEJo3fKn7MbnVva6cBKDDHFTrA03u7lydhLbOZqvrf3Kpm
-	 GIzyZZGclwO/a9EoR88/wtF89NwqQO8LRLU1chDtg5jQvwzsn9Lpy4ah9m9D2pDzEIv+H
-	 I1aD8gYyxLS+TRPlF/eBYynfGU2t8znJXRqve0rBDyFmtasJV0mrcYKoOjWEoQi2Mpg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794866906;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=i+u549PmYZsY6qpU+DC+SKjR1dv37zUfAcYaMhaiLBo=;
-	b=DlBf9W6nNQ/SITp7ikGOBqIKSXSsAH0J7zcp4/uI5USP+byif3Lq9sp3KJPL+3jWKX9u
-	 kCldp3Z58x8nLa7qvsvm4Sdb6I7Iut62V4GFtNX74T1DJIZSw/mo/f4RhD/Y6D4lyeByI
-	 jscwF38zwXEru2dVXWeC/B1xRi5hEivY0XLj8AxCOYTgim7+ORm9mI6wbLDNHYRfi48VR
-	 sOy+4nv2tj5wmTabWGEApJbFl9hrP7eEeb+6TlKggztvi/QZqYJs+evBJeYA3BfAliRe5
-	 XC/HNOFXwBiS45xXccbC8r3t/YsLWF9YJq2HJ4gFeolfNh//uG//NJH93gkSE6et4mg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=b7VDE0Lu;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.41
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.14
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794867083;
+	b=mvts2sOchJVCvN+DvzPZmXhwO4/K0e1UX71VPwSVB2hKILeWOuQL+6KfkrI+9+Y/en5M
+	 kqp8CEyVzozyaeQ3TzqRQtATAO2NqcVgFEmzwr9cvARscHlApVCvs4rhD2ZeB/wOD1Lwz
+	 cAKoZsyYYwNG8wL+pQSbMiTBzBOtNzkbCjZFraIJuRqAb1qAEeNlUnl0FeafZR8klXIs0
+	 XtRco8qGBDo0iE8HNhred+W8rWaQMFeh7/t/LwnJam+e/ypwJ1MP75SM2Dl3xPQXJn+3H
+	 PE/T6tjkk8lxl3lZbvY7VaPHtch4QS4WDx426j8UIdXD2P5HSq1sopzUaOGBaW17NSQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794867083;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
+	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
+	bh=Fo3ujoH6Oj/JIrJMyCN/iO32s/QLUquuvqXiBzy+HAg=;
+	b=e0bKSL764/DiDLtGVENqvqZ6iYtfgyN7aQZFINzyHe0r6pZ9odhXJ2MiZQJLOKgkI7nl
+	 NRzeBwdxgBN3U/6z3Hs9BX8TWKSvhVh0LA2g4BTyDvdSeFnnALf5qchQuZ07FRo6zVsL+
+	 Uf+6OpVjwfJ3qMjkbWhaLnwMoGdvv5+S/fLP0szF1sj/LQ9Z+RIHdEmRsXPC9nVx43x4L
+	 ipkBQakDstFvCzYS0qW1o3To5qfcuDW7jrsn3/lxaOSoA5Lq9q20naQVLskMa+pOgKz5q
+	 iaw8m2plV6r0iePp8mkdHCwG0fpLLd76Kk/2heFasKzZqQ7fbmFAcVjkRloBei0Swfg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=L1BPQ1TT;
+	arc=none smtp.remote-ip=192.198.163.14
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA885606A8A5
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 22:08:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BA885606A8A5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E7A7606A331;
+	Mon, 16 Nov 2026 22:11:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E7A7606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=b7VDE0Lu
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-c4cb6834eaaso203130966b.2
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 14:08:25 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794866904; cv=none;
-        d=google.com; s=arc-20260327;
-        b=j31dFIcx8BUzlrvs+llAtf2cu2UFT4lNWCuxSdYHswmKSynokKQOF9hI807v/gjK4Z
-         iuj3UqmTh6g/3JEzgSddKJehmIrH8+qyR+ecps68JKvSIeDmlenHypoRFXc18DZPp9B7
-         3oGamGa6Z+SVmm2Yq6CU3LLk9CuT83TFp2B/ukm2ubpGvFZLXEyLvmC7x0qySumsNjjy
-         8yHZQ1yTTYWtHgJg24KPSVTZ8Khk5QCOzjZYRf8CJrkig0uJ1VfRYATVJEWHV8cZJEIb
-         H9swx/8sS8ipgOtTvUMGTCDZLHEwm+N8RedPvony8kL1Z1UgqLelVlY2UwMdK+kzLdjT
-         f0pQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=i+u549PmYZsY6qpU+DC+SKjR1dv37zUfAcYaMhaiLBo=;
-        fh=3MnadVPnqv2R6obaim1Z88nRc4hC+c+yrqGOg1ts2SM=;
-        b=FVreYKsSICz2Nu8hCg07MQf9mirwIWwj5aAmmgsm6T8bJ1htlZVVqMWNgbW8wk3H6P
-         AaZTiTnbS8UA1baKo5TRjTNe9h3n0GE09guXxcQx71uO0D3UCnUGBxwbDoBLuSeuq5Zh
-         PLHHKq6mq8CdDYkCxwv24pNK6DpkT5MFuAG+83lOttbmlqIhN65TyHM+m1zlQasa2ALP
-         ckLbonO9n9ujEd2QKFehyAJ+fs53s/vyCamLyzpnK+M5YGeJww9n/PSS/icfl4wClMDt
-         xT5hxqII3qvLbreIL/5U0JayfYPYYUZTscaFCo97dmKnFqBm2OJ/qwLd8bvsLazfxkYL
-         qC8g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794866904; x=1795471704; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=i+u549PmYZsY6qpU+DC+SKjR1dv37zUfAcYaMhaiLBo=;
-        b=b7VDE0LuEhaO1BSmQTnRF8IniMQqmqJdY8HFEwCfDiQxfFIGgWy/2IDS+iesB/nESm
-         rZsekcxazK81N/3kmm02UV0+QQaJZj6bawX+4k6FVXdwh2+35D9hFnzquKg8S5a9CuRt
-         qobKUGwfylVwL44ug9AXkc0uyn2Y6HnUnhrRGusraHL26SydKKc7BB3/uA7SPfVZ7z6d
-         Ha0aMLXOIFHAkdpVusbBF1EZut80FQcg9lGyn99f4EUw/ZA//oyvDfPKYEmWtu0e4JG5
-         JkV12luzSnwI98fyT2j2uWljepSknzdmblXPRwUUx7Qud/3kZv9cY7FIK2hbt5Qm8L3D
-         Du2Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794866904; x=1795471704;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=i+u549PmYZsY6qpU+DC+SKjR1dv37zUfAcYaMhaiLBo=;
-        b=OmPAeVMZidmSnb5+wOlsuecXWFXaCtgqUFsxVAsjMX6mLwvkED2N+wSnYiTD05HmFB
-         VXtd03nPCMRmvvLIul83qHsYg9ESZqWrBveA5LSvssht9EeXMhCD7aTGZubPgR07o01k
-         6zIcU+VykDOfJunDWKCqtIPOl0OKhH28QLkxDJXwSdpL9/B2qtGj+5xsKjumnXIYEmPP
-         SbEY9Cwvs2Bj46u2KCV+1q+LFspfkdNxMoylp31edxhw+jTwK1gq8VlVMWVIGOtFl8o0
-         ZctN5p+bToQlWj+rtpN704BTZmHdu67eoxWNSSKveL0MpPnpN2tiXLiIAEf81lDjz6T7
-         B32Q==
-X-Forwarded-Encrypted: i=1; AL+hErE+8F4p4g39llsL6nN7HzkARrECXSyYbZh7pSiqib+n9e3JSas4hldd/9QNPC0VwkIL5+b9jkD5+FY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8A1MBU2SpJqx7bK2rFSss5r3vIUZDOS/HDYVC13pN40LLU6DKC
-	oz+/Ns6vqF48nkmylJutgI0JwJSmRY3s3jVUiJFe0yNo4p7MJXt5iyXPmCw0RcpkA3zUTJ7KeDg
-	l8Lxsz4CyWm2TC/2E1W7APyhxclveUHk=
-X-Gm-Gg: AYBFou3yipUyjFEglz0UhUXQaSwe0eIuzYwf9GVN7z9q/kz5m/VmjpRIrKuVDfRxNrd
-	+eJ3M4MQBFM7HjulSyArNBTa3K7d7sUbyqDvQixALT0zOPBsAvjRbuGO7oFwRztmWd8+UygtaAt
-	2Cgcpt6zLrEFfQMToX9T/YrFcc+rEm4/HT5EMhws2Nb7+ZxKCz7ykvYa9Bjme8K4Vp0kNQLwQQZ
-	OHXtCs0dW5u8mcKJF1A8X66gKWtd4XlZCtt+kRUgFn6MNwpaUryFZiFtAzt6tD2k9zw3yTrGEL3
-	OvekRm3hfEuqnbYTY8twsRS28BZNSd1hQkbajcmlJD22kK4OA618xa5JRpeVKvAlyLPbK8LlxQ2
-	bMw1+EZLs8ihCHIRDSoQinA17JHjV0t1UlnkhDlJGDvcQZx/i/NCLcMybtco6yjTS24HWHckC5H
-	Rm1M97Jxkd92UHskRogMfo63BT3StmO/6Wkz/uJLn53ni/M79U1qJWFZiCwqzCPp6ZmPE4XHEer
-	eySvvMX9dl5o+0b
-X-Received: by 2002:a17:907:d20:b0:c49:df95:fd0 with SMTP id
- a640c23a62f3a-c50963ffe1emr1036693366b.48.1794866904124; Mon, 16 Nov 2026
- 14:08:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=L1BPQ1TT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794867083; x=1826403083;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=3sHjWaedFUq6Hhd20VqomB0qhf6g4lXVGRkoydlRMLk=;
+  b=L1BPQ1TTtZPGZwjHTOxwJktoqYi9pPcEKeh8cTjxotKMANmy9DaC4TXX
+   pk2QnZShqrj4zn6VIjz4LrL21ABB1cXK355D3ozYdCAx2ias3T5aZ9r6R
+   RuDXmkh3f1+Y/7Jd1/kiulXkWT/H8XtRTDEqWprncq9JGAeS9uyHWV1cm
+   MEu2aJ3CbKq90uxDeqlIX4DV7IoDY8CZr/l4VIiuaCEHSA6Kx+WMbWltS
+   f4/wOO07HNl2kX+1bL+GVEhLK7jMmDpvWsaE4RflqqDhWIsXXa5meRtE1
+   ZImcUYmhVmXe6xSk0tv520UmOiRdHrAXNmZq6ZhXkoJgrxyGPAoJNxOkU
+   A==;
+X-CSE-ConnectionGUID: QsiM1QD0TNOOUaTav+VOyA==
+X-CSE-MsgGUID: xJ6QVNK1Ry2oNVL8pYC/Qw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11968"; a="3511348"
+X-IronPort-AV: E=Sophos;i="6.27,217,1787036400"; 
+   d="scan'208";a="3511348"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 14:11:22 -0800
+X-CSE-ConnectionGUID: wf5btbBWRESk5LR5yePfiA==
+X-CSE-MsgGUID: GlzEjufLTwe7mPppwTs3fQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,217,1787036400"; 
+   d="scan'208";a="9730092"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.151])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 14:11:19 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 17 Nov 2026 00:11:14 +0200 (EET)
+To: Magnus Lindholm <linmag7@gmail.com>
+cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
+    Rob Herring <robh@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
+    Richard Henderson <richard.henderson@linaro.org>, 
+    Matt Turner <mattst88@gmail.com>, linux-alpha@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 02/13] alpha/PCI: Convert to
+ pci_bus_size_and_assign_resources()
+In-Reply-To: <87011375-bec3-5c38-3a37-a43a1de93fa6@linux.intel.com>
+Message-ID: <f54a994b-d711-00f7-393c-1875eef773fc@linux.intel.com>
+References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com> <20261116152403.2672-3-ilpo.jarvinen@linux.intel.com> <CA+=Fv5SkcpskpFUCP-qDmP1vWqDiqO8FgSJJ92UvX6jGRfaGLQ@mail.gmail.com> <87011375-bec3-5c38-3a37-a43a1de93fa6@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,36 +84,128 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <9ed2d8fb-fad5-44b3-82a2-0021edb405f4@gmail.com> <avt-FbT69lemI4b0@wunner.de>
-In-Reply-To: <avt-FbT69lemI4b0@wunner.de>
-From: "Perlow, Jason" <jperlow@gmail.com>
-Date: Mon, 16 Nov 2026 17:08:11 -0500
-X-Gm-Features: AclHuK_ZNfer2RnVSrgjN_8SjUD6al7lDk9SqQU4Ps_4AtvEs8wiMTd_WnnN8Ls
-Message-ID: <CABZrw2EEDCg3CG_uF40Cgdwabc-xQNHMHjh_KtqpAV2wrp5F3Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI/portdrv: Do not advertise DPC on ports without an AER capability
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	Darshit Shah <darnshah@amazon.de>, 
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed; boundary="8323328-1372809281-1794867074=:1056"
 
->
->
-> DPC does not mandate AER support, so the condition in
-> get_port_device_capability (which you're changing) is correct whereas
-> the condition in dpc_probe() is wrong.  There's a patch pending which
-> removes it:
->
-> https://lore.kernel.org/r/2ce502e5caa57db01e0a7bbc781210b66b73bec8.1790531238.git.lukas@wunner.de/
->
-> I'll respin the patch shortly.  The patch is tagged for stable.
-> If you can't live with the error message until the patch gets
-> picked up by the kernel version you're using, replace the
-> -ENOTSUPP with -ENODEV to silence the error.
->
-> Thanks,
->
-> Lukas
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
+--8323328-1372809281-1794867074=:1056
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Thanks!
+On Mon, 16 Nov 2026, Ilpo J=C3=A4rvinen wrote:
+
+> On Mon, 16 Nov 2026, Magnus Lindholm wrote:
+> > On Mon, Nov 16, 2026 at 4:24=E2=80=AFPM Ilpo J=C3=A4rvinen
+> > <ilpo.jarvinen@linux.intel.com> wrote:
+> > >
+> > > To serialize bridge window sizing and resource assignment, PCI core
+> > > needs to hold locks across both phases. Alpha nautilus PCI code calls
+> > > pci_bus_size_bridges() and pci_bus_assign_resources() separately
+> > > because it needs to do special resource alignment and setup after the
+> > > window sizes have been calculated. At least the former would seem to
+> > > belong to some existing __weak pcibios_*() hook but the latter might
+> > > need yet another pcibios_*() hook just for this single use.
+> > >
+> > > The nautilus code runs during init, so nothing is likely to race with
+> > > it. Converting it is mainly about consolidating the sizing and
+> > > assignment entry points of PCI core, which eventually allows removing
+> > > pci_bus_assign_resources().
+> > >
+> > > Instead of trying to do a complex rework of the code, which is risky
+> > > without the ability to test on the hardware, simply convert
+> > > pci_bus_assign_resources() to pci_bus_size_and_assign_resources(). Th=
+is
+> > > adds a small bit of extra work by performing the sizing step again, b=
+ut
+> > > the calculations should yield the same sizes, so it seems safe
+> > >
+> >=20
+> > Agreed. By the second pass irongate_mem has been request_resource()d, s=
+o
+> > pbus_size_mem() skips it as assigned, and ioport_resource is never pick=
+ed
+> > as a window (find_bus_resource_of_type()). Only the AGP bridge's
+> > unassigned windows are sized again, from the same inputs.
+> >=20
+> > That does rely on the assigned check, though: if your follow-up series
+> > starts sizing assigned windows,
+>=20
+> Yes, it will start to do that then.
+>=20
+> > nautilus' relocated root window
+> > (size_windows =3D 1) must stay untouched by the second pass.
+>=20
+> If the same size is calculated (during init, I see no reason why the=20
+> sizing results would change), there should be no change even when it=20
+> starts to assign windows.
+>=20
+> I'm bit worried though when it comes to the extra alignment done by this=
+=20
+> nautilus code as that can change the size from the original but I don't=
+=20
+> think there is anything that would allow shrinking the window even with
+> that so it looks okay to me even after the upcoming series.
+>=20
+> But it might be easiest to just set IORESOURCE_PCI_FIXED flag after the=
+=20
+> resource has been added to the tree. That should keep the usual sizing=20
+> and assignment from touching it at all.
+
+For the record, I realized this won't be necessary because nothing in the=
+=20
+fitting and assignment algorithm can change the resource once it has been=
+=20
+assigned.
+
+All direct resource changes are (or should be) blocked for assigned=20
+resources to not corrupt the resource tree and root bus resources don't=20
+have bus->self so they never go into lists that need bus->self=20
+(add_list/realloc_head and the upcoming bridge_win_list).
+
+> > It builds at every patch for the generic and Nautilus configs. I have a
+> > UP1100 (Nautilus), but it doesn't start up at the moment; if I get it
+> > running again I'll give this a boot. But for the Alpha part of this ser=
+ies:
+>=20
+> Oh, that would potentially make it possible to actually try to refactor=
+=20
+> this to happen in pcibios_*() code, which I certainly dare not without=20
+> ability test the change.
+>=20
+> > Acked-by: Magnus Lindholm <linmag7@gmail.com>
+>=20
+> Thanks a lot for taking a look and all the insight, it's really=20
+> appreciated.
+>=20
+> > > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> > > ---
+> > >  arch/alpha/kernel/sys_nautilus.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys=
+_nautilus.c
+> > > index 13b79960b4b9..23a74fd4a83f 100644
+> > > --- a/arch/alpha/kernel/sys_nautilus.c
+> > > +++ b/arch/alpha/kernel/sys_nautilus.c
+> > > @@ -263,7 +263,7 @@ nautilus_init_pci(void)
+> > >         if ((IRONGATE0->dev_vendor >> 16) > 0x7006)     /* Albacore? =
+*/
+> > >                 IRONGATE0->pci_mem =3D pci_mem;
+> > >
+> > > -       pci_bus_assign_resources(bus);
+> > > +       pci_bus_size_and_assign_resources(bus);
+> > >         pci_bus_add_devices(bus);
+> > >  }
+> > >
+> > > --
+> > > 2.47.3
+> > >
+> >=20
+>=20
+>=20
+
+--=20
+ i.
+
+--8323328-1372809281-1794867074=:1056--
