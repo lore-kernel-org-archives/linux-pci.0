@@ -1,101 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794859781;
-	b=boCxzndX46J793khzY5h2uy29w0ojQNdbgPZyIHXrlpVpUnczvSnoA/sRDPKlzStgtOS
-	 OpeLBgCnpmW8ZEKIhof8/KbTwVT/lzqZKBCQgMwvi/CL1Uah81NzYKgZ+Qg1Nj7G05EfV
-	 LZOXTeh+NdKK5TPf96sWv/rtC9twQEz22F4rBLmUy0Whumscvy0GzYTTC0hxkLbFJt6yJ
-	 E703n+yREmSllfh0g416bkw9w4rHx9wBbpHU47AWlOpOuQLgO0sy5tzZyH3YU2nRroLFM
-	 nRxFTt+FDWrNztkNKE/fTJyu+WA/JJZQrSuhleNmEzo2ryH6XzL61Ru0bOMkv9I7vKw==
+	t=1794860131;
+	b=NGD+U4GKgMywUHn7NtrtJO/n+cYz2rna1NxuMhF07XtkopxxZfbqUW9fcKVgm6eDYCpG
+	 ZQ/9PXyTwCxPc0b3VUA8HMwNRO7PAtes4ilzpVy5fsZ8OgdE1XjwIXuMCPmSMZEk4/tlX
+	 KVZVLXwPGafhS749ha9JLQGmGB+WotHCiEQtXhyyNg+OGM/qhQlxzc36rKRBG3B2w/XR5
+	 7oPN3vOFxZGaVSqB2kZGXTecRwqHxjTAmJV7CIj2NZmHzLgZndLKltlf28vXrjna16TCT
+	 UQCeb/vAzaVCn/j+UzphMSCXy+BnUtmJMeA4VimJzzhHzmUf0gYsAFEJ8bLvUoFvXOA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794859781;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=wWKgu+mFgtlwrDE3M/qikiFkywyfILm386oFvXBqykM=;
-	b=EfjAguBtr6SBcT5zLVBtGnf8D/jozvXkIYT/zGErpytNNSdqYQjPWjewwPGUrKWFIUNS
-	 rPeCeECmazw7x0Hsw7BHstgkKE3uItTnZKdRfOhyKK1a7BnX7eZzjCjHH+bN1WSbaIm0C
-	 5SeRYA7brQ1BKoVyGblQbbBcIndsXlMfRJtnKZrroXtPfPpsiCqRGc94KxaA0q0MSA1ZC
-	 1yescZIF6xo7OhTZWdTAHI5ufFxPo83V0xyCcY6rW3TQRksrYzEdW7YimHtv0CGegaUv6
-	 FBPJOzZIDTN4gziJ3HBOWsYG6yhMH3M99uexNni7o6fT8u0MyPbwEniI4yIBMKzg6YA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794860131;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
+	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
+	bh=5DvBID7NhGtKnGppEI26jIaivJUl1a5YPN2oWeq8o7Y=;
+	b=ANydu6lQB6uiMaRXMqdbWgLUmz1zxTVKyZQr0Itytze9IDqIJhpUOp6IS8v7HV7K/B8g
+	 AQNEJY9ItzM6HbjG1nqWiLB4Ku+6DAAxypphFnKmJwfVvtpgGNStlL6riv4EWDo4yyHgF
+	 /OuRm4kda5OwHVh8VYnEWNpJjB+mWW/DOC9ABxEH5RsPOnAmqnvsjIaQH59PG5ydKFrtN
+	 svmIjgU5LIZA4LDpk49GlrLwebNqZeuHq/MRccxUd+DlNJUoulcfzesjX6ym44WCWcgE6
+	 Js8HBOihNxJhT5CsEWWqjvF0owo+A9bsd5GO3V82DM2hxIMlikRFfQSyc1Sx28qPRgA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="vI5o/umH";
-	arc=none smtp.remote-ip=74.125.82.178
-Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=XPTdIfq4;
+	arc=none smtp.remote-ip=192.198.163.14
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1062606A31C
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 20:09:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F1062606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C03BB606A32A;
+	Mon, 16 Nov 2026 20:15:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C03BB606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vI5o/umH
-Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-33fb4680717so10118387eec.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 12:09:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794859779; x=1795464579; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=wWKgu+mFgtlwrDE3M/qikiFkywyfILm386oFvXBqykM=;
-        b=vI5o/umH5Q4SNsvz7EoLsCg5rfgEIiTgcisAYDX2M+rHXRIOyYWUw84Cz7020VYJbA
-         e0GWk+Znh3Rgot5o/ByIoUqRM8XULzybHE8aF9R8aP1UzGHds2HNlph0X+fy8yn8wmo3
-         HWkGrRM5vmMWN1/RdZw4/pm1jSoIHdyW9FnKJa1fLkHrY2NjSRr35/aa8E5ZLqyCEgMS
-         PUpsyenaCMxWnnZG2ebtlp+7FazM8ylbg5xF4NdFnp7Zh1ffYsWvNh0xpeRZKg5rXzWC
-         qkDs9mtekGlB5TL3htqNsDIb7RfaD2X/YZJCvXB3JzxdlpV+2gRsoGpBOA43V9kwAzzb
-         xq+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794859779; x=1795464579;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=wWKgu+mFgtlwrDE3M/qikiFkywyfILm386oFvXBqykM=;
-        b=cnZKtbKP7nIlVNKj0PMEHirmU3XpZOGsi/gkuHzhxof0a/EObwl/Z7D8LZfXwyYOjT
-         HpBXJWyj9L2E0/puTxJeRi9Zej244Ly+r/pZqhZ9oaBTtjIqWoKi0Uj6rV5MZwHg5fV2
-         XeZhkouJro+K+eOOpC0/dKNWNXkz8ugyeZAHR/4rJ68tW4DaspKjd4QLRMdHXavoQN/Y
-         hNCabCrBaxIRNgyM6hQtW0mzvSXOC1MycR6n8HjTZWVeprJ9eBpOw2VPc9DSla4Yk4xE
-         l0mGZxO7+tLWKOc+WuYW2s/2RvzsfyorgOzhbmN4Rr/+PjpQcij7J/ZnT99GIGIKZRHW
-         K/QQ==
-X-Forwarded-Encrypted: i=1; AL+hErFYh8FlsncttGu1XIqYgRqDYtxljdX+A34jYl452k80R3eETx72WrKK/6lgh6WB1WOQA+3N8y8LmMA=@vger.kernel.org
-X-Gm-Message-State: APuU4Z//s54heFNQQq2PWF3t9v2xrfwG3HBy1ozWlSznAX0htvFMGIw8
-	wKMB9IuXuuShO0ncIrt1Fn9aFFESitUazcSmw3/R1yhvKW+cI57rxXqz
-X-Gm-Gg: AZFdTZeqQvIWjz4mV2d7BGIGg1Ez4Kk0fiB2uEmfYvwy1UkGF7Dvfcdre3/6hSEktHa
-	FHRLdcnd/YFJ4zG/cNrkgoakTruFeUTMlLrfdJNitJV/9teAk01Z17uMEchj8qNdBANQFIeZrqV
-	XxvjlfFCrW3SYg023Hz+e6XgObLvhFsuWchb8f3KpyDFqWEmtitcfeWPB68ufsq0fcA3A7R6ZEr
-	ukqk+ff0dJL1XGJMwgWvtIFCAzC59qWcDFun0dUX+0TdRXmAxKRd5QIxyuZiRZwOnuVcMDRTPmK
-	AcA4Rzr8cLXCW6Ga7774SDNpHpifkL00tuFXgCcjgHWM5jcruBdpDnFg6gZDjLvUykPnYXbfFfL
-	pMl3hlnEcjLiznheiiRU7EQQISJLZwLz3BLKMKN1dTgPpU4mg/EWm34Vvn1rglw+H9ak80XeFIl
-	1eieWAfgCizjwHngf8FE0OEPbsxu54Gc/OETvFRm6ez7dJNVXdI8av1KT4Yn5HCPCzY+0wOwV+F
-	9Kt6LIzyMwB6urseizZcoGtnsRUQBohLSLLnuIzxrZvOwbE7534+rqm0XMrPvmf991SyCoLsVy6
-	ZCu+MTx/NQqf4+FlBlIAW4qrq29QMYvAt1FhFdyXvlV2Vio9yxSyxWvLZWhaRL9FUqOfJiNVVxL
-	CfWlpmo3PFynkZwc6
-X-Received: by 2002:a05:7301:11b:b0:36d:2b50:4eb9 with SMTP id 5a478bee46e88-37967316395mr13071358eec.25.1794859778068;
-        Mon, 16 Nov 2026 12:09:38 -0800 (PST)
-Received: from hp-OMEN-Laptop-15-en0xxx.tailcef561.ts.net ([122.172.81.184])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-379563e6b6dsm66737021eec.21.2026.11.16.12.09.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 12:09:37 -0800 (PST)
-From: Jayaraj Devaraj <jayarajdmit@gmail.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Walmsley <pjw@kernel.org>,
-	Greentime Hu <greentime.hu@sifive.com>,
-	Samuel Holland <samuel.holland@sifive.com>,
-	Rob Herring <robh@kernel.org>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	linux-pci@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Jayaraj Devaraj <jayarajdmit@gmail.com>
-Subject: [PATCH] PCI: fu740: Disable pcie_aux clock if reset deassert fails
-Date: Tue, 17 Nov 2026 01:39:12 +0530
-Message-Id: <20261116200912.156500-1-jayarajdmit@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=XPTdIfq4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794860131; x=1826396131;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=AFl6AZiCWsMcaE/h4nmHNGw5H7f/Pg2F05REN8KucNM=;
+  b=XPTdIfq4qq7P/5aPFLi32HqsTC3c6UZgOb6urGlzZRxTDcXEWi0dajrj
+   J5HoNsOGViIcMBKTGWM6JmhdhztApmzZrGrpJ5kti5bsBTlPiPuBXXyis
+   yUamAdOzNipxZtRqYEgUyB/8EOVKGMiwEMePkIh4jyn/YyemXDG71ZCMX
+   LSaQj7tgemhVgvvOPKgf2A3C1zWECApIo+IcwvAIvfx96nr95Q+XoNiEl
+   9FO85RVk6U/q8RwV9yFVY+AJ9d+iqWHgyPDV5J7xdAYpnroGplSc6L9vV
+   nWStN/qW4nNbNKAgQBk2WkbrY7ufYhJ7yPGTdT+0fI0hCbtc5d1NM/CNx
+   g==;
+X-CSE-ConnectionGUID: IimUbBZ4Tzy6eJhFAIie+A==
+X-CSE-MsgGUID: jtjHAT7OT3uJXg7n1j3HDg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11968"; a="3502125"
+X-IronPort-AV: E=Sophos;i="6.27,217,1787036400"; 
+   d="scan'208";a="3502125"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 12:15:30 -0800
+X-CSE-ConnectionGUID: 9qreVo3QSFmJnnG7OpuSOQ==
+X-CSE-MsgGUID: kBFAzvJqQFGCI4YbBVWzXA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,217,1787036400"; 
+   d="scan'208";a="9468839"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.151])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 12:15:26 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 16 Nov 2026 22:15:23 +0200 (EET)
+To: Magnus Lindholm <linmag7@gmail.com>
+cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
+    Rob Herring <robh@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>, 
+    Richard Henderson <richard.henderson@linaro.org>, 
+    Matt Turner <mattst88@gmail.com>, linux-alpha@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 02/13] alpha/PCI: Convert to
+ pci_bus_size_and_assign_resources()
+In-Reply-To: <CA+=Fv5SkcpskpFUCP-qDmP1vWqDiqO8FgSJJ92UvX6jGRfaGLQ@mail.gmail.com>
+Message-ID: <87011375-bec3-5c38-3a37-a43a1de93fa6@linux.intel.com>
+References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com> <20261116152403.2672-3-ilpo.jarvinen@linux.intel.com> <CA+=Fv5SkcpskpFUCP-qDmP1vWqDiqO8FgSJJ92UvX6jGRfaGLQ@mail.gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,31 +84,104 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; boundary="8323328-737568478-1794860123=:1056"
 
-fu740_pcie_host_init() enables the pcie_aux clock and then returns
-without disabling it if reset_control_deassert() fails, leaving the
-clock enabled on the error path.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Disable the clock before returning the error.
+--8323328-737568478-1794860123=:1056
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Signed-off-by: Jayaraj Devaraj <jayarajdmit@gmail.com>
----
- drivers/pci/controller/dwc/pcie-fu740.c | 1 +
- 1 file changed, 1 insertion(+)
+On Mon, 16 Nov 2026, Magnus Lindholm wrote:
+> On Mon, Nov 16, 2026 at 4:24=E2=80=AFPM Ilpo J=C3=A4rvinen
+> <ilpo.jarvinen@linux.intel.com> wrote:
+> >
+> > To serialize bridge window sizing and resource assignment, PCI core
+> > needs to hold locks across both phases. Alpha nautilus PCI code calls
+> > pci_bus_size_bridges() and pci_bus_assign_resources() separately
+> > because it needs to do special resource alignment and setup after the
+> > window sizes have been calculated. At least the former would seem to
+> > belong to some existing __weak pcibios_*() hook but the latter might
+> > need yet another pcibios_*() hook just for this single use.
+> >
+> > The nautilus code runs during init, so nothing is likely to race with
+> > it. Converting it is mainly about consolidating the sizing and
+> > assignment entry points of PCI core, which eventually allows removing
+> > pci_bus_assign_resources().
+> >
+> > Instead of trying to do a complex rework of the code, which is risky
+> > without the ability to test on the hardware, simply convert
+> > pci_bus_assign_resources() to pci_bus_size_and_assign_resources(). This
+> > adds a small bit of extra work by performing the sizing step again, but
+> > the calculations should yield the same sizes, so it seems safe
+> >
+>=20
+> Agreed. By the second pass irongate_mem has been request_resource()d, so
+> pbus_size_mem() skips it as assigned, and ioport_resource is never picked
+> as a window (find_bus_resource_of_type()). Only the AGP bridge's
+> unassigned windows are sized again, from the same inputs.
+>=20
+> That does rely on the assigned check, though: if your follow-up series
+> starts sizing assigned windows,
 
-diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
-index 00ec69a09164..2355243da793 100644
---- a/drivers/pci/controller/dwc/pcie-fu740.c
-+++ b/drivers/pci/controller/dwc/pcie-fu740.c
-@@ -260,6 +260,7 @@ static int fu740_pcie_host_init(struct dw_pcie_rp *pp)
- 	ret = reset_control_deassert(afp->rst);
- 	if (ret) {
- 		dev_err(dev, "unable to deassert pcie_power_up_rst_n\n");
-+		clk_disable_unprepare(afp->pcie_aux);
- 		return ret;
- 	}
- 
--- 
-2.34.1
+Yes, it will start to do that then.
 
+> nautilus' relocated root window
+> (size_windows =3D 1) must stay untouched by the second pass.
+
+If the same size is calculated (during init, I see no reason why the=20
+sizing results would change), there should be no change even when it=20
+starts to assign windows.
+
+I'm bit worried though when it comes to the extra alignment done by this=20
+nautilus code as that can change the size from the original but I don't=20
+think there is anything that would allow shrinking the window even with
+that so it looks okay to me even after the upcoming series.
+
+But it might be easiest to just set IORESOURCE_PCI_FIXED flag after the=20
+resource has been added to the tree. That should keep the usual sizing=20
+and assignment from touching it at all.
+
+> It builds at every patch for the generic and Nautilus configs. I have a
+> UP1100 (Nautilus), but it doesn't start up at the moment; if I get it
+> running again I'll give this a boot. But for the Alpha part of this serie=
+s:
+
+Oh, that would potentially make it possible to actually try to refactor=20
+this to happen in pcibios_*() code, which I certainly dare not without=20
+ability test the change.
+
+> Acked-by: Magnus Lindholm <linmag7@gmail.com>
+
+Thanks a lot for taking a look and all the insight, it's really=20
+appreciated.
+
+> > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> > ---
+> >  arch/alpha/kernel/sys_nautilus.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_n=
+autilus.c
+> > index 13b79960b4b9..23a74fd4a83f 100644
+> > --- a/arch/alpha/kernel/sys_nautilus.c
+> > +++ b/arch/alpha/kernel/sys_nautilus.c
+> > @@ -263,7 +263,7 @@ nautilus_init_pci(void)
+> >         if ((IRONGATE0->dev_vendor >> 16) > 0x7006)     /* Albacore? */
+> >                 IRONGATE0->pci_mem =3D pci_mem;
+> >
+> > -       pci_bus_assign_resources(bus);
+> > +       pci_bus_size_and_assign_resources(bus);
+> >         pci_bus_add_devices(bus);
+> >  }
+> >
+> > --
+> > 2.47.3
+> >
+>=20
+
+--=20
+ i.
+
+--8323328-737568478-1794860123=:1056--
