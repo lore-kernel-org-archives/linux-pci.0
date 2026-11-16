@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794842953;
-	b=XiSNtJAAJU02J66UME885nLz2HaerktBNP1rqTtb7+n6CWkNMsM1vpw7g0ekCG8Z59dO
-	 4R85Z14gqiSSnEkNH6c3W/ajhmpjobb4epKSpJKdq2Dp+nY9pwElhcH/UCrnLISF7ANSN
-	 1bzexT9pT9+V/s3UrKiETs0cgA0WueEebMz5rqgwWP9qN3CwVeAf/xnq4esIC7pjWeVCf
-	 rSF78kATn/tvByZbXW25AdBcmFto46nMxoxUP30H26x+J6ni9cTcDQzjb/xAMs9v+kOHG
-	 SYXUciGxK+iSdiJs9LNozDO8wRj6r17thiW1zDQ5bO1d504sfX+qyPMRuCOZVyvB8Iw==
+	t=1794843016;
+	b=HZjITXGjGXfmPmcZARzyj64IuUqYc5O5X6b0ApSaLK8NMjrzOej7dXFKFhoLjwpabVgz
+	 1T7HQ0WYmUtJLXCe1pK8e+zGdylBPQAQ0JCL7d3cGKLiMxCIL7VdK2jqschl2rgmiXvXH
+	 eVR2ybMqboz0gc0H7c4Pc4fsB0XXkChvBcj2v99ppOWtmPddKGDaXAzpbyWf13PHbHeQ6
+	 0bwgid4HduhrzjcRZ/pCILM2V5WNkdcReXYWL0oJ2VDFqU60Jf3LDU7q6cem53Ot3Go/N
+	 7RCwbkW7bqdEdbGDBngINfh6gx5Ww97sHEAHDSrkb+8ewbHyr/zLL6y31nzESLnzdFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794842953;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794843016;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=7RVcy7n5tSjpgBaWfnfRw/WKmcUzznYWwN47iMlcxF4=;
-	b=TNCSK/frxY6hlp/GMVZRZulwGAKGYxGeL3Vg9+NUy1UXj+tbeJcW8aqtoKmjbB8Y+99w
-	 /QZnhlOjyj6tCGQKZ6TW/HFBJFst7IBKn/pFAxCtLuPH9nuJGI1IRi9nx8S9ZTUuCygYB
-	 2fNs14m8PrqIMVTICAk/dXdh1+yoKXsEdN1x+b9EwRttxaUKygaGHU09ssCBTCJp5P63v
-	 xmua8+SN5bJmLJ1YxUPWS2bpMvejmBMLtMwOCMfs4ZZIukW/UivB5Qn3jdZ82heAU9Hty
-	 qYdW1h05JS8eDJCJEPxmS0j9bCBll2NYgWrdESpEwBYGrWmRSXmJR2vDzf0xhVBqniw==
+	bh=2Sybz9AVNQ1D/Oos9+9vW6nYMotH2PQedAaODv8HPoo=;
+	b=rsrMRTSK7hELRuMxUPin8lVyqfh7tURZ3hnQgO1Ewnx398dHDrFyku2/5+bt2UMOYG4K
+	 FYYyFJnldhALmK5X+qBPadrMLppIDKGsNZ4HsKgld5MirraMBB4gJaweCNyl6uamzjwPj
+	 aImL8Pc8VEowucA46qW5cyx/ow+GBLRlVs4JWdC5qm+KQXNeKriWjcwBXCyni8hwyAbn+
+	 qKlPPSfUe8WSuN5cBWVWT4fbte4XUJpE5+71xXdJkDT0tE7R4NP8oZhHLzpkfxz4U9tUi
+	 jBJWgFoo55oxlkn2upRe9nCDVbOVjbOsgjrqd5kPMEJbiKJqp6c5tig5cChTRgA0JHg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="n/SoUugx";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d6EfJaCp;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBDE606A33A
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 15:29:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 804D7606A33B
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 15:30:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n/SoUugx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B3971F000C4;
-	Mon, 16 Nov 2026 15:29:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d6EfJaCp
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E67F41F000C4;
+	Mon, 16 Nov 2026 15:30:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794842953;
-	bh=7RVcy7n5tSjpgBaWfnfRw/WKmcUzznYWwN47iMlcxF4=;
+	s=k20260515; t=1794843016;
+	bh=2Sybz9AVNQ1D/Oos9+9vW6nYMotH2PQedAaODv8HPoo=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=n/SoUugxH/+/bxprE3oFdQsJURHskhlQJhpws7ZB8CevQYLg91FaaXGR70mf2HCxA
-	 9umx8nPivoTo+KArgI1ptDXo0MuhsdFQpcbQNZIcL+nlbZrnHJcGBwNwh9yWCA+Omh
-	 1clTIyFJPK/E91mXY51OFqAD5OXYvPWOZc5nQ/AhfnoQl0TGTA7jGV7aZq1+kKIhSZ
-	 vXeUsMxmysvbqEzSeYZOMxfXq3n4MEhh+k5RmGNF5METC4Tbn/uk883S7u7BfD4980
-	 wPeSms1gJMGRG0Rn/CgJsYxBMYiGSeUSynB9F9P/p3z6n5ZPT1OQIwiLrcq/OD48ly
-	 b0IOal29sLrvA==
-Message-ID: <sashiko-outbox-217275@kernel.org>
+	b=d6EfJaCpytZwXrf/nae1C5iqV1lt+dtPOnmQzuMYn4CtUSoLnAGZY4isSZoPNTOPK
+	 rz2i2CRms+nbiBKIAa5YVhByWRP/Ae14nrOHHkrGOkNt/PUYPjlACJl2FyZ4ukR8YK
+	 hcXkIr7I6Q5HV5DOd210XERHj/7WsI0/P8lGTY9mt1Ckv0Po1xb8qdzD1+oafvSwWz
+	 sCjZDiM6g6xBcvWg5oi+yYjklAkcHwF9wVvWTqGML0cPtEbJgU6Bm8PUFjWZqYzowY
+	 03z5+ad1isSdKlMCDGpvoVgXMI4g/NRFdJY0RIEoVP1YhU992aM4y+LrT2k82gudqU
+	 eNqHFYud5p8zQ==
+Message-ID: <sashiko-outbox-217279@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 08/13] platform/x86: eeepc-laptop: Convert to
+Subject: Re: [PATCH 07/13] platform/x86: asus-wmi: Convert to
  pci_assign_unassigned_bus_resources()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261116152403.2672-9-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <20261116152403.2672-8-ilpo.jarvinen@linux.intel.com>
 References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
- <20261116152403.2672-9-ilpo.jarvinen@linux.intel.com>
+ <20261116152403.2672-8-ilpo.jarvinen@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 15:29:12 +0000
+Date: Mon, 16 Nov 2026 15:30:15 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,10 +60,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> The eeepc-laptop driver scans single device and then attempts to assign
-> its resource using pci_bus_assign_resources(). That function makes
-> bridge window sizing disjoint from the assignment phase and is going to
-> be removed.
+> The asus-wmi driver scans single device and then attempts to assign its
+> resource using pci_bus_assign_resources(). That function makes bridge
+> window sizing disjoint from the assignment phase and is going to be
+> removed.
 >=20
 > Convert pci_bus_assign_resources() to
 > pci_assign_unassigned_bus_resources() which is likely no-op in this case
@@ -75,5 +75,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116152403.2672=
--1-ilpo.jarvinen@linux.intel.com?part=3D8
+-1-ilpo.jarvinen@linux.intel.com?part=3D7
 
