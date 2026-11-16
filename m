@@ -1,82 +1,125 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.143
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794843627;
-	b=IThDwGVwdnzy6y7Ao43Dbv/++MmnLeP+RG0Ia2oI+74Q0CplVvoJfv/essCyzqByceEX
-	 xEzhYNFRNccUuNWXLeG4ePGSuGxPBXPDFNsLFutvtLjpcb/fv/CK59mreKpsMtlKdQg83
-	 tvnIkzKAUgzsB2V8tEr8iPjMRpnggzevp8hprpRnnI/u9nhi703XoBxceYDOURmIEnvLj
-	 Eb6VYKwOhS9/zX3wrVwB29vHx0W1iOtPJ5AMrbnkaL2BOTym4xrClbo2AHG6Hu913g1vr
-	 A6qkVwjtxcQZ76dVt+vYJ5UvhF+rRl3CmIZgV7cilNNHJcbrUKfF35l8EAQZ5NKzUHw==
+	t=1794843628;
+	b=FCKPrREQsZNOfH8QLsyqNVFwVU4NJG4AWw05vg3K6LqeoUE5B1rJlX069r9Ig+6DXDOS
+	 n66Z5J8FUjjgaPKy/cq/FufgNaQgI7dF55Ku6CvcYFzGzHEFzQs8TogywdUr6o9fesGtg
+	 4V6WLsvmGKYwUM4Z1sugfV7jgKz89DyX9rHKUyXIz917Mw4HzoDGE+k7ZEPR+3gzvO+7n
+	 3PVz0+Hswbirk4Dynvzc//RKjWT+H/QhQHRZfi7YOAkYMDngCoa/UGTI0ZcUz7hWeBFob
+	 xWslglxRV0K6tT4VvhHP38aYNcENEDr+LmqSVi9drr+ybvAATxkVSn2G9I82AvsCJQQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794843627;
-	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To:
-	 Content-Transfer-Encoding;
-	bh=Z1RqDp5SVrAov4sDkfri2yFgVkNhSV3e7nfkBE4+w2U=;
-	b=GNm1OZDp8WHyCq1SNXfBfMA55pQsSCKZ4+igIskkwx1H18RHUv6HziDQQLeyfNTWvCBI
-	 RKMCUVi76uaHm2VrOGEbKup7W2ADwZC2qofOm1JsSWNEwZorzE8ngHdRJ7Fiq+b2JW9BL
-	 JJRRGMipV4w6EQbSyY8BiimZgst2Rw1kzhmblxNohG3/Io3iETMojKD0m+Sij8P1nnwat
-	 eUoW+/ZOkzBiSrH0WNTVe0oxjRREY8f9Y40dOcY58X1jNZzMfYP5cKBV21WBUwQ1FAWKy
-	 loWLFctzipPz2971hj6Kdf4IfAfwR63CuTPT3RzBO1Nqm+osoj9KrqrpG4yiCOz3ItA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794843628;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
+	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
+	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
+	 Received:Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 X-Mailer:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=K9QCMgU3/qNmk6i5Ld3qHCb7sElYSI3GaLa7Dwr1/Es=;
+	b=PkeIZsY+X2MyH5Hp/98EkiNKQ+NIau7li0ZN38wjYM7zHESXt6IZnIysc4uCCtQFe+b4
+	 YnBxYClZG8UKqKyXvEcOzA+CvmtV+nSl9KlpM89uG6oufey2KMd6p8gQr9mbnFlzWfg9r
+	 UA7WeeHOdJtn6bQSWL1AuxdUg7cRmDhV/DXIvDlOdeTnDM/J1XqKt3IpMjtapsPqf9fa4
+	 u07Y65rP7PScSVsOm5mbo8HwJgA73WoJsrYG6LJkPvjTMUFWo5sIhLGLG0lH44Wfvo2aR
+	 c41QOMUIccqGcHyJtCgCp8+MumyVUETCm4QZCkxJ2OKdb0/c+DjAOpj1VPpllkjl3hg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=alien8.de;
-	spf=pass smtp.mailfrom=alien8.de;
-	dkim=fail reason="signature verification failed" header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=XLT6HZu0;
-	arc=none smtp.remote-ip=65.109.113.108
-Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	dmarc=pass header.from=shazbot.org;
+	spf=pass smtp.mailfrom=shazbot.org;
+	dkim=pass header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=c5vejlrL;
+	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=J+07JrxK;
+	arc=none smtp.remote-ip=103.168.172.143
+Received: from flow-a8-smtp.messagingengine.com (flow-a8-smtp.messagingengine.com [103.168.172.143])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3516606A31C;
-	Mon, 16 Nov 2026 15:40:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A3516606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19E77606A322
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 15:40:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 19E77606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (4096-bit key) header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=XLT6HZu0
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 3087F40E01E1;
-	Mon, 16 Nov 2026 15:40:24 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
-Authentication-Results: mail.alien8.de (amavisd-new); dkim=fail (4096-bit key)
-	reason="fail (body has been altered)" header.d=alien8.de
-Received: from mail.alien8.de ([127.0.0.1])
-	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id SlQzc3L40ATu; Mon, 16 Nov 2026 15:40:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
-	t=1794843618; bh=poL8nuyiXIzqUO23vtCw4eNo0GCTM0RnMw4c3izJXXg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XLT6HZu08mkPkyhnpslZTCDZ7m3XBDccM3qvLY+rZNfKvyciphVOhLuXN4TOlyEq9
-	 KCLzlWZIRCvPNJ1SMqCNzsSjtHxg69CRDfNsSBlMEOSFhA6RMW6AWvEcujXmv12PMI
-	 FBexuXWaKQyIziMg3bSo+yGn8NswHQsA8G4PXz6YOuUnz2t28gP8AjA1Hgpj2hCPCj
-	 LlF17vaK4BrBVySjqZhv4v+8GSIbLenyvu4xt3ZSKwNEMjhwIFF9MkfJssLnPuAKXR
-	 3GGJi/5VDL10nXWyAiRWemv/6zc6lkymdPDRR9wMqTnQ8YYUP+SQ6abixDrfOIbtk6
-	 e1jFkrEkuJB0qerZsT/lOGEkdy3OlB7joJTSA7HPZb4xfsY5zTR5ctH69k/NB4vnIH
-	 iS+CL952/2dnfjdWF/EwjMUlnoyYB2MZHAqXCp/3f5caRJ3K4BiMSrHIKeBU8poBHi
-	 kJuS72EfLbLSYKUa5uFqftGXFdgNz4u09gvuMGSFCgfK5s/XjNw0lM7RY/Q5kAo7Na
-	 W9iVxyff+y7QWm8KjKH+HP/Qd3Ii9hTzKkV3m0xNcY4jL/asoGxpLY4Fn4YapLQuDy
-	 8KTIo7f1EUsRf5cPH2QyltgKYRfhCEvCVsSiPESwk+AexRwZWmXDdNLZHxET7XXTmT
-	 +SSicgM9+MywENSysoJSssaM=
-Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::43])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 0423B40E015B;
-	Mon, 16 Nov 2026 15:40:08 +0000 (UTC)
-Date: Mon, 16 Nov 2026 07:40:05 -0800
-From: Borislav Petkov <bp@alien8.de>
-To: Tony Luck <tony.luck@intel.com>
-Cc: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 06/13] i82875p_edac: Convert to
- pci_assign_unassigned_bus_resources()
-Message-ID: <20261116154005.GAavsj1a11BRgBVtSd@fat_crate.local>
-References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
- <20261116152403.2672-7-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key, unprotected) header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=c5vejlrL;
+	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=J+07JrxK
+Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
+	by mailflow.phl.internal (Postfix) with ESMTP id BA4C51381A23
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 10:40:25 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-12.internal (MEProxy); Mon, 16 Nov 2026 10:40:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1794843625;
+	 x=1794850825; bh=K9QCMgU3/qNmk6i5Ld3qHCb7sElYSI3GaLa7Dwr1/Es=; b=
+	c5vejlrLPwZAjCGmX1QTNDJKlbwsc42YdY1kTMK8LGTmO33r29yZEezj1WeE+l6e
+	LzavMdwNWrdwT/bFvi6WiZXAncS80b3WFjqtyTAGRbA17nevA6YwcV2mrLS9Pah6
+	0MwtGPHw4k8/XXSiuTZcy61KQLhvUkYPEIHOfoE9lx04aJIpdaVSxoiEi1qF+eWC
+	KyiTi2ASZYzgmTwfeyETmCb7Q9jH0j+8DuaNNhuMupXd9heLoX2NiUauCT5XSP6q
+	ZCbIxoBSa2ZpDZYdHpp8R69D4NixGjOmf2dymmoYUrEVMzAYVAYSHmyqgU0GuRxp
+	K1q46lYEZIwMbnw5sbseMA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1794843625; x=
+	1794850825; bh=K9QCMgU3/qNmk6i5Ld3qHCb7sElYSI3GaLa7Dwr1/Es=; b=J
+	+07JrxKGH89agZwZypxfZOwjMdUvqyIWG4VSNZDpLZ3aWzRSBuSgwskD4DEjFwcv
+	H4cMAPVZ3dUNdsCmoUxxXW6lfi/biM3fs0dtH3+0Wood2ClPEYAizxyoR2Ji+1ek
+	MBf+V9PI1dLKngSamvhS6tTIWcfbla5yYKfwNgh+ytjtDE4+p4AZxkVkLjR14lpO
+	4CyE822JCpUu8UnSmdukEpszWMhCedT15Q0JLVClPVGOMb79kRceK43TqMdWSdCM
+	RAIdEJpeCqfDXs00vBE0A/kdjhRlicnOefNKMWxNzpyO1Hq/Ur31BxiJeCg4Yx+n
+	2BPaeNU3AxqS6XW+vTroA==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=sign d=shazbot.org a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1794843625; d=shazbot.org;
+	mf=PGFsZXhAc2hhemJvdC5vcmc+;
+	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm2:rsa-sha256:EqnYtWU47O0u8plMWp7ROntue/+uKock3FUFRZ6Fvj9ITlF
+	0TzsEnHWCKDLGLa/WRZTCAa18rrScbXmTGTmcYrG8QGkV4eg300lHEGo3Ppi9wYO
+	MbiGePdLjNt/3sX1ZJVUwbgrg8ZYvtN7k9xYWVAl9iJa63Qi9D78IDfou4Il0iUG
+	k/5EJs7ghUQxR2MAHYCZBIF64dfr40fxHfkW+A0HTLTxODKztQCw53iORKhkJD3p
+	rEDRGc2P6dqg4B55JQv2cULBrkhY9Na5YojFSKrzHgl+UrH5sv/D2JjPMTpoCGSV
+	QGhx+QGpLJ6MJj8UcTfAGMFaXxY+cSIPLH8NMpA==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
+	from,in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:0Y5rUBlQcrCj4l8SJGkaqp48B/WhxzlQss1o6ZgaDmk=:uyJPaLysvvX+DG/VcmnnuDeB94OwMehxNJ/NW9IPFc4=;
+X-ME-Sender: <xms:6SP7arbYZxLPnoqMSJbkzf9bdAqGrjncVRwkrH2noefuznsS0958tw>
+    <xme:6SP7akcpABGQBr1tLLLtqwITwXUQNYDOzlB3bIgjLvSNGTLvU5CWbFdymGThdBEXQ
+    dMZI6lIuTYRd1Ey9Qk7mh84x-tlDeUbVMQwDjnpAjxsbWNGWZ0ieA8>
+X-ME-Received: <xmr:6SP7at24dXWer6LLNFjK-_EXxHTW7spVtv_325TekFAm15kWI8DANB8pOwPVSg>
+X-ME-Proxy-Cause: dmFkZTGVW5RRIjhX0vofYqB5DQwzIH4ybjoBD4H/QKyxz1CgmLXHNktxjRFTVAf2AvyeKF
+    q73hIbVzdZcvzHkbuLgB3bgpka+Ug6AAEs8Bf2IjKC7E0HggYTQA+yLwxz9iUkVxNDR5aL
+    /wiFcJarF2w4gyZSM+s656/q8Ksgd+nc9p7/Z7I1nCWW24fZ4zKmXtRnhrBVT8MFnGS7m/
+    AcexrVX9bO0ySKLQMR1zz1zMvDqPTk1xvBtKwBgnC9ecCoOUPoomm+ySUKIymCN597SCI2
+    0SE56QdXXrscD5un8UpxCccGd2CfIvFBLGmPf7KHRj3/y9EV3C3mHhhrzsjqLGs9u44XTT
+    lTJBjENqyAI4S5w1H1CWASLIVCxdMABFZI3UaCUBr7xHTji1N9B8vlEYztE6ZNGUheoFOZ
+    pyxFLcXsortIvWGBWl7Aa8CoyRSTE5UytnhaxlOCIlTaZWX2nvnA5fbu7r5w055BXPx4vo
+    IKSYh5DV+Pp7C7uZcmcRJZSq0UTYKiMsEipR46uitMqpsc9Uql/TfhYD8MxtcWUNzn9+Dn
+    FE0M+wS0CYePpKJ6gETx9tL823rgTdlDqPdOM3o6uqNE3naF8uBydpuB23OiF/slAbzyQi
+    4G5KLqTp4Zk+bYJDQaoN9qxTJhWVyc7mpTUwy1GUuC4rsAIKnywSmehO+PBA
+X-ME-Proxy: <xmx:6SP7ajI_W2ctdjKLR08yW-lQhzJfuw6i4mxy1P0tnyJb6ri6Bocqtw>
+    <xmx:6SP7akGSRS6L9OdvhkuliQaAc0n1pm_b16N1RMOV5vNAI53LXAB1sg>
+    <xmx:6SP7anXJ2ttPjNpQijSJ7NkwK2nEWru2_xacgV3Jnr9MIrO1GTT0yg>
+    <xmx:6SP7akxzQYMKm-59M-TQwflBtldcBipCBTPtKYdb3k6nlLcm5iXBZw>
+    <xmx:6SP7atCj-hTWBKlPFqZIWsyF72xYi-2OlrzTmDMDw3IDjzBzse2a97Iq>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 16 Nov 2026 10:40:24 -0500 (EST)
+Date: Mon, 16 Nov 2026 07:40:22 -0800
+From: Alex Williamson <alex@shazbot.org>
+To: Gustavo Andrade <gustavogyn@gmail.com>
+Cc: Jason Gunthorpe <jgg@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alex@shazbot.org
+Subject: Re: [RFC PATCH 0/1] vfio/pci: Wait for GB202 firmware after reset
+Message-ID: <20261116074022.29d96bd7@shazbot.org>
+In-Reply-To: <CAPZV9qUMZcwVF=CUK4LY4G6Qoqd5ykCXE5ocX8VCy_f1c6+aBw@mail.gmail.com>
+References: <CAPZV9qUk3-eKOGEjVc7f0QzZcjb3L5QwUceAEUV0nuCdo90eGw@mail.gmail.com>
+	<20261114235828.GF3706007@nvidia.com>
+	<CAPZV9qUvgKjoBXGjYXJzwnCmqzSfu781ZSG8zW6Fn4PokUN2uQ@mail.gmail.com>
+	<CAPZV9qUMZcwVF=CUK4LY4G6Qoqd5ykCXE5ocX8VCy_f1c6+aBw@mail.gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,51 +129,40 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261116152403.2672-7-ilpo.jarvinen@linux.intel.com>
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-In addition to this, Tony, should we orphan this one too?
+On Sat, 14 Nov 2026 22:47:34 -0300
+Gustavo Andrade <gustavogyn@gmail.com> wrote:
 
-It is a P4-something-chipset...
+> Hi Jason,
+> 
+> Thanks for the feedback. I submitted this as an RFC because, while the
+> workaround solved the issue for me, it seemed unusual that only my
+> card required it, since I haven't seen recent reports of this issue.
+> 
+> How would you suggest I proceed? I am currently running the latest
+> VBIOS available for my card (Palit RTX 5090 GameRock, version
+> 98.02.2E.80.10), which is also the most recent version listed in the
+> TechPowerUp database.
 
-On Mon, Nov 16, 2026 at 05:23:51PM +0200, Ilpo J=C3=A4rvinen wrote:
-> The i82875p_edac driver scans single device and then attempts to assign
-> its resource using pci_bus_assign_resources(). That function makes
-> bridge window sizing disjoint from the assignment phase and is going to
-> be removed.
->=20
-> Convert pci_bus_assign_resources() to
-> pci_assign_unassigned_bus_resources() which is likely no-op in this cas=
-e
-> as it looks like bridges are not involved here.
->=20
-> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> ---
->  drivers/edac/i82875p_edac.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/edac/i82875p_edac.c b/drivers/edac/i82875p_edac.c
-> index 869de8e372b3..59a92a209dea 100644
-> --- a/drivers/edac/i82875p_edac.c
-> +++ b/drivers/edac/i82875p_edac.c
-> @@ -290,7 +290,7 @@ static int i82875p_setup_overfl_dev(struct pci_dev =
-*pdev,
->  		if (dev =3D=3D NULL)
->  			return 1;
-> =20
-> -		pci_bus_assign_resources(dev->bus);
-> +		pci_assign_unassigned_bus_resources(dev->bus);
->  		pci_bus_add_device(dev);
->  	}
-> =20
-> --=20
-> 2.47.3
->=20
+I imagine a better shape for a quirk is a resetfn in QEMU.
 
---=20
-Regards/Gruss,
-    Boris.
+The fact that nova knows about this issue and has code to handle it
+suggests to me that it's only the guest initial boot and reboot, where
+the VBIOS is run before the FSP is initialized, that's causing the
+problem. We don't want to pollute every vfio-pci reset with this
+wait-for-device action (if we did, a reset_done callback would be a
+better solution) and I also don't think we want to implement a
+kernel PCI-core device specific reset.  Either of those would make the
+device behave differently in a VM, or modify the current bare metal
+behavior that's clearly expected by drivers like nova.
 
-https://people.kernel.org/tglx/notes-about-netiquette
+A resetfn in QEMU can be device specific, wait for FSP to initialize,
+and not affect runtime resets where it would be the driver's
+responsibility to wait for FSP, as nova already does.  For example
+something similar to vfio_radeon_reset(), but calling the
+VFIO_DEVICE_RESET ioctl and then stalling for the FSP initialization
+to complete.  Thanks,
+
+Alex
