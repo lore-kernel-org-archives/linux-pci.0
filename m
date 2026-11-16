@@ -1,56 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794844805;
-	b=M3lwYA7hQUJaXfu2Kbxv1+AMMQNeJHH3rT+cxLOIIcIwG1GLq77Jaicd59NHTlTY/ydb
-	 Q0cu9Xfn1Pwvgpc4dZY5fMa2QchicLVC96/XQtJkr8DO1iFGDmQ1ZThgC38sEcPYRcGVF
-	 W91iPwHTCSElvV7afz7YfHg4rBBmCs69Dw12JfzPpDrO9a3MlA/MwsvHBOBR+xP9UNdTd
-	 tfAtWPhWL+kT0vaese12QX2rQPYhecXfZh7yzwb2pZaPmVxewIndSSVpdzirCIqe44dMv
-	 Vg2NpVzxuSKqUDCaE/xV+qFQKWzFjnHCBR4ZMWVHFZaWouT/Faj/BGyRr1iCXeoNg4w==
+	t=1794845190;
+	b=NJOvO9j0vXPQciB+6piMqjI7dU/7mKq3vPDOzPNad0jFDvmRBzVNX176i9/JKFyoS4Xi
+	 kA25JqzQVeiYpXJ2WEjL4A+6O8slXD5I7ETRXG8nU7iGcsxPZf25ArafXmK4Iv9jYbWSa
+	 YUhrSbiG8IoBv7plZ/WKwtaKJljEuyohlSnAVjKapsWN84WjRNdG8ZkaE4fhmJNg7pk/X
+	 1kZEF7FkV80azf9f/VCz2FPCyaxq3wHN5od/WpU0cV9CW1tAXZUqYtwDEkKn2uGDgnSAu
+	 hZObw96i3Zh96+e1D0TCGm/rUFGuWRc/XcBHvLdrh6svkKpk4104ooD036Ih4McvuHw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794844805;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=xAASFgdW/J4mo/lmKN3FH+d+5mSl8efVe28CsgSKsPY=;
-	b=JDv3h1Pu78Dq0CK0IqSLG7aOP79t9JqHdWDR4pa1rFa7HV9xfZMQZ8laAliFCEhEsqn3
-	 OuCcFEL2+1NEY4bwoVjeFilbYwiFJAodBv6HzGvwy0mIFlMZwLanzlYc+GiwYPh68mQQ5
-	 TihmWAAJP8scxFCAyvTjnDGqT1PVjBqDcSuXBI8OQP8Y1Hivfqc7iVphf5eNRE222cuGN
-	 UpZTMzhAE1lMyT7tnj8HQxr+zGz/VeBwmrKAIgdxsVPsezHh44INIMPshBnH9T7Spkd3j
-	 778JV6YyXfqSPBPlE9KWkpk0UkDk6BB7yUTiixBXgvZjHUal0HwuWSN0VhbmrQxk+FQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794845190;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=KkPjuzoL5FbYvRRmju0PcrJ03uAzI07vEAWraSUh5PU=;
+	b=a+fz7zqLErjVHHCYjyxW2RYR0Whv17J5da+eHgJUHln5pA0FENpOqzh8td0qCJbz9fM6
+	 cDAK49jTHvZrcTF3i6tAHrFqlxEGp1DoSVBvhOZfMTXwl6tzycI0Ke1oPmxEj99nj3u/W
+	 7LuBDTX40XTET2ZGe+EIxZpiTVZC0X2C/VWQqMLrp+LrjgLU2R7PWwswruKPGvUH5rRTX
+	 q8aMMwYZmduF4/Lu6QyelzV+R57I383BPn8BJF+sItrJ7MByxChdvjnEyQM4I/Zv89TCj
+	 5N3QBpWDQmA5K6i4og8LRwXFmMJ/KIOnPV8KqbR/ULQmFRlvHbZ2cl79tKdO+9yKIRg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d+GrFt85;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SZtO8pJh;
+	arc=none smtp.remote-ip=192.198.163.17
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40FCF606A31C
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 16:00:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 620AA606A31C;
+	Mon, 16 Nov 2026 16:06:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 620AA606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d+GrFt85
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DF0C1F000C4;
-	Mon, 16 Nov 2026 16:00:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794844804;
-	bh=xAASFgdW/J4mo/lmKN3FH+d+5mSl8efVe28CsgSKsPY=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=d+GrFt85eU+k/xZC5+wd95i+M+96ZU1iZ3hv5kVYrncKxAlCo2HeZJP6l1pyxxqE6
-	 PFdC9IbZ2bYd06P1lffwbH8r1voYhKDOykb8A/c+n5yKeICGjt57+13orWmTH2cjJz
-	 TLBfJO3MInZlPbzHl7HmbjcR7+KhX6Q6eJ5qBUu18MVBQR+lZdzMqoqCEKb4PJEoMQ
-	 qwxNt7FCmCRmLo/DWdVdd1lPBkD4iQJSu+1O2mfVwh15spbQ4dCXDVMY5S/jdM8e4J
-	 FCBqNFmj46lr0UceDd9WC161qBOVY2AYu81JssOnYYigKjJzB6uIcoKyUXGomCIaDI
-	 q/yH1Ab2Xv+wg==
-Message-ID: <sashiko-outbox-217333@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/13] PCI: Serialize bridge window sizing and resource
- assignment
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261116152403.2672-6-ilpo.jarvinen@linux.intel.com>
-References: <20261116152403.2672-1-ilpo.jarvinen@linux.intel.com>
- <20261116152403.2672-6-ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 16:00:04 +0000
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SZtO8pJh
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794845190; x=1826381190;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Db9OHh0nkyuxQ9oXRsKOwiEZL3Lx5s1Vi/G1JI8chj0=;
+  b=SZtO8pJhtG9SVGUy7fFHeT5z3t9ey3+KZIqDkaYmFGKKXMnOwppKxm+/
+   Bgp+JOoaQs0WsNTM6KJ4lXuSaaOdXUq2R9YgtBeJaOc7i5futAHpfiMIj
+   5wibw68+gYUqHLZIlaIKdkNf02rySPk9GYKYVefzKGoIDcKsiMes+AmHU
+   zPZMUgbuPP3uCeJIK1XF7qB5VauV4n+uq3+qZeZ0JO5kR8sLFAD3xUWeq
+   CmoxQbH4I8zwDw/zA5wmjOjqgxvI850pHpdeOk0HHSqY6TZhBuYLp4S+b
+   GNsMEZHQFz3bBHD7M8j7WA4/nJ9ugZqJQ9XmcrvOCKDwJt6DslNwM0L3G
+   Q==;
+X-CSE-ConnectionGUID: +i/a4lXJQHG4y8JXbQQtwA==
+X-CSE-MsgGUID: 160xJzJnQg+TrW1TBArIqQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11968"; a="3576266"
+X-IronPort-AV: E=Sophos;i="6.27,217,1787036400"; 
+   d="scan'208";a="3576266"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 08:06:29 -0800
+X-CSE-ConnectionGUID: AfzR70nDQR+OMGXOrPQ3nw==
+X-CSE-MsgGUID: ti3VtIj+SwiLbX/gL4bSPw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,217,1787036400"; 
+   d="scan'208";a="9751505"
+Received: from skuppusw-desk1.jf.intel.com (HELO [10.24.80.125]) ([10.24.80.125])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 08:06:28 -0800
+Message-ID: <9cb88cc0-f1f2-4c43-8a63-2698164da76b@linux.intel.com>
+Date: Mon, 16 Nov 2026 08:06:27 -0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,68 +71,59 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5] PCI/PME: Resume Catlow Lake Root Ports on PME with PME
+ Status clear
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+ "H . Peter Anvin" <hpa@zytor.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261103193136.2410148-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <avrouGIdiXIxE_5Y@wunner.de>
+Content-Language: en-US
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <avrouGIdiXIxE_5Y@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] PCI: acpiphp: enable_slot() holds pci_res_setup_lock across
-  pci_scan_bridge()
---
+Hi,
 
-commit 25d4f4c5afed80a01b7847608ddc4982cc9fd58d
-Author: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+On 11/16/26 03:27, Lukas Wunner wrote:
+> On Tue, Nov 03, 2026 at 11:31:36AM -0800, Kuppuswamy Sathyanarayanan wrote:
+>> Intel Catlow Lake PCH Root Ports do not set PME Status in the Root
+>> Status register when they generate a PME for their own hotplug event.
+>> The PME interrupt itself is delivered.  PMEs from devices below the Root
+>> Port are reported correctly.
+> 
+> Reading the commit message, I'm wondering whether PME_Status in the
+> Root Port's Power Management Control/Status Register is set?
 
-PCI: Serialize bridge window sizing and resource assignment
+No.  PME Status is set in neither Root Status nor PMCSR. 
 
-This commit introduces pci_res_setup_lock to serialize bridge window sizing
-and resource assignment across rescan, hotplug, and BAR resize paths.
+> 
+> If it is, an alternative approach to quirking a set of Device IDs
+> would be to auto-detect affected Root Ports, basically by using
+> the logic OR of PCI_EXP_RTSTA_PME and PCI_PM_CTRL_PME_STATUS.
+> 
+> Sorry for not thinking about this earlier!
+> 
+> Otherwise I like this patch and I like how you managed to keep it
+> unintrusive.
 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acp=
-iphp_glue.c
-> index 632344f34caed..d3987be044e33 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -502,6 +502,7 @@ static void enable_slot(struct acpiphp_slot *slot, bo=
-ol bridge)
-> =20
->  		acpiphp_rescan_slot(slot);
->  		max =3D acpiphp_max_busnr(bus);
-> +		guard(mutex)(&pci_res_setup_lock);
->  		for (pass =3D 0; pass < 2; pass++) {
->  			for_each_pci_bridge(dev, bus) {
->  				if (PCI_SLOT(dev->devfn) !=3D slot->device)
+Thanks.  Can I add your Reviewed-by?
 
-[Severity: Medium]
-Does taking pci_res_setup_lock before the pci_scan_bridge() loop invert the
-lock hierarchy with device_lock()?
 
-pci_res_setup_lock is documented as nesting inside device_lock() because
-__resource_resize_store() and driver probe hold device_lock(dev) when
-calling pci_do_resource_release_and_resize().  However, pci_scan_bridge()
-discovers child devices and calls pci_device_add() -> device_add(), which
-exposes the resourceN_resize sysfs attributes in bus_add_device() before
-acquiring device_lock(dev) for dev_set_ready_to_probe() and
-bus_probe_device():
+> 
+> Thanks,
+> 
+> Lukas
 
-CPU0                                    CPU1
-----                                    ----
-enable_slot()
-  lock(&pci_res_setup_lock)
-  pci_scan_bridge()
-    ...
-      device_add()
-        bus_add_device()
-                                        __resource_resize_store()
-                                          device_lock(dev)
-                                          ...
-                                            lock(&pci_res_setup_lock)
-        device_lock(dev)
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
 
- *** DEADLOCK ***
-
-Could pci_res_setup_lock be taken only around the __pci_bus_size_bridges()
-and __pci_bus_assign_resources() calls after pci_scan_bridge() has
-completed?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116152403.2672=
--1-ilpo.jarvinen@linux.intel.com?part=3D5
