@@ -1,100 +1,114 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794852205;
-	b=uucMuudJ3H6bPkVDY9Y6g+4klfP03ctybx4foH7AJPR7islt4LeJjbAOonTIXnTpy88p
-	 6/fKPUo/pSUqfebuIT/n4ukbAG1nEngW7k1zpOEfVaktUG+lj72p2WhUPCQ3T6fFFJWnZ
-	 ujbEM2kRSkMbV5wFD6GqPZecAgthKlniSikFg1z6aAfGqDA1Q98PxYxd9bwl8t3x7TgLO
-	 ORLIoye5QQoKWQ6+b69A61MOJy2Q3Og/ngc/7Col8N0afxL/IviWsY7ba2Tr1jmBcpIX4
-	 piottLgk+lNqd6ChyFOPgzUuWjp9MnrC6PSO8uojC3ImZXmrWZdCykfR9lY1v77TfAA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794852205;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794852234;
+	b=fZgqMYt0iJ36xUc3M8Wts6rXFx8ewuaYNKKG9+PIHKe7ndA1v7vBHueLIigvwB0E3fq5
+	 lnvTsjS4KnD4s5HvrOQXQFztBY63/3i4KfJaGOtWxl7eG46tNqrepbKPoMkSzBm62GjEW
+	 6PRv6qk6f1jWesdGOENNPkILtd9hz8Qm+kb4w1eL2Y6dcrCqa4bVHxnWGyvfuYzeGgEUx
+	 AkdgXNz23/hQCQ0UowXsrGFuF0+WH8DhiEyxx+wA9mwMWqDRD9fCzYjDnJrrXJoJtCEw8
+	 0WghcBMAfvM2HRGzrC0sryfOflCjm3O88M8Bd8U/IBo8yGDXefUXZgriyyCaCbcOHpw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794852234;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=UsEi7nj+gIWpohML70hey3/GRg+ovwcWW0/uBKwbaX0=;
-	b=EOQ71cYp21HiWg8gDaLcrrCAldZryOXehFUT0YXpy0/mbgbd+jkaQcbLKllDrAl+bWlc
-	 AatCGH0tyxVEkLTaL97jd8PdLiZPKpOOAu3fgnfGNWYTXZaLicAR0o6u+rm9PEOAu7AGJ
-	 FeClnpIbKbuwSYa1ZX0gSSPYOfVVHPOcMHhtYozASYvk7urfIVO4ImOY4nJkaNxNz54vM
-	 kCWGFWwGhE9P/XIq9eQnyXOJf54hfxZaY6wo6AhCUH6sNlPc99voUNjs8XfIUjsjr0X3h
-	 ZTuTxQ4tVLBOLmraUtts8JajKIkrscWk7O6P7WTjHaFuNF6bJ7gAnzesL0XjUClw37w==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=I6mqVMTG;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 X-Received:Received:Date:From:To:cc:Subject:In-Reply-To:Message-ID:
+	 References:MIME-Version:Content-Type;
+	bh=ME+tq2h4VrXHL0j3HMmUrv6ccZFFxfaadCJgOtMkU34=;
+	b=p+X9rvHmj6ERrsHmoFozCZDJMFk9dvrnWXQiNA27jY/IhOifu2/EUXDbydo8/P8ZdPPu
+	 Z8XW5fhjW+dgd6hsZ1xzLwQdW10/SpkXR8PUJXH35H+Q7NaGySRc8hU/Rq5lc4Ux3afJe
+	 /WHJQTbISX5PsYQvCAtr7ehD+HUTmeOHsdgvuYqTqOo9Y2ioN4gN0SO5mmdeyItmo2HVl
+	 cCflJcLxXwpVKMhzk98vB25ubtFVhihT6Z/iw7Q8gDgCDUQ5e6zl/DYPWt0bXJw7HB6pD
+	 16ymX++DunBRkWR9zdhWVoeO6i0Wv55GFQnCQ76S44Wf9pS5gJqHlfFWnnxeIK3Moiw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZTeFiAMZ;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=brGP6Ba7;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C35E606A32F
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 18:03:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C35E606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 767E8606A322
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 18:03:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 767E8606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=I6mqVMTG
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c4d581da0aaso453781466b.2
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 10:03:25 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794852204; cv=none;
-        d=google.com; s=arc-20260327;
-        b=kC5BRggTOVVbuT/in0+rXvD5q3GAtYmzzpHEUiGNqy6Jx0c/gEMF3mQ0fqbUNTa2p3
-         SdceX2iYp+y5xrJ+0BunescmhEq/EyhQFz66iu5ADKluM7LIg8blpmeA/CkELftpTxR5
-         8XqnYL9aBqGL5bj/bJw6A5nlPy3VE9dKchuAQ9fWFJpJ2+jDeXzx/pgS5Z2mZF76aQOQ
-         EVq0JjdobXQtCM8C2kd60RpdZwEvWl6xl9Itg/Ibvjgf6ziy747IUEzR8pEenVHlM89L
-         4QQEjiElVzZrkKbYrbhA7JqCpNvu6KvMkEQCxDUTyinQgp8Ev9IURv3cIdh5puIfTRLY
-         qTCw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=UsEi7nj+gIWpohML70hey3/GRg+ovwcWW0/uBKwbaX0=;
-        fh=al0hGED32B8GNrKQeSjwmAOl4/0RFpHnTSsEMoiUN+E=;
-        b=q/qLCfRXJ3NGyUlB7QAOsrqSK7gVCK/hFYCvztM6bKefYTaH0iyjBZnurq0SV9i5kK
-         V6PvmQNPfKccmRhWfy5ub4G+kzhQm4yMSdRnL4MZnQR2Go7aHr1MR5HsWpZ+SZ96hLQt
-         FeXyEDdgoIpNiVHlwA90NNXFAjz+okaBvMMzdYKWatutJ8oAHUEc6KKQFreda9S+pp2K
-         LYF7Y9ZMGOzhM/crqq24kge1pb22MsrlchEazh9XnPK4LUBOINgXT0uQAauo17YrdETh
-         IkB7md2/2QIs/R25NeqU7MwTetWDJFhleoSPcvd0Lpba8QvXcjdfM+uhSTydnyRke7en
-         1LGg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZTeFiAMZ;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=brGP6Ba7
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794852232;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ME+tq2h4VrXHL0j3HMmUrv6ccZFFxfaadCJgOtMkU34=;
+	b=ZTeFiAMZLMsWdEcYBJ9gxR6Ohjcdi3TKdY2jQS0kMjGh+uJUxW1ZAZR+hBQmPvOvuYZCAY
+	nGfZKABSsfrLN+FLytgSaiI8r/+qQrhlICvU8EvFwR8BvqHUwacph10A7ecSEvgzDvkE9d
+	+KMXKXOxLa+8HJP4SttYvCO8T5BzdZc=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-633-H3lZmzH1M1GMSpd4KPxyXw-1; Mon, 16 Nov 2026 13:03:26 -0500
+X-MC-Unique: H3lZmzH1M1GMSpd4KPxyXw-1
+X-Mimecast-MFC-AGG-ID: H3lZmzH1M1GMSpd4KPxyXw_1794852206
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4a80bd45e1cso18025485e9.3
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 10:03:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794852204; x=1795457004; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=UsEi7nj+gIWpohML70hey3/GRg+ovwcWW0/uBKwbaX0=;
-        b=I6mqVMTG7TOW0QEwtuel8eM52dKEJwwHsF405R3hjerJsFHBrNmZbXj1231hyCM8t6
-         lqbZTqy/W7RE6mA/aFf6Hg9AYwm6rN790YoLWLHRk8TLVbiDwMFzyhmLSGClLvIpmNF2
-         Fd1UV/CIckE73CtjGGY+0jZ2X7dcdvGciqVfMht+mmpUzFUMO+dLUMlCFCQaKyMepbGG
-         F8ohtkkUT7s7bFlbRNN/LGCQB4vCchBsVeQNAA3l8+Gj7s7oTeck1iQ/5Q79M9IA0TO1
-         Zyy7QFC3lWeB7VhNxN8iUb0z+6DXNIMXIKoic7ZeJEN5l6GIoGek36/tcXyIzG7bt/kg
-         1Tfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794852204; x=1795457004;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=redhat.com; s=google; t=1794852205; x=1795457005; darn=vger.kernel.org;
+        h=content-type:mime-version:references:message-id:in-reply-to:subject
+         :cc:to:from:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=UsEi7nj+gIWpohML70hey3/GRg+ovwcWW0/uBKwbaX0=;
-        b=v/NiVYKOC/R/NXqIeIRHtIXlUkVzJYbdb8OLVFuzQPgRnbFXMsORVqpVoodXf84v0q
-         rovJUCm1BbJ+ID2++w3nZ9i9kT/kJBi4YpDaMpH4FCDSmkjat5/XQicTOyJnrSYRgO+j
-         PK9ghmJvvGSH2PDMAQDDnjKgAfQmqY0ayVHdcaBq4vty+BANLZx+WIjpNxayjHCgNBoo
-         5WQA6t1zO43UYYSEao7x22RNfc5EK4uXtCGjJYUCpttbFdbw8DJ0qZh/TDH7+6QryKn6
-         Y2AU5bYh26HpPH5RDD953bxjWhwq4D138EIZ21Bo+owq9o6h1div1/RA8y/fvgS6t58j
-         sDDg==
-X-Forwarded-Encrypted: i=1; AL+hErEWxbqkSCsnKMLUkEnA+dd1dBCQp2EPorc2qH4goPD2n5IgMbzF1W5Fr8YfXDyFO+edbL4f88vXUQM=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+ZDxKspwwWUJ8w/ST5GHynwLOcMgmhxtt6SJo7IrUiZ7zPOp4C
-	/WYs0+gdTsHruXD8C8RUj7H0WG26GqvZdl1/dUkN7uwCOpAhKYuGcvXRgaVuJ7cCYdd+m2EhSAV
-	FDvcBm6LlbEJM4X5sJQR5ZZnDjbyE9DfmzC1RUkxV
-X-Gm-Gg: AYBFou36rjYd3CIc11TCXF4zoa2YvkqF/nG44uj69DLG1iWqGe01gFPvolVma9MGttv
-	j5NrCXv1eYP0JpMLozfoblaQdWDbmPkuNnuLkuvtb8GuLgvojXeuZum7sQvKT7bZE8p3JjzimV2
-	ch1jIXCBIOX7tkCg+2xUKB6SidUVTGy133wLuGuZYWE5NQjexQy4gFfBkTfd4+2goXoPulLfJs/
-	nI7uqM4eAYA6kgbwlnHXMbVJqWJX2+LUfkbGmox4kuAlIhBcP2sqY687BNsrBZNBHoTzn7fJynK
-	jopn1EqtMXf3FAHO+WMgZkJM9CQpYpRrnF+Z8Qgj7U4npVIb4IntYaVOFeqE/WvBQPHZqerihvO
-	krySJSidBDREGOtoYpNKFnXt0HFY9Rd7U03wR/06sqI0AfY1I/b4FnMV9gu0=
-X-Received: by 2002:a17:907:ea92:b0:c49:cdc8:10cf with SMTP id
- a640c23a62f3a-c50963df2ccmr868161066b.40.1794852203026; Mon, 16 Nov 2026
- 10:03:23 -0800 (PST)
+        bh=ME+tq2h4VrXHL0j3HMmUrv6ccZFFxfaadCJgOtMkU34=;
+        b=brGP6Ba7PSOK+rJmlZw4V7dx2J/TaHAtgZ43pfjitPEKar5AdDJXCPHn3t7Vqpjcl9
+         okXjyzVE+P/RcveEr6oDahHraSA+k9VvDKt8eC1jIhqbq+mCSXsyH8at8DnsuwB2RsiA
+         3sXAmAYmwfD8T41ZJEqDCHjb5lUdHTpXnrERaP8iKuSXOS/rIa1VgLsGrL5iyN/JjHts
+         c/J6UnNcl708YDawZ+caL+J3P6K6Ksbwbo7lL3W3KKg43PA95RYMHIY46Y1Xb+NHL8UK
+         ezacZY7boIcgWRIpbEPCAj7KK8Zdb5LdB7xmNQrn4VnVGKC6AobBytdM5Lx5P+KgENJ7
+         4L1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794852205; x=1795457005;
+        h=content-type:mime-version:references:message-id:in-reply-to:subject
+         :cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ME+tq2h4VrXHL0j3HMmUrv6ccZFFxfaadCJgOtMkU34=;
+        b=BINqTgBdwBC56tpJdYzIc8wnqNWize7Lm8MzoxHQCgToRCBOVfaV6K/ewd4nio5/1u
+         mffpdcsWuDM6jZSFCCTwWLefYLE/RjDfVnK9ICVOdaM3ADAMlHNVeZosysZetpeKoMvi
+         aPVv+TZeCLmGLHu8fM777gu6ymZMDgHIIWaIBKWzc3QAPZUWXeO/aruhxbiS1FoQUi3o
+         d1kJ2WIIFbwpZsxfu+clxtdHJgqZ1uDLJq/HaA/fJiwakc38Im90uT0w3K7NFJIhgsD1
+         TRZSxrP4piiJAl7ifEo9o1bDu5WXtGld+6gArr0i02JLB03jMSLHeNEoE0MejhZ76m3F
+         B36A==
+X-Forwarded-Encrypted: i=1; AL+hErFC6bkJKa7LJSxvofuBm9jEcxP00lU4xk4psZ2J8BELlXbLaYEGfRsYt6NZRsDIIICgpQO8Q5oDlDc=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/yQ4mVdHpXLDELonOPIMMSrwsshQvXTWfCzOTn7vEX+A/lv3nM
+	NxMUrVJVUGlD9kntN/+zYie3V+rqtVIoWWQfeR29WcQQPQY+7y0esy297v+EnOSODeB7o2vtlJ7
+	+C0yAYLif58Bstb7ioOx5xjjnASbf9y4QJdU3/4br1CKncRH8lhejnDku99hLLQ==
+X-Gm-Gg: AYBFou3nUpJcXKMqzvjnV1LEQZFTgHzZZGTPF/RXH/hTt1hNwvshz2PlLYNfkvuuZ6Z
+	885v+xLrrXVV2nXFdEoI5KwgoxRuQeDvPzx4/ldh//QiYEekbvl2Nppg/TIuMg1ETjx6kPrZ8pT
+	RbHPXhfW3b15jJsjtZj3tuRYmqb5crgGAhzSdA1ZDLquwVvtu9RdBr3SXzj/3P4bN4E81h1c2Ez
+	IrorzEvSc5x/ej4hZqAyisVBpZu0kmFfYUCawbiDJ69V6gd6SNqvcjLA7sYkVdhjCewLQiHapEY
+	my8TjsLuIDhbYWxhv8ygJ+oCHfYEa8lSAQtAJvVzHCt8Tp77WMzg8WZBErtJ9at4sOFcbGSAzt8
+	pjQMwdD3uwqynO5QQGYCsQoOSX83nKmoLGmBZ5TAmZv5eOmn87MS3Mlyo3RUwuV3tBFkAHlD0gR
+	asZMc1tlk1rWhSxIJ8rdBcDW6vwQDPxJmDqxhIIg==
+X-Received: by 2002:a05:600c:8b65:b0:4bb:6a5a:783d with SMTP id 5b1f17b1804b1-4bb6a5a795dmr108705615e9.18.1794852205589;
+        Mon, 16 Nov 2026 10:03:25 -0800 (PST)
+X-Received: by 2002:a05:600c:8b65:b0:4bb:6a5a:783d with SMTP id 5b1f17b1804b1-4bb6a5a795dmr108705085e9.18.1794852205147;
+        Mon, 16 Nov 2026 10:03:25 -0800 (PST)
+Received: from seott-rh (p200300f6af3d8001f2fecaef96c12e29.dip0.t-ipconnect.de. [2003:f6:af3d:8001:f2fe:caef:96c1:2e29])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb78430918sm4126565e9.13.2026.11.16.10.03.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Nov 2026 10:03:24 -0800 (PST)
+Date: Mon, 16 Nov 2026 19:03:23 +0100 (CET)
+From: Sebastian Ott <seott@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+    Bjorn Helgaas <bhelgaas@google.com>, Igor Mammedov <imammedo@redhat.com>, 
+    Fiona Ebner <f.ebner@proxmox.com>, linux-acpi@vger.kernel.org, 
+    linux-pci@vger.kernel.org
+Subject: Re: [RFC] Unrevert "PCI: acpiphp: Reassign resources on bridge if
+ necessary"
+In-Reply-To: <20261116121123-mutt-send-email-mst@kernel.org>
+Message-ID: <b59dadbc-035c-0a70-8947-bb0123bd5021@redhat.com>
+References: <c7f58d1f-3dd6-1456-31bf-7b62641c6e5c@redhat.com> <20261116121123-mutt-send-email-mst@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,59 +118,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261111192411.4133780-1-dmatlack@google.com> <avYjFfqr3T/U7lvn@devgpu015.cco6.facebook.com>
- <DMTK99TDM9AM.SAM3Z4COP9WS@google.com> <20261115231946.GB1239159@nvidia.com>
-In-Reply-To: <20261115231946.GB1239159@nvidia.com>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 16 Nov 2026 10:02:56 -0800
-X-Gm-Features: AclHuK98Rk-099iLtslJwrWtAxHkQR-ncmpykOH17KTcOCuNGBfykDUUL8uCEbE
-Message-ID: <CALzav=efnA_ABCZVicX0QeTmHknaEbMeWOy8cS+zHYVhm5z+iw@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/7] vfio: selftests: Add peer-to-peer DMA selftest
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: Alex Mastro <amastro@fb.com>, dri-devel@lists.freedesktop.org, iommu@lists.linux.dev, 
-	kvm@vger.kernel.org, linaro-mm-sig@lists.linaro.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
-	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, 
-	Leon Romanovsky <leon@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, Matt Evans <mattev@meta.com>, 
-	Matt Evans <matt@ozlabs.org>, Mina Almasry <almasrymina@google.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <shuah@kernel.org>, 
-	Sumit Semwal <sumit.semwal@linaro.org>, Vipin Sharma <vipinsh@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-On Sun, Nov 15, 2026 at 3:19=E2=80=AFPM Jason Gunthorpe <jgg@nvidia.com> wr=
-ote:
+On Mon, 16 Nov 2026, Michael S. Tsirkin wrote:
+> On Mon, Nov 16, 2026 at 05:52:23PM +0100, Sebastian Ott wrote:
+>> Hej Folks,
+>>
+>> using ACPI PCI hotplug with qemu on ARM for a device with a
+>> BAR > 2M fails because of a resource allocation failure in the
+>> guest kernel.
+>>
+>> Without ACPI hotplug the same usecase works because the native
+>> PCIe hotplug controller would increase the resource window of
+>> the parent PCI bus.
+>>
+>> X86 shows the same behavior but default resource window sizes
+>> are different and qemu can use ACPI DSM #5 to hint the guest
+>> to keep larger (predefined) resource windows.
+>>
+>> Efforts to adapt that behavior in qemu on ARM failed [1]
+>> because they've caused regressions elsewhere and maintainers
+>> thought that Linux hotplug controller should be changed.
+>>
+>> But this also has been tried before:
+>> 40613da52b13 ("PCI: acpiphp: Reassign resources on bridge if necessary")
+>>
+>> Unfortunately that led to regressions as well [2] and the patch was
+>> reverted:
+>> 5df12742b7e3 ("Revert "PCI: acpiphp: Reassign resources on bridge if necessary"")
+>>
+>> I've tried the reproducer mentioned in [2] using recent kernels for a
+>> couple 1000 times and didn't ran into issues.
+>>
+>> Could we give this patch another shot? Or does someone have another idea
+>> on how to make ACPI PCI hotplug work with large BARs without breaking
+>> something else.
+>>
+>> [1] https://lore.kernel.org/qemu-arm/0de640a2-8807-69cf-4429-672263e3e759@redhat.com/
+>> [2]
+>> https://lore.kernel.org/all/9eb669c0-d8f2-431d-a700-6da13053ae54@proxmox.com/
+>>
+>> Thanks,
+>> Sebastian
 >
-> On Thu, Nov 12, 2026 at 01:47:03PM -0800, David Matlack wrote:
-> > On Thu Nov 12, 2026 at 12:35 PM PST, Alex Mastro wrote:
-> > > Hey David,
-> > >
-> > > On Wed, Nov 11, 2026 at 07:24:04PM +0000, David Matlack wrote:
-> > >
-> > >>     Is requiring userspace to re-issue IOMMU_IOAS_MAP_FILE the expec=
-ted
-> > >>     uAPI behavior?
->
-> Yes. Even if we wanted to the locking is doesn't allow trying to do it
-> automatically.
->
-> > The way I designed the P2P selftest support requires 2 things:
-> >
-> >  (A) initiator: A device that has a VFIO selftests driver.
-> >  (B) target: A device that can provide a memory BAR (vfio_pci_find_mem_=
-bar()).
-> >
-> > So far I haven't found a single device that can do both. But you are
-> > right that theoretically a single device could satisfy both
-> > requirements.
->
-> mlx5 can do both
+> Why would trying the same thing again lead to a different outcome?
+> At a minimum, I'd expect an explanation what changed.
 
-Looks like GPUs and NVMe can do both as well.
+I couldn't reproduce the reported issue with scsi hotplug on recent
+kernels. I have not done a bisect though since I couldn't even build
+the kernel for which the issue was initially reported with recent
+toolchain. So I can't answer what exactly made the issue go away.
 
-How would we implement vfio_pci_find_mem_bar() for mlx5? BTW for the
-target device, by "a memory BAR" I meant "a region of a memory BAR
-that behaves like normal RAM". Sorry that was not clear.
+Sebastian
+
