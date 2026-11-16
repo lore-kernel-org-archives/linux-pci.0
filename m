@@ -1,106 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794853503;
-	b=ABzDJtwrMCkS+Bea2bTgg2Q6ODPz7EKrqf+pUSykP0hRxazg35MKXXU7uWrT4trvVjIw
-	 8zo8OMgcQYMHzFYYl11sL1O4itcW8NMFBG2xPWI06VkUB9PGQdmfa9kt+Higk+c7NkmQL
-	 SpNfm8zUC6Litd9WuYQ/jb0Wwz2k6pCJHVELtCAi5L7gE/YvovU+HS0WsvWpRbc6/moaM
-	 UV9FnPW0jxRj2L9DG0KSUVG49Jt3YBD8S/iVO2NJui9absiPNZueUFB6kGcTPqzuSNWn/
-	 R9PHsYWvJqzlpU4DwNJ7jv8X7mMEhqFtIKyLMzfhVQocGfQLWr5CnVVmyrae0n25RhA==
+	t=1794854140;
+	b=l56RsbmEaMxN4/Ypc6OinJJE7OnLY3a0avi46DOO92vIamd14+aBZSbRXUqapwh4Kqtt
+	 RArolUKmUwD62V2Jo65lRVgjh4nGYWNbZnY2Z3qWW6Sj+9/iSq5WNzXztT5DJeXZjIs50
+	 uqruQqi727NVCb6wNqrfi7or3Dig6rDQ0kYvGaDW4dNW6FsYmMv8DOwRubZHl1JVqk6Uo
+	 0p1useVImMUBvh5lkjpnXAipJLy/vtM/wVZB86FhDk27zKsgF0Oi9exrY0yl2zlmsnmQS
+	 TCUaKAGBrjV330uq9b2ECzQ1nGb3QkM7dyoEBv9r0ZLASCCIqnjBHXIMdvOMEM7Ji8Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794853503;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794854140;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
-	 In-Reply-To;
-	bh=RxveffzrPQLFyll9ZgjwqbKKHagqTYrppHHKXVLfEqU=;
-	b=4jWOAmQEgmL13oDrgA76qdAZD+LFrPuKOdPb7sQXn1bOi8+eNvB2wEc4krStazQE2f6J
-	 aou+vfakuBStTmwTOwftsmtIuuC8eE2Zz7UcVUG3MU7Sd6ItydsnjO1Nmx24Nokvp2VBA
-	 JB4j5H8qMjFdbgFJtJHyOOBjWBbQi8SGPagW8wumPA9IsOH06DMUZYl0fzIY1JbHSALiI
-	 2BQZjPgA8y47RV5OBMHiOVyRptzimZaMz6JoWSSdpXmUtQ1czenaquLJDAdb0g7vKY4Ud
-	 Liq2X/Eekx753ujTfCZ5Xn5zgFRkcqcvpmD1MlM8TrO+TuGKmiDR+H06o/NR4x+pBLg==
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=EPargW/ndTMk8W5T5ryrw8EEtwPYjCnMb9VWPm+Ydmo=;
+	b=PMxTiCpHmHA57RGglwku+KVIO/5PqZ+4cmr35GMTURJwzC5ENE/t5W8RDc8YbeJmU9XU
+	 kxtRJlRN8LUJMBVUfLqyMshsOPJ7WutwQsGropH3MkS6iDNQ0LDjnkPAN+C9D3XKuVM2d
+	 tOWcW5tGsQiufmGZOZ0rOYpyCA6xpkNcTsVVB+D+jlwwelfEUpeKqAc3ix07zSLf8tVgi
+	 mKTjbPzqSXwoS08UxX5EfB3YfbaIL4sHmPc0nPJVs/iefsjJf1kTDIcoN5GjV9RwJjA2x
+	 GHQ3wsszA5t3q/qCBUtc6XFbhD6+RxH4e+qIDEQnQV+7SJcRNzU7GgA3Ivi3/zPxMBg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=A2luHTnB;
-	arc=none smtp.remote-ip=209.85.214.169
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	dmarc=pass header.from=baylibre.com;
+	spf=pass smtp.mailfrom=baylibre.com;
+	dkim=pass header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b="E3+6/1hx";
+	arc=none smtp.remote-ip=209.85.221.44
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EAD5606A331
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 18:25:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6EAD5606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 674D8606A323
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 18:35:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 674D8606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=A2luHTnB
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2ee254f6eefso6705ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 10:25:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=E3+6/1hx
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-492690dd5daso3669715f8f.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 10:35:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794853502; x=1795458302; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=RxveffzrPQLFyll9ZgjwqbKKHagqTYrppHHKXVLfEqU=;
-        b=A2luHTnBzkGSMF2SIgDNxeNTW+bNvFUE0N2jlRcqRczmzdfRdcN9yBTceU4GEI6kAn
-         hfRh+Bi3fIaAUEv1QVrJENm5Lqq0t375pPznAk7/OIdgG1YibB+Qs3xumwqfJ8g5nd0k
-         6tGPIUAOHCegV3iOa0V9fxGubHoApxuoEM/xrOxhuTpgwO4kS8hLv9/rEbNyLdYr4kiE
-         746Q8+8rNxbMY4cUu2/EQeyEGKWNs2kMUNjwXx3+b/QQq+OLETf+jHbn0FbHZVV6KC/A
-         SGedSkLiSxOSdLSFaZk4mkqZi5tkVkbnF9iMk5R+t6kAJqe3URHpGr8RZe+HWd/gWgpK
-         n6lA==
+        d=baylibre.com; s=google; t=1794854138; x=1795458938; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=EPargW/ndTMk8W5T5ryrw8EEtwPYjCnMb9VWPm+Ydmo=;
+        b=E3+6/1hxj2sx16NOC59UDyHnwicYd2BXhyX5J0HFKKh0Bi9Mmrg6Pit7Zxd7QWuruj
+         rs7xrXDQra6ZSF/eTfdHvMV9IkMasjFZSUbr+DOllAIselgkMhGyy3TS8Xn9iMxGSDab
+         Ge9bwzPp/nwI5nxBrxl2Gzj7UoMBIeuAgiiTPtU8/hu5kZFbIrwF4Wc2/6toi8T8DF70
+         BboMkugbvcXP2EdxqjLiNJVqVickrZ9lcmh/10OmSjOKc5Ov/l/iAqgfseMnAMNeQ3kC
+         Vz5uf8uPNhqWlDhJaqhfMX7P/0vFbGZWgeEQ7pz/Pi+d6ri3FCsVy2in6j1RH6blXZQF
+         1Ufg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794853502; x=1795458302;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=RxveffzrPQLFyll9ZgjwqbKKHagqTYrppHHKXVLfEqU=;
-        b=jq1G/somZ7xM1/gXtj7Or+Pu1g0KtoczWli7AxJIC20gkAotsueJ477jMTKBO9n6N+
-         9/ejpfqf1RegY8aHUa/PSM39nV1Aqa6aMe/ZEmX5R6xoibqaM1IG6/ktg0bjjYmt3PO6
-         TzllLWqPtrdLP6fCKfUIPNr6ZR8zJ3CqD1Y+2IZVOBAVVnNwsS6nRGwPkq6zgclch29b
-         4pBGw4n5AKwelerWHjLE8u32BMwTqBn4RDeP/S/MJDg5o0Ugvr0njxZAUG+SntmytM7K
-         GnJ5uDnoUccdb5M7lAE+qUMxHYps0UzJOWypV/PETDT7PZwD8qnxnOvRXEswlK+9w1Fz
-         GZHA==
-X-Forwarded-Encrypted: i=1; AL+hErH6bh85RBgJ+rD5l/YwlqTXWrGEduXHxqf5br15YRcDcc+Wn/GxgWQDllAtYgjLiRczUKghKp0lb5g=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+f9uSJe9X76P08/QTcbgSCSOZ168CEEC2Ethcrk5QHCmVy+op2
-	FIjXo6JjrdbG2HNwSHc9X9FdQmsc6jQe35+W2zQvysYfAnY4skyWbwjIHs1/9WJuaQ==
-X-Gm-Gg: AZFdTZdfbyLiQ+kOT0ASzzUayzoc+RimIkBop6F3TUscqmLzysalj9Tsg/c3EKBbO8i
-	ciEbDpyGa7QXESXRp4wPdDxVKkh+AIXMs8IQ741QZsj/g2kcJVt+x/rBmHNJnRT1mhnybd0UmUV
-	TanipE4FLPxrztYtK3npiRfAqVKHQK21MRhhyrdXsq24hdAkjg2cIgAmyF0a/A+hEJV4f2dGVBN
-	hdcHzpn/VNKgU7ilgrATV5dMsp4eR5GniYq7z2e8QZT9exe86/2PioDNVk9RbyAxYinZMRtRi4E
-	z2KATcis9vG5rGGQj8D6xnXiHdwS7DxBnNaNRL/727ZklfgpX3xaLn5h6duZJibYA/Ob/6uPLni
-	uibEF6c5RaxOnzXTS7tHTghQ7VD6ihnZUtywh/AH6f4q7PRFNe4vco6mrLI9NC0etbV1iKgBJkN
-	Gonl3Z6Flz07lLVjOsM+OIGMXgXM+eA021Uun4h/nBTUCoMUatCwK1ci4UXCHyDdm+65zUwuHSl
-	8oMSm51oBKbylJTJDTWoJZcVxbQid+DKtu+wWB8s8K6k7TIm1TJuqkqfLdIp7536GfZDRKDsISy
-	MPsAb++GHSV9o9BK4tk/naaU7IBS/rxQNyfVfC7eIDkfWPYiMbbYgxAYXd+efw+EcPyUz5lKDSP
-	wzTPEl9CBX3gDmxZCb1zcsQ==
-X-Received: by 2002:a17:902:f68e:b0:2e9:73e0:2a6e with SMTP id d9443c01a7336-2ee2b19e019mr7765275ad.17.1794853502041;
-        Mon, 16 Nov 2026 10:25:02 -0800 (PST)
-Received: from google.com (25.75.145.34.bc.googleusercontent.com. [34.145.75.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac70ea45sm296668a91.17.2026.11.16.10.25.00
+        d=1e100.net; s=20260707; t=1794854138; x=1795458938;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=EPargW/ndTMk8W5T5ryrw8EEtwPYjCnMb9VWPm+Ydmo=;
+        b=2ROkyiPyp/WDecHT4xu0SDVOvWQlSN0JvhaoGZxJmNRRBj7LTwSuh6yIHy1RAaYuUp
+         kxod8JAZcPG5bTX6crjB2UVDipLx4BKIbE1BNf2tT80O4F/KLp8cy8dCGceU7BqwPetP
+         1tNMZ0I69JwRBWGvc2+h2CX2lO7/KdxG7yR0rn6AqO0uzoY1IQCb9SMlGXQFwH4oHHw5
+         8d9Iez/+1Q1NWpWjMAV8NZol++/wHcNiC3eG5toqzz3ac4rvPhppDr3rE0SJpKzRDRq8
+         KykatWsYNprPIjtSCfkwhsMeZ+XdxQyjMx/+YlHabYqurdiJ0TPHrDXyo9QW9R7X3k2t
+         JxSA==
+X-Forwarded-Encrypted: i=1; AL+hErHMfJJgGKUVS7+eI+8HhgV7r3jX+C3+W0YzfOHE+HqpLlkbRANpgM7r2TmE34xmoabR50fiMIZB/T0=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/gG0EQbB91oDn3295EkbC9OpQNySWa294uiTKJZvpRAd5M0u9E
+	Cvmhu/ZzgWlMSgz4lbCbhPK/E0dN6qrDaaPdPSa4Co5YzQB3bImEOO4qZ1DWw19p96Q=
+X-Gm-Gg: AZFdTZdyjvznuJ1BgsK7RPkVu+eS64rweX7xBHhMCJD0jJYxlHCbEQZag4wq9TG7e4V
+	uPd6UzMoiZWqHKzi3KgMBnHzkeCTT6sxKD9WMpP27EjlStauEiCAGBvvmBoV2uF3bk2GR424Esy
+	5+ZhPbBm0vesoOab1TW7EmmTVbJGhsulxDkTGgp2QB4rrG+drX7K/1hg74rXYm0+NUVfjLTEIa5
+	8urzmbzBMpvAMzbyxfCBjVK4NSphKKDUz2Rve2x1M6oKKauBfyEYnvn/K5Fa/GTi9ehdeSZkEfn
+	eAOJNR493Sd/RJ3c+Sg4NMjodZ2wy5r3iAKBtYjLHgEAeN0Oz9M4H/hycLJg/u28j0Aj1sMWmlp
+	AE0S5x2iInbO1hg/LUbFt63mApp0UEbGiXhwvxVg/hLGNTwLNlgDEFW9nui23nNzCwAy2RtthR9
+	H43ZuldsmfEPgnPNtPm7GdFVUBaVvEymQzlKZKPVSMS9m3WEhSR2qENULZTQZfFu+jS4m9H1bj3
+	+PUSlqe/Cv4fMaXKIySB+XAXwjqOyxmowTHekIO7IXzvMovOAYv2xkmJxBW2/4ldhYDwNp+qZAa
+	O0A9OtJd/WN/s1eHC6Fp2ckEemS2SY+JnU9jywE3AWdJPSGwOw0eCK1jjP+7sgHscQqswko3iZR
+	RP2auARbUm4SoA1thsYO6d422igNJWK+qVIEfHw==
+X-Received: by 2002:a05:6000:491c:b0:48b:118e:7454 with SMTP id ffacd0b85a97d-49c70a0f0cbmr22973182f8f.31.1794854137742;
+        Mon, 16 Nov 2026 10:35:37 -0800 (PST)
+Received: from localhost (p200300f65f19a90439293c698a65b414.dip0.t-ipconnect.de. [2003:f6:5f19:a904:3929:3c69:8a65:b414])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-49c5fe373casm23015553f8f.30.2026.11.16.10.35.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 10:25:01 -0800 (PST)
-Date: Mon, 16 Nov 2026 18:24:57 +0000
-From: Samiullah Khawaja <skhawaja@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>, 
-	dri-devel@lists.freedesktop.org, iommu@lists.linux.dev, kvm@vger.kernel.org, 
-	linaro-mm-sig@lists.linaro.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, Alex Williamson <alex@shazbot.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>, 
-	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, 
-	Leon Romanovsky <leon@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, 
-	Matt Evans <mattev@meta.com>, Matt Evans <matt@ozlabs.org>, 
-	Mina Almasry <almasrymina@google.com>, Shuah Khan <shuah@kernel.org>, 
-	Sumit Semwal <sumit.semwal@linaro.org>, Vipin Sharma <vipinsh@google.com>
-Subject: Re: [RFC PATCH 0/7] vfio: selftests: Add peer-to-peer DMA selftest
-Message-ID: <avtI--OIZu5E5sma@google.com>
-References: <20261111192411.4133780-1-dmatlack@google.com>
- <avYjFfqr3T/U7lvn@devgpu015.cco6.facebook.com>
- <DMTK99TDM9AM.SAM3Z4COP9WS@google.com>
- <20261115231946.GB1239159@nvidia.com>
- <CALzav=efnA_ABCZVicX0QeTmHknaEbMeWOy8cS+zHYVhm5z+iw@mail.gmail.com>
+        Mon, 16 Nov 2026 10:35:37 -0800 (PST)
+Date: Mon, 16 Nov 2026 19:35:35 +0100
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+To: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Hanjun Guo <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@kernel.org>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Dan Williams <djbw@kernel.org>, 
+	Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Alison Schofield <alison.schofield@intel.com>, Ira Weiny <iweiny@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Zhang Rui <rui.zhang@intel.com>, 
+	"Mario Limonciello (AMD)" <superm1@kernel.org>, Saranya Gopal <saranya.gopal@intel.com>, 
+	Gergo Koteles <soyer@irl.hu>, Jakob Riemenschneider <riemenschneiderjakob@gmail.com>, 
+	Yauhen Kharuzhy <jekhor@gmail.com>, Pawel Zalewski <pzalewski@thegoodpenguin.co.uk>, 
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, nvdimm@lists.linux.dev, linux-pci@vger.kernel.org, 
+	Kai-Heng Feng <kaihengf@nvidia.com>, Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, 
+	Mauro Carvalho Chehab <mchehab@kernel.org>, Shuai Xue <xueshuai@linux.alibaba.com>, 
+	Alexandre Belloni <alexandre.belloni@bootlin.com>, Dave Hansen <dave.hansen@linux.intel.com>, 
+	Chu Guangqing <chuguangqing@inspur.com>, Andy Shevchenko <andy@kernel.org>, 
+	Mika Westerberg <westeri@kernel.org>
+Subject: Re: [PATCH v1 0/4] ACPI: Use named initializers for acpi_device_id
+ arrays
+Message-ID: <avtL3i7n9cUARCd1@monoceros>
+References: <cover.1794567577.git.ukleinek@kernel.org>
+ <CAJZ5v0jC5YXsLgB6Qd55KNCU0oCsN86X5WpRfL+Ycz0MJ8vGqA@mail.gmail.com>
+ <avs5thXfoZA4TBnE@monoceros>
+ <CAJZ5v0iSJVszOCLCuK+ifCzTgx1RgDAExaYUbij=jaWmaTsb8Q@mail.gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -110,44 +115,71 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="nqnngouwa55krefe"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALzav=efnA_ABCZVicX0QeTmHknaEbMeWOy8cS+zHYVhm5z+iw@mail.gmail.com>
+In-Reply-To: <CAJZ5v0iSJVszOCLCuK+ifCzTgx1RgDAExaYUbij=jaWmaTsb8Q@mail.gmail.com>
 
-On Mon, Nov 16, 2026 at 10:02:56AM -0800, David Matlack wrote:
->On Sun, Nov 15, 2026 at 3:19 PM Jason Gunthorpe <jgg@nvidia.com> wrote:
->>
->> On Thu, Nov 12, 2026 at 01:47:03PM -0800, David Matlack wrote:
->> > On Thu Nov 12, 2026 at 12:35 PM PST, Alex Mastro wrote:
->> > > Hey David,
->> > >
->> > > On Wed, Nov 11, 2026 at 07:24:04PM +0000, David Matlack wrote:
->> > >
->> > >>     Is requiring userspace to re-issue IOMMU_IOAS_MAP_FILE the expected
->> > >>     uAPI behavior?
->>
->> Yes. Even if we wanted to the locking is doesn't allow trying to do it
->> automatically.
->>
->> > The way I designed the P2P selftest support requires 2 things:
->> >
->> >  (A) initiator: A device that has a VFIO selftests driver.
->> >  (B) target: A device that can provide a memory BAR (vfio_pci_find_mem_bar()).
->> >
->> > So far I haven't found a single device that can do both. But you are
->> > right that theoretically a single device could satisfy both
->> > requirements.
->>
->> mlx5 can do both
->
->Looks like GPUs and NVMe can do both as well.
 
-AFAIU the memory BARs for GPUs would need initialization. The internal
-VRAM needs to be exposed (mapped) to the BARs.
+--nqnngouwa55krefe
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v1 0/4] ACPI: Use named initializers for acpi_device_id
+ arrays
+MIME-Version: 1.0
 
-Do you think we should have a P2P device "setup" step that can be
-implemented for various types of devices?
+Hello Rafael,
 
-Thanks,
-Sami
+On Mon, Nov 16, 2026 at 07:15:48PM +0100, Rafael J. Wysocki (Intel) wrote:
+> On Mon, Nov 16, 2026 at 6:16=E2=80=AFPM Uwe Kleine-K=C3=B6nig (The Capabl=
+e Hub)
+> <u.kleine-koenig@baylibre.com> wrote:
+> >
+> > Hey Rafael,
+> >
+> > On Fri, Nov 13, 2026 at 05:17:30PM +0100, Rafael J. Wysocki (Intel) wro=
+te:
+> > > > Uwe Kleine-K=C3=B6nig (The Capable Hub) (4):
+> > > >   ACPI: Unify acpi_device_id list terminators
+> > > >   ACPI: Drop unused .driver_data initializers in acpi_device_id arr=
+ays
+> > > >   ACPI: Use named initializers for acpi_device_id arrays
+> > > >   ACPI: Unify *_device_id list terminators
+> > >
+> > > All patches applied as 7.5 material, thanks!
+> >
+> > While rebasing these patches (as part of my wip tree that contains a lot
+> > more similar patches) to next-20261113 I hit some merge conflicts. If
+> > you tell me where you applied it, I can take a look and provide my merge
+> > conflict resolution to allow double checking.
+>=20
+> I've rebased a couple of patches on some material merged previously.
+>=20
+> Please see
+>=20
+> https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git/commi=
+t/?h=3Dlinux-next&id=3D58d4ba8979133c41cd491dff1dab40626daa924a
+
+OK, it seems you already rebased on top of the commits that made my
+rebase a bit bumpy and you did the same resolutions as me. :thumbsup:
+
+Best regards
+Uwe
+
+--nqnngouwa55krefe
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmr7TPUACgkQj4D7WH0S
+/k6vZQgAjLzcTYkt9CbkThW0RlljMQXJxP5fmZNoFevLodwamfhpt+348ZmhBkWR
+pva0yzF64v2uFwtmOgge+e1azRuruDvxfilctoJgbCV+g8N8GlaVkT6OU7mHXpNB
+C/esmpj/xKsGPaZnrbRAXqxJ+/KWjGuW2Tc4/CLmjidnaqdHoi6we+/W/YDZe/zD
+hK5ahEuQfANr2sXtQMET7/79wAiZ0mquQalFQaDDF2whSgyu7dWdt3+ahdFOS9u3
+DTc/gz1Yiu4f/sTzP8Hh7Gr6y/CnHyaILNhtxA3YnnMqLmQnPEONbSnbua34q36a
+S4dDn9kuuyzsCa5pFr4vhDplKXzROA==
+=5qsj
+-----END PGP SIGNATURE-----
+
+--nqnngouwa55krefe--
