@@ -1,49 +1,123 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=217.140.110.172
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794849251;
-	b=e4rurydjca4ohEAOuRhjsBqf3Laihd+G++1rlFP4Z5mHVNRsTSbls8l/Ca0SfDAtFJrM
-	 nElpX/yUjYb5e0xmmw4h0c9lBUR4nVk/FX5SKufy5dFsLqhv4gkrpyfHEaE3DBE9ZOhXv
-	 VHZkOwH24WPz6+UYF/YxVc4sEwpCUirK3P0FIfs6094LBE7tgUlOsL+oC20QFwy0cX28q
-	 bx796WC/l8cQbdGh2X/Rh2PRP2xW6iPed63wvjw1cZdpvgabPBJ2zDhZnSDhLy3F4GAMx
-	 gKOOL2HiV7goCxra7LGP3zFnbaXsF79oRVf8JGGfoCIevU+eNCj0zW8llc+cd9ursHQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794849251;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=oD6xjLGP1p1QO/KyzSmaklpRQQCQt5kNwZ1vxWq45Wo=;
-	b=4Pc+qsfGngv9X4UvHXQ9Mihlystl5siIzCPUaeCr3bRZlpukHKu0h0IQ+3bv2IWPSiiW
-	 H7rUZToK9ymVMJpapjbIrl29Id1wCN9xFADGEsw9Q8AmqVZo9RIu0ieE2iU+2F/Kx1gnM
-	 xk/sVaoTVveE+zIM0lI+w7rxLWzNbICnCdrRo32P6KrfZbO8Ff86ox9nnt9dk+Tvj64Qj
-	 n5zDwexF3Hb9rxgWiqvosE4CAUnjGa2Dv2rsRd2k0GG+G5uDQhYIWgUjgbNpHN8DiBTP5
-	 Bua/xFK3mE2kNd6yqDeTRypWk2Os+VfXAhfqCsUa0B88hJeIF1RtBzkwoeR3zeNPETQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arm.com;
-	spf=pass smtp.mailfrom=arm.com;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=t766+NIJ;
-	arc=none smtp.remote-ip=217.140.110.172
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 194FA606A322;
-	Mon, 16 Nov 2026 17:14:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 194FA606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.180.131
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794849259;
+	b=yykLw+7g95JuYlCkOVpIlc20k7muKGey4UK89Vm1w0gkfEriB46QpfYXk7d7Cj4lH/6S
+	 CALKJCGx55BcDdCW1TIkZ2vHlvxf4tUk7kItaJz6yTLrEs1p/XB2PoGttF/q4ufFsW9b2
+	 1lmq7+7DwWeEf2dhL9mcRS50RDPg3xnuXyE69AFroZN+Vy7tPEIVWDgm5cNRbPS1++F6E
+	 0Vws/5vBC04BVZ6I5noCM3kMQL7hYrlMynlL96OaIRhVneGtiXTADqGmgS82Xbbg5lAmR
+	 H/4cr9PN9mAI2r/wFQZWEz5VpSSbBv4r52bRQZ24xNHoxYRUBRjX8q7PtrgAHQ1sRAg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794849259;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
+	 X-Received:X-Received:MIME-Version:References:In-Reply-To:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
+	 Content-Transfer-Encoding:X-Authority-Analysis:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=UGIDXdp2RIrXTSdgnrAspAZ/nkS4v0bZBuA1gb5G5i8=;
+	b=w8tS6UKtWriqMp4eu5rop3NYVc1YBOAYJ1afN7RAdiBVZnKObmV8Km8YuUzLrvD8CdzP
+	 tr5Ka7fYkHw0o6TtF8ShPUip7WMaqxdvb2+IrHrTpCsH4efwYpptemAVs7ekx6BWM9zHA
+	 nQXtj4SyswK7xZglABlgn2zFYMfVv9KzYz9AJax6/Pr2ZoHbi4Ul7P7CAiTCIhaiWK0TN
+	 9/uTUYO23kSnNEYIoiTM918mjoPNQb4gclJ4MZKEUhDAbiJphQGTzXBQUOIbj0QIbjabs
+	 WMZxrHXETDEnBZUzC/O+5tiFPtqOE3kuv2qMtV5unC5t1Z/mPqpuCnKKVLZ+F7WBjhg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=NywTcSMT;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Oavvq+Jw;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DA80606A337
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 17:14:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8DA80606A337
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=t766+NIJ
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 114891476;
-	Mon, 16 Nov 2026 09:14:05 -0800 (PST)
-Received: from [10.2.212.23] (e121345-lin.cambridge.arm.com [10.2.212.23])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3AADC3F632;
-	Mon, 16 Nov 2026 09:14:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1794849248; bh=Y/LDVkPRdojFVdWdZuy7hYb3sZ13M4Qo5KKpMgZclts=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=t766+NIJWk5CeADE62+AhYQCjogseUG8qdQVHJYyj6KD3epFwb8pvhsiozOg7ow0G
-	 5dFAk4nz9rFqs7YbyhEGy+PpBCzFEWertlgn27JbNZYVynM8CKOlSXtLGr+b5sU4x6
-	 ZROeUlBRlr3SWPygTZwemQ1XL0y6Vhs3ScVuxo6U=
-Message-ID: <b4c2538f-8021-4abc-be2e-fcd1596f84ca@arm.com>
-Date: Mon, 16 Nov 2026 17:13:59 +0000
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=NywTcSMT;
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Oavvq+Jw
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AGGIQYE2789944
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 17:14:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	UGIDXdp2RIrXTSdgnrAspAZ/nkS4v0bZBuA1gb5G5i8=; b=NywTcSMTB0SjVUH8
+	zpjux3PRGT+tY70cwKUHkTdZU6FQce64TaRkPm55vIxr2cJyMo+bEdnrpOKiv31O
+	FFQIlEiLf9N9yJLplM7D8VMht3Te2bvxzvNzib6F+Fh3/GJE2YfxEfkSh43plUNn
+	0U1jZvUAj1k0ASPm4mybE5QcXm+kJol8yLMjkVb02U85KmpF24PWjWCvAtJF/98A
+	CoC5ifC7q+rvAkW3KWJF8yyVOUcN2Y/WhBKI04O0FA8R95QVy1aOW3+QGT7qfpqA
+	LoOOYzr+6iz7S4t2RDspWL/9FPDi3hgcY3SmQ40L6u9MAWeAL6SOBB8V45aF1VzH
+	4Zp33Q==
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j00nfhext-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 17:14:16 +0000 (GMT)
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-948d83322f6so629080985a.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 09:14:16 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794849256; cv=none;
+        d=google.com; s=arc-20260327;
+        b=SVvxACW9S1AzeZKog9nwDYG3F0PPv2UWxBAMSG+W7h4VtwzyX8jd6TvxVBLcQPFJ2t
+         eX13QOEstmhMz0zZzdGGYqL+4IjhaU2WibO5+lbf8z/D80J/uzB/4Gw/Gowg9mf6CVye
+         XRO2bQEuZG9HhrJRq92W46HETc3LZMl2TOt9l5FTkUCOjS+m6Ax66yefD3BBxqmtWtgx
+         bCtUu1AcuxxwdHx3keiLv3cscI3PiuaPCamasTluSnRLEKWSCU5cshvOxgIE6Q37t3YB
+         cRCkIQ1kDzO58mMjoxdQBRp+louMIjwqLeDElpZrMMe8UeDqsj/m6RCJjdcch+3SxezW
+         tJzw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=UGIDXdp2RIrXTSdgnrAspAZ/nkS4v0bZBuA1gb5G5i8=;
+        fh=AkTk9dPkJHzWgQG8I76gP84Z9MY6iDO5l3wuDqRs+zo=;
+        b=F/LQTIxcWurnCOa0NhUYK8e1BkccVh61Q9fWNgZvq648HU4g2ccRhXj4wNNkTf88Wx
+         T95Ury1p+sTrF9YVMU6wlJFCb5fVBNrqHmpc8QTjUjYXDO9b18sF686rq31eyGC8KVk5
+         Js9C4ovpI9dq0TB7DZLRU4/7LW+dVM3SAVkNexP5rmUaWGzzHzjhCQlj5+V7YAPnDfRc
+         8SvBInWpzqSAAB6se0coGTGnmE6Xpdo2nXUjDbCay9c9ZiSS7Jj+0zZVB98hJTYjLOPa
+         K20VO068sVOltm30eSQ4R/P4fCn/hpO4eizRrnXOuCtuFcL2tZiobw8FAYcsLLvM7b7J
+         PwEA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1794849256; x=1795454056; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=UGIDXdp2RIrXTSdgnrAspAZ/nkS4v0bZBuA1gb5G5i8=;
+        b=Oavvq+JwNQrTn5YmGNpTNeeEL/plcUcvqJpF8HaP0iHoXVlerGo8RsTb33IrKAIXEa
+         UEbEmF6gVxDQsV0OCOX/zkrltHSnDA/k6NhQQqLfv/6Ae7kPJWuPUdYuJiX8SFb/z64w
+         oS/RslhJ//HsCF29Pn7yZejEuMX6UepSDdxXS9kUADNYfKKIMW+iXQKSDTN1IpZsJ2Ni
+         UkfUCxJeFnm5RZC6II3tEJKmWDl0zZgHtU6QpAPJfzsPX0XwjUT1K+lICHFXZ0umgsQt
+         byVlH5niBMIQMv2sX4dAZoK9OVqMnv1CXIZqO9CQKuvg4O+sXSxeJJZsf7q/tDQ0S+UJ
+         jxIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794849256; x=1795454056;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=UGIDXdp2RIrXTSdgnrAspAZ/nkS4v0bZBuA1gb5G5i8=;
+        b=Pk3XNgkNZwPX0mIAgLUxwUe/L93K7b9SKeQ/G9KMHvKmLhJHJmOCHs2rwf+2SDJ4Sx
+         2/2gwrrjGNmUrNEXQnocZYKLMEJYa7MxyNM8BcxVVvUt0ON/MF5xu1y2jP4F5BSlJyDm
+         S1uUjvcbOeiCyO4CiW9vAhxCr90Rwx2jyD5k4mI2dyi9gM0tTTXA9FhAi99ibBceNOT/
+         D/f+M2qEvKlhfa2+ZKOTEKZjyFAJ5uuM5hrN8XsTO0s4Unx9Ohal+7j8zZ7h7bdyrpLJ
+         bDb2sSaqe+2bdA7N+ad2YsyK6uUsKQEXqICzO/SszYc2MlHKFpwYqmbBiAnOjc+8LEmX
+         S7YQ==
+X-Gm-Message-State: APuU4Z+B1WuJGas/mdSCo1bBZWhv3v42NvpDMqOKwsYciQntrOpLJNTC
+	PVUVCUh4hQve8m043uV6yFCeJj6xFGQs+JAKtVr1VE8vZcVCaGB11jgIFHhDIPge0IT0ESTYcpF
+	ScOPzWU7fWR41pYK9DKc6e8VTs1cqDwgErFnlfG+nhA3fJnHm56dT8EyQUvkp6TZ5po8H0kMjmb
+	1sE2o4z/R9hoUPwEIVWF9DY574Sp+ksOYyYEj3aQ==
+X-Gm-Gg: AYBFou3+SwZqC6ff9hMZcrAFINhkBucuNuyICyyFbSakLOCZMI73kuB6xHQdqNFjU7z
+	c4FpYzF9i6A2Ozyj7IYjPOIQbaie4HidUBWtjPrL5NkITr2w5ER3elGw+vxU3JHZltYrGa3uW3h
+	+GAuRcSyML5jJjh8ZU4saQBKA8j0mVGfNWfrZ1lz5wstoWyp7AA21NWeiSngySwSzp22QDuVXXs
+	Cpv2i1KULSmCYV9dOmR+pj2SiVV2MP+uxkXjN5qTcADpxjCFluC+gCpQlZ7fOiGKB602mqe5vF2
+X-Received: by 2002:a05:620a:370e:b0:949:7502:6a8 with SMTP id af79cd13be357-94975020921mr757115885a.56.1794849255611;
+        Mon, 16 Nov 2026 09:14:15 -0800 (PST)
+X-Received: by 2002:a05:620a:370e:b0:949:7502:6a8 with SMTP id
+ af79cd13be357-94975020921mr757111285a.56.1794849255104; Mon, 16 Nov 2026
+ 09:14:15 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -53,194 +127,194 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
- Dmitry Torokhov <dmitry.torokhov@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
- Heiner Kallweit <hkallweit1@gmail.com>, Russell King
- <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Johannes Berg <johannes@sipsolutions.net>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
- <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "Joerg Roedel (AMD)" <joro@8bytes.org>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
- David Woodhouse <dwmw2@infradead.org>, Lu Baolu <baolu.lu@linux.intel.com>,
- Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
- Marcel Holtmann <marcel@holtmann.org>,
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Nipun Gupta <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
- Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
- linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
- linux-input@vger.kernel.org, netdev@vger.kernel.org,
- linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
- linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, iommu@lists.linux.dev,
- Jason Gunthorpe <jgg@ziepe.ca>
-References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
- <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
- <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com> <20261110122237.GG8635@unreal>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <20261110122237.GG8635@unreal>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20261005-monza-wireless-v7-0-5a6de7662dcb@oss.qualcomm.com>
+In-Reply-To: <20261005-monza-wireless-v7-0-5a6de7662dcb@oss.qualcomm.com>
+From: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Date: Mon, 16 Nov 2026 18:14:04 +0100
+X-Gm-Features: AclHuK-gzqgD2ofKvkGd7o_qM6TFIZRuqcKLnoXo_1NUG577lrtNPElPOvNnw5A
+Message-ID: <CAFEp6-1ys9CibgvvaQL3dvA7y0GjJbhNgf0wD5YAAFz3AqFkaA@mail.gmail.com>
+Subject: Re: [PATCH v7 0/8] arm64: dts: monaco-arduino-monza: Add support for
+ LGA WiFi/BT module
+To: Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Bartosz Golaszewski <brgl@kernel.org>
+Cc: linux-pci@vger.kernel.org, Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>, Rob Herring <robh@kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+        Wei Deng <wei.deng@oss.qualcomm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Authority-Analysis: v=2.4 cv=BrEIUoX5 c=1 sm=1 tr=0 ts=6afb39e8 cx=c_pps
+ a=qKBjSQ1v91RyAK45QCPf5w==:117 a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=_glEPmIy2e8OvE2BGh3C:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
+ a=AQfUo8DtNGVBezQI14YA:9 a=QEXdDO2ut3YA:10 a=NFOGd7dJGGMPyQGDc5-O:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTE2MDA2OCBTYWx0ZWRfX3odIrUbtqO8b
+ vIsWzoSWBXxIcnRQLWMDQVHmxxd/dcnHr3GUrGOTudy1MoyTi8c18wcJVXewdW2os57t2aYS0hJ
+ BG372e4gbvUbpsJgQfFhoocEJUpf1RE=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTE2MDA2OCBTYWx0ZWRfX7jgfP58ewOj/
+ j3uSfg7OGm1kq45QaZPMAiLLnQLZr+fDM44DUFUeKutINGqGJMbnjfgVywSEOEQPt76miNzxycN
+ zru/sA/oEv96A1MO1ZMApGwHJtiLm0PyqrT/CQspwpG/3g80mJ6kJdPm8hR8hHX6TLyuy5n1FFk
+ nPoec4DxBA+4AUphJ86CPkKy/VpQo4gCadumABPVtdIhlLULDcXVa6IChUPjKk96jldV7rnmMnR
+ 4rB9qtw7BC0W8aCFx/IvLrYWauITm8HnJlnyQoL8OW4DfR+v7UHcuOiMaBjvKi24x3UjnGmmb1h
+ PpSPcKbGuOaLA1Da9r7hY/AfJxUA2mCNz7H7Ae3KugRn3oCu2HyUdNLwmdlNJMwlTYoj9eq6nmJ
+ UKuvZdLUpscMbRNESalfs8d3NFby9QYztwpl3FSjmCfwILi+UQslWiLfIpQioYCyaV5/AXKtHf5
+ gyNXrgi/FKIJHUkrYOQ==
+X-Proofpoint-ORIG-GUID: Wf9b4SeAQG5zCEH3Z0-lLDfE9XSCJATO
+X-Proofpoint-GUID: Wf9b4SeAQG5zCEH3Z0-lLDfE9XSCJATO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-16_05,2026-11-16_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 spamscore=0 phishscore=0 priorityscore=1501
+ suspectscore=0 adultscore=0 bulkscore=0 malwarescore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611160068
 
-On 10/11/2026 12:22 pm, Leon Romanovsky wrote:
-> On Mon, Nov 09, 2026 at 01:53:02PM +0000, Robin Murphy wrote:
->> On 09/11/2026 7:33 am, Leon Romanovsky wrote:
->> [...]
->>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
->>> index b486b8bbd1fcd..8be2a246d4903 100644
->>> --- a/drivers/iommu/iommu.c
->>> +++ b/drivers/iommu/iommu.c
->>> @@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
->>>    static int iommu_get_default_domain_type(struct iommu_group *group,
->>>    					 int target_type)
->>>    {
->>> -	struct device *untrusted = NULL;
->>> +	struct device *restricted = NULL;
->>>    	struct group_device *gdev;
->>>    	int driver_type = 0;
->>> @@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
->>>    		driver_type = iommu_get_def_domain_type(group, gdev->dev,
->>>    							driver_type);
->>> -		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
->>> +		if (dev_is_pci(gdev->dev) &&
->>> +		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
->>
->> I think this should be the generic device_is_adversarial(gdev->dev) now - in
->> fact probably all the dev_is_pci()/to_pci_dev() stanzas aren't conceptually
->> PCI-specific, just an artefact of the current "untrusted" flag being so.
-> 
-> I wanted to do the same, but iommu_get_default_domain_type() may be called
-> before the PCI device's trust level has been set. At that point, we are
-> still in "disabled" mode, whereas device_is_adversarial() checks for
-> "adversarial" mode.
-> 
-> The below is from AI, I asked to present me the path for that:
-> --------------------------------------------------------------------------------
-> For a newly discovered PCI device with an available IOMMU and a new IOMMU group:
-> pci_scan_single_device()
->    pci_device_add()
->      device_add()
->        bus_notify(dev, BUS_NOTIFY_ADD_DEVICE)
->          blocking_notifier_call_chain()
->            notifier_call_chain()
->              iommu_bus_notifier()
->                iommu_probe_device(dev)
->                  __iommu_probe_device(dev, NULL)
->                    iommu_setup_default_domain(group, 0)
->                      iommu_get_default_domain_type(group, 0)
-> 
-> For a device whose initial policy is adversary, its state during that call is:
-> dev->trust_policy          = DEVICE_TRUST_POLICY_ADVERSARY
-> dev->trust_level           = DEVICE_TRUST_DISABLED
-> dev->trust_committed_level = DEVICE_TRUST_DISABLED
-> dev->driver               = NULL
-> 
-> device_is_adversarial(dev) = false
-> 
-> The active level changes later, during binding:
-> really_probe()
->    device_trust_prepare()
->      __device_trust_prepare()
->        WRITE_ONCE(dev->trust_level, DEVICE_TRUST_ADVERSARY)
->    dev->bus->dma_configure()
->    call_driver_probe()
+Hi Luiz, Bartosz,
 
-OK, that seems less than ideal. Feels like it would be better if bus 
-code set the initial device state prior to device_add, so then it only 
-ever changes later as a result of an explicit attestation/acceptance 
-process. If the initial IOMMU probe still has to poke into bus-specific 
-code to avoid always making a worst-case assumption, doesn't that rather 
-defeat the point of having a generic abstraction?
+On Mon, Oct 5, 2026 at 2:21=E2=80=AFPM Loic Poulain
+<loic.poulain@oss.qualcomm.com> wrote:
+>
+> This series describes support for the onboard WiFi/Bluetooth module
+> present on the Arduino VENTUNO Q (monaco) platform.
+>
+> The board provides LGA pads for a wireless module. On the VENTUNO Q
+> these pads are populated with an NFA725B module featuring the
+> QCA2066 WiFi/BT combo chip. While implemented as an LGA footprint,
+> the design is functionally compatible with the M.2 Key E.
+>
+> The NFA725B exposes WiFi over PCIe and Bluetooth over a UART.
+> Both interfaces are gated through the W_DISABLE1# and W_DISABLE2#
+> signals, as defined by the M.2 specification and handled here via
+> the pcie-m2 power sequencer.
+>
+> This series models the hardware using the existing pwrseq framework
+> and connector bindings, allowing coordinated PCIe and UART bring-up.
+>
+> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
 
-Even with the slightly dubious argument that this series only intends to 
-shuffle the existing PCI code around rather than fully introduce the 
-generic abstraction that it claims to, if the PCI behaviour is still 
-just based on propagating the internal "untrusted" flag plus the new 
-global override, both of which *are* known at add_device time into the 
-common trust state, then there seems little excuse for not doing that 
-up-front so that the new API *can* just work as expected.
+Is there anything blocking this series from being picked up for
+Bluetooth? I've already rebased it, so I'd appreciate any feedback if
+anything still needs to be addressed.
 
->>
->>>    			/*
->>> -			 * No ARM32 using systems will set untrusted, it cannot
->>> -			 * work.
->>> +			 * No ARM32 using systems select a restricted trust
->>> +			 * policy; it cannot work.
->>>    			 */
->>>    			if (WARN_ON(IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU)))
->>>    				return -1;
->>> -			untrusted = gdev->dev;
->>> +			restricted = gdev->dev;
->>>    		}
->>>    	}
->> [...]
->>> @@ -616,6 +608,28 @@ static inline struct pci_dev *to_pci_dev(const struct device *dev)
->>>    {
->>>    	return container_of(dev, struct pci_dev, dev);
->>>    }
->>> +
->>> +static inline bool
->>> +pci_dev_default_is_restricted(const struct pci_dev *pdev)
->>> +{
->>> +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
->>> +
->>> +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
->>> +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
->>> +}
->>
->> Unless I've wildly misunderstood, I'm not sure this is right - if the user
->> has set DEVICE_TRUST_POLICY_DISABLED to explicitly override the bus-default
->> behaviour, but that leads to the IOMMU layer special-casing all PCI devices
->> as adversarial and thus force-*enabling* all their trust-model restrictions,
->> isn't that pretty much the complete opposite of what was asked for?
-> 
-> We have two levels: policy - that describes the default of all devices
-> for that bus. level - actual decision on how that device is going to be
-> operated.
-> 
-> "Disabled" prevents driver probing until the device is authorized,
-> "Adversary" permits probing and requests the available protections
-> for operating an untrusted device.
-> 
-> Both need conservative initial IOMMU setup: a disabled device may later
-> be authorized as adversary, and authorization does not rebuild its IOMMU
-> domain.
+Thanks,
+Loic
 
-Urgh, I can be absolutely certain I'm not the only one who is going to 
-be confused this way... I see "disabled" and instinctively take it to 
-mean disabling the device_trust *mechanism*, as the logical thing that 
-people will reach for in terms of "I don't care what this new thing is, 
-just get it out of my way and let my drivers work like they always used 
-to; I want to disable the new thing."
 
- From there it then also makes perfect self-consistent sense that 
-"device_trust=full" would be the opposite end of the scale as in "Apply 
-the explicit trust model 'fully', to all devices regardless of their 
-bus-level default."
-
-Now I guess you could name it something like 
-"device.default_trust_level" to attempt to make it clearer that it 
-represents a value the value represents the "trust" *of* each individual 
-device itself, but TBH it's still liable to look backwards to many users 
-- similarly it's hard to guess that FOO_POLICY_DISABLED might mean 
-something entirely different from "don't enforce the policy for FOO.", 
-thus rather than try to contort the naming of everything, I'd still be 
-much more inclined to just flip the meanings to be more intuitive from 
-the outsider perspective.
-
-Say you upgrade your kernel and find your boot is broken because it now 
-flibbles, but at least there is a "flibble" parameter whose values are 
-"disabled", "wibble" and "frobble". Are you really going to spend time 
-straight off reading up on what flibbling is to understand what wibbles 
-and frobbles mean? Or is your instinct just going to be to try the 
-seemingly obvious way of disabling flibbling, and then getting 
-positively annoyed if that only makes it flibble harder?
-
-Robin.
+> ---
+> Changes in v7:
+> - Rebased on linux-next (pwrseq changes dropped)
+> - Link to v6: https://lore.kernel.org/r/20260904-monza-wireless-v6-0-d8c5=
+042b3efd@oss.qualcomm.com
+>
+> Changes in v6:
+> - Rebase onto v7.3-rc1: drop the now-upstream "power: sequencing: pcie-m2=
+:
+>   Add QCA2066 (QCNFA765) BT serdev ID" patch and adapt to the
+>   pwrseq_power_on()/pwrseq_power_off() -> pwrseq_enable()/pwrseq_disable(=
+)
+>   rename that landed in this merge window.
+> - hci_qca: fully drop struct qca_power and move its fields directly into
+>   struct qca_serdev, removing the bt_power indirection (Dmitry).
+> - Pick up Reviewed-by/Acked-by tags from Mani, Bartosz and Dmitry on the
+>   pwrseq_is_controllable() API, the pcie-m2/qcom-wcn controllability
+>   reporting, the bt_en_available rework and the M.2 connector support
+>   patches.
+> - Drop the pwrseq-m2-bt prerequisite series link, it is now merged upstre=
+am
+>   and included in the v7.3-rc1 base.
+> - Link to v5: https://lore.kernel.org/r/20260720-monza-wireless-v5-0-69ec=
+6743543c@oss.qualcomm.com
+>
+> Changes in v5:
+> - hci_qca: comment why the M.2 'uart' pwrseq lifetime is bound to the ser=
+dev
+>   consumer device instead of using devm_pwrseq_get() on the controller (B=
+artosz).
+> - hci_qca: note that dropping the always-on pwrseq handle is not a leak s=
+ince
+>   the descriptor is still released by devres (Bartosz).
+> - Link to v4: https://lore.kernel.org/r/20260716-monza-wireless-v4-0-9b02=
+e6f549d7@oss.qualcomm.com
+>
+> Changes in v4:
+> - pwrseq: rename pwrseq_power_is_controllable() to pwrseq_is_controllable=
+() (Bartosz).
+> - pwrseq: move the is_controllable() callback from the unit to the target=
+ (Bartosz).
+> - pwrseq: add might_sleep() and guard pwrseq_is_controllable() against
+>   concurrent provider removal with rw_lock, matching pwrseq_power_on/off(=
+) (Bartosz).
+> - pwrseq: clarify the pwrseq_is_controllable() doc (Bartosz)
+> - hci_qca: lifetime follows the Bluetooth device rather than the UART con=
+troller (ChenYu).
+> - dt-bindings: also add the "qcom,pcie-m2-1620-lga-connector" compatible =
+(Mani).
+> - arm64: dts: monaco-arduino-monza: rename the 'pcie_bridge_ep' endpoint =
+to 'pcie_ep' (Mani).
+> - pwrseq: reword commmit message (Mani)
+> - Link to v3: https://lore.kernel.org/r/20260710-monza-wireless-v3-0-4625=
+3587af64@oss.qualcomm.com
+>
+> Changes in v3:
+> - Embed bt_power in struct qca_serdev instead of allocating it (Dmitry).
+> - Add generic pwrseq_is_controllable() API + per-target .is_controllable(=
+)
+>   callback; use it in hci_qca instead of peeking at the W_DISABLE2# prope=
+rty.
+> - Implement .is_controllable() in the pcie-m2 and qcom-wcn providers.
+> - Treat non-controllable BT power as always-on.
+> - Integrate the pending Bluetooth pwrseq patches from Mani.
+> - Link to v2: https://lore.kernel.org/r/20260702-monza-wireless-v2-0-7b56=
+e2a6a6d4@oss.qualcomm.com
+>
+> Changes in v2:
+> - hci_qca: extract M.2 pwrseq into qca_serdev_get_m2_pwrseq() helper, cal=
+led
+>   outside the SoC switch; drop duplicated of_graph logic and redundant
+>   bt_power NULL checks (Dmitry/Mani)
+> - dts/bindings: use qcom,pcie-m2-1418-lga-connector (fallback
+>   pcie-m2-e-connector) instead of the generic M.2 E-key compatible (Mani)
+> - Link to v1: https://lore.kernel.org/r/20260520-monza-wireless-v1-0-9f69=
+42310653@oss.qualcomm.com
+>
+> ---
+> Loic Poulain (6):
+>       Bluetooth: hci_qca: Set 'bt_en_available' based on pwrseq power con=
+trollability
+>       Bluetooth: hci_qca: Embed bt_power in struct qca_serdev
+>       Bluetooth: hci_qca: Support QCA2066 on M.2 connector via pwrseq
+>       Bluetooth: hci_qca: Flatten struct qca_power into struct qca_serdev
+>       dt-bindings: connector: pcie-m2-e: Add vendor LGA connector compati=
+ble
+>       arm64: dts: qcom: monaco-arduino-monza: Add QCA2066 M.2 WiFi/BT sup=
+port
+>
+> Manivannan Sadhasivam (2):
+>       Bluetooth: hci_qca: Add M.2 Bluetooth device support using pwrseq
+>       Bluetooth: hci_qca: Rename 'power_ctrl_enabled' to 'bt_en_available=
+'
+>
+>  .../bindings/connector/pcie-m2-e-connector.yaml    |   8 +-
+>  arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts  |  64 ++++++++-
+>  drivers/bluetooth/hci_qca.c                        | 160 ++++++++++++---=
+------
+>  3 files changed, 157 insertions(+), 75 deletions(-)
+> ---
+> base-commit: f0406245cb9855e6318335a8a223551354291a46
+> change-id: 20260520-monza-wireless-e6ce7f013f38
+>
+> Best regards,
+> --
+> Loic Poulain <loic.poulain@oss.qualcomm.com>
+>
