@@ -1,129 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.46
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794835249;
-	b=aBD0S1SciWo8OB+d3n2wiEK575U3Zrg7qphOnhpvBD4QJjM7pR1U1Kue2Mr1dK89HEh+
-	 pkQVtN2gCz9Qu3I6+0k8jb38D3IEYgttaHXix1o21y0zGnWUmbh3GC/IZY+28GTrPVV0o
-	 BDfil0bTpxHhV7JZyqxTLqaRgU6ZMULblBNnl4GAbSm7UvmJHdxJ2KtUFo7EmYKafY6pU
-	 nysvrv+fLcvezbkgl0Zrqm4+ooP6Z1CdzclqCjzp6N4WeIZDf0/D/oD+0iNAquhaA0NIi
-	 tXAxKLXgkEBjoba1mHbwkRR/Yi6GP8/dcO9FmF39mAq/lGJuvU9LP7PBaa9o4bOlJtQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794835249;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=pW6Ljdl+VPjn0HqbJ5aXeG19kylCTPtUMbKY6fBA+PE=;
-	b=BiSBgW4PmKYplNb1bbIf25Bx2m+ZYBnYMDliJLa7S9KkzD64d3hOxQ07yA2/NuQ2JM9r
-	 NVm3IXDdP6rL1zAiIJf/vA7O5LGVkXYGdElX4qpcrIMmWr2Q6PJ6OnPqyr24rprvqhmAu
-	 WFmMAPDk/qNQ685GGBRIqjfRRPlnYi1Q0CjM+FlRL++j3rpA29D0F6m2Xp2Nc2XYPdQ20
-	 FOHIo7kJe3EHxP+H9qmBqpsXbVfjjxS3I4vcWCiff+C6HLkve6SLVNYiekMf6yTqly5l8
-	 N6opTBwzIOu882WDvOoK+F/kPomLmhIi7p//66/NhxFo4cM6Or379JAlTShgFaeo5lg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=F00eXo5h;
-	arc=none smtp.remote-ip=209.85.219.46
-Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.9
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794835270;
+	b=gu9y0McCWhlAaTT5yz8Y1WP3fN8T2lPEkVtKy97eK7IXbDfqmtyzqzjjpTnkRtBqIKo9
+	 k4U55hpMz9MGsRbH9IK3elWqRV+OcvSpSKZRvXw7Uq4aJtX0x9smlxS3rn56oDJzYfZob
+	 I6ven+D1LZnnM99fs42BcI1hNYA9OStQaiSrhHkjIU0q7H+32odkHa7CeCBE782FpIhSp
+	 NEwZVnwmdPCwKkrG4GtjetqcMmQ5RmoNHE9NOYtWMYafNdPzTuiqKqbjdMu/LZzUmk1Jw
+	 5WSzr9l9rUbariy5rORxzubosGQUFNc7bHm8JzOOU9f/e9M9/akU0Vfuz97mOa1P4Dg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794835270;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:Content-Type:Content-Disposition:
+	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=TKtg+hCnmq42BF25g6dM2aS/tTun9Y1xgbOmY9LH+mE=;
+	b=GT/SPxdIVp9yoBmXKS940VDDgK2ICzFxSlHX13lAX1t441V78oOLsLX7QVcNC2wRu7Jm
+	 yq7Mk91DIFolvSCXQS3LRCbqLmn+NPAesZ+pmB6hSW0kMYRlWgfZVHTOlALdRpiOM4KOu
+	 aURlD2PDdJwzcWq6MuJyh93ny16NqJ5xVCbGQwZD/Sk38ifTWHGCYTCN77QKmWUeicQaP
+	 4E8eMgAJoQapK86qpA1/KcV8TvhotYxvHTbHx87eqUaHUdfKhUaQOOUBTwLJcEd9opcQp
+	 rjFDSghxYVoHoLUGe5kfwOELN218VsNd5MP7q98x/C233ZCAu2CN1n+U95ixj4NcoxQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="RBPETet/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.9
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010009.outbound.protection.outlook.com [52.101.193.9])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F07D606A323
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 13:20:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3F07D606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BC8606A31C
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 13:21:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 17BC8606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=F00eXo5h
-Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-91f23ddf32fso23834706d6.0
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 05:20:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1794835248; x=1795440048; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=pW6Ljdl+VPjn0HqbJ5aXeG19kylCTPtUMbKY6fBA+PE=;
-        b=F00eXo5hK7MhiGIzcy2xEZvXaOlU++0SsxWdg8F2eYgLj0IP/wqxNHSj70WYC1UCbD
-         vmKPyn8zqLHpLHOvxkTPyXLn/laMAvSaSbXM05SN4tjv6Cx+GcVaR0GxUXpMgXzGykx3
-         FokKvpAfMx6w/qg4Q5h79shuv6MexzGsY/vmut+9b8A8pQsaE0GfSqy0kYc2aGWEaEae
-         3xYzyobXgBsc03sh3wdT6H/0kLtFYOlPUaVehm8clJUf4d9zj9Hfn5kvjyTiGQDD3sEC
-         6wk4kHeXw7a4jDhfFMIm7aNEb1ZQhwAt5xztT2KrBS1HRA1ERCFKDcAKt5g1NH70HZ/q
-         daJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794835248; x=1795440048;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=pW6Ljdl+VPjn0HqbJ5aXeG19kylCTPtUMbKY6fBA+PE=;
-        b=W9LIRNuXl/sxDmbh8Y3UUkG85HfWaVYDAb/cUVdzu73maxLioYe/CLtuGTEHVZiRD1
-         fhr+CoQs2QjCizMm8QNyBaM0Q3Rl0n8N0waQ3CTaRJ8zq8NzmbuRc1jhpgFMdDlE/PHE
-         bdnV0DBmLn0l7lLGvEj1wlU78XXtIf0Af91XzqksW0kbiCSHQZ7TYc6Q94uBtvatYYW6
-         4LghY0lLIoa7iYe4jRMqUMJUqMb872abqpYJK+UyOJ+fTbV2JfEptfM48Uin74m7ECII
-         oAX2Cz9uk7e7nJsx4VnJx+EzusXFfQa5DZCLFPmff0SccAv1fYtSzEZ0bWsgjNOgaokY
-         2r+w==
-X-Forwarded-Encrypted: i=1; AL+hErHS7R7bzzzXWREBRFDhP+LuCF7UuJMkOaJbmnSBRqe4IaAZiGZu98T76m6WcJwJ93Apo5G0EWqJpGQ=@vger.kernel.org
-X-Gm-Message-State: APuU4Z81XL21w/RQp2Dvb0Vgbf9JNXVudqANqI0rk/cdj9CEA06nZd+H
-	o3WFo+uXnzuIXu9CEhnSUEDNu21PSMp+MfAQZRAtghuDl7biDV9dj6+b5xtplIbOQck=
-X-Gm-Gg: AZFdTZev7F+6zRLo4pNfH2qvXfbQS8OBINAHVQTMQE8HjoGmgOcIZTMpqyNMkKRinE5
-	4onJlIMQatN2dzMWGPJ4et5cH189xqjCRZuNJwmCkS4aVubxgSfxfC4LqTxZs0VizDVOJ59fvl5
-	nm2stvNAPq4DubVU38cXx07qYH6FrNVzLdDh5w4GTQLlFznkzE4qsPMUu/WXCebfmy9GCvzL3Sw
-	OAhxJXbKXw8ZSc4qTdEmrs9d2drIUIdbCIp1fDP5Z8bEbjSWgC/BxOLkJgnQyOtiyKA9dHUZL8F
-	BrvOeG2rgjVLmZYyEasbDbJX7ZQWrNw2emVwzYiZZPvtG7g7QfuWTBgjClySsX5Qnse18zeBKuk
-	3uYe98zOjhUNlPyCJlyW5BY5/LC8/P8eYKipzWtHzZl2oNEPVCHFoklQ33oIRH46k5VIB5gor+j
-	T/64UqmxspUk29CV4jr7cJvNM5ZI3eUP/r54RuCW8zSas5+oErSF2J46xuM4CQEZqJJ4cp47to+
-	y5nr+wdX2lkY4PFUONDdKkjzHLTsgz7uBvD3LAR70ETCTRh6sGxp6p+BQ/SpUfaqQQrfbqmIxWj
-	Iu9I+w==
-X-Received: by 2002:ad4:5744:0:b0:91f:3230:2a4 with SMTP id 6a1803df08f44-91f32300351mr126741416d6.53.1794835247815;
-        Mon, 16 Nov 2026 05:20:47 -0800 (PST)
-Received: from ziepe.ca ([142.166.156.71])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91f23d7ba48sm85758876d6.28.2026.11.16.05.20.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 05:20:47 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xSwda-00000009KhK-1awf;
-	Mon, 16 Nov 2026 09:20:46 -0400
-Date: Mon, 16 Nov 2026 09:20:46 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=RBPETet/
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Mj4by8s8H0LYer5hbLAKnYH2WzaNOwfDdX2vqI3zj4IECT2JFhvr25uwXq8bLK+LsLNssPjjvROdN9ZjYiodL1g+GJ/Y2qHkvWuNVwNzOOiFn6kD5t6uwgJwKYD5cUs1o0UAzmnMn1x4+evVHs9ef0w+6ddfymT7gwuRd+9T383WXdXQf3aCuKOR1RLOVilSKTMF1RsoveAlKZXq1o+j2YH72eaBzDHxHsHbOCUpWk5jcUnlt9FPn8+IyT7FVQiz7L2vHPydgAESG7PtcmsAu7VgboV5y4jkLbjlwDb6uYWb7MRKxNqtTMmVF91KzXaJGTI+9e/QegEDhB57k3cEBg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TKtg+hCnmq42BF25g6dM2aS/tTun9Y1xgbOmY9LH+mE=;
+ b=ymWgQKcLk7Y8FiLphfO1jyAou81oflBUz3HlUDB47YXOMZSiZCOTfMPdhMGyJCFFnDURfOSEAC1azR95yqvC7XfW8dgyi8FR8hUSqK69agVwJeSM7dpA6/zoy7G9DYuoDSmyuQeP8tsRs/AYkVIsQayUXUrgeb7c+v5y1Pdj+nnmyD5wkz4uGarFfpq2RdB1Ni2atxMiQEu7+5oQf9mtOWxB9GrFP2XscxVoOKc+Idy67xWa35vrI4z9P/6lHt+HhoTuWzieGRnt4Fqt+bKhJ3ISKoU78L21rx23ayf0Erq+fKnRxp3RdE5IenHthBu+zyd/FFHcNabJTB1ydwe+0A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TKtg+hCnmq42BF25g6dM2aS/tTun9Y1xgbOmY9LH+mE=;
+ b=RBPETet/iqI0Jo5r2R1pUw7WxTscr9lNiAqcDk1mErWmmDSgxzzfNj8SfmKH7vcQDqTRnbhtgKXrj/lf7oHEH3bGZyDFcvpkVSDtgqaQ5qUm1CgpBerxnko48cK287ZifAjdkSf1S06gVSZAsasOBvF17X1pTjsIYQKzZQ6bGLQr/WfbViMjRjlgWKxfxi2OXAdqSzjsRObg5gPonyTUliY4Wmmo63c1+KTtE4DK7aRhwYlSK/bB3Za1Wz8l6dmsxTXwf4j6KEneRuNvdsc5G1+CktxSRRRTJEwUhXQWJ5fhbPXXwxxpUXKkLBapN99VMD9p8x6jMgQrLhBM5vp9kg==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12) by IA1PR12MB6163.namprd12.prod.outlook.com
+ (2603:10b6:208:3e9::22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Mon, 16 Nov
+ 2026 13:20:00 +0000
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0615.013; Mon, 16 Nov 2026
+ 13:20:00 +0000
+Date: Mon, 16 Nov 2026 09:19:59 -0400
+From: Jason Gunthorpe <jgg@nvidia.com>
 To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: Leon Romanovsky <leon@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev
-Subject: Re: [PATCH 17/17] PCI: Replace untrusted state with device trust
-Message-ID: <20261116132046.GI2532299@ziepe.ca>
-References: <20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com>
- <20261105-device-trust-core-v1-17-1e536825b4eb@nvidia.com>
- <yq5amrr8yldi.fsf@kernel.org>
+Cc: linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
+	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/TSM: Move core code into its own directory
+Message-ID: <20261116131959.GD1850935@nvidia.com>
+References: <20261116075420.76205-1-aneesh.kumar@kernel.org>
+ <20261116075420.76205-2-aneesh.kumar@kernel.org>
+ <20261116130055.GB1850935@nvidia.com>
+ <yq5ajymcyl2g.fsf@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq5ajymcyl2g.fsf@kernel.org>
+X-ClientProxiedBy: BL1PR13CA0223.namprd13.prod.outlook.com
+ (2603:10b6:208:2bf::18) To CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -133,68 +99,76 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5amrr8yldi.fsf@kernel.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|IA1PR12MB6163:EE_
+X-MS-Office365-Filtering-Correlation-Id: 494ed551-41f5-4012-f96c-08df43e45130
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|1800799024|23010399003|10067099003|4143699003|11063799006|5023799004|56012099006|261021121427099003|261102123227099003|261009223027099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	UswNyO0TWrhVVSZrXRyldPZ8MHgqicGHifVwzQfSSSNQysDyK3Hek5U+lKWIQy8H59DuY3JLWdWmfpeZmn+qJOGVq0mJEfU2fyMzObHhP+JnzbenbWoP3v7PBiEY13vlmKyjTHVBfN1zSVUj0ymmrMFnpGGrJUuYTLYzk4IJjasmCOwvOVGifFb6nwCo+NCO4imtzPaphG4xoEkf7zQgTEmHkVtXNM7riDrAQXmidtzmHIEEU3I+EDVQyxK45WYzPAhCXzgM5l2P/ym6E/+dcR7B7NLKFXC+X3grUNnwrbQ5N/QwSDow7G0N9FpPaKP6iCfs1cAtWQillJHGZwUlk63AXMjzkVI+SkocNKKpUWPLlPNbttQ9weggFMotvtPJSqbAF5xg1j31q5yzs/tNBw8Hto+YyKUy6u1OE3fcuAoycRMMgbJQrbmy8bJ44Yn7xvPJdBQUKhQ8AmmIun4mTLgagyN8OT8hHZV7xMYnHT+pdiOsERun/eHUTxba1mLL579wu7jvxBy4npi8kCYpo4YUWxYnXNaD8oQ1b14YdIQ66gMK7gR55AMWL9LKIWiNi3fKtrttqb0KyeadrUriksYPKxBhi+DJLB74skxPWUQrm/LrSXHwOalFjYPpg8GNJnQJKubzPSrx8MKAUIGjCIut73xXAeOgXBJF6dT3XG8=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(23010399003)(10067099003)(4143699003)(11063799006)(5023799004)(56012099006)(261021121427099003)(261102123227099003)(261009223027099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?8PXq/Csg+DfDW0JS98mBPj4ssZWE92s70pNwiWaDuToXJ7bagEkZuRLzb/D2?=
+ =?us-ascii?Q?1P+MPv5xFB5Z7IwmW5uCWzNW+gqVF7L4r8gJY+WwwqS8vhxmMMuBy3jhF9rc?=
+ =?us-ascii?Q?B9ase4NUoN+z6AJg6S9WLE033peg7qnKbVRAWdwVwmxLCHu8W/gzUGhWNxxt?=
+ =?us-ascii?Q?KSwpqgz053ehex58zh5UXqt7EYcqEhvOZbEkfPLyw/i4GObHo2QTNDFaQ8V4?=
+ =?us-ascii?Q?Z61PP0PV2VFNRCXQs05ll+OXsnu9oL1Hks4xyIW9ZhPlj9TwU9RMDDOMKJ7T?=
+ =?us-ascii?Q?72bAgy6dUZGQTcI6glNFSg7EV+OZfPfUn5+EQm09lElokcn0KvidGnJW7scH?=
+ =?us-ascii?Q?DDNYJKRvyHWhPYpeJhcLQMfeOMrdW7nqPxm/BNQdvhvvG6S9IYGzOqfMYVMn?=
+ =?us-ascii?Q?ZCQSueuZu3ryDFPOU7/2FUMW9pnU/KJPHt2XYpE/fw2UaY3ZXRG8CO9/6vF1?=
+ =?us-ascii?Q?aeZ9P7ag7st1b9qiHy1Em0zS0Sgr7PDGENNHN0zQNkD1O4SNM6JMws8/N3++?=
+ =?us-ascii?Q?i3UE+DPwEJrRrkPRfRN/hxd126I4NkWoMEotsZuAxgPwY7tGtj3HuVli3a8e?=
+ =?us-ascii?Q?HyMYzX+Tk1Mh3qzgYRkcYkkvE84FywOOrf03mbVmjuKfHr4PlKwE42fxF3ul?=
+ =?us-ascii?Q?K/bDvDauQZrU2hEvctNxfAfrQ5DoS0Nz4gdlLuFdj+UfP5Cpwr3OKd19kwUc?=
+ =?us-ascii?Q?sSGdBR5qLfDZxj+gDkyPFGCGxbNY9CKOxwwH0x3v9/p88S9z7pwNAybW3BEn?=
+ =?us-ascii?Q?GyLKyfcBpWSLD8UVxf8kF3ZLxdmIDjUSDXuuaHXFIiYI7ydk5L0GnEuhMulM?=
+ =?us-ascii?Q?qw4Drt7GI5M3uzlNH/59k21Ok3UNlQi7Tb0rzfooMc1GuafujWLbttdA4s9u?=
+ =?us-ascii?Q?Kn8uX5haDTDzR9uSMNB291syUSPqc5MQnCmzVb+YKH7nIdDm8giJ5unqoHd9?=
+ =?us-ascii?Q?thAw18y/2FviKKS5+Ux0AMAREb9WtHiRsh+TQr33iD1cZKL49Xs+z4bdWglf?=
+ =?us-ascii?Q?TC3UPMsKazPt8DskA3oplByna/GXSQqx2gcs5aGMgJbDj/KGDJOolqqkV8Ki?=
+ =?us-ascii?Q?JOuGADaD+NoL5f61bdR9T1gJQRUn/qJH3a/PfZLIPvj4lcaiVjbgv455CmIG?=
+ =?us-ascii?Q?0HE99X+cYj8HpoG1zqCrhyN8SeB7+XAN+xrH2BdfTSM5UqL10RlbVkeclA7p?=
+ =?us-ascii?Q?tIz0x9GQZmUiMBlsJZKtFLaNSIHxylZfNBGX99UjwSdFxU2mD1lD14cD1ecu?=
+ =?us-ascii?Q?O0BHs/G0ehErJwjJN7Bcmj9S0FW8KAERphtVVvkjIK1qr8apmMOfxIVoJu7p?=
+ =?us-ascii?Q?xiwhu+3YF8BI55Ki5vSdVc1vKjVhAoSqUlZ+XD4q+0Kqa9HxGk97jN29BxGl?=
+ =?us-ascii?Q?HKWAUoUSe7+mzQCpZeM+4rOyypKwvL1FvzHDXFRxs0FioWxQ8FIDI/sFTEIK?=
+ =?us-ascii?Q?3zm9mOQSyYj8OPNQPwKDoXmi4qMtRDxZKjIinu2TcuhDKGpu3VuxpJ760Moc?=
+ =?us-ascii?Q?6wBrKbX8YbSvlmUf1m0SP+U86xuA5Q208Iyi+Guz1XC50dehcWXcjP5jpk6x?=
+ =?us-ascii?Q?1bN1ciFGyWh0NuRtAbvVHizeCHJ+x96vJEN97asF/pWE9xiwZpNBakAr3+Sc?=
+ =?us-ascii?Q?MvzItLQnuh5VJwqVIQhEcfAvS4DsVcD3MPW13EhvFsgcQ2nzxLJZgBsl9IGE?=
+ =?us-ascii?Q?gGmYw/s+Qh4BhuCZox7rYFfAAL6F7vBOxP4/GLgJaR8H/SDP?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 494ed551-41f5-4012-f96c-08df43e45130
+X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Nov 2026 13:20:00.4562
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: J1DK6F8IIbjP3UTB0P+UU/T1JfG2EqeiOjlQfydBctTIHq7uKnkHS3l5BdvO7Mom
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6163
 
-On Mon, Nov 16, 2026 at 06:38:25PM +0530, Aneesh Kumar K.V wrote:
-> > +static inline bool
-> > +pci_dev_default_is_restricted(const struct pci_dev *pdev)
-> > +{
-> > +	enum device_trust_policy policy = READ_ONCE(pdev->dev.trust_policy);
-> > +
-> > +	return policy == DEVICE_TRUST_POLICY_DISABLED ||
-> > +	       policy == DEVICE_TRUST_POLICY_ADVERSARY;
-> > +}
-> > +
+On Mon, Nov 16, 2026 at 06:45:03PM +0530, Aneesh Kumar K.V wrote:
+
+> The complete CCA patch series adds the following files:
 > 
-> Could you clarify how this series will work alongside device acceptance
-> and private-memory access?
-> 
-> In particular, what should callers of device_cc_accepted() use under
-> this model?
+> attestation.c  core.c  ctlv_attestation_pci_gen.c  ctlv_attestation_pci_gen.h  internal.h  Makefile  spdm.c
 
-Who is calling device_cc_accepted? I thought we were keeping that
-internal to the DMA PI?
+Why would any of this go under drivers/pci ?
 
-> My understanding is that trust describes the operating
-> policy, not TDISP acceptance or DMA access to private memory.
+The whole point here is to make an 'attestation subsystem', so that
+all belongs under
 
-Right.
+  drivers/attestation/ 
 
-> Therefore,
-> neither FULL nor ADVERSARY alone indicates whether a device can access
-> private memory?
+Send a series to move tsm-report.c and tsm-mr.c to drivers/attestation
+to kick it off.
 
-Right.
-
-Once you turn on TDISP you effectively activate DMA, just like turning
-on the IOMMU.
-
-Userspace then gets to choose how the rest of the system behavess. You
-can still run a strict viommu with an adversarial driver even if you
-enabled TDISP and can DMA to all memory.
-
-I don't know if many people would choose that combination, but it is
-there.
-
-> You also mention that once a trust level other than DISABLED is set, it
-> cannot be changed during the device's lifetime. If a device initially
-> operates in ADVERSARY mode and later attestation justifies FULL
-> operation, is that transition intentionally unsupported for the existing
-> device object? As documented, unbind/rebind and reset preserve the
-> committed level.
-
-I think it should only be for the duration of a bound driver?
-
-> It would help to describe how the trust framework fits together with
-> those separate mechanisms, including which pieces are left for follow-up
-> series.
-
-The main thing it brings is the pause to allow userspace to measure
-the device and put it into RUN if it so chooses before any driver is
-bound.
-
-It doesn't change how any of the DMA or TDSIP flows work.
+Then we can extract the AMD and Intel drivers
 
 Jason
