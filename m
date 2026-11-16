@@ -1,77 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794812947;
-	b=ePYLK8Y++vV92rE1O+zSZCs4lo87Otb4FfAJWiDs70cEphLaB2Y96yBMFN3hxfG6Wu7S
-	 ID1wO3/s7IRKmfszS6ass9rVS/NkT+0IEKNclHH6Na5A1XglLvVX89hw6EX3OTizXWw11
-	 XaY2Vq2klq+DvtRoTGG5+ExU/nDQ1RsbCFoZ8eimZrSHXVAtAp/S1UOfts+Fre8by4a0k
-	 75Ao4/kAVxy2XfqfbsSPh5jyAdGfMPBkfJKDBLVoPGrY+SF+4T5MKQQKPRboRM10D4ihZ
-	 XGbgoYXU6qr45whCoELyMp4Xzt4TGUiDdtmlGclm984F6gQjikei6KsKoZ/5SsaMAvg==
+	t=1794813082;
+	b=buX6bug8hv05FsoYseY58gvv4nGDtQRYvIOnYHE+RAje3YGWG28gWXVxao8JFbsHt762
+	 Z6A0W+w+Cl6xfZAgj6oCe9PYiUCPMF4yS+v5whQUASrAJiVLtg3aW4nwiLAMLqXAO5gl/
+	 j1xEyKfmvikxTSG1lAUVh9Ww9HSi/Fl9IUqKnIFMkXPo6YHbwJtP8VCAyVKEvABTfHZRI
+	 XOYgh6/Rma6BoYu0iMge8ogutf7T1/06GolaE1ozHxcGq527c623uoABHpLzcNY0ZEl2m
+	 FGUsGjbjIIybcwKTz7rAJDH5yzUOGWxVpPK27vooTHx8cJ18HyOPWnD//iixO81883A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794812947;
-	h=DMARC-Filter:Received:Received:Date:From:To:cc:Subject:In-Reply-To:
-	 Message-ID:References:User-Agent:MIME-Version:Content-Type;
-	bh=1mHmG9IJHtIMld4ZeRanDjKIMZUQxx8f0ptnWkrCv+U=;
-	b=0i8RahmNidBKHbWBeQckX6v4j9iCyuvVL/fZe/BEsPc/Xoe2nv+21TKq8Z9boKNYHrYK
-	 TotB7T80Z1D6oFXyUkcSsAhoCh3IC2ARjY/i+UN6pi3dNYn0B76azB/X9E/tIfcdqgcSB
-	 9AKBwpQFVyOBZwo6poe7axdA/vqIytMUUML/LMiEAVafmfqLwAHbYtegV4ihhnpc2LQN1
-	 1aZBowjXeK5BftnnOth8JJo70ZfTNBNImfEeyD/SSoOHs0mtHF983Xw9qw+XNmuv9T2VO
-	 QrXYqlONvEBxO/uVPvcWVve8MQ3C5gxmDeM/Gca8NoKmNnPn6fkxMNR6i7ZoQw4/UxQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794813082;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Kl2rLWbji/nVhm9r5/b+CgT9jHrZIV8SLbA6nFzQ4CI=;
+	b=pd8XG4GPRzRx1RVccgs/MF2kQMt7qrqeZ9LSSeqDHHebcdxgmCHsu7jgtAoF9bvePUak
+	 tVKirbzVjit3H9fDl1ssObflwifcRAUOcWz8yLE4xHYdmmnLbq/21xdCaq7ZFzLpkBdEg
+	 TqqL6/NrwOhq8qJQgm5fM5N6w6aaN4vffC8DRVHAmg523WyD2AXdzakV3Qvf3+o0PXQIR
+	 BEu3E3SNnape6qioDbe8MNpiM/wIRyGIjcRrRyKhelY600EJJHyt1XVCKVzSVCeRqxitw
+	 diGd3Z6ka0smBO/PYK4ylTBBWDxyZf/dqI/mskjdow55Q9RrSuxXX5gLuJ62DqdyWPA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=orcam.me.uk;
-	spf=none smtp.mailfrom=orcam.me.uk;
-	arc=none smtp.remote-ip=78.133.224.34
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 364A6606A332;
-	Mon, 16 Nov 2026 07:09:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 364A6606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 39D8A92009C; Mon, 16 Nov 2026 08:09:04 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 376CC92009B;
-	Mon, 16 Nov 2026 07:09:04 +0000 (GMT)
-Date: Mon, 16 Nov 2026 07:09:04 +0000 (GMT)
-From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: David Laight <david.laight.linux@gmail.com>, 
-    Christian Brauner <brauner@kernel.org>, 
-    Geert Uytterhoeven <geert@linux-m68k.org>, linux-fsdevel@vger.kernel.org, 
-    Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-    Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
-    NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
-    Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
-    Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-    Greg Kroah-Hartman <gregkh@suse.de>, 
-    Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
-    Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-    linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-    linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-    linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-    linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
-    linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
-    ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
-    coreteam@netfilter.org, kexec@lists.infradead.org, 
-    linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-    netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-    ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-    linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-    linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-    linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
-    linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-    sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
-    linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
-    linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
-    linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-    linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
-    linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
-Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
- pinning the entry
-In-Reply-To: <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
-Message-ID: <alpine.DEB.2.21.2611160657470.17804@angie.orcam.me.uk>
-References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org> <CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com> <20261107-akteur-gemieden-eckdaten-21304d085e35@brauner> <20261108185953.28054fb3@pumpkin>
- <alpine.DEB.2.21.2611090504170.17804@angie.orcam.me.uk> <20261109214558.0d9d5228@pumpkin> <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=njtZer3G;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19F56606A323
+	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 07:11:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=njtZer3G
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77E2C1F000C8;
+	Mon, 16 Nov 2026 07:11:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794813081;
+	bh=Kl2rLWbji/nVhm9r5/b+CgT9jHrZIV8SLbA6nFzQ4CI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=njtZer3GUp0xcJzJ5EFBGa2cz6Dy7QfA3P/4YSY3NNQnaPl6BPQnT5hsxU0FhzDL/
+	 +v9DneYN3DaWzdJKnd8+WdCWL/q9Sh/87EPESutouY/mSE+3UWJeKaw2Zm/ALPmvwU
+	 HLfZ/GnrRDV+C3YBDPcA0l/yFM+LxvXNz5sGUYC3uqWQlh+QuJ9KdGCCKz3G6rnp2E
+	 kJk2hQYjgFe0Sc8Vkf25KhvcTy1JzRzG+HvKWqqqqh+GssXuLQjSja0uUWWhhHffQZ
+	 qGNDqVpJg5kama/AM6ZhvA3tRN7l50NN7UPlfWCCoMV8L7DXrRJ10CZeaw6WnUq9PR
+	 RHI/5EsTdSQUA==
+Message-ID: <sashiko-outbox-216392@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: rockchip-host: Retry link bring-up on repeated
+ Recovery
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Igor Velkov" <iav@iav.lv>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261116-rockchip-pcie-resume-v2-1-a633e279be97@iav.lv>
+References: <20261116-rockchip-pcie-resume-v2-1-a633e279be97@iav.lv>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 16 Nov 2026 07:11:21 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -80,22 +59,33 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 
-On Mon, 9 Nov 2026, Linus Torvalds wrote:
+> From: Igor Velkov <iav@iav.lv>
+>=20
+> On Kobol Helios64 (RK3399 with a JMB585 at x2) about 3% of link
+> bring-ups go bad. The LTSSM reaches L0 and then re-enters Recovery about
+> every 200 us; the RC sees DLLPs about 300 times as often as on a good
+> link, with no DLLP or CRC errors. The first config read behind the port
+> gets no completion and aborts the CPU, or link training times out. The
+> state survives Recovery, and a new bring-up of the port clears it.
+>=20
+> After the link comes up, poll the LTSSM for 5 ms and treat more than two
+> entries into Recovery as a bad bring-up. The RC runs at 2.5 GT/s only,
+> so no speed change goes through Recovery, and good bring-ups on the
+> boards we tested showed no Recovery entries after L0. Bring the port up
+> again, up to five tries in all with 500 ms between them, for this and
+> for a training timeout. An empty slot stays in Detect, so a timeout
+> there fails on the first try. If no try gives a usable link, probe and
+> resume fail as they do on a training timeout today.
+>=20
+> Every link bring-up takes 5 ms longer. A link that stays bad delays the
+> failure by 3 to 5 s.
+>=20
+> Signed-off-by: Igor Velkov <iav@iav.lv>
 
-> > Just that the cast would have to be:
-> >         u8 *foo = (u8 *)bar;
-> > where 'bar' is 'char *', and I don't think you need a cast there when
-> > char is unsigned.
-> 
-> .. and just to clarify: 'char' is always unsigned in the kernel on all
-> architectures since commit 3bc753c06dd0 ("kbuild: treat char as always
-> unsigned") back four years ago...
+Sashiko has reviewed this patch and found no issues.
 
- Thanks, yes, that's the piece of the context I was missing.  I've since
-actually come across this commit while investigating which Linux ports 
-have plain `char' signed in the psABI (MIPS for sure).
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116-rockchip-p=
+cie-resume-v2-1-a633e279be97@iav.lv?part=3D1
 
-  Maciej
