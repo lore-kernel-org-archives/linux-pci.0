@@ -1,57 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=78.133.224.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794812766;
-	b=bVx6J3ryub9oELsdet7Ry5HUhUHR8gcKUSJXydnolPDJyZGAppSgwvFm2e0c/2UTvBN8
-	 4xIq7gIRLLwhmAEAeJuP8xtzoSGTMF+x1K86r10ifq7mdPNWckh+lPDZhxXCmjrfWg3s8
-	 SYw5c+zM6ngEY7zGbfxJQxrupWMgCxIw1L8cwsNU2RmFzErU5J9dpCyYeYx/yjzSPq0MB
-	 Z3cThut4m6lJTk/cabbc0i2D/umxaZ5Ud75Gr1/LF98S+9n49gdGq/hYCdL0oACeZPww8
-	 TysZRC4Qi3mjCNKihxipwLobld0y09QoU7q+toS6N9Uptufg/30snTTIPD3ryviHZrQ==
+	t=1794812947;
+	b=ePYLK8Y++vV92rE1O+zSZCs4lo87Otb4FfAJWiDs70cEphLaB2Y96yBMFN3hxfG6Wu7S
+	 ID1wO3/s7IRKmfszS6ass9rVS/NkT+0IEKNclHH6Na5A1XglLvVX89hw6EX3OTizXWw11
+	 XaY2Vq2klq+DvtRoTGG5+ExU/nDQ1RsbCFoZ8eimZrSHXVAtAp/S1UOfts+Fre8by4a0k
+	 75Ao4/kAVxy2XfqfbsSPh5jyAdGfMPBkfJKDBLVoPGrY+SF+4T5MKQQKPRboRM10D4ihZ
+	 XGbgoYXU6qr45whCoELyMp4Xzt4TGUiDdtmlGclm984F6gQjikei6KsKoZ/5SsaMAvg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794812766;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=tiG48DnyZGmU5gzeXcmtodiYWk9U98E+sQX2YBJR8BY=;
-	b=En5NpLUeCMU9xAFbC+8apelIjhy+ceTnBJ5bgPPXidt2NFXeaIq46Zuu5fnpUqJ5qQbS
-	 F0EyrLtCnxXI21Jz72Cpb2pL1iQHN4R96FAOEHM4CgbjSY3YHHjaCH6TY+4PWCmi1aLm1
-	 kV9mkzCapwAtz4kGuutPa2VTTHZAL+YvfYwycNM6R0at1Zpw2vOe5OMQsyhJ6ZQFy7toX
-	 su8H9B30/8myOVlqpD/dZfGfej/cQbiy1jq1I7xFwoX3ZZ1V1/BVqLFbBHlFLyEEVKRVd
-	 FbwruAGUdB84AYBhU0yClga2Y3oj6hYROnTdAuyUJFrQ7pZMRaNLX4Iub8/xebSaWpA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794812947;
+	h=DMARC-Filter:Received:Received:Date:From:To:cc:Subject:In-Reply-To:
+	 Message-ID:References:User-Agent:MIME-Version:Content-Type;
+	bh=1mHmG9IJHtIMld4ZeRanDjKIMZUQxx8f0ptnWkrCv+U=;
+	b=0i8RahmNidBKHbWBeQckX6v4j9iCyuvVL/fZe/BEsPc/Xoe2nv+21TKq8Z9boKNYHrYK
+	 TotB7T80Z1D6oFXyUkcSsAhoCh3IC2ARjY/i+UN6pi3dNYn0B76azB/X9E/tIfcdqgcSB
+	 9AKBwpQFVyOBZwo6poe7axdA/vqIytMUUML/LMiEAVafmfqLwAHbYtegV4ihhnpc2LQN1
+	 1aZBowjXeK5BftnnOth8JJo70ZfTNBNImfEeyD/SSoOHs0mtHF983Xw9qw+XNmuv9T2VO
+	 QrXYqlONvEBxO/uVPvcWVve8MQ3C5gxmDeM/Gca8NoKmNnPn6fkxMNR6i7ZoQw4/UxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F94MEYqj;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFD44606A31C
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 07:06:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F94MEYqj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A19C1F000C4;
-	Mon, 16 Nov 2026 07:06:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794812766;
-	bh=tiG48DnyZGmU5gzeXcmtodiYWk9U98E+sQX2YBJR8BY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F94MEYqjbLkZvUoWbgrlhuTiQ6YN7PUCGM+tvsoJ6MQvC3vPzdQUjNWDlw91vVekR
-	 XvUgB5PGn2YHdyYLA9ItA6xoBJMPAz0Qudq/Pfb+kwDd3Av3Id6kIQipnMXazyR9lL
-	 EF1/N6//QxD1vCrH1MX+m34to2YqLWrUHgmzKSe6gOInxyNVqytd6i+kMk0UMmMmOf
-	 hGWdi4sYq+QIhhPDHFfiKugvNW31/LQgvCPSQRB1kDyV6Fb1dSZRjsTtQYYVzMd6Dy
-	 +DyxCsodEmJ6rJ6L6/qHC97fcX/1u8JIXhogHRU/2QtUhp1G4o2BRFrzurrmQYF8EI
-	 181XHUdQtU/mw==
-Message-ID: <sashiko-outbox-216379@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] PCI: Disable spurious s2idle wake from the NVMe root
- port on ThinkPad P1 Gen 9
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Kean Ren" <rh_king@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261116065612.230481-1-rh_king@163.com>
-References: <20261116014214.102524-1-rh_king@163.com>
- <20261116065612.230481-1-rh_king@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 07:06:06 +0000
+	dmarc=none header.from=orcam.me.uk;
+	spf=none smtp.mailfrom=orcam.me.uk;
+	arc=none smtp.remote-ip=78.133.224.34
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 364A6606A332;
+	Mon, 16 Nov 2026 07:09:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 364A6606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id 39D8A92009C; Mon, 16 Nov 2026 08:09:04 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id 376CC92009B;
+	Mon, 16 Nov 2026 07:09:04 +0000 (GMT)
+Date: Mon, 16 Nov 2026 07:09:04 +0000 (GMT)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: David Laight <david.laight.linux@gmail.com>, 
+    Christian Brauner <brauner@kernel.org>, 
+    Geert Uytterhoeven <geert@linux-m68k.org>, linux-fsdevel@vger.kernel.org, 
+    Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
+    Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+    NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+    Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+    Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+    Greg Kroah-Hartman <gregkh@suse.de>, 
+    Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
+    Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+    linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+    linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+    linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+    linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
+    linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
+    ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+    coreteam@netfilter.org, kexec@lists.infradead.org, 
+    linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+    netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+    ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+    linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+    linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+    linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
+    linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+    sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+    linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
+    linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
+    linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+    linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
+    linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
+Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
+ pinning the entry
+In-Reply-To: <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
+Message-ID: <alpine.DEB.2.21.2611160657470.17804@angie.orcam.me.uk>
+References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org> <CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com> <20261107-akteur-gemieden-eckdaten-21304d085e35@brauner> <20261108185953.28054fb3@pumpkin>
+ <alpine.DEB.2.21.2611090504170.17804@angie.orcam.me.uk> <20261109214558.0d9d5228@pumpkin> <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,39 +80,22 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-> On Lenovo ThinkPad P1 Gen 9 (21UF, Panther Lake), firmware enables the
-> ACPI wake capability (_PRW) of PCIe root port 00:1c.4, which is the root
-> port of the primary NVMe SSD.  When the NVMe controller is put into D3
-> during system suspend, a spurious PME is raised on that root port, which
-> sets ACPI GPE 0x6F (SCI).  The SCI fires during the noirq suspend phase
-> and aborts s2idle before it reaches the low-power state: every suspend
-> is followed by a wake within ~2.5 seconds with practically zero s2idle
-> residency.
->=20
-> The downstream NVMe device is not a wake source (its own ACPI wake is
-> disabled), so the spurious event comes from the root port's wake/PME
-> path.  Disable the root port's wake capability as well.
->=20
-> No firmware with a fix is available: the issue reproduces with BIOS
-> N4SET31W (1.10) and N4SET32W (1.11), the latest version at the time of
-> writing.  Match the 21UF model prefix; all 21UF SKUs share the same
-> platform and firmware, and the remaining MTM characters encode the
-> factory configuration and region.  If a fixed BIOS is released later,
-> this quirk can be removed or restricted to the affected BIOS versions.
->=20
-> Verified on 21UFZE0PCN:
->  - gpe6F increments by one per suspend/resume on both BIOS versions;
->  - masking gpe6F, or disabling RP05 wake via /proc/acpi/wakeup, makes
->    s2idle stay asleep;
->  - with this quirk, /proc/acpi/wakeup reports RP05 as disabled and
->    gpe6F no longer increments across repeated suspends.
->=20
-> Signed-off-by: Kean Ren <rh_king@163.com>
+On Mon, 9 Nov 2026, Linus Torvalds wrote:
 
-Sashiko has reviewed this patch and found no issues.
+> > Just that the cast would have to be:
+> >         u8 *foo = (u8 *)bar;
+> > where 'bar' is 'char *', and I don't think you need a cast there when
+> > char is unsigned.
+> 
+> .. and just to clarify: 'char' is always unsigned in the kernel on all
+> architectures since commit 3bc753c06dd0 ("kbuild: treat char as always
+> unsigned") back four years ago...
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116065612.2304=
-81-1-rh_king@163.com?part=3D1
+ Thanks, yes, that's the piece of the context I was missing.  I've since
+actually come across this commit while investigating which Linux ports 
+have plain `char' signed in the psABI (MIPS for sure).
 
+  Maciej
