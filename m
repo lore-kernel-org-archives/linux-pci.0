@@ -1,100 +1,130 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.48
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794873007;
-	b=NmVXKCTvn0lwYrdZQBJKwBy5Q/2l1a7M34gRwMfaJlMiSBSMXmsp77N+ZQviBKz35fw1
-	 DyPAoVjDi4A1xtuRbWlP+s9FftEvhK2UlnSoTiW+kD4D+TQnK/zRAWkz8J1V8FywpcnAt
-	 XB0Oz1blLSsXRKwXtWdr5EhQDhE99QcXBtA3LlfiPpq4nEZaC5mivM9E8b+nefD9LtPvk
-	 GEnKxB/beJWWNqNR8qdiUKw+Fv1qGp40jUFcTFoJzG9qrNf1FKyJLJenQJADeb9w1aavo
-	 Tww/GxyzdgicU4rDDTbmIKMXpPQ0nXNfiL4xMsgwDs0kGR5+hkhwmNQ02vqjylQrIqg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794873007;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.182
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794873921;
+	b=17UiBuueskK/2bMPLcElhvgxEnCN52jtqCPnNevtP/iFoGL5H/znuecfeoVFxM5rKRwN
+	 HieXr5Az2GFrsuSo+/yh/jiI32XuCW0RXj/9TaePjTr6wxo1gH001/8T9SVHlb5ujhipU
+	 TLklKsI6NjsUR597qboyV2/Q85Wu+HsouCTUZgcUBzc7TF2SoOO8l0mx7pAmZ4vYHhU/w
+	 T3EoPIDIsQl91zJOqheD5vi5QklaZWbV7kaWvGCs0q/AtAuWQ3Go1FkiPbPj+X1siSFzw
+	 TDan0ElZvcltgUzq3D1xo9HcLcbK32iHKEV6KslgRHEYSnflHxSJ1xXNT9Y6l/C1+jA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794873921;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=7FRS3DAvrAxtXcplP2lI1BU1rJaQlAKpU++3t87iHlU=;
-	b=fzKJIZqhppes2P84IQgZwGGmpOSq4Xg7TkE0c5nICTNmwwqipY71gku4yAYFqUPCb4im
-	 SWNFUqJfMYM3XMrIh6Z3Yz9m8Ryx6HWskg3y455runhZdrIEeuF1kuRuipo65TFLX8Xg7
-	 4TZaqYINB1ZcDu4RgUhjtimzz9+omeDyIDN9b/cU90NJbeR0bUFbseKWaJJsZejVMslyZ
-	 Y60k/1/3tVpdtgnvWZV0p2/Dh4RiiKcJUEVgd9OyUpJ0h+yn1qacO/WmmCRFAKGKC+t0C
-	 Xc8eVvGelhhyShqzbWXkawFt5ygirWcBVbRe+COEm/kgNd2rztLtDXq60Kopg5auDUw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=pqvemtLw;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.48
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=eMx+CTkXv1VoOtSvi+6D1nYsmWu0vpvPd8N8huVVt6c=;
+	b=N+HN6fnsHHxrMW7BcyNM11mXZARFuXSwxDZS235pulO9bXRw/EatoVasd0GyfwX+ilW0
+	 gmAHtRSsPAs0+9UEO56UjRPBZj5AX44HtQyEZz7HIQ5p6UVeUInK3gsMYA8iGQ+qrz4qz
+	 lMHgIJbSV2ohkUitgCjralPPSHniVieLDIdcPBIOCfFjuwRwfavxgprgHSkQccdYPe7nm
+	 BSQKCyEzDg2zhOSaWdxbCdLgFnO0PKtXhlwRYP/JqGkjC34fFqnaHlrdIM4q1brb+fHU8
+	 8oUKY2mjjzPCxiXIbUBImxD48JM5/knlJ+dbe3NX7bakhMwMfEU/SdQiX6B/V756e0w==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=none header.from=ziepe.ca;
+	spf=pass smtp.mailfrom=ziepe.ca;
+	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=o+1molFf;
+	arc=none smtp.remote-ip=209.85.222.182
+Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3FB8606A33B
-	for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 23:50:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E3FB8606A33B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C7E8606A323
+	for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 00:05:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1C7E8606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=pqvemtLw
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-6b81214ab40so1104648a12.0
-        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 15:50:06 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794873005; cv=none;
-        d=google.com; s=arc-20260327;
-        b=OUY9QjhwzbXdDgsnWT21STamZj3rdvW0rvMdZcqXPERgKWVgD5g6y0DDmQFpJYq24N
-         4rOSweUmqojpvBBmzAwwnPwVDTuAdwljIve9hw/J15m4ASLqp7xO0gycmldHHPQTZp8l
-         CHhhG3BCqDyT5Umgx7L1a+r0POXTyMKpMH9w9/43pzoOmIHxG2pDNwuOVHRMx+FORswf
-         1v6HoviRud94HGvDsqoFAmXZCe+2fidZhTtxxbJAbt0q+YBmpbI6VKZtJsera2IZ0TPX
-         CyJUuYAu158aTpP3nm9EgLhQypDVEZNGApEnojccCpQFdsaaMJV86TZ0dfUX4hlnoeNj
-         8cNw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=7FRS3DAvrAxtXcplP2lI1BU1rJaQlAKpU++3t87iHlU=;
-        fh=ON+HtOS69eRrE+GzY5WJFnYqlTkCjAIEkRk1w/g8kVs=;
-        b=e+tVwvH/izD7EDGKaQblJ3r/T4BZiCFUIroOnkR2d3Fh8VD+B99x08mfsiheAlQdPp
-         3TL0c6H+OF+SOZHZWXupdGFKo0lY4Lgmwoa+kxF9fv5pgFyLCm6iEn9gbDBhV0jV2OdH
-         BP2wsrnRb9gyOjnU+M//TWe/U031gw6ZT7Xn+5gIiYai8nod+f+M4lRffZoVNrAXLNdB
-         EsXoSfcjHIpjh6DEJ6K04EBXz4NLPI2G/g7lxRAGGArK78fQN6ZdpeEo8DemXNnVkljJ
-         TQlvvn8atxTFtxEJ/3m4MJUe/j77xhFIR4IqW+p201F5LC7DcgN9wu/QaOmTY/tJmRfL
-         qaQQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=o+1molFf
+Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-949589c1495so334703685a.3
+        for <linux-pci@vger.kernel.org>; Mon, 16 Nov 2026 16:05:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794873005; x=1795477805; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=ziepe.ca; s=google; t=1794873920; x=1795478720; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=7FRS3DAvrAxtXcplP2lI1BU1rJaQlAKpU++3t87iHlU=;
-        b=pqvemtLw2O71X7r23B62BRqkqr+ryl8tzqCUbYwgOY8P9YRUtcY5noeVc0Q4rLsNBQ
-         zijkKIPLCDKO8bwiCim25UesGTSY9PgIFy7BY5BexbxUgvRf4JviUfuZfwg9GXzqBt2K
-         12vOGr/NdO1pwsLaG3ylr9O5p99suJ0iugumHnc1JuF8pJLItmDdUyWamNXb2XRMEg/z
-         4dCCrKpaSZ2JqSVMkI3zctHREdE479RxMTlpS7La3NKrdpxrC18LucQoJEAcVlEHQgTx
-         qHYkh9qIJQYZ+wruOEwWz6f+6CEzqCq6PifkKVZ2SbtA0cgN0/sgUvGuZ9HBEZgOK3Yj
-         GyPg==
+        bh=eMx+CTkXv1VoOtSvi+6D1nYsmWu0vpvPd8N8huVVt6c=;
+        b=o+1molFffc9e6T9ddIDnNeseSjzEf2bQKujHs4vpOVw4OzSSGS4YQo8BJrSN9kd667
+         k9JFBOotGGRYa0PkAFx2E0FiQp1pgsnwgn6pcnUL3Eya4+1ObVIZXwVWtTnGOXsLpAKM
+         Qm4w4F5jBIoZdwaJAnrycuNhvr/nMKvlaRPWeoY+KemZwqtCHlIRV3pKlOZAan8ZiPyk
+         dg+rWFVtziAEodqueYjujOY8FQIiLOIqi0nCOki4SNuEx/vo4myxz/px2YhfTxnQyYx8
+         5SnT2fX1BMMsw9KBqqyDMrnK6kEETUe11lAAN+nPzvpxO9VlnJiaiLVZSGU+NSdcdbag
+         q8ig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794873005; x=1795477805;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1794873920; x=1795478720;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=7FRS3DAvrAxtXcplP2lI1BU1rJaQlAKpU++3t87iHlU=;
-        b=mL0IniERfU+ypHV16qRHIFjSOq6ZwT+N6g8ZrmSiITdLvAOLqcbEUA4+oZ7VbaXsfG
-         60dGFuiz8bGOFn/ZHYxL44ml78ht5xTpid7SgLCt90Y4oVoPoYbkjudCknLcj7Cgr45m
-         7YGyM4t4iEuCFqzxgfO9CxvfZv8RuRbD8UtbyjXyJqTbbGXOHktSHCOpvcCbq2itDDP4
-         CGtVSogxLzdefqWL3HH+W+LQcb08frvMzu2XeOdVUIZeFpILIqfVGt/cbtlsVVmI84Om
-         QpItrt7k9xRmxWfpzfRf9qGn9LXWZA9zpHFCa3NaN0wmOrhMt13uORD9K8fikOt1bIeB
-         5j2g==
-X-Forwarded-Encrypted: i=1; AL+hErEtDF84HnitfNr1J/nBkNndeTuh/iBLxlurR/jElcohdbPD8RPb94Kp2c+H0+00sO4EiRxFeoqdyFA=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/sEj6WNvD9q0U1FJWWM9rPOEszyo0ydUKAN8c+eF4x2xxOM9xE
-	qzRhUMD2H1t7zRmiTUSQUZngL7PgdP41beWzyE+6pvAV0BBzxxtGtbQ431CccuD0DYKSwsOQcMR
-	zKVsxUntF9vdGCWwdTNM99lhqQn7Tzuw=
-X-Gm-Gg: AYBFou1vGEUOg6AYAQYRr+LzWyCiBJY/Urf1FYqcePyobgXsFcKwvOno0vBnFaDoHWZ
-	sqi9uzXYIxPJnSMgJB5mVhtil0YNuxOXemCCu1CuOctiCBJ9y/Is3UhIT6NbNJ7N22W/dHL8elJ
-	ZGAA48mEynoNLUdyU+riwc2ieounLB6SVE9wK+wA0pBAEC1+wcE8EJ4ih1YABNOm68w4WH1ptLN
-	LM9SLB8agQX8PyHQgmDzkU23kUmHE2rr1I3xzEx+JKGD/OjbaCCSb6foVK1RjILoVYKq72SaRIj
-	r42Q82iMmMTRzY1psnFB1HMQAFfP/QFdSnvQNXnGkvRIgsjaYiRyN4/cCd1TCbDiI8DVDRxezbv
-	aCIISMcZgfnQyunngODM5oAJ2DbWkFwz+rBzjb38MdAxFeIG11RW4Pnw/BG3TbcFoQJp0k1ve
-X-Received: by 2002:a17:907:d88:b0:c36:777f:824c with SMTP id
- a640c23a62f3a-c50f320cef8mr84585466b.4.1794873005174; Mon, 16 Nov 2026
- 15:50:05 -0800 (PST)
+        bh=eMx+CTkXv1VoOtSvi+6D1nYsmWu0vpvPd8N8huVVt6c=;
+        b=fz8CcTDFGPHIuPzhiG/NdZOZ/n291bd4G3gZ6tOFNHZ6MECGqHnD/PfcailSF5MClS
+         PzusZblu5P3di/W5jprtYIKbR4sgPk4NdQSnvBDbeWcCWAXQzj7C2IYmFmKTVBpO7XCD
+         D7/5XopnbAcO1SrcfBV3sXoUbMo4qKs5UtBauT+VXUGZyQNEDTQ5ifwCSvYvNwglvM8h
+         0kGdyYbjzbKYpcoGWZuhGnErRHFxWKiEN/IuJ7bgp99ZAg29RCMh0A33c3apUIroFVSr
+         8GYdZbwKM7xAL2WDL7OtUIb9W8pKfN86VB88JKMfv4uEyw+X6i9gK2yw0lNWQHYuxEax
+         IoYw==
+X-Forwarded-Encrypted: i=1; AL+hErHgWnI4tDy8HadHN9B9J47AueEEzKOOCYiw4molxz3JuUMEP90C4zpLHVn9gi2ABiTCT/ro95qc+z0=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+yy6y8v8akH3mBPxFvlylMT6gl8MBxRdWqFhwCmPhuyY5wYR1+
+	PYe8HXJFOPNswMmhLDjaCPzMHkaYIx61OUOKWGtoDhkGFafRK+/sno0Zatb7aP10CDg=
+X-Gm-Gg: AYBFou3kR8aFU3VvGkPAGwDZxObRI/C9bNnb9GyJK/cmdPeloXrRxw1+QKmCc+uEJoF
+	lKDFxY8Nghs/mvuaR5dp80VQK4s8XH1nuDs4fSx67BUZKHzFGnrWpIQ3VvprqbveuEOPRJA0ePh
+	kgJ1JXUbDMHL2t4PYE/XAnypID1POb5Rq/lO4Fwnxh01WAnIr0XWEGS4ci+MoiMUMiI9BicpIrn
+	XgK6vOM5noGPQ3lpE5dRLJn4CYpKlxvVicv1tLl6gB4AqMjaQqHQuUMl/BrwUY4pBIDSGkiO2GA
+	cryeqb/Zs4JLAZHPrLOyJdVEaZRbtQGmHNhtKmipr11qNbt4b9UT2UxZtrIliOzLC5ZdQdbOf8b
+	7od0dulrw5DP34v5P507JRlY/iYXQhUApfKzrId0dY2d7MbXHV4Szh9hRynWzP+DWSm8hfFrm6I
+	61R/Iq2Azx1pJMU+OFh9jXI302Gzb9NYyvXW6+hyYKCsu3taF8DIcAlXA0DZVktfbGLaISGtfN9
+	fGBK190Ok6ZIK9g+KPXPUZTmFGwxmIW6g+A9uCvdc/vI7NPIm+QA12979RDWKWAPZQyEiOW6of8
+	Er3+wQ==
+X-Received: by 2002:a05:620a:aa0b:b0:949:7473:b1a5 with SMTP id af79cd13be357-9497473c077mr807892285a.55.1794873920005;
+        Mon, 16 Nov 2026 16:05:20 -0800 (PST)
+Received: from ziepe.ca ([142.166.156.71])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9494c8b889csm969866585a.32.2026.11.16.16.05.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Nov 2026 16:05:10 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xT6h7-0000000Apgy-1pGN;
+	Mon, 16 Nov 2026 20:05:05 -0400
+Date: Mon, 16 Nov 2026 20:05:05 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Leon Romanovsky <leon@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev
+Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
+Message-ID: <20261117000505.GA2488304@ziepe.ca>
+References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
+ <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
+ <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
+ <20261110122237.GG8635@unreal>
+ <b4c2538f-8021-4abc-be2e-fcd1596f84ca@arm.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -104,67 +134,53 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <CAPZV9qUk3-eKOGEjVc7f0QzZcjb3L5QwUceAEUV0nuCdo90eGw@mail.gmail.com>
- <20261114235828.GF3706007@nvidia.com> <CAPZV9qUvgKjoBXGjYXJzwnCmqzSfu781ZSG8zW6Fn4PokUN2uQ@mail.gmail.com>
- <CAPZV9qUMZcwVF=CUK4LY4G6Qoqd5ykCXE5ocX8VCy_f1c6+aBw@mail.gmail.com> <20261116074022.29d96bd7@shazbot.org>
-In-Reply-To: <20261116074022.29d96bd7@shazbot.org>
-From: Gustavo Andrade <gustavogyn@gmail.com>
-Date: Mon, 16 Nov 2026 20:49:48 -0300
-X-Gm-Features: AclHuK--I7eLB9wssYrjidNqtZcmf5db4-ZbJTD49xw-7f4cTL26Jgoahe2N3Nc
-Message-ID: <CAPZV9qWp8rWLkdzdQ0hJ3nsN0CQXj=7epsV9UnG-x_7PvYgMXw@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/1] vfio/pci: Wait for GB202 firmware after reset
-To: Alex Williamson <alex@shazbot.org>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, kvm@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b4c2538f-8021-4abc-be2e-fcd1596f84ca@arm.com>
 
-Hi Alex,
+On Mon, Nov 16, 2026 at 05:13:59PM +0000, Robin Murphy wrote:
+> Even with the slightly dubious argument that this series only intends to
+> shuffle the existing PCI code around rather than fully introduce the generic
+> abstraction that it claims to, if the PCI behaviour is still just based on
+> propagating the internal "untrusted" flag plus the new global override, both
+> of which *are* known at add_device time into the common trust state, then
+> there seems little excuse for not doing that up-front so that the new API
+> *can* just work as expected.
 
-I completely agree with you. I wasn't aware that QEMU was the proper
-place for this, but I've made the change there and it is working
-without any issues.
+The desired iommu flow is to start out as blocking and create the
+default domain only right before driver binding when we have the
+correct trust level.
 
-Thank you very much, Alex and Jason, for pointing me in the right direction=
-.
+If we try to do that without this series then we have to do it all the
+time, which I'm really scared will break some embedded thing that
+expects scanout to work or something like that. My hope was this
+becomes opt-in based on the new command line stuff in this series.
 
-Cheers,
-Gustavo Andrade
+On the other hand this series works properly on systems without an
+iommu, which is pretty much all CC VMs today.
 
-On Mon, Nov 16, 2026 at 12:40=E2=80=AFPM Alex Williamson <alex@shazbot.org>=
- wrote:
->
-> On Sat, 14 Nov 2026 22:47:34 -0300
-> Gustavo Andrade <gustavogyn@gmail.com> wrote:
->
-> > Hi Jason,
-> >
-> > Thanks for the feedback. I submitted this as an RFC because, while the
-> > workaround solved the issue for me, it seemed unusual that only my
-> > card required it, since I haven't seen recent reports of this issue.
-> >
-> > How would you suggest I proceed? I am currently running the latest
-> > VBIOS available for my card (Palit RTX 5090 GameRock, version
-> > 98.02.2E.80.10), which is also the most recent version listed in the
-> > TechPowerUp database.
->
-> I imagine a better shape for a quirk is a resetfn in QEMU.
->
-> The fact that nova knows about this issue and has code to handle it
-> suggests to me that it's only the guest initial boot and reboot, where
-> the VBIOS is run before the FSP is initialized, that's causing the
-> problem. We don't want to pollute every vfio-pci reset with this
-> wait-for-device action (if we did, a reset_done callback would be a
-> better solution) and I also don't think we want to implement a
-> kernel PCI-core device specific reset.  Either of those would make the
-> device behave differently in a VM, or modify the current bare metal
-> behavior that's clearly expected by drivers like nova.
->
-> A resetfn in QEMU can be device specific, wait for FSP to initialize,
-> and not affect runtime resets where it would be the driver's
-> responsibility to wait for FSP, as nova already does.  For example
-> something similar to vfio_radeon_reset(), but calling the
-> VFIO_DEVICE_RESET ioctl and then stalling for the FSP initialization
-> to complete.  Thanks,
->
-> Alex
+There are probably around 15 series to complete all of this PCI device
+attestation. Without everything it isn't really usable, IMHO. I'm not
+that worried about the series ordering.
+> > We have two levels: policy - that describes the default of all devices
+> > for that bus. level - actual decision on how that device is going to be
+> > operated.
+> > 
+> > "Disabled" prevents driver probing until the device is authorized,
+> > "Adversary" permits probing and requests the available protections
+> > for operating an untrusted device.
+> > 
+> > Both need conservative initial IOMMU setup: a disabled device may later
+> > be authorized as adversary, and authorization does not rebuild its IOMMU
+> > domain.
+> 
+> Urgh, I can be absolutely certain I'm not the only one who is going to be
+> confused this way... I see "disabled" and instinctively take it to mean
+> disabling the device_trust *mechanism*, as the logical thing that people
+> will reach for in terms of "I don't care what this new thing is, just get it
+> out of my way and let my drivers work like they always used to; I want to
+> disable the new thing."
+
+Maybe "isolated" is a better word?
+
+Jason
