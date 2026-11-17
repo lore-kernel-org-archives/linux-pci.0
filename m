@@ -1,85 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794950185;
-	b=cgU6j/BvwYjf1sAmy9jthops9irS9Gz5915inGTDC+ooHMEF2EEhgphWcDXaYKBleWio
-	 vpFBvEbVZ8J6MNujtM4K/0tTBOIxXAqcfQyhK9lbT34PlyWnhJO1TjBcipTHDaNizu8WR
-	 ADUXAQDergW2FWzOQb45XcymDvY8jAduoVOtRKnziurR8PHQHSVl7xF8/JuSLnrmrz65v
-	 KLJQ8FssrhRXiVhg0OjG4wLxNqi9rbFkudoMAPJ93cuNJgVFG5InKvWJ7MxA4CIvLCVUe
-	 G+Xz6p8BXK3060+u1bwaU4h3Y96cudWA26H/ehXm8W8Z2X1CWUbjdr/2KWzwnjBeQJQ==
+	t=1794950658;
+	b=bFrraoyat7gB8RmdXmGsaTvoX4o24SR0xwtXMn2fWJBHcjkIjry/kcOgPIoRfz7tkvaN
+	 OMyuLfKHn82Fu/MN4g5ONNkxcbHusx8Ju1nnjmsM72NCA1M8WE0EDJ2ZQOjBreDz5Ra+Q
+	 oCNmhF7sWj5dMOlKMsJiD1nM9+pJp17ND6Aw5jjCGWn1RO76OqkV0NQioCXw7+/1gYjyP
+	 8uG9HfDSe2atxEMAqg4MnWZw7MZG8LBDwRgBtJN6q/JsRtlp2I8h5PHT7TxV3XfgvAGkB
+	 o4gDiY82YZSeuBeAAo6S8elt0H2nSwIh24a4+V3EFGgumAGpnnAPdYg/mShS4cRDxKw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794950185;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794950658;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 To:Cc:Subject:From:X-Mailer:References:In-Reply-To;
-	bh=Ays1EfzTLcRjTY+4yI71x15YxEo2laYpKiSTCWHUOoo=;
-	b=IopGMXeyzNGTJkoRQ39EgijNpQtvg0MUnIlCcWBa39mOUxK/1il9boY13KM+AK9cmDIF
-	 +EYW67oveBM8zJc4Tazz7FU55CRxSnrNnSW6Frfr61jkwTh/ySU5qcQlIo/PahMqVt6Ft
-	 nCz/Qrw4LEMb/jQb7N1OMEKWWfZHqConvwu7HSjUm57SXOXMS+nXjk/bmHAhEGdCvDQCy
-	 CZgGZXRyo2eEAdD9Jk0ZNFMYO2fcbGmp3GRExfPD8rSKrLO0Nkpq5v0jCnqI1Bfk/q6xS
-	 scoEgQ7Hkb3yAydmhr23ZBr8RdWh+NYYnpFOTA9KSo4DRfY5BANWHDVVzqpQU6yWslg==
+	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
+	bh=J/fjCpBeMUF8gNXxUY7RYX8CVW+S81rP+s0YQaibwOw=;
+	b=bLy6oBJwQ6ECd9IxFUDsp8iQaIh6wujcw63DAqU9MY6mMsZUMgGAzRtEfOOi5Aq7xQFC
+	 jWXjays4uoF2FktRgOR0uxD3Lge1vJFzxoYUNK4xm/OHbge2+8UfGN4hwjjul3y40RVtF
+	 R8NeT4CG5q3CBdDuoyNDiUnW7D3eMHGrKPNqOOA37b2nfPsEak2ASuAvHjQUKdn/4NFQ9
+	 NzH0lebTiwQugTr6SmYF+iFiVXU9TYh5O3ynHw9s4HS9/mKjGS4bmwx5WQiMVrko00GS+
+	 1VekJ0gjz0kwWUWifKdBPJoy+PGw9BEqFq0Zypwmzl/KsLnqFwRMSMPx+3Fgo4kP/9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=S9eb+zZ+;
-	arc=none smtp.remote-ip=209.85.210.181
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=nxr9m7DQ;
+	arc=none smtp.remote-ip=209.85.214.181
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F4EB606A333
-	for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 21:16:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8F4EB606A333
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7037606A32C
+	for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 21:24:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7037606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=S9eb+zZ+
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-8a60f90a924so128968b3a.3
-        for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 13:16:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=nxr9m7DQ
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2ed2bfe3252so1115345ad.3
+        for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 13:24:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794950184; x=1795554984; darn=vger.kernel.org;
-        h=in-reply-to:references:from:subject:cc:to:message-id:date
+        d=google.com; s=20260707; t=1794950657; x=1795555457; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
          :content-type:content-transfer-encoding:mime-version:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=Ays1EfzTLcRjTY+4yI71x15YxEo2laYpKiSTCWHUOoo=;
-        b=S9eb+zZ+PJvunm63i/fXDlCBqZsN39Q9h2grW/i2SIKOr71F+NwBup8zef5dQt+gcB
-         Q/0rrjVlc8gUSkw9ZVn3EhHFV5fx2Tm9FW3M8fA4i0Ww3PzuTovXl+iTx9BCBASvwUWr
-         pova27Z7YfhEiaxRjzF4dHotz1kC2zngiDdDONWYPDQmPivP3oQ4ytGKGpMIekSGYGM3
-         3FAs/qBVWevcJX2GmN7YxTm56VsKILYGaDVDI4AeaxrcywybDiXOgsR2HYISBBCTznCb
-         Ka9llwU/+pcYfEhEoANG49K58AY7OFrkbMwVaDPlLMxHF6QpnNJ2BOd0wBZvfFmxEQK6
-         B8YQ==
+        bh=J/fjCpBeMUF8gNXxUY7RYX8CVW+S81rP+s0YQaibwOw=;
+        b=nxr9m7DQhADZJ0A11Vgtv9+ajmQSQVyjgxlF4UwAbRrS0p+4aLCL0I3w9+n8hCnAcE
+         kjwiv5TjLKTSGMaG913wevcCAjy+0kZFu0WQDUaACQ06JCCjpAQEgkqWNeh/KD1jGktI
+         ynt3rXfYw0l0vQ/YqcKzSN7xwFu7Rbe0jP1QxDANz1zURk/krMd5ubwFuWiIxzpXqBbg
+         jFXwEKz0rfsOmVSIhERyJ6WHu+KZ0H9I3EM7G+f7OB/0bYQ6xsUORuwZ6r70SEvLo2rH
+         hLxNxv6VSg1nz8Gf8vmXTRaGufNR8it5NUuNFRh0JEBJCW5TkDavFdqZAK5rDa0c60Rn
+         Ui3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794950184; x=1795554984;
-        h=in-reply-to:references:from:subject:cc:to:message-id:date
+        d=1e100.net; s=20260707; t=1794950657; x=1795555457;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
          :content-type:content-transfer-encoding:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Ays1EfzTLcRjTY+4yI71x15YxEo2laYpKiSTCWHUOoo=;
-        b=gU4GOUtP+Fw+JAxz6ol8B1pZgGo5E4X1RPBULKwYvgWoZSHMJn197YrZgxnPYQViRu
-         RdQZxyaFy6FMm6Ansl07HGdycJcBX8ACM1n6rSgsOYJ9iHqzjDHiIkBcIDypPyO/3ySq
-         gYva+AOPgGVTU5Xm5cD3ioLsMshnVvhY2GCD9RWE7knajPp77qaSsRl94I2RmDQ267Fb
-         nmHG0kML8Axt1zzV3w2JF1j5OgBbGJ/fFxaayVD1zjDZ4xFUf6cjxjqw12R9PxxWFD1Y
-         qSR7SN3+N5pgu/hGas2Q1ljNMY4Ljrum7+KtJOY4LTP+kXvYxkVR+vFCLGd8WYrI4FRU
-         FEcw==
-X-Forwarded-Encrypted: i=1; AL+hErGpsPMOOmB0aV3/7s8v4YAY6aw3h6Uq/ASkKxOKnPHlmae3mUCfqWR3mHmIwLwDmQnaPzUsCim/+y0=@vger.kernel.org
-X-Gm-Message-State: APuU4Z83iKtvhHJzxiZhgrMKc0F1pItwcSS+eKSeablh9p3dX/gb/6Ke
-	XMDs8dg3q4fB320+YgH/3oVnXOpcExDKmr8iGbaWfU0I3ScawTSHINzF9665jQTDtg==
-X-Gm-Gg: AZFdTZf+Au6OJEAz4zAl6E9j1Cx+APVty47z3FepKc6R1GkuAktqMtA6fiMfoip2V9R
-	n56/OELN8pjOUe1Che9sf45ckeDhpsWW4k8hcw3SWRBJjgKUnBBkgRw2EEbaYvN3/FSbKCioWlw
-	kyu+EnjMhW4qa/AIdq1CjJuuand1pD1ITjyrMB5fvTKmONT52SG1uDxvqQ3iPSBnML2QYSVtWdj
-	txJF8vgwjRslAJ9wW2mQmvriRp429K4t9XV28JWQBveaoGIwgt380SE48TYiFaymyUGEulQIW+Z
-	bLEGAtFWCHUsqZHSELisL6zc6O54n2usq/c8Fox7j9f3dA/ATasi5uf96wJ+yWVn+Se5RulDx1r
-	b9m/4++iOcpHTQ3rbVM6Kq823MF2K9EDxui0/gs0iKI/Efi3q6EjoD5ZJSTRmsxKktMWV8+GxMO
-	aYLyWLAVBZ6Hcg9JuZwpeIXF580bxFN03CoPEofRA2Q+SL3VFAUgHCkoAtt/6KdCYsOwTp+K401
-	4FT9nY87bpIZ7o9mUiXJ+OqvsGQKOC61eyvmhbxVpZcQJngK9emCY3/vVcInL9rEIuNZi4Oyira
-	xuBs5AVcr0+kTTgbFSlTnnZNUEzrgo7XziPP0IdqQnsvm5RYqE81/JNcKFNUY4ahJ7BFReLPnbP
-	emt9Qb0ktzA==
-X-Received: by 2002:a17:902:f790:b0:2e9:460e:ca57 with SMTP id d9443c01a7336-2eff7529757mr5030915ad.15.1794950183338;
-        Tue, 17 Nov 2026 13:16:23 -0800 (PST)
+        bh=J/fjCpBeMUF8gNXxUY7RYX8CVW+S81rP+s0YQaibwOw=;
+        b=sAYLXPsxmTqCpRJd4Sj3pkC0iwC2lzynhV8PryBOpEHGVCY9paHDvWL4Qp+v+M7shH
+         MifRx+FvTx7lVh98wUJiMbKjQlRPaDQSObmnWDg2p+kfdhqX8HM3wh+MOkM/HifwF7Bz
+         paIV8lSGHqUpAkrKJBDBR4TTE7RqfGpAcLDizBF0zq1tKE+z+gshDpDHj+okwMJLmeeX
+         vmjvR0B0KueUbSYehucsWBzWVcEwOc2syIccZOUofUFsjl5Q9vIX5vMNwZet4hWwJYsD
+         HV9etuOHsTQkhs2nz0SaHyOzeGUa1ehuntxqJLON53uX5ut31ARgYzKTvOPGQ8n5MgaJ
+         +9Kg==
+X-Forwarded-Encrypted: i=1; AL+hErFOm3rrkwED3m5P4gSg/A+vNoMFvZgeMUwJjfvXnBcgnqv3rjnTy6sK66rHh7nmMXPgeUAqucYFftY=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+ak7TpFeJaKoE0ju836fGjZbMtnp+ZMM4ItsnDTwLcXmEs3/A8
+	t/XmTWOhkDFojQoF6PTn8bx1FeaSMjSY+54CAAKp2elsfg0qZr+YTZA2cdurmB/UuA==
+X-Gm-Gg: AZFdTZcBliV0k2K/LJZsKSiMxbva1seJwuspe8yZRY2I+8ZniYpqbYeYkwQIGCOqR2D
+	Sg1+8zyoDRuHd3lBDG/hQK3Sq8bLntoTAErhzzJQFYlx4fRpj6rwMLYQg9P794BjOTT2Ya5xncQ
+	T5niPPYhevyLPIUZcFdpGdkcY0NxxpkrQqV1etZ9QLF7kOK70XiGVoZOYDQ17DpiOGqTH8sh8AA
+	zuTFNF73GMd5UmXu3zMUyHEIUdncToou3gR3US7dQQJuUf9j+kSIjOprJkhLeALp7DmaQUWLbJb
+	nSbyOUnRejPGcMxQzRX5oLXIrbsilD8pEaRQ3mha7cuCzqavDC8bH9IQn/kEjlqsW9xhzrPKrYJ
+	EphlFPnRgOWpqdWYh+7Ix/SVEZFKla5QicVyTrs24As4wwlONPrvrY+1cFbHYbT+ELygBIykomX
+	FpJaBn3KhTVrWcPCgrWqvQWdE+BdZAO0sGHfxBLxmPa7ehiZhBVbxLnWn6175ZyYfuYG9VVc4/+
+	NW9dYDfDjE/1Hdh7gzIwUUN2CDj1xmzJuo7gglVWuDRqBkq6oJbqJDQhdFtURY0A05ma6DRldEQ
+	mCQbleaI8d+3/M2w62JBhl+MJAWxjXYoPv/3c1NF6tGAQnXTkPw8SGppb3V/E3+q
+X-Received: by 2002:a17:902:d583:b0:2ef:ee74:78e with SMTP id d9443c01a7336-2eff72ea998mr4954175ad.13.1794950656357;
+        Tue, 17 Nov 2026 13:24:16 -0800 (PST)
 Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff61841aasm2714705ad.34.2026.11.17.13.16.22
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff617eb61sm2650725ad.28.2026.11.17.13.24.15
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Nov 2026 13:16:22 -0800 (PST)
+        Tue, 17 Nov 2026 13:24:15 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -91,10 +90,8 @@ Precedence: list
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Tue, 17 Nov 2026 13:16:21 -0800
-Message-Id: <DMXSQHZG5L27.2NIIT7F6FW0ME@google.com>
-To: "Alex Williamson" <alex@shazbot.org>, "David Matlack"
- <dmatlack@google.com>
+Date: Tue, 17 Nov 2026 13:24:15 -0800
+Message-Id: <DMXSWJDPGJLE.30NVP7WQSZIZ7@google.com>
 Cc: <kexec@lists.infradead.org>, <linux-doc@vger.kernel.org>,
  <linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
  <linux-pci@vger.kernel.org>, "Adithya Jayachandran"
@@ -111,106 +108,46 @@ Cc: <kexec@lists.infradead.org>, <linux-doc@vger.kernel.org>,
  Khawaja" <skhawaja@google.com>, "Shuah Khan" <skhan@linuxfoundation.org>,
  "Vipin Sharma" <vipinsh@google.com>, "William Tu" <witu@nvidia.com>, "Yi
  Liu" <yi.l.liu@intel.com>
-Subject: Re: [PATCH v10 09/13] PCI: liveupdate: Adopt ACS controls in
- incoming preserved devices
+Subject: Re: [PATCH v10 08/13] PCI: Save and restore the ACS Control
+ register and Egress Control Vector
 From: "David Matlack" <dmatlack@google.com>
+To: "Alex Williamson" <alex.williamson@nvidia.com>, "David Matlack"
+ <dmatlack@google.com>
 X-Mailer: aerc 0.21.0
 References: <20261013162529.1928093-1-dmatlack@google.com>
- <20261013162529.1928093-10-dmatlack@google.com>
- <20261116170942.720b06fd@shazbot.org>
-In-Reply-To: <20261116170942.720b06fd@shazbot.org>
+ <20261013162529.1928093-9-dmatlack@google.com>
+ <20261116171017.2342bd11@nvidia.com>
+In-Reply-To: <20261116171017.2342bd11@nvidia.com>
 
-On Mon Nov 16, 2026 at 5:09 PM PST, Alex Williamson wrote:
-> On Tue, 13 Oct 2026 16:25:25 +0000
+On Mon Nov 16, 2026 at 5:10 PM PST, Alex Williamson wrote:
+> On Tue, 13 Oct 2026 16:25:24 +0000
 > David Matlack <dmatlack@google.com> wrote:
->> +int pci_liveupdate_adopt_acs(struct pci_dev *dev)
+>> +static void pci_allocate_acs_save_buffer(struct pci_dev *dev)
 >> +{
->> +	/*
->> +	 * Check if the device was preserved over a previous Live Update (even
->> +	 * if it has already gone through pci_liveupdate_finish()). This ensur=
-es
->> +	 * that the device continues to use the ACS controls established by th=
-e
->> +	 * previous kernel.
->> +	 */
->> +	if (!dev->liveupdate.was_incoming)
->> +		return -EINVAL;
+>> +	size_t size;
+>> +	int pos;
 >> +
->> +	/*
->> +	 * The previous kernel should not have preserved any devices that
->> +	 * require device-specific quirks to enable ACS, but if such a device =
-is
->> +	 * detected (e.g. new device-specific ACS quirk in the current kernel)=
-,
->> +	 * log a big warning and fall back to the normal enable ACS path.
->> +	 */
->> +	if (pci_need_dev_specific_enable_acs(dev)) {
->> +		pci_warn(dev, "Device-specific quirk required to enable ACS!\n");
->> +		WARN_ON_ONCE(true);
->> +		return -EINVAL;
->> +	}
 >
-> This looks pretty unsafe and the comment is only explaining how we
-> might get here, not why we shouldn't panic.  IIUC, the IOMMU lho
-> support requires singleton groups, but I'm not sure what it does if a
-> group becomes non-singleton in the new kernel (such as via a new quirk).
+> Nit, moving the device specific enable test here:
 >
-> Is a warning related to what might be a parent bridge rather than the
-> endpoint device, really sufficient here?  Thanks,
+> 	if (pci_need_dev_specific_enable_acs(dev))
+> 		return;
+>
+> Would avoid:
+>
+>  - Allocating a buffer that will never be restored
+>  - Saving ACS state to a buffer that will never be restored
+>  - Testing for the device specific enable at restore
+>
+> Otherwise,
+>
+> Reviewed-by: Alex Williamson <alex.williamson@nvidia.com>
 
-It's not necessarily safe. The new quirk could change how TLPs are being
-routed while a downstream preserved device is still sending memory
-transactions.
+Thanks for the review.
 
-I think a better approach would be for a preserved device to always
-adopt the ACS controls left by the previous kernel, and keep them
-across resets through the ACS save state. So a new device-specific quirk
-for the device is ignored, apart from logging a warning. IOW, new ACS
-quirks only take effect on cold boot.
-
-If a preserved device has an ACS capability but no save state (i.e. the
-allocation failed), then we can panic, since its adopted controls would
-be lost by the first reset..
-
-Roughly:
-
-	int pci_liveupdate_adopt_acs(struct pci_dev *dev)
-	{
-		if (!dev->liveupdate.was_incoming)
-			return -EINVAL;
-
-		if (pci_need_dev_specific_enable_acs(dev))
-			pci_warn(dev, "Ignoring ACS quirk, adopting ACS controls from previous k=
-ernel\n");
-
-		if (dev->acs_cap && !pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ACS))
-			panic("%s: No ACS save state for preserved device\n",
-			      pci_name(dev));
-
-		return 0;
-	}
-
-The panic would only happen if allocating the save state fails. Ideally
-I'd like save state allocation failures to cause the whole device setup
-to fail. That's something I'm hoping to do in the future on top of the
-pci_save_state rework [1], and then we can remove this panic. Until
-then, the panic is constrained to Live Update, and the allocation
-shouldn't fail in practice.
-
-As for IOMMU groups: Sami's IOMMU Live Update series refuses to let any
-device join a group that contains a preserved device, in both the
-outgoing and incoming kernel (__iommu_probe_device() fails with -EBUSY)
-[2][3]. So if the new kernel considers the path less isolated than the
-previous kernel did, e.g. because of a new quirk, the group grows and
-the IOMMU core refuses the second device rather than putting both in
-one group. The system comes up with that device unavailable, which can
-be debugged and recovered by rebooting, instead of panicking.
-
-[1] https://lore.kernel.org/linux-pci/20261106004218.604799-1-dmatlack@goog=
-le.com/
-[2] https://lore.kernel.org/linux-iommu/20261110040828.1774343-6-skhawaja@g=
-oogle.com/
-[3] https://lore.kernel.org/linux-iommu/20261110040828.1774343-13-skhawaja@=
-google.com/
-
-Does that sound reasonable?
+I'll make this change as you described. Preserved devices will still
+need the buffer even if they match a device-specific quirk (see my reply
+on 09), so 09 will also allocate it for devices that were preserved by
+the previous kernel. Since restore then just checks whether the buffer
+exists, that is all it takes for preserved devices to keep their adopted
+controls across a reset.
