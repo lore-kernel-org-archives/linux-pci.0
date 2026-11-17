@@ -1,56 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794931499;
-	b=OdUcz5HuBAx6UxXnK0E697SZKQXKHPNWAKb2RFv/89HCWy0w4m/qEeK3FMq9X1zSTPiu
-	 pY3gvaCdOhWNgBqu9xUc232pHVKYIt/w6ntFxBgZE+XeVt5ty/ep9iu3D7UZxsp60A/oZ
-	 hdU0sEakuSV4ba3MdLGHC1Ow3zuDrMwN8XA0WVPQ6q+I+2uUR47N+cljNaDK/id0yFMjB
-	 tvE9vfL0i2dxM42EKMKoEIksp4r+hhH7yPJuQklEwOZODxEd0KvnVKBjAn2yugMa1N9S1
-	 TAnDrP+zgPzl9Dh6IAqveT89vtzVuXPp79waHaGsm6Lk0i4Eh5eVmftmfOsZgUXz9WA==
+	t=1794933179;
+	b=fhaufRZMSUzBBN7o8xXv/cIOd4T8SxA2P+q4ij51HYS8CWYiebzeM/c7R+E0cLrxzLV8
+	 M8YpkSfgZvtaO7EhDvFZILkoP2lCIEFgwdqMxF6nh0AbNwTiGc3aiJI8XWRwHZIfWyIFw
+	 3PcdZ6mWyLYAr/FaEg0IRh2N0u7UPwQGjyHhyThhWotqsSrdcXCdR8doGugHY0X45jr6A
+	 k98cU8X5/ofCBHdt6aw69qVQOx6n8nFFhH4ghRbliT6Xq5HukoqJkZNNWHKmOp960qupQ
+	 3ms0yDpwdXnzCygwyF5ZXS2cU5PuqYClpzDmM3N1TfCm4Cfclf+cDg4EW+Oj+G/zQoQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794931499;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=eVBF4o0kEai+HPD0JhvCdx6pzmewisIty/Isb77lxGM=;
-	b=tBY5R/2IxKZTKXyt3hNfZMCg2PaAH70SO6DPDmupNk3+/BCT2c9s5DH4ZIg8clC5MuYQ
-	 YT3ETKnZMVD3bZfv0Zuijf/sukxhD/aZqF2eePrYyH21U/7lRp8cPxlpzkXlW9aR322zI
-	 IAxekSfoGSECGh/70fWF6livyEMwl0TDZvSJwR1Lqo5U0YW633L09YuataaclibYCa3X2
-	 1r8VWU9qmaeultQ2VUIhfQhkbYVMZyMxk1mM17CIXhOEZttVj8uu32vYagfb6DSlENv/M
-	 mYIusGZmYRgSWrDigHRz8P2CfrEfEguZJJuBWiD6A5//W0CQ+nitkDNmAtm6hfGjTqg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794933179;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:User-Agent;
+	bh=WIAhLRI43FFYgXIoih+Q20ASxciDamv7AcrfCOcbSYw=;
+	b=Kam63KYXLEvZt0SEe2Lz1G6TO5pKIVjUyV38BvcnvG/pJvJbwba9mUsCdOPvZJowGUsW
+	 DBtadOeFR/5Kl/ONbwWIzVjUvhR50CVsXtnRChlGqk5FnW0lr5bbXVKA+yBs/nHwjkc4V
+	 27PrZaO24vUb0Ua5scY/Kdr7mj2C7ok8/pY+W9frWMSY8RbAeMkncdV9PtOfjzA6v9p8d
+	 Bsx+DcXvMZK/QiFvSIfbQbl81IUD0k1jB8WYVw3TF3T0IqyZTHDAk+qSXF8xK41oZNbKa
+	 3p2oGxs1M2I1AecppVzRwp/XMZTV+6o4mptEmJzK1KIWOBQXiN32cwUZpygNur4ev9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nu6Z0NrX;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=MkLNM7zI;
+	arc=none smtp.remote-ip=198.175.65.17
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F3BD606A31C
-	for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 16:04:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 248F1606A31C
+	for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 16:32:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 248F1606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nu6Z0NrX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76291F000C4;
-	Tue, 17 Nov 2026 16:04:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794931499;
-	bh=eVBF4o0kEai+HPD0JhvCdx6pzmewisIty/Isb77lxGM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Nu6Z0NrX6Xg3ih97kVPrwhWQsE+ddaN+aYZc0X+5fXYqDr82FBeSyk3+rTe1hm+MT
-	 UPaT2/UUk1AnecXHPoWxRfmSTzhmvFxvLbICguz+EbvadS5AYcy2hRqk1AhJRMHqPz
-	 +q1RDS2Gk2+bm0m97JCjwX7xlq070mBj6RVGEeXhJ9w6RODOpJ5Dq2IQpN+79mjTMV
-	 f4sM5gdTpONscVZllD+nDGdddlK+ozgot8EjIM95QqMKumf3wWjm224uFuKQLVvbdF
-	 to9ZD5ppyUfOM3Rgi5/ez9E4K2DE6pkfxy7bxwgyK7IP3tpwR7kHp0kz0JfLaXSpH+
-	 PltTCr7lpnrkA==
-Message-ID: <sashiko-outbox-219138@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1] ACPI: PM: Avoid initializing power management for
- absent devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Linux PCI" <linux-pci@vger.kernel.org>
-In-Reply-To: <6047463.DvuYhMxLoT@rafael.j.wysocki>
-References: <6047463.DvuYhMxLoT@rafael.j.wysocki>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 17 Nov 2026 16:04:58 +0000
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=MkLNM7zI
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794933179; x=1826469179;
+  h=date:from:to:cc:subject:message-id;
+  bh=iK5jWYttF1dLizBvCiDt2NRGMwRKhLiVyZYJ3MajhZY=;
+  b=MkLNM7zIB4I+I3Q6RFhx2PbwI19jQvyM2LLytD3mDR28pa45zfqliRyA
+   Dj7vhRYkGxDdPlC2+tC9EcNpI9zNUZJe1XjoxVZnaD2Dq7rxfBmiMQ0fY
+   GkalBWrcIsmLyMfYHNUYGcon896to85U4N60erVGCXXh7HaYxg61BEgoj
+   1o1bxdFRrTmIHOn/EM03J8zQYbfOhFKhhWFUedzwZgTf0JnXAFe+MrKej
+   ekOG6KjlSBRtsgFnhJmHjiW2GONF9enx1DSQf775muAJl20TFo8ec0Bum
+   EmQlT1xxPmUXVPUbEl3myv2s0kDwA+H4njC6bqjMwZ2kiMQCkoVe206Mn
+   w==;
+X-CSE-ConnectionGUID: 6Fq5XiGeTSOP0yAUVJPKRA==
+X-CSE-MsgGUID: KaFmVVC+RpO+JGFeL7KmhA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11969"; a="3729883"
+X-IronPort-AV: E=Sophos;i="6.27,218,1787036400"; 
+   d="scan'208";a="3729883"
+Received: from fmviesa012.fm.intel.com ([10.60.135.152])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2026 08:32:59 -0800
+X-CSE-ConnectionGUID: QNV79QVeR1a40fyHF8a/iQ==
+X-CSE-MsgGUID: wdivCRCXRACZAt/NtRzovQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,218,1787036400"; 
+   d="scan'208";a="11612426"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa012.fm.intel.com with ESMTP; 17 Nov 2026 08:32:57 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xTM75-00000001C1W-03sD;
+	Tue, 17 Nov 2026 16:32:55 +0000
+Date: Wed, 18 Nov 2026 00:32:05 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller:dwc] BUILD SUCCESS
+ 7bf2db752515a9020b310984ae3bce1089cfdf20
+Message-ID: <20261118003205.qXgSFhER-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,71 +80,193 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] ACPI: PM: acpi_bus_init_power() leaves absent devices
-  power_manageable in unknown state
---
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
+branch HEAD: 7bf2db752515a9020b310984ae3bce1089cfdf20  PCI: dwc: ultrarisc: Use cached PCIe capability offset
 
-commit e1ff9e3263028781a317610ed251f6f169a95bfb
-Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+elapsed time: 1393m
 
-ACPI: PM: Avoid initializing power management for absent devices
+configs tested: 174
+configs skipped: 4
 
-This commit restores the device presence check in acpi_bus_init_power()
-and updates find_child_checks() to reject absent devices rather than
-disabled ones.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-> diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-> index 76104f715efa1..8007a0d64bb5b 100644
-> --- a/drivers/acpi/device_pm.c
-> +++ b/drivers/acpi/device_pm.c
-> @@ -360,6 +360,9 @@ int acpi_bus_init_power(struct acpi_device *device)
->  	if (device->power.state !=3D ACPI_STATE_UNKNOWN)
->  		return 0;
-> =20
-> +	if (!acpi_device_is_present(device))
-> +		return -ENXIO;
-> +
->  	/*
->  	 * The ACPI device power state can be only initialized once.  If this
->  	 * fails, ACPI power management will not be used for the device going
+tested configs:
+alpha                              allnoconfig    gcc-16.2.0
+alpha                             allyesconfig    gcc-16.2.0
+alpha                                defconfig    clang-24
+alpha                                defconfig    gcc-16.2.0
+alpha                 randconfig-2200-20261116    gcc-15.3.0 smatch
+arc                               allmodconfig    clang-24
+arc                                allnoconfig    gcc-16.2.0
+arc                               allyesconfig    clang-24
+arc                                  defconfig    gcc-16.2.0
+arc                   randconfig-1000-20261117    gcc-13.5.0
+arc                   randconfig-1001-20261117    gcc-13.5.0
+arm                                allnoconfig    gcc-16.2.0
+arm                               allyesconfig    clang-24
+arm                                  defconfig    gcc-16.2.0
+arm                             dove_defconfig    clang-24
+arm                          nhk8815_defconfig    clang-24
+arm                   randconfig-1000-20261117    gcc-13.5.0
+arm                   randconfig-1001-20261117    gcc-13.5.0
+arm                   randconfig-1002-20261117    gcc-13.5.0
+arm                   randconfig-1003-20261117    gcc-13.5.0
+arm                   randconfig-2200-20261116    gcc-13.5.0 smatch
+arm                            spitz_defconfig    clang-24
+arm64                             allmodconfig    clang-24
+arm64                              allnoconfig    gcc-16.2.0
+arm64                                defconfig    gcc-16.2.0
+arm64                 randconfig-1000-20261117    gcc-16.2.0
+arm64                 randconfig-1001-20261117    gcc-16.2.0
+arm64                 randconfig-1002-20261117    gcc-16.2.0
+arm64                 randconfig-1003-20261117    gcc-16.2.0
+arm64                 randconfig-2200-20261116    gcc-8.5.0  smatch
+csky                              allmodconfig    gcc-16.2.0
+csky                               allnoconfig    gcc-16.2.0
+csky                                 defconfig    gcc-16.2.0
+csky                  randconfig-1000-20261117    gcc-16.2.0
+csky                  randconfig-1001-20261117    gcc-16.2.0
+csky                  randconfig-2200-20261116    gcc-16.2.0 smatch
+hexagon                           allmodconfig    gcc-16.2.0
+hexagon                            allnoconfig    gcc-16.2.0
+hexagon                              defconfig    gcc-16.2.0
+hexagon               randconfig-1000-20261117    clang-17
+hexagon               randconfig-1001-20261117    clang-17
+i386                              allmodconfig    clang-22
+i386                               allnoconfig    gcc-16.2.0
+i386                              allyesconfig    clang-22
+i386        buildonly-randconfig-1000-20261117    clang-22
+i386        buildonly-randconfig-1001-20261117    clang-22
+i386        buildonly-randconfig-1002-20261117    clang-22
+i386        buildonly-randconfig-1003-20261117    clang-22
+i386        buildonly-randconfig-1004-20261117    clang-22
+i386        buildonly-randconfig-1005-20261117    clang-22
+i386                                 defconfig    gcc-16.2.0
+i386                  randconfig-1000-20261117    gcc-14
+i386                  randconfig-1001-20261117    gcc-14
+i386                  randconfig-1002-20261117    gcc-14
+i386                  randconfig-1003-20261117    gcc-14
+i386                  randconfig-1004-20261117    gcc-14
+i386                  randconfig-1005-20261117    gcc-14
+i386                  randconfig-1006-20261117    gcc-14
+loongarch                         allmodconfig    clang-24
+loongarch                          allnoconfig    gcc-16.2.0
+loongarch                            defconfig    clang-24
+loongarch                 loongson32_defconfig    clang-24
+loongarch             randconfig-1000-20261117    clang-17
+loongarch             randconfig-1001-20261117    clang-17
+m68k                              allmodconfig    gcc-16.2.0
+m68k                               allnoconfig    gcc-16.2.0
+m68k                              allyesconfig    clang-24
+m68k                          apollo_defconfig    clang-24
+m68k                                 defconfig    clang-24
+m68k                           hp300_defconfig    clang-24
+microblaze                         allnoconfig    gcc-16.2.0
+microblaze                        allyesconfig    gcc-16.2.0
+microblaze                           defconfig    clang-24
+microblaze            randconfig-2200-20261116    gcc-11.5.0 smatch
+mips                              allmodconfig    gcc-16.2.0
+mips                               allnoconfig    gcc-16.2.0
+mips                              allyesconfig    gcc-16.2.0
+mips                   cavium_octeon_defconfig    clang-24
+mips                           eyeq6_defconfig    clang-24
+mips                             gpr_defconfig    clang-24
+mips                       maltaaprp_defconfig    clang-24
+mips                          rt305x_defconfig    clang-24
+nios2                             allmodconfig    clang-20
+nios2                              allnoconfig    clang-24
+nios2                                defconfig    clang-24
+nios2                 randconfig-1000-20261117    clang-17
+nios2                 randconfig-1001-20261117    clang-17
+openrisc                          allmodconfig    clang-20
+openrisc                           allnoconfig    clang-24
+openrisc                             defconfig    gcc-16.2.0
+parisc                            allmodconfig    gcc-16.2.0
+parisc                             allnoconfig    clang-24
+parisc                            allyesconfig    clang-17
+parisc                               defconfig    gcc-16.2.0
+parisc                randconfig-1000-20261117    gcc-9.5.0
+parisc                randconfig-1001-20261117    gcc-9.5.0
+parisc                randconfig-2200-20261116    gcc-8.5.0  smatch
+parisc64                             defconfig    clang-24
+powerpc                     adder875_defconfig    clang-24
+powerpc                           allmodconfig    gcc-16.2.0
+powerpc                            allnoconfig    clang-24
+powerpc                       bamboo_defconfig    clang-24
+powerpc                       cm5200_defconfig    clang-24
+powerpc                       ep88xc_defconfig    clang-24
+powerpc                        holly_defconfig    clang-24
+powerpc                  mpc836x_rdk_defconfig    clang-24
+powerpc               randconfig-1000-20261117    gcc-9.5.0
+powerpc               randconfig-1001-20261117    gcc-9.5.0
+powerpc                   storcenter_defconfig    clang-24
+powerpc64             randconfig-1000-20261117    gcc-9.5.0
+powerpc64             randconfig-1001-20261117    gcc-9.5.0
+riscv                             allmodconfig    clang-24
+riscv                              allnoconfig    clang-24
+riscv                             allyesconfig    clang-24
+riscv                                defconfig    gcc-16.2.0
+riscv                 randconfig-1000-20261117    clang-24
+riscv                 randconfig-1001-20261117    clang-24
+riscv                 randconfig-2200-20261116    clang-24   smatch
+s390                              allmodconfig    clang-17
+s390                               allnoconfig    clang-24
+s390                              allyesconfig    gcc-16.2.0
+s390                                 defconfig    gcc-16.2.0
+s390                  randconfig-1000-20261117    clang-24
+s390                  randconfig-1001-20261117    clang-24
+sh                                allmodconfig    gcc-16.2.0
+sh                                 allnoconfig    clang-24
+sh                                allyesconfig    clang-17
+sh                                   defconfig    gcc-14
+sh                    randconfig-1000-20261117    clang-24
+sh                    randconfig-1001-20261117    clang-24
+sh                    randconfig-2200-20261116    gcc-15.3.0 smatch
+sh                            sh2007_defconfig    clang-24
+sh                              shx3_defconfig    clang-24
+sparc                              allnoconfig    clang-24
+sparc                                defconfig    gcc-16.2.0
+sparc64                           allmodconfig    clang-20
+sparc64                              defconfig    gcc-14
+sparc64               randconfig-2200-20261116    gcc-8.5.0  smatch
+um                                alldefconfig    clang-24
+um                                allmodconfig    clang-17
+um                                 allnoconfig    clang-24
+um                                allyesconfig    gcc-16.2.0
+um                                   defconfig    gcc-14
+um                              i386_defconfig    clang-24
+um                              i386_defconfig    gcc-14
+um                    randconfig-2200-20261116    gcc-14     smatch
+um                            x86_64_defconfig    gcc-14
+x86_64                            allmodconfig    clang-22
+x86_64                             allnoconfig    clang-24
+x86_64                            allyesconfig    clang-22
+x86_64                               defconfig    gcc-14
+x86_64                                   kexec    clang-22
+x86_64                randconfig-1000-20261117    clang-22
+x86_64                randconfig-1001-20261117    clang-22
+x86_64                randconfig-1002-20261117    clang-22
+x86_64                randconfig-1003-20261117    clang-22
+x86_64                randconfig-1004-20261117    clang-22
+x86_64                randconfig-1005-20261117    clang-22
+x86_64                randconfig-1006-20261117    gcc-14
+x86_64                randconfig-1007-20261117    gcc-14
+x86_64                randconfig-1008-20261117    gcc-14
+x86_64                randconfig-1009-20261117    gcc-14
+x86_64                randconfig-1010-20261117    gcc-14
+x86_64                randconfig-1011-20261117    gcc-14
+x86_64                                rhel-9.4    clang-22
+x86_64                            rhel-9.4-bpf    gcc-14
+x86_64                           rhel-9.4-func    clang-22
+x86_64                     rhel-9.4-kselftests    clang-22
+x86_64                          rhel-9.4-kunit    gcc-14
+x86_64                            rhel-9.4-ltp    gcc-14
+x86_64                           rhel-9.4-rust    clang-22
+xtensa                             allnoconfig    clang-24
+xtensa                            allyesconfig    clang-20
+xtensa                   nommu_kc705_defconfig    clang-24
 
-[Severity: High]
-Does returning -ENXIO early here leave device->flags.power_manageable set
-to 1 with device->power.state stuck at ACPI_STATE_UNKNOWN (0xff)?
-
-acpi_bus_get_power_flags() sets power_manageable =3D 1 and power.state =3D
-ACPI_STATE_UNKNOWN for any device with _PS0 or _PR0, and 2f4ddf2bd1ba
-("ACPI: scan: Stop calling acpi_bus_init_power() early") stopped clearing
-power_manageable when acpi_bus_attach() skips a non-present device.
-
-When a physical PCI device is bound to a single matching _ADR companion
-whose _STA reports not present (via check_one_child(), which bypasses
-find_child_checks()), acpi_bus_attach() logs FW_BUG and falls through to
-acpi_bus_init_power() without updating device->status:
-
-drivers/acpi/scan.c:acpi_bus_attach() {
-    ...
-	pci =3D acpi_dev_get_pci_dev(device);
-	if (pci) {
-		if (!acpi_device_is_present(device))
-			pci_info(pci, FW_BUG "ACPI status differs from reality\n");
-
-		pci_dev_put(pci);
-	} else if (!acpi_dev_ready_for_enumeration(device)) {
-    ...
-	acpi_bus_init_power(device);
-}
-
-With this early return, acpi_bus_init_power() fails without taking D0
-power resource references or clearing power_manageable.  Because
-acpi_pci_power_manageable() and acpi_bus_power_manageable() still see
-power_manageable =3D=3D 1, subsequent power transitions on the PCI companion
-(or on absent _ADR-bound SATA/USB devices) call acpi_device_set_power(),
-which fails with -ENODEV because state < device->power.state (0xff) is
-always true.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/6047463.DvuYhMxLoT@=
-rafael.j.wysocki?part=3D1
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
