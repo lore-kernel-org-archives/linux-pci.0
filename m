@@ -1,68 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794941858;
-	b=4w6RZCyMkYz5mdOvWAD4fcqKH64GEFMLf6m1ZQA4esjhXsz9nImjUdfBjs+ybzyuKeO2
-	 E7/TgQ0u50UmVxHk3cYMoKoqnlbiGfpuyHGI7GtuOThyy2/yoBx1wK7G1OiLpD02jcLzO
-	 /Y+Qw159FrqgoDf37fwKfsWn2EpByA++N6vgNyXG8p3N4MpQVXLoQD/Khy685Fi+p9FQz
-	 CdgWVdrA/xXyb8j1SskEbFgTOeurJXgtk60CDTWMHeRuS7QybbMMaGkqZfedM9+X6y7iP
-	 KQGJo2IvfD6gNfnevtryc15n4vcGAX24AS/OG5LAHumpB784SujnX+zaYzGcDpv4RsQ==
+	t=1794942588;
+	b=Hi/C+2HlJdWGkBaUCFlKAJTqeV3jfbM47Z/1qX+obr6ByEK6bzl+9Z8utaQk6b9jILT3
+	 lVfHSEx4HtiYZXJPP58ZzodZnGyxGItSJ6tQF4PIfSuBsCLjwjkJqgc/m+fj+TC7ktQKf
+	 Uw0Sfwer7oIXGbCRIDpw/MDdW7J8bhiwScYDBJZMUyyLHi6rfizKybGXgnHy/ykuPIuR7
+	 7UU5iGhhWgyJD1rZCsgX21CgNrFIrM9wKEg0NXoATBtgswjcrPK+QDeMsB123omwsOGR+
+	 YpCGk4mmuOdmoJjyZzdTrSGLt4XY3VEqKYOJnxyY60ivqeLhvH4XqfKODvK+cQjGp/w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794941858;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=HdkDes0ncCU4WGhgyR7YXxDGwX38qel+esSZ7Ve7TMg=;
-	b=CduaPRnsKMVt/L6gHk2bNd+cQdU+DKnFJy+4RcBvxrNDuHsBBJn6ALRl9Jq9zLKsE0mI
-	 EjE2j4I8O6COwVie3bWa5+A1+eQWnMC0IveoxJfu/8HF41PKWcV5D9k4Y/b3cVOr0KYEt
-	 K/M2Z8f4epTb/nyjZid5VG/aeRHtAFBLoycsgW7H2cwk1dHgc6oa3lUaITBEBsGxpoDV9
-	 QJBUE22Q8Cue67ooD6YJCQkOyGz66Ia6uTvFG7xGAmg65orsT1LB+WTVLfD4jg7sxU+PV
-	 085i2fSIvAK8vrdZ6uEK/Q2LpNN3GoZlS/4X4noPDyiGnyH5E4yrttyybE1iSPxOVng==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794942588;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 Organization:MIME-Version:Content-Transfer-Encoding:Content-Type;
+	bh=ZDcHq/AOC/OWPDGUOT6/vfP4a3L21dDTqfqlVs8RLMc=;
+	b=HsLYc4udgqOCK1pZTGJRe/WNmG7E6BoxBhMLAwFCt6jhurDpHFvCnimo0ZfwKzGgFEaO
+	 6mWYBFiqEXlNm3CTs1CUbvv1gJq2ZFC+2Pj+5sF48sAhPwwmDPo+adhXnUbHgRpxv6Afg
+	 ETQIUjoFsstsTJ9fnSXjUsSef4BtnhLA1TDSwa3nonVWQusezSaa1mvf5W4IQ2wJQrMYU
+	 2OvHY05Y8cPEYxEaqVpRVrUl306oR23pC/VPBfv6maw8FUMYIC5ep9/D9rBgEo4mUAKIG
+	 SwKE54Wu/FfzJ/iqwxvXknizxkFuzZrwRVRSDZOpzR5UiEs7bpLFtbaVrITRuat5jJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=klSK5K0f;
-	arc=none smtp.remote-ip=192.198.163.18
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PyV+XpF8;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74698606A31C;
-	Tue, 17 Nov 2026 18:57:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74698606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2D7606A32C;
+	Tue, 17 Nov 2026 19:09:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=klSK5K0f
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794941857; x=1826477857;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=v1NsJvl2MeAn+U0ELjw0P121EwhLfFQaHMoHS8YBAvw=;
-  b=klSK5K0f0e3+1quJ7DkyIFQuOFiFpnnIy6p0e27w4zes6se1eYYIj1g/
-   7HdWUdl9/xggNSP3k2OM/8sSsdUPRZSluyFqh10kQS1wzjotVTS1C58Kg
-   YV64PwdvW3btFMNeCsNmcOaH467m8nt4zxHNLd4PExb43NCVoW6JQ+8cc
-   Z9CpIeyBhE/hIOUeS5eNZfEFVXpeXJ0oeP/XzsQgUu6lujc6ykOdiCdlB
-   eIZ2UmSbx5C4BPEaU0NXKV616bplFNi3xEvv+u877gdZRuYjEfZpyV+n+
-   EC1UfN2y549bMcOL9r72QYr+C5Zyh/O+JnOZvIziXahK0kdl9DTYGwRlj
-   A==;
-X-CSE-ConnectionGUID: wh1Km1HVR5+D2kr1ZGNjNA==
-X-CSE-MsgGUID: UsCCO0d7QQKUE7NlVHcGgg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11969"; a="3753801"
-X-IronPort-AV: E=Sophos;i="6.27,218,1787036400"; 
-   d="scan'208";a="3753801"
-Received: from fmviesa011.fm.intel.com ([10.60.135.151])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2026 10:57:34 -0800
-X-CSE-ConnectionGUID: DPWAMEErR3Kxtj4lkE/CAw==
-X-CSE-MsgGUID: y3FAroW/Sx6yGrYcfClEAA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,218,1787036400"; 
-   d="scan'208";a="11733291"
-Received: from skuppusw-desk1.jf.intel.com (HELO [10.24.80.125]) ([10.24.80.125])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2026 10:57:34 -0800
-Message-ID: <28da8229-99f9-47c7-b2d6-d301ae34253f@linux.intel.com>
-Date: Tue, 17 Nov 2026 10:57:33 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PyV+XpF8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF5E81F000C4;
+	Tue, 17 Nov 2026 19:09:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794942588;
+	bh=ZDcHq/AOC/OWPDGUOT6/vfP4a3L21dDTqfqlVs8RLMc=;
+	h=From:To:Cc:Subject:Date;
+	b=PyV+XpF8cNgrNmloGNf9z60qVUikEdZxgTJyZulItapkO09LfMmYKJGk8CAbr9BAK
+	 3V3fAB9XEUdVJVWNDaIWAjidi0LLnwVLCwvjIwr1A2OjFxmRbWXBjUra0SjRkj3GhK
+	 nPaHShmIdWjsq0NhojI/wV+9GnyvuUsct3Yd/iyJKvCGYPxd+u0n3hxRvRYh7TcnoP
+	 g99k9UUd1DbhSUT6A/5I8kYmiPDbQ28c7HFEJMeKkwgJ1HohONit3C6vZ+I85bK3Z3
+	 OPkDaSWI3yCoKW0bymUh1Gj9X/qIeJhF4hzC53V5XQrlP+O5R40RG8aUMvQsis4ihQ
+	 VELzxqoLOGZDw==
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+ Linux PCI <linux-pci@vger.kernel.org>, Mika Westerberg <westeri@kernel.org>,
+ Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
+Subject:
+ [PATCH v3] ACPI: PM: Avoid initializing power management for absent devices
+Date: Tue, 17 Nov 2026 20:09:45 +0100
+Message-ID: <13013440.O9o76ZdvQC@rafael.j.wysocki>
+Organization: Linux Kernel Development - Intel
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -72,70 +58,113 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 19/19] PCI/ERR: Avoid NULL bridge pointer
-To: Lukas Wunner <lukas@wunner.de>, Pierre Gondois <pierre.gondois@arm.com>
-Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
- James Morse <james.morse@arm.com>, Mark Brown <broonie@kernel.org>,
- Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
- x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
- Tony Luck <tony.luck@intel.com>, Hanjun Guo <guohanjun@huawei.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Shuai Xue <xueshuai@linux.alibaba.com>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Maciej Wieczor-Retman <maciej.wieczor-retman@intel.com>,
- Pawel Chmielewski <pawel.chmielewski@intel.com>,
- Yazen Ghannam <yazen.ghannam@amd.com>, Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
- Avadhut Naik <avadhut.naik@amd.com>, Radu Rendec <radu@rendec.net>,
- Jonathan Cameron <jic23@kernel.org>, Dave Jiang <dave.jiang@intel.com>,
- Kai-Heng Feng <kaihengf@nvidia.com>,
- "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
- Breno Leitao <leitao@debian.org>, Terry Bowman <terry.bowman@amd.com>,
- linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
- acpica-devel@lists.linux.dev
-References: <20261117111444.4185512-1-pierre.gondois@arm.com>
- <20261117111444.4185512-20-pierre.gondois@arm.com>
- <avw_daENKPcY7_04@wunner.de>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <avw_daENKPcY7_04@wunner.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
+
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+
+Commit 2f4ddf2bd1ba ("ACPI: scan: Stop calling acpi_bus_init_power()
+early") removed a device presence check from acpi_bus_init_power() which
+in some cases causes power management to be initialized for an ACPI
+device object and never used going forward.  That in turn may prevent
+power management from working as expected for other devices.
+
+Namely, if a given ACPI device object is not enabled according to its
+_STA, find_child_checks() will return an error for it which will prevent
+it from being used as an ACPI companion for a PCI device.  Thus if
+acpi_device_init_power() initializes power management for it and its
+initial power state turns out to be different from D3cold, it may stay
+in that power state forever.  If it has power resources and they are
+"on" during the initialization, they may be reference-counted and never
+turned off.  If they are shared with other devices, they will prevent
+power from going down after attempting to put the other devices into
+low-power states.
+
+To prevent that from happening, restore the device presence check in
+acpi_bus_init_power(), but also adjust find_child_checks() to return
+an error for absent devices (instead of doing that for disabled devices)
+in accordance with acpi_bus_init_power() and the existing check in
+acpi_bus_attach().
+
+Fixes: 2f4ddf2bd1ba ("ACPI: scan: Stop calling acpi_bus_init_power() early")
+Reported-by: Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
+Tested-by: Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+v2 -> v3:
+   * Also set power.state to ACPI_D_STATE_INVALID if the device is
+     not present when acpi_bus_init_power() runs (Sashiko)
+
+v1 -> v2:
+   * Clear power_manageable when returning an error early from
+     acpi_bus_init_power() (Sashiko)
+   * Print debug message when that happens
+
+Quick turnaround because it fixes a recent regression.
+
+---
+ drivers/acpi/device_pm.c |   15 +++++++++++++--
+ drivers/acpi/glue.c      |    8 ++------
+ 2 files changed, 15 insertions(+), 8 deletions(-)
+
+--- a/drivers/acpi/device_pm.c
++++ b/drivers/acpi/device_pm.c
+@@ -365,14 +365,25 @@ int acpi_bus_init_power(struct acpi_devi
+ 	 * fails, ACPI power management will not be used for the device going
+ 	 * forward.
+ 	 */
++	if (!acpi_device_is_present(device)) {
++		acpi_handle_debug(device->handle,
++				  "Device not present, ACPI PM disabled\n");
++		result = -ENXIO;
++		goto fail;
++	}
++
+ 	result = acpi_device_init_power(device);
+ 	if (result) {
+-		device->flags.power_manageable = 0;
+-		device->power.state = ACPI_D_STATE_INVALID;
+ 		acpi_handle_info(device->handle,
+ 				 "Initial power state undetermined, ACPI PM disabled\n");
++		goto fail;
+ 	}
+ 
++	return 0;
++
++fail:
++	device->flags.power_manageable = 0;
++	device->power.state = ACPI_D_STATE_INVALID;
+ 	return result;
+ }
+ 
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -109,14 +109,10 @@ static bool acpi_dev_has_children(struct
+ 
+ static int find_child_checks(struct acpi_device *adev, bool check_children)
+ {
+-	unsigned long long sta;
+-	acpi_status status;
+-
+ 	if (check_children && !acpi_dev_has_children(adev))
+ 		return -ENODEV;
+ 
+-	status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
+-	if (status == AE_NOT_FOUND) {
++	if (!acpi_has_method(adev->handle, METHOD_NAME__STA)) {
+ 		/*
+ 		 * Special case: backlight device objects without _STA are
+ 		 * preferred to other objects with the same _ADR value, because
+@@ -128,7 +124,7 @@ static int find_child_checks(struct acpi
+ 		return FIND_CHILD_MIN_SCORE;
+ 	}
+ 
+-	if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_ENABLED))
++	if (!acpi_device_is_present(adev))
+ 		return -ENODEV;
+ 
+ 	/*
 
 
-
-On 11/17/26 03:50, Lukas Wunner wrote:
-> On Tue, Nov 17, 2026 at 12:10:29PM +0100, Pierre Gondois wrote:
->> Return PCI_ERS_RESULT_DISCONNECT when no upstream bridge is available,
->> avoiding a NULL pointer dereference in pci_walk_bridge().
-> 
-> How can that happen?  If it can happen (which I doubt), why isn't this
-> patch tagged for stable?
-
-One way I can see is a device without a PCIe capability on a root bus.
-pci_pcie_type() returns 0, which is PCI_EXP_TYPE_ENDPOINT, and
-pci_upstream_bridge() returns NULL. Native AER never gets there. Only
-firmware-first can, through aer_recover_work_func(), and only if
-firmware reports a PCIe error section for such a device. If that is
-the case, skipping recovery for !pci_is_pcie(pdev) in
-aer_recover_work_func() seems a better fit than a check in
-pcie_do_recovery().
-
-> 
-> Why is it at the end of this series?  Does the series somehow make it
-> possible that there's no upstream bridge?  Which patch does that?
-> If the preceding patches are not the cause of a potential NULL
-> pointer deref, why isn't this patch submitted separately from the series?
-> 
-> Thanks,
-> 
-> Lukas
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
 
