@@ -1,63 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794917089;
-	b=aurGByHw5wblnzSUVbYRRqIGVIk/9brjQOUsf0710X/6S1pfyU/BaB5K086BAssQqgg9
-	 wSPrfnAe3S4HardEwrAixeCe+qs0cZkaDEb6ogz8B194JyHKijxQKHE5GL7IsrehFWvYa
-	 E+l1dRNjYMmKJKyMdkgQDKiQVX32tCcdrAODomOWvKXSHSPIR4eUSdFT8Dqehufg1Dh1c
-	 Ri3gMS1dzSoRBbP3cMTpMg/qE/lnJY4iliYec7uH0N/VcGHVPr4cggWp3ofWeZ4mbP/qD
-	 zWD02WgtdYS68VGIK70c3zMmLn7WXKl8GuE0lfdzufhg1MzX1hv2TcjHRhpRjmZl3gQ==
+	t=1794917848;
+	b=Quvx8dfj+rwuDo1ehhy9Ug11QRfxj8Vk2yZUZceAKch2xCZOMIrU7epprdTDRQUhIDdK
+	 U273Fv9LLX1KlPxQiV8KOq5Z097TBr0kPUK7DoyB5kYnf4fxucu9004NCIttUfh0keP9/
+	 C/hZss5mMVnvcxyirZcyIGePrBT4oUNPVNHvJTS8moC9D/m+Hwm3lXUroeCEYwuX49Kk4
+	 bUblWkXA/YxBN7HT/24JPtXw3F2bpEIMPlX5Zr4Ir42AGdIJCOjltnoIkD6N7qIvf9oss
+	 CdtW5Pviq2e23jkDND1SFDKksoxaNOvpas5YrSg36uBVfPyMLPdwnnIxaMz+pXUTJ0g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794917089;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794917848;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=4vnrUH1GRjckPRWmrfIxNgnhEnk8Xa/wgumm0ceW7tI=;
-	b=NlQfSLFDZJ0lAEgzmYvqdPRgCHVYliwG6bAobkcmcuNce7LmvqFEyaDOspZD4VlT3O8D
-	 sG+64cBmU0xauD1qTrVnsMI3gJ5g6FW2grIc9nYunodStYNKsY6zh6k708qTKbx8AuPuQ
-	 632eOa4eRtc+SBDTuJ9C4uXkye07tyc69uoGduvGuhkkvZzBDtbGb/4iYOaD30lb7e0nl
-	 G5/E2JHlJqDEfDiVwpsV727B/H1r94IshHlxfrRpwlhcRYRljL74loHWSeZ91JAVfTdo6
-	 uC7gUSVa1Ne+nc/zn5LHmR2Uoss+PXjd70eLhiZacTqsK7yjvjEcf1wf3wJ0oc1vOwA==
+	bh=jNT+l6BO0P+Rjx7Z6tCld6ldi+lTIwnNQobYF9qXSic=;
+	b=4abL+8MmsyLDzqRa85C6Z5O3foXVsx5L0a9/cHJfbAhWE8C+w2c+Z9N1tGZvLpj39jy7
+	 NINOp4iNTCFgGWvQm0snzIXAzk6njJaNl530Dx0UvrWk2zAbglgePwYAqyz+cQ2GqDGkL
+	 a+/X9GMPb39JKSZE+I9pNbxENtjwPr0nfDze5CxjxE3uyzD2Sp72iVCD9G7nmIveZ9B3L
+	 XSFJp7yvVe1Q6KiiheF1BZ1yTytVca+qNPjv+jrEg2nK2UL4pLepMCQYtxCWiVTwkGoiv
+	 54oIU8G8yiehLIosHIv/jY/M8K2YahW+tFsuiIz6K6rP4YKNqzcEYxAbOSVKbcIwMHQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BartBUr6;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hfa3r9c5;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01858606A323;
-	Tue, 17 Nov 2026 12:04:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27C2606A33F;
+	Tue, 17 Nov 2026 12:17:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BartBUr6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BB411F000C4;
-	Tue, 17 Nov 2026 12:04:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hfa3r9c5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D99431F000CA;
+	Tue, 17 Nov 2026 12:17:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794917088;
-	bh=4vnrUH1GRjckPRWmrfIxNgnhEnk8Xa/wgumm0ceW7tI=;
+	s=k20260515; t=1794917848;
+	bh=jNT+l6BO0P+Rjx7Z6tCld6ldi+lTIwnNQobYF9qXSic=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BartBUr6Stg07pLC0D2AtcCX9IUPXwbzyytX0DYnqSpCOIimST8hmkphcHHeU++bK
-	 e6RwwUKsimCxqecV5NShikpsua8dkusxR3mHxnGNLECUkgGoflFMpcn8adtk+Wdrpl
-	 YUcIM4BT10M+MxCdR+91P2cpf6D/ohd6a2PYX3ATaxLrkvnBN6xiynSOnCa0gJKDlC
-	 IWyCDVw0VYOVuODbLLtpbTUmj7b8F/RETtDDrALEuv4Rgz68xTpNRr8RKnPpP4aVnL
-	 4kKCgr4dHpYa4N5I2Q8enqkpioWyMRwdq6I4atxUCoO27dYl6mtCDM6uaIUaDPTp5N
-	 +aIN4HNBU72NQ==
-Date: Tue, 17 Nov 2026 12:04:40 +0000
-From: Will Deacon <will@kernel.org>
-To: matt@boondocker.io
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Herring <robh@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Igor Velkov <iav@iav.lv>, maz@kernel.org, arnd@arndb.de
-Subject: Re: [PATCH RFC v3 2/6] arm64: Allow synchronous abort fixups for
- guarded MMIO reads
-Message-ID: <avxC2NbBCa3Ilowr@willie-the-truck>
-References: <20261116-rfc-b4-v3-0-0bf052b68f2a@boondocker.io>
- <20261116-rfc-b4-v3-2-0bf052b68f2a@boondocker.io>
+	b=hfa3r9c5j2esRkqiN9wTo1ASYUJcd4lQRrLzXuUgcpQ29+BpAFDi609CQXVmux5H5
+	 lRHvc97eMFBhPkUoZZAEX7o7iR6lSyJgytpQqfTRkkR4WTx4H4L12VuVXVY0A+Vk/z
+	 kg2lk8Z7OqOguGKRg2QtOxkAWn05TW8NDb78Yz0eB1p92bXkh11kUj6lO00J4IElsK
+	 pJMMxu1tgbjtMdNIHxLUS6Z2jx1Pk/7TV95dBsRDfZgDl1v4BDv8ovNx9jk1UJuRW3
+	 +zC399Cr6wD/HHgGv6D84FczMP7AOtiFWtsBqm9vwwsrmc7lDy+zl0UnkE65S0Wpjo
+	 UD68dsWKtMUcg==
+Date: Tue, 17 Nov 2026 13:17:25 +0100
+From: Thierry Reding <thierry.reding@kernel.org>
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 5/6] arm64: tegra: Add node for the GB10B GPU on Tegra264
+Message-ID: <avxBUt6Yo3oKbEZI@orome>
+References: <20261029-b4-t264-igpu-pci-v1-0-4d843dda0b02@nvidia.com>
+ <20261029-b4-t264-igpu-pci-v1-5-4d843dda0b02@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,112 +61,76 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="stybnbzoyez3jyff"
 Content-Disposition: inline
-In-Reply-To: <20261116-rfc-b4-v3-2-0bf052b68f2a@boondocker.io>
+In-Reply-To: <20261029-b4-t264-igpu-pci-v1-5-4d843dda0b02@nvidia.com>
 
-Hi Matt,
 
-On Mon, Nov 16, 2026 at 02:35:44AM -0700, Matt Thompson via B4 Relay wrote:
-> From: Matt Thompson <matt@boondocker.io>
-> 
-> An RK3399 PCI configuration read can raise a synchronous external data
-> abort if it does not get a usable response. Allow an explicitly annotated
-> MMIO load to return an error in this case.
-> 
-> Match only a current-EL synchronous external abort on a read instruction
-> with the new exception table type. Keep existing handling for other
-> faults, including asynchronous SError and translation table walk aborts.
-> 
-> Signed-off-by: Matt Thompson <matt@boondocker.io>
+--stybnbzoyez3jyff
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 5/6] arm64: tegra: Add node for the GB10B GPU on Tegra264
+MIME-Version: 1.0
+
+On Thu, Oct 29, 2026 at 12:32:07PM +0900, Mikko Perttunen wrote:
+> While the integrated GB10B GPU on Tegra264 is on the PCI bus, it
+> requires a BPMP power domain to be enabled or it won't enumerate on the
+> bus. Therefore, describe it and the power domain in the device tree to
+> allow the power domain to be enabled prior to enumeration.
+>=20
+> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 > ---
->  arch/arm64/include/asm/asm-extable.h | 15 +++++++++++++++
->  arch/arm64/mm/extable.c              | 20 ++++++++++++++++++++
->  arch/arm64/mm/fault.c                |  4 ++++
->  3 files changed, 39 insertions(+)
-
-[...]
-
-> diff --git a/arch/arm64/mm/extable.c b/arch/arm64/mm/extable.c
-> index 299a244..dcb84d8 100644
-> --- a/arch/arm64/mm/extable.c
-> +++ b/arch/arm64/mm/extable.c
-> @@ -28,6 +28,8 @@ bool insn_may_access_user(unsigned long addr, unsigned long esr)
->  		return false;
->  
->  	switch (ex->type) {
-> +	case EX_TYPE_MMIO_READ_ERR_ZERO:
-> +		return false;
->  	case EX_TYPE_UACCESS_CPY:
->  		return cpy_faulted_on_uaccess(ex, esr);
->  	default:
-> @@ -101,6 +103,8 @@ bool fixup_exception(struct pt_regs *regs, unsigned long esr)
->  	case EX_TYPE_UACCESS_ERR_ZERO:
->  	case EX_TYPE_KACCESS_ERR_ZERO:
->  		return ex_handler_uaccess_err_zero(ex, regs);
-> +	case EX_TYPE_MMIO_READ_ERR_ZERO:
-> +		return false;
->  	case EX_TYPE_UACCESS_CPY:
->  		return ex_handler_uaccess_cpy(ex, regs, esr);
->  	case EX_TYPE_LOAD_UNALIGNED_ZEROPAD:
-> @@ -109,3 +113,19 @@ bool fixup_exception(struct pt_regs *regs, unsigned long esr)
->  
->  	BUG();
->  }
+>  arch/arm64/boot/dts/nvidia/tegra264.dtsi | 6 ++++++
+>  1 file changed, 6 insertions(+)
+>=20
+> diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/d=
+ts/nvidia/tegra264.dtsi
+> index 5ab34cd09a3d..4c8b320ecc40 100644
+> --- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
+> +++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
+> @@ -3597,6 +3597,12 @@ pcie@0 {
+>  				#address-cells =3D <3>;
+>  				#size-cells =3D <2>;
+>  				ranges;
 > +
-> +bool fixup_sea_exception(struct pt_regs *regs, unsigned long esr)
-> +{
-> +	const struct exception_table_entry *ex;
-> +
-> +	if (ESR_ELx_EC(esr) != ESR_ELx_EC_DABT_CUR ||
-> +	    (esr & ESR_ELx_FSC) != ESR_ELx_FSC_EXTABT ||
-> +	    (esr & ESR_ELx_WNR))
-> +		return false;
-> +
-> +	ex = search_exception_tables(instruction_pointer(regs));
-> +	if (!ex || ex->type != EX_TYPE_MMIO_READ_ERR_ZERO)
-> +		return false;
-> +
-> +	return ex_handler_uaccess_err_zero(ex, regs);
-> +}
-> diff --git a/arch/arm64/mm/fault.c b/arch/arm64/mm/fault.c
-> index b227368..ebe8054 100644
-> --- a/arch/arm64/mm/fault.c
-> +++ b/arch/arm64/mm/fault.c
-> @@ -30,6 +30,7 @@
->  #include <linux/hugetlb.h>
->  
->  #include <asm/acpi.h>
-> +#include <asm/asm-extable.h>
->  #include <asm/bug.h>
->  #include <asm/cmpxchg.h>
->  #include <asm/cpufeature.h>
-> @@ -879,6 +880,9 @@ static int do_sea(unsigned long far, unsigned long esr, struct pt_regs *regs)
->  	const struct fault_info *inf;
->  	unsigned long siaddr;
->  
-> +	if (fixup_sea_exception(regs, esr))
-> +		return 0;
-> +
+> +				gpu@0 {
+> +					compatible =3D "pci10de,2b00";
+> +					reg =3D <0x00010000 0x0 0x0 0x0 0x0>;
+> +					power-domains =3D <&bpmp TEGRA264_POWER_DOMAIN_GPU>;
+> +				};
 
-We've deliberately avoided exposing an interface such as this from the
-architecture code for a variety of reasons, including:
+My understanding is that the GPU is the only device on this PCI bus, so
+wouldn't it be simpler to add the power-domains property to the bus' DT
+node? I guess that's just another interpretation of how this hardware
+works, and I like how this power control for PCI devices allows
+individual devices to be turned on before the bus probes (there's a case
+like this on Jetson Nano where Ethernet needs a GPIO pin to be pulled up
+in order to start enumerating on the PCI bus, though I don't remember
+how we ended up solving that, sources don't have any indication of that
+GPIO being permanently set high or something).
 
-- If you can trigger one of these, you can probably also trigger
-  asynchronous exceptions (i.e. SError) which we cannot handle using
-  fixups
+Thierry
 
-- External aborts are usually a sign that something has gone horribly
-  wrong
+--stybnbzoyez3jyff
+Content-Type: application/pgp-signature; name="signature.asc"
 
-- In the general case of MMIO, it's not at all clear what state the
-  endpoint is left in and so swallowing the abort is likely masking the
-  issue
+-----BEGIN PGP SIGNATURE-----
 
-- It's not a portable interface for drivers
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmr8RdIACgkQ3SOs138+
+s6GMShAArcrx6nhaieugr5wJethsjuUbTSbYRpsOgOzwxZ5OYxgBA7fVwgTlx4AP
+Rcvd+tEvW90FBxl7Ngm1M3/TJpSyydRF31CWUMFGIzMXvsiFJHkFhCt5R+TtQKCN
+lg7WW7vkq5ElEdxc8w2qSLBV1idfcLSPYuznmRnn0lMsZbWXBDRcEXBS9zfFn//E
+NZmOX3J1GGj29deR18rC3C1QcLYQnj68tBKQTXrePARhuelB5Ir2N95Eg3ah+yjW
+LrGGSsdmTJ4OPeSI5RNdaM9r+1v6E7bUQUVnnTv+cAFJq+y3lllduzXXynaPH1kV
+sZi41EKUlmL116fQShE54WDyOCq9nNdoNP2C5bsx6dJzeOIHSsg0UytwAYAPDUhB
+e01jIJ6w8hAg9BFx8ChZuOrFRkn3J73a4gFXFe3Uci/+tzaGcjJ0F4E1rF0EOgkd
+6WBPFXrxDjzfFTAu9/AeBWi5dJXiSf8G6ieJgkXcwQ74QJC/5vPMMudYTcKhi+eW
+3UE2gRgSapL0QDlEp6EANfa8huV7s1+PII9xymHqFzdQhjbDW/6rFeVJH91BRlV0
+Ai68z3yOmDYKtEP5nqxTO1cfKMivXcM69q1vxmcYgSVlRqaf3vJBwMzUBZ264mUC
+iIA37350bQBA0Y0Og11yeT9aZ1oMwDpcgO1SMjGKLbOMUqNbBDg=
+=BBt3
+-----END PGP SIGNATURE-----
 
-So rather than trying to fix the symptoms, it would be much better if
-you could fix your driver so that the hardware doesn't generate these
-things in the first place.
-
-Will
+--stybnbzoyez3jyff--
