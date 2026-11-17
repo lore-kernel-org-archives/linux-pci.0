@@ -1,80 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794930803;
-	b=XpY6M+nBYXnJ+aVpbaxWes/0kkJCFAzcTjmFIhxYWMjeKaTPKPNF8VtFitcD6svT34SN
-	 dYKdwAUEebyzVxH4AnC1x5ZfEzX4G6WAVgLxyL+N0lKZDwzO3Cdmumtdig7o4BmvzAFk0
-	 6/hBN4aA7usVPYgGSpwoRviCPc5ZaYkI/jtPXXCcezy0VbqKpbffYupEiMbL70jvD7M6Y
-	 7gUjDrb8rMkxPxW9t0WzRfiBdonxwU2EocQfHndrVplIJjwfHWp5Np08GsknmWoirAzbx
-	 RPuaXvpMWTcjWxVTmzLFMaBa60396TzHEvOouo3tcd3S8tmC97o/yrc/Vq6xbfnMDiA==
+	t=1794930912;
+	b=H4GkQd8ajP9ZIHzAGFS0TtJlaxpy6UGPDl9lYHFEP13Pzh5i83gvpTBHt++iBndVB6wn
+	 WfUt7Y1DJbd2J6qmOxwvO3kzbkzHcg+Fm+n36fKfeeet+j9lvmrR8zrnCHYz21QHpEfkq
+	 ihabdICc7BhVMf8TVBtQFM9zR14gKQ8StWcmrBgSmZ5iIbMr3oWnsjaiHodlq7Z/TKwt/
+	 fidY/71A93E7tbRmk6RFaNEDc0j8XB32cfJLzYphZjiJMt98Y/ZZV1NmIiZPRSkNF52gY
+	 htgNO4YRaPrpk73RSys36xOOk/Nfm1Q/tdh6CajmRVgigVg+Su+yQPxOlRG4DTuZvcw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794930803;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Subject:
-	 From:To:Cc:Date:In-Reply-To:References:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=YoGfLQzYye6iX4AGyxZoDCy4EyUcynD1nqduXP0L6nc=;
-	b=5bAwUkFJ/2kZI7V/GMtFTPlhk/BmeRHOdk+V0k9sIXGbaCe/oAeapo0L+l56TPi3B2zW
-	 s8MRhBixtjQ7S2hkFZIg9a5i7ezaTTc82bCMBbBg+wn1eN0VjP0VDFWccBNGDtaseNHa6
-	 /RZYhLTVkEXHrsQe/753mZ2Gxoh7JjnHO9QF06ABO06m0yhRYhFnTjJ5FZplYYUFOYMjP
-	 SEv8ju8JDmI/l/l4R+kU8xnEr5TN8+BjcfuD8g7qCHxhuFZszOdDmoq3WnGnrrcb0B7qw
-	 H8FmZIbsiPRTTrwsymD7v+xk9BhIK23gDOul+oj9uiPIxL7Eo7Pxjj7ZgIUUl+V1pXA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794930912;
+	h=Received:DKIM-Signature:Subject:From:To:Cc:Date:Message-ID:
+	 In-Reply-To:References:X-sashiko-severity:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=XgxlZZNQSDhCeE3vldSU17DsBsAk8DRist2NVpPCFhI=;
+	b=aMvh50t0dl/RHyyqvxwbkJKJKe//M3YXuKJbolOtiX/uPS8P65pw+LYFNfMwUlXZ0Bmm
+	 W61dneFIP4m5MfrhXJ+xHBWdDRQXKv53tOjhA66XzrATOOS9M0QYWSQp7BIuLXdbLJoJi
+	 kgPXxKF0UfHX57EPy6LxZRL2G7EkFSdRqmJSDXhSLXZ8Fw1alN42eDTezCG2RNrZtd1WJ
+	 e/KwIbqiQHGNuuZl0ptOQNS5GH+fWgqr3oh9+NttS569Ratr3NYus30arLqvd01bpQuUw
+	 PVUp8BJt8uynQuvUkczsnGeI849QDSxwKPd63na7b69XkE9ndyCdpcoH/dClELt8Ong==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="YbDSVPw/";
-	arc=none smtp.remote-ip=192.198.163.13
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oJVbuSX0;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 007E2606A335;
-	Tue, 17 Nov 2026 15:53:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 007E2606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B04CE606A885;
+	Tue, 17 Nov 2026 15:55:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=YbDSVPw/
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794930804; x=1826466804;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=YL8RJPhb8wIm8l/PgV/HcNdusxj7ZcxDNK3eX4ESV2g=;
-  b=YbDSVPw/rQ3dbIJWqbmUWfawK9+ZjUu6IX7hXWQi/Y2Z2ju90y7A2jpP
-   HjJhasnCImiOqQru5I/vycL5+pkhcrBxIFV6BdX7jDBJQcjZjViLjgYYU
-   Gm5kKg37XGZdUVvmb+KTCcAGs91OxL58H5Z3h/JHBFfyUivEYshsemTli
-   iqN7ohltLmDUKNmC37EZ/vANImOFnvuZGQ+rGbqDxuWMMMXooMZygV7hS
-   q/3hndXa4o7vexWkQM7wVM0ZyPJxDJ8fGgojFCvnomHv+QOJBxHcqJgmo
-   JDOwyAjU6nto9KASo0KRveLkELCZVSgtt40v9J3JHjQwWpacyG8M5/hSp
-   Q==;
-X-CSE-ConnectionGUID: 6e0lpRYWQJKkZxnpwafyCg==
-X-CSE-MsgGUID: y+fkXmUYQBi2/UxpqBlRSw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11969"; a="3696803"
-X-IronPort-AV: E=Sophos;i="6.27,218,1787036400"; 
-   d="scan'208";a="3696803"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2026 07:53:23 -0800
-X-CSE-ConnectionGUID: 8fPZtEuzR9KHf1veCipCiA==
-X-CSE-MsgGUID: zzPu/I4SQF6KT8Zrzsqd1Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,218,1787036400"; 
-   d="scan'208";a="9945580"
-Received: from aborzesz-mobl3.igk.intel.com ([10.237.140.67])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2026 07:53:19 -0800
-Message-ID: <a8a4b99f7f9c600035019f52a30681d4a7a9ca0b.camel@linux.intel.com>
-Subject: Re: [PATCH v1] ACPI: PM: Avoid initializing power management for
- absent devices
-From: Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI
-	 <linux-acpi@vger.kernel.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>, Linux PCI
- <linux-pci@vger.kernel.org>,  Mika Westerberg <westeri@kernel.org>
-Date: Tue, 17 Nov 2026 16:53:16 +0100
-In-Reply-To: <6047463.DvuYhMxLoT@rafael.j.wysocki>
-References: <6047463.DvuYhMxLoT@rafael.j.wysocki>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2-9 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oJVbuSX0
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31C6E1F000CA;
+	Tue, 17 Nov 2026 15:55:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794930912;
+	bh=XgxlZZNQSDhCeE3vldSU17DsBsAk8DRist2NVpPCFhI=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=oJVbuSX0KcGKZbYsciDFVrqFxcf2xwHherbHdjA31t/XqIwGeTwvavTzoeYd4Ctz8
+	 JaLz5GzMyZfmOlGW/yiCHU6TdClzdJo4w2XSLu7iF1YP7iWuJHD7f0aLytJwERjsh9
+	 YsyJUHON8R/ha0y6u2j9AW6pKrEpkZwVsqdKWN0yfem1thFfd1V2e1b/3Te+x0FKoH
+	 R3MTHRWJjXXwrzQ996H+Ttk1vVHzDGqUZmyrD3gbgHIgxeldf7qCPrLIuDsMDB0Srv
+	 KvfpjrAP7P/i/Q3gCyL+Tn99fZ9b9kIggvaL/lhlhs9L7hYxq1FisRFCPsd+pa5sVX
+	 cUZtasDRfqhGw==
+Subject: Re: [PATCH net-next v4 5/6] arm64: dts: s32n79-rdb: enable NETC IEP18
+From: netdev-bot+sashiko@kernel.org
+To: claudiu.manoil@nxp.com
+Cc: netdev@vger.kernel.org, s32@nxp.com, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, kuba@kernel.org
+Date: Tue, 17 Nov 2026 15:55:11 +0000
+Message-ID: <179493091171.3136.308017869378286942@kernel.org>
+In-Reply-To: <6f1ea6caef6ca01c9a6384cd1024384d31848c53.1794581338.git.claudiu.manoil@nxp.com>
+References: <6f1ea6caef6ca01c9a6384cd1024384d31848c53.1794581338.git.claudiu.manoil@nxp.com>
+X-sashiko-severity: Medium
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,97 +62,135 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 
-On Tue, 2026-11-17 at 16:32 +0100, Rafael J. Wysocki wrote:
-> From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
->=20
-> Commit 2f4ddf2bd1ba ("ACPI: scan: Stop calling acpi_bus_init_power()
-> early") removed a device presence check from acpi_bus_init_power()
-> which
-> in some cases causes power management to be initialized for an ACPI
-> device object and never used going forward.=C2=A0 That in turn may preven=
-t
-> power management from working as expected for other devices.
->=20
-> Namely, if a given ACPI device object is not enabled according to its
-> _STA, find_child_checks() will return an error for it which will
-> prevent
-> it from being used as an ACPI companion for a PCI device.=C2=A0 Thus if
-> acpi_device_init_power() initializes power management for it and its
-> initial power state turns out to be different from D3cold, it may
-> stay
-> in that power state forever.=C2=A0 If it has power resources and they are
-> "on" during the initialization, they may be reference-counted and
-> never
-> turned off.=C2=A0 If they are shared with other devices, they will preven=
-t
-> power from going down after attempting to put the other devices into
-> low-power states.
->=20
-> To prevent that from happening, restore the device presence check in
-> acpi_bus_init_power(), but also adjust find_child_checks() to return
-> an error for absent devices (instead of doing that for disabled
-> devices)
-> in accordance with acpi_bus_init_power() and the existing check in
-> acpi_bus_attach().
->=20
-> Fixes: 2f4ddf2bd1ba ("ACPI: scan: Stop calling acpi_bus_init_power()
-> early")
-> Reported-by: Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
+Thank you for your contribution! Sashiko AI review found 3 potential
+issue(s) to consider.
 
-Tested-by: Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
+Critical: 0 · High: 0 · Medium: 2 · Low: 1
 
-> =C2=A0drivers/acpi/device_pm.c |=C2=A0=C2=A0=C2=A0 3 +++
-> =C2=A0drivers/acpi/glue.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0=C2=
-=A0 8 ++------
-> =C2=A02 files changed, 5 insertions(+), 6 deletions(-)
->=20
-> --- a/drivers/acpi/device_pm.c
-> +++ b/drivers/acpi/device_pm.c
-> @@ -360,6 +360,9 @@ int acpi_bus_init_power(struct acpi_devi
-> =C2=A0	if (device->power.state !=3D ACPI_STATE_UNKNOWN)
-> =C2=A0		return 0;
-> =C2=A0
-> +	if (!acpi_device_is_present(device))
-> +		return -ENXIO;
+If you believe none of the issues are legitimate, please reply to each
+issue of Medium severity or higher and explain why the AI is wrong.
+If any of them are legitimate and you plan to respin, please let patchwork
+know by including "pw-bot: cr" as a separate line at the end of your reply
+(one such reply per series is enough).
+
+- [Medium] This patch turns on `&netc_iep18` in
+  arch/arm64/boot/dts/freescale/s32n79-rdb.dts so that, per the commit…
+- [Medium] Setting `&netc_iep18` to okay makes the ENETC v4 PPM PF and
+  VFs live DMA masters.
+- [Low] The new `&netc_iep18` override in
+  arch/arm64/boot/dts/freescale/s32n79-rdb.dts is added after `&usdhc0`.
+
+--
+
+arm64: dts: s32n79-rdb: enable NETC IEP18
+
+This commit enables the NETC v4 ECAM bus #18 on the S32N79-RDB board. The
+goal is for the ENETC v4 Pseudo-MAC port (PPM) PF and VF instances to be
+probed.
+
+> diff --git a/arch/arm64/boot/dts/freescale/s32n79-rdb.dts b/arch/arm64/boot/dts/freescale/s32n79-rdb.dts
+> index 1feccd61258ef..897ba24ac03ae 100644
+> --- a/arch/arm64/boot/dts/freescale/s32n79-rdb.dts
+> +++ b/arch/arm64/boot/dts/freescale/s32n79-rdb.dts
+> @@ -68,3 +68,7 @@ &usdhc0 {
+>  	no-sdio;
+>  	status = "okay";
+>  };
 > +
-> =C2=A0	/*
-> =C2=A0	 * The ACPI device power state can be only initialized
-> once.=C2=A0 If this
-> =C2=A0	 * fails, ACPI power management will not be used for the
-> device going
-> --- a/drivers/acpi/glue.c
-> +++ b/drivers/acpi/glue.c
-> @@ -109,14 +109,10 @@ static bool acpi_dev_has_children(struct
-> =C2=A0
-> =C2=A0static int find_child_checks(struct acpi_device *adev, bool
-> check_children)
-> =C2=A0{
-> -	unsigned long long sta;
-> -	acpi_status status;
-> -
-> =C2=A0	if (check_children && !acpi_dev_has_children(adev))
-> =C2=A0		return -ENODEV;
-> =C2=A0
-> -	status =3D acpi_evaluate_integer(adev->handle, "_STA", NULL,
-> &sta);
-> -	if (status =3D=3D AE_NOT_FOUND) {
-> +	if (!acpi_has_method(adev->handle, METHOD_NAME__STA)) {
-> =C2=A0		/*
-> =C2=A0		 * Special case: backlight device objects without
-> _STA are
-> =C2=A0		 * preferred to other objects with the same _ADR
-> value, because
-> @@ -128,7 +124,7 @@ static int find_child_checks(struct acpi
-> =C2=A0		return FIND_CHILD_MIN_SCORE;
-> =C2=A0	}
-> =C2=A0
-> -	if (ACPI_FAILURE(status) || !(sta &
-> ACPI_STA_DEVICE_ENABLED))
-> +	if (!acpi_device_is_present(adev))
-> =C2=A0		return -ENODEV;
-> =C2=A0
-> =C2=A0	/*
->=20
->=20
+> +&netc_iep18 {
+
+[Severity: Low]
+This isn't a bug, but Documentation/devicetree/bindings/dts-coding-style.rst
+says:
+
+  When extending nodes in the board DTS via &label, the entries shall be
+  ordered either alpha-numerically or by keeping the order from DTSI,
+
+The existing overrides in this file are in alphabetical order (irqsteer_coss,
+uart0, uart5, uart6, uart7, usdhc0). Should &netc_iep18 go between
+&irqsteer_coss and &uart0? Keeping the DTSI order would also put it before
+&usdhc0.
+
+> +	status = "okay";
+> +};
+
+[Severity: Medium]
+The commit message says the bus is enabled "so that the ENETC v4 Pseudo-MAC
+port (PPM) PF and VF instances are probed". Does the PF actually probe when
+the kernel is built from the in-tree arm64 defconfig?
+
+The netc_iep18 host bridge node in s32n79.dtsi has no child nodes, so the
+ENETC PF function does not get a static of_node. For a pseudo-MAC port,
+enetc4_link_init() in drivers/net/ethernet/freescale/enetc/enetc4_pf.c then
+fails here:
+
+	if (!node) {
+		dev_err(dev, "Missing of_node for Pseudo-MAC port\n");
+		return -ENODEV;
+	}
+
+The only other way to get an of_node is of_pci_make_dev_node(). The last
+patch in the series, "PCI: Create OF node for NXP ENETC pseudo-MAC
+functions", adds it as a final fixup for 0xe101/0xe110:
+
+	DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_PHILIPS, 0xe101, of_pci_make_dev_node);
+
+However, of_pci_make_dev_node() is only built with
+CONFIG_PCI_DYNAMIC_OF_NODES. Without it, drivers/pci/pci.h provides an empty
+inline stub.
+
+PCI_DYNAMIC_OF_NODES is a plain bool with no default, and NXP_ENETC4 only
+selects OF_DYNAMIC. arch/arm64/configs/defconfig sets
+CONFIG_PCI_HOST_GENERIC=y, CONFIG_NXP_ENETC4=m and CONFIG_FSL_ENETC_VF=m, but
+it does not set CONFIG_PCI_DYNAMIC_OF_NODES.
+
+So on a default arm64 build, won't the only device behind the newly enabled
+bus fail with -ENODEV? The PF creates the VFs through SR-IOV, so the VFs
+would not appear either. This is still the case at the end of the series.
+
+Would one of these work: giving the PF a static child node in DT, adding
+CONFIG_PCI_DYNAMIC_OF_NODES=y to the arm64 defconfig, or having NXP_ENETC4
+imply or select it?
+
+[Severity: Medium]
+With this bus enabled, the PPM PF and VFs become live DMA masters. The
+netc_iep18 node in s32n79.dtsi has:
+
+	iommu-map = <0x0 &smmu 0xc0000 0x100>;
+	msi-map = <0x0 &its 0xc0000 0x100>;
+	dma-coherent;
+
+The smmu node it points to is disabled at the SoC level:
+
+	smmu: iommu@4fc00000 {
+		compatible = "arm,smmu-v3";
+		...
+		status = "disabled";
+
+No board DTS under arch/arm64/boot/dts/freescale/ enables it.
+of_iommu_xlate() in drivers/iommu/of_iommu.c then ignores the mapping without
+any message:
+
+	if (!of_device_is_available(iommu_spec->np))
+		return -ENODEV;
+
+As a result, the PF and VFs fall back to dma-direct and use raw physical
+addresses for the BD rings and buffers.
+
+The SoC dtsi commit in this series says "DMA is translated by the SMMUv3
+(iommu-map)". That does not seem to hold on this board.
+
+Doesn't DMA now depend entirely on the SMMU state left by boot firmware?
+Suppose firmware left the SMMU enabled with its own stream table, or set it
+to abort unmatched streams. NETC DMA would then fault or be blocked, even
+though the netdev probes.
+
+The dma-coherent property makes Linux skip cache maintenance. That too relies
+on stream attributes configured outside of Linux.
+
+Should &smmu be enabled along with this bus? Alternatively, could the
+firmware requirement be documented (SMMU in bypass with coherent attributes
+for StreamIDs 0xc0000 and up) and the dtsi commit message corrected?
+
+-- 
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/cover.1794581338.git.claudiu.manoil%40nxp.com
