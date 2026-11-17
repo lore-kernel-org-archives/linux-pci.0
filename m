@@ -1,107 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.169
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794952746;
-	b=dUWppZQw4nM6rhx9jlSQ5VB3i3eCDQv8OzT30FGg9XGkN0NPjjVFCtoUkLp80M3YR7JA
-	 EkBW3+Sv7ujSA2BmMEQAof/Htu69LWkP7Cjz2vo4LBh6olBnY75EZnO9hgHZ7X/G0lzqK
-	 svWSvcgMzhAkIjuwnODbvjOpLs1kYIRdLqPmz9KzVllPunh9TniB03h+CxRbtZnMRGhEj
-	 s0T4W2T91+YANdj/o3SNPj1QM+3nEBMXr+RLWndtfe55vbLYTKaXlEJF7mGUUuGofJ9i/
-	 Son69a3vXeZXMEZp2GGX/CHSyTSJuuoHHT0HyIhrnHleLSWQ6zl6sCX/UKv0po1pJ/w==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794952746;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=6ppas4HZ2NGOZcFcrTWA/+6VjpboNZmJZl+VQIcgy64=;
-	b=l4/iA7M6RUGp0cfspuMwctUyzd9UZUGdSlCLVrT/s1+PB1NQ6BalaVD+p9F9aYWaRNKG
-	 v4ri6HLqiN6uoWzI9bj9Vg+t+1MzSbwZoFz0g6DqNZOXrHhB3/p8tSShtFjKIawAX1xpS
-	 f7aSLgEy4RA0YQAJk2t2ZpwBce+0Z6F0PZTgDfpturFF5/eEQYhJBA6UUT8t3SKpSYGd6
-	 xjBbdZz+nZ7aVZNWTMbFrcVeg4/gBqXCQULRdsQ8B1F2Dh6iTE0Xb6Skg/14IXrhu8jaw
-	 AF3XwYXQSHXMRutTpeeacoMb6XxB9MZWs+qex/paHGfM/Azw7KlxTfLlG82GOwt3JiA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=EfJXDMRe;
-	arc=none smtp.remote-ip=209.85.214.169
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.46
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794952914;
+	b=GKbq1AzFH7Hj18m//kPNVzgY3kuQsTNbAujGmRVf30uKLjv8VAwSSfio0KCU98vWFGnX
+	 4L7GrGbvV8zRz+RsbNV2OFoEczqTSkzADUA5pQr3b7ntZSIuOITEril6zmB6RXsZbxXPD
+	 4Zt/8vx6GOf9Vd/ceyEQMMAkF4YRSGhohBCj8X4Ay6OEOOFnyK/FyFgpPQdhtgAglQ0rb
+	 +5/z/BG5eWgHjvkM1BBZREOsH+Gc3Vbgv9eU+ADxu775y4P4iP7xT1dhz9KAiHDfV75Df
+	 B0mm4e6uYN9DHRZpSvG+R10jVVV2lbL+FI6mCvZ6WFNOHQ4CtnBuFIwsjMoaptgPvfw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794952914;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=6PW5XMwxE8OuSXtLMWnoHr0FBlQPRWMHrC5OcqZBytQ=;
+	b=PbG8+OmVBAtDW9jhW/X54cSBXOXmk/cSjyGJ+HPmvYbEpPOPuNztWQsSKDTlvNwzXdAV
+	 MQWFlF0nhX1cf9vQb+k7cSpt+aV/G2GGUK8ocjJiY9znuXzN/FtipijK7xW/fDGmsvmeq
+	 HyJpuAdYLgP6XIH2Mt8/voSpWwADvKhROJo6UypdSMW2dgwOclJJm6LM3Ml0o6s1xvpOj
+	 2g1uAzH2oER9x0VyT5d9JteMCnNPLeDW2aIR/Tf0gREEm8pKnX9NVoiozeaw0jWjeddIU
+	 tDfTwH1WQIKe1a0j4z2dgWnQSBbozsSFqG8yDnT+0dogv1cd/Vx0GSnoCtSuo8Xgj8w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=amd.com;
+	spf=fail smtp.mailfrom=amd.com;
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=lYJF0d50;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.46
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011046.outbound.protection.outlook.com [52.101.57.46])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B28F1606A32F
-	for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 21:59:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B28F1606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B68606A32A;
+	Tue, 17 Nov 2026 22:01:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A1B68606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=EfJXDMRe
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2ed3f563739so21505ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 13:59:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794952745; x=1795557545; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=6ppas4HZ2NGOZcFcrTWA/+6VjpboNZmJZl+VQIcgy64=;
-        b=EfJXDMRe6em8z635NUEChDgMdqWOKqo0Ntv8rvsuf/jUawXGDGUYrN9oAIqxv1+c0U
-         ZENiouw7xqD64r/dkBosaSnCVTs5QOI8dP8jqaoMnGyIHsAv5DAoyCovx0fieD13wagD
-         UjV8/gdiVoChlZxwDASL07PfN1GyMbRWcyVl6jwlymYaGWs2bhlIHwLr1yyQXZ4cR8y9
-         KtZrqL5WlnWD6iJ1pKsZCa2RHH6jbyLcG30nTBHmV3sf/MINwUM/StzUdO484WOWfkP4
-         U61AJKGxSjv4tnnVb4bvEcfbFPIllJKH6t7RrFpnDC+nwYAFsHDYMBaCLf7UQsJX1Iqw
-         26rQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794952745; x=1795557545;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6ppas4HZ2NGOZcFcrTWA/+6VjpboNZmJZl+VQIcgy64=;
-        b=dDWI83JwMvfnIbIYpyt4ERKViO6SGR9Gmq93/4J940NDmy+sv9GUpWTELgzucbfGIQ
-         g2CrHNzeqgwEB6ealCSd+vsB9RGMWe8t/TYyQMlJG5xPweRPV0iy6W33iteEFFHZ/OUX
-         4q4lBZU15eJo86nnQCC6AaV/MdlwkPH2Duyq/R3K9g/Bcz6txq/fVKoDxcB/oCgpcCVO
-         kf5OC2V90m0jHm/iJqdsOeRDWcaiPAVTyP3oV+ywDFtplrF2QMBBw1tVnFxFOWF0tQ1+
-         8YxJ8p99RDuSwQgkn1SL70Y+V+1T6aSfxJnFAEygdHQ1gNpqAiwM7b66gKl6HxcIF9/o
-         QrjA==
-X-Forwarded-Encrypted: i=1; AL+hErFyayw8s2kTHhSiTJvC9K4YPcrwldNBlMxia1swT+PEQSZ3Gu/e/qAcWU5lRxyvI5C4f9AH9yVoUXg=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/mGoKbqlxi2+BN+Oa12MXeEVEx2/FAnY2JktLrTlAhugC2drUa
-	QJ/kLCj/33UsBgkqigGO+v/Iz4gquyuPrqsXj9hbqeeNSFNm9z0DuzBtFx71mudIMA==
-X-Gm-Gg: AZFdTZdH9hCuvt/lK2lcqQM4g2MQMH+EqZkN+2/dk9aHZqnJqpz182flF3lIgqfluaz
-	ejuP/vIWXNffPYIxgID0P82TVw5s+HoMuAHERfSKeErU0lOScybSFHVy4BJSZZxECLqznUuSPQT
-	Fpz6Xpy+CxeIK6ORXRZ8K0bQmKYr3FNB9YigEBrhO8BmwDchURie0v4BKSwhqIHQEu9HfaXmlHe
-	XVrhYnXR+4yokPx7ua0xFcoLKKv0CbE3OScvu3g8xDvRLKkqbsmWBFwEVAPE1sT++W0cBrskW4U
-	DBWVeZb6mi2neSh56CAWi/S0UvcA+3DPEj4VhRq6SuFTvxCmyrM+ZVYBADQTb3PaCuQMnE5SJ8l
-	obSEghEWBc1ROCSypQfWl76fPBToMkh8PfkY3o1kBkTdaxCy/WaccEF3zEGkO1wtz7ITjj2hjS+
-	9n/aHcwKWDEHhBQjFnYhC7/lIhi4AsrS3DXiVY0SPYbrkkiBUYT+wQZpod+2EHCGWxz794oJzzE
-	z/BInysDtxrkVW8fRj7jJNGKMjffZbv1YPJ7SWDP/qbEiw/YHzmbmJVJBgOuUBQq8d9lO6QsaUi
-	9gVoI77QLRNBF2patStf20jVQafA0V9aRAqEyRhzfdIWOCQHYu1i01RojlrOfU/w2LqE/DKSLut
-	IRHjYeaaAdR+W
-X-Received: by 2002:a17:903:3d0e:b0:2df:96ca:d7c7 with SMTP id d9443c01a7336-2eff98e2025mr646525ad.10.1794952744396;
-        Tue, 17 Nov 2026 13:59:04 -0800 (PST)
-Received: from google.com (176.13.105.34.bc.googleusercontent.com. [34.105.13.176])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff623c4c6sm2756405ad.54.2026.11.17.13.59.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 13:59:03 -0800 (PST)
-Date: Tue, 17 Nov 2026 13:59:00 -0800
-From: Vipin Sharma <vipinsh@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org, ajayachandra@nvidia.com, 
-	alex@shazbot.org, amastro@fb.com, ankita@nvidia.com, apopple@nvidia.com, 
-	bhelgaas@google.com, chrisl@kernel.org, christian.koenig@amd.com, corbet@lwn.net, 
-	graf@amazon.com, jacob.pan@linux.microsoft.com, jgg@nvidia.com, jgg@ziepe.ca, 
-	jrhilke@google.com, julianr@linux.ibm.com, kees@kernel.org, kevin.tian@intel.com, 
-	leon@kernel.org, leonro@nvidia.com, lukas@wunner.de, mattev@meta.com, 
-	michal.winiarski@intel.com, parav@nvidia.com, pasha.tatashin@soleen.com, praan@google.com, 
-	pratyush@kernel.org, rananta@google.com, rdunlap@infradead.org, rientjes@google.com, 
-	rodrigo.vivi@intel.com, rppt@kernel.org, saeedm@nvidia.com, schnelle@linux.ibm.com, 
-	skhan@linuxfoundation.org, skhawaja@google.com, vivek.kasireddy@intel.com, witu@nvidia.com, 
-	yanjun.zhu@linux.dev, yi.l.liu@intel.com
-Subject: Re: [PATCH v6 07/27] vfio/pci: Preserve vfio-pci device files across
- Live Update
-Message-ID: <20261117003405.GA4153658.vipinsh@google.com>
-References: <20261102153656.1431701-1-vipinsh@google.com>
- <20261102153656.1431701-8-vipinsh@google.com>
- <auzVEUpFEoWltpVg@google.com>
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=lYJF0d50
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=GqvtxEZvDjo4kOHcVZ1/v9uERQR4QCChQ1Ftu7zrmIy72xacBAwCcKUeYp74T3qm50tv8C3hhMG9+7+R8vpA8HoaZOj6xVrwC9kZXDTJX3xapIK61SBTMCNO1HtlXsSoAgBqgQPsfABagi9ZakbUNLcVTXax+yQITc5lgXoF1Cygj5qeV4EEgeQZVZ5dYtwB9TjoMV8bGafLqVbaICykgu+qHxSW89HVx8GnjSl6HQQg3cEXDTU031MbGPZfV7njruMUAZRkeVMR3Ya8jUl9IlvNeZVdON+oWZOmr3GrnnFM5AIzDp3NKnzV/zd2n2dvTeHYfc2WcpiL2EZHMJvnPA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=6PW5XMwxE8OuSXtLMWnoHr0FBlQPRWMHrC5OcqZBytQ=;
+ b=Ryyv305NSGGcUUNq5dsa/9KvriPqClJB03KiZwezxMBrek1PKIQVHROiHHbJEiaoAg3vp5d/0Vzfk/84035TILMIMJLrfSK2w46mrE8E5n58/BkW0hTUD8T49dYFkCUZv/aYokCGi0y9AD19wW8bTxd3+UuFY2G2tkVj+/4LItxxg/Fk7FIo8Q+I3ZZyCWgI7zhCDVadCN8OPCvQy5HIMepshJ9PN0IHCZOE49cX7qfzPXtzM0pdtdhZlXld2OcT8woTZbCf8rKYT8a8PGw5U2zInioAtE2+d9m5PAbBS9gZVf+Tpogx0a/OemT4pVO+P03YHTgKHPYJQN8fZ+7HpA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6PW5XMwxE8OuSXtLMWnoHr0FBlQPRWMHrC5OcqZBytQ=;
+ b=lYJF0d50LJ8g1xub0yKcTEWREd8Gmiqpip45T4kq95hzmO7ZgvA9kQimHSmQLgOBbNm7OFB7m8vCn7dmDqJUDWWNoJi+q0J+/2peH3pGPnbRDw5nw0o0LUOJFL2Ww3ymwnRqyGGZ/bhl/svMeCt4OB29TbUX9p0ghUT8wAddIvI=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from CHAPR12MB999249.namprd12.prod.outlook.com
+ (2603:10b6:610:300::24) by SA1PR12MB8986.namprd12.prod.outlook.com
+ (2603:10b6:806:375::8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.8; Tue, 17 Nov
+ 2026 22:01:49 +0000
+Received: from CHAPR12MB999249.namprd12.prod.outlook.com
+ ([fe80::1cfd:535b:cec6:5077]) by CHAPR12MB999249.namprd12.prod.outlook.com
+ ([fe80::1cfd:535b:cec6:5077%4]) with mapi id 15.21.0615.013; Tue, 17 Nov 2026
+ 22:01:49 +0000
+Message-ID: <e530cc43-5d35-4391-b7ce-eaa52b8a1a59@amd.com>
+Date: Tue, 17 Nov 2026 16:01:45 -0600
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 04/25] dmaengine: sdxi: Prepare function and sanitize
+ MMIO state
+To: Frank Li <Frank.li@oss.nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, David Rientjes <rientjes@google.com>,
+ John.Kariuki@amd.com, Jonathan Cameron <jic23@kernel.org>,
+ Kinsey Ho <kinseyho@google.com>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ PradeepVineshReddy.Kodamati@amd.com, Shivank Garg <shivankg@amd.com>,
+ Stephen Bates <Stephen.Bates@amd.com>, Tycho Andersen <tycho@kernel.org>,
+ Wei Huang <wei.huang2@amd.com>, Wei Xu <weixugc@google.com>,
+ dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20261103-sdxi-base-v4-0-3668ccc7aab8@amd.com>
+ <20261103-sdxi-base-v4-4-3668ccc7aab8@amd.com> <avYvDpY8R6fbSjjf@SMW015318>
+Content-Language: en-US
+From: "Lynch, Nathan" <nathan.lynch@amd.com>
+In-Reply-To: <avYvDpY8R6fbSjjf@SMW015318>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SN7PR04CA0042.namprd04.prod.outlook.com
+ (2603:10b6:806:120::17) To CHAPR12MB999249.namprd12.prod.outlook.com
+ (2603:10b6:610:300::24)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -111,125 +106,98 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <auzVEUpFEoWltpVg@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHAPR12MB999249:EE_|SA1PR12MB8986:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7437df3e-bc50-47b9-fc2f-08df44f66146
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|23010399003|7416014|376014|18002099003|22082099003|6133799003|11063799006|56012099006|261026121527099003|261102123227099003|4143699003|261021121427099003|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	h6lZ44aJjyFEU3uMzH3W+GPd9CRFv3+NZW6dDMt188/Mw3nl93Ijuni+6CkcztgYEuf2o+STB9OICO21Rx0Yf5x2VLGlUbyYDPJg+1a/BgmQ5V+PYMJSZ7Yu/k4Ws4G6w/0AppO/BVvmmuVNJqIJwmb/7TddBYleLXJzqB0WpZFJwZAd2ZAbkClSpBt4o6YpvNHdTc0N5DHdSDltNhFJUaHj23tvsv+cThjNjnIwJYfRc+FQCJO7OfM+GX5ECIvcpFY2AHxMcDLdDiE5c62OdlPgwrfsS4JVDLnSe7stgPPaBE2+HiEXp6tHnrrQylL4p11RQy02KF6mIJspNMaQ8jmvDP0IJN4lPqU4URwQdrqe58cR3YOnMUiOjszMUbWGWz8PofFlXcoTfedzQwWPVlfWZ6tA8ZtkJGzNKgYznvuGcim9QT32FQwosVEbvYXhQEeEZAuBSKYbpUJbBuzw2KEO+Azy3BTLz6riiMhWSOFrds074/dZln5OuOFfXa69xyljf1PQVGEauGC20yBnMePkD0KChUdstHgd6GPkWn92LbuBtZVbnb9tIhxNSNFiCQl3HKhwxgABaLwX22y1I9ckAxnlXogAQkR78vx60fk2qGIJ+QT31grqkFFQa5YOs+Xya22aJLSc/pSlyNuAioKr1Ks4vsVdXJLz6ZzRVHE=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHAPR12MB999249.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(23010399003)(7416014)(376014)(18002099003)(22082099003)(6133799003)(11063799006)(56012099006)(261026121527099003)(261102123227099003)(4143699003)(261021121427099003)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?TFBNT3BEeVZQRHl0UDhrNERUcnJRbkdXQlptMkhFeExmeEJuSi9relg0U3dB?=
+ =?utf-8?B?STFOM3ZYVHBpRjg4LzBvWW1kZlRKZUc2MnNQbGx0WGROMmNPVjd2Z0JXTTdN?=
+ =?utf-8?B?a3EvM2w4ZlV4QWhKclpOQzQ4SGEzeGUxdEpmbVFxb3pZU2Z0R0dhVit0cWZu?=
+ =?utf-8?B?MS9uQXdtMUNlY0FhVlM5MDNhUmEzZGlLekZUaEFZa1VVbXM3MGhXZWpEc3lL?=
+ =?utf-8?B?Rm9iU0w4ay9mWUhwVDEwVXdMa1NRZkRPQ1ovdjFSaDJpNVZ5TGM0V2NMZmVR?=
+ =?utf-8?B?a0tWNWNBRURramJncGJyTkR2ZGc1RjNMZFlhN05pMXlvVlZPQktUT1J2SUxn?=
+ =?utf-8?B?N2NZZHZ3dVRwL1hVZHNPQjVZMGpTRXNmR0dCN3UzSnlXQk81UVhRQU9vMlhr?=
+ =?utf-8?B?eEtuNEpEWnRxVENYSUJ5SGk4RURCRGJWbmRpREhGVFdsbXYzZWVaNDV5TnZD?=
+ =?utf-8?B?RHhFV3QzSWlCQjhsOW9nTTJQd1QyMkV3U1I1bDA3SzZVaTMxdHd2cjN4MmM5?=
+ =?utf-8?B?VWl1a2djRGcwcEtQNTRoMzZzQ1BRZncxdndPbkd4RmN5SW9oYVkxdFlVSGZI?=
+ =?utf-8?B?bkRYT0dxRjltV3BaSkE4WHdoTUFMWW1HWTJBNUdIRU5rK1FFRnd6U050VHNL?=
+ =?utf-8?B?MDVNc2Z3aTk5ZUdKOFAwZXo3VHIyUTVtQjVta1lFTmtoQXNmdVdGOG15cGVo?=
+ =?utf-8?B?ZHFEUkRpeTdnL0g1b1pLQ0pIMlRpcmhoOVlCQjNJeGs0M0FvQ2ltc3ZLQys4?=
+ =?utf-8?B?KzMwSUJQcXUvd0VUc2hTMVMvQS9zUGQ3RTVGNXZzamVvWXhseWxxM043WFgw?=
+ =?utf-8?B?NHB3akZ2STZpSERjeTJIdFNjaVQyR2pvK3QyWEhRSXc0SDFGZGhDaXp3ZDF0?=
+ =?utf-8?B?S2I3YXkvVUdyWFZUMU9yUExmVU5YZWNXdnFuV2krUWhLN3FtMVFUSnhjd2tR?=
+ =?utf-8?B?OC9mVXhLMzl3ZWRBa0ExQTg1NnVCaDJwQkpzUFBIK2QrVWdxMlo0WjB6ajlN?=
+ =?utf-8?B?VHBwcGlKSzFkYmVlUEJFdG5zOStsS2svV3V2MmFHRzI0cDlpT1I5ak5lN1JK?=
+ =?utf-8?B?MEV5L3BZajUzM0IzdC9PUTZ5WkFYWFJKTm8vbXdDY3MyK0RhVUU2clR6bnRR?=
+ =?utf-8?B?c1dVQmdhMUhMMXZFWjJCWFNhNldnUTZCR2dRSEM4WmlCYWVXWjZ0SWpsejgz?=
+ =?utf-8?B?WXBwTUxUL1M4K0orVlFEWlFpZGs0MGxDRFZYRFRobW5BK2prTDZBQWQ5YlM0?=
+ =?utf-8?B?emU0eTV0RlhKYVEzOTB2bW5vUVVaMU4yZThsRFdnVDZacCtGcys2eTFMVkEy?=
+ =?utf-8?B?dnhOVjVNOEJOazB3ZjZUejNhVXJhVGw3R1huVUJDUm9zY01USnFWemoyTWhQ?=
+ =?utf-8?B?czRKNkkrcnViTkJpS01xdlVvU1RTYzllakd4WUpybWhJUklQbHF5Q3pMczRO?=
+ =?utf-8?B?RnRjK1RMbEhJV1orU3dicW1jLytURTMzOEI1VCtVZW8xS2ZkK25HVmY4ZWY5?=
+ =?utf-8?B?QmQvVHlmSWUrWW1idVYzYXFQYU55MXFWa25pUUFIYUhwcDQvdG50UGJZUnc0?=
+ =?utf-8?B?TlZpMTdjdzNkUmhselN4cGE3OTNGQUNTTDBOWG5tT0ZBN003bEk0VHpFcVBt?=
+ =?utf-8?B?WE1uY2ZuNnpZdG50SEJqeTA5T2VEUjBvRWR3TjdUMGVUcXJ1b3pzNUVVaG9U?=
+ =?utf-8?B?M2tMcXZoNjlqdElOQmFTYWRURzdkZDR3UGNEQW5IVFhUM1NUdldoeTN5Skto?=
+ =?utf-8?B?WS9SZnVWdk9FTW1BZU1EUkNjbHRLRXN6NC94dmpUTjIrY2U0akRDSForRzJG?=
+ =?utf-8?B?S0pTNE9HY1JQVUNrUlpLTVJRaFJ2VXFEN3BLVEtPRmI4RGFmbU5VWnBiNFFJ?=
+ =?utf-8?B?enFYMHgxSUd3MUpuSzVGSWtCcDAxcXIyZG5MZStwVm5VbXF4anh3czgwS0xG?=
+ =?utf-8?B?WVEyTnRnYm5xc01oc2RGdlY1Q0tXOHJnQS93OHhjY25DQ0VvTjBmNmlTL3ll?=
+ =?utf-8?B?dGY2MXV4VHBaaldkUTBTR1ZpSFhScDlkb1dodFF5SDZidVd6TGFUcUVlRWVS?=
+ =?utf-8?B?MzkzS3hsOGVVYjNGYTFhQURNRkRZdzVvMGNERTJqOTZpdkJkenMwdjN1M1BO?=
+ =?utf-8?B?UGJGUEJIVmxSdXA2bjVuTERacGRTdEVJdHBEWnUyU29Tb0x5R2EwL2kvTkhh?=
+ =?utf-8?B?YnRibzlGUFEwU2dSeGgrNy9sMklRL1dGaDhPMUxsdDZBWmIxRVZUWUQrdlhC?=
+ =?utf-8?B?L3BrSlBlak0ycEw0VmNZRUx4WlY4aFE1SDBDMEFSQWtDS2g0cTloYzZXNXc0?=
+ =?utf-8?Q?s6pWRdzKIWnFsanqZ7?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7437df3e-bc50-47b9-fc2f-08df44f66146
+X-MS-Exchange-CrossTenant-AuthSource: CHAPR12MB999249.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Nov 2026 22:01:49.5735
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: PYDNQwCKD8QGq3WveubJteS3G4nRImNiEh+TLlKHeXYYrItYJnm61COjxrU0quS1nflspC8TTitcW7QjK6Fzsw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8986
 
-On Thu, Nov 05, 2026 at 07:12:17PM +0000, David Matlack wrote:
-> On 2026-11-02 07:36 AM, Vipin Sharma wrote:
-> >  * TOCTOU synchronization: vfio_pci_dev_is_frozen() is checked locklessly
-> >    on entry to the ioctl, read/write and mmap paths, and re-checked under
-> >    a lock that freeze() holds before any operation that could change the
-> >    device or vconfig: under vdev->igate in vfio_pci_ioctl_set_irqs() and
-> >    around every config-space write in vfio_pci_config_rw_single(), under
-> >    vdev->memory_lock in vfio_pci_runtime_pm_entry(),
-> >    vfio_pci_ioctl_reset() and the SR-IOV enable path of
-> >    vfio_pci_core_sriov_configure(), and under dev_set->lock in
-> >    vfio_pci_dev_set_hot_reset(). A racing operation thus either completes
-> >    before freeze() takes its snapshot or fails, while existing BAR mmaps,
-> >    ioeventfds and dma-bufs keep working. Serializing config writes on
-> >    igate covers the PCI_COMMAND, INTx disable emulation, power state and
-> >    FLR paths at one point (the INTx disable emulation now uses the
-> >    igate-held __vfio_pci_intx_mask() and __vfio_pci_intx_unmask()
-> >    helpers), and also serializes the irq_type and virq_disabled accesses
-> >    of config writes with VFIO_DEVICE_SET_IRQS.
+On 11/12/2026 3:26 PM, Frank Li wrote:
+> On Tue, Nov 03, 2026 at 08:49:45PM -0600, Nathan Lynch via B4 Relay wrote:
+>> +static int sdxi_dev_stop(struct sdxi_dev *sdxi)
+>> +{
+>> +	unsigned long stepped_from = 0;
+>> +	enum sdxi_fn_gsv gsv;
+>> +
+>> +	/*
+>> +	 * Each step must reach a state we have not already stepped from.
+>> +	 * The table admits no cycles, so revisiting one means the device
+>> +	 * is not behaving as specified.
+>> +	 */
+>> +	for (gsv = sdxi_dev_gsv(sdxi); gsv != SDXI_GSV_STOP; ) {
+>> +		const struct gsv_stop_step *step;
+>> +		enum sdxi_fn_gsv from = gsv;
+>> +
+>> +		if ((size_t)gsv >= ARRAY_SIZE(gsv_stop_steps))
+>> +			break;
+>> +		if (stepped_from & BIT(gsv))
+>> +			break;
+>> +		stepped_from |= BIT(gsv);
 > 
-> I think there's a simpler way to do this. Checking the frozen flag
-> locklessly and then re-checking it under whichever lock covers each
-> path spreads the synchronization across igate, memory_lock and
-> dev_set->lock. That makes it hard to convince yourself every path that
-> can change the device is covered. It also makes every config space
-> write take igate, for all vfio-pci users, even when
-> CONFIG_VFIO_PCI_LIVEUPDATE=n.
-> 
-> Instead, I suggest adding a per-device rw_semaphore to struct
-> vfio_device in the VFIO core, e.g. liveupdate_rwsem, that protects a
-> liveupdate_frozen flag:
-> 
->  - vfio_device_fops_unl_ioctl(), vfio_device_fops_read() and
->    vfio_device_fops_write() take liveupdate_rwsem for read and fail
->    with -EIO if the device is frozen. That covers every device ioctl in
->    one place, including the ones handled by the VFIO core
->    (VFIO_DEVICE_FEATURE, VFIO_DEVICE_GET_REGION_INFO and
->    VFIO_DEVICE_{ATTACH,DETACH}_IOMMUFD_PT). This patch doesn't block
->    the last two at all today.
-> 
->  - freeze() and unfreeze() take liveupdate_rwsem for write, before any
->    other lock, and flip the flag. preserve() doesn't need it since it
->    only serializes state that doesn't change after the device is
->    opened.
-> 
-> Putting this in the VFIO core also means other VFIO drivers can reuse
-> it if they add Live Update support in the future.
-> 
-> The lock order then becomes:
-> 
->   liveupdate_rwsem -> dev_set->lock -> igate -> memory_lock
-> 
-> freeze() can still take igate and memory_lock to check irq_type,
-> pm_runtime_engaged and sriov_active. But the ioctl, read and write
-> paths no longer need to re-check anything under those locks. So you
-> can drop the igate change in vfio_pci_config_rw_single(), the
-> open-coded vfio_pci_zap_and_down_write_memory_lock() in
-> vfio_pci_runtime_pm_entry() and vfio_pci_ioctl_reset(), and the
-> smp_load_acquire()/smp_store_release() pair.
-> 
-> Two paths still need their own handling because they don't go through
-> the device's file:
-> 
->  - vfio_pci_core_sriov_configure() is reached through sysfs. Take
->    liveupdate_rwsem for read around the frozen check and the
->    sriov_active update.
-> 
->  - VFIO_DEVICE_PCI_HOT_RESET issued on one device also resets the other
->    devices in its dev_set. Keep the check in
->    vfio_pci_dev_set_hot_reset() under dev_set->lock. freeze() sets the
->    flag while holding both liveupdate_rwsem and dev_set->lock, so
->    holding either one is enough to read it. Please don't take the other
->    devices' liveupdate_rwsem there, since that would invert the lock
->    order relative to freeze().
-> 
-> I don't think mmap needs to be blocked at all. Creating a new mapping
-> doesn't change the device or any of the state that gets preserved, and
-> existing mappings already keep working while the device is frozen.
-> Leaving mmap alone also avoids taking liveupdate_rwsem under mmap_lock,
-> which could deadlock: the ioctl, read and write paths can fault on user
-> memory (taking mmap_lock) while holding liveupdate_rwsem for read, and
-> freeze() may be waiting for the write lock. Please update the comment
-> in freeze() and the DOC section to match.
-> 
+> BIT_ULL()?
 
-Thanks for suggestion, this is indeed simpler.
+stepped_from is unsigned long, so I don't think so?
 
-> > diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> > index 9914f3ac69ae..1f1ac7a798aa 100644
-> > --- a/drivers/vfio/pci/vfio_pci_config.c
-> > +++ b/drivers/vfio/pci/vfio_pci_config.c
-> > @@ -644,10 +644,10 @@ static int vfio_basic_config_write(struct vfio_pci_core_device *vdev, int pos,
-> >  
-> >  		if (virt_intx_disable && !vdev->virq_disabled) {
-> >  			vdev->virq_disabled = true;
-> > -			vfio_pci_intx_mask(vdev);
-> > +			__vfio_pci_intx_mask(vdev);
-> >  		} else if (!virt_intx_disable && vdev->virq_disabled) {
-> >  			vdev->virq_disabled = false;
-> > -			vfio_pci_intx_unmask(vdev);
-> > +			__vfio_pci_intx_unmask(vdev);
-> >  		}
-> >  	}
-> 
-> With the rwsem, config writes no longer need igate, so this change
-> isn't needed. If config writes and VFIO_DEVICE_SET_IRQS really do race
-> on irq_type and virq_disabled today, that's unrelated to Live Update.
-> Please send it as a separate fix.
-> 
+include/vdso/bits.h:
 
-This will go away.
+#define BIT(nr)			(UL(1) << (nr))
+#define BIT_ULL(nr)		(ULL(1) << (nr))
 
-> Lastly, please add the freeze infrastructure and the checks in their
-> own commit ahead of this one, e.g. "vfio: Add infrastructure to freeze
-> devices for Live Update". Then this patch only has to implement
-> freeze() and unfreeze() on top of it, which will make both easier to
-> review.
-
-Sounds good. Thanks for the review.
