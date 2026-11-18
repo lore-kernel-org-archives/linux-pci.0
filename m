@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795030041;
-	b=g1siZkCJyv4OVol72kNWjIusG+YY3qwRZrdsX1ZKlrXIbZn0dcoUH1KObXJPpc/I3Fp+
-	 m9R+WdEduNDfd5dFfDkq2AL61DybczyULxjZtPfhJuOzXyz/UOLMCGgkHeFtV1ImytiqW
-	 2ocvDP19JyqxrrNoEP6nw2pzK5iTZNpdFyLbTpzBkjYWjwMktBP6leWYUeSqJigF1v427
-	 oHSAFNwUHwxDT92yCjdWb4kMVS98cTr/6xPKQO5EKRxga+jJbE35senT4IDPbQzqf5sPy
-	 v2n3+gyVg1cErIhusHpCHLLUq2ko03dzLLQJa6ZdDdzyOSwoxbMVSpTs5Z2zx7hZHNQ==
+	t=1795030049;
+	b=2EBMDjsIp+40D5uSBl/QiWzVFUMBQ0xfy5w8ssWDOL7guu5bOCHcLfFLdG5dpuS32Mhx
+	 CiGQmG6UAbZn60Y09A0ewmyGBsBGY/IigxoQ8hI+NPQgU2+0iBwyiwPQFLM1/xLDfJDTR
+	 d/f6NqcVOOLGhzkeV4AYfVwUJTqPWyOlRTJZ6JvNuxDsmBqGu9jkMBJYdHVhlqnZHtBsP
+	 5caYCMvAqLVwOT3AIEu/0QeTodF8EIMLaPQfUH/IqbGppw3ZzGY2D1AcFZD3gkh7YLyEL
+	 53dmQCCwmKSREbtY4vljmJ93tqqVjmsgKEFYUQPOi9CbnhI3p7qGCCjeROhFC2URXFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795030041;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795030049;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=0q1TynGssykC2LOKqTJCRLWewJrYt+Qms+Y+NUNnNmQ=;
-	b=XmaBCmmsF32ng43C+VzTTbxeWkhNOcQBW46JsKTZiPsZZEevsvVwkr54B8gniOzpyjU3
-	 8oyD9WVl8Pt44y7lm//LNEmZyDiKFriL0ipT6nu8X7WuAecQjuwRjJGoM4Ks32oRQcWGI
-	 Se/kYae0pU1zNtduZxbpZ0n0XwOekmNs0alIML7h3e0Az8gG9VUg0Wi3J3KGZDmdUPlCQ
-	 89SWrweU1TNjqVAS3lFw0Js6cC6YfT+ibIRPj1jPe0SRR9pqJ4eiwVf4HDAcYwZ64d+qj
-	 Hn97EOLmFViuqOWbHp/r7gbYeMxSzS7JST+iUd3LRLwJ7VRvG1MxqLkXkxquSjIXiLA==
+	bh=p4sT5+vbEJgTPXn0ZxCwAz9v5MiOVyx+czs5SWxFdeU=;
+	b=I1bogf9Zdcwhb0YJUGqEWGzE8082UJljTlBVn7Mwc6w73o/O4qjLFWqFVTTp6lK2697+
+	 GOM4K06u93UFAEFkgpwJR4wqMPgblxjrgItCPqdRhDPbMgW7G2MfAznh/aCZWhtq42nkH
+	 CJ2puwMSFbAlHfQ3MXlnVe/m/1pNduD7FHLe32X9RToCLQOhC8OTjdx42E4B8H3sxuNsm
+	 SjCgzzR1eEmq2ozhW84lAISkNpcW270VL+dXtl+mSxlavvhWIkH0ZLXl/6KizPmjN2eYD
+	 QxJID8Xm1P/MuVyNq/2OFZwdT2Xl2MLoLJIYimnDZvYDHgYXm42PzdqCocOJzcBDJpg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hiMBpwfr;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="DX0DWC/X";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78562606A325;
-	Wed, 18 Nov 2026 19:27:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA231606A333;
+	Wed, 18 Nov 2026 19:27:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hiMBpwfr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6729A1F000C6;
-	Wed, 18 Nov 2026 19:27:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DX0DWC/X
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74BB71F000CF;
+	Wed, 18 Nov 2026 19:27:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795030041;
-	bh=0q1TynGssykC2LOKqTJCRLWewJrYt+Qms+Y+NUNnNmQ=;
+	s=k20260515; t=1795030049;
+	bh=p4sT5+vbEJgTPXn0ZxCwAz9v5MiOVyx+czs5SWxFdeU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hiMBpwfrjl85DWLJPdGsFdo1dx3SonbuhvpM6QUiy9ACYFdkJKsr806pKMwu6EGdf
-	 uttd5jCD7Fe2XyIoXYkc8QrqK3NDRUwxmXQai8YBKkElcdnCigyMNObTNkgUDmWjPg
-	 hwuG7wZn1VoQ1RaA5WDxeVd/Ip9YQ7UTxRQQBiuHp+A7i+NFqZgIagSKpVzhzf2hwC
-	 +KW7PRUmk8Xiaijkpad2QvLUghhmudE6WxVLsz3+7UNKlMnXim598zK7am1ZuulVAw
-	 Ygt0OutVArPGmZ0uVeF5/dCPE782AS9a/3fKGF4hpxYalDvW6oFNPIRA72gJPnNkwA
-	 3vGL4GVfqZeZA==
+	b=DX0DWC/XWrMRnax1dnyz64DHeCC7MDTnGaxyhIDpdHcai9waT0XcsKypg+D4QfrOI
+	 pmaUh2Z7APtyu2kiL38XzxpzkSN2vzSKTw+CNLuQX6HKjj7X55f+/hj9cKg15LzIgj
+	 21O5PtOoNmZsagQIQ28hmZxgLZBb6TkDBTGoP8jYLf8vmvfwKVB9fjIg/Ohkt8QHsO
+	 yxW7GDs2k6SyXCjng1R5IkkKkJ5LD29xapKsXauA2I2juIfRoGgl6yBOlVzga2rqPn
+	 EtysFUjm04Yt9bsmWXBaSSke1iATngbnxQLGNzQHPj9FUbN32qRax3UMuIPbqlbXCY
+	 NMSI7H9jmzflA==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -96,9 +96,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v3 01/31] wifi: mac80211_hwsim: lock device for manual driver binding
-Date: Wed, 18 Nov 2026 21:26:31 +0200
-Message-ID: <20261118-device-trust-core-v3-1-d655875c4bfb@nvidia.com>
+Subject: [PATCH v3 04/31] USB: serial: Register USB drivers with their owning module
+Date: Wed, 18 Nov 2026 21:26:34 +0200
+Message-ID: <20261118-device-trust-core-v3-4-d655875c4bfb@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
 References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
@@ -117,30 +117,68 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-The documented API contract for device_bind_driver() requires the device
-lock. mac80211_hwsim uses it for a newly created class device with no bus,
-so no automatic driver-core path can bind the device concurrently and the
-missing lock was safe.
+The USB-serial core allocates each USB driver on behalf of its serial
+module, which deregisters and frees it during module exit. Registering
+through usb_register() instead identifies the USB-serial core as its
+owner, so a module reference does not retain the driver's allocation.
 
+Pass the serial module's owner and KBUILD_MODNAME to usb_register_driver().
+Keep the module name separate from the USB driver name so built-in drivers
+also link to the correct module.
+
+Fixes: 68e24113457e ("USB: serial: rework usb_serial_register/deregister_drivers()")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/usb/serial/usb-serial.c | 4 +++-
+ include/linux/usb/serial.h      | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index e53714b81ec2c..b796da3dd54b3 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -5769,7 +5769,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		goto failed_drvdata;
+diff --git a/drivers/usb/serial/usb-serial.c b/drivers/usb/serial/usb-serial.c
+index 4a19621f08ba2..ccbd0875339a3 100644
+--- a/drivers/usb/serial/usb-serial.c
++++ b/drivers/usb/serial/usb-serial.c
+@@ -1513,6 +1513,7 @@ static void usb_serial_deregister(struct usb_serial_driver *device)
+  * @serial_drivers: NULL-terminated array of pointers to drivers to be registered
+  * @owner: owning module
+  * @name: name of the usb_driver for this set of @serial_drivers
++ * @mod_name: name of the module containing the serial drivers
+  * @id_table: list of all devices this @serial_drivers set binds to
+  *
+  * Registers all the drivers in the @serial_drivers array, and dynamically
+@@ -1520,6 +1521,7 @@ static void usb_serial_deregister(struct usb_serial_driver *device)
+  */
+ int __usb_serial_register_drivers(struct usb_serial_driver *const serial_drivers[],
+ 				  struct module *owner, const char *name,
++				  const char *mod_name,
+ 				  const struct usb_device_id *id_table)
+ {
+ 	int rc;
+@@ -1559,7 +1561,7 @@ int __usb_serial_register_drivers(struct usb_serial_driver *const serial_drivers
+ 		}
  	}
- 	data->dev->driver = &mac80211_hwsim_driver.driver;
-+	device_lock(data->dev);
- 	err = device_bind_driver(data->dev);
-+	device_unlock(data->dev);
- 	if (err != 0) {
- 		pr_debug("mac80211_hwsim: device_bind_driver failed (%d)\n",
- 		       err);
+ 
+-	rc = usb_register(udriver);
++	rc = usb_register_driver(udriver, owner, mod_name);
+ 	if (rc)
+ 		goto err_free_driver;
+ 
+diff --git a/include/linux/usb/serial.h b/include/linux/usb/serial.h
+index 5866f19d3c7b8..fcfd0e26e0ffb 100644
+--- a/include/linux/usb/serial.h
++++ b/include/linux/usb/serial.h
+@@ -321,9 +321,11 @@ struct usb_serial_driver {
+ 	container_of(d, struct usb_serial_driver, driver)
+ 
+ #define usb_serial_register_drivers(serial_drivers, name, id_table) \
+-	__usb_serial_register_drivers(serial_drivers, THIS_MODULE, name, id_table)
++	__usb_serial_register_drivers(serial_drivers, THIS_MODULE, name, \
++				      KBUILD_MODNAME, id_table)
+ int __usb_serial_register_drivers(struct usb_serial_driver *const serial_drivers[],
+ 				  struct module *owner, const char *name,
++				  const char *mod_name,
+ 				  const struct usb_device_id *id_table);
+ void usb_serial_deregister_drivers(struct usb_serial_driver *const serial_drivers[]);
+ void usb_serial_port_softint(struct usb_serial_port *port);
 
 -- 
 2.56.1
