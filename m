@@ -1,51 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.112
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795059132;
-	b=S1kK1a1A1YZXon9fFiFq4BjSJcGdur3ok6TlkbmWwfWhsDdGONZ8ehVkfjwztB1G9jEO
-	 UHjBQgz2mzFf7wLzAGmM5APusJdbxW+9ELLC94h9EXyFsXSg2Ueh9hmYWkTWsEIW4sDf0
-	 riMea+DIFvzluWFZ1BDlnrephNr0fWpUkL/pxTzXBnPSFFr2ZzdZUlNdE+J2fww2vO6L3
-	 clInwOBafyso3ChMttVtnRT2rbAZ221+5Uo/nOvh2vn6hZGhJKz98Lzv7qdM/k1K6H4Tp
-	 sYMNxM8ET+uzeuFcudMM6mutsyBexL73w3G4YpVfg0i+4vKJOBHSRoRE4aBpe1FuVIg==
+	t=1795061350;
+	b=eVqMuzMlrn8C0R/WhTqc1m8L2mdiAjV8sL0hThPL6a/1xybdPF9YwHQ21wb7UIhGaUps
+	 elG5jk7Jx5fT2Z3Y2VpGoXg9ksBzMSKGaY9EOycZSkHVfRFEDwaFUeA3skLp20jy7oLYK
+	 Or3uVPeENY5atlkTxmsJHBOkXaqZsQXJmBBHPjT+hKmkPYq5II8iXzNUmY+385dsZIRWL
+	 +k+Z+cvWIW+d60ZtMXBf56u4FPk/4ZKMYddgFy1G77VxvoJ07W1E43lU16pVMbV/EJHu0
+	 mmUU7E7ReILecpukHiWiVEdHEU/SkFR4Q+9lNsyHcfaa8Dwdjm/rrv3Rw9oG52K+VRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795059132;
-	h=DMARC-Filter:DKIM-Signature:Cc:Mime-Version:From:Subject:In-Reply-To:
-	 Date:Message-Id:Content-Transfer-Encoding:References:X-Original-From:
-	 To:X-Lms-Return-Path:User-Agent:Content-Type;
-	bh=PJA8HI/26n09BDtdxwvrwKrlkq0uzVECslo8UM0vFOE=;
-	b=mwMM4ifN3e47Os7sv89DcLp2ld84Yo3x9SNRW/RHAMNOnkqyTmJKjQHGITdiDyIVCdho
-	 FcAKDBzQhbiHG2Vw+enbj+DISVYaI9EM34ncbc6PKXFPmmnEnshqaBFm0TXI+rd2QbiFg
-	 /YasxbqGlTwuhQUJ4ymn2+5j0l02djkkhd+p9t6Gcqqw8m4HGk/dC71sopAB+Ald1qrVU
-	 V/S1pbtb31ojSbUKmpW3Ms/8Jw7K+M9/j2trKMLcP3O62JEpmut8g/Or+Yl+5UMNjlLb4
-	 KrdYtLOfcIC9iH7q2dAVN0s4PfK4GIaVFbYkol5tHhuuD/L4+Tq7Ef/tY70f2CBCChw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795061350;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:User-Agent:X-stable:X-Patchwork-Hint:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=+fiS5lSjlv1XeLg4ntd5I5AZBbPipyB8eDsuBWBCVq8=;
+	b=PKQsBzs/fdQann098mW4mLdmZfbSqTGin57pdPG62wlrt4q0VQTWGqNSZ79BQ1vQhETA
+	 D42puy+Heqw1rLVLXjocu+Kh16EPGzH6mLiSZafH6CtDaE3iG9ylxbfu4iZCWeFSRS65Q
+	 OAKjO4LRPBDzjYDLtbPNpG0UIbNCWoxzdqHOEknI17qGHeYRoegDQoO71F9j0r8Q7I3MQ
+	 gFkykXUU96gSAzQ4gZCQ/NoEtNm1mwDsEuiN2cVjNZceet309LnTLlywvyKo2dBNvEn7t
+	 CGum4LmEVlmimBt4hav61qfqL8k14wtz4GuAr8Ni5RxbyMAKYLKN7tTtiHVLuAcFbnw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=pwIcxiyu;
-	arc=none smtp.remote-ip=209.127.230.112
-Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=M0OSyXlq;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42478606A31C
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 03:32:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 42478606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E875D606A32C;
+	Thu, 19 Nov 2026 04:09:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=pwIcxiyu
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1795059126; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=PJA8HI/26n09BDtdxwvrwKrlkq0uzVECslo8UM0vFOE=;
- b=pwIcxiyu58O8mtEa60Kd5PHF/aqExu1gO+sMih2b3/WHi55PHH/m53gFeaokF/bfpcURpa
- ibYacbeG4ja6S9EGC0mGjsgT7ACKfZpa8+pomwMnuCGkoo3++m3AA6AGJllBxAzl/BPpFq
- gbtSzE7Pl/ecLr5WSZucAqIT83ivSJlSRHaKbUggMiOSyL6BuB4gw8rwx2Xq+Ax9x0/VgP
- PLBx4ijd90kkfZHPm61rDtcCeKjTzTEI8QVPtZ86spKTrb5M9ykd+U36g2fO/TdrOGS1LB
- 8yahnIZSdGAaneXpkt+jVH8/iH6n2FlV+VhilUllr4FC4UFlFfE3PG2lmzG+gg==
-Cc: "Keith Busch" <kbusch@meta.com>, <linux-nvme@lists.infradead.org>, 
-	<linux-pci@vger.kernel.org>, <tglx@kernel.org>, 
-	<namjain@linux.microsoft.com>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=M0OSyXlq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D19A1F000C4;
+	Thu, 19 Nov 2026 04:09:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1795061349;
+	bh=+fiS5lSjlv1XeLg4ntd5I5AZBbPipyB8eDsuBWBCVq8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=M0OSyXlqUhkkyEHBNY5eUVuKkDS+ZAesuQjT+EVdVkokWbrCJ76NDK4lVlEstKGwX
+	 wmkKoRfyFCQ1VasDwKrsHnbr68uOOeyH57JmAO5FK2LkmRcz+W7VV7To0KYpkWltN8
+	 CiTB83mg6f4UR8HWs2y7RE9gIZ9Vv+V5vxYLBmU4=
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	patches@lists.linux.dev,
+	Terry Bowman <terry.bowman@amd.com>,
+	Robert Richter <rrichter@amd.com>,
+	Oliver OHalloran <oohall@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 5.10 1522/1848] PCI/AER: Forward RCH downstream port-detected errors to the CXL.mem dev handler
+Date: Wed, 18 Nov 2026 15:59:20 +0100
+Message-ID: <20261118150023.066942464@linuxfoundation.org>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261118145911.150052362@linuxfoundation.org>
+References: <20261118145911.150052362@linuxfoundation.org>
+User-Agent: quilt/0.69
+X-stable: review
+X-Patchwork-Hint: ignore
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -54,117 +68,224 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: "Fengnan" <changfengnan@bytedance.com>
-Subject: Re: [RFC PATCH 0/3] nvme-pci: dynamic interrupt moderation
-In-Reply-To: <8d42a690-79f7-4431-bffb-73decfc97dad@bytedance.com>
-Date: Thu, 19 Nov 2026 11:31:50 +0800
-Message-Id: <e5de8bb4-6605-47f0-98f0-d7246602e566@bytedance.com>
-Content-Transfer-Encoding: quoted-printable
-References: <20261013223543.395054-1-kbusch@meta.com> <16e8bc03-42c2-4bc8-bce9-dab49aad66b8@bytedance.com> <20261028150712.GA16374@lst.de> <auIRf1QATQjVDtkH@kbusch-mbp> <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.9ea1a2e5.340e.41d7.bbaa.69129ddcead9@bytedance.com> <8d42a690-79f7-4431-bffb-73decfc97dad@bytedance.com>
-X-Original-From: Fengnan <changfengnan@bytedance.com>
-To: "Keith Busch" <kbusch@kernel.org>, "Christoph Hellwig" <hch@lst.de>
-X-Lms-Return-Path: <lba+26afe6db4+9347c7+vger.kernel.org+changfengnan@bytedance.com>
-User-Agent: Mozilla Thunderbird
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-=E5=9C=A8 02/11/26 20:22, Fengnan =E5=86=99=E9=81=93:
+5.10-stable review patch.  If anyone has any objections, please let me know.
 
-Hi Keith:
+------------------
 
-Any comments?
+From: Robert Richter <rrichter@amd.com>
 
->=20
->=20
-> =E5=9C=A8 29/10/26 10:14, changfengnan =E5=86=99=E9=81=93:
->>
->>> From: "Keith Busch"<kbusch@kernel.org>
->>> Date:=C2=A0 Wed, Oct 28, 2026, 23:15
->>> Subject:=C2=A0 Re: [RFC PATCH 0/3] nvme-pci: dynamic interrupt moderati=
-on
->>> To: "Christoph Hellwig"<hch@lst.de>
->>> Cc: "Fengnan"<changfengnan@bytedance.com>, "Keith Busch"<kbusch@meta.co=
-m>, <linux-nvme@lists.infradead.org>, <linux-pci@vger.kernel.org>, <tglx@ke=
-rnel.org>, <namjain@linux.microsoft.com>
->>> On Wed, Oct 28, 2026 at 04:07:12PM +0100, Christoph Hellwig wrote:
->>>> On Thu, Oct 22, 2026 at 05:43:54PM +0800, Fengnan wrote:
->>>>> Hi Keith:
->>>>> =C2=A0
->>>>> I made some modifications to DIM and then implemented a solution
->>>>> using the DIM framework.=C2=A0
->>>>> Based on current testing, the results are now comparable to those of
->>>>> the previous patch.
->>>>> Here are the preliminary test results:
->>>>> https://docs.google.com/spreadsheets/d/1e8LQPnaDhmv50XlAM3XxI0TMQkhbk=
-0bTZwlJP1Hzzdk/edit?gid=3D188992110#gid=3D188992110
->>>>> =C2=A0
->>>>> If you agree with this approach, I=E2=80=99ll continue testing and op=
-timizing.
->>>> =C2=A0
->>>> =D0=86 can't speak for Keith, but I'd really love to see this going fo=
-rward!
->>> =C2=A0
->>> Same! This is a great problem to solve, but I'm just sorry I don't have
->>> more cycles to work on the cause. I can quickly respin the msix noflush
->>> pre-patches to address the naming issues tglx mentioned, and we can tak=
-e
->>> nvme in whichever direction has the best performance.
->>> =C2=A0
->>
->> That sounds good.
->> I'm currently working on continuously optimizing and testing both
->> approaches (using DIM and not using DIM).=C2=A0
->> I plan to update the code and add new data again next Monday.
->>
->> Thanks.
->=20
->=20
-> Hi Keith and Christoph,
->=20
-> I've prepared two implementations of adaptive IRQ polling: one reusing
-> the DIM tuning state machine and one using an NVMe-specific policy.
->=20
-> I tested both with a 158-case fio matrix and additional latency and
-> CPU-contention tests. The results show broadly similar throughput gains
-> over their respective OFF baselines in the tested workloads.
->=20
-> Test data:
-> [1] Non-DIM version:
-> https://docs.google.com/spreadsheets/d/17kmXH9Zkr2jrN-19BwaInSx53HwOdRPJF=
-rZ-Hjlk0_Y/edit?gid=3D300100#gid=3D300100
->=20
-> [2] DIM version:
-> https://docs.google.com/spreadsheets/d/18JADnBXWAGkffY_3LsPJ6ftA9DGH6qpNb=
-KvP-lQWLnE/edit?gid=3D300200#gid=3D300200
->=20
-> Both implementations are opt-in and choose between IRQ completion and
-> timer-driven polling per I/O queue. They evaluate samples of at least
-> 32,768 completions and use a target polling interval of 10 us. A polling
-> trial must improve the completion rate by more than 1%. Once successful,
-> polling can continue while its rate stays within roughly 1% of the saved
-> IRQ baseline, subject to a completion-progress guard.
->=20
-> Neither implementation uses I/O latency as a tuning metric.
->=20
-> The non-DIM implementation uses explicit rules inside the NVMe driver.
-> It admits polling trials at an IRQ completion rate of about 100k
-> completions/s per queue and applies a fixed completion-count backoff
-> after three consecutive failures.
->=20
-> The DIM implementation uses IRQ and POLL as two profiles. It explores
-> polling without that fixed admission threshold and requires a trial
-> to gain more than both 1% and one completion/ms. While parked on IRQ,
-> it increases the wait between trials from 1 to 2, 4, 8 and then 16 valid
-> IRQ samples. It also discards stale samples and stops the polling timer
-> when the queue drains.
->=20
-> During development, I felt that the version with `dim` required more
-> rules to achieve a similar effect. So, I still prefer the version
-> without `dim` because it=E2=80=99s simpler, easier to understand, and eas=
-ier
-> to maintain.
->=20
-> Which approach would you prefer?
->=20
->=20
-> All the patches are in the attachment.
+[ Upstream commit 0a867568bb0d203ca3d28634a611a1367d7c892d ]
+
+In Restricted CXL Device (RCD) mode a CXL device is exposed as an
+RCiEP, but CXL downstream and upstream ports are not enumerated and
+not visible in the PCIe hierarchy. [1] Protocol and link errors from
+these non-enumerated ports are signaled as internal AER errors, either
+Uncorrectable Internal Error (UIE) or Corrected Internal Errors (CIE)
+via an RCEC.
+
+Restricted CXL host (RCH) downstream port-detected errors have the
+Requester ID of the RCEC set in the RCEC's AER Error Source ID
+register. A CXL handler must then inspect the error status in various
+CXL registers residing in the dport's component register space (CXL
+RAS capability) or the dport's RCRB (PCIe AER extended
+capability). [2]
+
+Errors showing up in the RCEC's error handler must be handled and
+connected to the CXL subsystem. Implement this by forwarding the error
+to all CXL devices below the RCEC. Since the entire CXL device is
+controlled only using PCIe Configuration Space of device 0, function
+0, only pass it there [3]. The error handling is limited to currently
+supported devices with the Memory Device class code set (CXL Type 3
+Device, PCI_CLASS_MEMORY_CXL, 502h), handle downstream port errors in
+the device's cxl_pci driver. Support for other CXL Device Types
+(e.g. a CXL.cache Device) can be added later.
+
+To handle downstream port errors in addition to errors directed to the
+CXL endpoint device, a handler must also inspect the CXL RAS and PCIe
+AER capabilities of the CXL downstream port the device is connected
+to.
+
+Since CXL downstream port errors are signaled using internal errors,
+the handler requires those errors to be unmasked. This is subject of a
+follow-on patch.
+
+The reason for choosing this implementation is that the AER service
+driver claims the RCEC device, but does not allow it to register a
+custom specific handler to support CXL. Connecting the RCEC hard-wired
+with a CXL handler does not work, as the CXL subsystem might not be
+present all the time. The alternative to add an implementation to the
+portdrv to allow the registration of a custom RCEC error handler isn't
+worth doing it as CXL would be its only user. Instead, just check for
+an CXL RCEC and pass it down to the connected CXL device's error
+handler. With this approach the code can entirely be implemented in
+the PCIe AER driver and is independent of the CXL subsystem. The CXL
+driver only provides the handler.
+
+[1] CXL 3.0 spec: 9.11.8 CXL Devices Attached to an RCH
+[2] CXL 3.0 spec, 12.2.1.1 RCH Downstream Port-detected Errors
+[3] CXL 3.0 spec, 8.1.3 PCIe DVSEC for CXL Devices
+
+Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+Signed-off-by: Robert Richter <rrichter@amd.com>
+Cc: Oliver O'Halloran <oohall@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Link: https://lore.kernel.org/r/20231018171713.1883517-18-rrichter@amd.com
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Stable-dep-of: e86ac10110d0 ("PCI/AER: Fix struct pci_dev reference leak in aer_process_err_devices()")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/pcie/Kconfig |  9 ++++
+ drivers/pci/pcie/aer.c   | 93 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 100 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 45a2ef702b45b..c38789da37ac6 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -45,6 +45,15 @@ config PCIEAER_INJECT
+ 	  gotten from:
+ 	     https://www.kernel.org/pub/linux/utils/pci/aer-inject/
+ 
++config PCIEAER_CXL
++	bool "PCI Express CXL RAS support"
++	default y
++	depends on PCIEAER && CXL_PCI
++	help
++	  Enables CXL error handling.
++
++	  If unsure, say Y.
++
+ #
+ # PCI Express ECRC
+ #
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 688b9e7345380..c46ad6e868f27 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -935,14 +935,97 @@ static bool find_source_device(struct pci_dev *parent,
+ 	return true;
+ }
+ 
++#ifdef CONFIG_PCIEAER_CXL
++
++static bool is_cxl_mem_dev(struct pci_dev *dev)
++{
++	/*
++	 * The capability, status, and control fields in Device 0,
++	 * Function 0 DVSEC control the CXL functionality of the
++	 * entire device (CXL 3.0, 8.1.3).
++	 */
++	if (dev->devfn != PCI_DEVFN(0, 0))
++		return false;
++
++	/*
++	 * CXL Memory Devices must have the 502h class code set (CXL
++	 * 3.0, 8.1.12.1).
++	 */
++	if ((dev->class >> 8) != PCI_CLASS_MEMORY_CXL)
++		return false;
++
++	return true;
++}
++
++static bool cxl_error_is_native(struct pci_dev *dev)
++{
++	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
++
++	return (pcie_ports_native || host->native_aer);
++}
++
++static bool is_internal_error(struct aer_err_info *info)
++{
++	if (info->severity == AER_CORRECTABLE)
++		return info->status & PCI_ERR_COR_INTERNAL;
++
++	return info->status & PCI_ERR_UNC_INTN;
++}
++
++static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
++{
++	struct aer_err_info *info = (struct aer_err_info *)data;
++	const struct pci_error_handlers *err_handler;
++
++	if (!is_cxl_mem_dev(dev) || !cxl_error_is_native(dev))
++		return 0;
++
++	/* protect dev->driver */
++	device_lock(&dev->dev);
++
++	err_handler = dev->driver ? dev->driver->err_handler : NULL;
++	if (!err_handler)
++		goto out;
++
++	if (info->severity == AER_CORRECTABLE) {
++		if (err_handler->cor_error_detected)
++			err_handler->cor_error_detected(dev);
++	} else if (err_handler->error_detected) {
++		if (info->severity == AER_NONFATAL)
++			err_handler->error_detected(dev, pci_channel_io_normal);
++		else if (info->severity == AER_FATAL)
++			err_handler->error_detected(dev, pci_channel_io_frozen);
++	}
++out:
++	device_unlock(&dev->dev);
++	return 0;
++}
++
++static void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
++{
++	/*
++	 * Internal errors of an RCEC indicate an AER error in an
++	 * RCH's downstream port. Check and handle them in the CXL.mem
++	 * device driver.
++	 */
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
++	    is_internal_error(info))
++		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
++}
++
++#else
++static inline void cxl_rch_handle_error(struct pci_dev *dev,
++					struct aer_err_info *info) { }
++#endif
++
+ /**
+- * handle_error_source - handle logging error into an event log
++ * pci_aer_handle_error - handle logging error into an event log
+  * @dev: pointer to pci_dev data structure of error source device
+  * @info: comprehensive error information
+  *
+  * Invoked when an error being detected by Root Port.
+  */
+-static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
++static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int aer = dev->aer_cap;
+ 
+@@ -966,6 +1049,12 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+ 		pcie_do_recovery(dev, pci_channel_io_normal, aer_root_reset);
+ 	else if (info->severity == AER_FATAL)
+ 		pcie_do_recovery(dev, pci_channel_io_frozen, aer_root_reset);
++}
++
++static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
++{
++	cxl_rch_handle_error(dev, info);
++	pci_aer_handle_error(dev, info);
+ 	pci_dev_put(dev);
+ }
+ 
+-- 
+2.53.0
+
+
+
