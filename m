@@ -1,46 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795029015;
-	b=ewJ8/ENjIRPbqKI8MV5hTbkH8yJgEk0Fxc1QQ5Py2h2XWqpPdOA5kIDiBufVel+DmW1y
-	 jboorb+8wzyHWHVCi2N2Q7qOpp1YWmnw2YSS9c8U/honuwe5iA+HFn/E4x6WiwSWerN2v
-	 s86giYXocd4aLvF3mQsPHfOFsNC3lPlbCVYb0kuJHujcoouGitlnj519VSTWrxb+9B2+5
-	 XXM3PjG//RCflmLav2tGlb4re1XjWAhIqfulADLf3XcUhab5sAj6WufOmMQpHsZ7tsjLn
-	 BSMBLTXW7hRkJyAOGSKRO318j2Hd7E/unYNSG9q3HGqUh8Dk+MX008aep1VdyZhdz3w==
+	t=1795029259;
+	b=q+V/7Lmvj2dT77K23c+M3T39ChYoyQLH+FW3SyMqNihfFrL+KbkU9jDQgUFumyZZO04l
+	 QYKrqhpsVnHXoKfBObQXP+lruBJhnUtyDWurdfiVERIzJvwAF2fnPVzmPGzyajJn3jPVM
+	 MAvWsdz+6nF/zT5M0nBXZXtIuE/CyBBK6uVRSXCbrJ31/JOHc8oNGUDQvcOSp8rLlv/ET
+	 o4xW88466ENVvcfvu4A3EyWMWz2xmf2lQLWwAm7T/P+pYQyCsmbnUcqHnsn0Vj8y5OmlU
+	 kZTeghyn0Ido1b9HG/hOU3Hx0HG/ggYhjdEz3Q0W3Aq9hSlBKG+qUp1XERKQ45G4K7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795029015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795029259;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=iMRUsGYu7zSEFYynNiT3pkVIolltTYn1kN2e3iJRjP4=;
-	b=IltnEzPskj44FbW/N9uF5PyT/CITWvJ6/OoMDS2c4brjI/4vlykKI5dl+mqxzLjFv4Fn
-	 BFoTh/e/AYPKCGvTuIm11oSNNIT4lzttmG5ul1TWC7NeNJ6nC7tlRpkXUV6maANTj4JHf
-	 3qK3WdEqok3lgJtkhI9TQubZBzkqNA+W09Kl22n7jZwPmz1uqrMBJdC01JShbk/tKso3h
-	 OJeb2CP2cUhtrTXTNG7wEG98YEl4j5hDivR7Ok4ll7V9pS+qMlN8A1Ug8QaHrp26gEOBl
-	 If4goVgqNWGaUqLwtKluANUVHiCKs17vhaw1VeqFx+48NK6jir0skOlbKhehs/JlYnQ==
+	bh=d9SMOsxwAFQZaUBngPgxh+BWRFva5JtsprMZmImAyMc=;
+	b=H/CctYTdGOiJP+/Pg5lb4jfvNfP8yQI7Uj3GbNK56i5jiGlsuSzWzVsc5oQp65g5DpOD
+	 519YAzmu8jYpBBnMSteJm8Ow70xCeTJNTaihvBuORipd6aX4J9eWGsgOjchZmRQ/arScC
+	 RE3E4eeF+LiYUVoybnLm9Fvkd/wLfgztPwlGyzvLaxxGoHkX9gjZLe30eVkCDIpyA6Ff6
+	 6KOK5S0o/crljwVvyvDsz7PUs5enm/NgKu+1tKtyE+ehOXhjVBuFijn20SB2zq3EeQbBU
+	 u05Fxh1F0QOrK3g9+jUhv+NMQJ2QMHu0ib+rVCXWnhh9xEavH8NVlJqlu49NrzfOWyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N5Jph70J;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VxoeVWsw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4095C606A339;
-	Wed, 18 Nov 2026 19:10:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE3B606A31C;
+	Wed, 18 Nov 2026 19:14:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N5Jph70J
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD5081F000C4;
-	Wed, 18 Nov 2026 19:10:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VxoeVWsw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0AF51F000C4;
+	Wed, 18 Nov 2026 19:14:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795029015;
-	bh=iMRUsGYu7zSEFYynNiT3pkVIolltTYn1kN2e3iJRjP4=;
+	s=k20260515; t=1795029259;
+	bh=d9SMOsxwAFQZaUBngPgxh+BWRFva5JtsprMZmImAyMc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=N5Jph70JX2LYHDXBMhrdOmmHoE8hVNOQFsb0hD8QdJi5/HOJWMOWiILiGvRyS1xko
-	 TYl8bryWfX649pvRtKP3OuUQLCY43WdJo6ES1ssjR6HL7W1Pe2MonCKbHUT3wFoXet
-	 2Z/FI0yiiDwAwcCdHNWjtNP+PI/HMNp0VcQ6fsQVv7VlL/W+3M6ng8HiZQLY4s9az0
-	 k44AVz0RsKIL2XEPtOV6t+CDqoZ6czFpIWR5Etk78FYZ6ggNhpZvY4LrhR78vAOMhf
-	 +s7YaQykImzKFE5dj4WS/53WLMgCSKEuq/ymS0dhIYGrw6plUoYDkILvR9xTI0GgXz
-	 0kWdY5+Vt60rw==
-Date: Wed, 18 Nov 2026 19:10:03 +0000
+	b=VxoeVWswVKJ9uEK5QYTOLpSc/fG1ejiOdRS9ttIaxvwDjkbx+fjATQoIvZarZK5Cr
+	 30BaMKHJoZpLs0TqJQ4KjckA9GnwiI96q2cSEqA85pWEgY/3QBJhLZb0Hn1X1vicLX
+	 aDOcOvlF6cn6ceiorWrs31apZUXj7aELEInkTtjYkp3l6ZtIzCZqJJ82TM9yllYjg2
+	 KGokbS+cmhTz2BxpxZj5B1KPuHCJi74n908Uz8seXJfpXOOR+67Rtimd+mBJzJZZnv
+	 uzXK52FpqEtPGxEmJEKo5kD9xygQ852Tw0g8oaUipdAbx8Y3bJ5AqunBoOvaLt3xe4
+	 MkCUysXXoCmAw==
+Date: Wed, 18 Nov 2026 19:14:08 +0000
 From: Jonathan Cameron <jic23@kernel.org>
 To: Pierre Gondois <pierre.gondois@arm.com>
 Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
@@ -54,20 +54,21 @@ Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
  <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, Bjorn
  Helgaas <bhelgaas@google.com>, Maciej Wieczor-Retman
  <maciej.wieczor-retman@intel.com>, Pawel Chmielewski
- <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>,
- Avadhut Naik <avadhut.naik@amd.com>, "Fabio M. De Francesco"
- <fabio.m.de.francesco@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>,
- Kai-Heng Feng <kaihengf@nvidia.com>, Breno Leitao <leitao@debian.org>, Dan
- Williams <djbw@kernel.org>, Terry Bowman <terry.bowman@amd.com>,
+ <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, Qiuxu
+ Zhuo <qiuxu.zhuo@intel.com>, Radu Rendec <radu@rendec.net>, Avadhut Naik
+ <avadhut.naik@amd.com>, Dave Jiang <dave.jiang@intel.com>, Kai-Heng Feng
+ <kaihengf@nvidia.com>, "Fabio M. De Francesco"
+ <fabio.m.de.francesco@linux.intel.com>, Breno Leitao <leitao@debian.org>,
+ Dan Williams <djbw@kernel.org>, Terry Bowman <terry.bowman@amd.com>,
  linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
  linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
  acpica-devel@lists.linux.dev
-Subject: Re: [PATCH v1 04/19] ACPI: APEI: Use empty FRU values if valid bit
- is absent
-Message-ID: <20261118191003.5a4a2ddd@jic23-hlaptop>
-In-Reply-To: <20261117111444.4185512-5-pierre.gondois@arm.com>
+Subject: Re: [PATCH v1 06/19] ACPI: APEI: Remove aer allocation in
+ ghes_handle_aer()
+Message-ID: <20261118191408.2005b091@jic23-hlaptop>
+In-Reply-To: <20261117111444.4185512-7-pierre.gondois@arm.com>
 References: <20261117111444.4185512-1-pierre.gondois@arm.com>
-	<20261117111444.4185512-5-pierre.gondois@arm.com>
+	<20261117111444.4185512-7-pierre.gondois@arm.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,60 +82,47 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Tue, 17 Nov 2026 12:10:14 +0100
+On Tue, 17 Nov 2026 12:10:16 +0100
 Pierre Gondois <pierre.gondois@arm.com> wrote:
 
-> When a status block contains multiple sections, a section without valid
-> FRU fields inherits pointers from the preceding section.
-
-Perhaps rewrite that so it is clear you are referring to the
-implementation of the parser not spec requirement for it to get
-them from previous section. That had me briefly confused -
-I even wondered why I'd never noticed that requirement :)
-
+> aer_recover_queue() now copies the input aer_regs instead of
+> storing a pointer to the struct. Use a local variable to pass
+> aer_regs in ghes_handle_aer() and remove the memory allocation
+> introduced by:
+> commit e2abc47a5a1a ("ACPI: APEI: Fix AER info corruption when error
+> status data has multiple sections")
 > 
-> Use empty fru_id and fru_text values whenever the matching VALID
-> bit is not set instead of reusing the value of the previous loop.
+> No functional change intended.
 > 
 > Signed-off-by: Pierre Gondois <pierre.gondois@arm.com>
-Fixes tag seems appropriate for this one given it may be reporting
-confusing or invalid data today.  Probably not a thing to rush
-into stable but nice to tag it anyway.
+Just one trivial thing.
 
-With that small reword above.
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+I didn't bother figuring out impact of the change discussed on previous
+patch on this one, so no tags for this version.
 
-> ---
->  drivers/acpi/apei/ghes.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index 703f3b7f700a6..444d8e82353a7 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-> @@ -979,8 +979,8 @@ static void ghes_do_proc(struct ghes *ghes,
->  	int sev, sec_sev;
->  	struct acpi_hest_generic_data *gdata;
->  	guid_t *sec_type;
-> -	const guid_t *fru_id = &guid_null;
-> -	char *fru_text = "";
-> +	const guid_t *fru_id;
-> +	const char *fru_text;
->  	bool queued = false;
->  	bool sync = is_hest_sync_notify(ghes);
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index 57406494ec1f7..d7ef84e3b988e 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -32,7 +32,6 @@
+>  #include <linux/slab.h>
+>  #include <linux/vmcore_info.h>
+>  #include <acpi/apei.h>
+> -#include <acpi/ghes.h>
+>  #include <ras/ras_event.h>
 >  
-> @@ -990,9 +990,13 @@ static void ghes_do_proc(struct ghes *ghes,
->  		sec_sev = ghes_severity(gdata->error_severity);
->  		if (gdata->validation_bits & CPER_SEC_VALID_FRU_ID)
->  			fru_id = (guid_t *)gdata->fru_id;
-> +		else
-> +			fru_id = &guid_null;
->  
->  		if (gdata->validation_bits & CPER_SEC_VALID_FRU_TEXT)
->  			fru_text = gdata->fru_text;
-> +		else
-> +			fru_text = "";
->  
->  		ghes_log_hwerr(sev, sec_type);
->  		if (guid_equal(sec_type, &CPER_SEC_PLATFORM_MEM)) {
+>  #include "../pci.h"
+> @@ -1413,18 +1412,15 @@ static DECLARE_WORK(aer_recover_work, aer_recover_work_func);
+>   * @severity: AER_CORRECTABLE, AER_NONFATAL or AER_FATAL
+>   * @aer_regs: snapshot of the device's AER Capability registers
+>   *
+> - * Queue an error record received from firmware through APEI GHES.  The
+> - * record is processed later from a workqueue, which logs the error and,
+> + * Queue an error record received from firmware. The record is processed
+> + * later from a workqueue, which logs the error and,
+>   * for uncorrectable errors, attempts recovery of the device.
+
+Whilst noisier, you should probably still rewrap that last line.
+
+>   *
 
