@@ -1,107 +1,75 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795030162;
-	b=H02fUXr4PS14D5X8rJ4K+l/YocePioZWW7bHE+RU7Idt1NQROi0AMF9OV1bFf/7ZWssW
-	 36jE8zGl4ZRETwKVoKNDUGgYd06gd5Hflcny36aV1b0NrLtl5Xb74t2J3GXWziPGiSyEw
-	 JKzT0AXqt8gk+clkCbyfqxhQCB9wWKiPaEF1jdiCgZZwsgUg71aviH3OpHEUMwV5uRsdm
-	 A1qRdtKdmuUTX4vI6EuNtyQQRh+mJ9qsmqUjXr4OW4TtiBVyeVEFd2n6u/2XH1kIyxyyo
-	 tZU8Isa5EFdsH3+QOYvGCplxddQ12KNeLHh4svXvWK3FcqC5cYjyVdx4dkKy9F/BVZw==
+	b=rp6Hw8igXrIIJngig2Ng/c0OSqWlYL3St/OGhLuI1ipbpx7BWB43N0pSEC4USzQcxJyd
+	 zzt4XbjdAPWN+qdxkQC5gb5yhB8ZHyd8mMmDXjsX1il1cCPh96eeDmeS+F6IAKQ8wNfzQ
+	 9zcgKnqFqMeVeDZPzCkuHx5QkudzA6iSzXhi+SQduTyjZy5kzHMgCwsQjKXxCbeZ/gcsY
+	 DAFIRtB5ur6EWOwJsyBVF58YdWKlQS8kvP8Ns6c+FUFv601yIbl4+OmAlvlHpuNtWrqo7
+	 efJii/3q+wF1/g6kns3jztjk6hu/Jt6v9zgAjRNtxnM9xyyR6Nbo6H65LYjstOffoEQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795030162;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=izaoDFFlfbOL5o2AeSm9ffJ1CFTRgMmeFIApGBCueOM=;
-	b=hZcm7q6Dlug/YsyiD23dperFf+HJESmqxXDxCUh2OHt+QmEJVUAXagAncEViaki6e40Q
-	 vy8zGncOZVEC79w3z3SldaabivhF9Q77fOr5OlSR2f22NAN2rUyIhduMoxQGn3DxGsXIe
-	 ShHFqPCPMbFUECbTNPdzvosD2Cn3eiJ7CqkyS1XeJRLIjuRFxqRSRhJdF5FC/+4NI+2PF
-	 6r4/frQy2bb7Vs9Fth1SN0XX2iWAQ4h7v0sqE/IQNsXryQy8fcql2XCiQt6JJi46N9h6F
-	 SceOGvQqJbudoQ5HzWLvV+ipwTqs42V22I9DMNS3q/wXv7HKtHB1L4+hUkPWFQ4BP8Q==
+	bh=JJVam/uvZJBrgEkalBet5PVx2RW+nfigUefm/MSs4n4=;
+	b=BzrdTu2zJRbhkLb3YtP4CNNfsusJlm9Zu5BA1mtgDHNRt1dZLsKfBaCAbJfFOguaL2+2
+	 moGQ0KkPn4jOIqPr+B1ada8+tLJJhkwJcvihSPKYjsTo4DISiBpWoKMnSYUjJd62j4Eds
+	 HaTkORaD26uzN54THnAy4O2HiVI+K3DUL7HfJqRuYsdJsDguVolLl56DYCK+XNZCoDi8p
+	 nOmx3W6Xzsqmx6inrmV5S8AYP6e/41fAPdH4DKWc3EZEoHtwGZ1zEgA7uZU12Zu04Krn4
+	 rMDLH6t63mP5PfrXztK340Z4sTyPPDG6XtWzORWpyb7fLIyKwbaFmzWQ+3zwEDFeciQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XUBWeYSk;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EQMF2R9P;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E76BF606C718;
-	Wed, 18 Nov 2026 19:29:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F12E60A3819;
+	Wed, 18 Nov 2026 19:29:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XUBWeYSk
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC2AE1F000C6;
-	Wed, 18 Nov 2026 19:29:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EQMF2R9P
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A260E1F000C9;
+	Wed, 18 Nov 2026 19:29:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795030161;
-	bh=izaoDFFlfbOL5o2AeSm9ffJ1CFTRgMmeFIApGBCueOM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=XUBWeYSkdFLuQxucZ3b0go3s7CrVcxZ9UvMssUSShGSltmRmQnC5bZE6Zxln+wBx9
-	 PTYYuY4j7u9YAxAwixjxxwGaZjxX3BDJ/PX/7dl7H49TgUSGZoUXDO4wYC3nnn0OCN
-	 xfpO/BHVb8j7fO4GWedms5W7YE9L1hAKLabqLKS1eofblH0HRrQe5Dws5tXzNTDOf7
-	 qET96OZ6XY8g+ZM1Qypj/mCx3dcJagkIakQBlGKGD6Ku86l6H93cNNy0Um2fY+Xcay
-	 FJyu6SVLOOI2L7Y1Z4nxFG2vSg3jBVufXxpR9L9YaIriJFoMjSIq7WHXV63zJ6maFR
-	 Ie/RqNFr05XTA==
-From: Leon Romanovsky <leon@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	Chris Lu <chris.lu@mediatek.com>,
-	Mans Rullgard <mans@mansr.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Jaroslav Kysela <perex@perex.cz>,
-	Takashi Iwai <tiwai@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Cornelia Huck <cornelia.huck@de.ibm.com>,
-	Andrew Morton <akpm@osdl.org>,
-	Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-coco@lists.linux.dev,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-sound@vger.kernel.org,
-	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v3 29/31] USB: Retain the result of configuration requests
-Date: Wed, 18 Nov 2026 21:26:59 +0200
-Message-ID: <20261118-device-trust-core-v3-29-d655875c4bfb@nvidia.com>
-X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
-References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
+	s=k20260515; t=1795030162;
+	bh=JJVam/uvZJBrgEkalBet5PVx2RW+nfigUefm/MSs4n4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=EQMF2R9PZs0N8mIRRWGUD6gKWClhjyEwi9hhRXRFtask4MefFvRdlvqwYTEdjfgeF
+	 SgPtKyzPxKDwpHVxzuWZyNdx4JouHyyJzK3IOsr2j/6Ms7mqp0oiVGBVChQJV6tvXe
+	 la0Z9shVkj7Bws2hWiErxteYhdqmvkCSa+5mkHUYkvUs9NcxLJvjUEh16y6LWyFUJw
+	 Y3pKsewHD11SrmLztX4KnTLxtg0sg1w2jXuYLcgzJQ79JByvIMOl00exu90tdFgzs9
+	 AfaOFNXGCJsymqIA7Ku29q7STnqQytuQgb53dcdy8XI7aaLRpbSsjmM4uMV67xfD1g
+	 mUFQohWucDh2g==
+Date: Wed, 18 Nov 2026 19:29:12 +0000
+From: Jonathan Cameron <jic23@kernel.org>
+To: Pierre Gondois <pierre.gondois@arm.com>
+Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
+ James Morse <james.morse@arm.com>, Mark Brown <broonie@kernel.org>, Thomas
+ Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
+ <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+ "H. Peter Anvin" <hpa@zytor.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>, Hanjun Guo
+ <guohanjun@huawei.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Shuai
+ Xue <xueshuai@linux.alibaba.com>, Mahesh J Salgaonkar
+ <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, Bjorn
+ Helgaas <bhelgaas@google.com>, Maciej Wieczor-Retman
+ <maciej.wieczor-retman@intel.com>, Pawel Chmielewski
+ <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, Radu
+ Rendec <radu@rendec.net>, Avadhut Naik <avadhut.naik@amd.com>, Kai-Heng
+ Feng <kaihengf@nvidia.com>, "Fabio M. De Francesco"
+ <fabio.m.de.francesco@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Breno Leitao <leitao@debian.org>, Terry Bowman <terry.bowman@amd.com>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+ acpica-devel@lists.linux.dev
+Subject: Re: [PATCH v1 08/19] ACPI: extlog: Align extlog_print_pcie() and
+ ghes_handle_aer()
+Message-ID: <20261118192912.7c222427@jic23-hlaptop>
+In-Reply-To: <20261117111444.4185512-9-pierre.gondois@arm.com>
+References: <20261117111444.4185512-1-pierre.gondois@arm.com>
+	<20261117111444.4185512-9-pierre.gondois@arm.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -111,85 +79,82 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.15-dev-18f8f
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-From: Leon Romanovsky <leonro@nvidia.com>
+On Tue, 17 Nov 2026 12:10:18 +0100
+Pierre Gondois <pierre.gondois@arm.com> wrote:
 
-The generic USB device driver can bind successfully even when setting its
-configuration fails. Authorization that attaches this driver therefore
-cannot use the attachment result to report configuration errors or decide
-whether setup can be retried.
+> In order to unify extlog_print_pcie() with ghes_handle_aer() and
+> prepare to remove one of the functions, align the behaviour of the
+> 2 functions. Thus:
 
-Retain the last configuration result for callers holding the device lock.
-Keep driver binding successful so userspace can recover by selecting
-another configuration.
+Say which function you are changing.
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- drivers/usb/core/message.c | 12 +++++++++++-
- include/linux/usb.h        |  2 ++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+> - Submit the decoded snapshot through aer_recover_queue() instead of
+>   just printing the error.
 
-diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-index b8e2d864faa46..0a022ce8739c2 100644
---- a/drivers/usb/core/message.c
-+++ b/drivers/usb/core/message.c
-@@ -2042,6 +2042,8 @@ static bool usb_has_claimant(struct usb_device *dev,
- 	return false;
- }
- 
-+static int usb_set_configuration_internal(struct usb_device *dev, int configuration);
-+
- /*
-  * usb_set_configuration - Makes a particular device setting be current
-  * @dev: the device whose configuration is being updated
-@@ -2089,6 +2091,15 @@ static bool usb_has_claimant(struct usb_device *dev,
-  * drivers currently known to the kernel.
-  */
- int usb_set_configuration(struct usb_device *dev, int configuration)
-+{
-+	int ret = usb_set_configuration_internal(dev, configuration);
-+
-+	dev->config_error = ret;
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(usb_set_configuration);
-+
-+static int usb_set_configuration_internal(struct usb_device *dev, int configuration)
- {
- 	int i, ret;
- 	struct usb_host_config *cp = NULL;
-@@ -2349,7 +2360,6 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
- 	usb_autosuspend_device(dev);
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(usb_set_configuration);
- 
- static LIST_HEAD(set_config_list);
- static DEFINE_SPINLOCK(set_config_lock);
-diff --git a/include/linux/usb.h b/include/linux/usb.h
-index a5e706f67f33a..d372712eba34c 100644
---- a/include/linux/usb.h
-+++ b/include/linux/usb.h
-@@ -599,6 +599,7 @@ struct usb3_lpm_parameters {
-  * @descriptor: USB device descriptor
-  * @bos: USB device BOS descriptor set
-  * @config: all of the device's configs
-+ * @config_error: Result of the last configuration request.
-  * @actconfig: the active configuration
-  * @ep_in: array of IN endpoints
-  * @ep_out: array of OUT endpoints
-@@ -686,6 +687,7 @@ struct usb_device {
- 	struct usb_host_config *config;
- 
- 	struct usb_host_config *actconfig;
-+	int config_error;
- 	struct usb_host_endpoint *ep_in[16];
- 	struct usb_host_endpoint *ep_out[16];
- 
+That's a major functional change.  I'm kind of making the assumption
+that something handled the aer recovery previously that wasn't via
+this path?  So do we now handle it twice?  I can't figure out how
+this works on systems using extlog but it is certainly a bold change to make :)
 
--- 
-2.56.1
+
+> - Override the mapped AER severity with AER_FATAL when CPER_SEC_RESET
+>   is set so the AER worker selects the frozen-channel recovery path
+>   when it finds an unmasked uncorrectable error.
+> 
+> Signed-off-by: Pierre Gondois <pierre.gondois@arm.com>
+> ---
+>  drivers/acpi/acpi_extlog.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
+> index 125f7931b98bc..e09ea571c32f5 100644
+> --- a/drivers/acpi/acpi_extlog.c
+> +++ b/drivers/acpi/acpi_extlog.c
+> @@ -8,9 +8,11 @@
+>  
+>  #include <linux/module.h>
+>  #include <linux/acpi.h>
+> +#include <linux/aer.h>
+>  #include <linux/cper.h>
+>  #include <linux/ratelimit.h>
+>  #include <linux/edac.h>
+> +#include <linux/pci.h>
+>  #include <linux/ras.h>
+>  #include <cxl/event.h>
+>  #include <acpi/ghes.h>
+> @@ -138,7 +140,6 @@ static void extlog_print_pcie(struct acpi_hest_generic_data *gdata)
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+>  	struct cper_sec_pcie *pcie_err = acpi_hest_get_payload(gdata);
+>  	struct aer_capability_regs aer_regs = {};
+> -	struct pci_dev *pdev;
+>  	unsigned int devfn;
+>  	unsigned int bus;
+>  	int aer_severity;
+> @@ -156,6 +157,9 @@ static void extlog_print_pcie(struct acpi_hest_generic_data *gdata)
+>  		return;
+>  
+>  	aer_severity = cper_severity_to_aer(gdata->error_severity);
+> +	/* A component reset by firmware needs reinitialization. */
+> +	if (gdata->flags & CPER_SEC_RESET)
+> +		aer_severity = AER_FATAL;
+>  
+>  	aer_cap_regs_unpack(&aer_regs, pcie_err->aer_info, sizeof(pcie_err->aer_info));
+>  
+> @@ -163,12 +167,7 @@ static void extlog_print_pcie(struct acpi_hest_generic_data *gdata)
+>  	bus = pcie_err->device_id.bus;
+>  	devfn = PCI_DEVFN(pcie_err->device_id.device,
+>  			  pcie_err->device_id.function);
+> -	pdev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+> -	if (!pdev)
+> -		return;
+> -
+> -	pci_print_aer(pdev, aer_severity, &aer_regs);
+> -	pci_dev_put(pdev);
+> +	aer_recover_queue(domain, bus, devfn, aer_severity, &aer_regs);
+>  #endif
+>  }
+>  
 
