@@ -1,112 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794972666;
-	b=2ekSnjkg5QWM6/SRHUXcSw0gxPHsMOf899inRSlsvjnzw4eLNY4uCCiDyCTdGCLkqhz5
-	 CiB008WO3uCCaHdM8gO2L1cbHYMN/yuvcvcZMHGYy28a2b0I26DzBnY/kucnDvK4JSMM8
-	 7FszHMMXC7YohPezdOxuBPWsvLTxP/R0ZomAmV7u8vQkE/aHUH0jTr280bHSjgc+yGLeb
-	 MnBHVwzQt4N8Qn4Tzz9cQnSQ+JkzIo8LUmcTNvUvJ9MjTI5XiAefYOyvv4kR15f6c62tL
-	 8tqynogiqCwdJf7OqHQE4ds+sdasVNbYS9Tgl5ppwVqij53FHPZCRPda5xnBeK6soFA==
+	t=1794981170;
+	b=O0kwZXswD+f/CYvJ5/I2KKxHaAG62uf9kcWymoQaaLSNZsC3CQSJGu9mGTR80jgJjz5s
+	 0VbTfmSQEz3EeZHnNr83ihx4AbLzVKkSNdKB4SvVLWZjie4OOSH8RK3zwnftQVeS+bkcq
+	 GvbPFZ+it2TtjGrvKV/J3fqqC0lrI2A5ZbylINJTs9n19XQzSb/7I6JvNtwiD1nTl0CTH
+	 zI+4LtcU1LNFGbGf0pfCjuLuZQu/PxPgutPRnMROZPs4Emp1RYbaNr8yilLlIeqdcofFU
+	 ktszzxagR4EDy5SJFIXOwL+/50MmJoN0f41LJs75n40BRgR2Ls46hdNNmawUNzc1B1Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794972666;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Details-Enc:
-	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=DLrT5Mh7fC5h8PM28yHTHw+H7Tw5FCOseBcBKNYwgUk=;
-	b=k/X6F9FijLmyg2hARc7iiVM2wLRnOlDP1aYhaHL52aPT73eQpk1ik960MzC+2n3PmWVi
-	 ZaFn/sL1xSEyUwPifSu++s/mV0SfN2QmLe9e4z/zxJB/JXSE07g0JLGX4Nb8Eq1P/6vSg
-	 X0r39oh9yAZtjy06zivxuOepwsTbzmqrvdkEox9QE4Ga5ivqwrUPoyn4Okw7tO2am0BWk
-	 APHgqITHAE4lOTzMxtmoDz5ydkEDq/Wa4gncfykIhAtk8Wv3TtSAxUJBypSMtaECksvtv
-	 6Zl/LLSbzrCnWxG9kg28a+eE061OzQUhIbpfHDTMuouV502wpPa0ATo5RVLciiXGF9Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794981170;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=0Vlq6ue+qh7BHW1GAYP75/3G3+W8nkqGjXsQh3xHgHI=;
+	b=cSBLXGLndL6LtcGpmOPTRqJiJ4OKw8B/FpyK3Zl7BCCElkczRFgPvcC2+otGp693kZTB
+	 KoGqME8T1PVdUVBBi/ajIu5DILwgYWNWwpx7Sy+f4WUGL6ufZmP0LMuQwbkY6K+bJsEdY
+	 nsSDvKwWEB9a1UZMFyg5v4UkBYLEFAPCGHC6E2T/8Y06VkcOXQaC6fttvW773eIBGsOOz
+	 Am030UaJwuBNAvcvXgBWgN//0iPT9kyGsMlTmzlcOzt4VbbUYSrJRr13Y01Ba6ANhNvsl
+	 KgGr9vBx0KN5+idZ8H9B6aODP3Lojz1A9ac+MAlneeXMm90XFWZdImXD+BneHanOEIw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=VvsUyW2m;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KpV9QlD8;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=PsYEo9qQ;
+	arc=none smtp.remote-ip=198.175.65.11
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76313606A325
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 03:31:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 76313606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46362606A31C;
+	Wed, 18 Nov 2026 05:52:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 46362606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=VvsUyW2m;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=KpV9QlD8
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AI2V1Mt3121825
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 03:31:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	DLrT5Mh7fC5h8PM28yHTHw+H7Tw5FCOseBcBKNYwgUk=; b=VvsUyW2mxCoem6Qz
-	k52PYDF93mU2kFdVyPVt1c46WNx3vkyQPzJXLm6a+sOGs0D/nCe5RghCLYt4FoOP
-	+iq29gOgHgSa7zsVGaLbmUEUCOLJfwL63S51QuTpO078sL+0L27+EliRUVhGXG51
-	7zJHalL2eUH9FTib/3fEFpZmrM+LHG2cTOjxd5I/iKXIvtX73gy8rfRSougUgbc9
-	BgoW8+coGFHqvj6HIw/lPh4eTL+ihAAPd7ervl3trCRFRd/n1H/qb2lhjqX3uRX9
-	MjOVbCgoUY/vKZEdvjkyXlGFluNj84eYJ0uJYa5gNeE/NxUcfRQr2umUHfjfi9PS
-	s79t7Q==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j0yv9gy3b-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 03:31:04 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2eaf8ea208bso4606125ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Nov 2026 19:31:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1794972663; x=1795577463; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=DLrT5Mh7fC5h8PM28yHTHw+H7Tw5FCOseBcBKNYwgUk=;
-        b=KpV9QlD8kNJTkzacr6vCHk7+67iQ0xgsW0dXYWJwpL51reCUcI68/MZVhItl3s3EQo
-         CrOSud/Dnxxt2gGgalQUStFZu8YK/5vpNBJ22ohAnJoTyi6X8/mvAzthrmgHqLm/3urm
-         TZyhjxoe3dn5piQsUtSESDCezaNmlgvfUdEeowUlmaLSY15FKl4ia4vkt2wh+1gP4O3X
-         E+yrVx3w1XMi3yxEkz9Lr1w6f7KI5UZFyYmT00PZDQG6beZqoR2kJzgUVkbxvNAyoZ3y
-         r7kCqJ4n6ENkoXE7Lxe1k1isoCRGWO+G0kFkp1PVr7VyYuak22fUzUEo7M7MS0gfDNXj
-         A6Tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794972663; x=1795577463;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=DLrT5Mh7fC5h8PM28yHTHw+H7Tw5FCOseBcBKNYwgUk=;
-        b=s6su5YDFuTdSkQpgfSTJ2t+G2cMOlAVcq4aSf6F7gPZ5jHxZAMySjNRHlI52EknD1F
-         glFxk1DHShLTTOdp05Y67PznUm5uOnPwCR3JT9LfVS+xjVmg4srUA5S1SrZgR8/mWwLF
-         iBDcT+xC39zHpdc3/NsQJQVycV62g7cVSRy8FFvPI3q2/aBG1D6iEFKCUzp57//OAOIy
-         N4xW4CznnfeQoJISjLVua59ExtEAM04Tg5TOFTgIP2zQ/izugTuKVfVMh2OdJrUNb47n
-         VLdnpfc82cR0zAlhCNnogHB4TcbHsHHD53wkREc49+O7lw+ougZ4XMSfMF7BbVa8f3rG
-         C94A==
-X-Forwarded-Encrypted: i=1; AL+hErGcNvbuzB4Hqujh+T8PTs4qOpbnU0a7rLS+0eClyeSryL/v72ALK92BCoCe6qras9fFJDbB/Fs0zms=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9901BVNt2cRAO2cta9PZwzh1Zia2Kx5sPqHCyTYJSH4eEG6a4c
-	DkRtKjpLONn06Lzqmi01QuijtztbEB//zmsPEYu70YFIxOONVHC4pGBzTw3/b3MsRgHJsXW9sJC
-	Agbk3r6VzCIKXGILF1yljqwArdtaHI0XqhQZ/OoYzRG8PYkkpbEo2xL0jYEZeRGY=
-X-Gm-Gg: AZFdTZfnZXWwCtYNBMqWzvWEYzqVi/6/VKc94sPs/XSvqKbCVVCYle1HiBwVzKqCz38
-	UagWyHKAHVHoFL0K1nd5VxBV3oAIAyyru4Kx1gsSx6Er7bIhOKe7UazeJX/IbhC2FwHpd0rcnuL
-	FQBP2PXjTJWbvhDGRq1BQm5chh4GXPG5sgXgjndqEWDzHEo0FJoSutL4M5uUSRWi/sZ6ISROMCd
-	pq95L8eAPpks5l7Y+QiqWxf2Ckrm2+4G8ewsJrUIuZX79wHFrnGh+MMqEwj6ALN+y7B93Iedb1/
-	AUdcErEsn7B04Cyinw+Nt6tmcVRcMEZ28dZY7LsOTgc1jFU+BKf5XmOQnefN1OzNsMT8w3nI/ih
-	redfYWuV79BBG7cWZHJJaVzLQoCPXew6uIIqD+vIbNj0zw7ulzGvklUoHeLGcCBCgf+/MhZHmHm
-	/Fsih6w4E=
-X-Received: by 2002:a17:903:1aab:b0:2ed:42d5:e682 with SMTP id d9443c01a7336-2eff751f06amr11721395ad.41.1794972663136;
-        Tue, 17 Nov 2026 19:31:03 -0800 (PST)
-X-Received: by 2002:a17:903:1aab:b0:2ed:42d5:e682 with SMTP id d9443c01a7336-2eff751f06amr11721145ad.41.1794972662720;
-        Tue, 17 Nov 2026 19:31:02 -0800 (PST)
-Received: from [10.218.42.145] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff61162d0sm5287935ad.20.2026.11.17.19.30.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Nov 2026 19:31:02 -0800 (PST)
-Message-ID: <1844d833-caa5-4a35-a601-2da1700c0d9e@oss.qualcomm.com>
-Date: Wed, 18 Nov 2026 09:00:56 +0530
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=PsYEo9qQ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794981170; x=1826517170;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Op3BBcwuhcAl8R5kAUSSotauL18FdPRMmQONGuXPJrA=;
+  b=PsYEo9qQbjd/0GeFTcpimUt2bFMi8a7ArlsqTnM85v8TdS4tnaZowijC
+   gAsrl6qbvvhSFQ8X/zo/6lPAf69sQwL0TQE0v8qN7mw2Iwp0GI+h5GmI7
+   ces30SMwoH/jQ2mmUHuf4NeP9RjkxZPJHrz4k80NJlMTpdGos+bt08ciH
+   Gtnm4E5jQ976hq/UybfbF7+y4eqLgP7MVLZdjvv2vl+zfcwjvMyG2Ulgj
+   Pg2SVBrXfQ6W6kQEDOaBxfoTk+Ao/EMlFsTlVlGjTtAqhSSDQQaGA8rdy
+   dtg4WhRwZ8HwAHSIeRiejBMtaVnFHmj/o8skg6xZ2TTx+tZTH9JCTsyM5
+   g==;
+X-CSE-ConnectionGUID: FuzcPuq0SdmanTGNstJ3aA==
+X-CSE-MsgGUID: WE8xQ217RhqHC0p50Ikb9w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11969"; a="3675596"
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="3675596"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2026 21:52:49 -0800
+X-CSE-ConnectionGUID: gXn+umyoQZWIFUgmMMjR3Q==
+X-CSE-MsgGUID: 1wZpSS2/SGS1eozYqf7vOQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="10407132"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa007.fm.intel.com with ESMTP; 17 Nov 2026 21:52:48 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 6877199; Wed, 18 Nov 2026 06:52:46 +0100 (CET)
+Date: Wed, 18 Nov 2026 06:52:46 +0100
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <westeri@kernel.org>,
+	Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
+Subject: Re: [PATCH v3] ACPI: PM: Avoid initializing power management for
+ absent devices
+Message-ID: <20261118055246.GA229695@black.igk.intel.com>
+References: <13013440.O9o76ZdvQC@rafael.j.wysocki>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -116,79 +84,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/6] dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Add
- qcs8300 16 GT/s PHY
-To: Vinod Koul <vkoul@kernel.org>
-Cc: Neil Armstrong <neil.armstrong@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-References: <20261019-monaco_ep-v2-0-852cb9f5d012@oss.qualcomm.com>
- <20261019-monaco_ep-v2-1-852cb9f5d012@oss.qualcomm.com>
- <avWZJr2eIE9KrV77@parshuram>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <avWZJr2eIE9KrV77@parshuram>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: qJ_lfEmaRAwKkOzwtnXic2erdEMaivYo
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTE4MDAxMyBTYWx0ZWRfX9cFh+CvEAcc0
- GvnxPvWoc1bj7VwWYPbdEoSorOfBKhrP+odwHafhGxQrhgDVgn9xWAoT3jTOMfPSeeqRMqTsuY4
- jDO2Gf3TiJ/bVqdiLTMEG3Gl0f/JiDw=
-X-Proofpoint-ORIG-GUID: qJ_lfEmaRAwKkOzwtnXic2erdEMaivYo
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTE4MDAxMyBTYWx0ZWRfX4/SE/rwIW/e5
- mN3doig+6MHGAnjySxTnXUQUM2wGlcmVZU/b6IFC1w7SSTSYfu881lbAE+tEgWdrsrBJ/c9T2X1
- vlDOTqYhMfqa1BS3+AYq9XXZszHPkGKAklqvepi1w39sUzKkjJyKJqRWz/xTEJKr28hcAKw+jdc
- QAAEmNvsULzJCxgZWUwNn/i1NSRYYQHXV5BVtDaD5mAe9Kf51RHDjU2/F7qNbhK+L+2uqtoIn4f
- wCgVPj8A7zw52bOUFSGtabmiHGw605/tH49xcudRBEs6mSKOjFC7GGaz9nDoN6wyVHeiStdFh5U
- GkU9Q83tzmn8wy63JBJvAhBMpMS7PapiHJNaLy/t9S5XxEQv0X5oDvEAMHe1Na7KcDdTYrw8xXN
- M4uYHaYf4KJlDBChnsHFv3qNp67HyP2rBmYda6i79b80zQ2+2LOokRMMDRSMFG67AvKzp3z2qUq
- FU+/ObGFFUMZtM4bZDw==
-X-Authority-Analysis: v=2.4 cv=RYIFmFtv c=1 sm=1 tr=0 ts=6afd1bf8 cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=UoCkNwF0umAWgb14yFsA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=uG9DUKGECoFWVXl0Dc02:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-18_01,2026-11-16_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 spamscore=0 priorityscore=1501 phishscore=0 impostorscore=0
- adultscore=0 suspectscore=0 bulkscore=0 lowpriorityscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611180013
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <13013440.O9o76ZdvQC@rafael.j.wysocki>
 
+Hi Rafael,
 
+On Tue, Nov 17, 2026 at 08:09:45PM +0100, Rafael J. Wysocki wrote:
+> From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> 
+> Commit 2f4ddf2bd1ba ("ACPI: scan: Stop calling acpi_bus_init_power()
+> early") removed a device presence check from acpi_bus_init_power() which
+> in some cases causes power management to be initialized for an ACPI
+> device object and never used going forward.  That in turn may prevent
+> power management from working as expected for other devices.
+> 
+> Namely, if a given ACPI device object is not enabled according to its
+> _STA, find_child_checks() will return an error for it which will prevent
+> it from being used as an ACPI companion for a PCI device.  Thus if
+> acpi_device_init_power() initializes power management for it and its
+> initial power state turns out to be different from D3cold, it may stay
+> in that power state forever.  If it has power resources and they are
+> "on" during the initialization, they may be reference-counted and never
+> turned off.  If they are shared with other devices, they will prevent
+> power from going down after attempting to put the other devices into
+> low-power states.
+> 
+> To prevent that from happening, restore the device presence check in
+> acpi_bus_init_power(), but also adjust find_child_checks() to return
+> an error for absent devices (instead of doing that for disabled devices)
+> in accordance with acpi_bus_init_power() and the existing check in
+> acpi_bus_attach().
+> 
+> Fixes: 2f4ddf2bd1ba ("ACPI: scan: Stop calling acpi_bus_init_power() early")
+> Reported-by: Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
+> Tested-by: Alan Borzeszkowski <alan.borzeszkowski@linux.intel.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On 11/12/2026 4:17 PM, Vinod Koul wrote:
-> On 19-10-26, 14:55, Krishna Chaitanya Chundru wrote:
->> The QCS8300 16 GT/s x4 QMP PCIe PHY was previously described using only
->> the qcom,sa8775p-qmp-gen4x4-pcie-phy compatible, since no QCS8300-specific
->> compatible existed for this PHY. This was a mistake, as it left the PHY
->> undocumented as QCS8300 hardware and indistinguishable from SA8775P in
->> the binding.
->>
->> Correct this by documenting a dedicated
->> "qcom,qcs8300-qmp-gen4x4-pcie-phy" compatible, with
->> "qcom,sa8775p-qmp-gen4x4-pcie-phy" listed as its fallback compatible.
-> This fails to apply for me on phy/next. Please rebase
-Sent V3 after rebasing it[1].
-
-[1] [PATCH v3 0/6] PCI: qcom-ep: Add PCIe Endpoint support for Monaco -
-Krishna Chaitanya Chundru
-<https://lore.kernel.org/all/20261114-monaco_ep-v3-0-7fe227cdfac0@oss.qualcomm.com/>
-
-- Krishna Chaitanya.
->
-
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
