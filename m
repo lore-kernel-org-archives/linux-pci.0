@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795030141;
-	b=ehlUyZmAEgKj3GUG8ArdVQIW9SMSd1LDum3pFhEZgRHnXxroQV3xNv4XH4Jp8GX3emXb
-	 BQ44VKxKxinylH7O+NhsPq38YVYLGNLHDtshGwlJiV/7FLvAeU1jKo0JAQeGjiDYaNs6M
-	 oZEDVQKhosS0XRUkTgnSebSZxfsIppQzUH/0XhWPSiiiomjvPdfvFHn5gvYvZWYl9+kAN
-	 5Sdi5l+u0wh6Tv5eNjGU25GaTq0jmKShrGYNzmmAid8Z3PM4KDW0/5Mt67pv3w4XpW2jq
-	 6qz7atjE8bJERI1eCAJ6vya4wmpR2BKw2Frje1rL+QuTGU1rn9g0yWhzx5TZwiqBTng==
+	t=1795030145;
+	b=exDsZ2nM8Q9DfTqvPMcrsdxDEsYfIvra8lmElynlq5NqkbmFrNn2IpbppP9TiPxFJtIf
+	 ox4/j/L2RfU5pM2Ty0C46urO11zQW+D2vV0zmezHz43OXG8isrT9lcQCtbKOeKbLYzLXT
+	 QXdOTqjfgPtxWWKiYkNWLmuOi/hoaDjSBq3AoSeeq/oaXc0m9x2Rydl3zo96NwHJTVosI
+	 TNpxZJiX6H8zvHl6abZQhiFKuMbJo/IfCDCcVvUlIlRfu292pCEZtfj6Yyep2QAhHOedQ
+	 aaT7pi0HbiEh7Te0n9cxeBkcAAj8Fi1EKEF9Lj9hEXWvFUEaG4VADRa8xdtWk6NxmUg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795030141;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795030145;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=S1lNzkiO6o4LausFVoazoovvosWrAl7cb3L0/hfy7Nw=;
-	b=gAcVFRz/mne9wtS1u5T4zuV6PqG2gWgM3aBuaxKVhTsjsVFvPvHbcLoPCP52vdjIBYdU
-	 9WHA5WKgNNe/1vFWP+f9YT9MFWNx16H9LHSoQgMtatSYSLxhYonqpv0rsTkCq/ncrJIGZ
-	 EQF300dh59uSwEfJFy7c05HL6JX+eOV6NaBFfXhFjhmJesZWmj3VIGz8NutlfddjHE3RG
-	 3emjBswG9MPPWFIAqfvVDbLCMPjYQazjaoBk0QA2YLk2ElvuDlytOwos9RlecsxdrxUTC
-	 +tsGyPmfmMU9dr2KsZj25/VJK/kfybyQHzVLPkdhEV7CtkG2/lcJBcpT4FianKJUUwg==
+	bh=1V5OySgH+ZSszge5UvHlymL+jckhu9tpr2xqgdevGuY=;
+	b=C+4ATZwl7GkABMD52c9Xh1rbKLI+SIQ4Lm30+NhS/HMKFfyYJCD7PFtqLhTecsVzAS1a
+	 Zn2h8C3xfALll5IckLAAgJe2tqCvU6TwEr4coKHK3ChjiR9qlzpf+2pBL1uJeyQkHs8Ho
+	 8wMk0XC4FdS+O1ImNa2SAIXcdggZX+jvUD1EqHHscGMSIG0KzmGijW5Q4haW4pzK+erMX
+	 O9xG3ektIrSE05Pn8/Cnv48dADVooBnDYS0xUCvPgx7zw015AYo+TVZaMml1LTzJ+87W7
+	 FLEDi6DdIMEEpAo82zhSzLavXIJ+NCuYnFyXiSdRJNld1bNxZgHJGWMF++XVAl5bzcg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ikxGeUA8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jVYon4HH;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A2960760BD;
-	Wed, 18 Nov 2026 19:29:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5414E606BB5D;
+	Wed, 18 Nov 2026 19:29:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ikxGeUA8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 117601F000C6;
-	Wed, 18 Nov 2026 19:29:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jVYon4HH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3D601F000C7;
+	Wed, 18 Nov 2026 19:29:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795030140;
-	bh=S1lNzkiO6o4LausFVoazoovvosWrAl7cb3L0/hfy7Nw=;
+	s=k20260515; t=1795030144;
+	bh=1V5OySgH+ZSszge5UvHlymL+jckhu9tpr2xqgdevGuY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ikxGeUA8dvLFbEJXQIvvte+w88nOTJond/jB7u2/RVGkk2omK1tilcywzAn3Atf80
-	 OmBakMOp8kMobsRoJHAZZghuesXgdMGgkG5ryBt3oVGV6gh1zCeSGrCkbVzueLM3Ev
-	 qLztC9gMNtPdpuzJi3QJX2oE5lwmb3OYltbt/sq9xdFtMSBtLfnVsdzzp7InoxRLym
-	 QKOXD2pnOhOVvKk5492wqMo77OAmjaDKSgx4WXOX7wRgGqpglhRK8EwQDgYNwn6Ojn
-	 W4iVhKQWxeap1mSHalyNaDvZlIQxRSZzds8gd0AWEygzKYbEHPrpTO0f+QewCmKKYt
-	 B9HyMJ/S1QmEg==
+	b=jVYon4HHntgw2K3s3j0o1jJjWdeJxstyXtRmoG8gdDVdsNKee6TP08bVAQQko85sY
+	 xYcCCuP1mnI7Pn6KQhsZVptc7Yfy14sPZxx56wIBJUe8P3gOIOOaN54ENf43Rs3tDl
+	 YthiSHBr8ioKEq2skaQhcz6SbKMdhVFi1Y5lIE4sAhagJ+4VRZY+1uPaWuEvTQiCOO
+	 LDB8wfceU38Wp3XpuOpuDbPbxvMlEqAWghC3I+KG0o3pUov+qLxcakw1xqOvFCuuxB
+	 GFRk69toorsTOfSyuugDgS0ciwp2k7hTKuxH6qko3hW1Ah5MF68b2duGEGpWkRpTL+
+	 Q/374NS5keUGQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -96,9 +96,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v3 27/31] iommu: Use device trust for DMA restrictions
-Date: Wed, 18 Nov 2026 21:26:57 +0200
-Message-ID: <20261118-device-trust-core-v3-27-d655875c4bfb@nvidia.com>
+Subject: [PATCH v3 28/31] driver core: Allow driver attachment with the device lock held
+Date: Wed, 18 Nov 2026 21:26:58 +0200
+Message-ID: <20261118-device-trust-core-v3-28-d655875c4bfb@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
 References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
@@ -117,182 +117,101 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-PCI-specific untrusted checks exclude devices classified as adversaries
-through generic policy. Their DMA protections should depend on the selected
-trust policy rather than the source of that classification.
+USB authorization needs to keep driver attachment and its configuration
+result under the same device lock. Dropping the lock to call
+device_attach() would let another request change that result before the
+authorizing caller can inspect it.
 
-Use policy for early domain selection and active trust for DMA bouncing.
-This removes the remaining need for PCI's duplicate untrusted flag.
-Changes to IOMMU domains after authorization remain separate work.
+Provide synchronous attachment for callers that already hold the device
+lock. Keep asynchronous scheduling outside the lock in the existing path.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/iommu/amd/iommu.c   |  3 +--
- drivers/iommu/dma-iommu.c   | 14 +++++---------
- drivers/iommu/intel/iommu.c | 14 +++++---------
- drivers/iommu/iommu.c       |  9 +++++----
- drivers/pci/probe.c         |  1 -
- include/linux/pci.h         |  8 --------
- 6 files changed, 16 insertions(+), 33 deletions(-)
+ drivers/base/dd.c      | 34 ++++++++++++++++++++++++++++++----
+ include/linux/device.h |  1 +
+ 2 files changed, 31 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
-index 960e1dc05ec69..e358bbb1f2baa 100644
---- a/drivers/iommu/amd/iommu.c
-+++ b/drivers/iommu/amd/iommu.c
-@@ -3401,8 +3401,7 @@ static int amd_iommu_def_domain_type(struct device *dev)
- 	if (!dev_is_pci(dev))
- 		return 0;
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 4c4723384dc66..2f45b53e5ba91 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -1222,12 +1222,11 @@ static void __device_attach_async_helper(void *_dev, async_cookie_t cookie)
+ 	put_device(dev);
+ }
  
--	/* Always use DMA domain for untrusted device */
--	if (to_pci_dev(dev)->untrusted)
-+	if (pci_dev_default_is_restricted(to_pci_dev(dev)))
- 		return IOMMU_DOMAIN_DMA;
+-static int __device_attach(struct device *dev, bool allow_async)
++static int __device_attach_locked(struct device *dev, bool allow_async,
++				  bool *async)
+ {
+ 	int ret = 0;
+-	bool async = false;
  
- 	/* Apply device specific quirks */
-diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-index 78742aeba932d..a48fb511bfe6f 100644
---- a/drivers/iommu/dma-iommu.c
-+++ b/drivers/iommu/dma-iommu.c
-@@ -589,16 +589,11 @@ static int iova_reserve_iommu_regions(struct device *dev,
+-	device_lock(dev);
+ 	mutex_lock(&dev->p->driver_lock);
+ 	if (dev->p->dead) {
+ 		goto out_unlock;
+@@ -1265,7 +1264,7 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 			 */
+ 			dev_dbg(dev, "scheduling asynchronous probe\n");
+ 			get_device(dev);
+-			async = true;
++			*async = true;
+ 		} else {
+ 			pm_request_idle(dev);
+ 		}
+@@ -1275,6 +1274,16 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 	}
+ out_unlock:
+ 	mutex_unlock(&dev->p->driver_lock);
++	return ret;
++}
++
++static int __device_attach(struct device *dev, bool allow_async)
++{
++	bool async = false;
++	int ret;
++
++	device_lock(dev);
++	ret = __device_attach_locked(dev, allow_async, &async);
+ 	device_unlock(dev);
+ 	if (async && !async_schedule_dev_nocall(__device_attach_async_helper, dev)) {
+ 		put_device(dev);
+@@ -1284,6 +1293,23 @@ static int __device_attach(struct device *dev, bool allow_async)
  	return ret;
  }
  
--static bool dev_is_untrusted(struct device *dev)
--{
--	return dev_is_pci(dev) && to_pci_dev(dev)->untrusted;
--}
--
- static bool dev_use_swiotlb(struct device *dev, size_t size,
- 			    enum dma_data_direction dir)
- {
- 	return IS_ENABLED(CONFIG_SWIOTLB) &&
--		(dev_is_untrusted(dev) ||
-+		(device_is_adversarial(dev) ||
- 		 dma_kmalloc_needs_bounce(dev, size, dir));
- }
- 
-@@ -611,7 +606,7 @@ static bool dev_use_sg_swiotlb(struct device *dev, struct scatterlist *sg,
- 	if (!IS_ENABLED(CONFIG_SWIOTLB))
- 		return false;
- 
--	if (dev_is_untrusted(dev))
-+	if (device_is_adversarial(dev))
- 		return true;
- 
- 	/*
-@@ -1189,7 +1184,8 @@ static phys_addr_t iommu_dma_map_swiotlb(struct device *dev, phys_addr_t phys,
- 	 * swiotlb_tbl_map_single() has initialized the bounce buffer proper to
- 	 * the contents of the original memory buffer.
- 	 */
--	if (phys != (phys_addr_t)DMA_MAPPING_ERROR && dev_is_untrusted(dev)) {
-+	if (phys != (phys_addr_t)DMA_MAPPING_ERROR &&
-+	    device_is_adversarial(dev)) {
- 		size_t start, virt = (size_t)phys_to_virt(phys);
- 
- 		/* Pre-padding */
-@@ -1790,7 +1786,7 @@ size_t iommu_dma_max_opt_mapping_size(void)
- 
- size_t iommu_dma_max_mapping_size(struct device *dev)
- {
--	if (dev_is_untrusted(dev))
-+	if (device_is_adversarial(dev))
- 		return swiotlb_max_mapping_size(dev);
- 
- 	return SIZE_MAX;
-diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index 5a2e705a2f2e0..0202b491f222e 100644
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -2624,8 +2624,8 @@ static void __init platform_optin_force_iommu(void)
- 		return;
- 
- 	/*
--	 * If Intel-IOMMU is disabled by default, we will apply identity
--	 * map for all devices except those marked as being untrusted.
-+	 * If Intel-IOMMU is disabled by default, an external device could
-+	 * otherwise receive an identity map despite its adversarial policy.
- 	 */
- 	if (dmar_policy_off()) {
- 		pr_info("Intel-IOMMU force enabled due to platform opt in\n");
-@@ -3629,16 +3629,12 @@ static bool intel_iommu_is_attach_deferred(struct device *dev)
- 	return translation_pre_enabled(info->iommu) && !info->domain;
- }
- 
--/*
-- * Check that the device does not live on an external facing PCI port that is
-- * marked as untrusted. Such devices should not be able to apply quirks and
-- * thus not be able to bypass the IOMMU restrictions.
-- */
-+/* Bypass quirks must not prevent later adversarial operation. */
- static bool risky_device(struct pci_dev *pdev)
- {
--	if (pdev->untrusted) {
-+	if (pci_dev_default_is_restricted(pdev)) {
- 		pci_info(pdev,
--			 "Skipping IOMMU quirk for dev [%04X:%04X] on untrusted PCI link\n",
-+			 "Skipping IOMMU quirk due to trust policy [%04X:%04X]\n",
- 			 pdev->vendor, pdev->device);
- 		pci_info(pdev, "Please check with your BIOS/Platform vendor about this\n");
- 		return true;
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index b486b8bbd1fcd..891b0cd2dad02 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -1901,10 +1901,11 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
- 		driver_type = iommu_get_def_domain_type(group, gdev->dev,
- 							driver_type);
- 
--		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
-+		if (dev_is_pci(gdev->dev) &&
-+		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
- 			/*
--			 * No ARM32 using systems will set untrusted, it cannot
--			 * work.
-+			 * No ARM32 using systems select a restricted trust
-+			 * policy; it cannot work.
- 			 */
- 			if (WARN_ON(IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU)))
- 				return -1;
-@@ -1928,7 +1929,7 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
- 		if (driver_type && driver_type != IOMMU_DOMAIN_DMA) {
- 			dev_err_ratelimited(
- 				untrusted,
--				"Device is not trusted, but driver is overriding group %u to %s, refusing to probe.\n",
-+				"Device trust policy restricts DMA, but driver is overriding group %u to %s, refusing to probe.\n",
- 				group->id, iommu_domain_type_str(driver_type));
- 			return -1;
- 		}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9aa69d19ceab4..40b449b8e736c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2080,7 +2080,6 @@ int pci_setup_device(struct pci_dev *dev)
- 	set_pcie_cxl(dev);
- 
- 	pci_set_default_trust_policy(dev);
--	dev->untrusted = device_policy_is_adversarial(&dev->dev);
- 	device_trust_init(&dev->dev);
- 
- 	/* "Unknown power state" */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d8edf8403a5ad..17612cb18385e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -490,14 +490,6 @@ struct pci_dev {
- 	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
- 	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
- 	unsigned int	is_cxl:1;               /* Compute Express Link (CXL) */
--	/*
--	 * Devices marked being untrusted are the ones that can potentially
--	 * execute DMA attacks and similar. They are typically connected
--	 * through external ports such as Thunderbolt but not limited to
--	 * that. When an IOMMU is enabled they should be getting full
--	 * mappings to make sure they cannot access arbitrary memory.
--	 */
--	unsigned int	untrusted:1;
- 	/*
- 	 * Info from the platform, e.g., ACPI or device tree, may mark a
- 	 * device as "external-facing".  An external-facing device is
++/**
++ * device_attach_locked - try to attach a driver with the device locked
++ * @dev: device to attach
++ *
++ * Synchronous device_attach() with the device lock held by the caller.
++ * When called for a USB interface, the parent lock must also be held.
++ * The device lock remains held on return.
++ *
++ * Return: 1 if bound, 0 if no driver bound, or a negative error.
++ */
++int device_attach_locked(struct device *dev)
++{
++	device_lock_assert(dev);
++	return __device_attach_locked(dev, false, NULL);
++}
++EXPORT_SYMBOL_GPL(device_attach_locked);
++
+ /**
+  * device_attach - try to attach device to a driver.
+  * @dev: device.
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 3db6657dffe41..05b8f4af36873 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -1337,6 +1337,7 @@ int __must_check device_driver_attach_unrestricted(
+ int __must_check device_bind_driver(struct device *dev);
+ void device_release_driver(struct device *dev);
+ int  __must_check device_attach(struct device *dev);
++int __must_check device_attach_locked(struct device *dev);
+ int __must_check driver_attach(const struct device_driver *drv);
+ void device_initial_probe(struct device *dev);
+ int __must_check device_reprobe(struct device *dev);
 
 -- 
 2.56.1
