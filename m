@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795030062;
-	b=2EzEC2SvpZPiKLEmkq6N+3Ub2wdlOOuQK1tdCpYE+xUxpaB1cBcZSQQr8AvVXxPBjUZy
-	 Rul3uNC7Rww+PvuUbbCKzhDeHL9mQFPVUB8iNBpZOzAvJTn+Fu4oia+1qgMEqDQ34BHOw
-	 FoKEdRubsPsTOyKv6Z3abdwCJJsN9OjYpFTg59phtvfiskuGyyeoKO1NKyFhpZwk9fI9p
-	 trlboUC/iUTnNSQEcydnVnnaR8nl5YvZxJUW7sufjSuOgPMcfu/wQzSZ6+AeLm+Fjv763
-	 NlfxyTnGHktfF4+nNCxtg2oThWD2hohy/Wlfy+kCpYZZ3GHYCYzsB1sHRZ6TYTHSN/Q==
+	t=1795030054;
+	b=swbt8Rf8R5y7JT5XlP9blDYDg9/iiltw5w4tZXnYBf1UUQvIKCmoK9jD0sf1Y7k03KUs
+	 sAnjZMZU4f8fVK5oDw9ZHaoGqr39KT5KH0MEnnWTGR1gQeSYVuIUrcKjc748q6FYMXFTZ
+	 B1+6YhB3X+AFNpzvPxH6VZ2PHtYjJOM9Hb3oWVjCZ3n08NmLk05HZce1kvRqZK9JmvqlV
+	 vzLFq1HBFfgIzuFKW39AnR8fVAlLkr7fvW6w3VJTE6so7qg/qsgt90WHC1OChqyHAvwQi
+	 nc/pde7+wwkLkKo0Sxnel//FdcdCqaGt3cAJR6iMnKLM1Xb3wMwMqRsdRDrdpGTcZdA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795030062;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795030054;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=tIkIa9xWsGpipUak11v/cJ0X9CImINsTJeRFQi63NF0=;
-	b=0xBNgVHkkwLLzrlYaep3iMUDervmCpsIjeZCUDNIToyPhc+Dgu2xWxZkuDJhgs43MrN3
-	 t8mm/X8ZPzLIbIxkWS38yU+1Wp99eIwd9G7hGQSGKT0hxFQJJiJyQmVfnzXesi5G2GQp7
-	 BqshrtZ6osEAlr5048rcvPR9UeB+snjld8iqKmKsqKCWk49WZhmHssTo5174pivut/rHb
-	 x8uhhpufcezuR75pFTyKt0844a07vYtkpGQSDnfdfImGskfWJWvl6mX8oRfwUuzWbGVFM
-	 C8kStw5Aoa6Gnq2RA4aV1Tjb8AHsvnrE8SHfNXPuW7bm6aSSNKt1kIKstHBVXmBiBdg==
+	bh=wbkmNHR1nRw2+5k8665nB5tZwQXzmDpbNKqdau8pHu8=;
+	b=RIQZPKzd7vUqm+DW8i6+zWcsSjSoE/DjfwCssOK/kS3WDkKJD5h36uqYayyxYvU7/ccP
+	 qim0cCfMUFpOdPjX3qa9xvDtxFsVaigFGSHZi/oUmz6ZYu+jYOGSlZoBYdKXRSinK+0la
+	 JzJEa1DKo6Ms6sgpm4EZvARfhZiBan/hwdqZhX6/mAXvvkzxpER8oCY/tdsMCMkwobrmY
+	 r/Nj9Wrzlm8Sol/WIfNYm/vo1ZnUON8bC//JkI0dnY7OoRFY+G2O0lQQQHiHh8jNAUTEt
+	 XVtqJBJzlcBj/aikaKSb20VUAf3f6CVZUIusP+XzB7kHgpGzvXtNcDy9PZmp0SA7hxg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VG88znX5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ESah7qvO;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21F4B60A6F6E;
-	Wed, 18 Nov 2026 19:27:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F50B60A262F;
+	Wed, 18 Nov 2026 19:27:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VG88znX5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E209B1F000CA;
-	Wed, 18 Nov 2026 19:27:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ESah7qvO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E321A1F000C8;
+	Wed, 18 Nov 2026 19:27:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795030061;
-	bh=tIkIa9xWsGpipUak11v/cJ0X9CImINsTJeRFQi63NF0=;
+	s=k20260515; t=1795030054;
+	bh=wbkmNHR1nRw2+5k8665nB5tZwQXzmDpbNKqdau8pHu8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=VG88znX5pFawkJSAyapyFZsuga4KtFPIUUOEh1BSrA2aCI7XmTozzLCKkOcvVB+Xn
-	 lJCdTnr/UQD/DajyfgnXleNWKgcBxNM6CeHKnx7jDVPNgLWln+CmAcdGysoCUYm20B
-	 WHE3rxRMrHJ293qYp8/yLi6hBaq+MJMHh962b2LBNnlc9CVA+93dQx3erLL+tmYniH
-	 Ustpq/1wvW/LqSq3l3a7GVviQPDdGML/v86356ZO20vYo4kzwLKu3+uo66ejlKEvu9
-	 H59iiXEikoL+iVWmvvA8Roc07kaF0rtGAUt5SqdZr4oynVbuMC+p6+sGxw0qouB7hI
-	 npI5Sbp5u5bhg==
+	b=ESah7qvOosG2ghqBoGmhIkOOsmLSoZIWc8X+J2VjFlIO/JhUEfs2YSLYquqnLtK4J
+	 /wWLdsUxxEIy2bkilx5EZc7sUtKoysLv1QPwiM2Mur7/bgAsvdm9YT3TwgbEVfsMa/
+	 PTHsPUlQjRijmWAoSnfYY5YZD1gK/h7NLWV+IaTN4c80wiqIqpUeyMtHavWsP0uDXl
+	 /qsccpHGKQq5NfDtwfOcTtWX45kSjKZGyE71zpGz1o1BfVyNImykqcNpgtuGFVfjoU
+	 U2XbQced8/s022Y9gGnWenlrlbm9j9SW/Wi2s6TIT9BrSoYCkK24VN/ZPHDXbJN2ZU
+	 gjMI+mfq7R32w==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -96,9 +96,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v3 07/31] USB: Reject claims after interface registration failure
-Date: Wed, 18 Nov 2026 21:26:37 +0200
-Message-ID: <20261118-device-trust-core-v3-7-d655875c4bfb@nvidia.com>
+Subject: [PATCH v3 05/31] USB: Reject claims of DT-disabled interfaces
+Date: Wed, 18 Nov 2026 21:26:35 +0200
+Message-ID: <20261118-device-trust-core-v3-5-d655875c4bfb@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
 References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
@@ -117,68 +117,40 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-After device_add() fails, the interface remains in the active
-configuration, so usbfs can still claim it. Configuration removal skips
-unregistered interfaces and never calls the claimant's disconnect
-callback.
+USB core skips registration of DT-disabled interfaces but keeps their
+objects available to sibling drivers. A CDC-ACM control interface can
+therefore claim a disabled data interface: manual claims check USB
+authorization without checking Device Tree availability.
 
-A driver can claim an interface before USB core registers it. If
-registration fails, reject further claims because USB core will not retry
-registration of that object. Changing the device configuration creates
-new interface objects.
-
-Fixes: 86d30741e480 ("[PATCH] USB: Usbcore: Don't try to delete unregistered interfaces")
+Fixes: 01fdf179f4b0 ("usb: core: skip interfaces disabled in devicetree")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/usb/core/driver.c  |  2 +-
- drivers/usb/core/message.c | 14 ++++++++++++--
- 2 files changed, 13 insertions(+), 3 deletions(-)
+ drivers/usb/core/driver.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
-index 926f63cd2c834..0a6fdf2e88f4e 100644
+index e1de348cc0cac..735ae3310b45d 100644
 --- a/drivers/usb/core/driver.c
 +++ b/drivers/usb/core/driver.c
-@@ -561,7 +561,7 @@ int usb_driver_claim_interface(struct usb_driver *driver,
+@@ -28,6 +28,7 @@
+ #include <linux/device.h>
+ #include <linux/slab.h>
+ #include <linux/export.h>
++#include <linux/of.h>
+ #include <linux/usb.h>
+ #include <linux/usb/quirks.h>
+ #include <linux/usb/hcd.h>
+@@ -560,8 +561,8 @@ int usb_driver_claim_interface(struct usb_driver *driver,
  
  	device_lock(dev);
  
--	if (!iface->authorized ||
-+	if (!iface->authorized || iface->unregistering ||
- 	    (dev->of_node && !of_device_is_available(dev->of_node))) {
+-	/* reject claim if interface is not authorized */
+-	if (!iface->authorized) {
++	if (!iface->authorized ||
++	    (dev->of_node && !of_device_is_available(dev->of_node))) {
  		retval = -ENODEV;
  		goto unlock;
-diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-index a738d03c23eac..e56079398d26e 100644
---- a/drivers/usb/core/message.c
-+++ b/drivers/usb/core/message.c
-@@ -1468,8 +1468,13 @@ void usb_disable_device(struct usb_device *dev, int skip_ep0)
- 		 * bandwidth_mutex, we have to mark all the interfaces
- 		 * before unregistering any of them.
- 		 */
--		for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++)
--			dev->actconfig->interface[i]->unregistering = 1;
-+		for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
-+			struct usb_interface *intf = dev->actconfig->interface[i];
-+
-+			device_lock(&intf->dev);
-+			intf->unregistering = 1;
-+			device_unlock(&intf->dev);
-+		}
- 
- 		for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
- 			struct usb_interface	*interface;
-@@ -2278,6 +2283,11 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
- 			intf->cur_altsetting->desc.bInterfaceNumber);
- 		device_enable_async_suspend(&intf->dev);
- 		ret = device_add(&intf->dev);
-+		if (ret) {
-+			device_lock(&intf->dev);
-+			intf->unregistering = 1;
-+			device_unlock(&intf->dev);
-+		}
- 		if (ret != 0) {
- 			dev_err(&dev->dev, "device_add(%s) --> %d\n",
- 				dev_name(&intf->dev), ret);
+ 	}
 
 -- 
 2.56.1
