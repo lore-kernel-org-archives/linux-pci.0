@@ -1,13 +1,13 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.28
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795029907;
-	b=d5METa0pXRf8O5HzxIo7qrL7WlTZa1VYP/pKzKPwb7PuceHf4u5rlNf50iRQoHDwi+4m
-	 yOoBi8Xp7QNdgeSJLQI8gEzMRbS00YTfuhWqxxjTRaf3jnwSD48p0+YFY5gvBTMWhjz1X
-	 gxdr86jQXKWJ9WQE4c9J3CK+RgHQL3z+WtL7ey+gHRlzwNXwvHF2CQxaXN2Dcp+6W0qGh
-	 rO0lQVsdhUsnOFdpH14wh7I+tI8FReeCAsri59OwGv5f93Ka3G2kz6sT9BAcGFj9eQPyA
-	 bb6DX8mu4QhlkxSCWhwVky3GmZwmc0HLhOE/6ygPEtABujjBb8k1kXkOsyAmhm75CGg==
+	t=1795029904;
+	b=qURJbTmZPnRi9j4peSZv6zlkmlOBFbhDIewKtrykZxCemylu7sPqJUSRfJJE6fpHg7Bk
+	 NjfmZT/6jm7oTczwN8h9AEYXJoU+Mkj4g6IpzQYcjXieI6qmPbLngn5TvHGkUMbj3IJ78
+	 mQlW/uxWt3zI3fd9/67jIfU6jIwTiv6AQ2gcCF6hJVE5A8oGY+i84810DwPJtsYsagoaC
+	 Mt7H/b62vRNo6iLja4CZT6aHhzO/FfKhYpBKDLMYYQC6QFzujZVBsEUVxIa2DvdbT4ydD
+	 3oXvXgcePnLgWN+VdkhjFy1wrY/kVWXzeLPxA2HY1J5Q9+43cjiB3sfgcCzRZD98jpw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795029907;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795029904;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
 	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
 	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
@@ -25,52 +25,52 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
 	 X-MS-Exchange-CrossTenant-userprincipalname:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=JcTok4/mS1r8EiPrD1iHcrGiorXO1Np5ls3LVz2jeEM=;
-	b=vljFKtPsLfWneefINr1vWBdZ5jQ0BeslVUwYN2a9INlW29FYAdJnYRqNh1M3ywiRU+84
-	 qjfZFTHgttOfxu77Svu+Luaurv9BZeIOOTvROFoH2wsmopi/QhnEF3vKQUaiQVQcqW4Yc
-	 IffBK6aeFDyP019ea1vAB6Uy5RKkPkXkPzPsMrjLTuc8v01cBzfyC/fygA83zUKB39d3+
-	 VP/XirqpzfLRDdQ/bFEcM7s4fvcZl0fE1AtdiuZKdkI3urD+4sBQ2FjFbJ/GlswFPCl0g
-	 K+jzesQTqN6lJIftaa/G10+VK6hIAZ5lda4m10q0kelCVYH2mvM7fq8YvbS5DzEgtLg==
+	bh=IxcaskVNHaPhuM8XfCRqFJPQx/TEgUdNzIioqB8CNXc=;
+	b=vqSrbCUM6pvC6R6PQKw5PykiqvPNzakyqYyHbDI5IGFyGQn7irEJ+mSWg8JJyC1VyHuE
+	 2kfjOVXWZb2sTNnUTyM/MktN1/AqFLrmOPfWQ7M5puZ5L/XHsyulyuyFP8WuBaUasASlS
+	 B2UiKrOvawdzJCTa21ZmJQkpD3mzZNl/3fUZWLtvPvCSSqL+F7MmOLHpsnDu/de+81AHf
+	 NlYqsT0SqcDnkYRZAiSyUoYlCnaIFEN+ViIxI1X7DnQrZ3mYQJGsBlAQ4SqG+brNSG+OK
+	 +x8apJ4boGluchA/Y77JZ6RI6EboR8CcEah1jg31efhhH54+oYbMltARtcDXNugDXBw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=gFLusLZQ;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=iuxbLv4z;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.28
 Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013028.outbound.protection.outlook.com [40.107.201.28])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E915060A5BC0;
-	Wed, 18 Nov 2026 19:25:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E915060A5BC0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4F360A261A;
+	Wed, 18 Nov 2026 19:25:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD4F360A261A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=gFLusLZQ
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=iuxbLv4z
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aqRg0RgXpAGpB6PUhmGMNgCWoNml1T/Rc4g6u+l/hX6SmGikI02btqqLFjtjpDhs6wE6HM1oH1XaJTbOiHDRQw+/Y5mJOqJI17cxNF+gwHRS90gLGsDA/jd0jhczelY9tCXRJSo0qGtiB74JaP58HxEU2UpzscctwKgYVg0zbqvombpwvCcZHEKWCjrhc23dGNvnWe5zrobIW2CDl4TBgjdYFr4AHHTIGfNcnzJQ9nlDvHhp69G9WzRJjl3YfKd0wfdIbsHt0C76dOO4oouYABCOh7qzdtG/lBHdazKG6j+0oZ4j3AVtYEJrxw3F73td3Bx4KNaNPy93yGAFaajCsg==
+ b=WMUshkL487y2WGudRNDFZqCyQqe8UZm8HmuEons3D3cLSO/MIA5F9uEnQl0xjrg3y3BdAKCzPB5645wbj/az5bE5hTGbqkzZ5y1gs79OporRd9zr/5/azAUbGRfAVkH/X6QGZ8enWdzJrpMJVao0kxVdBXweUxykE4mE7Yo5JJPICcPVQk8wCK1VdoL8aJeAgkbZJFCftfeAOQhX4gy1BVjaIultjP3jORhoiFDm7f5Djy4GEEn6tz57nxPZQtZoMKJFL6IeUYAOWaW0fJAkekMUYxB3lZ664Uk5Td4qyr0C59kB3c+U2GlccJhCQDT0Z/98rMOIZXo1xHRHT+DV9Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JcTok4/mS1r8EiPrD1iHcrGiorXO1Np5ls3LVz2jeEM=;
- b=vhHr4mzxyvpto83nMlMf/BOjez3M+rpK4hijCyPoGZPisbViqp4P77WjcC4nBIQxMCt4Z8479vUGtZh36ACrOu4hAXqARVc23X9K8DdIQSlRavndBlGWti8ka9iIgf0dDq7E1JO4CvnENOeLtw9DbAsMfs5lO+nrE7jX/XLNwYPxdbN8FESXrv56H8UVhJyShAdauf2gdcODezSoKZARJxrp/EAVG6qGGxZfilbYzdNM2PRZlpq9liweuaBPh3VoFbPXTU/6AgbJBM7otKGVTjonBdtOTDhj+HqaH574moBTAKU/nbAc8fC2/+rsRzmc/lWUV2kEaqUYpeI18kF+tQ==
+ bh=IxcaskVNHaPhuM8XfCRqFJPQx/TEgUdNzIioqB8CNXc=;
+ b=Ji5IrtM+ESR7+6u2epv9CAPQ9Rd8DfzVRDKM8Yngzirmvw8n16lIhwp/n1su1jHWlLpJ72NrwGZCtEDJHshGU7NBnk2oA9LXnJgj2hOXermB85KehjgYIgm80iVBRNRs+H1WEuCIcRWdWCX9kMnbyALNbocl5aASYaNFMUD/i8vTgpZb6JvalW0aiBDbI5RJK59KkHcdClvmLKVsOMr+6/oFiTp+lM+9Z2sgJAxWxfIh4tc3JrQCiEMJbwdycKJ7ZD0Ur5G5NBrJ+fC1Fyyj7TQgVygI008kviWDfHU6KFUUMaT0Qe2ZscTaA+RhAp8Wx4EFseFydryYkbIJ9qd7Lg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JcTok4/mS1r8EiPrD1iHcrGiorXO1Np5ls3LVz2jeEM=;
- b=gFLusLZQZX8EWS1EYTtkrLwNwikGXcYJlJxjmSpsRLbp+uaSmjOrCGQVgJtw+Uq+ATL/LEVkP0475FnIg9+a/HJagDtZIVvz0byFDVYnt79c3fWho6qwLwY7pvLGhASxuR9C3DlEiSur2ZKHmMRmZlJUDauegWtiaI4TGjTPRRidkFOJAAY3cfPNlyUEEWoTsEdXU310syAvDK0TU4N4ZlRmOq9Urh/7yOVgkQWxs9pJnijyvr1SHIMH7uSkN2K+mCpvwpvMMXdLPuLbTKDzGQjLFwIS6b8a6jNZ2nEnpqHgOtc9qdaExELv+JRNRdhIJaX4QGePTmgjcQAySYuq0g==
+ bh=IxcaskVNHaPhuM8XfCRqFJPQx/TEgUdNzIioqB8CNXc=;
+ b=iuxbLv4zUW9HQJIkPvKCoOgSHzxzRX6kdBKmbdPC0fWoF+HzjziUPwGZdB4GMp9gIT3rKSHK/K/gCnywPJaCdqRPA+tMeq4sCki9V2qXggCxWI5ZS95DpGKUQoc2PscWZomcktuWnDRwKxtnwcPEaEsBxF1bAueGkxruYoD9Hqh5CLoh8iNGpyZ0/lbp89xBhQ7fs/79XaSYow9E4RoVoyJcsf/U83y4tFPQ7oCE+mfn0Bk06XypmPzoUAaGn88wuXHpQai2l6haZBCaZBfJCw1amlKz08CODAmXDXqR8fcDFp1prUKnL7yPr4pBzpoQbZvytn6h0XJiTO7u8nsUTQ==
 Received: from IA1PR12MB9030.namprd12.prod.outlook.com (2603:10b6:208:3f2::22)
  by CH3PR12MB9455.namprd12.prod.outlook.com (2603:10b6:610:1c1::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Wed, 18 Nov
- 2026 19:24:56 +0000
+ 2026 19:24:52 +0000
 Received: from IA1PR12MB9030.namprd12.prod.outlook.com
  ([fe80::2c1d:ed27:b53a:97d2]) by IA1PR12MB9030.namprd12.prod.outlook.com
  ([fe80::2c1d:ed27:b53a:97d2%6]) with mapi id 15.21.0615.013; Wed, 18 Nov 2026
- 19:24:55 +0000
+ 19:24:52 +0000
 From: Manish Honap <mhonap@nvidia.com>
 To: Alex Williamson <alex@shazbot.org>
 CC: "jgg@ziepe.ca" <jgg@ziepe.ca>, Ankit Agrawal <ankita@nvidia.com>,
@@ -95,18 +95,18 @@ CC: "jgg@ziepe.ca" <jgg@ziepe.ca>, Ankit Agrawal <ankita@nvidia.com>,
 	<linux-pci@vger.kernel.org>, "linux-kselftest@vger.kernel.org"
 	<linux-kselftest@vger.kernel.org>, "linux-hardening@vger.kernel.org"
 	<linux-hardening@vger.kernel.org>, Manish Honap <mhonap@nvidia.com>
-Subject: RE: [PATCH v6 03/31] cxl: Move component register defines to
- uapi/cxl/cxl_regs.h
-Thread-Topic: [PATCH v6 03/31] cxl: Move component register defines to
- uapi/cxl/cxl_regs.h
-Thread-Index: AQHdXYozg3lnUnLESEiCMrXc74qPr7cetCUAgBWidNA=
-Date: Wed, 18 Nov 2026 19:24:55 +0000
+Subject: RE: [PATCH v6 07/31] vfio/pci: Detect CXL devices and load the CXL
+ provider on demand
+Thread-Topic: [PATCH v6 07/31] vfio/pci: Detect CXL devices and load the CXL
+ provider on demand
+Thread-Index: AQHdXYpKL5uZEnghmUSofyelBg1aWbcetC4AgBWoamA=
+Date: Wed, 18 Nov 2026 19:24:46 +0000
 Message-ID:
- <IA1PR12MB90305D1AC497D9811765D1A8BD7A2@IA1PR12MB9030.namprd12.prod.outlook.com>
+ <IA1PR12MB903080126D5C9434839E803ABD7A2@IA1PR12MB9030.namprd12.prod.outlook.com>
 References: <20261016161839.2765592-1-mhonap@nvidia.com>
-	<20261016161839.2765592-4-mhonap@nvidia.com>
- <20261104165256.09860477@shazbot.org>
-In-Reply-To: <20261104165256.09860477@shazbot.org>
+	<20261016161839.2765592-8-mhonap@nvidia.com>
+ <20261104165304.2563f4ae@shazbot.org>
+In-Reply-To: <20261104165304.2563f4ae@shazbot.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach:
@@ -115,46 +115,46 @@ authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: IA1PR12MB9030:EE_|CH3PR12MB9455:EE_
-x-ms-office365-filtering-correlation-id: f9acf41d-8044-479b-c37a-08df45a9a0bd
+x-ms-office365-filtering-correlation-id: 6110e833-c63d-4c7b-72ae-08df45a99e61
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|7416014|23010399003|366016|22082099003|18002099003|261009223027099003|4143699003|56012099006|11063799006|261026121527099003|261028144727099003|261026140227099003|261022105027099003|261022113327099003|38070700021|10067099003;
+ BCL:0;ARA:13230040|1800799024|376014|7416014|23010399003|366016|6133799003|22082099003|18002099003|261009223027099003|3023799007|4143699003|261102130727099003|56012099006|11063799006|261026121527099003|261102123227099003|261102124527099003|5023799004|261028144727099003|261026140227099003|261021121427099003|261022105027099003|38070700021|261021123027099003|261022075727099003|10067099003;
 x-microsoft-antispam-message-info:
- FonsKeLOBbvDaSRbpLUga4jHBbAuYFuqbdMvLqHXilxgk9TLKO7zE0t1YzFtP9WuPu+UeRiuNaUfPGRd6B+6kSBgqTFtF9PsFx72+nE3JNHrWqEmFgHM80Icc0jElHi1dyP+r/vm8cjAB3csvcWcbdDiBfqIxkK8kqAYN4SefIRazdxbxCUw1erTk5xihwRkttTBM4YxwdG69/FafOMaVIHRQdzrA9DVN/jhgOxJU7z1jG3b+P1ggxg+B2LINc+04IOvsFJVo17BvCo0eeuolI/pQARhxivB+TN5L91kOTtco+PsVSEBdwY1xbNMQmdNiseghudM9fg8t/ry9ZVOTfVZDrasUkMMcR4rjMfOE5lbPxdIidX2GPypBX71pjeFR5boc/ugX2enr3AxUTqdki5bDdWp21arF9frg59sVUud7U8/zlOlkpJYHtGfIm+w+bFQG+9dywEN19HWCRUtITtFK6zx66g/4In3coHqeDzFUQ8MApLymqDacSF0PVCiojuH+3vquSFVAmhQprNS+TbislEPiLO2R3w/KRozP4kn+zszSNTm5bgiFp3uJQtsapyFkg56vgEl6rXTibPeyPlGCe5xZjgFJD9siW2gRJjscSVIf4YGqQejzkDJD+Q5SohYL8KSCT4KT+QjlA4WPvbYLY7eFqVbRjOrhgTuLdrAIP+XMTHrshVEBHMv8778U1K5s/GZjIIc3h5yvX4Awtwi/X2KCNTD2poET8HQs94=
+ zH4jrDiypzfgfOkt78A3OPU7JHtHE69TCsJFm+jNE8Jnn8bue8a+24PGWNuFZOI3eAmc81louKjE64DCC6bkh8PSpKCDa3naeHrb93Voc/vZmxXK4RWenrfHnLUsNIC6+avfZzb9PcDEBkbvjn+dzAxZgAaYAS7mSJMJUZW4u3t9zxtkBETe6ZfNVK9qvi2dHLjluB5OfHrqjlWJQrNL1WFJfiaj6yirSLocLDfD3+RaFKvLXcZ0hD1tebVQ/takvF56QiOz7Ed2GMvjuZ/AQ2MD74925l7PqrxNUHVL5czi54nibqzxsDZozud9JiA+sHBvFBXFPWps1+AlCHGaa8+bjQd3NenGv83GPdmPCZJtpX5gkhW2DcorLTsaY2AzkziKUJPXPXzmf53nCDQYhJUlaLe/kWwgGi8uomzziDM5OyfaEnUTYp5Tv+oJoVnddHcq8KBbcHfXi8uKbegMcIDAPGbJfDR7GqWact/R9hP/A3aL3Z/S8hG9zHJkqk8o0K9/vO8f0OKnQZEJ1zm4/SFhtGVj2P61IW022T1DI6SlkHMbjDnViBxIl0K2m1LPJblKTrDLwotsKhn6RPHL7x8srPr5stLdwqnA04xSuuukrb7GBsjfzsdO9jElPJRvZLcRwGU9+TUPDlhcy7shR7UyPBldBrO9rAWkfkJ4B/agUmAhYMZqmIExQ5RHqI0RnVrLahD+bM1LNcApSbe4TOlrfcJHnQZe5DPJ1DBpn6E=
 x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB9030.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(23010399003)(366016)(22082099003)(18002099003)(261009223027099003)(4143699003)(56012099006)(11063799006)(261026121527099003)(261028144727099003)(261026140227099003)(261022105027099003)(261022113327099003)(38070700021)(10067099003);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB9030.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(23010399003)(366016)(6133799003)(22082099003)(18002099003)(261009223027099003)(3023799007)(4143699003)(261102130727099003)(56012099006)(11063799006)(261026121527099003)(261102123227099003)(261102124527099003)(5023799004)(261028144727099003)(261026140227099003)(261021121427099003)(261022105027099003)(38070700021)(261021123027099003)(261022075727099003)(10067099003);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?AzXbLUmAdN6hacKM45rOPhZDgzrfhcKl5+7h8jWuXXmg12aJYJ5knBC2dvdQ?=
- =?us-ascii?Q?zhNrymfKj0bocVwd9kck+8YvSMqeDzk6VG8/pXEYwJsEU+eBLe6Qp0tCCwYI?=
- =?us-ascii?Q?Ixg1OqJP8EQcaGSrYtIPwD2nPfburr6K/zQRD9I+IfqDSuuoSIuN0i29Chhr?=
- =?us-ascii?Q?AJ3Ev9q156LJwxvf8M2ggTEZFWI/PLfGO/vUw3VAILOYeHmCrasf6Ae/4+Xf?=
- =?us-ascii?Q?UQBQ7G6VVxkMpNy/u5q3P3JlBH+nFVDkxH1gBXIj2xLvoW158+jApJnoA3DX?=
- =?us-ascii?Q?QSHH59WF0dnFHAcUXXBFbCM9KvCpbVEkN7n469rFsD2SGxsYLARxkiPX0iPa?=
- =?us-ascii?Q?OTQQ4AzxGa1z8raMdAEjDZ0PaqXuoWE1g8669N+9uxkmeSHjCm2oWzpUthRm?=
- =?us-ascii?Q?to92/I09uEx23jcnZXzgjoKQ+i0lQVJZPHjmJ0zNm5zlrRASnDMBdU+Puf+D?=
- =?us-ascii?Q?sPIswva3OvViosa8R6ssr8H1T2o6i7bTGgpqJbkuMrXXC3Z9usrUNttVTs7h?=
- =?us-ascii?Q?jqEziDX7mKdwr9XGaQ2CVDQvP1Jj2uUvCjX3kzgczJR0mzVw1zkrG9j9+Ouy?=
- =?us-ascii?Q?sm4xpjxXXZAPDwwtu3H4zlCrGKPimKhgyuoUCMsMylhCd3TkJiUOMKWLfoew?=
- =?us-ascii?Q?k/cWLtfqGvUsYkfXPYJdPrlGsw0DZdcpcjb8Qp2dlYp7TLgssoM0QjVb2t47?=
- =?us-ascii?Q?9/DjjgKz3uJDEVo57WuzTnEEgRtSSooiNfeTK3hqYLCA8FamxhAEiaSGCdUi?=
- =?us-ascii?Q?Ilv7TmhDCIhXO+ZP09NyKhpjZkdIedtaD5ASztpTcWUEh5I/C28dKFwQVyyR?=
- =?us-ascii?Q?ZptggyDi4PKGz0kMvxIv3OHJhWOu8OJSpioaRR2RtZoG+fzSTAFM8H93Vifj?=
- =?us-ascii?Q?C87dMMCBPAr+FlMEdy5SANNN5NJaa3ietqDYJ40kePfSE+9gUlYj3rlYE+nY?=
- =?us-ascii?Q?RRGY5yJLbSJXosoDtb3C+CIVxcBJKLjaZOuvUCxi32C+V1Eke0ZBHcDUJTxi?=
- =?us-ascii?Q?exf42wKfLVUWNR9S0W+TPPj6w6UUx/4xcf69Z6q4dWf5nLS0F97QV4u0IxGk?=
- =?us-ascii?Q?t8Bjrbpoj65/wInBbBLej6+SEQf+GCTwKomWR5kmBZclM3K7VJKgJvn/F+Aq?=
- =?us-ascii?Q?NVLSDKtLm/nBKicrom5bGqDlEeIUnOuEVZKSRa/e9m2TB1BSTERDmUUVdqlA?=
- =?us-ascii?Q?wwGC0kTJERQ4L4/G9dH4QvRkULqp8Qy0Cb5Ru/yYOp57MtK8drZOGhxqbSrs?=
- =?us-ascii?Q?/5Pdc0TRABVIIZewIcBrgi2CF1xQhUxhlWmR5TwRrQm67HsY4XGDEEDQgWlA?=
- =?us-ascii?Q?LOp2sEXOWkqCtBGh8tlzSuavzqbtNu0g1QJX3R/+mDqNSEBv6gG9sHaa1Ymh?=
- =?us-ascii?Q?71ReRscJLUFXQXyX9NVkHwsfFqun3/p96QI1dZuMt1xKQwpvdZ/MIjM9w+lr?=
- =?us-ascii?Q?Qz3UB2ATm6m4kQsgeHdtSGhT9EfB5tfd/wzrhu1YYGzgMpP8DUONN5H/Wsao?=
- =?us-ascii?Q?WsKHafIqwOQTlKM4alPCvxm0IHfvtpHH+MicJaH/OFUySE8KkzVCnZZ6XHv1?=
- =?us-ascii?Q?V4jm+G9E9rlPEhUF6tgTTOm0LNGOuntw7pIw0MM2SsAaizwaWdU4zL8u7uZZ?=
- =?us-ascii?Q?BU5RShVBDO5vnKIkXuNUmknGNbBj4WtHMZl5OmCxsxog2vv1i3UcfpGpyNA6?=
- =?us-ascii?Q?WgYd9BrKoLpYBsjU1el6r/TIafz5MrwOAoX+8KfCxWggvL1q?=
+ =?us-ascii?Q?lCfT+aE5l5GA5hIZ7JrUnby7ESMbEdeNAuj8Unq+knYr2lY3+PO0QwKUBzHc?=
+ =?us-ascii?Q?ne5yIEef+h4E+83JUP3GW/OHSQUpUiOpwgnI2gO0lsZhsPz5Sq7VDYt5LR8H?=
+ =?us-ascii?Q?3TZ+PhQiQNJsXxgf2mF9fMLuQjZjSm0sttOnkzC6PatWG9GhxfL6W0AUJvbr?=
+ =?us-ascii?Q?WuzaB0frYBZn+nSfNR686v3wUbP+uf0YAaL28COI09pERiDhQj/0m+d5wpzj?=
+ =?us-ascii?Q?uGyRaFOsL0r+uF1TbOLeM5gUK16pTxzPNGsMBE6HWhxQRcoUdm0yBW+xNxYg?=
+ =?us-ascii?Q?MFuqP7JMUGrhQpT8B1NLKLvT5ghKeWKkZeoCRyVoxKGz1gIqOYEY9gvdG/cM?=
+ =?us-ascii?Q?38deSuBQZ37vqemozGs2oHvc0zjOv/tpj06XHcAt06JWaVMCB8uzvL3uHyZg?=
+ =?us-ascii?Q?4F1KgUIfYTDxNQJNAuyvo6yxDyCGGQx2vPNXUPjdjxpHHNFTsISMir99P6rr?=
+ =?us-ascii?Q?SIaRNr0KUq6vHxHjUM19upcK7q8RL+4vka3d0NheJtxnnPsY/MwW9jERIdl1?=
+ =?us-ascii?Q?Yim7e/Q/0Us7dXx+acyRCfz1XfKghKkBscBpMmzuvRMvamNC7x2W5RDeGMjl?=
+ =?us-ascii?Q?Lywk95K7GTRYzUEfDE57EO/3gfBlWoxCGt4m94kodV5ks9q+yDaIydIH0aJ5?=
+ =?us-ascii?Q?RJWKo5joi4WOuqVKp7mRmsd3am/3IKj6P2/2WtnMb1pBCstDWCHPm/FosjIN?=
+ =?us-ascii?Q?OE6WQgDW3Sinf94rHvvB48tx/0QyhVGoPlo8HF1FMByaEFNGkNGGCKHtdq2K?=
+ =?us-ascii?Q?dNA2eCbeHFUs8eXElB65hh2omkHxWcm4oev0uh4HZQSEd6Y97a3Qybltl8+z?=
+ =?us-ascii?Q?nRhPNvR0vXYCYFw4SG61c0FZuiqSEyj7KNvm4ha7AfPJ2xaWGfNmd1qrXLEY?=
+ =?us-ascii?Q?xuHG6u8oTOn32RJZkr687159rpi+EJddaxN2CgA4vDd2BVQOUeDI4YlOc+iF?=
+ =?us-ascii?Q?f+lBQaWYJfD/12A0XmGpV9k3wL+GZcychrYpQITDHE01A/6K94kGa+eC62iv?=
+ =?us-ascii?Q?LgBYfrL7iM8szI8ZfINNbUNXKn6rlDhr62A5SPQzJRajJ7IjeNfP5/iXw6WR?=
+ =?us-ascii?Q?AeBj9EL4IMsnATZuo8Mq1E93tcfdqGV1spwml79ImjehtBejT0EsUeZcXHA1?=
+ =?us-ascii?Q?gr9nz2Cg+NJu1xgdCZDGI5tH8QXUmBjCU1MxExRVr5GOiRiQ0hVk0cfw4K0t?=
+ =?us-ascii?Q?q2qr5bJ5sFnZ/rCFhUakNFQsljO01vPup2RrJALvUmbsXu+colJU4SOFiGY9?=
+ =?us-ascii?Q?EPysqq/yhfTadkaRTlM7c5zmAP/ZTQ8Q/2C/pT75WzFBq+MwujAu3mvghTlX?=
+ =?us-ascii?Q?qeyIE+rnmVE/mbrpd2qIYTzkgrR4kOIsUCAKRs3G0PiirdZ9vZw/Ap/GpqjZ?=
+ =?us-ascii?Q?ddAnSug3onfbnSE80C0fdN986j1Hg15fRxAy7MdNPQNR2g14jtpjOR07RMfD?=
+ =?us-ascii?Q?kF4uDgDM8N2K6x/z3zp575lyqz5L72IcRBGlhMBm1fpkngVJZRmoBrvWcJa2?=
+ =?us-ascii?Q?BNGkf3yXo90pyi+3hpLFmmoSjJm235BZeCDSr7eypcuZZe9FO1ekKkWor8hn?=
+ =?us-ascii?Q?oiJMO9hqZEmIjY8xVOgT7qujPoY70691/iuZKlbQDUV2XLnTr7M+UGpw7VD7?=
+ =?us-ascii?Q?fEzJAlB2AHRwiH2G0BC6TnXBDrKKVZmuphMOjOx6IV5kSSmFxvR7uK4lA6lb?=
+ =?us-ascii?Q?KmPD6Y1Dd5rxM2ndOlY0c7YmkpQzicRADV3HK2qqpPVCGwzt?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -169,13 +169,13 @@ MIME-Version: 1.0
 X-OriginatorOrg: Nvidia.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: IA1PR12MB9030.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f9acf41d-8044-479b-c37a-08df45a9a0bd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Nov 2026 19:24:55.8010
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6110e833-c63d-4c7b-72ae-08df45a99e61
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Nov 2026 19:24:46.6291
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rbLFx3US/MQ9MCQB4wOHf++u0kI3hLDdhG9dFg20JMUbFZuz5nw/a3iTqj9OOhbX17rKUZQ70Vk5MKMG15GBnQ==
+X-MS-Exchange-CrossTenant-userprincipalname: WjCyvtuOVmrGVXUdWiIbRfJs+FJfXBkY2lpP/KCcBkzPaBUQADr+hvz0XR7JEBBEqg1T4QrWRsd7gnV6ZdaXEQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9455
 
 
@@ -185,11 +185,11 @@ X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9455
 > Sent: Thursday, November 5, 2026 5:23 AM
 > To: Manish Honap <mhonap@nvidia.com>
 > Cc: jgg@ziepe.ca; Ankit Agrawal <ankita@nvidia.com>; jic23@kernel.org;
-> dave.jiang@intel.com; alejandro.lucero-palau@amd.com; Srirangan
-> Madhavan <smadhavan@nvidia.com>; corbet@lwn.net;
-> skhan@linuxfoundation.org; dave@stgolabs.net; alison.schofield@intel.com;
-> vishal.l.verma@intel.com; iweiny@kernel.org; ming.li@zohomail.com; Yishai
-> Hadas <yishaih@nvidia.com>; Shameer Kolothum Thodi
+> dave.jiang@intel.com; alejandro.lucero-palau@amd.com; Srirangan Madhavan
+> <smadhavan@nvidia.com>; corbet@lwn.net; skhan@linuxfoundation.org;
+> dave@stgolabs.net; alison.schofield@intel.com; vishal.l.verma@intel.com;
+> iweiny@kernel.org; ming.li@zohomail.com; Yishai Hadas
+> <yishaih@nvidia.com>; Shameer Kolothum Thodi
 > <skolothumtho@nvidia.com>; kevin.tian@intel.com; bhelgaas@google.com;
 > dmatlack@google.com; kees@kernel.org; gustavoars@kernel.org; Neo Jia
 > <cjia@nvidia.com>; Krishnakant Jaju <kjaju@nvidia.com>; Vikram Sethi
@@ -198,50 +198,334 @@ X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9455
 > linux-cxl@vger.kernel.org; linux-pci@vger.kernel.org; linux-
 > kselftest@vger.kernel.org; linux-hardening@vger.kernel.org; alex@shazbot.=
 org
-> Subject: Re: [PATCH v6 03/31] cxl: Move component register defines to
-> uapi/cxl/cxl_regs.h
+> Subject: Re: [PATCH v6 07/31] vfio/pci: Detect CXL devices and load the C=
+XL
+> provider on demand
 >=20
 > External email: Use caution opening links or attachments
 >=20
 >=20
-> On Fri, 16 Oct 2026 21:48:10 +0530
+> On Fri, 16 Oct 2026 21:48:14 +0530
 > <mhonap@nvidia.com> wrote:
-> > diff --git a/include/uapi/cxl/cxl_regs.h b/include/uapi/cxl/cxl_regs.h
-> > new file mode 100644 index 000000000000..276f9361c840
-> > --- /dev/null
-> > +++ b/include/uapi/cxl/cxl_regs.h
-> > @@ -0,0 +1,56 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-> > +/* Copyright (c) 2026 NVIDIA Corporation & Affiliates */
-> > +
-> > +#ifndef _UAPI_CXL_REGS_H_
-> > +#define _UAPI_CXL_REGS_H_
-> > +
-> > +#include <linux/bits.h>
-> > +#include <linux/const.h>
-> > +
-> > +/* CXL r4.0 sec 8.2.3 Component Register Layout and Definition */
-> > +#define CXL_COMPONENT_REG_BLOCK_SIZE 0x10000
-> > +
-> > +/* CXL r4.0 sec 8.2.4 CXL.cache and CXL.mem Registers */ #define
-> > +CXL_CM_OFFSET 0x1000 #define CXL_CM_CAP_HDR_OFFSET 0x0
-> > +#define   CXL_CM_CAP_HDR_ID_MASK __GENMASK(15, 0)
 >=20
-> A local sashiko review asks if this new uapi header should include
-> asm/bitsperlong.h since __GENMASK requires __BITS_PER_LONG.  We include
-> the other two header dependencies, but not this one, so it's a bit self-
-> inconsistent.
+> > From: Manish Honap <mhonap@nvidia.com>
+> >
+> > A CXL device needs the vfio-cxl callbacks, but pulling vfio-cxl and
+> > the CXL core in unconditionally would bloat every vfio-pci setup.
+> > Detect a CXL Type-2 device at bind and request_module("vfio-cxl") only
+> > then, then hand the device to the registered ops.
+> >
+> > Each bound CXL device pins the provider through
+> > vfio_pci_get_cxl_ops() (try_module_get) and drops it with
+> > vfio_pci_put_cxl_ops() at release, so vfio-cxl can unload once no CXL
+> > device is bound.
+> >
+> > If the provider is absent the device is bound without the CXL
+> > extensions. A built-in provider whose initcall has not run yet is
+> > waited for with -EPROBE_DEFER; the deferred-probe machinery will retry
+> > the bind once the provider registers.
+> >
+> > The provider .init() can return -EPROBE_DEFER when the device is not
+> > ready yet, for example when its CXL port has not enumerated. Propagate
+> > it so the bind is retried later. Any other init failure is non-fatal:
+> > a CXL Type-2 device is also a valid vfio-pci device, so log the error,
+> > drop the provider reference, leave cxl_ops NULL and continue without
+> > CXL support.
+> >
+> > Assisted-by: LLM
+> > Signed-off-by: Manish Honap <mhonap@nvidia.com>
+> > ---
+> >  drivers/vfio/pci/vfio_pci_core.c | 101
+> +++++++++++++++++++++++++++++++
+> >  include/linux/vfio_pci_core.h    |   3 +
+> >  2 files changed, 104 insertions(+)
+> >
+> > diff --git a/drivers/vfio/pci/vfio_pci_core.c
+> > b/drivers/vfio/pci/vfio_pci_core.c
+> > index 2cc5dd20396c..e50b36751d9a 100644
+> > --- a/drivers/vfio/pci/vfio_pci_core.c
+> > +++ b/drivers/vfio/pci/vfio_pci_core.c
+> > @@ -2202,6 +2202,101 @@ void vfio_pci_core_unregister_cxl_ops(const
+> > struct vfio_cxl_ops *ops)  }
+> > EXPORT_SYMBOL_GPL(vfio_pci_core_unregister_cxl_ops);
+> >
+> > +static const struct vfio_cxl_ops *vfio_pci_get_cxl_ops(void) {
+> > +     guard(rwsem_read)(&vfio_pci_cxl_ops_rwsem);
+> > +
+> > +     if (vfio_pci_cxl_ops && try_module_get(vfio_pci_cxl_ops->owner))
+> > +             return vfio_pci_cxl_ops;
+> > +
+> > +     return NULL;
+> > +}
+> > +
+> > +static void vfio_pci_put_cxl_ops(const struct vfio_cxl_ops *ops) {
+> > +     module_put(ops->owner);
+> > +}
+> > +
+> > +/*
+> > + * A CXL Type-2 device advertises both CXL.cache and CXL.mem in its CX=
+L
+> DVSEC.
+> > + * pcie_is_cxl() is also true for Type-1 (cache only) and Type-3 (mem
+> > +only)
+> > + * devices, which the vfio-cxl provider does not handle, so confirm
+> > +the Type-2
+> > + * identity before engaging it.
+> > + */
+>=20
+> Probably another AI comment, it's only describing what the function is
+> obviously doing.  Drop it.
 >=20
 
-Okay, I will add it in v7.
+Okay, I will drop this.
 
-> BTW, current guidance on the Assisted-by tag: 1e035297ffda ("docs:
-> remove Assisted-by references").  Thanks,
+> > +static bool vfio_pci_is_cxl_type2(struct pci_dev *pdev) {
+> > +     u16 dvsec, cap;
+> > +
+> > +     if (!pcie_is_cxl(pdev))
+> > +             return false;
+> > +
+> > +     dvsec =3D pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
+> > +                                       PCI_DVSEC_CXL_DEVICE);
+> > +     if (!dvsec)
+> > +             return false;
+> > +
+> > +     if (pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap))
+> > +             return false;
+> > +
+> > +     return (cap & PCI_DVSEC_CXL_CACHE_CAPABLE) &&
+> > +             (cap & PCI_DVSEC_CXL_MEM_CAPABLE); }
+> > +
+> > +/*
+> > + * Load vfio-cxl on demand for a CXL Type-2 device and hand the
+> > +device to its
+> > + * ops. If the provider is absent the device is bound without the CXL
+> > + * extensions; a built-in provider whose initcall has not run yet is
+> > +waited for with
+> > + * -EPROBE_DEFER.
+> > + */
+> > +static int vfio_pci_core_cxl_init(struct vfio_pci_core_device *vdev)
+> > +{
+> > +     const struct vfio_cxl_ops *ops;
+> > +     int ret;
+> > +
+> > +     if (!vfio_pci_is_cxl_type2(vdev->pdev))
+> > +             return 0;
+> > +
+> > +     request_module("vfio-cxl");
 >=20
-> Alex
+> A local sashiko run questions:
+> ---
+> [Severity: High]
+> Could request_module() in vfio_pci_core_cxl_init(), in
+> drivers/vfio/pci/vfio_pci_core.c, deadlock when a matching Type-2 device =
+is
+> probed asynchronously and vfio-cxl is an unloaded module whose own
+> async_probe setting remains false?
+>=20
+> Asynchronous probing can be selected with vfio-pci's async_probe=3D1 modu=
+le
+> argument or driver_async_probe=3Dvfio-pci. The resulting wait cycle is:
+>=20
+>     __driver_attach_async_helper()
+>         vfio_pci_core_cxl_init()
+>             request_module("vfio-cxl")
+>                 waits for modprobe to exit
+>=20
+>     do_init_module() for vfio-cxl
+>         async_synchronize_full()
+>             waits for the outstanding vfio-pci probe
+>=20
+> In kernel/module/main.c, do_init_module() performs this synchronization a=
+fter
+> the provider initializer returns. Successfully registering the operations=
+ therefore
+> does not break the cycle. The provider's async_probe setting is independe=
+nt of
+> vfio-pci's setting.
+>=20
+> The warning in __request_module(), in kernel/module/kmod.c, does not abor=
+t
+> loading. Dispatch through pci_call_probe(), in  drivers/pci/pci-driver.c,=
+ also
+> preserves the cycle because the originating async callback waits in
+> flush_work(). The global async wait has no timeout.
+>=20
+> The final series retains this synchronous request. Could provider loading=
+ be
+> moved outside the outstanding async probe, with binding deferred until th=
+e
+> operations are available?
+> ---
+>=20
+> AIUI, this could be resolved if we do the request_module() on bind and th=
+e CXL
+> init on open, but CXL expects that we use the devm interfaces that have a=
+ bind-
+> >release lifetime.  But then...
+>=20
 
-Okay, I will drop this in v7 and update the cover letter as per new guidanc=
-e.
+Hmm, I will need to spend more time on this. With vfio-pci async_probe=3D1,=
+ I think
+the probe blocks in request_module() while do_init_module() for vfio-cxl
+waits in async_synchronize_full() for that same probe.
+
+For v7, I will load vfio-cxl from vfio_pci_init() instead before
+pci_register_driver():
+- if a device present at that point has a CXL DVSEC that vfio-cxl can handl=
+e,
+init calls request_module() and waits. Module init is not an async probe, s=
+o
+the cycle suggested above cannot form, and a host without such a device wil=
+l not
+load CXL module, as per your suggestion on v3.
+
+- A device that shows up while vfio-cxl is not loaded gets
+request_module_nowait() and binds without CXL support, as it does
+today when CXL setup fails. A rebind will pick it up.
+I will use MODULE_WEAKDEP("vfio-cxl") to keep the module in the initramfs
+without loading it.
+
+> > +     ops =3D vfio_pci_get_cxl_ops();
+> > +     if (!ops)
+> > +             return IS_BUILTIN(CONFIG_VFIO_CXL) ? -EPROBE_DEFER : 0;
+> > +
+> > +     ret =3D ops->init(vdev);
+> > +     /*
+> > +      * A provider that is not ready yet (for example its CXL port has=
+ not
+> > +      * enumerated) returns -EPROBE_DEFER. Propagate it so the bind re=
+tries
+> > +      * rather than continuing without CXL support.
+> > +      */
+> > +     if (ret =3D=3D -EPROBE_DEFER) {
+> > +             vfio_pci_put_cxl_ops(ops);
+> > +             return ret;
+> > +     }
+> > +     /*
+> > +      * Any other failure is non-fatal: a CXL device that cannot be br=
+ought
+> > +      * up as Type-2 still works without the CXL extensions, so log an=
+d
+> > +      * continue rather than failing the bind.
+> > +      */
+> > +     if (ret) {
+> > +             pci_warn(vdev->pdev,
+> > +                      "CXL init failed (%d), continuing without CXL su=
+pport\n",
+> > +                      ret);
+> > +             vfio_pci_put_cxl_ops(ops);
+> > +             return 0;
+> > +     }
+> > +
+> > +     vdev->cxl_ops =3D ops;
+> > +     return 0;
+> > +}
+> > +
+> > +static void vfio_pci_core_cxl_release(struct vfio_pci_core_device
+> > +*vdev) {
+> > +     if (!vdev->cxl_ops)
+> > +             return;
+> > +
+> > +     vdev->cxl_ops->release(vdev);
+> > +     vfio_pci_put_cxl_ops(vdev->cxl_ops);
+> > +}
+> > +
+> >  int vfio_pci_core_init_dev(struct vfio_device *core_vdev)  {
+> >       struct vfio_pci_core_device *vdev =3D @@ -2223,6 +2318,10 @@ int
+> > vfio_pci_core_init_dev(struct vfio_device *core_vdev)
+> >       init_rwsem(&vdev->memory_lock);
+> >       xa_init(&vdev->ctx);
+> >
+> > +     ret =3D vfio_pci_core_cxl_init(vdev);
+> > +     if (ret)
+> > +             return ret;
+> > +
+> >       return 0;
+> >  }
+> >  EXPORT_SYMBOL_GPL(vfio_pci_core_init_dev);
+> > @@ -2232,6 +2331,8 @@ void vfio_pci_core_release_dev(struct vfio_device
+> *core_vdev)
+> >       struct vfio_pci_core_device *vdev =3D
+> >               container_of(core_vdev, struct vfio_pci_core_device,
+> > vdev);
+> >
+> > +     vfio_pci_core_cxl_release(vdev);
+>=20
+> Sashiko has a doozy regarding the resulting lifecycle teardown:
+>=20
+> ---
+> [Severity: Critical]
+> Can vfio_pci_core_release_dev(), in drivers/vfio/pci/vfio_pci_core.c, inv=
+oke
+> provider teardown after device-managed cleanup has freed vdev->cxl when
+> final object destruction is delayed during unbind?
+>=20
+> In the final series, vfio_cxl_create_memdev(), in
+> drivers/vfio/pci/cxl/vfio_cxl_core.c, allocates the provider state throug=
+h
+> devm_cxl_dev_state_create() against pdev->dev. This release hook instead
+> runs at final vfio object destruction, which can follow driver removal an=
+d
+> device-managed cleanup.
+>=20
+> Device-cdev close and unbind can interleave as follows:
+>=20
+>     vfio_device_fops_release()
+>         drops the last registration reference
+>         completes the unregister wait
+>=20
+>     vfio_pci_remove()
+>         finishes unregistering
+>         drops its vfio device reference
+>         returns while the cdev still retains the vfio object
+>=20
+>     device_unbind_cleanup()
+>         devres_release_all() frees the provider state
+>=20
+>     __fput()
+>         cdev_put() drops the remaining parent reference
+>         vfio_pci_core_release_dev() calls provider teardown
+>=20
+> Enabling delayed kobject release provides another path without an open fi=
+le.
+> The module pin preserves the provider callback text, but does not preserv=
+e its
+> device-managed state.
+>=20
+> vfio_cxl_release_device(), in drivers/vfio/pci/cxl/vfio_cxl_core.c, then =
+reads
+> the freed cxl->hpa_range and cxl->hdm to release the reservation and free=
+ the
+> decoder snapshot. Reuse of that allocation can cause an incorrect reserva=
+tion
+> release or an invalid free. The final series retains both the managed all=
+ocation
+> and this final-release hook.
+>=20
+> Could provider teardown run before device-managed cleanup, or could the
+> provider state remain allocated through final vfio release?
+
+I agree this is a bug in v6. I will handle this in v7. vfio-cxl state is
+allocated with devm agains the PCI device and freed at unbind. But the tear=
+down
+happens at final vfio_device release. This can come later if cdev file
+outlives the unbind.
+
+For v7, I will setup CXL objects in vfio_pci_core_register_device and tear
+them down in vfio_pci_core_unregister_device. This way, nothing CXL is left
+in release_dev. CXL lifetime will be from open to close only.
+
+I will make sure this is not introducing any bugs by running a local sashik=
+o run.
 
 Thanks,
 Manish
+
+> ---
+>=20
+> So perhaps trying to shoehorn CXL's devm lifecycle into vfio-pci is bitin=
+g us
+> anyway.  Thanks,
+>=20
+> Alex
