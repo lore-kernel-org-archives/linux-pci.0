@@ -1,125 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.145
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795048633;
-	b=GIaqqn5XyWd6JQ+NIB5v3fULyaYqIh61042iyCkzbbkJMvW2Ot/kfeQWNytyF7wfCYph
-	 +MA1QbvGs8+0ZmR9prW9B6PGI1gNGLezvXLa4bFisy/lv3kxNN+ncGotkTyzFQQOMiZpG
-	 3aT/sdZ74L/VPyB8X6gPOOFH4LBtk/Dw5DIq8nA8sOSmZtF0lFmJTwIGKhstcYFf5PnBX
-	 QaI8YyLvly73IuHGWDGQpqkcebQsj8thCc8i/TnkYPsdYqT/3B7fU2P1bbUpC98Qe61Pu
-	 XxQ2HZ2qi1Fvvw2eyh1MEcYjb6jabjSkvyIZJE4SudE9iA02DgAS1IZnKQDbDmDJJ4g==
+	t=1795049277;
+	b=ZIj56B5d9+wBcm7J2ZSMi6wyNH5EDgbq5MYBLkdOVH/BB1bmOqsOEw76aLwGy8+XyP1w
+	 8p9V0lSVvIhukY97ogVAfMGYq7/m1mYerMi9Jo6U04ZwijzSsg0fpxt7Z/5AzsGiFIRtP
+	 NZ3ed2E47uu4Tj/1S6L0oikS05cv2HV470wQnQmgdn+ZzK5PXPrgXFH/6gx1q6qdoFrwd
+	 hxy4cF4ts84GfC3tL6xuzvCVy9YqwSdnfxR7hu4MzvX2kiW1tWDfhWUFPoq8EKebxoZRg
+	 8EtmHcFLpDi2UebDgscO6/GxqXhtdKXpswbI2YKSEnhKY39Gder+Ndjhj+0Vbzc8m3w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795048633;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 X-Mailer:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=qpIpwK9XpX5/GXTayDyB/zpYQosbDeDg7lgyOZwSIWA=;
-	b=2UIqn5AYGEp8wx1Z+Ja/wPI5+cn6wuKxLLZg4urtyF5F+rIUk7zjpY+p8Elhubze72gB
-	 huzmMz97jxmL+u+f7yBoJofytXkgwxwpcY6/FS9YV329lycPN7Kq4I3irwJqwOHylWko9
-	 dh8GRdy7FwK6yFwc9AY9O/w99upVpTYtsw9xXcAVd6vUDncByhKINUGJA7SDp6vsQiX4W
-	 ADoaOmhcoNQjaeuR8Lke2tWAzqCv3R3TkhV3STGxb83lckOIJfcBmVZ8xONe6l2QKicKZ
-	 Jzz0c1qmbujBW7YY+xPqIa/qA6oc2tO7rKnnZGXDz7Eow7KulUF9Dx0LWI5gvghOd3A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795049277;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:User-Agent:X-stable:X-Patchwork-Hint:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=h7hUkUcxsVRNGzDAFlLrY1jlloNSmH8iv2Q/mCtRGsA=;
+	b=RYhLLwshvMoWUHV9hNLUM6iYlbeOLsl8bfGqaedPNtwCSzBpdj/QNB+1T8QpHy8L54WO
+	 TttrBs0u2dwOQK2LsA9tjqJGGvlhQ951Wh0Vgt8sQcfI83fFLdk7VBlY7M7tIvuCiKI1e
+	 jWAJQ/zJ0tA2emgIvL4dlDEA6CfHS3M2/N1QAuX4U9+k/pOwlnQAQ3jHmaWIbngIZQ6U4
+	 D3K7g/j25kasg4BwDec0yfO8fnbe7uAsr8bSUayur15wuB3o0TEFSHQodJCcVY7AQp3Bs
+	 o0GSWZHwg+uLRvmINyEckF8kPUyObbnpSnyFio2gY9WnWg4YRogr7nCztgSpmmUOWGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=shazbot.org;
-	spf=pass smtp.mailfrom=shazbot.org;
-	dkim=pass header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=rnnMjSiE;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=Mcm3y5EF;
-	arc=none smtp.remote-ip=103.168.172.145
-Received: from fout-a2-smtp.messagingengine.com (fout-a2-smtp.messagingengine.com [103.168.172.145])
+	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b="PU171Cx/";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00935606A325
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 00:37:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 00935606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDC3A606A320;
+	Thu, 19 Nov 2026 00:47:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=rnnMjSiE;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=Mcm3y5EF
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.phl.internal (Postfix) with ESMTP id 14179EC08AA
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 19:37:11 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-04.internal (MEProxy); Wed, 18 Nov 2026 19:37:11 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1795048631;
-	 x=1795135031; bh=qpIpwK9XpX5/GXTayDyB/zpYQosbDeDg7lgyOZwSIWA=; b=
-	rnnMjSiEWU1AOPLY9OYHeS6d+S+bRpylNEcgpjJ/TJoLYwsIZ0I3O5zndcxxAhat
-	Djo+TQXWU2bChqKsToejSPf9jLM1jHgQytGu5Y/fqVLD9sWIMqC01ZdGOcK4NzL3
-	yqqEU0cWFHUUrwxbPCOBQNwQ+Rtqe+0HBgOPT3gCCM/HPrd33E0CMBP3cCX/q0J1
-	xvCbanyZ7vmUpfMtdpZnqsLs2IKWJNflQfEGgmWD8pA0tYoMJf8+MiUAe3vQcrc4
-	1m1IOO+DrQuxdXCNaT5RlKhyLMu0p2Iipt3uhul9IPnFzfosAZCeII18UWWmp0M7
-	U7lu4jTUAC0XF29g7auFCA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1795048631; x=
-	1795135031; bh=qpIpwK9XpX5/GXTayDyB/zpYQosbDeDg7lgyOZwSIWA=; b=M
-	cm3y5EF+AH7IuZjgZ1KLAC2sZBtr6lnKXEzjq9iU5YpKUjmvndlwrzVN2n1yKxqh
-	zJoQ36S3xA/bEOWGMfBqq+q0nTxMgqqu5/qNsMM/DQnj2b7RJApfxixQpmGnw7lO
-	y4HeqpI4cWIpgZ/nxqft2W5PjnCeLyc6bUJXKOEqh9lt4EMEXjhUiWfhEat48VNR
-	AO2g/RO5KoX2fRbgoXsLGLb88mXC3inUnjFW/4TbyTU6+yKJ3tf5vK6u14afpcg/
-	PA906xkw0NIpH5NvQS1ioKzJ6IYZpcmIovTgJ5YKUXQkGucC6ctqBw9zbowTDHS0
-	nCTO/j3w8GcldrhqHHQ7Q==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=sign d=shazbot.org a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1795048631; d=shazbot.org;
-	mf=PGFsZXhAc2hhemJvdC5vcmc+;
-	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
-	s=fm2:rsa-sha256:ZHvHN5T+8HHm0UK70RmC/dsHtYugnf1CIHH85LBjaziXuqg
-	0xCyvqOhrAUDdRUNQSFSCbS0/G6XuDLcalASMFUZ8NWGC3WZsx1l1TgC53l/7OAn
-	OCyJHXE2nkG4OblSzb+sc+oDguVGufzDQenzCO3HdCnxK4+2Hb+OQze3XjacSOhn
-	9yDQ8yZIWVKC67Dc+CU7UXRF4b5crVuzXh/8dplzaIEhzC4MzypT01QIvIlLUVBu
-	5ZkPCNwI1Ro32oMLPVAIlBxlodL/vxcShnOgPJ1kvkjklgoK6Mu6no631GWLUyJE
-	St/FvpWka8TnJLsW7VO10thiGlF863IPQoWb2BA==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=mi-m=1; hc=12;
-	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
-	from,in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:Cl8OXxmcCEAdRYan5CeUap1qnNrhJ0yy3z+nON3YliE=:9cvHxKZg+asX8ehKkhLJPZdP2WAjU/8Zzk5ApZCkuk8=;
-X-ME-Sender: <xms:tkT-ama6x7b8k052Fm_BhU13d1cQWKEq-Id-qvkAewmKSfZdsh4mbQ>
-    <xme:tkT-avx_9OBWxvr09IyyjX38K7iyq21zU-o3W2YJtx_ZbMSAsNNIcyHqYavZ11uzg
-    TcZV_6cWgL_P3RieEpx03DQAjcW_5qc3RvbL7OlQXw9RfEl63t9Z1A>
-X-ME-Received: <xmr:tkT-atMHV3TmlWlONYw3v7QsBY64IvRPyRzOrn54q8Fks7cm-0Ntr0CqwBjVpg>
-X-ME-Proxy-Cause: dmFkZTEPC5mauUjeYZHtjsRY6AjwwCMgO7qscRFz4rjP/wC6GkjGAlT/otJM7HQfG+d2+l
-    IGQUpbGx1SNIRj9iMI5+o+FJUIuMmIccN9ILK5cpXM9+43i8VqmyhF/1MtEyPHSnyUTuCl
-    52H3rdeqlcZAmSRsrnl3GOMI7cXX1RdwccQNqVC6zv5SNPwETB96QwEdLd7VEETgXKFesq
-    onleEJEi4cuoaz/QVma2f8XsbOPYnQXDe/X1HfV4kFdPmvmx7RlHnDzIlwarVfHHC9OsOf
-    CPFlOSOGAabR2hD+t4AzvRNKFnK3aCiL/JiVLcCHAJOTitsExJau7lwT8OULuwp/X2DhUZ
-    w05R3/9XPP3lwyY8RcdAs3Q8BxTi1BHzUWDYkuz+RmYnjYckGeeiG9uNMGW0DBnpwztnmq
-    U24ptAYNISnVKfhx1u6AlGSh+x7ERXSjhIL6eAMvxaju8zukGJaGqgDEFV4RR5FwqVdfZJ
-    MtrYtNDufkzhvx818ip2CzHUo0nIRrGiLbWLB4TqzDFqjpUT8M1d+7e0nMZHmcKgPq6rfp
-    hw7LbpWlZpRgYKvp5/AX8+PF/6i0W80vrRaEL+urHbQ0Xjldhpt33S+zP6nvuke4XZWRTk
-    6Y59dnB761Wndy53YUjjdKSeSMGNBoRQXpguDRodrQi9Ob8yrhVIKmWOg0tA
-X-ME-Proxy: <xmx:tkT-ameGB1AQK_6qWCFsbiAnTWD3TqsKohclbFp7j8tSfYQYVmJWKQ>
-    <xmx:tkT-aqTO0qf6Xsl5nrhv0x3LNUUGcz4rFNKUpP-EpnH0Rljpu1h2zA>
-    <xmx:tkT-asefQ5_RFySHvl1TM8fjHModUmeP3XKOuTwHAQJ0WUOc3j4LSQ>
-    <xmx:tkT-aru0uej0XqvKwvNeipTanoDj76ARQPoxqMYXCVJmA91SSXOE_w>
-    <xmx:t0T-aqHhzTNtlcs9qs1pvgtatdOaKRAkWL2ak28rplVpgYsVmiFT3i9_>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 18 Nov 2026 19:37:09 -0500 (EST)
-Date: Wed, 18 Nov 2026 16:37:06 -0800
-From: Alex Williamson <alex@shazbot.org>
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Kevin Tian <kevin.tian@intel.com>,
- Jason Gunthorpe <jgg@ziepe.ca>, Anthony Pighin <anthony.pighin@nokia.com>,
- Dave Jiang <dave.jiang@intel.com>, Dan Williams <dan.j.williams@intel.com>,
- kvm@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH] vfio/pci: Only lock the upstream bridge if the reset
- may need it
-Message-ID: <20261118163706.7138d246@shazbot.org>
-In-Reply-To: <20261112235700.2029562-1-skhawaja@google.com>
-References: <20261112235700.2029562-1-skhawaja@google.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=PU171Cx/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53A421F000C4;
+	Thu, 19 Nov 2026 00:47:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1795049276;
+	bh=h7hUkUcxsVRNGzDAFlLrY1jlloNSmH8iv2Q/mCtRGsA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=PU171Cx/SN+7pCmK2+Qg/ntk/C+lQvgtZdJJ7+lUBn24uFdsWOHZ7EsEhsb/3gqbP
+	 nTiDo5SauwshBJsSDb09vYO5QRoAaBS/A2N9Da9UjER0yizA1YdQpAprhWIIFe6HSd
+	 kitlb0hEnDMY8Xyh3/1cwFGqykfNF1uK380mi8Yg=
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	patches@lists.linux.dev,
+	Terry Bowman <terry.bowman@amd.com>,
+	Robert Richter <rrichter@amd.com>,
+	Oliver OHalloran <oohall@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 6.1 2294/2857] PCI/AER: Forward RCH downstream port-detected errors to the CXL.mem dev handler
+Date: Wed, 18 Nov 2026 15:55:28 +0100
+Message-ID: <20261118150324.077759539@linuxfoundation.org>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261118150201.293410965@linuxfoundation.org>
+References: <20261118150201.293410965@linuxfoundation.org>
+User-Agent: quilt/0.69
+X-stable: review
+X-Patchwork-Hint: ignore
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -129,152 +69,223 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Thu, 12 Nov 2026 23:57:00 +0000
-Samiullah Khawaja <skhawaja@google.com> wrote:
+6.1-stable review patch.  If anyone has any objections, please let me know.
 
-> Commit 962ae6892d8b ("vfio/pci: Lock upstream bridge for
-> vfio_pci_core_disable()") makes vfio_pci_core_disable() trylock the
-> upstream bridge before resetting the device, and skips the reset if the
-> trylock fails.
-> 
-> All VFs of a PF have the same upstream bridge. Take a device with two
-> VFs, both used by one process. When the process is killed, both VFs can
-> be released at the same time. The first one takes the bridge lock and
-> does its FLR, the second one fails the trylock and is never reset.
-> 
-> The bridge lock is only needed for a bus reset, which is done through
-> the bridge. A VF is reset with FLR, and pci_parent_bus_reset() never
-> resets the bus for it because the PF and the other VFs are on the same
-> bus.
-> 
-> Add pci_reset_needs_bridge_lock(), which returns true if any reset
-> method enabled for the device is a bus reset, and only lock the bridge
-> in vfio_pci_core_disable() when it does.
-> 
-> Fixes: 962ae6892d8b ("vfio/pci: Lock upstream bridge for vfio_pci_core_disable()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Samiullah Khawaja <skhawaja@google.com>
-> ---
-> Tested in QEMU with an igb PF behind a PCIe root port, bound to vfio-pci
-> with two VFs. Both VFs are opened through VFIO and then closed from two
-> threads at the same time, counting FLRs with a kprobe on pcie_flr().
-> Without this patch one VF missed its FLR in 50 of 50 rounds, with it
-> both VFs were reset in every round. I will send a VFIO selftest for this
-> separately.
-> ---
->  drivers/pci/pci.c                | 28 ++++++++++++++++++++++++++++
->  drivers/vfio/pci/vfio_pci_core.c |  3 ++-
->  include/linux/pci.h              |  1 +
->  3 files changed, 31 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7c6f2aba8144..c44e4d4d8774 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5256,6 +5256,34 @@ int __pci_reset_function_locked(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
->  
-> +/**
-> + * pci_reset_needs_bridge_lock - check whether a reset of @dev may need the
-> + * upstream bridge to be locked
-> + * @dev: PCI device to check
-> + *
-> + * A bus reset of @dev is done through its upstream bridge, so the caller must
-> + * hold the bridge lock. The other reset methods only access @dev itself.
-> + *
-> + * Return: true if any of the reset methods enabled for @dev is a bus reset.
-> + */
-> +bool pci_reset_needs_bridge_lock(struct pci_dev *dev)
-> +{
-> +	int i, m;
-> +
-> +	for (i = 0; i < PCI_NUM_RESET_METHODS; i++) {
-> +		m = dev->reset_methods[i];
-> +		if (!m)
-> +			break;
-> +
-> +		if (pci_reset_fn_methods[m].reset_fn == pci_reset_bus_function ||
-> +		    pci_reset_fn_methods[m].reset_fn == cxl_reset_bus_function)
+------------------
 
-This looks like a maintenance nightmare.  What if instead we did
-something like:
+From: Robert Richter <rrichter@amd.com>
 
-bool pci_parent_bus_reset_possible(struct pci_dev *dev)
-{
-	struct pci_dev *pdev;
-   
-	if (pci_is_root_bus(dev->bus) || dev->subordinate ||
-	    !dev->bus->self || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
-		return false;
+[ Upstream commit 0a867568bb0d203ca3d28634a611a1367d7c892d ]
 
-	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
-		if (pdev != dev)
-			return false;
+In Restricted CXL Device (RCD) mode a CXL device is exposed as an
+RCiEP, but CXL downstream and upstream ports are not enumerated and
+not visible in the PCIe hierarchy. [1] Protocol and link errors from
+these non-enumerated ports are signaled as internal AER errors, either
+Uncorrectable Internal Error (UIE) or Corrected Internal Errors (CIE)
+via an RCEC.
 
-	return true;
-}
-EXPORT_SYMBOL_GPL(pci_parent_bus_reset_possible);
-  
-static int pci_parent_bus_reset(struct pci_dev *dev, bool probe)
-{
-	if (!pci_parent_bus_reset_possible(dev))
-		return -ENOTTY;
+Restricted CXL host (RCH) downstream port-detected errors have the
+Requester ID of the RCEC set in the RCEC's AER Error Source ID
+register. A CXL handler must then inspect the error status in various
+CXL registers residing in the dport's component register space (CXL
+RAS capability) or the dport's RCRB (PCIe AER extended
+capability). [2]
 
-	if (probe)
-		return 0;
+Errors showing up in the RCEC's error handler must be handled and
+connected to the CXL subsystem. Implement this by forwarding the error
+to all CXL devices below the RCEC. Since the entire CXL device is
+controlled only using PCIe Configuration Space of device 0, function
+0, only pass it there [3]. The error handling is limited to currently
+supported devices with the Memory Device class code set (CXL Type 3
+Device, PCI_CLASS_MEMORY_CXL, 502h), handle downstream port errors in
+the device's cxl_pci driver. Support for other CXL Device Types
+(e.g. a CXL.cache Device) can be added later.
 
-	return pci_bridge_secondary_bus_reset(dev->bus->self);
-}
+To handle downstream port errors in addition to errors directed to the
+CXL endpoint device, a handler must also inspect the CXL RAS and PCIe
+AER capabilities of the CXL downstream port the device is connected
+to.
 
-Where we'd then condition acquiring the bridge lock on whether it's
-even possible for a function scoped reset to perform a bus reset.
+Since CXL downstream port errors are signaled using internal errors,
+the handler requires those errors to be unmasked. This is subject of a
+follow-on patch.
 
-It's a bit broader of a test than whether we actually have the necessary
-methods in our reset_fn list, but since we're not locking the reset_fn
-list between test and function-reset, it's also safer.  Thanks,
+The reason for choosing this implementation is that the AER service
+driver claims the RCEC device, but does not allow it to register a
+custom specific handler to support CXL. Connecting the RCEC hard-wired
+with a CXL handler does not work, as the CXL subsystem might not be
+present all the time. The alternative to add an implementation to the
+portdrv to allow the registration of a custom RCEC error handler isn't
+worth doing it as CXL would be its only user. Instead, just check for
+an CXL RCEC and pass it down to the connected CXL device's error
+handler. With this approach the code can entirely be implemented in
+the PCIe AER driver and is independent of the CXL subsystem. The CXL
+driver only provides the handler.
 
-Alex
+[1] CXL 3.0 spec: 9.11.8 CXL Devices Attached to an RCH
+[2] CXL 3.0 spec, 12.2.1.1 RCH Downstream Port-detected Errors
+[3] CXL 3.0 spec, 8.1.3 PCIe DVSEC for CXL Devices
 
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_reset_needs_bridge_lock);
-> +
->  /**
->   * pci_init_reset_methods - check whether device can be safely reset
->   * and store supported reset mechanisms.
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index fcbb2da860e2..ba3dfdadae39 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -777,7 +777,8 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  	 * overwrite the previously restored configuration information.
->  	 */
->  	if (vdev->reset_works) {
-> -		bridge = pci_upstream_bridge(pdev);
-> +		bridge = pci_reset_needs_bridge_lock(pdev) ?
-> +			 pci_upstream_bridge(pdev) : NULL;
->  		if (bridge && !pci_dev_trylock(bridge))
->  			goto out_restore_state;
->  		if (pci_dev_trylock(pdev)) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index aa3765a20a96..cb2856f444ca 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1486,6 +1486,7 @@ void pcie_print_link_status(struct pci_dev *dev);
->  int pcie_reset_flr(struct pci_dev *dev, bool probe);
->  int pcie_flr(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev);
-> +bool pci_reset_needs_bridge_lock(struct pci_dev *dev);
->  int pci_reset_function(struct pci_dev *dev);
->  int pci_reset_function_locked(struct pci_dev *dev);
->  int pci_try_reset_function(struct pci_dev *dev);
-> 
-> base-commit: 7475ea8b58616b33c04afb976cf0fbaad9dd63fb
+Co-developed-by: Terry Bowman <terry.bowman@amd.com>
+Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+Signed-off-by: Robert Richter <rrichter@amd.com>
+Cc: Oliver O'Halloran <oohall@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Link: https://lore.kernel.org/r/20231018171713.1883517-18-rrichter@amd.com
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Stable-dep-of: e86ac10110d0 ("PCI/AER: Fix struct pci_dev reference leak in aer_process_err_devices()")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/pcie/Kconfig |  9 ++++
+ drivers/pci/pcie/aer.c   | 93 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 100 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 788ac8df3f9db..366a35fec776f 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -45,6 +45,15 @@ config PCIEAER_INJECT
+ 	  gotten from:
+ 	     https://git.kernel.org/cgit/linux/kernel/git/gong.chen/aer-inject.git/
+ 
++config PCIEAER_CXL
++	bool "PCI Express CXL RAS support"
++	default y
++	depends on PCIEAER && CXL_PCI
++	help
++	  Enables CXL error handling.
++
++	  If unsure, say Y.
++
+ #
+ # PCI Express ECRC
+ #
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 9ae9f64457d0f..49f825531b527 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -942,14 +942,97 @@ static bool find_source_device(struct pci_dev *parent,
+ 	return true;
+ }
+ 
++#ifdef CONFIG_PCIEAER_CXL
++
++static bool is_cxl_mem_dev(struct pci_dev *dev)
++{
++	/*
++	 * The capability, status, and control fields in Device 0,
++	 * Function 0 DVSEC control the CXL functionality of the
++	 * entire device (CXL 3.0, 8.1.3).
++	 */
++	if (dev->devfn != PCI_DEVFN(0, 0))
++		return false;
++
++	/*
++	 * CXL Memory Devices must have the 502h class code set (CXL
++	 * 3.0, 8.1.12.1).
++	 */
++	if ((dev->class >> 8) != PCI_CLASS_MEMORY_CXL)
++		return false;
++
++	return true;
++}
++
++static bool cxl_error_is_native(struct pci_dev *dev)
++{
++	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
++
++	return (pcie_ports_native || host->native_aer);
++}
++
++static bool is_internal_error(struct aer_err_info *info)
++{
++	if (info->severity == AER_CORRECTABLE)
++		return info->status & PCI_ERR_COR_INTERNAL;
++
++	return info->status & PCI_ERR_UNC_INTN;
++}
++
++static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
++{
++	struct aer_err_info *info = (struct aer_err_info *)data;
++	const struct pci_error_handlers *err_handler;
++
++	if (!is_cxl_mem_dev(dev) || !cxl_error_is_native(dev))
++		return 0;
++
++	/* protect dev->driver */
++	device_lock(&dev->dev);
++
++	err_handler = dev->driver ? dev->driver->err_handler : NULL;
++	if (!err_handler)
++		goto out;
++
++	if (info->severity == AER_CORRECTABLE) {
++		if (err_handler->cor_error_detected)
++			err_handler->cor_error_detected(dev);
++	} else if (err_handler->error_detected) {
++		if (info->severity == AER_NONFATAL)
++			err_handler->error_detected(dev, pci_channel_io_normal);
++		else if (info->severity == AER_FATAL)
++			err_handler->error_detected(dev, pci_channel_io_frozen);
++	}
++out:
++	device_unlock(&dev->dev);
++	return 0;
++}
++
++static void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
++{
++	/*
++	 * Internal errors of an RCEC indicate an AER error in an
++	 * RCH's downstream port. Check and handle them in the CXL.mem
++	 * device driver.
++	 */
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
++	    is_internal_error(info))
++		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
++}
++
++#else
++static inline void cxl_rch_handle_error(struct pci_dev *dev,
++					struct aer_err_info *info) { }
++#endif
++
+ /**
+- * handle_error_source - handle logging error into an event log
++ * pci_aer_handle_error - handle logging error into an event log
+  * @dev: pointer to pci_dev data structure of error source device
+  * @info: comprehensive error information
+  *
+  * Invoked when an error being detected by Root Port.
+  */
+-static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
++static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int aer = dev->aer_cap;
+ 
+@@ -973,6 +1056,12 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+ 		pcie_do_recovery(dev, pci_channel_io_normal, aer_root_reset);
+ 	else if (info->severity == AER_FATAL)
+ 		pcie_do_recovery(dev, pci_channel_io_frozen, aer_root_reset);
++}
++
++static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
++{
++	cxl_rch_handle_error(dev, info);
++	pci_aer_handle_error(dev, info);
+ 	pci_dev_put(dev);
+ }
+ 
+-- 
+2.53.0
+
+
 
