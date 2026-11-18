@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795000744;
-	b=G8zIw1CkJvGwojMNlqgMAxtpESmu1vn7ZJpKxUaSKIClqF2GRy1DvFVMGC5gitN3YOnP
-	 4okWSodSkO9OfFSIKv9xAp+CZk3NTp+6N9wdlE0QOl3AO+/TVkGiGNeG9Oi4NfdcO2UOF
-	 GJYPmfeQ7VtoUI3Q+X2uGRejZOJmc0LziAzqIZCuoU9mEgmcNn3cinGdGVlHmCqK6ubAY
-	 ZvjpmrRj9jks0xRK+lDAv6/OlHrw5sgIaNZeyMDLAq00LNq8KJm74L6nA18dIVvnZ/Y66
-	 od2LYJx8W+kqJz0gFRmmQGvXXhovwr5OcE2ViT5rV6574WdXQmsUY8yfKnSy58FLDyw==
+	t=1795000906;
+	b=K12fSPmJrHObJS5TY/AJDJVcyvSHH41rlM8igBfFdVH/JBlXTmr8k/oYzl1SDA4F+hoq
+	 l8utQMj4etOueY+yQVzX1M1EUxM6Yh5m14eJI5Fn9j6/MPdTr4q0NGGdHIn3KcuSvvJtJ
+	 jtfeLgXW+wyxXtmeaVeqENkUCu6ISiaUpjKGLomsfQSy8Lgyp8TuByiBatpBziax0pzek
+	 7ABKap+52ivbXTUCLiTYD5yHR5PYFreVyy5gEc3pDNmEmB2iKgeHh5xIGo+yeTj9HQZTz
+	 e2RNXnkeZVNS5jronagWIiJFU3NeHqm7US0B1+8aRF+x0EQtJfPYBmz7nD4Z+1lqhmg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795000744;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795000906;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=fSnOovw7lUzI6PEZFMsDtQCyuPYp3fOnR17TlbMzKlw=;
-	b=rckNiANEo7GwbXs7niO6mVlbh1X1UrZ4//sY797ZDg50FDWiYTqjUaInlbFgv2fN7ESx
-	 y5RJh6FcWbor4qFJjyBJyC8NO9bb7yJ/2nizAVuvGJV/FMMWniLzyjco+vB/YqNydHsWh
-	 t3pGQnWE0TpWQtjXv+WZKq61KfPyVITrlUU6zO7nOPO0T59UAf7MsdP10vj+ZVa8wIqUX
-	 wJJDV4rI3jSf6nKGuZCr/gBKmvzMsWPjx2B4pu30C2gI09LkCmdynHs7g51Fjob5YMqTB
-	 +xAl9vkJACN9C6xSjJMbKqIGIMiluZ2XRBTZsV/6gXyRbVVDiDld39lR2XpuLg80ycQ==
+	bh=B0NGvl4heywNe/2Uy1bIJsWF2DgbUHuiaFXjjkwUzFY=;
+	b=YLOe49C8q9PHbyl7OujbkD1j9zWMHp/THaahczeWFry85psI0tQVMXRr6x5z96h9SW3u
+	 kiBy0AfVPrf7RJ0jgFAy+Gc4xabS+fAEKA/PXjY+KrDvehvqrweC/9hJdFj+fqV6g4pDD
+	 yVCGm3uXYYyAh4eyCsLwM9JrqZ1DDruncToK2k06FodFBFByKyj1Ypy+tnXJiPwy4UFbC
+	 GHPXWZWzBruTEoecvwy6A/ZA2kxzQ5m7dufSHCnq8UMGljW444hCwVFLd35odG7uh5V15
+	 C8Cedb3cjnLOvEpoMQy+WE6MVohQUb1qibz1OlnW+WZXWYoLgQFNVOpuCZBQh5Xu4dQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EzdfX+MD;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hFG0OK4M;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C47606A31C
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 11:19:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 033EF606A31C;
+	Wed, 18 Nov 2026 11:21:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EzdfX+MD
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 218971F000C5;
-	Wed, 18 Nov 2026 11:19:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hFG0OK4M
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99D091F000C4;
+	Wed, 18 Nov 2026 11:21:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795000744;
-	bh=fSnOovw7lUzI6PEZFMsDtQCyuPYp3fOnR17TlbMzKlw=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=EzdfX+MDS9jqHg8KtMtQWbSw00KG+vqxcx2JAlIskWUaga0Xc4vksft4qTQaUcYj+
-	 BrsJvP9fHtB+N/6LjNMzrwmSM5tUk/IOkz6qWrBEh9rlA7mvSPqfAWoGr03ShY8/MI
-	 cHeWjMM0vPQmFXU7O0zwG0ca5sfH7jYa6jbpombrFtfvzix0C03z9DaBr+0cSSSouZ
-	 gFGn5IaQOLX22lM4rn7dqaZCOnc3BsGlXzmO4sLXVORQfBtYH5hJLD5PTm3yr+B+Ox
-	 5BNit4wyj836DYoNJhilIPaegpOfF9x6O27YFj1x7EuXYtxQ9/xU4VCN1/NoUcBUri
-	 m+vZoTpWH+FcA==
-Message-ID: <sashiko-outbox-220816@kernel.org>
+	s=k20260515; t=1795000905;
+	bh=B0NGvl4heywNe/2Uy1bIJsWF2DgbUHuiaFXjjkwUzFY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=hFG0OK4MzzO+f4QhGm1wSalLvyazJ6163iIxT/UTbqUkfXYQQ3u1SXwv6rItMZhh4
+	 ZWCu6dMS8I8uCgRlzfCz/eSkDv8z01r+GtUy9M5Y9Qjwb3Q+FS7n8+vHEn/p2Mnd1b
+	 5WlLldIf7pnX307ixHgQ8eegjLfrTiY5Y+ZdUvQygyv1Lb2Yy5oV157twb3lty64oW
+	 GWwVZV+Bsnvm+XWYs3SrFkIGd5Gpqa5Wn+WumMrYqLkva5E7xB61xApbtqUf16IBVx
+	 Hzv+ygoNTg0Naf/Hxd89cL4zvM2lqv5XsHvaJH5/du7KQhFg57BwaEIbQYivKRgDOa
+	 kG2t9RvvnPnUA==
+Message-ID: <sashiko-outbox-220818@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 7/7] PCI/AER: Enable baseline capability error
- reporting
+Subject: Re: [PATCH v21 10/13] vfio/pci: Add IV-ST TPH policy and
+ TPH_PROGRAM batch programming support
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Lukas Wunner" <lukas@wunner.de>, linux-pci@vger.kernel.org
-In-Reply-To: <40e4bd7f25b37af1bdc48a13be140bdd8e7d81ab.1794997749.git.lukas@wunner.de>
-References: <cover.1794997749.git.lukas@wunner.de>
- <40e4bd7f25b37af1bdc48a13be140bdd8e7d81ab.1794997749.git.lukas@wunner.de>
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20261118091238.45992-11-fengchengwen@huawei.com>
+References: <20261118091238.45992-1-fengchengwen@huawei.com>
+ <20261118091238.45992-11-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 11:19:03 +0000
+Date: Wed, 18 Nov 2026 11:21:45 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,152 +61,397 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential
+Thank you for your contribution! Sashiko AI review found 9 potential
 issues to consider:
-- [Medium] PCI/AER: aer_get_device_error_info() misclassifies fatal
-  errors when !aer
-- [Medium] PCI/AER: aer_stats_attrs_are_visible() exposes rootport attrs
-  when !aer_cap
-- [Medium] PCI/AER: RsvdP PCI_EXP_AER_FLAGS in VF PCI_EXP_DEVCTL breaks
-  VF baseline AER
+- [High] vfio/pci: UAF and leak in vfio_pci_tph_dev_deinit() on PCI
+  disconnect
+- [High] vfio/pci: vfio_tph_config_write() drops ST mode and active req
+  updates
+- [Medium] vfio/pci: UAF and NULL deref freeing tph_st_cpu before cpuhp
+  removal
+- [Medium] vfio/pci: OOB access on tph_st_cpu from uncached ST table
+  size reads
+- [Medium] vfio/pci: missing memory_lock and enable in
+  vfio_pci_tph_cpuhp_offline()
+- [Medium] vfio/pci: missing cpu_online() check in
+  vfio_pci_tph_resolve_st_tag()
+- [Medium] vfio/pci: vfio_pci_tph_get_capability() skips
+  pcie_tph_dsm_supported()
+- [Low] vfio/pci: race in vfio_pci_tph_dev_init() adding cpuhp node
+  before init
+- [Low] vfio/pci: unsigned promotion of -1 when setting tph_st_cpu in
+  program
 --
 
-commit 9287c85cae40e6093499911042f25e70c5543c73
-Author: Lukas Wunner <lukas@wunner.de>
+commit a348f43d0aba3da4e82aeff21aba4bc617cdcd33
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-PCI/AER: Enable baseline capability error reporting
+vfio/pci: Add IV-ST TPH policy and TPH_PROGRAM batch programming support
 
-This commit enables PCIe baseline capability error reporting on devices that
-do not implement the Advanced Error Reporting Extended Capability, using the
-Device Control and Device Status registers.
+This commit adds the IV-ST TPH policy to vfio-pci, introduces the
+VFIO_DEVICE_FEATURE_TPH_PROGRAM ioctl for batch programming architected
+steering tag entries, and registers a CPU hotplug offline callback to clear
+steering tags mapped to offlined CPUs.
 
-Link: https://lore.kernel.org/r/20260826212619.GA1566339@bhelgaas/
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
+ci_config.c
+> index 3946ed2ec0cfe..398f8db8b8ff0 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+[ ... ]
+> @@ -1210,7 +1218,7 @@ static int vfio_tph_config_write(struct vfio_pci_co=
+re_device *vdev, int pos,
+>  	cap =3D vdev->tph_vcap;
+>  	mode =3D FIELD_GET(PCI_TPH_CTRL_MODE_SEL_MASK, new_ctrl);
+>  	req =3D FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, new_ctrl);
+> -	if (mode !=3D PCI_TPH_ST_NS_MODE || !(cap & (1u << mode)) ||
+> +	if (mode > PCI_TPH_ST_IV_MODE || !(cap & (1u << mode)) ||
+>  		req =3D=3D 0x2 /* reserved */ ||
+>  		(req =3D=3D PCI_TPH_REQ_EXT_TPH && !(cap & PCI_TPH_CAP_EXT_TPH)))
+>  		goto out; /* Drop invalid or unsupported write value. */
 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 9bb8e2127849e..3c28afca5d037 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -403,21 +403,22 @@ void pci_aer_init(struct pci_dev *dev)
->  {
->  	int n;
-> =20
-> -	dev->aer_cap =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> -	if (!dev->aer_cap)
-> +	if (!pci_is_pcie(dev))
->  		return;
-> =20
->  	dev->aer_info =3D kzalloc_obj(*dev->aer_info);
-> -	if (!dev->aer_info) {
-> -		dev->aer_cap =3D 0;
-> +	if (!dev->aer_info)
->  		return;
-> -	}
-> =20
->  	ratelimit_state_init(&dev->aer_info->correctable_ratelimit,
->  			     DEFAULT_RATELIMIT_INTERVAL, DEFAULT_RATELIMIT_BURST);
->  	ratelimit_state_init(&dev->aer_info->nonfatal_ratelimit,
->  			     DEFAULT_RATELIMIT_INTERVAL, DEFAULT_RATELIMIT_BURST);
-> =20
-> +	dev->aer_cap =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	if (!dev->aer_cap)
-> +		goto enable;
+[Severity: High]
+Does vfio_tph_config_write() drop ST mode updates and active requester-type
+changes now that PCI_TPH_ST_IV_MODE is allowed?
 
-[Severity: Medium]
-Does allocating dev->aer_info for all PCIe devices cause
-aer_stats_attrs_are_visible() to expose the aer_rootport_total_err_* sysfs
-attributes on Root Ports and RCECs that lack an AER Extended Capability?
+Immediately below this check, vfio_tph_config_write() still has:
 
-drivers/pci/pcie/aer.c:aer_stats_attrs_are_visible() {
+drivers/vfio/pci/vfio_pci_config.c:vfio_tph_config_write() {
 	...
-	if (!pdev->aer_info)
-		return 0;
+	org_req =3D FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, org_ctrl);
+	if (req =3D=3D org_req)
+		goto out; /* Only care about requester enable. */
 
-	if ((a =3D=3D &dev_attr_aer_rootport_total_err_cor.attr ||
-	     a =3D=3D &dev_attr_aer_rootport_total_err_fatal.attr ||
-	     a =3D=3D &dev_attr_aer_rootport_total_err_nonfatal.attr) &&
-	    ((pci_pcie_type(pdev) !=3D PCI_EXP_TYPE_ROOT_PORT) &&
-	     (pci_pcie_type(pdev) !=3D PCI_EXP_TYPE_RC_EC)))
-		return 0;
+	if (req =3D=3D PCI_TPH_REQ_TPH_ONLY || req =3D=3D PCI_TPH_REQ_EXT_TPH)
+		pcie_enable_tph_ext(pdev, mode, req);
+	else if (req =3D=3D PCI_TPH_REQ_DISABLE)
+		pcie_disable_tph(vdev->pdev);
 	...
 }
 
-Those counters are only updated from PCI_ERR_ROOT_STATUS in the AER
-capability and Documentation/ABI/testing/sysfs-bus-pci-devices-aer states
-that they only appear under AER-capable Root Ports or RCECs, so
-aer_stats_attrs_are_visible() should also require pdev->aer_cap for them.
+Because writes where req =3D=3D org_req exit at goto out without updating
+hardware:
 
+1. Switching mode between PCI_TPH_ST_NS_MODE and PCI_TPH_ST_IV_MODE while
+   TPH is already enabled is ignored.  Hardware and pdev->tph_mode stay on
+   the old mode, and if pdev->tph_mode remains PCI_TPH_ST_NS_MODE,
+   pcie_tph_set_st_entries() silently skips writing ST entries during
+   VFIO_DEVICE_FEATURE_TPH_PROGRAM.
+2. Writing PCI_TPH_ST_IV_MODE while req is PCI_TPH_REQ_DISABLE and enabling
+   req in a second write loses the mode selection, because the next
+   vfio_tph_config_write() syncs vconfig[start + PCI_TPH_CTRL] back from the
+   hardware register before applying the second write.
+3. Changing req between PCI_TPH_REQ_TPH_ONLY and PCI_TPH_REQ_EXT_TPH (or
+   re-enabling TPH after a function reset cleared the hardware register)
+   calls pcie_enable_tph_ext() while pdev->tph_enabled is still set, which
+   fails with -EBUSY unless pcie_disable_tph() is called first.
+
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 05a03aa2bceb0..23ed8ea396575 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
 [ ... ]
-
-> @@ -1204,8 +1206,11 @@ static bool is_error_source(struct pci_dev *dev, s=
-truct aer_err_info *e_info)
->  	if (!(reg16 & PCI_EXP_AER_FLAGS))
->  		return false;
+> @@ -1597,12 +1608,116 @@ static int vfio_pci_core_feature_token(struct vf=
+io_pci_core_device *vdev,
+>  	return 0;
+>  }
 > =20
-> -	if (!aer)
-> -		return false;
-> +	if (!aer) {
-> +		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-> +		return reg16 & severity2devsta[e_info->severity] &&
-> +		       !PCI_POSSIBLE_ERROR(reg16);
+> -static u32 vfio_pci_tph_get_capability(struct vfio_pci_core_device *vdev)
+> +static enum cpuhp_state vfio_tph_cpuhp_state;
+> +static u32 vfio_pci_tph_get_st_table_size(struct vfio_pci_core_device *v=
+dev);
+> +
+> +static int vfio_pci_tph_cpuhp_offline(unsigned int cpu, struct hlist_nod=
+e *node)
+> +{
+> +	struct vfio_pci_core_device *vdev =3D
+> +		hlist_entry(node, struct vfio_pci_core_device, tph_cpuhp_node);
+> +	u32 st_size =3D vfio_pci_tph_get_st_table_size(vdev);
+> +	int i;
+> +
+> +	if (vdev->tph_st_cpu =3D=3D NULL)
+> +		return 0;
+> +
+> +	mutex_lock(&vdev->tph_lock);
+> +	for (i =3D 0; i < st_size; i++) {
+> +		if (vdev->tph_st_cpu[i] !=3D (s64)cpu)
+> +			continue;
+> +		pcie_tph_set_st_entry(vdev->pdev, i, 0);
+> +		vdev->tph_st_cpu[i] =3D -1;
 > +	}
+> +	mutex_unlock(&vdev->tph_lock);
+> +
+> +	return 0;
+> +}
 
 [Severity: Medium]
-Does checking PCI_EXP_AER_FLAGS in dev's own PCI_EXP_DEVCTL prevent
-is_error_source() and clear_status_iter() from working on SR-IOV Virtual
-Functions?
+Should vfio_pci_tph_cpuhp_offline() wrap pcie_tph_set_st_entry() in
+vfio_pci_memory_lock_and_enable() and vfio_pci_memory_unlock_and_restore()
+as vfio_pci_core_feature_tph_program() does?
 
-Per PCIe r7.1 sec 7.5.3.4 and sec 9.5.1.2, the PCI_EXP_AER_FLAGS bits in
-PCI_EXP_DEVCTL are RsvdP and hardwired to 0b on VFs, which inherit the
-associated Physical Function's PCI_EXP_DEVCTL settings while implementing
-per-VF status bits in PCI_EXP_DEVSTA.  Reading PCI_EXP_DEVCTL on a VF
-therefore always sees 0 for PCI_EXP_AER_FLAGS, so is_error_source() never
-checks PCI_EXP_DEVSTA on VFs and clear_status_iter() never clears it;
-meanwhile pci_enable_pcie_error_reporting() writes 1s to those RsvdP bits on
-VFs.
+When the ST table is located in the MSI-X table (PCI_TPH_LOC_MSIX),
+pcie_tph_set_st_entry() performs MMIO writes and reads on the MSI-X BAR,
+which will fail or trigger AER errors if userspace has cleared
+PCI_COMMAND_MEMORY or if the device is in a low-power state or resetting.
+
+In addition, pcie_tph_set_st_entry() temporarily clears
+PCI_TPH_CTRL_REQ_EN_MASK in PCI_TPH_CTRL and restores pdev->tph_req_type
+under vdev->tph_lock, whereas vfio_tph_config_write() modifies PCI_TPH_CTRL
+and pdev->tph_req_type under vdev->memory_lock without taking
+vdev->tph_lock, so the two paths can race on PCI_TPH_CTRL.
 
 [ ... ]
 
-> @@ -1531,13 +1537,22 @@ int aer_get_device_error_info(struct aer_err_info=
- *info, int i)
+> +static int vfio_pci_tph_dev_init(struct vfio_pci_core_device *vdev)
+>  {
+> -	/* NO-ST only, no capability bits exposed now */
+> +	bool has_arch_st;
+> +	u32 st_size;
+> +	int i, ret;
+> +
+> +	vdev->tph_opt_in =3D 0;
+> +	vdev->tph_st_cpu =3D NULL;
+> +
+> +	has_arch_st =3D vfio_pci_tph_has_architected_st(vdev);
+> +	if (!has_arch_st)
+> +		return 0;
+> +
+> +	ret =3D cpuhp_state_add_instance_nocalls(vfio_tph_cpuhp_state,
+> +					       &vdev->tph_cpuhp_node);
+> +	if (ret !=3D 0)
+> +		return ret;
+> +
+> +	st_size =3D vfio_pci_tph_get_st_table_size(vdev);
+> +	vdev->tph_st_cpu =3D kcalloc(st_size, sizeof(*vdev->tph_st_cpu),
+> +				   GFP_KERNEL);
+> +	if (vdev->tph_st_cpu =3D=3D NULL) {
+> +		cpuhp_state_remove_instance_nocalls(vfio_tph_cpuhp_state,
+> +						    &vdev->tph_cpuhp_node);
+> +		return -ENOMEM;
+> +	}
+> +	for (i =3D 0; i < st_size; i++)
+> +		vdev->tph_st_cpu[i] =3D -1;
+> +
+>  	return 0;
+>  }
+
+[Severity: Low]
+Can vfio_pci_tph_cpuhp_offline() observe a zero-filled vdev->tph_st_cpu
+array before the initialization loop sets entries to -1?
+
+CPU0                                    CPU1
+vfio_pci_tph_dev_init()
+  cpuhp_state_add_instance_nocalls(...)
+  vdev->tph_st_cpu =3D kcalloc(...)
+                                        vfio_pci_tph_cpuhp_offline(0, ...)
+                                          if (vdev->tph_st_cpu =3D=3D NULL)
+                                          mutex_lock(&vdev->tph_lock)
+                                          vdev->tph_st_cpu[i] =3D=3D 0
+                                          pcie_tph_set_st_entry(...)
+  for (i =3D 0; i < st_size; i++)
+    vdev->tph_st_cpu[i] =3D -1;
+
+Because 0 is CPU 0's ID rather than the unmapped sentinel (-1), offlining
+CPU 0 in this window races on vdev->tph_st_cpu and treats every
+uninitialized entry as mapped to CPU 0.  Allocating and initializing
+vdev->tph_st_cpu before cpuhp_state_add_instance_nocalls() avoids this.
+
+> +static void vfio_pci_tph_dev_deinit(struct vfio_pci_core_device *vdev)
+> +{
+> +	bool has_arch_st;
+> +
+> +	has_arch_st =3D vfio_pci_tph_has_architected_st(vdev);
+> +	if (!has_arch_st)
+> +		return;
+> +
+> +	kfree(vdev->tph_st_cpu);
+> +	vdev->tph_st_cpu =3D NULL;
+> +	cpuhp_state_remove_instance_nocalls(vfio_tph_cpuhp_state,
+> +					    &vdev->tph_cpuhp_node);
+> +}
+
+[Severity: High]
+Does vfio_pci_tph_dev_deinit() leak vdev->tph_st_cpu and leave
+vdev->tph_cpuhp_node registered if the PCI device is hot-unplugged or its
+link is down when closed?
+
+vfio_pci_tph_has_architected_st() calls vfio_pci_tph_get_st_table_size() ->
+pcie_tph_get_st_table_loc(), which reads PCI_TPH_CAP from hardware config
+space.  If the device is disconnected, the config read returns 0xffffffff,
+so reg & PCI_TPH_CAP_LOC_MASK is 0x600 (neither PCI_TPH_LOC_CAP nor
+PCI_TPH_LOC_MSIX) and vfio_pci_tph_has_architected_st() returns false.
+vfio_pci_tph_dev_deinit() then returns early, leaking vdev->tph_st_cpu and
+leaving vdev->tph_cpuhp_node on the global cpuhp list after vdev is freed,
+which causes a use-after-free on the next CPU offline event or module
+unload.  Checking if (!vdev->tph_st_cpu) instead of re-querying hardware
+avoids this.
+
+[Severity: Medium]
+Even when the device is present, can freeing vdev->tph_st_cpu before
+cpuhp_state_remove_instance_nocalls() cause a use-after-free or NULL
+pointer dereference in vfio_pci_tph_cpuhp_offline()?
+
+CPU0                                    CPU1
+                                        vfio_pci_tph_cpuhp_offline()
+                                          if (vdev->tph_st_cpu =3D=3D NULL)
+vfio_pci_tph_dev_deinit()
+  kfree(vdev->tph_st_cpu)
+  vdev->tph_st_cpu =3D NULL
+                                          mutex_lock(&vdev->tph_lock)
+                                          vdev->tph_st_cpu[i]  <-- UAF / NU=
+LL
+  cpuhp_state_remove_instance_nocalls()
+
+cpuhp_state_remove_instance_nocalls() is what synchronizes against running
+hotplug callbacks, so it needs to run before freeing vdev->tph_st_cpu.
+
+> +static u32 vfio_pci_tph_get_capability(struct vfio_pci_core_device *vdev)
+> +{
+> +	bool has_arch_st;
+> +
+> +	has_arch_st =3D vfio_pci_tph_has_architected_st(vdev);
+> +	if (!has_arch_st)
+> +		return 0;
+> +
+> +	return VFIO_DEVICE_TPH_CAP_PROG_ST_NONE | VFIO_DEVICE_TPH_CAP_PROG_ST_C=
+PU;
+> +}
+
+[Severity: Medium]
+Should vfio_pci_tph_get_capability() check pcie_tph_dsm_supported(vdev->pde=
+v)
+before advertising VFIO_DEVICE_TPH_CAP_PROG_ST_CPU?
+
+Commit "PCI/TPH: Add pci_tph_dsm_supported() helper to detect device TPH ST
+_DSM" earlier in this series added pcie_tph_dsm_supported() for VFIO, but
+nothing calls it.  Without that check, VFIO_DEVICE_FEATURE_TPH GET reports
+VFIO_DEVICE_TPH_CAP_PROG_ST_CPU even when CONFIG_ACPI is disabled, the
+device is a Root Complex Integrated Endpoint, or the Root Port lacks the
+TPH ST _DSM, and subsequent VFIO_DEVICE_FEATURE_TPH_PROGRAM calls with CPU
+sources will all fail in pcie_tph_get_cpu_st_ext().
+
+>  static int vfio_pci_core_feature_tph(struct vfio_pci_core_device *vdev,
+>  				     u32 flags,
+>  				     struct vfio_device_feature_tph __user *arg,
+> @@ -1638,6 +1753,154 @@ static int vfio_pci_core_feature_tph(struct vfio_=
+pci_core_device *vdev,
+>  	return copy_to_user(arg, &tph, sizeof(tph)) ? -EFAULT : 0;
+>  }
 > =20
->  	/* Must reset in this function */
->  	info->status =3D 0;
-> +	info->mask =3D 0;
->  	info->anfe_status =3D 0;
-> +	info->first_error =3D 0;
->  	info->tlp_header_valid =3D 0;
->  	info->is_cxl =3D pcie_is_cxl(dev);
-> =20
->  	/* The device might not support AER */
-> -	if (!aer)
-> -		return 0;
-> +	if (!aer) {
-> +		if (info->severity !=3D AER_CORRECTABLE) {
-> +			pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &devsta);
-> +			if (devsta & PCI_EXP_DEVSTA_URD &&
-> +			    !PCI_POSSIBLE_ERROR(devsta))
-> +				info->status =3D PCI_ERR_UNC_UNSUP;
+> +static u32 vfio_pci_tph_get_src_mask(struct vfio_pci_core_device *vdev)
+> +{
+> +	u32 flags =3D vfio_pci_tph_get_capability(vdev);
+> +	u32 src_mask =3D 0;
+> +
+> +	if (flags & VFIO_DEVICE_TPH_CAP_PROG_ST_NONE)
+> +		src_mask |=3D VFIO_DEVICE_TPH_SRC_NONE;
+> +	if (flags & VFIO_DEVICE_TPH_CAP_PROG_ST_CPU)
+> +		src_mask |=3D VFIO_DEVICE_TPH_SRC_CPU_VOLATILE |
+> +			    VFIO_DEVICE_TPH_SRC_CPU_PERSISTENT;
+> +
+> +	return src_mask;
+> +}
+> +
+> +static u32 vfio_pci_tph_get_st_table_size(struct vfio_pci_core_device *v=
+dev)
+> +{
+> +	struct pci_dev *pdev =3D vdev->pdev;
+> +	u32 loc =3D pcie_tph_get_st_table_loc(pdev);
+> +	int ret;
+> +
+> +	if (loc =3D=3D PCI_TPH_LOC_CAP) {
+> +		return pcie_tph_get_st_table_size(pdev);
+> +	} else if (loc =3D=3D PCI_TPH_LOC_MSIX) {
+> +		ret =3D pci_msix_vec_count(pdev);
+> +		if (ret < 0)
+> +			return 0;
+> +		return ret;
+> +	} else {
+> +		return 0;
+> +	}
+> +}
+
+[Severity: Medium]
+Can re-reading the ST table size from hardware in
+vfio_pci_tph_get_st_table_size() cause out-of-bounds accesses on
+vdev->tph_st_cpu?
+
+vdev->tph_st_cpu is allocated once in vfio_pci_tph_dev_init(), but
+vfio_pci_tph_cpuhp_offline() and vfio_pci_core_feature_tph_program() call
+vfio_pci_tph_get_st_table_size() again to bound indices into
+vdev->tph_st_cpu.  If PCI config space becomes inaccessible after
+pcie_tph_get_st_table_loc() succeeds, the second config read inside
+pcie_tph_get_st_table_size() or pci_msix_vec_count() reads all-ones and
+returns 2048 (0x7ff + 1), which can exceed the allocated size of
+vdev->tph_st_cpu and cause out-of-bounds reads and writes.  Caching the
+table size on vdev at allocation time would keep the array bounds
+consistent.
+
+> +static int vfio_pci_tph_resolve_st_tag(struct pci_dev *pdev, u32 src_bit=
+s,
+> +				       u32 src_handle, bool extended, u16 *st)
+> +{
+> +	u8 req_type =3D extended ? PCI_TPH_REQ_EXT_TPH : PCI_TPH_REQ_TPH_ONLY;
+> +	int ret =3D 0;
+> +
+> +	if (src_bits & VFIO_DEVICE_TPH_SRC_NONE)
+> +		*st =3D 0;
+> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_CPU_VOLATILE)
+> +		ret =3D pcie_tph_get_cpu_st_ext(pdev, TPH_MEM_TYPE_VM,
+> +					      req_type, src_handle, st);
+> +	else if (src_bits & VFIO_DEVICE_TPH_SRC_CPU_PERSISTENT)
+> +		ret =3D pcie_tph_get_cpu_st_ext(pdev, TPH_MEM_TYPE_PM,
+> +					      req_type, src_handle, st);
+> +	else
+> +		ret =3D -EINVAL;
+> +
+> +	if (ret !=3D 0)
+> +		*st =3D 0;
+> +
+> +	return ret;
+> +}
+
+[Severity: Medium]
+Does vfio_pci_tph_resolve_st_tag() allow programming steering tags for CPUs
+that are already offline?
+
+vfio_pci_core_feature_tph_program() holds cpus_read_lock(), but neither it
+nor pcie_tph_get_cpu_st_ext() -> acpi_get_cpu_uid() checks
+cpu_online(src_handle).  An offline CPU ID still resolves via static ACPI
+processor tables and gets programmed into the ST table and recorded in
+vdev->tph_st_cpu[], where vfio_pci_tph_cpuhp_offline() will never clear it
+(and on LoongArch, passing a possible-but-not-present CPU < nr_cpu_ids
+indexes acpi_core_pic[cpu_logical_map(cpu)] at -1).
+
+[ ... ]
+
+> +	if (i > 0) {
+> +		mutex_lock(&vdev->tph_lock);
+> +
+> +		cmd =3D vfio_pci_memory_lock_and_enable(vdev);
+> +		ret =3D written =3D pcie_tph_set_st_entries(pdev, program.start, i,
+> +							tags);
+> +		vfio_pci_memory_unlock_and_restore(vdev, cmd);
+> +
+> +		if (written > 0) {
+> +			for (k =3D 0; k < written; k++)
+> +				vdev->tph_st_cpu[program.start + k] =3D
+> +					(tags[k] =3D=3D 0) ? -1 : src_handle[k];
 > +		}
-> +		return 1;
+> +
+> +		mutex_unlock(&vdev->tph_lock);
 > +	}
 
-[Severity: Medium]
-Should the !aer branch check info->severity =3D=3D AER_NONFATAL instead of
-info->severity !=3D AER_CORRECTABLE?
+[Severity: Low]
+Does (tags[k] =3D=3D 0) ? -1 : src_handle[k] store 0xffffffff instead of -1=
+ in
+vdev->tph_st_cpu?
 
-Without an AER capability, error severities are fixed to their defaults whe=
-re
-Unsupported Request is always Non-Fatal (PCIe r7.1 sec 6.2.7), yet
-PCI_EXP_DEVSTA_URD is also set by prior Advisory Non-Fatal or Non-Fatal
-Unsupported Requests (sec 6.2.5 and 7.5.3.5).  When an AER_FATAL error occu=
-rs
-on an AER-incapable device, reading PCI_EXP_DEVSTA accesses config space on
-an Endpoint or Upstream Port whose link may be down, and any set
-PCI_EXP_DEVSTA_URD bit causes aer_print_error() to misreport the fatal error
-as UnsupReq and increment the Unsupported Request counter in aer_dev_fatal
-(which Documentation/ABI/testing/sysfs-bus-pci-devices-aer says must remain
-0).
+Because src_handle[k] is a u32 and -1 is an int, the ternary expression has
+type u32, so -1 is converted to 0xffffffffU before being widened to s64
+(4294967295LL instead of -1LL).
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1794997749.gi=
-t.lukas@wunner.de?part=3D7
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118091238.4599=
+2-1-fengchengwen@huawei.com?part=3D10
