@@ -1,53 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=65.109.113.108
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795040240;
-	b=P383Vb8of+c4Gm3wfNzuyePR06seDl4sMjVNztdHyb0pbuQSog5j/qnPYr33dZCQH6WP
-	 A4liAEWW/twAMFAm5uiLFRLnLIhgssywsfTrSnmb0vMWKBW2ttVjxHNgQK3S9dGugRuBo
-	 SirkOqbOaXAB73XeIK5NhEJLhEfhJZGNd2+oxPahGrX90fPYJUd8V+cnUuwHc8lp34GTl
-	 I5HscbxvJ5PThFGL4Mhskg1HgOvPxfOqBxj0/ZTuvRdk5dpYXOxN+guF1rxBAHKqLAFfN
-	 6wNIn9HHiLZtjZOROrZhb6fKjWFYEf59oaKE/PhNHxyE11J7/lj1Eek3Hu8P59QGGtQ==
+	t=1795040531;
+	b=NQ1NY1UfUCp/UUyjqSeIIxHX2EnEkHIhTYij9Rx0IO2eeAFzDHDe8h4/Stpj6RtsMpvg
+	 x36eFVopnrKEMtNjRKfwcmqKcsCDLmzR7+XN1w99fmikSILuXUyCzxewFaR7/cNe0duq1
+	 LB8K58tCHI3yDhI5ie2lf1QBuGh6t4PdMr62Hydc7AcsOz47z3t43ng+lXZoCvl+Os97+
+	 4r1mRYFND+AZMDcDr1UFQ/3Xy9L6O3QKIv/dEEPBcyc/32lNempTsw1EiPZDXMFSp3mVB
+	 c0z3njoV1LvIg/itzS+enB6THTacTYxBEoRl42IK1a5ZxXfblIH51MhLr/l0GxYiaDg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795040240;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=OYsvEI5KoJNPfvtyr1P+eJvz19e9MIzY1Iy57nVmND4=;
-	b=Hn41Vbc9qAq12bHnNIenUJaZG7WPIw/CBhEsGjPQwog2pR2K1gxGLw0sS89fkjm9DJr3
-	 Ww0n6z6SSlyf6h9nBRUMLxMhOtCr9Ic1sszeCFsTbt577CvmC8JiC5x+xr5rJg/z1ZC1/
-	 BCk6FxEUMcjbcDHYYcS1GIxInST7ltRwrA++yqGITt5nOGwh1z2GxZRhSs2nUli6mftFa
-	 6LWKl/oZU5vKyl88kv3icMnXGR5AXhoDRcVPueS89kl5MrlEgAiDCp2Iw/uavHbJd86g1
-	 nEYMetWWQ7SkcuFmXgVEaYXaKfOLwcpPrDTwwqYVcJERmVQuW1+eYVHjWjew1mdFRdg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795040531;
+	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=oBLl2ZgbtZzWgM6/8uoKipPcTWFuyccR49px6Ov+SrU=;
+	b=z9FSJBW5cKfn44gyVRIUL2/42mmuTV48oa9ADDgItTikR26oFV+b/C4azh53mMU4PnSl
+	 I6cgxhN3gqXwk6a328JGfObS1/NqRIvSub2B0PA/JCQJ+YHKDcS4nFUdnu1uTjR/pC6al
+	 AzVCDrarzWBZlWUZGReECwUhmkJi/Yjkj4ncC5ixeuQe3j8KLn+0P9ClRVSDnciVaKIgL
+	 9vbhzDpciSsYmNOGaB8iE0l6LnxVTwsEQXYn6K2aoae2caGxknNS+w7j0uAK4a+MOndGL
+	 Ic2DXM6nmmobqWs0b2Y+IW8qvUdWQvjFFXivlNpgr0nR/Wi+1dRO6KaKGDX0e01BF1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=83.223.95.204
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+	dmarc=pass header.from=alien8.de;
+	spf=pass smtp.mailfrom=alien8.de;
+	dkim=pass header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=dW4SapPP;
+	arc=none smtp.remote-ip=65.109.113.108
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E58C606A320
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 22:17:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E58C606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9FC1606A331;
+	Wed, 18 Nov 2026 22:22:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A9FC1606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=dW4SapPP
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id DE18440E01F4;
+	Wed, 18 Nov 2026 22:22:01 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id HV56oMIbxqM0; Wed, 18 Nov 2026 22:21:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1795040518; bh=oBLl2ZgbtZzWgM6/8uoKipPcTWFuyccR49px6Ov+SrU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dW4SapPPPxF+o89PEAyD4rwh8D7DPju7lfrifSy54wursIa9i5qxCgjtyvz4Q/tQX
+	 YRzyStNwN97KwmACncjco2C4+10akLH9dF1F1nP8pkP6ufZG/A6wA7X7VvWskWj4D5
+	 KjASTIHZ4c9hPz1+q8n5b2O9HU1vVbNnQJPp2NkQ2ub3hL0yAJbYtZoYZXJSoN1YFD
+	 N0Pxpu2ZKrAXM6qFmUXbHVaCdlPh6pUj9bXDF3p37CwfES/gimtCFQ6N8Mz7/l75hQ
+	 hG3zmsxUCOT6bq/3pkI9Sjtj21mNEny0JREB6wZ/oqxS6idC60lu/mKD6b9ZQL2xVm
+	 H+fM2hqu7SDMfks8Ft8fBMfziqfhnWmHZgJBUdtK3cmPF0tRSUqLWDgVqMNEkgrpiZ
+	 UY4xJ9RCuvzZfTqUgaPeEBlOfjIbfXFi+NYSierikixvEMAXnZaP+Ds9udhVN+8N9/
+	 5m8I3y1D4nR81H3xDYKecLnzeen019NSEfANrCh5uFHBobqIpx8sWt6o9/9TXZnl3w
+	 uoQhU3QxqWfLkKicmjMrodzpNV0cp8PZgk3hRIaxaBDGgkc9tNWpion5lOlIE+L//P
+	 2A2dPR1KAARPb524lD1rqXkBALYOtDTSGmwhb8KjTya9OSa5Am77ql3O8ms1R4NXCT
+	 8hUo0eZaiG9tRMkBoIKGcmXI=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::2b])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 1E7D56B4;
-	Wed, 18 Nov 2026 23:17:11 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 08B3C600DF02; Wed, 18 Nov 2026 23:17:11 +0100 (CET)
-Date: Wed, 18 Nov 2026 23:17:10 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 7/7] PCI/AER: Enable baseline capability error
- reporting
-Message-ID: <av4j5j9-In1uWC8T@wunner.de>
-References: <cover.1794997749.git.lukas@wunner.de>
- <40e4bd7f25b37af1bdc48a13be140bdd8e7d81ab.1794997749.git.lukas@wunner.de>
- <sashiko-outbox-220816@kernel.org>
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id EE27A40E0184;
+	Wed, 18 Nov 2026 22:21:44 +0000 (UTC)
+Date: Wed, 18 Nov 2026 14:21:41 -0800
+From: Borislav Petkov <bp@alien8.de>
+To: Thorsten Blum <blum@kernel.org>
+Cc: Dave Hansen <dave.hansen@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@hobbes.lan>,
+	Lukas Wunner <lukas@wunner.de>, Ingo Molnar <mingo@elte.hu>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND v2] x86/early-quirks: Scan all functions in
+ early_pci_scan_bus()
+Message-ID: <20261118222141.GBav4k9eZ5-QMjOem4@fat_crate.local>
+References: <20261106004343.457087-2-blum@kernel.org>
+ <av3v7KY64vjxDCk1@kernel.org>
+ <be480966-3b68-44f5-9afa-f88b3c203092@intel.com>
+ <av4bS1QEZpniwlb3@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,138 +88,100 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-220816@kernel.org>
+In-Reply-To: <av4bS1QEZpniwlb3@kernel.org>
 
-On Wed, Nov 18, 2026 at 11:19:03AM +0000, sashiko-bot@kernel.org wrote:
-> Does allocating dev->aer_info for all PCIe devices cause
-> aer_stats_attrs_are_visible() to expose the aer_rootport_total_err_* sysfs
-> attributes on Root Ports and RCECs that lack an AER Extended Capability?
-> 
-> drivers/pci/pcie/aer.c:aer_stats_attrs_are_visible() {
-> 	...
-> 	if (!pdev->aer_info)
-> 		return 0;
-> 
-> 	if ((a == &dev_attr_aer_rootport_total_err_cor.attr ||
-> 	     a == &dev_attr_aer_rootport_total_err_fatal.attr ||
-> 	     a == &dev_attr_aer_rootport_total_err_nonfatal.attr) &&
-> 	    ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
-> 	     (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_EC)))
-> 		return 0;
-> 	...
-> }
-> 
-> Those counters are only updated from PCI_ERR_ROOT_STATUS in the AER
-> capability and Documentation/ABI/testing/sysfs-bus-pci-devices-aer states
-> that they only appear under AER-capable Root Ports or RCECs, so
-> aer_stats_attrs_are_visible() should also require pdev->aer_cap for them.
+On Wed, Nov 18, 2026 at 10:40:27PM +0100, Thorsten Blum wrote:
+> The patch has been reviewed and acked for quite some time. Bjorn offered
+> to take it via the PCI tree at the end of October, pending an ack from
+> one of the x86 maintainers, but there hasn't been any further feedback.
 
-A valid point.
+Why, because after sifting through all that gibberish in the commit message,
+it is basically telling me that some mac laptops have trouble with Linux?
 
-> > @@ -1204,8 +1206,11 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
-> >  	if (!(reg16 & PCI_EXP_AER_FLAGS))
-> >  		return false;
-> >  
-> > -	if (!aer)
-> > -		return false;
-> > +	if (!aer) {
-> > +		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-> > +		return reg16 & severity2devsta[e_info->severity] &&
-> > +		       !PCI_POSSIBLE_ERROR(reg16);
-> > +	}
-> 
-> Does checking PCI_EXP_AER_FLAGS in dev's own PCI_EXP_DEVCTL prevent
-> is_error_source() and clear_status_iter() from working on SR-IOV Virtual
-> Functions?
-> 
-> Per PCIe r7.1 sec 7.5.3.4 and sec 9.5.1.2, the PCI_EXP_AER_FLAGS bits in
-> PCI_EXP_DEVCTL are RsvdP and hardwired to 0b on VFs, which inherit the
-> associated Physical Function's PCI_EXP_DEVCTL settings while implementing
-> per-VF status bits in PCI_EXP_DEVSTA.  Reading PCI_EXP_DEVCTL on a VF
-> therefore always sees 0 for PCI_EXP_AER_FLAGS, so is_error_source() never
-> checks PCI_EXP_DEVSTA on VFs and clear_status_iter() never clears it;
-> meanwhile pci_enable_pcie_error_reporting() writes 1s to those RsvdP bits on
-> VFs.
+And because of this we need to stop the presses and take your patch
+immediately?
 
-Hallucination.  Section 7.5.3.4 does not say anything about error bits being
-"RsvdP and hardwired to 0b on VFs".  There is no section 9.5.1.2 in PCIe r7.1.
+> I'm not keen on sending it directly to Linus, but I'd like to get it
+> into linux-next for testing and eventually merged.
 
-> >  	/* The device might not support AER */
-> > -	if (!aer)
-> > -		return 0;
-> > +	if (!aer) {
-> > +		if (info->severity != AER_CORRECTABLE) {
-> > +			pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &devsta);
-> > +			if (devsta & PCI_EXP_DEVSTA_URD &&
-> > +			    !PCI_POSSIBLE_ERROR(devsta))
-> > +				info->status = PCI_ERR_UNC_UNSUP;
-> > +		}
-> > +		return 1;
-> > +	}
-> 
-> [Severity: Medium]
-> Should the !aer branch check info->severity == AER_NONFATAL instead of
-> info->severity != AER_CORRECTABLE?
-> 
-> Without an AER capability, error severities are fixed to their defaults where
-> Unsupported Request is always Non-Fatal (PCIe r7.1 sec 6.2.7),
+So just from looking at the diff, that patch will definitely NOT go to stable
+but needs to stay in tip for at least a cycle so that it is tested as widely
+as possible.
 
-Indeed checking against AER_NONFATAL makes more sense here, although this is
-nowhere near as critical an issue as sashiko thinks:
-
-> yet PCI_EXP_DEVSTA_URD is also set by prior Advisory Non-Fatal or Non-Fatal
-> Unsupported Requests (sec 6.2.5 and 7.5.3.5).
-
-Advisory Non-Fatal Errors are not signaled on AER-incapable devices
-(as stated in the commit message).
-
-> When an AER_FATAL error occurs
-> on an AER-incapable device, reading PCI_EXP_DEVSTA accesses config space on
-> an Endpoint or Upstream Port whose link may be down, and any set
-> PCI_EXP_DEVSTA_URD bit causes aer_print_error() to misreport the fatal error
-> as UnsupReq
-
-No, the "!PCI_POSSIBLE_ERROR(devsta)" prevents that.
-
-Below is a fixup patch for the two valid sashiko findings:
-
--- >8 --
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 3c28afca5d03..83682bc7764e 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -680,12 +680,16 @@ static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
- 	if (!pdev->aer_info)
- 		return 0;
+Because if you break other systems with it, we will have to revert and fix up
+after you.
  
--	if ((a == &dev_attr_aer_rootport_total_err_cor.attr ||
--	     a == &dev_attr_aer_rootport_total_err_fatal.attr ||
--	     a == &dev_attr_aer_rootport_total_err_nonfatal.attr) &&
--	    ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
--	     (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_EC)))
--		return 0;
-+	if (a == &dev_attr_aer_rootport_total_err_cor.attr ||
-+	    a == &dev_attr_aer_rootport_total_err_fatal.attr ||
-+	    a == &dev_attr_aer_rootport_total_err_nonfatal.attr) {
-+		if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
-+		    (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_EC))
-+			return 0;
-+
-+		if (!pdev->aer_cap)
-+			return 0;
-+	}
- 
- 	return a->mode;
- }
-@@ -1545,7 +1549,7 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
- 
- 	/* The device might not support AER */
- 	if (!aer) {
--		if (info->severity != AER_CORRECTABLE) {
-+		if (info->severity == AER_NONFATAL) {
- 			pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &devsta);
- 			if (devsta & PCI_EXP_DEVSTA_URD &&
- 			    !PCI_POSSIBLE_ERROR(devsta))
+> > Oh, and I guess this is an objection. Please don't send this specific
+> > fix upstream.
+> 
+> Is your objection to the patch itself or to merging it via my tree?
+
+It is also my objection to you not merging anything tip-maintained through
+your tree.
+
+It looks like you fail to adhere to the process everyone has agreed upon and
+you're simply bypassing maintainers. No one does that and if you're planning
+on working with other maintainers, bypassing them is the *LAST* thing you
+should do. I never thought I would have to even write this on the mailing
+list - it should be implicit.
+
+I don't know whether you know that, maybe you should refresh on the
+development process if you haven't done so:
+
+https://docs.kernel.org/process/development-process.html
+
+As to being familiar with your work which dhansen mentioned, I can give my
+experience:
+
+You are flooding us with what are mostly cleanup patches which are so-so and
+not really urgent. Not really. Sure, perhaps some of them are nice to have but
+meh, not important. Each time I have to ask, why do I need this patch?
+
+However, your frequency of sending more and more of them is as if your patches
+are the most important thing since sliced bread.
+
+And because we cannot reply to them immediately, you resend and ping and
+resend again. Instead of being patient. See, we're swamped with shit that is
+orders of magnitude more important than your cleanups.
+
+And I told you back then, if you really wanna help, you should REALLY HELP and
+review some patches from other submitters, for a change. But you completely
+ignored my hint - rather, you continued to shoot out your patches.
+
+Sorry, buddy, but this is not how this works. We are not here to review only
+your cleanups and deal only with your output when you're not reciprocating in
+the least.
+
+So what I would do if I were you, is to slow down, try to help out and be
+patient. Think whether your fixlet or cleanup really needs to be resent
+multiple times in the face of much more complex and important work we all
+have.
+
+And maybe, just maybe, you could perhaps start helping out with review. The
+thing that we all sorely need and no one really wants to do.
+
+Because it is only five of us against a gazillion of submitters who are even
+faster with AI now and we have to go sift through all that flood, and make
+sense of each pile.
+
+So we're down there, neck deep in shit and all you're trying is to bypass us
+- who cares what the maintainers think.
+
+All this is telling me is that you basically have no clue how the process
+works. And it makes me trust you even less than before. And this project works
+on trust. So maybe you should step back and think twice: do you really want to
+work in this community and have people trust you and you trust them or do you
+wanna do your own shit?
+
+Answering that would be very hepful for me to know what to do with your
+submissions in the future.
+
+Thx, but not really...
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
