@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795026420;
-	b=XG4iAYlvYs3PhxMGckDNwFiBvAKC6XO+QPj2Kj+gAF0G0cL4kda9FnXw8nIGzHFItbz8
-	 EDicBzNWulX+nROb6gWZbBbhneQtGJAzZTIR1FFAnJyyFyZ2VBVmf89jG6k2PO8qrQgaB
-	 thgX2BTfoYKCwz4SuCvrKm2Iqa5njCaH6K6b9eSwNU5svkCF3MJ+/8J3qOWXSOQ+bB2sU
-	 VVOKpZaA4Au4+z4dSBTNe87jMPc1APpxY/Jf4lqa8FpDlOg9boLHja0nUyPX8w0QRE2ME
-	 M1ZGklZg6APpcLZOS814s2rAuT9UwAtp17MDf9Yao+mt4qybwZfrLdxqEUnd1XV8DXw==
+	t=1795026931;
+	b=ZxV/KViPxATVaQ4fi/6PFn0s+uT95te/dNFC3DywaRqsWU1ziTqp/hbdYEkRCGfPnZX9
+	 jvc5EwH606utk9ufK25qNB47oI9OjPbbjUhu2zGcR2/SGxZwtibaAan4uEfuWbU34L1J9
+	 V4ixUSAXc4Xey3gWfN+LqsrL7Typz3of0HMDUE2+MLLuNdSDF1KBxbEqsOaYS8ICjOyt6
+	 daFBuuaaf25Y6PyEBEuEGHazPEJ0WfwKs7NspoWMfZY6rLUw4Wjq5kAelYKp41UKfj/uJ
+	 dsjZr1icGJ5nkenSrORFY6VAMlzKji3xLdpLELnOpqxkDHe9bGpYy0xeE/OwT3iIrUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795026420;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=sE9ZrUWQuA92zFu99YwuuIrFAGyWC56QUMh1euSw5fg=;
-	b=r/7Hb/hUp/94YtOSsmizbNMGJGdFivWpwiKHYnngooLXbPTjTwGDwAgVHUBUSo/QSRwZ
-	 3FxAe6LkVgfaXFJ1Rp85b0cpAiarVsNLGi2LcFVYXtYXf/89vuEPMnOkE4vr/1XOZuGOU
-	 oBKrldEgSkSMpG0dlHtVDDNoAwD5YXgG/hlvJOn+q7RtYUSmqQlTKA0FBEdfnzYgZqnyE
-	 rqPhLMDKolhTB8iZVxBartPHzbs6epAWQTH01UMqRAuNjcHNa0ID4fml68wmPjbKF3IX0
-	 Y2UAnAEk3x7/IvayEj5CodbvYzP04q5ZdmBi2D+jn1ajNeUmHNfozTy0/s53c6OlKAQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795026931;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=B0lS7neeXGXFe3QzmU7KdA4SEjkEDlESBGtxe2LNicw=;
+	b=CpP1eLgdz/a3bQNAMXV2lSrXlWsYbLCAbzOJWwJthPT5HQaS8QNsLJ7e0luWkdfhhbTX
+	 0u2WsR4dGh/byCA4/MoqCbjxFpxEjkLwowmOO1s5i7PuDkhgbSiddyZ8W9QmUh0SK2y7H
+	 ejz7jTVkZvR7FNQWT5kmtUp3Y4aGdX3+WrALrA3e87GIzwmst4QRz0v6JLa76jpWXZsEb
+	 JZ8xxt8mdDH0ePcTJVkBpEpjzrqjlKHgadCI3pecbGHQqVUu4o+bh7vPMz1di+bl9PbbH
+	 lyDBn7iypW3dDKMfNSJIw+QM1Dw3O7xLT3lq8Lzd+7wKvA0OpnNaWCnPsXu7rGbpQMw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MSKhejvs;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VErHkJtY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E65606A320
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 18:27:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53D24606A325;
+	Wed, 18 Nov 2026 18:35:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MSKhejvs
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5749B1F000C5;
-	Wed, 18 Nov 2026 18:27:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VErHkJtY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 220381F000C4;
+	Wed, 18 Nov 2026 18:35:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795026420;
-	bh=sE9ZrUWQuA92zFu99YwuuIrFAGyWC56QUMh1euSw5fg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MSKhejvsy/Xg4wSorMsYymgAy1QNu1PlpfDg591vzl2urMpiAwayausnR9p5DQkjT
-	 wCY7YJlGZmOYLQkHE1sxJDFO9pzIt/Du4xxF1wQuqvzogY1XEGJnSx/NgTmcKg2WfP
-	 DVxIZmpcnJs4UGEO3AgxYET6KoeAfrgHsCND5mrM+9aOwSDjOS+JDg7wE95wjMWDxq
-	 yXHClNLd4MRf7fajN8l7rsPXTUXGjdBvbEAVUH4ikZHE3BEkwhQrazn/ZoSFAF8ubB
-	 1vesSnvlBH//kJb2GjO2jrCV11xgH4H0otInk3WoMIJok8IlrokFPXY5rTeB2echn+
-	 cGnnEuSSLd8KA==
-Message-ID: <sashiko-outbox-221752@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 4/6] PCI/portdrv: Don't require AER to bind DPC
- service
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Kuppuswamy Sathyanarayanan" <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261118181718.3907441-5-sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <20261118181718.3907441-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <20261118181718.3907441-5-sathyanarayanan.kuppuswamy@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 18:26:59 +0000
+	s=k20260515; t=1795026930;
+	bh=B0lS7neeXGXFe3QzmU7KdA4SEjkEDlESBGtxe2LNicw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=VErHkJtYQGDUZe/9jiqECopRcZqAnEBNOsbdiv3VRJvNuBzSKz4o5KCqV5Li9JYVK
+	 5UDxXP78AyHbE2uOBWLkluVjlVa7/ZPmnCeESCsafIFadzOYSuM+jQG1KVkOONoAmO
+	 Z3am4icXADNjJwK9S4kMoFj9jTXxlnJdg3CYeOESBG5LnPRqo808Duj1TC5Z/JtZcH
+	 w37HNu0fQw+WpxNZnoTz/wVSWPdmY3Hr/QJjw3GSYK/+WzPR+tuL7+fW4PB0L66nnE
+	 R5HF6VLjecEqTyK00/NNWiaLN1mOq9CJwBcuPKIL5M/aiw8BfKZltoDPfiakgtMGqb
+	 +gfEWFKMah0qw==
+Date: Wed, 18 Nov 2026 19:35:24 +0100
+From: Thorsten Blum <blum@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@hobbes.lan>
+Cc: Lukas Wunner <lukas@wunner.de>, Ingo Molnar <mingo@elte.hu>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND v2] x86/early-quirks: Scan all functions in
+ early_pci_scan_bus()
+Message-ID: <av3v7KY64vjxDCk1@kernel.org>
+References: <20261106004343.457087-2-blum@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,33 +59,57 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261106004343.457087-2-blum@kernel.org>
 
-> get_port_device_capability() binds the DPC service only if
-> pci_aer_available() is true.  pci_aer_available() is false with
-> "pci=3Dnoaer" or when MSI is disabled.
->=20
-> The DPC driver does not need either of these.  pci_aer_available()
-> depends on MSI only because the AER driver does not work with INTx
-> (commit 3e77a3f7895e ("PCI: Disable AER with pci=3Dnomsi")).  The DPC
-> driver does not depend on MSI or on the AER driver, and it works on
-> ports without an AER capability.
->=20
-> PCIe r7.0 sec 6.2.11 recommends that the OS link control of DPC to
-> control of AER.  PCI Firmware r3.3, sec 4.5.2.4, requires the same for
-> _OSC.  Both are about ownership, not about using the AER driver.
-> host->native_aer and the _OSC negotiation already cover ownership.
->=20
-> [ ... ]
->     uncorrectable error that used to be ignored with "pci=3Dnoaer" now
->     triggers DPC, which takes the link down and resets the devices below
->     the port.
->=20
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@lin=
-ux.intel.com>
+On Fri, Nov 06, 2026 at 01:43:43AM +0100, Thorsten Blum wrote:
+> early_pci_scan_bus() stops scanning a PCI slot when check_dev_quirk()
+> returns nonzero, which avoids probing functions 1-7 on single-function
+> devices, but also stops scanning when a function is absent on a
+> multifunction device.
+> 
+> This can skip early quirks on multifunction devices with holes in their
+> function numbering.
+> 
+> On iMac13,1 and iMac13,2, the BCM4331 AirPort card is behind root port
+> 00:1c.3, also documented by the model list in commit abb2bafd295f
+> ("x86/quirks: Add early quirk to reset Apple AirPort card").
+> 
+> Public lspci output for 2012 iMacs [1][2] shows that 00:1c.0, 00:1c.2,
+> 00:1c.3 and 00:1c.4 are present, but 00:1c.1 is missing. The old code
+> stops at 00:1c.1 and never reaches 00:1c.3, so the AirPort reset quirk
+> is silently skipped on these machines.
+> 
+> Check function 0 first, and if it indicates a multifunction device, scan
+> functions 1-7 independently so that absent functions do not cause later
+> ones to be skipped.
+> 
+> Fixes: 15650a2f644a ("x86/PCI: fixup early quirk probing")
+> Cc: stable@vger.kernel.org
+> Link: https://forum.libreelec.tv/thread/26799-wifi-not-detected-on-2012-imac-in-11-0/ [1]
+> Link: https://zoringroup.com/forum/5/7170/ [2]
+> Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Acked-by: H. Peter Anvin (Rosaic) <hpa@zytor.com>
+> Tested-by: Thorsten Blum <blum@kernel.org> # on an iMac13,1
+> Signed-off-by: Thorsten Blum <blum@kernel.org>
+> ---
+> Changes in v2:
+> - Add iMac13,x background information and supporting links (Lukas)
+> - v1: https://lore.kernel.org/r/20260807094601.263450-2-thorsten.blum@linux.dev/
+> 
+>  arch/x86/kernel/early-quirks.c | 14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
 
-Sashiko has reviewed this patch and found no issues.
+Applied to blum/for-7.5 for linux-next testing.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118181718.3907=
-441-1-sathyanarayanan.kuppuswamy@linux.intel.com?part=3D4
+[1/1] x86/early-quirks: Scan all functions in early_pci_scan_bus()
+      https://git.kernel.org/blum/c/83e3892f2aadca0123a3b7d452e3f39e74cf5126
 
+I plan to send it to Linus during the next merge window unless there are
+objections or the x86/PCI maintainers would prefer to take it.
+
+Thanks,
+Thorsten
