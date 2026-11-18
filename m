@@ -1,63 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.216
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794993182;
-	b=0c2MpqbtrZnu0WjQ3ggWJsB6Y6XeewEGgUrmpeKIwF3LUFkXUOnVNZbb3/z2XnXzYDwh
-	 o71jgs8jNQbzMVCvbsi/Mv94c0xVvGK3fYMPcMpEDazRIc/HjPfjlwAW801ghpSTUVpg3
-	 d7lXQXWqitWj96BiR8eVB1ytXJNXJN0jjhK0S7fK1PyRIm6xPXai+P3CjAda1Jd5iXTzb
-	 Lx+y7eG2LMTpPUOQ7+dxi9lWKvJedK6H+Ddo7f17sp9ogr30O8OkRSYaTDjFAqpr4MK9h
-	 Gc9A/VbwYfJRxrAVyisGRBbPYbbYwc//I2j+QMVCFB+EL8cnPGmp8f/R5C0k9TZ8xZA==
+	b=y0rESa1v4cUSWGmzFQhJAx1pEnmkg0KUml5U6JsYZsgyPtRcrPQVE+22+B4AME1YiCX4
+	 K1m/n/BEDxiK8lmVoGjXbKrRODu6I48fGQSFSIvjgEYzpZYMhVZcM/H1nq6kJtJIMhhfD
+	 fY5xFXHotz6A74g0+5skapACvprwKtz3dBdGv6wYGPtv9AbF+l2ufEHlr6kaM8Pl111/F
+	 /SZHV6bX1YF3evN0i4BxZCaY8QiEDFG9+pD8tyXoawEXyIVoycBje0Tcj4Q1AxJOa0oSO
+	 DqTQeaMWBn2Mbgrelg6E7QKQjuhj6J5E/53ikEZ65oQLLrY33DAv+bZfBRxx78C8YWQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794993182;
 	h=DMARC-Filter:dkim-signature:Received:Received:Received:From:To:CC:
 	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Type:X-Originating-IP:X-ClientProxiedBy;
-	bh=D9iuTRLl4khyoE8ah8O1JA++QGoJxh82hwouZ4f6W7s=;
-	b=quXxWBpEi51TjSzlavk8oEuOm4u7/d7dATu2Q15u4oF6p9++EzqEdDmZ14LPS+f7E5Rt
-	 JRtud6SQyql7cPtCYVWoEZdnDsk18eNTpQHoiFQpO14UNURuq/IOEoVRNZAW5Mo5mxZIF
-	 XdzQ0BGWhvTWqQcv5o0yrgxkwtuDAHHoHu9omSX+56Y7bUEN/5AHP60DVm85QL4JOJHpO
-	 0lKTXl3ULuxokF3V/Qlcbt608VXSyIEWS1d0NOdPLw2ROT+eqchWMz7PgdHkZfxzY3kYB
-	 r+WqTueNZMzOuHaobCzs1ME+HGO6rQ930oB+3gR7XtGQJzXRbDLrDdNgumyuzmirDwA==
+	bh=zhVeDYjz2TrJxKRgkfdEpGrqtlk+WI/oTa8+4c99Hhs=;
+	b=DUDQ3yxkLNgw57dnzFYCq8Cy8Ue60GKuJDJwlvwYJpZTF4u6DRidKSKfqEKUssHzG4+v
+	 EnUc9hEUXUUOhwY8lyIugWQRAGmN3xwKavaCI4MLyD/BV4HgFUbU6Wc5ujnp+6CK1yMkV
+	 YKcArHFCs3HmbxKQIgtxHuarGQOzo5698lHFmxUV/MEirVYNxiigvvFQDSa1TxwdUv1Kn
+	 mIQzbPfRKvD7NiwFclIUtOgAwb+T0zHoL/rjO5GIzqiyAYJe1zprE8WEJdQC2Nqg6Xw+b
+	 bULRl9MD4O+DU96VFstLjLCdzp1illQ6ZdrLs1hdFgJ3rbwC55wZIY3DWsaS/pnZTEg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=huawei.com;
 	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=RP4PKLVL;
-	arc=none smtp.remote-ip=113.46.200.225
-Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=W6GuqeIJ;
+	arc=none smtp.remote-ip=113.46.200.216
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A1E0606A896;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5D0A606A33E;
 	Wed, 18 Nov 2026 09:13:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6A1E0606A896
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5D0A606A33E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=RP4PKLVL
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=W6GuqeIJ
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=D9iuTRLl4khyoE8ah8O1JA++QGoJxh82hwouZ4f6W7s=;
-	b=RP4PKLVLEatbe+rWR3aoodFZ3xDC4jZh4tt/sownoymuyru6e5bk0m63C/MIiQevyGn4kUF5Y
-	qp6c5LDof+8Y+K6WXsYuibq18FeKJcx3cnUf7GPXTs9hyqmoyPECMw7dzoH343h4c5WgnT0KVxe
-	7C09mz0jtCOX3VwUgdHKzT8=
-Received: from mail.maildlp.com (unknown [172.19.163.163])
-	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4jTwqJ13jnz1K970;
-	Wed, 18 Nov 2026 17:12:44 +0800 (CST)
+	bh=zhVeDYjz2TrJxKRgkfdEpGrqtlk+WI/oTa8+4c99Hhs=;
+	b=W6GuqeIJq8wl99QU+OAG1nkaxM+lBf0htikTomkK2L7ITprXKnIfleEQ3euFamajXkM5UjuUb
+	1HXJH+CwC8SofU4QB6ZRpmpOwrBvW77UXHBpTcIuYrDmnfRPPbma1gwBS18RCPNzC5XlJcDMOGc
+	JN3XjkIyU2seyilTdvDLpJw=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4jTwpr2TSSz1T4G5;
+	Wed, 18 Nov 2026 17:12:20 +0800 (CST)
 Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id C18E64048B;
-	Wed, 18 Nov 2026 17:12:57 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 058B540561;
+	Wed, 18 Nov 2026 17:13:00 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Wed, 18 Nov 2026 17:12:57 +0800
+ 15.2.2562.45; Wed, 18 Nov 2026 17:12:59 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>, <helgaas@kernel.org>
 CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v21 07/13] PCI/TPH: Add pcie_tph_set_st_entries() batch ST entry programming helper
-Date: Wed, 18 Nov 2026 17:12:32 +0800
-Message-ID: <20261118091238.45992-8-fengchengwen@huawei.com>
+Subject: [PATCH v21 13/13] vfio/pci: Expose per-device TPH state via debugfs
+Date: Wed, 18 Nov 2026 17:12:38 +0800
+Message-ID: <20261118091238.45992-14-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20261118091238.45992-1-fengchengwen@huawei.com>
 References: <20261118091238.45992-1-fengchengwen@huawei.com>
@@ -74,160 +74,55 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
  kwepemo500009.china.huawei.com (7.202.194.199)
 
-Add batch variant pcie_tph_set_st_entries() to write a contiguous range
-of ST table entries, returning the number of successfully written entries
-or negative errno.
-- Keep original pcie_tph_set_st_entry() as a wrapper for backward
-  compatibility
-- Disable/enable TPH once per batch instead of per entry for better
-  performance
-- Add header declaration and fallback static inline version
-- Add error logging for failed ST entry writes
+Add read-only debugfs file "tph" to report per-device TPH runtime state:
+- effective tph_policy mode
+- virtual TPH capability value
+- tph_opt-in user enable state
+
+Align debugfs comments to include tph_policy and new tph debug entry.
 
 Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 ---
- drivers/pci/tph.c       | 77 +++++++++++++++++++++++++----------------
- include/linux/pci-tph.h |  6 ++++
- 2 files changed, 54 insertions(+), 29 deletions(-)
+ drivers/vfio/pci/vfio_pci_core.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index 51a065d83104..c8b867dd233d 100644
---- a/drivers/pci/tph.c
-+++ b/drivers/pci/tph.c
-@@ -311,21 +311,19 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
- EXPORT_SYMBOL(pcie_tph_get_cpu_st);
- 
- /**
-- * pcie_tph_set_st_entry() - Set Steering Tag in the ST table entry
-+ * pcie_tph_set_st_entries - Batch set Steering Tag entries in the ST table
-  * @pdev: PCI device
-- * @index: ST table entry index
-- * @tag: Steering Tag to be written
-+ * @start: starting ST table index
-+ * @count: number of contiguous entries to write
-+ * @tags: array of u16 tag values to program
-  *
-- * Figure out the proper location of ST table, either in the MSI-X table or
-- * in the TPH Extended Capability space, and write the Steering Tag into
-- * the ST entry pointed by index.
-- *
-- * Return: 0 if success, otherwise negative value (-errno)
-+ * Return: number of successfully written entries (>0), or negative errno
-  */
--int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
-+int pcie_tph_set_st_entries(struct pci_dev *pdev, unsigned int start,
-+			    unsigned int count, const u16 *tags)
- {
--	u32 loc;
- 	int err = 0;
-+	u32 loc, i;
- 
- 	if (!pdev->tph_cap)
- 		return -EINVAL;
-@@ -333,9 +331,12 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
- 	if (!pdev->tph_enabled)
- 		return -EINVAL;
- 
-+	if (!count)
-+		return -EINVAL;
-+
- 	/* No need to write tag if device is in "No ST Mode" */
- 	if (pdev->tph_mode == PCI_TPH_ST_NS_MODE)
--		return 0;
-+		return count;
- 
- 	/*
- 	 * Disable TPH before updating ST to avoid potential instability as
-@@ -344,29 +345,47 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
- 	set_ctrl_reg_req_en(pdev, PCI_TPH_REQ_DISABLE);
- 
- 	loc = pcie_tph_get_st_table_loc(pdev);
--
--	switch (loc) {
--	case PCI_TPH_LOC_MSIX:
--		err = pci_msix_write_tph_tag(pdev, index, tag);
--		break;
--	case PCI_TPH_LOC_CAP:
--		err = write_tag_to_st_table(pdev, index, tag);
--		break;
--	default:
--		err = -EINVAL;
--	}
--
--	if (err) {
--		pcie_disable_tph(pdev);
--		return err;
-+	for (i = 0; i < count; i++) {
-+		switch (loc) {
-+		case PCI_TPH_LOC_MSIX:
-+			err = pci_msix_write_tph_tag(pdev, start + i, tags[i]);
-+			break;
-+		case PCI_TPH_LOC_CAP:
-+			err = write_tag_to_st_table(pdev, start + i, tags[i]);
-+			break;
-+		default:
-+			err = -EINVAL;
-+		}
-+		if (err != 0) {
-+			pci_err(pdev, "failed to set steering tag: %s table, index=%u, tags=%u, ret=%d\n",
-+				(loc == PCI_TPH_LOC_MSIX) ? "MSI-X" : "ST",
-+				start + i, tags[i], err);
-+			pcie_disable_tph(pdev);
-+			return i > 0 ? i : (err > 0 ? -EINVAL : err);
-+		}
- 	}
- 
- 	set_ctrl_reg_req_en(pdev, pdev->tph_req_type);
- 
--	pci_dbg(pdev, "set steering tag: %s table, index=%d, tag=%#04x\n",
--		(loc == PCI_TPH_LOC_MSIX) ? "MSI-X" : "ST", index, tag);
-+	pci_dbg(pdev, "batch set steering tag: %s table, start=%u, count=%u success!\n",
-+		(loc == PCI_TPH_LOC_MSIX) ? "MSI-X" : "ST", start, count);
- 
--	return 0;
-+	return count;
-+}
-+EXPORT_SYMBOL(pcie_tph_set_st_entries);
-+
-+/**
-+ * pcie_tph_set_st_entry() - Set Steering Tag in the ST table entry
-+ * @pdev: PCI device
-+ * @index: ST table entry index
-+ * @tag: Steering Tag to be written
-+ *
-+ * Return: 0 if success, otherwise negative value (-errno)
-+ */
-+int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
-+{
-+	int ret = pcie_tph_set_st_entries(pdev, index, 1, &tag);
-+	return ret == 1 ? 0 : ret;
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 8d3d532cd51a..a9cdcb0f95a0 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -130,10 +130,20 @@ static int vfio_pci_core_debugfs_disable_idle_d3(struct seq_file *seq,
+ 	return 0;
  }
- EXPORT_SYMBOL(pcie_tph_set_st_entry);
  
-diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-index 50640fdc84e1..58c8d416aff2 100644
---- a/include/linux/pci-tph.h
-+++ b/include/linux/pci-tph.h
-@@ -37,6 +37,8 @@ enum tph_mem_type {
- 	((pdev)->tph_max_type == PCI_TPH_REQ_EXT_TPH)
- int pcie_tph_set_st_entry(struct pci_dev *pdev,
- 			  unsigned int index, u16 tag);
-+int pcie_tph_set_st_entries(struct pci_dev *pdev, unsigned int start,
-+			    unsigned int count, const u16 *tags);
- int pcie_tph_get_cpu_st_ext(struct pci_dev *dev, enum tph_mem_type mem_type,
- 			    u8 req_type, unsigned int cpu, u16 *tag);
- int pcie_tph_get_cpu_st(struct pci_dev *dev, enum tph_mem_type mem_type,
-@@ -52,6 +54,10 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
- static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
- 					unsigned int index, u16 tag)
- { return -EINVAL; }
-+static inline int pcie_tph_set_st_entries(struct pci_dev *pdev,
-+					  unsigned int start,
-+					  unsigned int count, const u16 *tags)
-+{ return -EINVAL; }
- static inline int pcie_tph_get_cpu_st_ext(struct pci_dev *dev,
- 					  enum tph_mem_type mem_type,
- 					  u8 req_type, unsigned int cpu,
++static int vfio_pci_core_debugfs_tph(struct seq_file *seq,
++					    void *data)
++{
++	struct vfio_pci_core_device *vdev = vfio_pci_core_debugfs_private(seq);
++
++	seq_printf(seq, "policy=%u cap-virt=0x%x opt-in=%u\n",
++		vdev->tph_policy, vdev->tph_vcap, vdev->tph_opt_in);
++	return 0;
++}
++
+ /*
+- * disable_idle_d3 and nointxmask are writable module parameters latched
+- * per device at init, so a device's effective value can differ from the
+- * current parameter setting.  Expose the per-device (read-only) values
++ * disable_idle_d3, nointxmask and tph_policy are writable module parameters
++ * latched per device at init, so a device's effective value can differ from
++ * the current parameter setting.  Expose the per-device (read-only) values
+  * here for visibility; read-only parameters can't drift and are omitted.
+  */
+ static void vfio_pci_core_debugfs_init(struct vfio_pci_core_device *vdev)
+@@ -149,6 +159,8 @@ static void vfio_pci_core_debugfs_init(struct vfio_pci_core_device *vdev)
+ 				    vfio_pci_core_debugfs_nointxmask);
+ 	debugfs_create_devm_seqfile(dev, "disable_idle_d3", pci_dir,
+ 				    vfio_pci_core_debugfs_disable_idle_d3);
++	debugfs_create_devm_seqfile(dev, "tph", pci_dir,
++				    vfio_pci_core_debugfs_tph);
+ }
+ #else
+ static inline void vfio_pci_core_debugfs_init(struct vfio_pci_core_device *vdev)
 -- 
 2.17.1
 
