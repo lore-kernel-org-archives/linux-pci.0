@@ -1,88 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795007551;
-	b=FqNHS0r5MbZYNonJNKDyJhoyk1retrJXfM8lIDUg+Ik/Z63i0hV/jtOJavh7pSblcHR5
-	 o+4pzFtj/SYC622ttnKmL0U0yVtZC4k8ibf4qNZvYzKazJnlqq1J8JHa2nCIasIdTx/s6
-	 0xqRq8hLNWz7xrGmrNKnzbFMwxHfsb+LJnU6VeLMvmI8k6VSFOf5LiyVWOKyommJ6m8l4
-	 6CO4RxvGKVUXRkaJPXc6YnTbalRxgBzCUnBDBvLiMF9UqA9kMnDlVxaHrXGph5l8HK/ok
-	 uQ2W0jDTiRJBCaBhFUalEVtOSqSUnpvJmUurjtIEx8+lnVPpjO1T95HSr1iwBnJINIw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795007551;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=I1vWLb4kBx/eVsIs5pdih0gN+x99z2ISx2RwkUP35zg=;
-	b=QyyIgpeIeGl8YT7ejNDYm27R3BgjsXqNZU4At67t3sVDkMZ8bTn6GlkTrOywqoumWdh4
-	 WIusQT4XHCKOGm3dFaG479wfyCt2Y3PKZihZMFkrhKhWf1LSnOWeuDU0TIL4e3wLwqStM
-	 c1Yk9asuMNJzAjGTKG7lQ8/04s0As8TviYAnfBwOTR9yiwq1F4UsO/NudCu3p36+ws3Lz
-	 oFeg51dmtsaaIhoDk2MlNVhKKj7KWoK/nQKT7cZmWcvG+iIMWfEBP8NsT3iw6hifPXi2e
-	 mTbAI3srNMQfcTW4DtAJuSghFEGuqa0/+bw3tEZXXnVZmKwG+kd1+wHdqqqN6XnItKQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SzEQGEef;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.55
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795007674;
+	b=wOAB78Vy4hyxbTyd7F+u8WkC+ibrsjiBVqtqPXXbZW3S5P3e4SuXu3yMSRv7xzoyGV6g
+	 0T/wxiSRu4/IJqgIWact8b0VWPYG02JpHgz4hVTagy89O1ZkKWHFkCRmn07oap/yd+XtR
+	 1K1ih/HGA8xV90UqJgLV82FkK2BvdSqAE53pTtn6wbYpMPD2XKvGaUeM0DWycvxxRNpgW
+	 XR2El4Ue1OxAKzm8Z7AeZboGD0R4hAlQvcaBdWWGpHZWMwOZOEEJjXr9Xb+ZCYPvXzK8s
+	 SxNlFjl9Xda2+u/Q9/jZoIZAqDbli4zuv62MkkEg+/b7bVFN8+2qXx1m1Y3zm/W+DAA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795007674;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:Content-Type:Content-Disposition:
+	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=N/Gm3MFH76KL6I3rB/x/8jlc4xyUaMY5igz3LL8kxoU=;
+	b=sV8xIdioREbCYe+zARg9ZBuwXRN6tROdLF+/NqOaG7CCEB1oRSo031R06Bn/4yvh4TRj
+	 V4sMdIr6J9FXQZ77bIDanL9t5+KooOdgBPupNvUHwBz+8RPT8oa5WIs0ytFyxmKPv6J9s
+	 zkIGSzDf1Lddg9eJR1EnLjcNQs0pwXZLX7eCtjW1gIi1++NrHqYbuWqZ1sP63P4eENbS4
+	 n2Ec0QftfSckFThhm024IavbSci1Y5e0ExTEkaBeUb7GTifkMiD0i9nJpzDm9LeQ6AaGY
+	 4i/r+gNGeDqn+aRhda3dK50zbMC68uNK0xFus8SmxBAtQk2KV3jclzmI2PqdwO2I59A==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=AD4Dh5wX;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.55
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011055.outbound.protection.outlook.com [40.93.194.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1B94606A31C;
-	Wed, 18 Nov 2026 13:12:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACAD1606A31C
+	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 13:14:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ACAD1606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SzEQGEef
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9EC01F000C4;
-	Wed, 18 Nov 2026 13:12:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795007551;
-	bh=I1vWLb4kBx/eVsIs5pdih0gN+x99z2ISx2RwkUP35zg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=SzEQGEef4Q5ibf23T4lKW8nd/bWvXR3SKus+tk9JqTx/RBbroWEwaw8n1qjKt8tqh
-	 D6toOaficzYKJohi6nFFPdQ0dHHOo0lmScOntNtVSnnZkOUdRuBTbwOh3EZ67r0Ghq
-	 otw4njjF6x8O8SsPuoJHdf4ULJkvht7GS4f/qL4YSAjbwiYgEezzcgXniZGY6CMdYN
-	 z6UTvn/0ksbMaDGL3PbPu6qlubTctcCsiCIBM4Zx07AT0NE/nXRht/lIRWhRSZ7vXx
-	 da0sBTZToeWs1oL/si/pp9zSk1tMjSHqIGAh70OtVJHSqc3IAzQwiC3A2TCrF8pzjI
-	 yGMfwzc8mXi0g==
-Date: Wed, 18 Nov 2026 15:12:27 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Alexey Kardashevskiy <aik@amd.com>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH v2 18/19] PCI: Replace untrusted state with device trust
-Message-ID: <20261118131227.GF162713@unreal>
-References: <20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com>
- <20261109-device-trust-core-v2-18-3b12d9a9f861@nvidia.com>
- <d0999161-3b27-4c3b-9d66-1d117c4836fd@arm.com>
- <20261110122237.GG8635@unreal>
- <b4c2538f-8021-4abc-be2e-fcd1596f84ca@arm.com>
- <20261117124801.GD124972@unreal>
- <fd25ed52-e3ea-41a2-9f62-2397d5d9e8c8@amd.com>
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=AD4Dh5wX
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=oi9LD0ZRshFdNT8DdprNfFXe0RL40AMNMAtgrUSLhQMrIdPFRvNFlxFpU9106yfEgcx8UlxrDTomRB7Vij9wZ1R2OEZOARNfS6osV8wn7bsoZETTnQWR0DXD87gjE2Mc3ycLZWISauXzp4AfNumIe6UVJeci5WB4slJzb1KMjVq5zUlN7KU+2ZpBcLXkh5GUQK5lpuWdZdY9/MHpjFbodvios3O25/Bs4Dm3OdBGsrQFSsidrtVGM5U0NXQsuWoJQvA4Rm6AmYJMMQfgWOahbsWP6PBQYYC4eGBRhV7VR7ZT74ByTvnIwmdUhF4ZX+MoQob3CrYQuUql9WGeB2PbAw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=N/Gm3MFH76KL6I3rB/x/8jlc4xyUaMY5igz3LL8kxoU=;
+ b=IRPAWvgxALcjxvXLWZayuD3Afw/MOXZCQ7/tPYY0ZpmqoP3OCDuACypTNZwyDimvHGfdFr+xjrExrY6t+ciJv7czwYy9zJLVdCvvI18jHJ9UWBJyS61N7Dk0zR10078a5MjGh7aUp0LPkAn6cf8JXJfRQHbq1iIjOFWJAI7I7+8HrPDDHOhY1AEqsYqBlKrV/XIY5ImkRBky4WPF+Miz2woiP31rPh9L+rAcy3nAVNN63qNd/uehwwd7i/L13VlOdUIChbZv2hJJKrVU29cB9okWy2bh5eI/Hq4IQN2gPL2F3TCZNPdK45vDCDHsiSRR//m4lO9RWzwp+rirGmZWKA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=N/Gm3MFH76KL6I3rB/x/8jlc4xyUaMY5igz3LL8kxoU=;
+ b=AD4Dh5wXDocIlR1XBGctfGtJUyFzQAcCbccG+bX/5i51VfBbkj7L3UYkM2dR9ZEMQ3O+hBnqACcp683ppeT/YuuSEYFFTplMjtIZ0wgmP8fn7eDZI4Umk7KpTmstOvlUYoJyWdak5CPCaMrpJUpEVpaTuMxOoqBiu9DVC2hTXhhoU4MWqRRLNoYcgEzRFFWuEiFUHJIQ0oSTt7f0Xf02LNfZvwnBcZxAOgUXNARcJJgtsVHs6BGVd/KdtYNU2JBEs7Kjen1KY4OLtWiAG3bQI8pVVTs8SZDHDW83B9BxSp/lgg4HX6DxfuelXqRvi+W7oMoWu5ge5gTOf8MGY2FmJA==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12) by SA1PR12MB8697.namprd12.prod.outlook.com
+ (2603:10b6:806:385::10) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.13; Wed, 18 Nov
+ 2026 13:14:28 +0000
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0615.013; Wed, 18 Nov 2026
+ 13:14:28 +0000
+Date: Wed, 18 Nov 2026 09:14:27 -0400
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+Cc: linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
+	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/TSM: Move core code into its own directory
+Message-ID: <20261118131427.GM2245175@nvidia.com>
+References: <20261116075420.76205-1-aneesh.kumar@kernel.org>
+ <20261116075420.76205-2-aneesh.kumar@kernel.org>
+ <20261116130055.GB1850935@nvidia.com>
+ <yq5ajymcyl2g.fsf@kernel.org>
+ <20261116131959.GD1850935@nvidia.com>
+ <yq5aecckyhdn.fsf@kernel.org>
+ <20261116144237.GB2245175@nvidia.com>
+ <yq5a1p8iy4c7.fsf@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq5a1p8iy4c7.fsf@kernel.org>
+X-ClientProxiedBy: BL1PR13CA0097.namprd13.prod.outlook.com
+ (2603:10b6:208:2b9::12) To CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -92,160 +103,128 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fd25ed52-e3ea-41a2-9f62-2397d5d9e8c8@amd.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|SA1PR12MB8697:EE_
+X-MS-Office365-Filtering-Correlation-Id: f9119eb8-cc63-4c80-b321-08df4575e032
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|261026140227099003|261022105027099003|261026121527099003|4143699003|11063799006|5023799004|56012099006|261021121427099003|10067099003|261102123227099003|261009223027099003|261021135927099003|261022075727099003|261028144727099003|18002099003|22082099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	8L5psXwJ2xRSk2taKHLRkUmhIzFiUWUjbWsVldUTSxjuOXbLvn5MFUJlbrARgrQsxokY2XQZ9wRTbTTaMb48ezabgMKoMfpxgY3crVk26g9T9fQZdVLEGFV6ux7NK4s5BtO41C4tlV5wYjVEUxXVjOGA1DH1o2rAm1nbM2btg+36Ojg2sbs+E1v748v4nqRxSTGit6Udt4QbHZoZbvftJwJU7lpWOsdsew2FU/9qP51C3GbZevmHHf4LsOCRIHQ+GdD4DIh1pV8J3hpCdpP5ggJPdc39s3PWuvRHpH99NMKCfM3kxFrZT6UcyRyMUitl9YEVuq19oGMzLZ2nEtXnZSkweWyTTXt41FBl732MJmB/15do9768qa5tm//U3g+GJCDQBunZlBXlo0l1x/j2Npxea4FMNss3/smxWoEveTKm7k8Pi1/QvhCUysmVyNIdaOY3BMRJnpkTJJYV+Xet7Mo4OZa+D+u1h/9w9FRA5062aK6ojajC77lLQEV1urf3TKdglFmgsIYMMhgg4182Sy6QQTm/Nj4tVlj8PINduFYQ7QaPbDyYLG4n/e1+MBrkQpRGeytWTbzAn0oTPi9Yorh+X9cZBbctSW4w0deZkidStUjOBAQia2L50jO8WYZZ/vuv1CpYIhxB8slvYTCCm8RXsxuUdkwDEGkw57fqDHY=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(261026140227099003)(261022105027099003)(261026121527099003)(4143699003)(11063799006)(5023799004)(56012099006)(261021121427099003)(10067099003)(261102123227099003)(261009223027099003)(261021135927099003)(261022075727099003)(261028144727099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?f4ba6nMbvb0ICFFnAra+3GkLChgMJk6tc0Ccbbjs3xY4Y4A3EElAEz6YF+nk?=
+ =?us-ascii?Q?scwQdil8BspS3IxVFhk0hIKnUxGrs6B7w27D7iLBFU++g/x5vm4BbBB0mcDP?=
+ =?us-ascii?Q?R7HDWcx+DAmvircSADaRdVw/qs3g/tb9A7C8uAGxpDr4QcP9zJC+MePJW3nL?=
+ =?us-ascii?Q?dor3mOeBpd1uStzUAgzIExxqE8C7msilrsZ7//Jm9FDUdocUt90LqvY2rTQ5?=
+ =?us-ascii?Q?FCdY4bo0HhBkWIHSfTAKpPNKmouMAhm8UA2ArTHhgVVes8XMpEDn0YGoj1FY?=
+ =?us-ascii?Q?Dz8w5SltqBDHLeirWskiJH4YBPx7a1lnbHe/cMHOx8CCHK1RqDaTiF4FeLKX?=
+ =?us-ascii?Q?3l0NNREsb/4stazqpgtNb7sD66mpdONNEZ4HqkXcCIwS+BPOJSv623/z7DDu?=
+ =?us-ascii?Q?nJKpZYbkK+eWbTSK6rJdY9awPEbKLnZZDbNWYCSs5lFW6xP39OL/a32xDNZk?=
+ =?us-ascii?Q?9ywGjj3yinnrPZ1fG3WaoQggjn+WBfDaxN3XKGQbYUIuK+OnCisf0he4m7dc?=
+ =?us-ascii?Q?RtjKwnYuD3aKP09zkTmKoP5FTYKBhkv80p/U3qFb8b7ggBlH8hhyr+e3I72j?=
+ =?us-ascii?Q?184VHieL9sQBvswk8LJnGFcanTG2aJqQ4klRfOWBYBN78WrGIumb/o4l5Wae?=
+ =?us-ascii?Q?pBmD1F4lVVQA4W0KgD24GbMxE5x2tUSHIKkxE725ZPwpLPqZYtuHzFQH7SLR?=
+ =?us-ascii?Q?aidQ36gL+/CbaITtruUw3aO4CZzIoNoxBIc3GaKMyuHWSokAxxyzo9GTxEOY?=
+ =?us-ascii?Q?2rJ44wcNmQaLhnbjrLB8K68aGvVSgfjRchhm9Wld7ejHKIsJTsYa+GIW81xf?=
+ =?us-ascii?Q?CF3gdtAAtmCgQIfFSyEAhaj2AOLeO9O3T/8P9USknB3BmNAX+BIzNEhqZ0Nj?=
+ =?us-ascii?Q?Z2Ft/YzhHTra2QU8EdeMM4Abmd42oL8ukuls8PncziGBZiUo8YmhEueeXIbQ?=
+ =?us-ascii?Q?cBt/Fyx3QGa/ClryPzjr9ZdGeZFap76pClUYWzCTO3FqpY24JeiIM6qNE8aw?=
+ =?us-ascii?Q?3ObBKugDkkCSkQZy2dA2sLwO1eIyem3mblk7/kaC4Ps7FLJWEEX/Ear7Lf2r?=
+ =?us-ascii?Q?2U4w3/axzs59/ANzVfMQtGF6z6cbvKnwQD1g/cJH2HLwqi8UnYUvtunqKiBn?=
+ =?us-ascii?Q?2mPPJ7dzV4gaymToEG0NGFBNPAtZHKR3rZXlv3f48C45muToxkfbrsBeXw77?=
+ =?us-ascii?Q?RwhZ+GHbAe73i7gRSQ0lRdVkHqcApZFg7HNVzTnRdkGk5jciI1qFu7deN8hx?=
+ =?us-ascii?Q?asIoQ4xv6Xl6dwCvyDIEqLn7RoI04gGEYYK8DexluozkXrZa1/1+DQsmz5sM?=
+ =?us-ascii?Q?oozL2lSSLBrTeNFZKMu3Y7+Up7Dbu9dOSqawX4XFhKVzSJFfZ6slZp9u1hP7?=
+ =?us-ascii?Q?t1NTHgkujUsEi70eibtfwoAmQbhMAkYSV7W8br5TfTPe2zQGc2xtYk/URV59?=
+ =?us-ascii?Q?c4Mp2NLYY5jVekKPeWJaihGz5R8f/gKBM0hit4fgNup/uSirBVfwLdyYW2Jy?=
+ =?us-ascii?Q?Aa2kS4RCVYi9hV6Gk9sb+Dxtk3YP24Dk7DnHH8fqTpdJzR25Hsgycqgzwjwb?=
+ =?us-ascii?Q?6SdiJn1IgmXFJTPFC0QszUnZfcVZMDBmbfJNIZEmGjYhMqp6KTQZtY/PsdCI?=
+ =?us-ascii?Q?6U0EgpmKBX9/KPT2PGrmJyL0lQDg0YWg1Us6Kz9VTlv5vT8F/UXW3j337Kq3?=
+ =?us-ascii?Q?330fer7VO7P9/sH1EwWA3PBOzo1qaosFWBj8XlwKbKIRdkv0?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f9119eb8-cc63-4c80-b321-08df4575e032
+X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Nov 2026 13:14:28.6815
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 28WDDJU2MsZPxd+1+9PvxQvf4I+XF6i/TIJOf8hOKj7pfhyRVVxcgkSV8vSsMhrD
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8697
 
-On Wed, Nov 18, 2026 at 06:33:45PM +1100, Alexey Kardashevskiy wrote:
-> On 17/11/26 23:48, Leon Romanovsky wrote:
-> > On Mon, Nov 16, 2026 at 05:13:59PM +0000, Robin Murphy wrote:
-> > > On 10/11/2026 12:22 pm, Leon Romanovsky wrote:
-> > > > On Mon, Nov 09, 2026 at 01:53:02PM +0000, Robin Murphy wrote:
-> > > > > On 09/11/2026 7:33 am, Leon Romanovsky wrote:
-> > > > > [...]
-> > > > > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > > > > > index b486b8bbd1fcd..8be2a246d4903 100644
-> > > > > > --- a/drivers/iommu/iommu.c
-> > > > > > +++ b/drivers/iommu/iommu.c
-> > > > > > @@ -1879,7 +1879,7 @@ static int iommu_get_def_domain_type(struct iommu_group *group,
-> > > > > >     static int iommu_get_default_domain_type(struct iommu_group *group,
-> > > > > >     					 int target_type)
-> > > > > >     {
-> > > > > > -	struct device *untrusted = NULL;
-> > > > > > +	struct device *restricted = NULL;
-> > > > > >     	struct group_device *gdev;
-> > > > > >     	int driver_type = 0;
-> > > > > > @@ -1901,14 +1901,15 @@ static int iommu_get_default_domain_type(struct iommu_group *group,
-> > > > > >     		driver_type = iommu_get_def_domain_type(group, gdev->dev,
-> > > > > >     							driver_type);
-> > > > > > -		if (dev_is_pci(gdev->dev) && to_pci_dev(gdev->dev)->untrusted) {
-> > > > > > +		if (dev_is_pci(gdev->dev) &&
-> > > > > > +		    pci_dev_default_is_restricted(to_pci_dev(gdev->dev))) {
-> > > > > 
-> > > > > I think this should be the generic device_is_adversarial(gdev->dev) now - in
-> > > > > fact probably all the dev_is_pci()/to_pci_dev() stanzas aren't conceptually
-> > > > > PCI-specific, just an artefact of the current "untrusted" flag being so.
-> > > > 
-> > > > I wanted to do the same, but iommu_get_default_domain_type() may be called
-> > > > before the PCI device's trust level has been set. At that point, we are
-> > > > still in "disabled" mode, whereas device_is_adversarial() checks for
-> > > > "adversarial" mode.
-> > > > 
-> > > > The below is from AI, I asked to present me the path for that:
-> > > > --------------------------------------------------------------------------------
-> > > > For a newly discovered PCI device with an available IOMMU and a new IOMMU group:
-> > > > pci_scan_single_device()
-> > > >     pci_device_add()
-> > > >       device_add()
-> > > >         bus_notify(dev, BUS_NOTIFY_ADD_DEVICE)
-> > > >           blocking_notifier_call_chain()
-> > > >             notifier_call_chain()
-> > > >               iommu_bus_notifier()
-> > > >                 iommu_probe_device(dev)
-> > > >                   __iommu_probe_device(dev, NULL)
-> > > >                     iommu_setup_default_domain(group, 0)
-> > > >                       iommu_get_default_domain_type(group, 0)
-> > > > 
-> > > > For a device whose initial policy is adversary, its state during that call is:
-> > > > dev->trust_policy          = DEVICE_TRUST_POLICY_ADVERSARY
-> > > > dev->trust_level           = DEVICE_TRUST_DISABLED
-> > > > dev->trust_committed_level = DEVICE_TRUST_DISABLED
-> > > > dev->driver               = NULL
-> > > > 
-> > > > device_is_adversarial(dev) = false
-> > > > 
-> > > > The active level changes later, during binding:
-> > > > really_probe()
-> > > >     device_trust_prepare()
-> > > >       __device_trust_prepare()
-> > > >         WRITE_ONCE(dev->trust_level, DEVICE_TRUST_ADVERSARY)
-> > > >     dev->bus->dma_configure()
-> > > >     call_driver_probe()
-> > > 
-> > > OK, that seems less than ideal. Feels like it would be better if bus code
-> > > set the initial device state prior to device_add, so then it only ever
-> > > changes later as a result of an explicit attestation/acceptance process. If
-> > > the initial IOMMU probe still has to poke into bus-specific code to avoid
-> > > always making a worst-case assumption, doesn't that rather defeat the point
-> > > of having a generic abstraction?
-> > 
-> > As Jason said, this is part of a very large series. Each series is an
-> > adventure in itself. Even Greg's seemingly simple request to convert the
-> > USB authorization knob to this new scheme has been extremely painful
-> > because of AI reviews. They keep pointing out bugs and gaps that are
-> > automatically attributed to me simply because I'm touching that part of
-> > the code.
-> > 
-> > > 
-> > > Even with the slightly dubious argument that this series only intends to
-> > > shuffle the existing PCI code around rather than fully introduce the generic
-> > > abstraction that it claims to, if the PCI behaviour is still just based on
-> > > propagating the internal "untrusted" flag plus the new global override, both
-> > > of which *are* known at add_device time into the common trust state, then
-> > > there seems little excuse for not doing that up-front so that the new API
-> > > *can* just work as expected.
-> > 
-> > I would prefer to keep both PCI and USB out of this series on device trust
-> > levels. Let's see what people say if I drop them in v3.
-> 
-> 
-> I'd rather you did not as it is going to make experiments with CoCo VMs harder.
+On Wed, Nov 18, 2026 at 01:10:56PM +0530, Aneesh Kumar K.V wrote:
 
-I haven't dropped it yet :(, but it's unlikely that you need USB there.
-Regarding PCI, these patches convert the ->untrusted knob, which is
-orthogonal to your experiments.
+> PF0 owns the PDEV state and resources used for authentication and stream
+> activation. vDEVICE operations also depend on that PDEV, so a live
+> vDEVICE must keep PF0 and its resources alive. Restarting attestation
+> must not destroy a PDEV while active VDEVICEs still depend on it.
 
-<...>
+Yeah, you'll definately need some kind of "core" module that handles
+these issues. Due to circular module dependencies it has to be
+distinct from the tsm:
 
-> > > Urgh, I can be absolutely certain I'm not the only one who is going to be
-> > > confused this way... I see "disabled" and instinctively take it to mean
-> > > disabling the device_trust *mechanism*, as the logical thing that people
-> > > will reach for in terms of "I don't care what this new thing is, just get it
-> > > out of my way and let my drivers work like they always used to; I want to
-> > > disable the new thing."
-> > 
-> > I completely agree. I was under the impression that these names had already
-> > been decided, since I picked up where Dan left off.>>
-> > >  From there it then also makes perfect self-consistent sense that
-> > > "device_trust=full" would be the opposite end of the scale as in "Apply the
-> > > explicit trust model 'fully', to all devices regardless of their bus-level
-> > > default."
-> > > 
-> > > Now I guess you could name it something like "device.default_trust_level" to
-> > > attempt to make it clearer that it represents a value the value represents
-> > > the "trust" *of* each individual device itself, but TBH it's still liable to
-> > > look backwards to many users - similarly it's hard to guess that
-> > > FOO_POLICY_DISABLED might mean something entirely different from "don't
-> > > enforce the policy for FOO.", thus rather than try to contort the naming of
-> > > everything, I'd still be much more inclined to just flip the meanings to be
-> > > more intuitive from the outsider perspective.
-> > > 
-> > > Say you upgrade your kernel and find your boot is broken because it now
-> > > flibbles, but at least there is a "flibble" parameter whose values are
-> > > "disabled", "wibble" and "frobble". Are you really going to spend time
-> > > straight off reading up on what flibbling is to understand what wibbles and
-> > > frobbles mean? Or is your instinct just going to be to try the seemingly
-> > > obvious way of disabling flibbling, and then getting positively annoyed if
-> > > that only makes it flibble harder?
-> > 
-> > What about: blocked, adversarial and unrestricted
-> 
-> yes, that's better.
-> 
-> > instead of: disabled, adversarial and full
-> 
-> may be simplify: blocked, restricted, unrestricted? Thanks,
+rmm_core
+tsm_rmm_host
+tsm_rmm_guest
+attestation_rmm_host
+attestation_rmm_guest
 
-"adversarial" is Dan's legacy, let's keep that name.
+?
 
+The module graph is
+ tsm_rmm_host -> rmm_core
+              -> attestation_rmm_host -> rmm_core
+
+> Placing the attestation backend in drivers/attestation/cca/ makes these
+> checks and locking requirements span two drivers. The attestation driver
+> calls PDEV_CREATE and PDEV_COMMUNICATE using the PDEV and communication
+> buffers owned by arm-cca-host. arm-cca-host uses the same PDEV to
+> connect streams and create vDEVICEs. The two drivers must therefore
+> coordinate access to these objects and their destruction.
 > 
-> 
-> > 
-> > Thanks
-> > 
-> > > 
-> > > Robin.
-> 
-> -- 
-> Alexey
-> 
+> My first attempt used pci_tsm_rwsem to serialize attestation operations.
+> That would require TSM callbacks for the attestation driver to acquire
+> and release the lock.
+
+Why callbacks? The TSM driver should create some kind of "pdev state"
+when it attaches to the PCI device and link it into the pci world so
+we can find this object from pci_dev.
+
+The "pdev state" is an object managed by rmm_core, has a lock and a
+refcounting scheme to ensure it cannot be destroyed out of order. It
+would have information about the one and only vdev, if it exists, as
+well.
+
+The TSM driver triggers attestation creation and passes in the "pdev
+state" pointer. Probably through an aux device scheme.
+
+Now we have the necessary shared state between three modules to have
+locks and some lifecycle rules, without any callbacks.
+
+> I also tried introducing an attestation_connection object with its own
+> mutex, reference count. Each vDEVICE then had to hold both its existing
+> PCI/TSM reference and a reference to this new object. The stream setup
+> still requires pci_tsm_rwsem, so this approach would also need callbacks
+> to acquire that lock before accepting evidence.
+
+Which stream setup do you mean? The device to host stream can be
+locked by the pdev object.
+
+The future P2P streams.. IDK how we even do uAPI for that, or cross
+lock different PCI devices.
+
+> I am now considering implementing the CCA SPDM attestation ops directly
+> in arm-cca-host, similar to the viommu ops.
+
+I really prefer we try to avoid this. At that point you may as well
+give up and just implement one giant uber module.
+
+I don't see that needing to get a lock on a pdev is so serious that we
+should give up?
+
+Jason
