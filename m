@@ -1,46 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795032269;
-	b=uwov2ID/sx2Kxy3gxZJSgv9oPeE4be0Os2dZfsWkrab2zIJUra77M803zNxcPyCm8PAz
-	 1pp/4kCFVhWzPEZKTKPFcoanUx6lD0iWj4dRim63VTCR2fdnXlfJkX7XrOD7S/a+YuZ8P
-	 WwzBXJvpr5TPJpQDoOW8kt90cIXM2/aDhV1JkkKodnn55vGW1P4Fyao82Cq0H99UJ8HRg
-	 4yy1RJn6jFhBkB0NH13Z5lPmsSyT7DpB2qoMbzDbyLBwyi4w0sobqsZUwh6WLva6Z8juq
-	 u1URG+fSGo4nrvtMYLdZGDj7+ooKUnJqnyrlEkhK67ZcQ4ycZ97IkHwv0PlcePwDs9w==
+	t=1795032429;
+	b=J7Acc1FwRVaJBRFYBBMQtQcSZBSGSuQ94d0eGhO7mYARpi/N3OHoOB8mUqtzsYNYiSxN
+	 xfskmfaivoWdlHoaIz9HffnVLcn+IaMzoSAcfuB+P/WOAE1jbJdBG+wU+4hYqfDXqGwnF
+	 b+xxXT6mlUuCOJ/3sbIgFVazOUm9wIeST3fZLgcGmhC63mOPNRY9Ao0yJ30s61Tun+V83
+	 BZ7coct0M0EwViFBV5NDQXR9U+qzwEgDjRK4axU0u3dDiDFlmkDe0XzUwzQBZQ4cxsoUj
+	 F/E/22XQb97jGpf3stVzOCPWOQFDeN/ww8OYatsd8U3ncoIE+RLr93Z+Ytndonsw82A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795032269;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795032429;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=KG1mjfcXzaJzGAZP0WznA6ezlruVcDCnyBjVr5/t4MQ=;
-	b=qykSUIaNOPyxmSY8702iz7Y59OqBN9NfstwBBynq90zBlhNF5FnrLnaUe4RyLCDsA4wG
-	 U57TwAsDSgMPqeS9vCO6yIK46ZUD62tC5jcVAncDJNRS54oi9VZAnZzsvj8ZlfXJYa1HD
-	 M1KEIxvYrRMYHESA6qdZJzmmMJDNKB3Z9zYtupyWe0w0x42Zj1zRnLBrbYXz60MK2Dtnj
-	 w789ha/Edy7fy2Ii85MsEuQGBKHs6PfMW5r7f0vgBrwFvXEJfaqongKJrW9xqNuoTL87Q
-	 Hbf1hB8gFy/H7t4VwOV0so8s/wzv51Pmy6/6Hdmur/7O/BE7yxTUms3Ah986SppMjlQ==
+	bh=Ydr2zuUo4Y+Eu5vs2uIcRAQ0D83Gb2IoOYjqdt7Pl2g=;
+	b=vjx7b1CMLWtIlDciOiAIhj6IjdiJ0kNyMxkmDlj7fThjo7h0swS2Od+MNPbMPU5vHtrd
+	 xflz3O2dEW11WDo7FoPSBe6qSXJPUOu8GPhZkeo+24UnQk+WvuJnzQYhTvwk9j22X5no9
+	 RzKL+COw/BpxhDTKxW753mCBBGnE+906nkcZGcjSqFoVy23wAIJ/uBEjfAKeAvQlfUqNU
+	 BeQZhOrwT8B2f679wqByrY8zve7Gx2VFuXqBtePtQdYz6K3M9Tsa7LBbyAHuDinrZkCws
+	 J9y9QVCNYZ+NN1NvqbWgZqUCOwxcBngl+tfj3kAWXD4bWFLm6Pjq0sCSR5mOGLanA8A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hXsuDz2Q;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jPTRhgOs;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFF5D606A330;
-	Wed, 18 Nov 2026 20:04:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D86F606A338;
+	Wed, 18 Nov 2026 20:07:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hXsuDz2Q
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D590A1F000C4;
-	Wed, 18 Nov 2026 20:04:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jPTRhgOs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A0821F000D3;
+	Wed, 18 Nov 2026 20:07:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795032268;
-	bh=KG1mjfcXzaJzGAZP0WznA6ezlruVcDCnyBjVr5/t4MQ=;
+	s=k20260515; t=1795032429;
+	bh=Ydr2zuUo4Y+Eu5vs2uIcRAQ0D83Gb2IoOYjqdt7Pl2g=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=hXsuDz2QRvI+jQBnp0CteauGv8WTUwSyhTcW+rQ1X+BXjf4WM7RGS6D1q8KfBJwfr
-	 jObpVFxMTFop4+tKCizD89fJAsULT4wcT96w1IGIjDzjn2NifJUmoeftL850htgPuQ
-	 +9lnsce44uDoIC5/9+1jIGIcyQt/rXofzqVfRBbp6czao5x1dgpit0eXw0u8IxjKT0
-	 KYUoWr5H3KcE4/InQ5Nq6if6L2lBqK6214K8V2i5kCd6Y3Pfx4AIPDA2LR4KVNqoz9
-	 jBs7Otbc1XYyzrJLTSJ8p6R0WWQR67Av7pKKax+434DoYSvZq9+f5mjnTxJU1BkpvS
-	 jZVBhwoHzIuFQ==
-Date: Wed, 18 Nov 2026 20:04:17 +0000
+	b=jPTRhgOsJ3gg9xAK3g1Kxi/CA9EBREb/tAFnQ69biXVG8KJQxY4VY55gGxMgxbxMm
+	 HuUwmxC6iqTnSdybEJfmpuaXeFpp+csnzklAdxn7PjBEs5WIWMcgYJyhT2OFeTBee9
+	 y0BRDXSr+3DPOn9WkTbyfg0ILxQAWuhvk5F26WpWV1g8oOstjYX+kdxU4ekO9rkTXw
+	 Yy/qU9eXDfUrBkjNvne7I6B98W6eOVnwLr80IOwKhpsn7thKaHjd/uOO8F7ebaUdnZ
+	 DWmuXVGRBFLjieYHQ1/v3GOQUEuJJguNK84Y5TVkq4/NJtLsBBkmSubqbE78/+3N8g
+	 1tSzHbnWZ2khg==
+Date: Wed, 18 Nov 2026 20:06:56 +0000
 From: Jonathan Cameron <jic23@kernel.org>
 To: Pierre Gondois <pierre.gondois@arm.com>
 Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
@@ -54,20 +54,21 @@ Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
  <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, Bjorn
  Helgaas <bhelgaas@google.com>, Maciej Wieczor-Retman
  <maciej.wieczor-retman@intel.com>, Pawel Chmielewski
- <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, Qiuxu
- Zhuo <qiuxu.zhuo@intel.com>, Avadhut Naik <avadhut.naik@amd.com>, "Fabio M.
- De Francesco" <fabio.m.de.francesco@linux.intel.com>, Dave Jiang
- <dave.jiang@intel.com>, Kai-Heng Feng <kaihengf@nvidia.com>, Breno Leitao
- <leitao@debian.org>, Terry Bowman <terry.bowman@amd.com>,
- linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
- acpica-devel@lists.linux.dev
-Subject: Re: [PATCH v1 12/19] ACPI: extlog: Extract CPER reporting from
- acpi_extlog
-Message-ID: <20261118200417.42034547@jic23-hlaptop>
-In-Reply-To: <20261117111444.4185512-13-pierre.gondois@arm.com>
+ <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, Radu
+ Rendec <radu@rendec.net>, Avadhut Naik <avadhut.naik@amd.com>, "Fabio M. De
+ Francesco" <fabio.m.de.francesco@linux.intel.com>, Kai-Heng Feng
+ <kaihengf@nvidia.com>, Dave Jiang <dave.jiang@intel.com>, Breno Leitao
+ <leitao@debian.org>, Terry Bowman <terry.bowman@amd.com>, Dan Williams
+ <djbw@kernel.org>, Kuppuswamy Sathyanarayanan
+ <sathyanarayanan.kuppuswamy@linux.intel.com>, linux-acpi@vger.kernel.org,
+ linux-edac@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-pci@vger.kernel.org, acpica-devel@lists.linux.dev
+Subject: Re: [PATCH v1 14/19] ACPI: APEI: Return status from
+ cxl_cper_post_event()
+Message-ID: <20261118200656.596420c2@jic23-hlaptop>
+In-Reply-To: <20261117111444.4185512-15-pierre.gondois@arm.com>
 References: <20261117111444.4185512-1-pierre.gondois@arm.com>
-	<20261117111444.4185512-13-pierre.gondois@arm.com>
+	<20261117111444.4185512-15-pierre.gondois@arm.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,166 +82,20 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Tue, 17 Nov 2026 12:10:22 +0100
+On Tue, 17 Nov 2026 12:10:24 +0100
 Pierre Gondois <pierre.gondois@arm.com> wrote:
 
-> Extract the CPER reporting code to a separate file in order
-> to re-use it in the GHES code in a later patch.
+> Callers cannot tell whether cxl_cper_post_event() queued a CPER event or
+> discarded it. Return 0 if success and 1 if aborted. Existing callers
+> continue to ignore the result for now.
 > 
-> CONFIG_ACPI_EXTLOG selects ACPI_APEI_GHES and acpi_extlog_report()
-> will be used in ghes.c, built with CONFIG_ACPI_APEI_GHES. Thus also
-> build extlog.c under CONFIG_ACPI_APEI_GHES.
+> A worker that is already scheduled still processes the queued event, so
+> its schedule_work() return value does not indicate a delivery failure.
 > 
-> Relax the definition of extlog_mem[|2]_event tracepoints to
-> CONFIG_ACPI_APEI_GHES. The common reporter references them even
-> when CONFIG_ACPI_EXTLOG is disabled. Guard its memory trace calls
-> with CONFIG_RAS because GHES can be enabled without RAS.
+> This prepares for a following patch moving PCI/CXL handling to
+> extlog.c.
 > 
 > Signed-off-by: Pierre Gondois <pierre.gondois@arm.com>
 
-There is too much going on in here that isn't code movement of
-Kconfig stuff related to that.  Those other changes need their
-own patches were you can describe fully why they are being done.
-
-> diff --git a/drivers/acpi/apei/extlog.c b/drivers/acpi/apei/extlog.c
-> new file mode 100644
-> index 0000000000000..8eef33a4326a7
-> --- /dev/null
-> +++ b/drivers/acpi/apei/extlog.c
-
-> +/**
-> + * acpi_extlog_mem_error - trace a validated CPER memory section
-> + * @gdata: section header followed by its payload
-> + * @err_seq: sequence number shared by sections in the same error record
-> + *
-> + * The caller must validate the payload length, including any optional fields
-> + * claimed by the memory validation bits, before calling this function.
-> + */
-> +static void acpi_extlog_mem_error(struct acpi_hest_generic_data *gdata, u32 err_seq)
-> +{
-> +#ifdef CONFIG_RAS
-> +	struct cper_sec_mem_err *mem = acpi_hest_get_payload(gdata);
-> +	const guid_t *fru_id;
-> +	const char *fru_text;
-> +
-> +	if (gdata->validation_bits & CPER_SEC_VALID_FRU_ID)
-> +		fru_id = (guid_t *)gdata->fru_id;
-> +	else
-> +		fru_id = &guid_null;
-> +	if (gdata->validation_bits & CPER_SEC_VALID_FRU_TEXT)
-> +		fru_text = gdata->fru_text;
-> +	else
-> +		fru_text = "";
-
-See below. This work is done in the caller unless I'm going crazy
-and it's a different fru entry...
-
-> +
-> +	trace_extlog_mem_event(mem, err_seq, fru_id, fru_text,
-> +			       (u8)gdata->error_severity);
-> +#endif
-> +}
-> +
-> +/**
-> + * acpi_extlog_mem2_error - trace a validated CPER memory section 2
-> + * @gdata: section header followed by its payload
-> + * @err_seq: sequence number shared by sections in the same error record
-> + *
-> + * The caller must validate the payload length before calling this function.
-> + */
-> +static void acpi_extlog_mem2_error(struct acpi_hest_generic_data *gdata, u32 err_seq)
-> +{
-> +#ifdef CONFIG_RAS
-> +	struct cper_sec_mem_err2 *mem = acpi_hest_get_payload(gdata);
-> +	const guid_t *fru_id;
-> +	const char *fru_text;
-> +
-> +	if (gdata->validation_bits & CPER_SEC_VALID_FRU_ID)
-> +		fru_id = (guid_t *)gdata->fru_id;
-> +	else
-> +		fru_id = &guid_null;
-> +	if (gdata->validation_bits & CPER_SEC_VALID_FRU_TEXT)
-> +		fru_text = gdata->fru_text;
-> +	else
-> +		fru_text = "";
-> +
-> +	trace_extlog_mem2_event(mem, err_seq, fru_id, fru_text,
-> +				(u8)gdata->error_severity);
-> +#endif
-> +}
-> +
-> +/**
-> + * acpi_extlog_report - report sections of a validated generic error status block
-> + * @estatus: caller-owned status block, already checked by cper_estatus_check()
-> + *
-> + * The caller handles console output and firmware acknowledgment. Section
-> + * processing, including PCIe recovery, does not depend on RAS consumers.
-> + */
-> +void acpi_extlog_report(const struct acpi_hest_generic_status *estatus)
-
-Given there are functional changes in here, it may make sense to do them
-separately from the code move  / factor out. 
-
-> +{
-> +	static atomic_t seqno = ATOMIC_INIT(0);
-
-Why did this become an atomic?  I don't mind that but I'd have made
-the change in a separate patch so you can explain it.
-
-> +	struct acpi_hest_generic_data *gdata;
-> +	const guid_t *fru_id;
-> +	const char *fru_text;
-> +	guid_t *sec_type;
-> +	u32 err_seq;
-> +
-> +	/* log event via trace */
-> +	err_seq = atomic_inc_return(&seqno);
-> +	apei_estatus_for_each_section(estatus, gdata) {
-> +		if (gdata->validation_bits & CPER_SEC_VALID_FRU_ID)
-> +			fru_id = (guid_t *)gdata->fru_id;
-> +		else
-> +			fru_id = &guid_null;
-> +		if (gdata->validation_bits & CPER_SEC_VALID_FRU_TEXT)
-> +			fru_text = gdata->fru_text;
-> +		else
-> +			fru_text = "";
-> +		sec_type = (guid_t *)gdata->section_type;
-> +		if (guid_equal(sec_type, &CPER_SEC_PLATFORM_MEM)) {
-> +			struct cper_sec_mem_err *mem = acpi_hest_get_payload(gdata);
-> +
-> +			if (gdata->error_data_length >= sizeof(*mem))
-> +				acpi_extlog_mem_error(gdata, err_seq);
-
-I'd move them with old name then rename in a follow up patch.
-Particularly as the new code duplicates the fru stuff above - that
-needs explaining which can't be done in code move patch.
-
-> +		} else if (guid_equal(sec_type, &CPER_SEC_PLATFORM_MEM2)) {
-> +			struct cper_sec_mem_err2 *mem = acpi_hest_get_payload(gdata);
-> +
-> +			if (gdata->error_data_length >= sizeof(*mem))
-> +				acpi_extlog_mem2_error(gdata, err_seq);
-
-Same for this.
-
-> +		} else if (guid_equal(sec_type, &CPER_SEC_CXL_PROT_ERR)) {
-> +			struct cxl_cper_sec_prot_err *prot_err =
-> +				acpi_hest_get_payload(gdata);
-> +
-> +			cxl_cper_post_prot_err(prot_err,
-> +					       gdata->error_severity,
-> +					       gdata->error_data_length);
-> +		} else if (guid_equal(sec_type, &CPER_SEC_PCIE)) {
-> +			extlog_print_pcie(gdata);
-> +		} else {
-> +			void *err = acpi_hest_get_payload(gdata);
-> +
-> +			log_non_standard_event(sec_type, fru_id, fru_text,
-> +					       gdata->error_severity, err,
-> +					       gdata->error_data_length);
-> +		}
-> +	}
-> +}
-> +EXPORT_SYMBOL_FOR_MODULES(acpi_extlog_report, "acpi_extlog");
-
+Given no error codes are returned, why not a bool return?
 
