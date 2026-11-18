@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795026263;
-	b=kQfUFQYhpBcCIDMHpyObq+4B3gPOf/r25YPTrsvYd2f1U7PHM8piOMeohMHVBEg3/SPh
-	 QvL0a7CrjOkjpRiiI4CAmroV91VCBF65Y4R6zAOzIzyEhX+Fnk9yG2Cdj/pFE0YiF9m2U
-	 uoSIXLrwB0Qa4w4uogCahErMNqDyh3LD6h6uIUJ1NoMaCS6tXX5TiMif9oV85rq8bZGVU
-	 1M6Kuhz1fH+Utf+2fKgwSLQ006Kyrp7kw3Z9vlGfpbmBGhd/U7y8srfxJRGq9XVQa1gGC
-	 CCFlXoxU94G0bslZjyhTlFZjUAdiqxaKX+aBUnpDCEKb2WHLuj2M0a5GBuyPHBj0WbQ==
+	t=1795026264;
+	b=dGo4wxDjiyxgi5VUAxQwvVH/+398Jd28dDGv4nYfLxg63WS4+PZ8l5M4jh5zvlhxANCQ
+	 sdxygsZjXZks3OTd72abVWHy2Jt8IqM9ARjqcclk8k4FTBgepw++39jT1VhDTjSf40nzM
+	 HBrOUI4QwBKw0t3BgTkiFHO32NU5o6REvUshoRkaCzjaiy0uIfwSAcO+vFvGu0svEX8sj
+	 kiLttdQfwaAj2lt9HeY1qgDhCDUyBlri4IpHaIVq+yeW052JKQudE/mJf1JqQ/dR0X6FN
+	 2HNmvKlA+3whOaq5UYt6TfiTLwEAR9p+sVazboRHyz//vjqNBZ5XTpZ3lYyrrE1OQBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795026263;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795026264;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=TI/qWsyM1tAa9jhgSjSzsHqUJ9QLuvccIO/+z45ixSw=;
-	b=C5sjU6l9DusBOwtzNp2caL7WMKqHMfzDAEP1vQf8j2oAkJWTR5KAdb10U9OSFARbnxym
-	 +rBIt7LZu3N+rDRsVH1S9f2fD1uj8zqoOn79jxeHAzvqY8G33K5sSDERyLC3cTb2jM8cs
-	 n7rUN2auEtOrMpfgq6zep83+6A9CdHPs1B5wbSTVaFJSCk/+FK79O8d7oIB40DQC/+/Nu
-	 Ul4Pl4wQVlAORnK7N8zdSPCAJ7GyKFVN2jE9Ka1peqeeneSxu7PGUAv1zS9czysXwlaCy
-	 5gmCQzZ0f1xAQDtet/pPGu0EE7puuEqor9LvKW+bJWXhh51FlBOEMZEK/L2CSWjeIOw==
+	bh=BH/++B5S+FTwkzKu7cNt1ObI5JO0y5mAcxR2pErePbQ=;
+	b=j9hH9T8fTQadNSiny25hfAy3USptQxawoa7dbsT2KZiTyTD5jwez51HUl9lw7KSGeZvh
+	 MQ3UTyW5ZGdc3asC8wVj6B+LK44xmcBXA9IhGWJLyhNg1HuCARRdl/XY/Gt4/a8jgg0RG
+	 ALEQ2Ays1fOKNO3KGidea8KB41FWhhzWDqQ9K9IS4KrmuJEPIlDuZIzPpSA0OC/d5gEF9
+	 +pa5R16565OfgsBsLAvLyBCJ3NpLnMcN+MFD29w/p7XrPQMAjwFQ2Req/qr+0aiPv0dAd
+	 tv0fXEZuAs57CTMA5eCGlENR7PX3Nv8zGM0jDILGt596EwaIyJGr0BI/SfYDMGQeQ2g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="kDik/2ux";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LIv+GNFb;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A203860A2603
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 18:24:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64DC760A2603
+	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 18:24:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kDik/2ux
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60FB01F000C5;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LIv+GNFb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04F6D1F000C4;
 	Wed, 18 Nov 2026 18:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795026263;
-	bh=TI/qWsyM1tAa9jhgSjSzsHqUJ9QLuvccIO/+z45ixSw=;
+	s=k20260515; t=1795026264;
+	bh=BH/++B5S+FTwkzKu7cNt1ObI5JO0y5mAcxR2pErePbQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kDik/2ux2OyKewxWVmpH9GZBLUOTfXAoIrEqT6FT6Oh+1CSMNnM+x2ftCpA7m6izI
-	 In6DMPgP3rE3+CScJI1Fdel95g7j7IK7a41+SIBks+ZCqYXW30FEJhC0VcZHbXt6+w
-	 H7NCcI/6DJbO6dqV+OoMbN4jvCauvrMUbF90chLKAQ0adKU51SXOPVvSx6tUG4L/Mw
-	 BqsCtmTKdFqT5oSjNS6n5kNacN1AEdeho2npXTucWFcPXCaSdCSVUtPU+r+onEhhqI
-	 c4sonRk/pLbHIt6I45e4AJrTmtmWFUzKE+6OvBEvmZ0SgOhTPswXEJsDy4q0j+5XIN
-	 i32VgNMdED/qQ==
-Message-ID: <sashiko-outbox-221743@kernel.org>
+	b=LIv+GNFbnxZpjWu4+2fkIK+9DpSOI9tbwtH2Pbu0BayPvmGKqH9aqRYMXq1dTNJYC
+	 O/buyr1Qmv+Yw76sqCVWvExKvex9Iy4nVTFKrYZpXflN5W7Uxgf9y+NL0ap2AqGGZy
+	 2rWRvmX7ZTbuPjzJ0rza7qpWGao8oJnzB3GLGRicGH7/A4nqc1QlWLYSUo5o3psX9v
+	 1ZhSJCbZ7m8MT5nC3Yhy/auvUotDQbDAvFRufZZEUQGIXcRhHlpwzwh8dJg8ZkjSTf
+	 q7ih1fSe5AGu4Brk/oFF3cm86uUG/GX2yN7ECNnIE8cadwaUDd9J1wjs4oT6k7FoB8
+	 Eb2UbAb58q7Zg==
+Message-ID: <sashiko-outbox-221744@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/6] PCI/DPC: Reinstate support for AER-incapable
- ports
+Subject: Re: [PATCH v3 6/6] PCI/portdrv: Bind DPC service based on
+ host_bridge->native_dpc
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Kuppuswamy Sathyanarayanan" <sathyanarayanan.kuppuswamy@linux.intel.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261118181718.3907441-3-sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20261118181718.3907441-7-sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <20261118181718.3907441-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <20261118181718.3907441-3-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20261118181718.3907441-7-sathyanarayanan.kuppuswamy@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Wed, 18 Nov 2026 18:24:23 +0000
@@ -61,35 +61,32 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> From: Lukas Wunner <lukas@wunner.de>
+> get_port_device_capability() binds the DPC service if the port has a DPC
+> capability and either "pcie_ports=3Ddpc-native" was given or the OS
+> controls AER.  This repeats decisions that are already made elsewhere.
+> It also ignores host_bridge->native_dpc, which is meant to say whether
+> the OS owns DPC.
 >=20
-> Downstream Port Containment does not mandate presence of an Advanced Error
-> Reporting capability, so a Downstream Port may support DPC, but not AER
-> (PCIe r7.1 sec 6.2.11.2).
+> Make host_bridge->native_dpc the single decider:
 >=20
-> Commit 708b20003624 ("PCI/AER: Remove HEST/FIRMWARE_FIRST parsing for AER
-> ownership") seemingly inadvertently constrained DPC to AER-supporting
-> Downstream Ports by inserting a call to pcie_aer_is_native() in
-> dpc_probe(), which implicitly checks for presence of an AER capability.
+>   - In acpi_pci_root_create(), assume DPC control whenever _OSC grants
+>     AER control.  PCI Firmware r3.3, sec 4.5.2.4, requires platforms to
+>     retain AER if they retain DPC.  Put the other way, firmware that
+>     grants AER does not keep DPC.  PCIe r7.0 sec 6.2.11 recommends that
+>     the OS link control of DPC to control of AER.  Commit 97ca178c899d
+>     ("PCI/DPC: Allow DPC on all Downstream Ports when OS controls AER")
+>     relied on this link.  Keeping it means DPC still works with firmware
+> [ ... ]
+> this.  The OS now uses DPC there because firmware granted it.  Since
+> "PCI/DPC: Reinstate support for AER-incapable ports", dpc_probe() no
+> longer requires AER control.
 >=20
-> Drop the call.  It is superfluous because it duplicates the conditions
-> applied by the PCIe port service driver when it decides whether to
-> instantiate a DPC port service (see get_port_device_capability()).
-> If the conditions are not met, no port service is instantiated and
-> dpc_probe() isn't executed.
->=20
-> The only difference between the conditions in dpc_probe() and the ones in
-> get_port_device_capability() is the check for the AER capability, so by
-> removing the checks from dpc_probe(), DPC is supported on AER-incapable
-> Downstream Ports again.
->=20
-> Fixes: 708b20003624 ("PCI/AER: Remove HEST/FIRMWARE_FIRST parsing for AER=
- ownership")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@lin=
+ux.intel.com>
 
 Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118181718.3907=
-441-1-sathyanarayanan.kuppuswamy@linux.intel.com?part=3D2
+441-1-sathyanarayanan.kuppuswamy@linux.intel.com?part=3D6
 
