@@ -1,76 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795003934;
-	b=QRNLXNbUz2irHO60iLk6uirbyOnOo7PCsNNppyGThoylLVbJFbk3MAFr62Qmd/VWSmQl
-	 e70tCgzEIrkanBbr2JpmGEezKuo9DbOWE3enQsgG8Ane4RVaFJ6jYoeN1GA8HASIT9YTj
-	 YdPgkBeeo50BJMKFBA9OcM+COaLLwekcC2X9nHZX4GIIEeggI8vpBAH0A1/9lumMlqoJF
-	 UR7h82RjV9A2pgeXwX5Ge8xL3eewbEaFclbs1QUcVUzxOGvH1pLF/JCVOFNSgnhb8rvbk
-	 wJkASYJkOMOwFhu421h5QHzET0WbsBM6pV+PAhb5DlWbRgG2pN95dmwwAZ6DAfy/TDw==
+	t=1795004422;
+	b=jjbIcp3GYaTUcItXolTca3bqh+pUopqa9OrmYg4UL98+izq1tLqoDxKe94BhbO8Nbb8T
+	 3xBOwOfzQSaLZw7ap3PP9t/u1bNjT1IFBhT4J0QipxPs7o3QaSWfP3Wjn9pcE2Fh7JBzv
+	 cvZseUR88KnXhpbis1QR2/2CdohJSoHM9++WFaQECIJ/Z86FfxhFOu1rCENSuVjIWhcMK
+	 XPESuzvn3cKv+PK89VeKgHXcUmbwHXjaneafgE8Xn60LHmiCzVo4OLfWJ23y++0wHk+yN
+	 +u2zdqsMAHGsTYaAM4Y/33bhUq38VZcGEpq2DaeYm1Z0xrE25DiQwANgEpdKSkELoWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795003934;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
-	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
-	bh=UTLyf/Un7t8f/JJJ6neh6fVV7b+Ecu5jTGdE9Z/l6tg=;
-	b=gwQ7D/Fr4P2+lc0gZP0wpmLNW35z0cstlMqrAteQmb1aH09fUwqPUG0XKT05qo6RiIqk
-	 1byf2UpYiMTKS1jRv6AL1Zf9AaY202YEwqxPGI5i+kGD03LzMpcT+nc+TRa0PKgjh6xoE
-	 yL+adZ62yB6fljoQ+kbuwPvwRUL30Ode8ImKODwoscCW0mIWPCyzMUS0C0eKo9mYBr7Rn
-	 bD3Ok0zWJC3CKmbXQKuhAfi2fsH8h92rzHpixKk7gt27Xw0IQF/jbecn8CBTrjuFK99ek
-	 PerTCUDOEV+e+fHiPutaP9m00NCU6h136kTYEd6SMn4QSZ5Ajiru5W0c7VVqQPYWzkw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795004422;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=aGwcY3cmPZsnUI5Lx24DztCWVdX9CErSqYeL9GumSAc=;
+	b=iSL1bMtyDhSPsObswqx1NQ2aASTH4gxr3Du8GVhMCOtivx9pY9NgLHhlbzc0pV/uZ9Dx
+	 eodwnsbAp0PUuJUwab5g0AbW+854UOjvV8r+B90DwSTO88NogZv3za7ds5p+ddtmq/knQ
+	 DVmHg4ZNyJ93ekVfVmVkWc7oWigNBO51SA+n2gBqllbBY6cxVIhmsh4QqXJ2ZJtGC/WX6
+	 /W8cQrjfL0pEnBzbp1chEqecr5Da1nMxc+eM18qTlz6CIgTkO4t17OdYSNm3//SUrM9ws
+	 y5UsUPQARvGm8mRM2DNl6VGFQkTs1v7H6PGbv14eMlN/Py1qkre701xp3TxeQq6HEiQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VnLwnZCk;
-	arc=none smtp.remote-ip=192.198.163.18
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TDvgikGP;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E7BB606A338;
-	Wed, 18 Nov 2026 12:12:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E7BB606A338
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 152E1606A31C;
+	Wed, 18 Nov 2026 12:20:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VnLwnZCk
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795003933; x=1826539933;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=uMdP28J8ruxyc617AkA9mX2kd8b6181ALjrCuZZJlvA=;
-  b=VnLwnZCkaAPt+4YtkdqQ8GWEWwxEwFhReGVrezadYKB6nHFteZQFAuUH
-   04qMJuvf2u78djWXW08AZoR5H/JPNJvxgxi53tJzNkT0p5lb7wokeoBGH
-   P+ZLQAjgO7q3I2mLEz/lzj1lcEGoZD+swPp1DQIq2i50QwUq8fCjSgvvv
-   DuVocsIt/CspKMwY25UpZdJ/CO/ekKo8GoidgVSTqWX4f+1/HOKIj7pvF
-   3pbMJL7HpUHTeuwG7XiQA7ZX3N2oK5n2zeJG1JqXtxBPwC3UHXc27P512
-   Uz3EO7nceEKVQM7mjKwsyV6OvgT6KONWPs6J5bKNgf5ausvvKfz7ALSqD
-   Q==;
-X-CSE-ConnectionGUID: pnfvTPMhSCS6YmcJAJaTrQ==
-X-CSE-MsgGUID: rqt2e007QC+tHBCwu+A8gA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11969"; a="3834531"
-X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
-   d="scan'208";a="3834531"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 04:12:13 -0800
-X-CSE-ConnectionGUID: +QhsQ6GYS+yl7IZW6hab6w==
-X-CSE-MsgGUID: M0auMPadQgaD93TxdhD0bA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
-   d="scan'208";a="10344295"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.239])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 04:12:10 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 18 Nov 2026 14:12:06 +0200 (EET)
-To: Stefan Ghetu <stefan.ghetu@nxp.com>
-cc: linux-pci@vger.kernel.org, bhelgaas@google.com, 
-    LKML <linux-kernel@vger.kernel.org>, hongxing.zhu@nxp.com, 
-    Jason Liu <jason.hui.liu@nxp.com>
-Subject: Re: [PATCH] LF-18678 PCI: Add quirk to fix byte-swapped class code
- on ARA240 device
-In-Reply-To: <20261118100406.600995-1-stefan.ghetu@nxp.com>
-Message-ID: <0558cc87-feca-3584-3af5-b05e7fcf4753@linux.intel.com>
-References: <20261118100406.600995-1-stefan.ghetu@nxp.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TDvgikGP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B02E21F000C4;
+	Wed, 18 Nov 2026 12:20:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795004421;
+	bh=aGwcY3cmPZsnUI5Lx24DztCWVdX9CErSqYeL9GumSAc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=TDvgikGPetbxESW4keWVqWHoezHVoVIXc9p48MY59YnlGxz7N71S7dP/0zSGv1oVD
+	 bXHv4oP9HXc4gQEl9N1FLonWZ9UHSEMi1GqE4ZoEQa6oTZt530xxIPolhlj2Of7x75
+	 gEoiutCgTxmfy+ZOGzx0tm0OPawwdcPif1hQItEoZp5GD77oBGZQhV6F2Hu2nCBztM
+	 VwEisgqFNKQSKQtYrMeQI1wPkpHXuGycZxnAthCp4UKbDvilxQQQ6QlOaWlK5Mt4pI
+	 DgRFzN9NzTqNMGDAGkShPIsfTOGezih+65pbz+Ypj9BHdlUia9qhE/H6uPtrLfXN0q
+	 mU9C2nFhdX9oA==
+Message-ID: <sashiko-outbox-220903@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v21 12/13] vfio/pci: Reset PCIe TPH state on device open
+ and close
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20261118091238.45992-13-fengchengwen@huawei.com>
+References: <20261118091238.45992-1-fengchengwen@huawei.com>
+ <20261118091238.45992-13-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 18 Nov 2026 12:20:21 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,52 +60,119 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 
-On Wed, 18 Nov 2026, Stefan Ghetu wrote:
+Thank you for your contribution! Sashiko AI review found 3 potential
+issues to consider:
+- [Medium] vfio/pci: pcie_disable_tph() after reset in
+  vfio_pci_core_enable()
+- [Medium] vfio/pci: unsafe TPH teardown order and cpuhp race in
+  vfio_pci_core_disable()
+- [Medium] vfio/pci: stale PCIe TPH state across runtime resets and
+  config writes
+--
 
-> From: Richard Zhu <hongxing.zhu@nxp.com>
-> 
-> The ARA240 PCIe endpoint device (1e58:0002) reports an incorrect,
-> byte-swapped class code of 0x000012 instead of 0x120000 (Processing
-> Accelerator). This causes the device to appear as an unclassified
-> device (class 0x00) rather than a processing accelerator (class 0x12).
-> 
-> On ARM platforms, the kernel may refuse to assign BARs to unclassified
-> devices, preventing the ARA240 from functioning properly. The device
-> cannot be initialized and remains unusable.
-> 
-> Add a PCI quirk to force the correct class code during early device
-> enumeration, allowing proper resource assignment and device operation.
-> 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Acked-by: Jason Liu <jason.hui.liu@nxp.com>
-> Signed-off-by: Stefan Ghetu <stefan.ghetu@nxp.com>
-> ---
->  drivers/pci/quirks.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 3d92b99a49238..fc95d87d4af0a 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -559,6 +559,18 @@ static void quirk_citrine(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CITRINE,	quirk_citrine);
->  
-> +/*
-> + * The ARA240 device reports a byte-swapped class code (0x000012) instead of
-> + * the correct value (0x120000 - Processing Accelerator). This causes resource
-> + * assignment issues on ARM platforms. Apply a quirk to force the correct
-> + * class code.
-> + */
-> +static void quirk_ara240_class_code(struct pci_dev *dev)
-> +{
-> +	dev->class = 0x120000;
+commit 339ada87f2084ce58d1ead31609b94d5bab56bf3
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-Why isn't this based on PCI_CLASS_ACCELERATOR_PROCESSING ?
+vfio/pci: Reset PCIe TPH state on device open and close
 
--- 
- i.
+This commit calls pcie_disable_tph() in vfio_pci_core_enable() and
+vfio_pci_core_disable() to reset PCIe TPH state when opening and closing
+a VFIO PCI device.
 
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 049392831b35f..8d3d532cd51ab 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -606,6 +606,8 @@ int vfio_pci_core_enable(struct vfio_pci_core_device =
+*vdev)
+>  		goto out_disable_device;
+> =20
+>  	vdev->reset_works =3D !ret;
+> +	/* Reset TPH state for new user session */
+> +	pcie_disable_tph(vdev->pdev);
+>  	pci_save_state(pdev);
+>  	vdev->pci_saved_state =3D pci_store_saved_state(pdev);
+>  	if (!vdev->pci_saved_state)
+
+[Severity: Medium]
+Should pcie_disable_tph() run before pci_try_reset_function() instead of
+after it?
+
+If pdev->tph_enabled is still set when entering vfio_pci_core_enable(),
+pci_try_reset_function() calls pci_save_tph_state() before the reset and
+pci_restore_tph_state() after it, writing the stale PCI_TPH_CTRL and
+capability-located Steering Tag table entries back into hardware.
+pcie_disable_tph() then clears only PCI_TPH_CTRL and sets
+pdev->tph_enabled =3D 0, leaving the restored ST table entries in hardware.
+Because pdev->tph_enabled is now 0, the following pci_save_state() ->
+pci_save_tph_state() returns early without updating the saved buffer, so
+vdev->pci_saved_state retains the stale pre-disable TPH state.
+
+> @@ -762,6 +764,9 @@ void vfio_pci_core_disable(struct vfio_pci_core_devic=
+e *vdev)
+> =20
+>  	vfio_pci_zdev_close_device(vdev);
+> =20
+> +	/* Reset TPH state on user session exit */
+> +	pcie_disable_tph(vdev->pdev);
+> +
+>  	/*
+>  	 * If we have saved state, restore it.  If we can reset the device,
+>  	 * even better.  Resetting with current state seems better than
+
+[Severity: Medium]
+Is calling pcie_disable_tph() this late in vfio_pci_core_disable() safe
+against MSI-X teardown and CPU hotplug?
+
+vfio_pci_set_irqs_ioctl() disables MSI-X and vfio_pci_tph_dev_deinit()
+runs before pcie_disable_tph() is reached here.  Meanwhile,
+vfio_pci_tph_dev_deinit() frees vdev->tph_st_cpu without vdev->tph_lock
+before removing the cpuhp instance:
+
+CPU0                                  CPU1
+vfio_pci_core_disable()               vfio_pci_tph_cpuhp_offline()
+  vfio_pci_set_irqs_ioctl()
+  ...
+  vfio_pci_tph_dev_deinit()
+                                        if (vdev->tph_st_cpu =3D=3D NULL)
+    kfree(vdev->tph_st_cpu);
+    vdev->tph_st_cpu =3D NULL;
+                                        mutex_lock(&vdev->tph_lock);
+                                        vdev->tph_st_cpu[i]
+                                          <-- use-after-free / NULL deref
+    cpuhp_state_remove_instance_nocalls()
+
+In addition, if a CPU goes offline after vfio_pci_set_irqs_ioctl()
+disables MSI-X on a PCI_TPH_LOC_MSIX device while pdev->tph_enabled is
+still 1, vfio_pci_tph_cpuhp_offline() -> pcie_tph_set_st_entry() ->
+pci_msix_write_tph_tag() fails with -ENXIO and logs a pci_err().
+vfio_pci_tph_dev_init() similarly registers vdev->tph_cpuhp_node before
+allocating and initializing vdev->tph_st_cpu to -1, and
+vfio_pci_tph_cpuhp_offline() calls pcie_tph_set_st_entry() without
+vfio_pci_memory_lock_and_enable().
+
+[Severity: Medium]
+What happens to pdev->tph_enabled across runtime resets during an active
+user session?
+
+This patch disables TPH on open and close, but runtime reset paths
+(vfio_pci_ioctl_reset(), vfio_pci_dev_set_hot_reset(), and PCIe/AF FLR in
+vfio_exp_config_write() and vfio_af_config_write()) do not call
+pcie_disable_tph() or reset vdev->tph_st_cpu.  When pdev->tph_enabled is
+1 across pci_try_reset_function() or pci_reset_bus(), pci_save_tph_state()
+and pci_restore_tph_state() restore PCI_TPH_CTRL after the reset, leaving
+TPH enabled with wiped device-specific ST tables and causing subsequent
+guest writes to PCI_TPH_CTRL in vfio_tph_config_write() to either drop
+ST mode changes when req =3D=3D org_req or fail in pcie_enable_tph_ext() wi=
+th
+-EBUSY.  If a reset clears hardware PCI_TPH_CTRL to 0 without restoring
+it while pdev->tph_enabled remains 1, vfio_tph_config_write() reads
+org_req =3D=3D 0 from hardware, so enabling TPH fails with -EBUSY in
+pcie_enable_tph_ext() while writing PCI_TPH_REQ_DISABLE exits early at
+req =3D=3D org_req without calling pcie_disable_tph().
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118091238.4599=
+2-1-fengchengwen@huawei.com?part=3D12
