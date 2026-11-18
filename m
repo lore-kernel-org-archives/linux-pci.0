@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795030086;
-	b=3xpwO3ad0whQ3GQF3du/663Rqa+5okaf6FxKzuD3q+ApayMVKWeUT4bZxsmF9SyN+v3H
-	 VyDTU3dhts6DSfGtYW28Ifgp7qu8qd2Rbe4KYrYP7qRpYIZ+AfNdphCeA9gqJdbNRkeuw
-	 66Fi38mgFDgNOsWtIbcsxKJR2aDaMnWnUuRp3OiibvfnxJalYURpH1AGfT7qh1amlVbuf
-	 VnHUdwYGI9GlcIne/odHJ4a8fL9X0eFP0kciiz9FHXvjJnn0HBIbh12hgOk713kaGGJWf
-	 Jjbrste6EkCUHFC0LEDtRzqxiImTp0HNPvy2BJDckQIjtdHsWmiybMDLxieSwIwMNjQ==
+	t=1795030090;
+	b=w3NA+cUGbcVB3xOVkdhvlqD0fHOjAF8I89o/dZIqXrvBD8rEN7By+gOnxxaWdjCAGviJ
+	 TxeecqA/QpujB8RUz2KqXxn8Q7m+i4IYRgM94aTpPz5Xo4RNLVl2K5zg52O9aAoOaq8TQ
+	 3UrRf6I6SsA89srGt+QaYButSjx7KnX+E3lcyP1Df8efmhGHgwXgh5hOTH+8VTa/V9zu5
+	 Ym747gX07PHoYesmHwu7735/JxCnuydpXKfYzjyN9rtOLu+aECbwkFmHvjhe70mK4QFZg
+	 wxlcd+CYh9zKfrSgNe97zKDzQT9HaUpI8w0+dal1LTp57RfZJVYje47Emhbrz6DPgbw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795030086;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795030090;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=SnrsLB5kZ1UeQnsG8kHcQUsE97ktcTSiGi8C0w4swCU=;
-	b=rZfrqhPTXixghYiwMysAWvgHtWL0NY5ZKsXalE5AMT+o17RLZqEWb9KACtrAwnLDBJUL
-	 vYH8ZlfDpx0MhoP3MrljmSlZhrnUWshmfZOPTM2wL0C8PoRgIW36hF5pNQzqU0PsYoGze
-	 3jMV7nZCUs7A7sPjz7+Lts/57x7WpBQ9P7mMNQC6+zmNfIUdblMW/u3jbGDCpT2FcjzJO
-	 A4wNj+GiEaArgf2b4b1ZXgYMUZ4F1ITe5IspyNEJepDTP+a6fwCOLvbZ912X5GMRGz+R6
-	 UqNPedD6hxFLrw7z9cmGeCOKKowiXCSr4CujRsFNX8TjBrm1MaOgyRWK+PlVrnVLLMw==
+	bh=AI23EedCHOkVt2bUFVxVq0Tw4jV6qHaXsCMKfKtBCb8=;
+	b=BhIzPldRCabPCIZrILnz6zgQ349jaWvrV8d8R/BFnlDWM/p4Q4WEz5IBaIzkqZZ5rUCP
+	 iDFXPpq+niCX2fTfVqPXPR3+qsNcD/I7Rd1nnU7708Lgt7Gj9+jG4eMS+oS4tdJdffsz+
+	 2cGF50eCaLsBTVfoQzkBZPnzVJNQSbO2ppvqoUUAgRoPxtuTTBM0ZIb01c5agGOPkDe0n
+	 ynjGpbW18f2+aWvS+3BnhpaSHGsVYtzXEe3mIt8ViBwxWkb3C3xX12soUbCrU3YU0bW6k
+	 IvljjIsKPSGsdWnSovcbKLf2N6Cgm/Mm9EQi8L6VjgLIx360R3du8pORMuEK9XSp3iQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cCPIYzfv;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bO3NjK55;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F29E606D35E;
-	Wed, 18 Nov 2026 19:28:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0671606DD12;
+	Wed, 18 Nov 2026 19:28:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cCPIYzfv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9ABB1F000C7;
-	Wed, 18 Nov 2026 19:28:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bO3NjK55
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE2941F000C7;
+	Wed, 18 Nov 2026 19:28:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795030085;
-	bh=SnrsLB5kZ1UeQnsG8kHcQUsE97ktcTSiGi8C0w4swCU=;
+	s=k20260515; t=1795030089;
+	bh=AI23EedCHOkVt2bUFVxVq0Tw4jV6qHaXsCMKfKtBCb8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=cCPIYzfvOpSaWxW7MQKpro4h15QnMMJVwSPJdZjOFqzBIZxjciSgPHzGsK9vib1jQ
-	 GgM2hLkK6ypMYv2W5GOZK/JttsXsLjTBYaDSIjFCgj3ipveP9BPs0YBMeBNOH5j5Zi
-	 BTlhM+g0yA3T8aR0EOmXh98niJGxJWpx/mxLtW+Zqih0yhCSDGfODnlAB1TLKykznB
-	 aBoTEK8SdW9Mj7lJxQXZnTSgaYdNAM4bvwpAi/7UVEu8AHgbp7TYN7e/eH7P3H5iMp
-	 POOX9gwWkG08D9sHpw0jcnMIUgEQrruGvkEMZpuEJ297tqzaw9P29HTipyqVJ/63y8
-	 Q//VtVqkfDpYQ==
+	b=bO3NjK55ns1629VdRftCmyGPsBjYPnXV9gEkr7QhP0WpECrtF8MvO+YnVRWnLKSUW
+	 k2u/T6Om4T5qkH0FSnf3Qx8NzMmaqQWaZc+npQXX/lL55XMUHIO5WvPa8HTfZWdXqs
+	 j/LCriv/5ZRyf45K6cbbNSa/gw/SF9WefYSM0SQMUO0y2Zzs8GLVHFIn0L+9HwPMpx
+	 rdZA40+5IR0evh1jHt4zg4KdLd7aTY31voXbpMNHnK28RSUy61C+mAtKkcwmleyD0P
+	 YZndbAHvGDEd3meMwDosu/rVkioU/iyBqSjb0NNdIlRJ4KKG2hZWm/yNsqRWFb8So3
+	 Mv6BN5sRIMTvA==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -96,9 +96,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v3 08/31] ALSA: usb-audio: Release interface claims when probe fails
-Date: Wed, 18 Nov 2026 21:26:38 +0200
-Message-ID: <20261118-device-trust-core-v3-8-d655875c4bfb@nvidia.com>
+Subject: [PATCH v3 14/31] driver core: Report deferred probes through sysfs drivers_probe
+Date: Wed, 18 Nov 2026 21:26:44 +0200
+Message-ID: <20261118-device-trust-core-v3-14-d655875c4bfb@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
 References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
@@ -117,38 +117,84 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-If the first control-interface probe fails after claiming streaming or
-MIDI interfaces, freeing the card leaves those claims behind. Module
-unload can then race with registration of the claimed interfaces and
-leave dangling driver pointers.
+commit b8c5cec23d5c ("Driver core: udev triggered device-<>driver
+binding") introduced the concept of "Systems who want to control the
+driver binding with udev" can use the drivers_probe sysfs to trigger a
+driver bind based on the kernel's match list.
 
-Release auxiliary claims when discarding a newly created card. Preserve
-them when a failed secondary probe leaves an existing card in use.
+If attaching the driver is deferred before its probe callback runs,
+userspace sees EINVAL and cannot tell it should try again, maybe after
+loading other drivers.
 
-Fixes: 9ad3d6ccf5ee ("[PATCH] USB: Remove USB private semaphore")
+Map that deferral to EAGAIN and add missed documentation for the
+drivers_probe sysfs. A deferral requested by the probe callback itself
+is still not reported.
+
+Fixes: b8c5cec23d5c ("Driver core: udev triggered device-<>driver binding")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- sound/usb/card.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ Documentation/ABI/testing/sysfs-bus-drivers-probe | 14 ++++++++++++++
+ MAINTAINERS                                       |  1 +
+ drivers/base/bus.c                                |  9 +++++++--
+ 3 files changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/sound/usb/card.c b/sound/usb/card.c
-index 59979b793fe91..56ebdd61f72e7 100644
---- a/sound/usb/card.c
-+++ b/sound/usb/card.c
-@@ -1090,6 +1090,13 @@ static int usb_audio_probe(struct usb_interface *intf,
- 		atomic_dec(&chip->active);
- 		if (!chip->num_interfaces) {
- 			usb_audio_disconnect_components(chip);
-+			for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
-+				struct usb_interface *iface = dev->actconfig->interface[i];
+diff --git a/Documentation/ABI/testing/sysfs-bus-drivers-probe b/Documentation/ABI/testing/sysfs-bus-drivers-probe
+new file mode 100644
+index 0000000000000..ed8828e55d6bf
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-bus-drivers-probe
+@@ -0,0 +1,14 @@
++What:		/sys/bus/.../drivers_probe
++Date:		February 2007
++Contact:	driver-core@lists.linux.dev
++Description:
++		(WO) Writing a device name requests driver attachment on this
++		bus, even when drivers_autoprobe is disabled. A successful
++		write does not guarantee that a driver bound. The driver link
++		can appear before probe completes; a bind uevent signals
++		successful binding.
 +
-+				if (iface->dev.driver == &usb_audio_driver.driver &&
-+				    usb_get_intfdata(iface) == USB_AUDIO_IFACE_UNUSED)
-+					usb_driver_release_interface(&usb_audio_driver, iface);
-+			}
- 			snd_card_free(chip->card);
- 		}
- 	}
++		EAGAIN means attachment was deferred before the driver's probe
++		callback, for example while a supplier or the device itself
++		is not ready. ENODEV means the device was not found. Other
++		attachment errors return EINVAL.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 93abbb315065d..b726344362b41 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8149,6 +8149,7 @@ M:	Johan Hovold <johan@kernel.org>
+ L:	driver-core@lists.linux.dev
+ S:	Supported
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-core.git
++F:	Documentation/ABI/testing/sysfs-bus-drivers-probe
+ F:	Documentation/core-api/kobject.rst
+ F:	Documentation/driver-api/driver-model/
+ F:	drivers/base/
+diff --git a/drivers/base/bus.c b/drivers/base/bus.c
+index 396097fdb3162..ecff32c3704b5 100644
+--- a/drivers/base/bus.c
++++ b/drivers/base/bus.c
+@@ -310,13 +310,18 @@ static ssize_t drivers_probe_store(const struct bus_type *bus,
+ 				   const char *buf, size_t count)
+ {
+ 	struct device *dev;
+-	int err = -EINVAL;
++	int err;
+ 
+ 	dev = bus_find_device_by_name(bus, NULL, buf);
+ 	if (!dev)
+ 		return -ENODEV;
+-	if (bus_rescan_devices_helper(dev, NULL) == 0)
++	err = bus_rescan_devices_helper(dev, NULL);
++	if (!err)
+ 		err = count;
++	else if (err == -EPROBE_DEFER)
++		err = -EAGAIN;
++	else
++		err = -EINVAL;
+ 	put_device(dev);
+ 	return err;
+ }
 
 -- 
 2.56.1
