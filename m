@@ -1,57 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795002208;
-	b=PGtFJnlKODU9Zdt0FOxc4j/MWGjGPYDdbi4wHTO3ecX0egIY7gJWBT6KLEnOhGSAhOAp
-	 v4hIs/H8Ci+Jr5DHwp9WyyddvzRdZ+levMJ7xZa3f7rBGn8lUhitSJUlXb5jMOFCu97V0
-	 Hp1P3T+y14NWFXfnpnv3QJjIRkeXnyK94CoxdVCUrOx+lYr9Z9nKfMTir4BrfUdu+Ql+U
-	 wcYK8HbXzEU5niCu4IrFBoUkZ1WYQTe65+76Z0i+fsmWB0o+8vDE+uNCPdpwD5rr/kZ7O
-	 PKzdnGE33v0WIyJ7VQ0YENF3Y3+dyXfIA/J1aq2ZrtfOaRW/tNUGiMcf2CwkAGnEPcA==
+	t=1795003934;
+	b=QRNLXNbUz2irHO60iLk6uirbyOnOo7PCsNNppyGThoylLVbJFbk3MAFr62Qmd/VWSmQl
+	 e70tCgzEIrkanBbr2JpmGEezKuo9DbOWE3enQsgG8Ane4RVaFJ6jYoeN1GA8HASIT9YTj
+	 YdPgkBeeo50BJMKFBA9OcM+COaLLwekcC2X9nHZX4GIIEeggI8vpBAH0A1/9lumMlqoJF
+	 UR7h82RjV9A2pgeXwX5Ge8xL3eewbEaFclbs1QUcVUzxOGvH1pLF/JCVOFNSgnhb8rvbk
+	 wJkASYJkOMOwFhu421h5QHzET0WbsBM6pV+PAhb5DlWbRgG2pN95dmwwAZ6DAfy/TDw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795002208;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ndf003pWa8Q/MoWtoRtvYhzs4bAn/vyXxF8URZFKxeY=;
-	b=sdRS5+njOJwlYISoZzfaD1O534bGm9QaIF01Xq5vwJxYoovOC9Nv4H/ZGAgHPBfuODMi
-	 b2AO4dunpr5LtGsRsJReKwimKI+t7jYZng0376Hyck1yBCk13pt8NjXFM6suYgR25jlnq
-	 GxTvKM9o9SJNVrB5YbQnFdZXe44YeWM6mJgCC5I/nlUbuHn2tO5t3w1s1fbtYKel/O/MY
-	 G+bxebOEuCB3gw8Qh+TlaPBNJkDMZloG2j5tqXqqtChzmMNKFEGXEmeWAopxSLA8Xlosm
-	 NL3/CyjmuAx7yFKP1tYX7xVRSP2LC+EEW12yeTri27WUzdp9nU126OAMdT9i+Ne2M+A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795003934;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
+	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
+	bh=UTLyf/Un7t8f/JJJ6neh6fVV7b+Ecu5jTGdE9Z/l6tg=;
+	b=gwQ7D/Fr4P2+lc0gZP0wpmLNW35z0cstlMqrAteQmb1aH09fUwqPUG0XKT05qo6RiIqk
+	 1byf2UpYiMTKS1jRv6AL1Zf9AaY202YEwqxPGI5i+kGD03LzMpcT+nc+TRa0PKgjh6xoE
+	 yL+adZ62yB6fljoQ+kbuwPvwRUL30Ode8ImKODwoscCW0mIWPCyzMUS0C0eKo9mYBr7Rn
+	 bD3Ok0zWJC3CKmbXQKuhAfi2fsH8h92rzHpixKk7gt27Xw0IQF/jbecn8CBTrjuFK99ek
+	 PerTCUDOEV+e+fHiPutaP9m00NCU6h136kTYEd6SMn4QSZ5Ajiru5W0c7VVqQPYWzkw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="fQPQ/mvV";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VnLwnZCk;
+	arc=none smtp.remote-ip=192.198.163.18
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73191606A338;
-	Wed, 18 Nov 2026 11:43:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E7BB606A338;
+	Wed, 18 Nov 2026 12:12:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E7BB606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fQPQ/mvV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A69D1F000CD;
-	Wed, 18 Nov 2026 11:43:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795002207;
-	bh=ndf003pWa8Q/MoWtoRtvYhzs4bAn/vyXxF8URZFKxeY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fQPQ/mvV5jfqE75WGc/rcM/6NuIm3aeRhGdvMnEBDLDZee7OpKWG/1BMuLBWT27tM
-	 MHYVpfur7K8kYpuClOQaq9PkBXMqACykeH7O5dksqiHondAOS2+DOKltIBDIKel4BL
-	 8M9pUisggzK27CKLIGHatjaIbUXDiQZmGlovACBFIkRQ7zP9Q+p0fd4Yjpio7vtCd/
-	 L0ty+YRIM1b9k34sAVAYc5TKm9BF7LM4rqTHLG0a5A/I+norbkRt85m2fpG7a+8+B/
-	 2PkapfTxy3xFsFXeCuCeZN6yEvIQlGtsF9XJp8ewjAev50W6DFqynp23u8MtG33NFt
-	 ULHXWvH882Jkg==
-Message-ID: <sashiko-outbox-220836@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v21 11/13] vfio/pci: Add DS-ST TPH policy and
- TPH_RESOLVE capability
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261118091238.45992-12-fengchengwen@huawei.com>
-References: <20261118091238.45992-1-fengchengwen@huawei.com>
- <20261118091238.45992-12-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 11:43:27 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VnLwnZCk
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795003933; x=1826539933;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=uMdP28J8ruxyc617AkA9mX2kd8b6181ALjrCuZZJlvA=;
+  b=VnLwnZCkaAPt+4YtkdqQ8GWEWwxEwFhReGVrezadYKB6nHFteZQFAuUH
+   04qMJuvf2u78djWXW08AZoR5H/JPNJvxgxi53tJzNkT0p5lb7wokeoBGH
+   P+ZLQAjgO7q3I2mLEz/lzj1lcEGoZD+swPp1DQIq2i50QwUq8fCjSgvvv
+   DuVocsIt/CspKMwY25UpZdJ/CO/ekKo8GoidgVSTqWX4f+1/HOKIj7pvF
+   3pbMJL7HpUHTeuwG7XiQA7ZX3N2oK5n2zeJG1JqXtxBPwC3UHXc27P512
+   Uz3EO7nceEKVQM7mjKwsyV6OvgT6KONWPs6J5bKNgf5ausvvKfz7ALSqD
+   Q==;
+X-CSE-ConnectionGUID: pnfvTPMhSCS6YmcJAJaTrQ==
+X-CSE-MsgGUID: rqt2e007QC+tHBCwu+A8gA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11969"; a="3834531"
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="3834531"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 04:12:13 -0800
+X-CSE-ConnectionGUID: +QhsQ6GYS+yl7IZW6hab6w==
+X-CSE-MsgGUID: M0auMPadQgaD93TxdhD0bA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="10344295"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.239])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 04:12:10 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Wed, 18 Nov 2026 14:12:06 +0200 (EET)
+To: Stefan Ghetu <stefan.ghetu@nxp.com>
+cc: linux-pci@vger.kernel.org, bhelgaas@google.com, 
+    LKML <linux-kernel@vger.kernel.org>, hongxing.zhu@nxp.com, 
+    Jason Liu <jason.hui.liu@nxp.com>
+Subject: Re: [PATCH] LF-18678 PCI: Add quirk to fix byte-swapped class code
+ on ARA240 device
+In-Reply-To: <20261118100406.600995-1-stefan.ghetu@nxp.com>
+Message-ID: <0558cc87-feca-3584-3af5-b05e7fcf4753@linux.intel.com>
+References: <20261118100406.600995-1-stefan.ghetu@nxp.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,189 +79,52 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issues to consider:
-- [High] vfio/pci: vfio_pci_core_feature_tph_resolve() fails when
-  !has_arch_st
-- [Medium] vfio/pci: vfio_tph_config_write() drops ST mode and active
-  req updates
-- [Medium] vfio/pci: vfio_pci_tph_get_capability() skips
-  pcie_tph_dsm_supported()
---
+On Wed, 18 Nov 2026, Stefan Ghetu wrote:
 
-commit 5b864ef3e267f2d34a7496c96455a9bee2cc860b
-Author: Chengwen Feng <fengchengwen@huawei.com>
-
-vfio/pci: Add DS-ST TPH policy and TPH_RESOLVE capability
-
-This commit adds the DS-ST policy level to vfio-pci and introduces the
-VFIO_DEVICE_FEATURE_TPH_RESOLVE ioctl feature for resolving CPU steering
-tags on DS-ST capable devices.
-
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
-ci_config.c
-> index 398f8db8b8ff0..8e47f84216b0d 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -1218,7 +1218,7 @@ static int vfio_tph_config_write(struct vfio_pci_co=
-re_device *vdev, int pos,
->  	cap =3D vdev->tph_vcap;
->  	mode =3D FIELD_GET(PCI_TPH_CTRL_MODE_SEL_MASK, new_ctrl);
->  	req =3D FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, new_ctrl);
-> -	if (mode > PCI_TPH_ST_IV_MODE || !(cap & (1u << mode)) ||
-> +	if (mode > PCI_TPH_ST_DS_MODE || !(cap & (1u << mode)) ||
->  		req =3D=3D 0x2 /* reserved */ ||
->  		(req =3D=3D PCI_TPH_REQ_EXT_TPH && !(cap & PCI_TPH_CAP_EXT_TPH)))
->  		goto out; /* Drop invalid or unsupported write value. */
-
-[Severity: Medium]
-Can vfio_tph_config_write() drop or overwrite ST Mode Select updates?
-
-Right below this check, vfio_tph_config_write() still skips hardware
-updates whenever req =3D=3D org_req:
-
-drivers/vfio/pci/vfio_pci_config.c:vfio_tph_config_write() {
-    ...
-	vfio_user_config_read(pdev, start + PCI_TPH_CTRL, &ctrl_val, 4);
-	vfio_default_config_write(vdev, start + PCI_TPH_CTRL, 4, perm,
-				  PCI_TPH_CTRL, ctrl_val);
-    ...
-	org_req =3D FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, org_ctrl);
-	if (req =3D=3D org_req)
-		goto out; /* Only care about requester enable. */
-
-	if (req =3D=3D PCI_TPH_REQ_TPH_ONLY || req =3D=3D PCI_TPH_REQ_EXT_TPH)
-		pcie_enable_tph_ext(pdev, mode, req);
-	else if (req =3D=3D PCI_TPH_REQ_DISABLE)
-		pcie_disable_tph(vdev->pdev);
-    ...
-}
-
-If userspace writes PCI_TPH_ST_DS_MODE while the requester is disabled
-(req =3D=3D org_req =3D=3D PCI_TPH_REQ_DISABLE) before enabling it in a sec=
-ond
-write, the first write is not committed to hardware and the second write
-clobbers vconfig[start + PCI_TPH_CTRL] from hardware (where mode is still
-0), enabling the device in NO-ST mode.
-
-Similarly, changing mode while TPH is already enabled is ignored because
-req =3D=3D org_req, disabling the requester via pcie_disable_tph() zeroes t=
-he
-entire hardware PCI_TPH_CTRL register including ST Mode Select, and
-switching req between PCI_TPH_REQ_TPH_ONLY and PCI_TPH_REQ_EXT_TPH while
-enabled fails in pcie_enable_tph_ext() with -EBUSY because pdev->tph_enabled
-is already set.
-
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 23ed8ea396575..049392831b35f 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1710,12 +1710,17 @@ static void vfio_pci_tph_dev_deinit(struct vfio_p=
-ci_core_device *vdev)
->  static u32 vfio_pci_tph_get_capability(struct vfio_pci_core_device *vdev)
->  {
->  	bool has_arch_st;
-> +	u32 cap =3D 0;
-> =20
->  	has_arch_st =3D vfio_pci_tph_has_architected_st(vdev);
-> -	if (!has_arch_st)
-> -		return 0;
-> +	if (has_arch_st)
-> +		cap |=3D VFIO_DEVICE_TPH_CAP_PROG_ST_NONE |
-> +		       VFIO_DEVICE_TPH_CAP_PROG_ST_CPU;
-> =20
-> -	return VFIO_DEVICE_TPH_CAP_PROG_ST_NONE | VFIO_DEVICE_TPH_CAP_PROG_ST_C=
-PU;
-> +	if (vdev->tph_vcap & PCI_TPH_CAP_ST_DS)
-> +		cap |=3D VFIO_DEVICE_TPH_CAP_RESOLVE_CPU_ST;
-> +
-> +	return cap;
+> From: Richard Zhu <hongxing.zhu@nxp.com>
+> 
+> The ARA240 PCIe endpoint device (1e58:0002) reports an incorrect,
+> byte-swapped class code of 0x000012 instead of 0x120000 (Processing
+> Accelerator). This causes the device to appear as an unclassified
+> device (class 0x00) rather than a processing accelerator (class 0x12).
+> 
+> On ARM platforms, the kernel may refuse to assign BARs to unclassified
+> devices, preventing the ARA240 from functioning properly. The device
+> cannot be initialized and remains unusable.
+> 
+> Add a PCI quirk to force the correct class code during early device
+> enumeration, allowing proper resource assignment and device operation.
+> 
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Acked-by: Jason Liu <jason.hui.liu@nxp.com>
+> Signed-off-by: Stefan Ghetu <stefan.ghetu@nxp.com>
+> ---
+>  drivers/pci/quirks.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 3d92b99a49238..fc95d87d4af0a 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -559,6 +559,18 @@ static void quirk_citrine(struct pci_dev *dev)
 >  }
-
-[Severity: Medium]
-Should vfio_pci_tph_get_capability() check pcie_tph_dsm_supported(vdev->pde=
-v)
-before advertising VFIO_DEVICE_TPH_CAP_PROG_ST_CPU and
-VFIO_DEVICE_TPH_CAP_RESOLVE_CPU_ST?
-
-Commit "PCI/TPH: Add pci_tph_dsm_supported() helper to detect device TPH
-ST _DSM" earlier in this series added pcie_tph_dsm_supported() to check
-whether the root port exposes the ACPI TPH _DSM method, but nothing calls
-it.  On systems without CONFIG_ACPI or without that _DSM on the root port,
-VFIO_DEVICE_FEATURE_TPH GET advertises CPU steering tag support that will
-always fail when invoked.
-
-> @@ -1901,6 +1906,50 @@ static int vfio_pci_core_feature_tph_program(struc=
-t vfio_pci_core_device *vdev,
->  	return ret;
->  }
-> =20
-> +static int vfio_pci_core_feature_tph_resolve(struct vfio_pci_core_device=
- *vdev,
-> +			u32 flags,
-> +			struct vfio_device_feature_tph_resolve __user *arg,
-> +			size_t argsz)
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CITRINE,	quirk_citrine);
+>  
+> +/*
+> + * The ARA240 device reports a byte-swapped class code (0x000012) instead of
+> + * the correct value (0x120000 - Processing Accelerator). This causes resource
+> + * assignment issues on ARM platforms. Apply a quirk to force the correct
+> + * class code.
+> + */
+> +static void quirk_ara240_class_code(struct pci_dev *dev)
 > +{
-> +	struct vfio_device_feature_tph_resolve resolve;
-> +	u32 user_flags, src_mask;
-> +	bool extended;
-> +	u16 tag =3D 0;
-> +	int ret;
-> +
-> +	if (!vdev->tph_opt_in || !(vdev->tph_vcap & PCI_TPH_CAP_ST_DS))
-> +		return -EOPNOTSUPP;
-> +
-> +	ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
-> +				 sizeof(resolve));
-> +	if (ret !=3D 1)
-> +		return ret;
-> +
-> +	if (copy_from_user(&resolve, arg, sizeof(resolve)))
-> +		return -EFAULT;
-> +
-> +	user_flags =3D resolve.flags;
-> +	extended =3D !!(user_flags & VFIO_DEVICE_TPH_EXTENDED);
-> +	if (extended && !pcie_ext_tph_supported(vdev->pdev))
-> +		return -EOPNOTSUPP;
-> +	user_flags &=3D ~VFIO_DEVICE_TPH_EXTENDED;
-> +
-> +	src_mask =3D vfio_pci_tph_get_src_mask(vdev) & ~VFIO_DEVICE_TPH_SRC_NON=
-E;
-> +	if (user_flags & ~src_mask || !is_power_of_2(user_flags))
-> +		return -EINVAL;
+> +	dev->class = 0x120000;
 
-[Severity: High]
-Does vfio_pci_core_feature_tph_resolve() always fail with -EINVAL on DS-ST
-devices that do not also have an architected ST table?
+Why isn't this based on PCI_CLASS_ACCELERATOR_PROCESSING ?
 
-vfio_pci_tph_get_src_mask() only checks VFIO_DEVICE_TPH_CAP_PROG_ST_CPU,
-which is gated on vfio_pci_tph_has_architected_st(vdev), and ignores
-VFIO_DEVICE_TPH_CAP_RESOLVE_CPU_ST:
+-- 
+ i.
 
-drivers/vfio/pci/vfio_pci_core.c:vfio_pci_tph_get_src_mask() {
-	u32 flags =3D vfio_pci_tph_get_capability(vdev);
-	u32 src_mask =3D 0;
-
-	if (flags & VFIO_DEVICE_TPH_CAP_PROG_ST_NONE)
-		src_mask |=3D VFIO_DEVICE_TPH_SRC_NONE;
-	if (flags & VFIO_DEVICE_TPH_CAP_PROG_ST_CPU)
-		src_mask |=3D VFIO_DEVICE_TPH_SRC_CPU_VOLATILE |
-			    VFIO_DEVICE_TPH_SRC_CPU_PERSISTENT;
-
-	return src_mask;
-}
-
-When a DS-ST device has PCI_TPH_LOC_NONE (storing steering tags in
-device-specific MMIO or firmware rather than an architected ST table),
-vfio_pci_tph_get_src_mask() returns 0, so src_mask is 0 and every
-VFIO_DEVICE_FEATURE_TPH_RESOLVE call is rejected with -EINVAL.
-Checking (flags & (VFIO_DEVICE_TPH_CAP_PROG_ST_CPU |
-VFIO_DEVICE_TPH_CAP_RESOLVE_CPU_ST)) in vfio_pci_tph_get_src_mask() would
-allow CPU source resolution when only VFIO_DEVICE_TPH_CAP_RESOLVE_CPU_ST
-is supported.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118091238.4599=
-2-1-fengchengwen@huawei.com?part=3D11
