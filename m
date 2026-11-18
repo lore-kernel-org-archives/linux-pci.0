@@ -1,46 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795031200;
-	b=OW27sdCFwjkfqJ/V/fONjufdiRj2JRBJtFIK6Vu2ZRnNpJrfdbp7V/oghsgK7JrfIOW7
-	 O3PhADxQsUwSrww+EbGNRM+358+ckvRzyINGoIhj/K8k7JmAlcK6OKyQcOvg8GH/4wkVN
-	 i8GXBwNnd06EEebGa5L3CuRWOVJ0N2M6Yeudzk07waYNtZnMyRKkl4/kSpXmTAChwzMxz
-	 8QISwhhtUG6YqHplFTfWJeWOPjKqq9kq46RSt2rJUWBcM8WYPn1+8/WvgsljY2Acqo9Lo
-	 BPeVjOry8E3MPnPPMfEj0+kIDl8xFjzEX5Ce8HxMix/NeWA0QqkTfAxCDsP69TwQhZA==
+	t=1795031396;
+	b=3LAQ2saecfCksP8u/O7OglB2+uDbP2ltXI1NRYmxtkM7FWjUaIEfXlBi/zBRQN/6eY2w
+	 LB41yVLKRvKfu24BpGIFKuHk9+JlWS6+dbMFxMJ3nDU3bIGq9hctuanWso8MfmYoRpe6D
+	 hy92NzSW1xRzwf8MZnu6KZT1T7uQ3krD5OnMgZkmoWGEq9yDKCCLmcOdQlHzvW6MxvrS6
+	 4yQu9a1jOWK6bQAjFOAKgLLjmUsbfpXdcmNtQvxqHmmMsXuOrfoQ1x8Pb3xfflDogAday
+	 g4ZMEwk8hFv5V7p8IRePjjc7CzAVAtuUJWc7Qx1huEByO1L/RSAU7MXCx/6S9639nsQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795031200;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795031396;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=FraNARuPZ3tZqbt90b68MTJtjCSnJWUqeang1fd2yUA=;
-	b=XKOVjIUbysbP3YieSDxJHkrXjY9UwPfEG/Zi6DnH7fu6H3ydBx0qiikUhAQWJVsWdYaL
-	 uqb8XRnyvltCx//jjmAZYGpI9gfalO3qmXhZsv259P4HY/J4viEdiM9+/FYJgxuklIT15
-	 CmRq5LSgunJfslJUEd3OBglr1GXDpK2hLmzyKtsN7B1yyi9xNQSEqdwsdsBzCBVEX1vcX
-	 q+acBn6IMzMfdY0FG95l8qxMkIKx3iOlBRuLLv8b64teGMAeA7RJNRRAFnGfH4OSl7xfx
-	 T8RdLhEjJjQSQSSUfdomzjxzScmt1QvjXyuB2INVK5q9N9/UE3Twtw7LRWq3aG0zkaA==
+	bh=XpUTJKSNd3BKZMuNsk4G3FLRtdV7s45kYttRU4gqcas=;
+	b=LUSTWbbCW5+uKqT3aODNAoGJYqv+xM1oM+J/btxalUVY8zxaDVb6oNokhhYvLy3gQR9Z
+	 ZL2TZ2jC64+QEdo7h9pV91cgGE2YmdMABNSrMfZ++Bu5VbWqzZM78cymnFTRevsxW7lk0
+	 tPQYFw/jiWREZQPXnVf36Mb3fm2M6eiTe5IMS+h3INZcHODwDcvebqfkgU5YUT7UdGUKL
+	 gLm4w0EN11MYPjr56SEe/e+BU3kTG5schv+z4jwEHGyfZFhkzf+A866S/ajxTsdHrr55g
+	 NNYDsRkm6K+u/wVhkhAyORWkVA9kXGFx1SN5txKbvp8lncowB2uosQ0qpJNFtiY4vIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k8rhOii4;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=demZj214;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DDC1606A33A;
-	Wed, 18 Nov 2026 19:46:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85685606A320;
+	Wed, 18 Nov 2026 19:49:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k8rhOii4
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44C5E1F000C6;
-	Wed, 18 Nov 2026 19:46:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=demZj214
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 255D01F000C4;
+	Wed, 18 Nov 2026 19:49:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795031200;
-	bh=FraNARuPZ3tZqbt90b68MTJtjCSnJWUqeang1fd2yUA=;
+	s=k20260515; t=1795031396;
+	bh=XpUTJKSNd3BKZMuNsk4G3FLRtdV7s45kYttRU4gqcas=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=k8rhOii4GBidYBHAj6OybYKjTi95/OE4IutpnAuro0koyhgtSDGMrHBqjxr2sRagl
-	 xsXin4sy87M6WN68cIHkqd3YIiqDzzLGmqRMy0dAcmgLOjmMTijhTQf7Uj4/jUmVrN
-	 lwFMRFnl/uAjRVANuBcqyW7GFSh2cKjw7odg8pFJGFKroRsjqyyWye4YpEJ5E5X0mu
-	 SpQubNXz2Pii6uA+K9BywHWQWqD72reCnZILizmgwg+ld1G//C9l325rWrKrAVwdna
-	 pRjtmXTtrY8/Az4tAbLk4ZVbgV2OY6SA2/k3co8e/Kq7g+ymgLGiZqR4I0uKOjOlcP
-	 screbGc9dWcmw==
-Date: Wed, 18 Nov 2026 19:46:28 +0000
+	b=demZj214Okph6xJpa/01zUcpC44TH2tWspl3ewP38RpUZK/Usoqx9e1ixsVubSSXO
+	 JCIiOBOUQb0dwTOGZBIKsU3wri/J8Jqcl//pGCJG0chd0j3HciCxzN158i8tpa1v2E
+	 gr1wLsOY7D3E/bGcsfBtKk7iBRZSzmG9+EFVX//i503bzxYB96Q/HD8PnYTdBpp19K
+	 F48hTsAvMkiq1LAsN+DsXwYpr8IPXP6ea4uScDktTGCzULUGOHu4kZ4qkHX/VF/pDw
+	 KPM2CLvpEMNAC56U+xbRc5sWFNb+YDGckQ1+LcmREDLdtiq5ir9oUxJjCPo1apthpD
+	 24lLCWhDkBbVA==
+Date: Wed, 18 Nov 2026 19:49:48 +0000
 From: Jonathan Cameron <jic23@kernel.org>
 To: Pierre Gondois <pierre.gondois@arm.com>
 Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
@@ -54,20 +54,19 @@ Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
  <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, Bjorn
  Helgaas <bhelgaas@google.com>, Maciej Wieczor-Retman
  <maciej.wieczor-retman@intel.com>, Pawel Chmielewski
- <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>,
- Avadhut Naik <avadhut.naik@amd.com>, Kai-Heng Feng <kaihengf@nvidia.com>,
- Dave Jiang <dave.jiang@intel.com>, "Fabio M. De Francesco"
- <fabio.m.de.francesco@linux.intel.com>, Breno Leitao <leitao@debian.org>,
- Terry Bowman <terry.bowman@amd.com>, Kuppuswamy Sathyanarayanan
- <sathyanarayanan.kuppuswamy@linux.intel.com>, Dan Williams
+ <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, Qiuxu
+ Zhuo <qiuxu.zhuo@intel.com>, Avadhut Naik <avadhut.naik@amd.com>, "Fabio M.
+ De Francesco" <fabio.m.de.francesco@linux.intel.com>, Kai-Heng Feng
+ <kaihengf@nvidia.com>, Dave Jiang <dave.jiang@intel.com>, Breno Leitao
+ <leitao@debian.org>, Terry Bowman <terry.bowman@amd.com>, Dan Williams
  <djbw@kernel.org>, linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
  linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
  acpica-devel@lists.linux.dev
-Subject: Re: [PATCH v1 10/19] ACPI: extlog: Simplify fatal record printing
-Message-ID: <20261118194628.30ad2621@jic23-hlaptop>
-In-Reply-To: <20261117111444.4185512-11-pierre.gondois@arm.com>
+Subject: Re: [PATCH v1 11/19] RAS: Remove unused ras_userspace_consumers()
+Message-ID: <20261118194948.45293a26@jic23-hlaptop>
+In-Reply-To: <20261117111444.4185512-12-pierre.gondois@arm.com>
 References: <20261117111444.4185512-1-pierre.gondois@arm.com>
-	<20261117111444.4185512-11-pierre.gondois@arm.com>
+	<20261117111444.4185512-12-pierre.gondois@arm.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,23 +80,40 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Tue, 17 Nov 2026 12:10:20 +0100
+On Tue, 17 Nov 2026 12:10:21 +0100
 Pierre Gondois <pierre.gondois@arm.com> wrote:
 
-> Only fatal CPER records reach print_extlog_rcd().
+> Remove the unused ras_userspace_consumers() and atomic
+> trace_count as the previous patch made extlog select
+> CPER console output by severity.
+wrap longer.
 
-Maybe mention that is only true due to an earlier patch
-(just refer to it by title). This kind of reads like
-it has been true for ages and you are just tidying it up.
+Otherwise, if the rest goes forwards this is obviously fine.
+However, more to do.. See below.
+Given it's trivial I'll just assume you'll do that.
+Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
 
-> Merge the two helpers, remove the unused prefix argument
-> and return value, and keep a single rate limiter.
 
-I love the trivial sometimes.  Short wrap.  Go to 75ish chars.
 > 
 > Signed-off-by: Pierre Gondois <pierre.gondois@arm.com>
-With any background you can add (or none if it seems it was never
-any different). 
+> ---
+>  drivers/ras/debugfs.c | 10 ----------
+>  include/linux/ras.h   |  2 --
+>  2 files changed, 12 deletions(-)
+> 
+> diff --git a/drivers/ras/debugfs.c b/drivers/ras/debugfs.c
+> index 42afd3de68b22..838cc689b9989 100644
+> --- a/drivers/ras/debugfs.c
+> +++ b/drivers/ras/debugfs.c
 
-Reviewed-by: Jonathan Cameron <jonathan.cameron@oss.qualcomm.com>
+>  
+>  static int trace_release(struct inode *inode, struct file *file)
+>  {
+> -	atomic_dec(&trace_count);
+>  	return single_release(inode, file);
+
+Use that as the callback. No need for the wrapper.
+
+>  }
+>  
 
