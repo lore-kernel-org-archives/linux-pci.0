@@ -1,60 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795012108;
-	b=2azc09uxi6uQxUWUgIm0VoN2eTGcODXAK4L3hVNiSNGfAHpzOrPIvLowgyxS1WaRo3Jq
-	 krLxVhecr2l4F0Bfq67wG0sH91MLTLcuRedWZMWvPIG/ot72wlnRmiqo0+PxZKLeOUdhj
-	 CDsp70dPo1DQ1+Gm2WsM4N0wsP1uf0OBdhU1/RfjAY1sJrC8L+oAl+1CAnKcepPDigFvM
-	 lb0ZYuwN0WC5AototFzk6XJY91ElujUnqJh5MWZbbIt7zLdfjd1x68+tt8ldI0izg4rBM
-	 Axc9hO0I4ujQd746nK5ctC82LRwd63bvFDkBGcPzp/eBm2wtuHU5cPCSl7RsTHssRVg==
+	t=1795013036;
+	b=Xr2FQ00PI3a+zpAcwrqLvdfy8FB+x9nt79KFHKz4oP2N+H4KNAinYhTPo22buAXAvAsO
+	 R5+oC+09KG37rg0Nij9m/aOlI8OGrEZ4l4+PUQwpe07tKNQbxGIJrg+wQNo0J3dr/2LVy
+	 xzSeCfLD7/9yC+fEG9UMAeDjkqc76/AF+Y6M26Sift7tebxPs7CSXOm2kO5/M2mRvoWT/
+	 ZYBMnAVI6Yn3jM4xYVrbY1y6m609G5fui+8cn+ZrLW8bRwQRgnrNK9a1ZZpuI8/J0qwSG
+	 j/syfJbatWe0xASgPtn1fFTKibMQyeDdB82sRRBq9yTtKACC6AUza4vA//AEpwguHBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795012108;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-HM-Tid:
-	 X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
-	bh=fSgwhlmKyQGQwctHqc43zOlvjdBzMgAkGZ09qlZCKuI=;
-	b=AXJWX1PbADHBAep2ST5DhFnyXyxwOJPrFgn13t6Wiz0aHpHDsX/T3rN0dO8HNQtNoRrn
-	 8nT7AQ0r/luC3vsUXi4J8BFiqPaTD3azoLGIXsEys5YNj9bDa9xSu8PGEeflCULQqKJ4m
-	 PSr4iEVFhd5qiU+6Hi1zDoK26DKOa3PUh31ylXhO+7zr5iEiherihk/eX3UFmTMEUFMUl
-	 0X6zzQ/+WUlB+orMceDJ6rt8pE1HLniE7PIp+zF8sofWhEUoMfFGFp9TAVYerpwGxX7YJ
-	 xM3RPe++uPWGcQi19KI7lYFK3jI1Jt7WA7y/NXBemdNuTEXETOcCyQQNxMS7uOHL3IA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795013036;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=cXUV7hKDsKpkJr1SARjDVAABt9+8XnSa63DJnjuCLmI=;
+	b=3FZKQouiRIHCQVjsK49G7USylfPkfjgX9R0P2qwjK6+oqBzlY0BcnEixT7OnQ9iW3Pkx
+	 fcncRB9lKl/DGmWPX5LdrUB/qI08eWO7Loxh3TJTwnBwregSAd+uOLFqot6tktSiwj+tb
+	 SStVzanCnuJcJJf1VLyiAiqMOylm5A/EoQpiC/Z5G3Zh6Kwxy0h0Se0rpX3nWJfvgeBwL
+	 t/g3bzlylJQxNC3qt1HEb5cmw20fZZdiz0+V/zETVmOwclghYG0+geGhyUAo7nI8idORN
+	 eBno+O1Z1ry/BEry1ZdZFNKZZGOf6U7sXt5T4pRG71tqnQSAYW2Pw/sOP9oG6XJQEEg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mail.sdu.edu.cn;
-	spf=pass smtp.mailfrom=mail.sdu.edu.cn;
-	dkim=pass header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=J9u6jso8;
-	arc=none smtp.remote-ip=101.71.155.101
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LQJ0awWo;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19DFF606A333;
-	Wed, 18 Nov 2026 14:28:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 19DFF606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.sdu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.sdu.edu.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8630A606A330
+	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 14:43:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=J9u6jso8
-Received: from lgs.. (unknown [101.76.249.61])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 5526d7a04;
-	Wed, 18 Nov 2026 22:28:22 +0800 (GMT+08:00)
-From: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
-To: Yue Wang <yue.wang@Amlogic.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Kevin Hilman <khilman@baylibre.com>,
-	Jerome Brunet <jbrunet@baylibre.com>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-amlogic@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: meson: Fix potential use-after-free after PHY provider removal
-Date: Wed, 18 Nov 2026 22:28:21 +0800
-Message-ID: <20261118-324f82bd41-pci-meson-0@mail.sdu.edu.cn>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LQJ0awWo
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8FA11F000C5;
+	Wed, 18 Nov 2026 14:43:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795013036;
+	bh=cXUV7hKDsKpkJr1SARjDVAABt9+8XnSa63DJnjuCLmI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=LQJ0awWoKGG8YPPENy/lUYu+Mx+E8yX2FQUl9bJTKNEM/iib/LkT+x+nHBBxfH9Iv
+	 2y1K3C6mFmrBD94Oc/T1E/FEI7GpIO7BrtBbn48HNbYVtbQCyy5B6l8F1F6dWy4+lN
+	 zjiMpY+9KinVtYvRIm6ENpnIil61v0g/KdujuTaePOwUzqWZNFEnO93hTLjQKJKwrY
+	 4A9qD4RWP/aS/N9qpLJ1sXgzNcZb7hzlTAxPQeL9l/G4gm+bI6SFFrHoqvOM06tOEm
+	 w1/7Ye0BODgs1ex/jCVKjrILgktQP1s/Vxh/PKyLbyZ0ku46hkPA3QILuSrZnf5k6O
+	 QfTwnM67SPoJw==
+Message-ID: <sashiko-outbox-221245@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: meson: Fix potential use-after-free after PHY
+ provider removal
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Guangshuo Li" <liguangshuo@mail.sdu.edu.cn>
+Cc: linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org, neil.armstrong@linaro.org
+In-Reply-To: <20261118-324f82bd41-pci-meson-0@mail.sdu.edu.cn>
+References: <20261118-324f82bd41-pci-meson-0@mail.sdu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 18 Nov 2026 14:43:55 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,52 +59,51 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1ef0f076c03a1kunmfe1958691a169f
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZTUhLVhlCGElJQxodSU5KGVYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKS0pVTE1VSU9CVU1KWVdZFhoPEhUdFFlBWUtVS1VLVUtZBg
-	++
-DKIM-Signature: a=rsa-sha256;
-	b=J9u6jso8uxOqF1ixoniwY6KndX5ryqPnNLKDGPlR9JGvTenW6T/GKKNor60TS/vnGbYxX0j8BNgeGR0r0YsTF++W2HC7PNfYDWjjjYnI/B3koqT04ZOX/BoSjjUBFpp6ZiFVZ7KtiIwTKzejsAanv1MECs2sJcjTwO+b9mE5ugY=; c=relaxed/relaxed; s=default; d=mail.sdu.edu.cn; v=1;
-	bh=fSgwhlmKyQGQwctHqc43zOlvjdBzMgAkGZ09qlZCKuI=;
-	h=date:mime-version:subject:message-id:from;
 
-The PHY reference keeps the PHY device alive, but not the provider
-driver resources used by its callbacks. Without a managed dependency,
-unbinding the provider first can leave meson_pcie_power_off() accessing
-freed provider data during PCIe removal.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Low] PCI: meson: open-coded device_link_add() on mp->phy->dev.parent
+  in meson_pcie_probe()
+--
 
-Add a managed link to the PHY provider so the PCIe controller is unbound
-before the provider releases its resources.
+commit c65612b1d0d3578038649d0fdc61a7521f33e1fc
+Author: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
 
-This issue was found by our static analysis tool under development.
-Fixes: 4b0dc84b2939 ("PCI: meson: Add missing remove callback")
-Signed-off-by: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
----
- drivers/pci/controller/dwc/pci-meson.c | 4 ++++
- 1 file changed, 4 insertions(+)
+PCI: meson: Fix potential use-after-free after PHY provider removal
 
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index 8559d132dcde..251673bc5963 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -401,6 +401,10 @@ static int meson_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(mp->phy);
- 	}
- 
-+	if (!device_link_add(dev, mp->phy->dev.parent,
-+			     DL_FLAG_AUTOREMOVE_CONSUMER))
-+		return dev_err_probe(dev, -EINVAL, "failed to link PHY provider\n");
-+
- 	mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
- 	if (IS_ERR(mp->reset_gpio)) {
- 		dev_err(dev, "get reset gpio failed\n");
+This commit adds a managed device link from the Meson PCIe device to its
+PHY provider in meson_pcie_probe() so the PCIe controller is unbound
+before the PHY provider releases its resources.
 
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
--- 
-2.43.0
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/control=
+ler/dwc/pci-meson.c
+> index 8559d132dcde8..251673bc5963c 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -401,6 +401,10 @@ static int meson_pcie_probe(struct platform_device *=
+pdev)
+>  		return PTR_ERR(mp->phy);
+>  	}
+> =20
+> +	if (!device_link_add(dev, mp->phy->dev.parent,
+> +			     DL_FLAG_AUTOREMOVE_CONSUMER))
+> +		return dev_err_probe(dev, -EINVAL, "failed to link PHY provider\n");
 
+[Severity: Low]
+Should a PHY consumer driver reach into mp->phy->dev.parent to call
+device_link_add() directly?
+
+On Device Tree platforms, fw_devlink already parses the "phys" property
+in drivers/of/property.c (parse_phys()) and creates a managed device
+link between dev and the PHY provider, which causes
+__device_release_driver() to unbind meson-pcie before the PHY provider
+releases its devres resources; device_link_add() here just finds that
+existing link and returns it without adding DL_FLAG_AUTOREMOVE_CONSUMER.
+Reaching into struct phy internals also bypasses struct phy
+encapsulation, and any provider device link needed when fw_devlink is
+disabled belongs in the PHY core (phy_get() in drivers/phy/phy-core.c)
+rather than in individual consumer drivers.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118-324f82bd41=
+-pci-meson-0@mail.sdu.edu.cn?part=3D1
