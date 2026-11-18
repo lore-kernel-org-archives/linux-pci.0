@@ -1,58 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.10
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795025650;
-	b=xcCi14T0RKzaMOdq2KUTDNQbtg35vEItefWVsBGomOMC3S/1lVwY52lZ6xo+PRsGwmrP
-	 xxuKvIp+XW65SV/BQHPcHb5fZTZPeoScspefXVvUqN8klIlz7hXDC24nfIDaRskRYoNZY
-	 NOLT9VjKAwKzrLh556CmBlKxBeIJb4BY42edoXbL1tHGvWErp/Qr6IMc3WXQfNxvJHV8a
-	 u6gMEi1IzauPLrunRFBliHrTPmDDQM0ciuj7rxc48kn06BagiEKpBT/YvW0qTaLRA79LY
-	 08Rj6quqIdJRq5HBFJWIEw5DnMP7CIpbPvPve6dBvViQNwa4VMHyKdDhvE5AT69Q/mg==
+	t=1795025842;
+	b=gkmLaMg4HmeL25ZeztfaQJbobj28EJF42vVDLP9ObRXCVOadRcH2xFlpA1npftiBwB+p
+	 psQmd5ZXlPvl+thuvm9LWdHhSEqmylQrUgApa0NPt9cS3YnA0utQOHH9QZ9OWPaVIJnHe
+	 qLacVrrbG6gb5qQsyXNMX87hpoFZrtRoD1FvlIl0jHrDJxscQrKTr1iUl/+R4QsRmpP/z
+	 sBpAUjbS/bnoD/+UFDorHAT0K+NbiQvLdyhjcpEbOXgDwxhk5HvEPQbcMVf+0qSSxqdt9
+	 3u79+0/bCxgSnhwFRPWqSKIh+SioeqLzk6PKD+8ZBNSxXyTX7T6L13lHg7sg9MagS8Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795025650;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=1ruXTHkCetMraDuq0NO8uW2/frG1fK6TaoKDogox4c4=;
-	b=hLMXcYI9UTdXnERsY0+nQasQAq82RIV2aiYTkO73bpi7TMldwAZP+laG0kMs7SnlNnmv
-	 9sKD2k8WI3WxXWo9/OQb6LhcOan23MQWfWBZ6uOF6Xk9AhHKx7cIZ0U+JTZ1nHMLt7NSO
-	 HaXLE60jv0KHGXUhfPRE7+MkJ3wwcCEy001ePmiKQgjxqinzA/R0w99LUYq5dsVZ4Fc4U
-	 NYOHhZ+PcoFCpgWN8rUl5NL3X0zi7EVXAHOI0n6x18e9A4V28ht61XybNYQacxv/tFMH+
-	 hbjOHdW6XaWlXK9wLaqedTyyTner5QNYui7GBYOkm9Q3V6jCQiP1MIAh1q+OPORQeww==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795025842;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=PbFLxNHjDnaUS0KL3r5kObCQqqZERx9HU4X7ztNYR6Q=;
+	b=uSawyjp17zm1YjaNM9e2x5fcZgJ46CdjOxH0uaLJYjXZwtbiFM+WaCkrarY0o4nx1vjN
+	 kWeB/usN94C60OG3YCO4CHfPxFtpPtIDN9/1lv9bhSptWhgZKyqXRUNrFJXuvMBoztYRq
+	 T7Gn7fHV1a1XE+zGYY37meodLIQWsUw70O3pB8rgdP+t2ypARIX5AFzx+wTAWmuqomXXQ
+	 yLxdOn/yNBr8bxU7d8fzV8BqnuvHPveI1eFX3sxxtXtk8UATtmN9SXuGHLH8LdBfcPoIK
+	 gISv+lVE0+lT0wISISYR5cWuxZfSOqaRvdu/D4OSkGNK21xdJ9Z33mM7UCy38GBR+uw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZoSjgBgV;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=T2EoKEqZ;
+	arc=none smtp.remote-ip=192.198.163.10
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9E94606A32A;
-	Wed, 18 Nov 2026 18:14:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88596606A32F;
+	Wed, 18 Nov 2026 18:17:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 88596606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZoSjgBgV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83B621F000C5;
-	Wed, 18 Nov 2026 18:14:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795025649;
-	bh=1ruXTHkCetMraDuq0NO8uW2/frG1fK6TaoKDogox4c4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ZoSjgBgV5mGs5czaFsrET/69bbnJvqSGh1XOplpDVprZzXDbKna1p9ji0a+kIFZ8H
-	 XidtqyIoNcQGDjXa5nlVSX6fwzGHjaEGC14ZVOhmzbWu64qRRHVTcN8hS80Ibs4Moz
-	 TVgqVgtV/Ov2z/35uA1bkEiLBWEEhSskx3HTD2Jcpe1mcMcuJo/z78Ni99x3gKVfuB
-	 iw0HR1s2eE78qFtDivE/26jAk0Kd9TTXzWytln2AXwJXzq7BcQENWu0i+xKBSy0Gb7
-	 84fL8C4K3z+Ntxji7ZxFM8dx2xUqlhrIj5ZJBMCgpIDSS9apaS2Xgf9B6ayoM9t0Vl
-	 5JL69t8WzYwow==
-Date: Wed, 18 Nov 2026 12:14:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Habil Eren =?utf-8?Q?T=C3=BCrker?= <habilerenturker@hotmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"H . Peter Anvin" <hpa@zytor.com>,
-	Andy Shevchenko <andriy.shevchenko@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86/quirks: Cast PCI_D0 to u16 in apple_airport_reset()
-Message-ID: <20261118181408.GA625801@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=T2EoKEqZ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795025842; x=1826561842;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=BB8Sidxy7tdBD0g99PmK8mzdJjQX6+rwLLTFK6AaG0g=;
+  b=T2EoKEqZToejj99u+lHAAhkAJWzybts/kdEs49zI6165O1uaMLrwpVXZ
+   VOSPSl+Ri9vcMILUmHSBHV7MRa9YN1cTixTFvru/MphW+Z5NYLkt1HPrY
+   Klk+wJhYbM65+eFMPiDDuj9K7XO0A+YpsT3yQiR0R0WQ9ncEW8Vqb7cU6
+   /9CKe2dphPe3T9bkzDoogsqXc2zTjxTod+GU92hzscxHmCwZ+yK2pIiyI
+   PifT/cEmGbgprnujXmXqiV6V3A8IcSBl1yWgWWwHvpd5gXsVQCCLF0frE
+   Q/Rml2+roB+K3D/FVd/nxAHpp9wTXEqMQxbt1v18OaWfildQZ+AC1ikkJ
+   w==;
+X-CSE-ConnectionGUID: ptnbU6oJTz+iNgICsrO+dQ==
+X-CSE-MsgGUID: TUKBn/DBSy2sj8V2EQFBzw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11970"; a="3744933"
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="3744933"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 10:17:20 -0800
+X-CSE-ConnectionGUID: 6AOb6tGyTwWZiinje3dcVw==
+X-CSE-MsgGUID: JTzWZnuFSnCifa+0vr3zbQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="10087018"
+Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 10:17:20 -0800
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	Yazen Ghannam <yazen.ghannam@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/6] PCI/DPC: Decide DPC ownership with host_bridge->native_dpc
+Date: Wed, 18 Nov 2026 10:17:12 -0800
+Message-ID: <20261118181718.3907441-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,66 +84,80 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261118161559.63617-1-habilerenturker@hotmail.com>
 
-[+cc Andy since he's fixed similar issues and may have better ideas]
+This series makes host_bridge->native_dpc the single decider for whether
+Linux uses DPC, as Bjorn asked during the review of "Simplify PCIe native
+ownership".
 
-On Wed, Nov 18, 2026 at 04:16:03PM +0000, Habil Eren Türker wrote:
-> PCI_D0 is defined as pci_power_t, whereas pmcsr & PCI_PM_CTRL_STATE_MASK
-> evaluates to a u16 integer.
-> 
-> This causes Sparse (make C=1) to report:
->         warning: restricted pci_power_t degrades to integer
-> 
-> Add (__force u16) casts on PCI_D0 to explicitly eliminate warnings.
+  https://lore.kernel.org/r/20261001221408.GA2731929@bhelgaas
 
-We have a bunch of similar sparse warnings in drivers/pci, but I'm
-kind of hesitant to just throw in a cast at each one to avoid the
-warning.
+Today the DPC service binds on host_bridge->native_aer, AER availability
+and "pcie_ports=dpc-native".  host_bridge->native_dpc is only consulted
+by pci_dpc_recovered().  After this series, native_dpc is the end result
+of everything that decides DPC ownership, and portdrv binds the DPC
+service on it.
 
-About a third of the sparse warnings related to pci_power_t are
-similar to this, where we're extracting the power state using
-PCI_PM_CTRL_STATE_MASK and assigning to a pci_power_t variable or
-comparing for equality with PCI_D0.  I think we can fix these with an
-accessor something like this (better name ideas welcome):
+Patches 1-2 are the two DPC patches from v2 of Lukas's "Error reporting
+for AER-incapable devices", which are included here directly.
 
-  static inline pci_power_t pci_power_t_get(u32 csr)
-  {
-    return (pci_power_t __force) FIELD_GET(PCI_PM_CTRL_STATE_MASK, csr);
-  }
+  https://lore.kernel.org/r/34c9ee153876bac953135b4518035194b7c07c6c.1794997749.git.lukas@wunner.de
+  https://lore.kernel.org/r/58d8a99cc6c2ecba6dadc450ecb4501d47816732.1794997749.git.lukas@wunner.de
 
-There are a few more we could fix with an analogous pci_power_t_set()
-or similar.  Most of the rest are arithmetic comparisons (>, <, >=,
-etc).
+Patch 1 keeps the DPC driver from accessing a non-existent AER
+capability.
 
-> Signed-off-by: Habil Eren Türker <habilerenturker@hotmail.com>
-> ---
->  arch/x86/kernel/early-quirks.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-> index 6b6f32f40cbe..7459a073c74d 100644
-> --- a/arch/x86/kernel/early-quirks.c
-> +++ b/arch/x86/kernel/early-quirks.c
-> @@ -644,13 +644,13 @@ static void __init apple_airport_reset(int bus, int slot, int func)
->  	/* Card may have been put into PCI_D3hot by grub quirk */
->  	pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
->  
-> -	if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
-> +	if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != (__force u16)PCI_D0) {
->  		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
->  		write_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL, pmcsr);
->  		mdelay(10);
->  
->  		pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
-> -		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
-> +		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != (__force u16)PCI_D0) {
->  			pr_err("pci 0000:%02x:%02x.%d: Cannot power up Apple AirPort card\n",
->  			       bus, slot, func);
->  			return;
-> -- 
-> 2.47.3
-> 
+Patch 2 drops the AER ownership check from dpc_probe(), so DPC also
+works on ports without an AER capability.
+
+Patch 3 builds EDR whenever DPC is enabled on ACPI, so CONFIG_PCIE_EDR
+is no longer a separate knob in deciding whether to request DPC control.
+
+Patch 4 stops requiring pci_aer_available() to bind the DPC service,
+since the DPC driver does not depend on MSI or on the AER driver.
+
+Patch 5 requests DPC control only together with AER control, as PCI
+Firmware r3.3, sec 4.5.2.4, requires.
+
+Patch 6 binds the DPC service on host_bridge->native_dpc and logs a
+message when the OS assumes DPC control that _OSC did not grant.
+
+Changes since v2:
+
+  - Pick up v2 of Lukas's two DPC patches.  Patch 1 now uses the AER
+    capability to find the error severity when the port has one.
+
+  - Keep CONFIG_PCIE_EDR as a hidden option instead of removing it, and
+    remove the pci_dpc_recovered() check that becomes dead (Yazen).
+
+  - Fold the PCI Firmware spec reference into the existing comment in
+    calculate_control() (Yazen).
+
+  - Shorten the comment in acpi_pci_root_create() (Yazen).
+
+  - Rebase on v7.4-rc1 and add Reviewed-by and Acked-by tags.
+
+v2: https://lore.kernel.org/r/20261020181924.3003553-1-sathyanarayanan.kuppuswamy@linux.intel.com
+v1: https://lore.kernel.org/r/20261007165840.1604136-1-sathyanarayanan.kuppuswamy@linux.intel.com
+
+Kuppuswamy Sathyanarayanan (4):
+  PCI/EDR: Build EDR whenever DPC is enabled on ACPI
+  PCI/portdrv: Don't require AER to bind DPC service
+  PCI/ACPI: Request DPC control only together with AER control
+  PCI/portdrv: Bind DPC service based on host_bridge->native_dpc
+
+Lukas Wunner (2):
+  PCI/DPC: Avoid access to non-existent AER capability
+  PCI/DPC: Reinstate support for AER-incapable ports
+
+ drivers/acpi/pci_root.c    | 19 +++++++++++--
+ drivers/pci/pcie/Kconfig   |  8 +-----
+ drivers/pci/pcie/dpc.c     | 58 +++++++++++++++++++++-----------------
+ drivers/pci/pcie/portdrv.c |  7 +----
+ 4 files changed, 51 insertions(+), 41 deletions(-)
+
+
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+-- 
+2.43.0
+
