@@ -1,53 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.8
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795017823;
-	b=rORe7Ezh89Fr8z6pcs+rpQ/waVnVj1x/XkcmOMFKq9wXFF+nafzUdDhVdWEBVyavh2Zh
-	 QdX1Gkea+zfS88ITiT/C0J8HAi0qe8L3tKhEBAIC8izX2amBsVHxHIismbMplx5wdDsKH
-	 4UCqIX6J8KgEpq2AX+LeTQjhVOstwe/x5E9iPSc9dSkHPFOO7mmNGDYYkXo+pkbdcdy19
-	 E0470V/87NEH5gcGZCL/n7/c/VDMigJZMsFIUi4o29xJ+D+9nW/kSSrlK7LKE4itfMXjA
-	 prPq++3iA+ST9yU92lySaWZZV2LslDslljKHQ0g4g/vedVMpqSOjNduieKDZXFqjasg==
+	t=1795017893;
+	b=stDTssKXQCTClGDgJjILNOGYSWk8tUF5lPPB/JyUsw7TZQxF4waVFC2lTSJaaPqYfpDT
+	 MC1Bp/BHHr4Bzt4zD65umPAtDNtjT5sxX38gZiOap4oZVez22rZwi5/H4B4MidLHX4X99
+	 20Fpky5qfcUDH37b9MkxVm5+qO3rYuTYZb10Zc+EzFx0Sx/0deZ9o0h3UcwOyUY6ZYFy0
+	 kGpDq4XrnzDrwhaRYvABqIirb5llKjkw4itKkIuuJ0IlWG9cwVgD5L0BtdnyMlwe0yckt
+	 5UUNa4ABRHymxpUeRQbyKDjeqUmEss09AKF/LUoN1cb4J7yTc7o14nhPzlxPCWzb77g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795017823;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=5Xtm/RRke3yK34FlDjzikOv9rzE5MoTMtqsjU90eEKs=;
-	b=G+p3jvxsfxwnQqhSe2QPidXfe5ROJneaUFdgoIRK0kplegD36QISEMv2EAe16OWRMnq2
-	 Z6q461UU8kHJK9JQtv5S60Ju7aHwjsbOd9O+4haoyA7yln29PNZlZ17gC1x62HghNQJEX
-	 QdR6mYldQhTuNxMbV9DH5qCOINjvFFBW+RS88vU/9+fALImDabPkoYATWWDQdE3gcr+LY
-	 RY0TObI9sXIwVaCor/BMPd1qJPoGS0iD4vX7zirvhHifHDPkRIkElS1KKe4ct41D3uLQg
-	 iVRITtUbezwj/SRoNXU/H/PhIJ/0i5GdEVPANrGx6fndlNwpNCZCL5NZd42PwR2Azgg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795017893;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=qNdQCu46JN+AvdW92yL/KhzoPvPF7o18pJEDv6Keoe0=;
+	b=gIWAY9vbQrs3u2sFFi13Z9wIdyMCDlLpfhQaL6tK9m6I1ST/0rA+GhUWFmYnxYREKLCL
+	 U0SVegc7GH6t5dDPv4QYNCcEA3o6SWqjv0qNsQ8ImpAzuwP037BdoC55yxLIrOmZwlM/o
+	 ce3qnmiq8B0SZ9VnkxmtCVEr9ziC+wdjw1yIewywELQ7aNNhvrTuorhD7Ehh5nAJ8H+nq
+	 QZfuvyhj9JMZAuZ2DONeye+2mZpc4iy3t8tmA4ih4KeIC18MTYp3ja3z+plWvk4ehIByC
+	 e0qJYb4cv/VOCNYXPKyNL7qycaXHMKQvtWFq1syFUy3AAJQ3G8Z+Qawf2lVoD/3z6/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=doExANyn;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=HnEGa6aO;
+	arc=none smtp.remote-ip=192.198.163.8
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3D54606A31C;
-	Wed, 18 Nov 2026 16:03:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52B38606A31C
+	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 16:04:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 52B38606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=doExANyn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 533DA1F000C7;
-	Wed, 18 Nov 2026 16:03:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795017822;
-	bh=5Xtm/RRke3yK34FlDjzikOv9rzE5MoTMtqsjU90eEKs=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=doExANynaJeSfs/RZkgD0skC/FwPTXXVMeKaQT2n03pq1eEGFdQhqp9uN1jy2KiOq
-	 RWktRryx11szb5eeGMcNRdbxtDyhA9TNyV6odycRMH8bf6PTs3gkPCUoMzu2VOPxW4
-	 yamhEl7XyQNnf5J6QDx/1AfzqROl6B8CW1itJs4mlLALrLuhcj9w+zoJz/Z2n8kkEI
-	 b9Vaoazxwpuax+vlWjZZ6gcsNQ7jDUj8zpKkJb0mJ8Idzm7i8a7icbHR/o3b1WpjT8
-	 SaGanjNXz/NIyOrmT0l84cx/Cx7dTYWD5Z/NxtH8ZQFr7tc+s8CvnpplEI2lyl2zr3
-	 bwU6JUzMXpXDg==
-Date: Wed, 18 Nov 2026 10:03:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stefan Ghetu <stefan.ghetu@nxp.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, hongxing.zhu@nxp.com,
-	Jason Liu <jason.hui.liu@nxp.com>
-Subject: Re: [PATCH] LF-18678 PCI: Add quirk to fix byte-swapped class code
- on ARA240 device
-Message-ID: <20261118160341.GA583443@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=HnEGa6aO
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795017893; x=1826553893;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=HlGntMaTXfG5rGmcaRF+1287Rm/VarsPSDTRNOZC8FQ=;
+  b=HnEGa6aOKB+RcXeqdLeoXa+3UND6dIwi3AHq4bZYU9qHHELx8rtMEHoO
+   4XfUkYhRXWIqisD+/eeZK/TojLcOV9s7RCOdCmaJqxySQ5leVjGXGoCCk
+   Kmvpd3MP39uyYIYeRpbZrH0X9dWfte5pMcQHi5RqGnYAPjgwJ8Qoxgx7C
+   HNrNy3schuXHqK198P3h/lnP+l0c/60o9W2CLCFVKpLG7eJONMt7a0Ris
+   ulfdBfiXvF9cAzs3i29JdLfdr8iN8T38MKXKGaSRgK7wC1BGK2JQXrMrP
+   lsebsCfOaff7Ck1pCE4D/vra8POlIbBnh6ivMHgoVo7M5zJgnRPWN54KB
+   Q==;
+X-CSE-ConnectionGUID: /8V9+ROfSrSgho5VyoLqrw==
+X-CSE-MsgGUID: LfxdXAybRd+J1nlMEFF7/w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11970"; a="3727457"
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="3727457"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 08:04:52 -0800
+X-CSE-ConnectionGUID: GMqOpEkEQZqhGqmE8CouQA==
+X-CSE-MsgGUID: 4MI+bbhVQnWNScobLRH2MA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,219,1787036400"; 
+   d="scan'208";a="10540463"
+Received: from skuppusw-desk1.jf.intel.com (HELO [10.24.80.125]) ([10.24.80.125])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 08:04:52 -0800
+Message-ID: <5cc37811-961a-43a7-8c87-278572c91ad5@linux.intel.com>
+Date: Wed, 18 Nov 2026 08:04:51 -0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,61 +72,129 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261118100406.600995-1-stefan.ghetu@nxp.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/7] PCI/ERR: Clear error status bits more selectively
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+ Raag Jadav <raag.jadav@intel.com>, linux-pci@vger.kernel.org
+Cc: Sourabh Jain <sourabhjain@linux.ibm.com>,
+ Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
+ Aravind Iddamsetty <aravind.iddamsetty@intel.com>,
+ Srinivasa Adatrao <srinivasa.adatrao@intel.com>,
+ Terry Bowman <terry.bowman@amd.com>, Keith Busch <kbusch@kernel.org>,
+ Maciej Grochowski <Maciej.Grochowski@sony.com>,
+ Yazen Ghannam <yazen.ghannam@amd.com>, Darshit Shah <darnshah@amazon.de>,
+ Jason Perlow <jperlow@gmail.com>, Riana Tauro <riana.tauro@intel.com>,
+ Yury Murashka <yurypm@arista.com>, Matthew W Carlis <mattc@purestorage.com>
+References: <cover.1794997749.git.lukas@wunner.de>
+ <8ab33b2307e9136719f72ccc2d9f946417651eab.1794997749.git.lukas@wunner.de>
+Content-Language: en-US
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <8ab33b2307e9136719f72ccc2d9f946417651eab.1794997749.git.lukas@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Nov 18, 2026 at 12:04:06PM +0200, Stefan Ghetu wrote:
-> From: Richard Zhu <hongxing.zhu@nxp.com>
+
+
+On 11/18/26 02:40, Lukas Wunner wrote:
+> After recovery from a PCIe error, all of the error status bits in the
+> Device Status register are cleared indiscriminately, regardless of the
+> error's severity.
 > 
-> The ARA240 PCIe endpoint device (1e58:0002) reports an incorrect,
-> byte-swapped class code of 0x000012 instead of 0x120000 (Processing
-> Accelerator). This causes the device to appear as an unclassified
-> device (class 0x00) rather than a processing accelerator (class 0x12).
+> So when a Correctable Error occurs simultaneously to an Uncorrectable
+> Error, after the former is handled, it is cleared alongside the latter.
+> As a result, the Uncorrectable Error isn't handled at all.
 > 
-> On ARM platforms, the kernel may refuse to assign BARs to unclassified
-> devices, preventing the ARA240 from functioning properly. The device
-> cannot be initialized and remains unusable.
-
-Out of curiosity, what's the ARM connection here?  The question of
-assigning resources for unclassified devices seems like it should be
-generic, not ARM-specific.
-
-If it *is* in fact generic, we should remove the ARM references.
-
-> Add a PCI quirk to force the correct class code during early device
-> enumeration, allowing proper resource assignment and device operation.
+> Conversely, an Uncorrectable Error occurring shortly before a Correctable
+> Error may cause the latter to be cleared and thus ignored.
 > 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Acked-by: Jason Liu <jason.hui.liu@nxp.com>
-> Signed-off-by: Stefan Ghetu <stefan.ghetu@nxp.com>
+> Avoid by clearing only the error bits corresponding to the error severity
+> being handled.
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 > ---
->  drivers/pci/quirks.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 3d92b99a49238..fc95d87d4af0a 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -559,6 +559,18 @@ static void quirk_citrine(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CITRINE,	quirk_citrine);
+
+Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+
+
+> Changes v1 -> v2:
+>   * New patch to clear error status bits more selectively (sashiko).
 >  
-> +/*
-> + * The ARA240 device reports a byte-swapped class code (0x000012) instead of
-> + * the correct value (0x120000 - Processing Accelerator). This causes resource
-> + * assignment issues on ARM platforms. Apply a quirk to force the correct
-> + * class code.
-> + */
-> +static void quirk_ara240_class_code(struct pci_dev *dev)
-> +{
-> +	dev->class = 0x120000;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(0x1e58, 0x0002, quirk_ara240_class_code);
-> +
->  /*
->   * This chip can cause bus lockups if config addresses above 0x600
->   * are read or written.
-> -- 
-> 2.53.0
+>  drivers/pci/pcie/aer.c | 20 +++++++++++++++++++-
+>  drivers/pci/pcie/err.c |  7 ++++++-
+>  2 files changed, 25 insertions(+), 2 deletions(-)
 > 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index 6f2460231422..51cf2ff8c85a 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -141,6 +141,12 @@ struct aer_info {
+>  					PCI_ERR_ROOT_MULTI_COR_RCV |	\
+>  					PCI_ERR_ROOT_MULTI_UNCOR_RCV)
+>  
+> +static const u8 severity2devsta[] = {
+> +	[AER_NONFATAL]    = PCI_EXP_DEVSTA_NFED,
+> +	[AER_FATAL]       = PCI_EXP_DEVSTA_FED,
+> +	[AER_CORRECTABLE] = PCI_EXP_DEVSTA_CED,
+> +};
+> +
+>  static bool pcie_aer_disable;
+>  static pci_ers_result_t aer_root_reset(struct pci_dev *dev);
+>  
+> @@ -1314,6 +1320,17 @@ bool is_aer_internal_error(struct aer_err_info *info)
+>  }
+>  #endif
+>  
+> +static void pcie_clear_device_status_sev(struct pci_dev *dev, u8 severity,
+> +					 u32 uncor_status)
+> +{
+> +	u16 devsta = severity2devsta[severity];
+> +
+> +	if (uncor_status & PCI_ERR_UNC_UNSUP)
+> +		devsta |= PCI_EXP_DEVSTA_URD;
+> +
+> +	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, devsta);
+> +}
+> +
+>  /**
+>   * pci_aer_handle_error - handle logging error into an event log
+>   * @dev: pointer to pci_dev data structure of error source device
+> @@ -1344,7 +1361,8 @@ static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
+>  			if (pdrv && pdrv->err_handler &&
+>  			    pdrv->err_handler->cor_error_detected)
+>  				pdrv->err_handler->cor_error_detected(dev);
+> -			pcie_clear_device_status(dev);
+> +			pcie_clear_device_status_sev(dev, AER_CORRECTABLE,
+> +						     info->anfe_status);
+>  		}
+>  	} else if (info->severity == AER_NONFATAL)
+>  		pcie_do_recovery(dev, pci_channel_io_normal, aer_root_reset);
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 1a7fc71c79d8..24a8a8263c2e 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -21,6 +21,10 @@
+>  #include "portdrv.h"
+>  #include "../pci.h"
+>  
+> +#define PCI_EXP_DEVSTA_UNC_MASK	(PCI_EXP_DEVSTA_NFED | \
+> +				 PCI_EXP_DEVSTA_FED | \
+> +				 PCI_EXP_DEVSTA_URD)
+> +
+>  static pci_ers_result_t merge_result(enum pci_ers_result orig,
+>  				  enum pci_ers_result new)
+>  {
+> @@ -274,7 +278,8 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  	 * signaling device may not even be visible to the OS.
+>  	 */
+>  	if (host->native_aer) {
+> -		pcie_clear_device_status(dev);
+> +		pcie_capability_write_word(dev, PCI_EXP_DEVSTA,
+> +					   PCI_EXP_DEVSTA_UNC_MASK);
+>  		pci_aer_clear_nonfatal_status(dev);
+>  	}
+>  
+
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
+
