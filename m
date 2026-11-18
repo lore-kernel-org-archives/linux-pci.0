@@ -1,46 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795032872;
-	b=vRUYA6yRcMUsoKMj1Bu4e7o3wbndT79y5Xhxt8z1oZ8BWfn0bdYdNqSLUr6BRlm01iuR
-	 ON3U1bVhrjCfsjv+dkeiBsa+OrUXZtJuI3OhbMEhmhZXW9hn14Xd/m2sXTr3WV3Sw/Xn6
-	 6m9+A8wxSRFyx4CawXUUNCLkvqU4ib2tWb85auJOh9qYWnaGtTXejYf8QSeLVlOkl2Xf0
-	 Y3sObXeFk8hT0PHMemsxONf9izXeHAjTI3UWs9nwcDaq9OSLesDsS9ttm3JgYCVVd3C6F
-	 6nA3B7sXCnxuH2t7N7B7XOb7RTLzEdw2/XmJFgsl+I3e8Oj8fWgCM2nH0iStqaRLAcA==
+	t=1795033057;
+	b=3s0m31S9+LFJr4yoNr2DODL1vltJaaqoujtjhBCeoFWHGenlLiunZPJBp6WJlIy1CFnQ
+	 VbqvuPO0dATkbwquDS/9tH4tmup087MREqc5nXX5fVBtlZ1QfYyRnziCkDuQ0GfbuR5m4
+	 a3+IyvLIxMQrLTbrahgHCua1ZdLzeqGMMP6PJFMIpWTA4dfJwqKajI7/h88fKL70sM0OZ
+	 M70USbN8Bvn13nacs8bDq2a8U9G2vEH1NzN3GW7hDNCLr6lwxxShj5EIjj8bX3eHD1+wb
+	 K/DpVjSEIwBOhm+0VPBxtvO/7/0J1nTQIgJFXnR2d/duQ1pFMnoB2A2NZrEdQKDdn7w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795032872;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795033057;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=pUhs6fW7JTG/XV7F5yinkkxTZdkT2kLrXXwi/BnqRWo=;
-	b=WsMx3aWmGtkg2QgEmTqhvNawLZ22OCgrvN7rC2KUWZ6J1eY2Yf3E2vHhe33oUp3OIk7K
-	 xm8B4xYKiMMIU/RBP3p2Q7f87zeL3kyMqpKjSdf/tHwqaJ045aN4mMoTemu17jpg4HXFA
-	 LF0/hQHiety5P56m4B2qXu5OiAiE3VDaqsWEZ4YhtC4SmaYYg07V377VfGldPyxKFn8VU
-	 cFcqE8oqdfWnXAFg1nVxOFnGN3BXG4EXjzhUPuhBxh1KgZ0BGZFvSZC7s9OMuBO1pufPn
-	 WlnCtP3sXgFd3ASnO636t4qFYh2nOG8cZno2FIgW2dfrMAoU75fApY1qow3UXYDWfHg==
+	bh=mVKoPdMSwhZTZlNTmmoGkN3w0L7rZ4fmniowdnKasL8=;
+	b=tfgBxrm3ZKShXTBJmfVD39XFvQw1FR1/C+UdBbxZT7XTGARoon0ClDVwKdfrRUqqUOaa
+	 y8Z9W7ADN6J3S1watRrCEih2ipwvucXlPUH1ryl8sEjuAfhON6cby0kWdgxhWZmQW8p4M
+	 0zrvW5DRdtHhcVvGwjZUo4D0netUl9VKzy40B2bpx6fHt5UnQJfjMfojigqPIXaNgJe8J
+	 i4Y7mVOwBX6aW3nutiLzOGe3FdxKmL+glQqJzUWFa0HmreeFrndHdXACcyJe9H0QdhcYF
+	 7H1F0A40qDWiOVtMxQDvE0qzluxOyKTxvw4V+4l4RgqNRzViUcBogznITM6KxTYKlCA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SgDlJU9K;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=beDKPYGP;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EAAF606A335;
-	Wed, 18 Nov 2026 20:14:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31A9F60A2602;
+	Wed, 18 Nov 2026 20:17:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SgDlJU9K
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292131F000C4;
-	Wed, 18 Nov 2026 20:14:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=beDKPYGP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE8341F000C7;
+	Wed, 18 Nov 2026 20:17:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795032872;
-	bh=pUhs6fW7JTG/XV7F5yinkkxTZdkT2kLrXXwi/BnqRWo=;
+	s=k20260515; t=1795033057;
+	bh=mVKoPdMSwhZTZlNTmmoGkN3w0L7rZ4fmniowdnKasL8=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=SgDlJU9KQwoCY7Uj7jzC0Qcq473jHIyRID8jZ5fvl0wB8SFc8SfBVnUdD2m1Pkfe0
-	 +FVlzCHOF7CVIbheRt1Jaf9XvfAoDCOfZ/vlacxvcQLrCIbwz8PHgMf5+VIWDS7UuG
-	 QRu4rUGXHUZ7Zz31zetvTyZdx+z4u86WqG/VRcFvfFMDnCjF8VsBTrucw6yDPEiGdg
-	 G3gD80JGuI+UFz0js3gcgBM4TLrupQLcWQ1MR6bNT4PnOL35ZjP7jKGCZOtjde1+t0
-	 NqQm5QLRhKfiqVaVmdoONuIgH2vX9a4TwcmTVUIT2/tiwHfVpfXxa0azpvAEVvUQET
-	 6qKwxwvqSqcKg==
-Date: Wed, 18 Nov 2026 20:14:26 +0000
+	b=beDKPYGPep6s5kZbcTpNzbPBGelfYYwJQX6xK4lL4gSNE0x6CH+gKjVOdA9SVmNaF
+	 EFYsCmTMH2K7XZmpsiepqr/FflIzKX2yvXmXBxzieXGu/Yg4Op50JpppR58y4hMhOr
+	 gxRvQWKN+1Uu/YsnaRceSzATK+5zMhJYNIUJuJm3bEhTvlC4n0HkvwPz+89zXUclKx
+	 zTSI+B1Jd58xjMI/cZSNq9L7JonxRc/hpfODsDcu87j7fuOPOq+drZ++9v73W7GEd8
+	 OC7JDx6iVDYSLA0S43DhlYyrwrfp1+7v03nfEykZaJ9Y46uTRD9PddKSQLmRNu1Isq
+	 mlQ8EPrQCrDYw==
+Date: Wed, 18 Nov 2026 20:17:22 +0000
 From: Jonathan Cameron <jic23@kernel.org>
 To: Pierre Gondois <pierre.gondois@arm.com>
 Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
@@ -54,22 +54,20 @@ Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
  <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, Bjorn
  Helgaas <bhelgaas@google.com>, Maciej Wieczor-Retman
  <maciej.wieczor-retman@intel.com>, Pawel Chmielewski
- <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, Qiuxu
- Zhuo <qiuxu.zhuo@intel.com>, Radu Rendec <radu@rendec.net>, Avadhut Naik
- <avadhut.naik@amd.com>, "Fabio M. De Francesco"
- <fabio.m.de.francesco@linux.intel.com>, Kai-Heng Feng
- <kaihengf@nvidia.com>, Dave Jiang <dave.jiang@intel.com>, Breno Leitao
- <leitao@debian.org>, Dan Williams <djbw@kernel.org>, Kuppuswamy
- Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, Terry Bowman
- <terry.bowman@amd.com>, linux-acpi@vger.kernel.org,
+ <pawel.chmielewski@intel.com>, Yazen Ghannam <yazen.ghannam@amd.com>, Radu
+ Rendec <radu@rendec.net>, Avadhut Naik <avadhut.naik@amd.com>, Kai-Heng
+ Feng <kaihengf@nvidia.com>, "Fabio M. De Francesco"
+ <fabio.m.de.francesco@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Breno Leitao <leitao@debian.org>, Dan Williams <djbw@kernel.org>, Terry
+ Bowman <terry.bowman@amd.com>, linux-acpi@vger.kernel.org,
  linux-edac@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
  linux-pci@vger.kernel.org, acpica-devel@lists.linux.dev
-Subject: Re: [PATCH v1 15/19] ACPI: APEI: Extend common CPER reporting for
- GHES section types
-Message-ID: <20261118201426.5698499a@jic23-hlaptop>
-In-Reply-To: <20261117111444.4185512-16-pierre.gondois@arm.com>
+Subject: Re: [PATCH v1 16/19] ACPI: extlog: Report error severity using GHES
+ bindings in MCE
+Message-ID: <20261118201722.2e449ec9@jic23-hlaptop>
+In-Reply-To: <20261117111444.4185512-17-pierre.gondois@arm.com>
 References: <20261117111444.4185512-1-pierre.gondois@arm.com>
-	<20261117111444.4185512-16-pierre.gondois@arm.com>
+	<20261117111444.4185512-17-pierre.gondois@arm.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -83,19 +81,37 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Tue, 17 Nov 2026 12:10:25 +0100
+On Tue, 17 Nov 2026 12:10:26 +0100
 Pierre Gondois <pierre.gondois@arm.com> wrote:
 
-> Add ARM processor tracing and CXL media delivery to acpi_extlog_report()
-> to prepare for GHES reuse. Trace CXL records as nonstandard events when
-> validation or queueing fails, preserving their payload and FRU metadata.
+> MCE extended logs report raw CPER severity values to
+> log_non_standard_event(). GHES relies on the GHES bindings in
+> ghes_do_proc(). The rasdaemon interprets the severity
+> as a GHES_SEV_* value.
 > 
-> Reuse acpi_extlog_mem_err_min_len() to accept legacy 73-byte memory
-> sections while rejecting records with missing fields marked valid.
-
-I'd do this separately and add more info on why... 
-The others are more trivial
-
+> Translate the CPER severity with ghes_severity() before reporting
+> the event.
 > 
 > Signed-off-by: Pierre Gondois <pierre.gondois@arm.com>
+Bug? Fixes tag 
+
++ Upstream this sooner rather than later so drag to start of patch set.
+
+> ---
+>  drivers/acpi/apei/extlog.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/acpi/apei/extlog.c b/drivers/acpi/apei/extlog.c
+> index 8cae5bdacf1c6..bd407436928b4 100644
+> --- a/drivers/acpi/apei/extlog.c
+> +++ b/drivers/acpi/apei/extlog.c
+> @@ -216,7 +216,7 @@ void acpi_extlog_report(const struct acpi_hest_generic_status *estatus)
+>  			void *err = acpi_hest_get_payload(gdata);
+>  
+>  			log_non_standard_event(sec_type, fru_id, fru_text,
+> -					       gdata->error_severity, err,
+> +					       ghes_severity(gdata->error_severity), err,
+>  					       gdata->error_data_length);
+>  		}
+>  	}
 
