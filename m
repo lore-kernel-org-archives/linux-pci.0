@@ -1,58 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=13.76.78.106
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794993975;
-	b=gjNbiu/lp+jIYlodQ82RGty9sRVPVIaEDo82h3Ext9F1+wPVDTvz2XPUNQWf13Q5FHPE
-	 beD7zJm+cD+FTOwFKlHUnUmds5kYOJPaOpdfgoxRb661p5N4mqlwHFbYfHyfa9pXHxqCd
-	 4/E0YPsPJusAA/Ft/vXJg8AjSvXc2fiXAgWI4Ro1YRfZEK44lbPDR0FcusevNxRLq/Ln8
-	 SMje5lEYV3vJER3TO3yPVIdQaCImT0xCVE5T9uhnBV7xRWRsGovI6olVyVkRAWnH1C9lv
-	 MSZtv2GcMf9/FGLl8XsCfUXcgJVgWvUQZ0zowXRa3NYK4GZkGl8xTnCCnTDkidWU4aw==
+	t=1794994164;
+	b=IMxaA6rF7ejst7Q/3SS2IGtzuA5rBrg2B50WBUs1T3HVO3t2TmB2k1+eivzxwy2sKk82
+	 j63n+zNa7rWVTWNVB39YXo2EtQoN3PqjL+hSgGdtxn7Os8ulUehbae6ivNxJQ3r/UA+7a
+	 AazUKSEQH1R4fqatppSHsVsmF2Hg5zDU3Pssm3AMnYaMMR2IoagKuL+9cXqX9zKopKFBq
+	 3h12rjGeYtkYs7BU9qrrnkwQZIHejzpo6OjUiJFKUR3EKQw73O3ycwTIc5ZPW76RP1c+0
+	 hNkp6gdh9pzyIqcqmIRDefhsGKjGd8d9474jWRWrfTIA3PYqYIaclRrrgMXI/VOfKbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794993975;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=GaMlISYuqBRz58Q42qtm8oVBsqSnGT8qAf9wEXA5LCY=;
-	b=V+6Sv16BoHmP3y962aMvh0aiI6tt2J6SL6mceg8aElU8A8QxsW4geFs8dd39ZIn4FyBX
-	 RPS4PDI4kURnwx+FCqURj0mzZf9G/l0ct2PBwrrb5cWFnyltd7LYBQxUcR2r0bY/7LK59
-	 KFb71hwcH/4dGLIxuye0++0cToxl4GBrtFtZOq11n+pbJflQczin6QdGHTZOYnRQpTgyK
-	 ieojrJ32NXsFURAmTjpr5bHDdI6TrxQzdw6X+w/MQpkHn8OzOe1milJDKfTHivEWPxEhp
-	 Z/WpHUWA/Q/Rgyc1aZ7RzFU6N04P0+GHG5ayz4e74Anvz+neahsiHMPuZ75Pc9d7EIA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794994164;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=KuDhDI8W/IShNvRXLHlgEMdk9zEvBiDXGCBjCnJIi68=;
+	b=lnqs0yumiySyWnUqnj9bJ+IAR9swxhd1sCvJpsl4yDrGR+LCWJbakjDhwRU7uCIOxrGu
+	 xm7hrn7vgIgCYaEPgK+bFObq6ifuBpr6bfIS1xzwfD0kYHv3RumG0eNhIjKoXiQ5jxdbc
+	 fl5cO/9PrqWrjSQYdVZvGJ2L9yqAlo/RwOHjt5ZO9zApjsyoLL6vuTUB1CCWTxCynTh0Q
+	 OslNi3X6JdRznH5Q2qGj+de0oCYmJi9IMGIh8dSSNA6H4E1O7Ud+FnFK37Gil/ZT3iam7
+	 9ZOu8LlnTekRLz2wbda4runz8IYTEtuwblCjtzHWk6OjDFJ4BaLCsX8XERawqfWrERg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=eswincomputing.com;
-	spf=pass smtp.mailfrom=eswincomputing.com;
-	dkim=pass header.d=eswincomputing.com header.i=@eswincomputing.com header.a=rsa-sha256 header.s=dkim header.b=RLjGci7b;
-	arc=none smtp.remote-ip=13.76.78.106
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.76.78.106])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9E8F0606A31C;
-	Wed, 18 Nov 2026 09:26:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E8F0606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QEgqUPHG;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61B53606A31C;
+	Wed, 18 Nov 2026 09:29:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=eswincomputing.com header.i=@eswincomputing.com header.a=rsa-sha256 header.s=dkim header.b=RLjGci7b
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=eswincomputing.com; s=dkim; h=Received:From:To:Cc:Subject:Date:
-	Message-ID:MIME-Version:Content-Transfer-Encoding; bh=GaMlISYuqB
-	Rz58Q42qtm8oVBsqSnGT8qAf9wEXA5LCY=; b=RLjGci7bIZwWBrbTR1DxSw01Gc
-	ynxarXAmLXhbr0QSgP9Wq3KCppXWteJD2/MHRfUciRVKoH3Fla+PsQglAClMqurF
-	JcZoZOWcqvM1AJMqIZSpA6KbsMCDOBkgdL8bpfIvbFGPhrV+woM6pKjBAXEeYq52
-	QYuuPmCaAfJDlZsdw=
-Received: from E0007865LT.eswin.cn (unknown [10.64.112.9])
-	by app1 (Coremail) with SMTP id TAJkCgA3JuUsb_1qFR8AAA--.206S2;
-	Wed, 18 Nov 2026 17:26:05 +0800 (CST)
-From: Donghui Zhao <zhaodonghui@eswincomputing.com>
-To: linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	zhengyu@eswincomputing.com
-Subject: [PATCH] MAINTAINERS: update PCIE DRIVER FOR ESWIN maintainer
-Date: Wed, 18 Nov 2026 17:26:03 +0800
-Message-ID: <20261118092603.1331-1-zhaodonghui@eswincomputing.com>
-X-Mailer: git-send-email 2.55.0.windows.4
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QEgqUPHG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CF1C1F000C4;
+	Wed, 18 Nov 2026 09:29:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794994164;
+	bh=KuDhDI8W/IShNvRXLHlgEMdk9zEvBiDXGCBjCnJIi68=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=QEgqUPHGGvyMOUfG4DDalRPzHTF197b0gTycqIp5n0psxc24BYKflKQDLjdQ8xwnS
+	 nhVQHcawITdHmhlF40ofSBIt6f9q/n41Pxku0wFz7hgorB4wCe6tB20cQajfChidcb
+	 HcbqrttoWoV1qazjcLLtOfD0rLb1GflUod2pSz1yBddP+t/FdF84e3i7c8akiP26vu
+	 XuIznb0PmxSrcMdQsvZJ+PADL6E+0XzxEgFVDlfTbvC0iIVXpmmlFbpvE6ASDbS0kN
+	 Dmyu+fOSFSKy34n+ZHrLlsltRf4xNGKBr4CtQQaTJcppj4TJ8C0pUWk11GkxZwoeb2
+	 mb87AC94qnoTA==
+Message-ID: <sashiko-outbox-220561@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v21 01/13] PCI/TPH: Fix pcie_tph_get_st_table_loc()
+ field extraction
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20261118091238.45992-2-fengchengwen@huawei.com>
+References: <20261118091238.45992-1-fengchengwen@huawei.com>
+ <20261118091238.45992-2-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 18 Nov 2026 09:29:22 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,48 +60,87 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:TAJkCgA3JuUsb_1qFR8AAA--.206S2
-X-Coremail-Antispam: 1UD129KBjvdXoWruF17ur1kCFyxJry7AF4UCFg_yoW3Grb_Ca
-	18Jan7XFWrJF1Iy3y0vFZakryYvw4rAr1Yy3WkK3WqyayFqFn0qF1qqa92ya10kF4fWr9F
-	qas3GFZrGF17XjkaLaAFLSUrUUUUbb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbIkFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
-	tVW8ZwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2
-	IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v2
-	6r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2
-	IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv
-	67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf
-	9x0JUd-B_UUUUU=
-X-CM-SenderInfo: p2kd0vxrqjx33l6h245lqf0zpsxwx03jof0z/
 
-Senchuan Zhang has left ESWIN Computing, so replace him with Donghui
-Zhao as the maintainer of the ESWIN PCIe controller driver.
+Thank you for your contribution! Sashiko AI review found 2 potential
+issues to consider:
+- [High] PCI/TPH: undeclared PCI_TPH_LOC_NONE in pci-tph.h when
+  !CONFIG_PCIE_TPH
+- [Low] PCI/TPH: inaccurate Fixes trailer in commit message
+--
 
-Signed-off-by: Donghui Zhao <zhaodonghui@eswincomputing.com>
----
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+commit 47bc8345d31e14953151f380f2af4f107d3d65ae
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index d738990161bd..879a51fe36b0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -21767,7 +21767,7 @@ S:	Odd Fixes
- F:	drivers/pci/controller/pci-thunder-*
- 
- PCIE DRIVER FOR ESWIN
--M:	Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-+M:	Donghui Zhao <zhaodonghui@eswincomputing.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/eswin,pcie.yaml
--- 
-2.34.1
+> PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+>
+> pcie_tph_get_st_table_loc() incorrectly uses FIELD_GET(), which shifts the
+> field value to bit 0. But the function is designed to return raw
+> PCI_TPH_LOC_* values as defined in the function comment.
+>
+> This causes incorrect ST table location detection. Fix it by using bitwise
+> AND with PCI_TPH_CAP_LOC_MASK to return the unshifted field value matching
+> the function specification.
+>
+> This doesn't make a difference to mlx5_st_create(), the lone external
+> caller, because it only checks for PCI_TPH_LOC_NONE (0), but will be need=
+ed
+> for callers that check for PCI_TPH_LOC_CAP or PCI_TPH_LOC_MSIX.
+>
+> Also add tph_cap validation for pcie_tph_get_st_table_loc() to prevent
+> invalid PCI configuration space access when TPH is not supported. Add stub
+> functions for pcie_tph_get_st_table_size() and pcie_tph_get_st_table_loc()
+> when !CONFIG_PCIE_TPH.
+>
+> Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+> Reviewed-by: Alex Williamson <alex.williamson@nvidia.com>
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 
+[Severity: Low]
+In d2e8a34876ce ("PCI/TPH: Add Steering Tag support"), get_st_table_loc()
+and get_st_table_size() were static helpers whose internal callers already
+validated pdev->tph_cap and shifted the return value with FIELD_PREP().
+Should the Fixes: tags point to the commits that exported these functions
+without stubs or pdev->tph_cap checks instead:
+
+  Fixes: 0a61ec9cc51b ("PCI/TPH: Expose pcie_tph_get_st_table_size()")
+  Fixes: 7b8a8ec20cfc ("PCI/TPH: Expose pcie_tph_get_st_table_loc()")
+
+[ ... ]
+
+> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+> index be68cd17f2f83..159ffb82b34ec 100644
+> --- a/include/linux/pci-tph.h
+> +++ b/include/linux/pci-tph.h
+> @@ -41,6 +41,10 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *=
+dev,
+>  static inline void pcie_disable_tph(struct pci_dev *pdev) { }
+>  static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
+>  { return -EINVAL; }
+> +static inline u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+> +{ return 0; }
+> +static inline u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+> +{ return PCI_TPH_LOC_NONE; }
+>  #endif
+> =20
+>  #endif /* LINUX_PCI_TPH_H */
+
+[Severity: High]
+Does this break the build when CONFIG_PCIE_TPH is disabled?
+
+include/linux/pci-tph.h uses PCI_TPH_LOC_NONE here without including
+linux/pci.h or uapi/linux/pci_regs.h.  Because include/rdma/ib_verbs.h
+includes linux/pci-tph.h before any header that pulls in pci_regs.h,
+translation units such as drivers/infiniband/core/mr_pool.c and
+drivers/infiniband/hw/mlx5/dmah.c fail to compile with PCI_TPH_LOC_NONE
+undeclared.
+
+A later patch in the series, commit "PCI/TPH: Add macros to check standard
+and extended TPH support", adds #include <linux/pci.h> to this header,
+leaving earlier commits in the series and standalone stable backports of
+this patch broken when CONFIG_PCIE_TPH is disabled.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118091238.4599=
+2-1-fengchengwen@huawei.com?part=3D1
