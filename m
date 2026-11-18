@@ -1,59 +1,71 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795016950;
-	b=GdNCPrhMENSmIMwVz5sl8kX0wquox3tqtIYTLduul5rfD6vq/mVyWa8hoZYgsB1soZvp
-	 +InjAmwOBIDbnv8MGmkDHduvI2oU6zG4+4jSOF9qnojODEhwD0dIHN1vTxL6cmAtwDht5
-	 leVw5HdD5dHL9R6oUD0hnmuYwYMHKsauRMhygw93XGeQPjt/Bboyvr8HZHNxWvDKrPypl
-	 sjX9gnKG29WBn/o0JDpMz5cv8NHK7tw8O179PlUdMvl85ZJamLSW4Ns5XEibWhBsjkoKW
-	 9jqTjpLyX2VfPqtqdAEbQZTqbHkEEMzpoQdKo27w++DjZha8WWcVC2TPfWaYmQSNfVw==
+	t=1795017080;
+	b=cRARoG9EntFN6R2HXHKbwjxEYXFBMLzCMluPrQB/E2QqQjGrtM1DpE/OQRu83ok98dTA
+	 Rarv7BjM/Lef4u4a7Tas7R8XHreJVO1/xYZw1I6z5T60VDSYWtT72SkQOUZldNOwG9fWv
+	 tSJks4imGUtLH7sCw332QZHl0zGEs6HtYnqgDVi5/1TdGNm3AA8IqEsw4klKQgMp5QSni
+	 GCrqpT2FlMKe+kFhr9xXiybVlX8XOEyECBJRWSxkLGnxxUA8QCKwzM/19sVUXo2qfZc03
+	 oz77BD4r4dv8viSnuRL113CB6HpiahxHv1TmHk+j8H6DQ4ey6XhDY9czwvG7RB3D2iw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795016950;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795017080;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=FjZOki/PxbChN/kpkS56mEwjlmPMGGtTDbC5dO/f5VE=;
-	b=kGMkL33yg721TVDyPN4oSHtmF1WZ1ShhIdT8aYej3V35EwtcVjVw5SNXx761Rf364vE0
-	 rpMCXt6XpWkcr7Ao5euf/fO2VkEa2wwgBV5bP7am028yKyCdXyehAwREvC6OaaH+BaVh3
-	 V1GXJq+DB6rOzqV/0dKrOeBwe2KRPokE/1CMak9CWuWYKc720x0bejBSAcBzB/8e+FWfY
-	 +CxwYZA4bOTkpO0xxMO3cHdUOsQe9YeLlYE7QarHXslhFlsSSUT5oqJmCKZKqqjOJPnQa
-	 8jt+VuEhxpCTazhFThNHscmuPjgtkSpp4+wCYw0wx5wpSPdC02sk4dLRMhNNn6L/uXw==
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=qf8B0pWSRob2jQEYRVRkMJrJy+KCpepLoEzVzLVC7JQ=;
+	b=QOSfveViYWNHvNbemtvLyDLJ3sMMr47LKMcTXdTnOInUXBSvL4yNhvxUGe176NhwM1vu
+	 3taZk69svCq8BWzlvTxQ23Du/5YGVYM7EIPDrX+/tE08fefiAP1Od6jEmRf+Cj0UDOMop
+	 3h/+l5QMFGoK344/mHmvGy6BbpTMUHC2AzGMxDLVUf9hLZgoHCTiNESbg5cxyPtUdwgmV
+	 UJIJrmJt3APUrpc0a18OELsysDLz8YF+qIbkIoXqDwwwMyZlUc/kZIJp9585/qQiu6TVD
+	 e3v+K1QtuKbPzktF/bkLimJs4tMVnT+l8EIxpD6YoltiH8g2tnS8QgtZeyXlfWWQWxg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DelL2Ase;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AhFZoIz5;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67F5B606A331;
-	Wed, 18 Nov 2026 15:49:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8F83606A332;
+	Wed, 18 Nov 2026 15:51:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DelL2Ase
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 076AD1F000C4;
-	Wed, 18 Nov 2026 15:49:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AhFZoIz5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8806E1F000C4;
+	Wed, 18 Nov 2026 15:51:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795016950;
-	bh=FjZOki/PxbChN/kpkS56mEwjlmPMGGtTDbC5dO/f5VE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=DelL2AseCkpI9pEwA1L5gY3UDxZ4DYa78FSdItn2+haIXyHKwqolDF9MxHW0qAI2U
-	 uGaRVw8t2ioh7l/hl7O4t/jnQY9aWtWF0HCkkVr1mXPMCs0PUdw81JezykySJPjEaj
-	 2nP+19nhBrZjLJPR/IYJJy52e53SrC4BjjM8C1FTgt7iIelEn9gZJitVhgpmfHjWjL
-	 l/2srAkF43eDWCRIGaKXQKVrpeGUFw6uTPG1iqhNGa0AplApXrllzYbPz17vmnmehi
-	 YAUHdHNQNA2KkI/iZ9/GXnbJmiprerrF9eoO4A4ELdrlaCE9Pmh8mS4n7OuCd5rYQO
-	 wSCdMKJW26xmA==
-Date: Wed, 18 Nov 2026 09:49:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Baolu Lu <baolu.lu@linux.intel.com>
-Cc: iommu@lists.linux.dev, Kevin Tian <kevin.tian@intel.com>,
-	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Danny Gonzalez <digonzal@google.com>,
-	David Decotigny <decot@google.com>,
-	Sheena Mohan <sheenamo@google.com>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Nicolin Chen <nicolinc@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] iommu/vt-d: Fix WARN_ON in iommu probe path
-Message-ID: <20261118154908.GA501396@bhelgaas>
+	s=k20260515; t=1795017080;
+	bh=qf8B0pWSRob2jQEYRVRkMJrJy+KCpepLoEzVzLVC7JQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=AhFZoIz5QPddGxQPSruoErjT8itmH040m+DxUw4Xf9wTElEkeOjtXi5Dz8iLlXf4l
+	 7QZC56tdiGTXLqUQjQM26gTHFMKk1S8CKYdoLT9aHwZowMADj8kh0ga1IwlEsoaHGM
+	 0UADq1Upe/15I96CG175mb9DwM3WKjZ8kcQCnFxtA+tJTN41+ICNOH+xKCFvK8P6En
+	 jSVCE/UjgX5Q3/K5plWFDB26K4I/979XXfMQQ5kfh99EvS1MnfNeUL4hNDuAr2tFJd
+	 +67kLMeYnEI14tgz1tVoyNdnjJht3qETjzczfA9NbUDFVGTdTYu11WcIh3qXkX+bpT
+	 nu2LyjcOLO50A==
+Date: Wed, 18 Nov 2026 15:51:13 +0000
+From: Conor Dooley <conor@kernel.org>
+To: Jerome Brunet <jbrunet@baylibre.com>
+Cc: Xincheng Ji <jixincheng@ultrarisc.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Brian Masney <bmasney+clk@redhat.com>,
+	Jerome Brunet <jbrunet+clk@baylibre.com>,
+	Maxime Chevallier <maxime.chevallier@bootlin.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Linus Walleij <linusw@kernel.org>, Paul Walmsley <pjw@kernel.org>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+	linux-clk@vger.kernel.org, netdev@vger.kernel.org,
+	linux-gpio@vger.kernel.org, Fei Chen <chenfei@ultrarisc.com>,
+	linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Update UltraRISC driver maintainers
+Message-ID: <20261118-unimpeded-swapping-6b1b3e5bebba@spud>
+References: <20261116-ultrarisc-maintainer-v1-1-f58706ae438c@ultrarisc.com>
+ <179501112283.639563.5233054429317576626.b4-review@b4>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,89 +75,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="N/uanLs0bA0BfJcj"
+Content-Disposition: inline
+In-Reply-To: <179501112283.639563.5233054429317576626.b4-review@b4>
+
+--N/uanLs0bA0BfJcj
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <19551f22-84cd-4256-a24b-f26c61502368@linux.intel.com>
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Nov 18, 2026 at 03:49:30PM +0800, Baolu Lu wrote:
-> On 11/18/2026 2:01 AM, Bjorn Helgaas wrote:
-> > [+cc Danny and others because this is related to ongoing work at
-> > https://lore.kernel.org/all/20261020181053.2646782-1-digonzal@google.com/]
-> > 
-> > On Sun, Apr 07, 2024 at 09:14:29AM +0800, Lu Baolu wrote:
-> > > Commit 1a75cc710b95 ("iommu/vt-d: Use rbtree to track iommu probed
-> > > devices") adds all devices probed by the iommu driver in a rbtree
-> > > indexed by the source ID of each device. It assumes that each device
-> > > has a unique source ID. This assumption is incorrect and the VT-d
-> > > spec doesn't state this requirement either.
-> > > ...
-> > 
-> > > +++ b/drivers/iommu/intel/iommu.c
-> > > @@ -4299,9 +4299,11 @@ static struct iommu_device *intel_iommu_probe_device(struct device *dev)
-> > >        }
-> > >        dev_iommu_priv_set(dev, info);
-> > > -     ret = device_rbtree_insert(iommu, info);
-> > > -     if (ret)
-> > > -             goto free;
-> > > +     if (pdev && pci_ats_supported(pdev)) {
-> > > +             ret = device_rbtree_insert(iommu, info);
-> > > +             if (ret)
-> > > +                     goto free;
-> > > +     }
-> > 
-> > This change is upstream as 89436f4f5412 ("iommu/vt-d: Fix WARN_ON in
-> > iommu probe path"), but I think there's a problem here.  Previously
-> > the rbtree insertion was unconditional, so the unconditional remove in
-> > the error path was correct.
-> > 
-> > After 89436f4f5412, the rbtree insertion is conditional.  If
-> > intel_pasid_alloc_table() fails, we try to remove it even though it
-> > may never have been inserted:
-> 
-> info->node is initialized with RB_CLEAR_NODE() before the insertion, and
-> the remove helper checks RB_EMPTY_NODE() before erasing. If insertion
-> was skipped, removal is a no-op, so this error path does not need
-> another state check.
+On Wed, Nov 18, 2026 at 03:12:02PM +0100, Jerome Brunet wrote:
+> > Jia Wang and Xincheng Zhang have left UltraRISC and are no longer
+> > maintaining its drivers. Jia's listed company email address is
+> > no longer available.
+> >=20
+> > Replace Jia Wang with Xincheng Ji and add Fei Chen as a co-maintainer
+> > for the DP1000 PCIe, clock, DWMAC and pinctrl drivers. Remove
+> > Xincheng Zhang from the PCIe maintainer entry.
+> >=20
+> > Having two maintainers provides continuity for maintenance and
+> > patch review when either maintainer is unavailable, as suggested
+> > by Conor Dooley during the UltraRISC maintenance handover.
+> >=20
+> > Link: https://lore.kernel.org/all/20261112-legend-outcast-c2226b5e02a1@=
+spud/
+> >=20
+> > Signed-off-by: Xincheng Ji <jixincheng@ultrarisc.com>
+> > ---
+> > Hi all,
+> >=20
+> > Jia Wang and Xincheng Zhang have left UltraRISC and no longer
+> > maintain these drivers. Jia's listed company email address is
+> > no longer available.
+>=20
+> Maintenance is not necessarily tied to an employer.
 
-Seems like RB_CLEAR_NODE() and RB_EMPTY_NODE() are lacking
-documentation: RB_CLEAR_NODE() isn't used at all by lib/rbtree.c and
-Documentation/core-api/rbtree.rst doesn't mention it.
+True, but if the people don't care enough to update their emails they
+probably aren't that interested in staying involved...
 
-But I agree, this does look safe as-is, though requiring a little
-inside knowledge of rbtree internals.
+> It would be better if the people removed could Ack the change, and let
+> the community know they don't plan on being involved anymore.
+>=20
+> If they do not reply within a reasonable timeframe (a cycle maybe?) I gue=
+ss
+> you can remove them anyway.
+>=20
+> That does not prevent you from adding yourself in the meantime.
+>=20
+> I suppose this would go through a starfive/riscv tree ?
 
-> > >        if (sm_supported(iommu) && !dev_is_real_dma_subdevice(dev)) {
-> > >                ret = intel_pasid_alloc_table(dev);
-> >                  if (ret) {
-> >                          dev_err(dev, "PASID table allocation failed\n");
-> >                          goto clear_rbtree;
-> >                  }
-> >      ...
-> >      clear_rbtree:
-> >          device_rbtree_remove(info);
-> >      free:
-> >          kfree(info);
-> > 
-> > > @@ -4336,7 +4338,8 @@ static void intel_iommu_release_device(struct device *dev)
-> > >        struct intel_iommu *iommu = info->iommu;
-> > >        mutex_lock(&iommu->iopf_lock);
-> > > -     device_rbtree_remove(info);
-> > > +     if (dev_is_pci(dev) && pci_ats_supported(to_pci_dev(dev)))
-> > > +             device_rbtree_remove(info);
-> > 
-> > This is also somewhat problematic because it relies on the assumption
-> > that pci_ats_supported(X) always returns the same value it returned in
-> > intel_iommu_probe_device().  That may be true today, but I don't think
-> > you should rely on it.
-> 
-> Agreed. The release path should not re-evaluate pci_ats_supported().
-> 
-> > I think both issues could be solved if intel/iommu.c kept track of the
-> > rbtree insertion itself, e.g., with a bit in struct
-> > device_domain_info.
-> 
-> Sure. I will address this with a follow-up patch.
+Sure, I can take it if the subsystem folk don't.
 
-Great, thank you!
+>=20
+> For the clock:
+> Acked-by: Jerome Brunet <jbrunet@baylibre.com>
+>=20
+> --=20
+> Jerome
+>=20
 
-Bjorn
+--N/uanLs0bA0BfJcj
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCav3JbQAKCRB4tDGHoIJi
+0qBxAQDnNYlzvCuzp3y54+YqWrqv9AdYL7pLR7wQG8oNc1UbhgD+MDe5Ob5AFsHw
+x1lndPqct4ZQjA7FNv/bu6vHGgf/xgE=
+=YLuJ
+-----END PGP SIGNATURE-----
+
+--N/uanLs0bA0BfJcj--
