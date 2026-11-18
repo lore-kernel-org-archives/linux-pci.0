@@ -1,65 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=140.211.166.183
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795040978;
-	b=lah1obPCWu6EGqK3Qju28g7GYFDcTIJtN1jvAoQnYgmI8HyhSxEb/bVtzQBXoFRNm3v1
-	 34sAsaScqlN40wmwwT05Ff3zihLXFZqDZxzpy73hIM/bF52smhvC+5SqG9L2NdyuiDxmi
-	 A++PbPYZ1innNpNgaytHe1BAb0zQa707OEloQq2kRNpTmhaG7DFvToLhMznlYvt8tVmdk
-	 k/vUWIZuk4Ah5pDqLUFL/amYcUjMBJtLZ5cwzcRs12H5aamepUHzynG0G2uI9WN6bh0k+
-	 L+KH5wdIXIhl2tVk4apONIn1JkbfNUu9+XGyhn9Oyhq0zEkuGFCpeF5HAgnZ8neMDyg==
+	t=1795041060;
+	b=yCyn6DSnnkT6IeuzL8nqpCA69TUotYMa3TYivU/1tsBRc6j9AILFV+yraOhT7X3kqNsA
+	 5diW0KnfIQfo3EZnE2Sp0Dbcc/101ILntNwPgXLNZmofRJYJ8Lw9CID5njaU+JcoupSH8
+	 7LxGnacvfD9nMtIkh3Q8HuIHgC3Ghy8kM9DDCGCFf0cddkr6GVnIKwW4p0nVV5LGdp0sW
+	 SaY89AJ7PP6/zUFARspUZlrFXPbi9Qwogrb8vCagccfI476pM/hDQC1ab9eCOyS0c2n/9
+	 A0aUm2BcOV1x9Yo768qwzbjH1FTscI6/mON26q5qkDuLpI2cpawRyZKsV95vMkhFzSA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795040978;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:User-Agent:X-stable:X-Patchwork-Hint:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=S1zXG5hSU7M7fE8I3P5fHdscFy585SUDTLAQOTjGrRw=;
-	b=in2k0t80prtKVX/87UVKjSPLVESohYagMgKGz+QykrCW+fDGW85WEtHvKcVpPWGqNi8Q
-	 sI+0UMgmWWBhkmdlugGzuZmWoY1PityUilbFojWVaNqMMKf1tChlD2CtL+pwmXy76xAMD
-	 q/3bMp6U7KqeCuKRfJ9c60C69OLNqDcHmhwu3t0LBTAXwJmbbwomVfZtFplzxe/iUgegt
-	 nunMp5bz7MsZScubZEdT5VUN3kXZL9RSi+K0nDWmHRr32ZW7oHZZZXn9s5MPM2e6jYhBF
-	 2NzclaIglM6rCS95Gc5C81bz0w32zvDW/ohnEibuw2XtwNtkLCcRj05IR5hJD0LHEmw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795041060;
+	h=DMARC-Filter:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:User-Agent:MIME-Version;
+	bh=YyI7TOzf2UvWpDcu5o8mNw71tdXHWAcQdrzoZghaDMI=;
+	b=TYezmzkePK6vLmq5mVU/sIJ+hD3ztD9YHWQgOi/tIxfgVT1ZHjzG4qUEY9VS7+FEWsxj
+	 DMGt1EWRZaF3sd/ErsmUkpKjp+bm6aj9HHwBdpbZfGQI3eBDzeQ5Q0e0g0+YdQFMs/NXR
+	 kglKIQO/p3Y2EzsiCmG3FUi8ldGJd+6chmehb7+8fKdCuqwjXROo9axenqMIyL7bSxCFy
+	 ejomw0oeRQaIzZ3bg1QADwHQtIysxX5fVy/5E4RtFprubx/Xh9+MMGHnXlRAyjsGEA5AL
+	 h1zFVxAaFMllxSAEd3w7oLYiq6rTJlWAiWIYwcfYcoZ9LU5h2dkNv2311Ere312e2nQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=nlu4JMkM;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=gentoo.org;
+	spf=pass smtp.mailfrom=gentoo.org;
+	arc=none smtp.remote-ip=140.211.166.183
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D800606A32C;
-	Wed, 18 Nov 2026 22:29:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=nlu4JMkM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B00391F000C4;
-	Wed, 18 Nov 2026 22:29:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1795040978;
-	bh=S1zXG5hSU7M7fE8I3P5fHdscFy585SUDTLAQOTjGrRw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=nlu4JMkMRE9QGBHUnnj1Gpzm54IXdzPvtAlKV0K8D3PZawuKJ4ZuiO9PSatAvrhrH
-	 DbHgmKvjI59PhyuEU7dxBNalCww82hF79EzhApDlrx1X0+mpiWjr4YcpgGJ2ETlGpv
-	 zKF6S+adjZc5fJ1eEwOhsW7uRkbGZMUeWr3HRzKc=
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	patches@lists.linux.dev,
-	Terry Bowman <terry.bowman@amd.com>,
-	Robert Richter <rrichter@amd.com>,
-	Oliver OHalloran <oohall@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 6.6 2649/3318] PCI/AER: Forward RCH downstream port-detected errors to the CXL.mem dev handler
-Date: Wed, 18 Nov 2026 15:54:31 +0100
-Message-ID: <20261118150440.520563179@linuxfoundation.org>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261118150313.527275416@linuxfoundation.org>
-References: <20261118150313.527275416@linuxfoundation.org>
-User-Agent: quilt/0.69
-X-stable: review
-X-Patchwork-Hint: ignore
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10EC1606A325
+	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 22:30:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 10EC1606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
+Received: from 9.b.8.c.1.6.8.7.6.b.f.2.6.1.2.4.c.6.e.0.c.6.2.0.0.b.8.0.1.0.0.2.ip6.arpa (unknown [IPv6:2001:8b0:26c:e6c:4216:2fb6:7861:c8b9])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: chewi)
+	by smtp.gentoo.org (Postfix) with ESMTPSA id 4045E342592;
+	Wed, 18 Nov 2026 22:30:58 +0000 (UTC)
+Message-ID: <a112657de590aefc2b306ebc9e6771cbaa76ae82.camel@gentoo.org>
+Subject: Re: PCI: dw-rockchip: Unable to boot Quartz64 Model B from NVMe
+ since reset changes
+From: James Le Cuirot <chewi@gentoo.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>, Manivannan Sadhasivam	
+ <manivannan.sadhasivam@oss.qualcomm.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, 	linux-pci@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, Shawn Lin	 <shawn.lin@rock-chips.com>
+Date: Wed, 18 Nov 2026 22:30:45 +0000
+In-Reply-To: <av3WcJyt_tRXNj2l@ryzen>
+References: <08cc96c5171fc969b074371692e6d95d46eba60b.camel@gentoo.org>
+	 <av3WcJyt_tRXNj2l@ryzen>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-ebQo5WGk+sMw/9Rs5xM+"
+User-Agent: Evolution 3.60.2 
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,223 +61,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-
-6.6-stable review patch.  If anyone has any objections, please let me know.
-
-------------------
-
-From: Robert Richter <rrichter@amd.com>
-
-[ Upstream commit 0a867568bb0d203ca3d28634a611a1367d7c892d ]
-
-In Restricted CXL Device (RCD) mode a CXL device is exposed as an
-RCiEP, but CXL downstream and upstream ports are not enumerated and
-not visible in the PCIe hierarchy. [1] Protocol and link errors from
-these non-enumerated ports are signaled as internal AER errors, either
-Uncorrectable Internal Error (UIE) or Corrected Internal Errors (CIE)
-via an RCEC.
-
-Restricted CXL host (RCH) downstream port-detected errors have the
-Requester ID of the RCEC set in the RCEC's AER Error Source ID
-register. A CXL handler must then inspect the error status in various
-CXL registers residing in the dport's component register space (CXL
-RAS capability) or the dport's RCRB (PCIe AER extended
-capability). [2]
-
-Errors showing up in the RCEC's error handler must be handled and
-connected to the CXL subsystem. Implement this by forwarding the error
-to all CXL devices below the RCEC. Since the entire CXL device is
-controlled only using PCIe Configuration Space of device 0, function
-0, only pass it there [3]. The error handling is limited to currently
-supported devices with the Memory Device class code set (CXL Type 3
-Device, PCI_CLASS_MEMORY_CXL, 502h), handle downstream port errors in
-the device's cxl_pci driver. Support for other CXL Device Types
-(e.g. a CXL.cache Device) can be added later.
-
-To handle downstream port errors in addition to errors directed to the
-CXL endpoint device, a handler must also inspect the CXL RAS and PCIe
-AER capabilities of the CXL downstream port the device is connected
-to.
-
-Since CXL downstream port errors are signaled using internal errors,
-the handler requires those errors to be unmasked. This is subject of a
-follow-on patch.
-
-The reason for choosing this implementation is that the AER service
-driver claims the RCEC device, but does not allow it to register a
-custom specific handler to support CXL. Connecting the RCEC hard-wired
-with a CXL handler does not work, as the CXL subsystem might not be
-present all the time. The alternative to add an implementation to the
-portdrv to allow the registration of a custom RCEC error handler isn't
-worth doing it as CXL would be its only user. Instead, just check for
-an CXL RCEC and pass it down to the connected CXL device's error
-handler. With this approach the code can entirely be implemented in
-the PCIe AER driver and is independent of the CXL subsystem. The CXL
-driver only provides the handler.
-
-[1] CXL 3.0 spec: 9.11.8 CXL Devices Attached to an RCH
-[2] CXL 3.0 spec, 12.2.1.1 RCH Downstream Port-detected Errors
-[3] CXL 3.0 spec, 8.1.3 PCIe DVSEC for CXL Devices
-
-Co-developed-by: Terry Bowman <terry.bowman@amd.com>
-Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Signed-off-by: Robert Richter <rrichter@amd.com>
-Cc: Oliver O'Halloran <oohall@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Link: https://lore.kernel.org/r/20231018171713.1883517-18-rrichter@amd.com
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Stable-dep-of: e86ac10110d0 ("PCI/AER: Fix struct pci_dev reference leak in aer_process_err_devices()")
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/pcie/Kconfig |  9 ++++
- drivers/pci/pcie/aer.c   | 93 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 100 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index 228652a59f27e..8999fcebde6aa 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -49,6 +49,15 @@ config PCIEAER_INJECT
- 	  gotten from:
- 	     https://git.kernel.org/cgit/linux/kernel/git/gong.chen/aer-inject.git/
- 
-+config PCIEAER_CXL
-+	bool "PCI Express CXL RAS support"
-+	default y
-+	depends on PCIEAER && CXL_PCI
-+	help
-+	  Enables CXL error handling.
-+
-+	  If unsure, say Y.
-+
- #
- # PCI Express ECRC
- #
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 2f7d88353b028..72283b0b8d596 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -948,14 +948,97 @@ static bool find_source_device(struct pci_dev *parent,
- 	return true;
- }
- 
-+#ifdef CONFIG_PCIEAER_CXL
-+
-+static bool is_cxl_mem_dev(struct pci_dev *dev)
-+{
-+	/*
-+	 * The capability, status, and control fields in Device 0,
-+	 * Function 0 DVSEC control the CXL functionality of the
-+	 * entire device (CXL 3.0, 8.1.3).
-+	 */
-+	if (dev->devfn != PCI_DEVFN(0, 0))
-+		return false;
-+
-+	/*
-+	 * CXL Memory Devices must have the 502h class code set (CXL
-+	 * 3.0, 8.1.12.1).
-+	 */
-+	if ((dev->class >> 8) != PCI_CLASS_MEMORY_CXL)
-+		return false;
-+
-+	return true;
-+}
-+
-+static bool cxl_error_is_native(struct pci_dev *dev)
-+{
-+	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-+
-+	return (pcie_ports_native || host->native_aer);
-+}
-+
-+static bool is_internal_error(struct aer_err_info *info)
-+{
-+	if (info->severity == AER_CORRECTABLE)
-+		return info->status & PCI_ERR_COR_INTERNAL;
-+
-+	return info->status & PCI_ERR_UNC_INTN;
-+}
-+
-+static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
-+{
-+	struct aer_err_info *info = (struct aer_err_info *)data;
-+	const struct pci_error_handlers *err_handler;
-+
-+	if (!is_cxl_mem_dev(dev) || !cxl_error_is_native(dev))
-+		return 0;
-+
-+	/* protect dev->driver */
-+	device_lock(&dev->dev);
-+
-+	err_handler = dev->driver ? dev->driver->err_handler : NULL;
-+	if (!err_handler)
-+		goto out;
-+
-+	if (info->severity == AER_CORRECTABLE) {
-+		if (err_handler->cor_error_detected)
-+			err_handler->cor_error_detected(dev);
-+	} else if (err_handler->error_detected) {
-+		if (info->severity == AER_NONFATAL)
-+			err_handler->error_detected(dev, pci_channel_io_normal);
-+		else if (info->severity == AER_FATAL)
-+			err_handler->error_detected(dev, pci_channel_io_frozen);
-+	}
-+out:
-+	device_unlock(&dev->dev);
-+	return 0;
-+}
-+
-+static void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
-+{
-+	/*
-+	 * Internal errors of an RCEC indicate an AER error in an
-+	 * RCH's downstream port. Check and handle them in the CXL.mem
-+	 * device driver.
-+	 */
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
-+	    is_internal_error(info))
-+		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
-+}
-+
-+#else
-+static inline void cxl_rch_handle_error(struct pci_dev *dev,
-+					struct aer_err_info *info) { }
-+#endif
-+
- /**
-- * handle_error_source - handle logging error into an event log
-+ * pci_aer_handle_error - handle logging error into an event log
-  * @dev: pointer to pci_dev data structure of error source device
-  * @info: comprehensive error information
-  *
-  * Invoked when an error being detected by Root Port.
-  */
--static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
-+static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
- {
- 	int aer = dev->aer_cap;
- 
-@@ -979,6 +1062,12 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
- 		pcie_do_recovery(dev, pci_channel_io_normal, aer_root_reset);
- 	else if (info->severity == AER_FATAL)
- 		pcie_do_recovery(dev, pci_channel_io_frozen, aer_root_reset);
-+}
-+
-+static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
-+{
-+	cxl_rch_handle_error(dev, info);
-+	pci_aer_handle_error(dev, info);
- 	pci_dev_put(dev);
- }
- 
--- 
-2.53.0
 
 
+--=-ebQo5WGk+sMw/9Rs5xM+
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2026-11-18 at 17:46 +0100, Niklas Cassel wrote:
+> Hello James,
+>=20
+> On Wed, Nov 18, 2026 at 04:03:11PM +0000, James Le Cuirot wrote:
+> > Hello Wilfred,
+> >=20
+> > Unfortunately, since your commit "PCI: dw-rockchip: Implement
+> > .reset_root_port() and use for link down" (b376b3ff9cb0527), I have bee=
+n
+> > basically unable to boot my Quartz64 Model B from NVMe. Sometimes if I =
+wait
+> > long enough, it will eventually work, albeit very slowly. If I revert t=
+his
+> > (and 4e9f69d08253) against 7.3.5, then it boots normally. Here is the r=
+elevant
+> > output.
+>=20
+> There are some dwc-rockchip fixes queued on the following branch:
+> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=3Dcont=
+roller/dwc-rockchip
+>=20
+> It would be interesting to see if using this branch makes a differnce.
+>=20
+>=20
+> Kind regards,
+> Niklas
+
+Thanks for the suggestion. I rebased these against 7.3.5 (with 85203c831a8)=
+,
+but sadly it made no difference.
+
+--=-ebQo5WGk+sMw/9Rs5xM+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEDBAAWCgCrFiEE6qETVs4yu3Lfuc3XsNCJZ6jP87QFAmr+JxUbFIAAAAAABAAO
+bWFudTIsMi41KzEuMTIsMiwyXxSAAAAAAC4AKGlzc3Vlci1mcHJAbm90YXRpb25z
+Lm9wZW5wZ3AuZmlmdGhob3JzZW1hbi5uZXRFQUExMTM1NkNFMzJCQjcyREZCOUNE
+RDdCMEQwODk2N0E4Q0ZGM0I0ERxjaGV3aUBnZW50b28ub3JnAAoJELDQiWeoz/O0
+a4UA/2QTkaQulxaeDprLbiSZip0cFicH+VDzRL03fNgAgMvuAP4nCgw1WMjlWfmE
+ycubVwztY7P4xsIOejROvHY5BecKBg==
+=Df3U
+-----END PGP SIGNATURE-----
+
+--=-ebQo5WGk+sMw/9Rs5xM+--
