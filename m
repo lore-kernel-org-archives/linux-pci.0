@@ -1,59 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.95.204
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795038034;
-	b=xSxx4Ml+/1UubiT4t1x+4uXUvSoW/b0FCaH5VaLhqSk8xFNnXwpKC2iLT0ZZZMFqZz04
-	 cW3Iavg93doq5CD5PLTuJFS5gcBDJE0yHK+3YaO55/Cbm4rBm64CcRK9CrImNiR2Lwr8W
-	 gbB+BR735PvOeAE/lqzKpkiMFm4XVgOinlap5Z+PkdIIAs4y0tNF5qC/xWGzCR779m8ZH
-	 jD5UpJIZs6mFZw5F8cUeqcy7NcnuRuLRGjRYVYjxwzaN7PQWeWOZcsSrEG+THKqbxlv5Y
-	 2ZbESObzx2tEzBsnyEjVVbr96cejA8siA+x1zQreewXrfxGR2GPTsp0WuiZNAcvdO2g==
+	t=1795040240;
+	b=P383Vb8of+c4Gm3wfNzuyePR06seDl4sMjVNztdHyb0pbuQSog5j/qnPYr33dZCQH6WP
+	 A4liAEWW/twAMFAm5uiLFRLnLIhgssywsfTrSnmb0vMWKBW2ttVjxHNgQK3S9dGugRuBo
+	 SirkOqbOaXAB73XeIK5NhEJLhEfhJZGNd2+oxPahGrX90fPYJUd8V+cnUuwHc8lp34GTl
+	 I5HscbxvJ5PThFGL4Mhskg1HgOvPxfOqBxj0/ZTuvRdk5dpYXOxN+guF1rxBAHKqLAFfN
+	 6wNIn9HHiLZtjZOROrZhb6fKjWFYEf59oaKE/PhNHxyE11J7/lj1Eek3Hu8P59QGGtQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795038034;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795040240;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=iuKNsFPRKwvcivKJujrThQj1zMMPbCoiOaIKHiRvbFo=;
-	b=X9iybZTixn/Za2pHJqTKmLasGkSC0cvMsiL3WTKz2+qPJEMpXxEoSa/Wrp67tFiflb6Z
-	 QcM3zYgc51mGz3vBT0cCI5XrNjZp74g3VXV0D8/DvHKkvh3P1LQQPgTLaAUAx/8MEb3+n
-	 x/hBQUE3XJ5Rt80UoPBiwNJXDIsOtbuxPLuGX+2x0CKpTqLbEkddZOgMtL1wtdGUFwbkx
-	 qznZj9R9Q+J9L6izU7QJj4dn3d2QEEeuF4kteoQ4NyqD32l9ULdxLFgxrwYrvTOKVXakq
-	 1f+fy6nVX5yMms7drVhBwgK0Jnc896w8YTucPXp3ks9Sabsu27iFEuyvwl7Ilhx5cYg==
+	bh=OYsvEI5KoJNPfvtyr1P+eJvz19e9MIzY1Iy57nVmND4=;
+	b=Hn41Vbc9qAq12bHnNIenUJaZG7WPIw/CBhEsGjPQwog2pR2K1gxGLw0sS89fkjm9DJr3
+	 Ww0n6z6SSlyf6h9nBRUMLxMhOtCr9Ic1sszeCFsTbt577CvmC8JiC5x+xr5rJg/z1ZC1/
+	 BCk6FxEUMcjbcDHYYcS1GIxInST7ltRwrA++yqGITt5nOGwh1z2GxZRhSs2nUli6mftFa
+	 6LWKl/oZU5vKyl88kv3icMnXGR5AXhoDRcVPueS89kl5MrlEgAiDCp2Iw/uavHbJd86g1
+	 nEYMetWWQ7SkcuFmXgVEaYXaKfOLwcpPrDTwwqYVcJERmVQuW1+eYVHjWjew1mdFRdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Pr+dmbxz;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=83.223.95.204
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A7FA60A2601;
-	Wed, 18 Nov 2026 21:40:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Pr+dmbxz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEBF31F000C5;
-	Wed, 18 Nov 2026 21:40:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795038034;
-	bh=iuKNsFPRKwvcivKJujrThQj1zMMPbCoiOaIKHiRvbFo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Pr+dmbxzIVAWKNADqW5UCHqyJoKcYVtCvxj6a6T2gniMoNbWNpknmhEXUSTae7YH/
-	 AmP+qF84cFNrFsGUyu/y2f/0CGrKL+Rth1qEU+qB09RH3wf+XdhOJ6PtEvmPTeRRc+
-	 cc9hVNBOoWSWz0fveLJ9qZ3Zu2ZOBlKH9K0NLCur1pg45kt+W7wATmOTmseFpaiVS/
-	 xXt1Z1i8MmxDuyX56ERseI5r7rYYVkD3TeFY9h65toaz6smwB4AW2eU38imj+q/o4f
-	 6PbjiRMLYmhqVSYyxYjsDXUTYqxHmTqVD24BOXNPGDcY7dfSdp0o1yS/o69ETbhRo7
-	 Epr+O6eOh9r6w==
-Date: Wed, 18 Nov 2026 22:40:27 +0100
-From: Thorsten Blum <blum@kernel.org>
-To: Dave Hansen <dave.hansen@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@hobbes.lan>,
-	Lukas Wunner <lukas@wunner.de>, Ingo Molnar <mingo@elte.hu>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RESEND v2] x86/early-quirks: Scan all functions in
- early_pci_scan_bus()
-Message-ID: <av4bS1QEZpniwlb3@kernel.org>
-References: <20261106004343.457087-2-blum@kernel.org>
- <av3v7KY64vjxDCk1@kernel.org>
- <be480966-3b68-44f5-9afa-f88b3c203092@intel.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E58C606A320
+	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 22:17:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E58C606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 1E7D56B4;
+	Wed, 18 Nov 2026 23:17:11 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 08B3C600DF02; Wed, 18 Nov 2026 23:17:11 +0100 (CET)
+Date: Wed, 18 Nov 2026 23:17:10 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 7/7] PCI/AER: Enable baseline capability error
+ reporting
+Message-ID: <av4j5j9-In1uWC8T@wunner.de>
+References: <cover.1794997749.git.lukas@wunner.de>
+ <40e4bd7f25b37af1bdc48a13be140bdd8e7d81ab.1794997749.git.lukas@wunner.de>
+ <sashiko-outbox-220816@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,33 +59,136 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <be480966-3b68-44f5-9afa-f88b3c203092@intel.com>
+In-Reply-To: <sashiko-outbox-220816@kernel.org>
 
-On Wed, Nov 18, 2026 at 11:40:59AM -0800, Dave Hansen wrote:
-> On 11/18/26 10:35, Thorsten Blum wrote:
-> > Applied to blum/for-7.5 for linux-next testing.
-> > 
-> > [1/1] x86/early-quirks: Scan all functions in early_pci_scan_bus()
-> >       https://git.kernel.org/blum/c/83e3892f2aadca0123a3b7d452e3f39e74cf5126
-> > 
-> > I plan to send it to Linus during the next merge window unless there are
-> > objections or the x86/PCI maintainers would prefer to take it.
+On Wed, Nov 18, 2026 at 11:19:03AM +0000, sashiko-bot@kernel.org wrote:
+> Does allocating dev->aer_info for all PCIe devices cause
+> aer_stats_attrs_are_visible() to expose the aer_rootport_total_err_* sysfs
+> attributes on Root Ports and RCECs that lack an AER Extended Capability?
 > 
-> I'm confused why you would even consider sending this to Linus. I'm
-> sorry but I'm not familiar with your work. Is this kind of thing you
-> normally send to Linus?
+> drivers/pci/pcie/aer.c:aer_stats_attrs_are_visible() {
+> 	...
+> 	if (!pdev->aer_info)
+> 		return 0;
+> 
+> 	if ((a == &dev_attr_aer_rootport_total_err_cor.attr ||
+> 	     a == &dev_attr_aer_rootport_total_err_fatal.attr ||
+> 	     a == &dev_attr_aer_rootport_total_err_nonfatal.attr) &&
+> 	    ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
+> 	     (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_EC)))
+> 		return 0;
+> 	...
+> }
+> 
+> Those counters are only updated from PCI_ERR_ROOT_STATUS in the AER
+> capability and Documentation/ABI/testing/sysfs-bus-pci-devices-aer states
+> that they only appear under AER-capable Root Ports or RCECs, so
+> aer_stats_attrs_are_visible() should also require pdev->aer_cap for them.
 
-The patch has been reviewed and acked for quite some time. Bjorn offered
-to take it via the PCI tree at the end of October, pending an ack from
-one of the x86 maintainers, but there hasn't been any further feedback.
+A valid point.
 
-I'm not keen on sending it directly to Linus, but I'd like to get it
-into linux-next for testing and eventually merged.
+> > @@ -1204,8 +1206,11 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+> >  	if (!(reg16 & PCI_EXP_AER_FLAGS))
+> >  		return false;
+> >  
+> > -	if (!aer)
+> > -		return false;
+> > +	if (!aer) {
+> > +		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
+> > +		return reg16 & severity2devsta[e_info->severity] &&
+> > +		       !PCI_POSSIBLE_ERROR(reg16);
+> > +	}
+> 
+> Does checking PCI_EXP_AER_FLAGS in dev's own PCI_EXP_DEVCTL prevent
+> is_error_source() and clear_status_iter() from working on SR-IOV Virtual
+> Functions?
+> 
+> Per PCIe r7.1 sec 7.5.3.4 and sec 9.5.1.2, the PCI_EXP_AER_FLAGS bits in
+> PCI_EXP_DEVCTL are RsvdP and hardwired to 0b on VFs, which inherit the
+> associated Physical Function's PCI_EXP_DEVCTL settings while implementing
+> per-VF status bits in PCI_EXP_DEVSTA.  Reading PCI_EXP_DEVCTL on a VF
+> therefore always sees 0 for PCI_EXP_AER_FLAGS, so is_error_source() never
+> checks PCI_EXP_DEVSTA on VFs and clear_status_iter() never clears it;
+> meanwhile pci_enable_pcie_error_reporting() writes 1s to those RsvdP bits on
+> VFs.
 
-> Oh, and I guess this is an objection. Please don't send this specific
-> fix upstream.
+Hallucination.  Section 7.5.3.4 does not say anything about error bits being
+"RsvdP and hardwired to 0b on VFs".  There is no section 9.5.1.2 in PCIe r7.1.
 
-Is your objection to the patch itself or to merging it via my tree?
+> >  	/* The device might not support AER */
+> > -	if (!aer)
+> > -		return 0;
+> > +	if (!aer) {
+> > +		if (info->severity != AER_CORRECTABLE) {
+> > +			pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &devsta);
+> > +			if (devsta & PCI_EXP_DEVSTA_URD &&
+> > +			    !PCI_POSSIBLE_ERROR(devsta))
+> > +				info->status = PCI_ERR_UNC_UNSUP;
+> > +		}
+> > +		return 1;
+> > +	}
+> 
+> [Severity: Medium]
+> Should the !aer branch check info->severity == AER_NONFATAL instead of
+> info->severity != AER_CORRECTABLE?
+> 
+> Without an AER capability, error severities are fixed to their defaults where
+> Unsupported Request is always Non-Fatal (PCIe r7.1 sec 6.2.7),
 
-Thanks,
-Thorsten
+Indeed checking against AER_NONFATAL makes more sense here, although this is
+nowhere near as critical an issue as sashiko thinks:
+
+> yet PCI_EXP_DEVSTA_URD is also set by prior Advisory Non-Fatal or Non-Fatal
+> Unsupported Requests (sec 6.2.5 and 7.5.3.5).
+
+Advisory Non-Fatal Errors are not signaled on AER-incapable devices
+(as stated in the commit message).
+
+> When an AER_FATAL error occurs
+> on an AER-incapable device, reading PCI_EXP_DEVSTA accesses config space on
+> an Endpoint or Upstream Port whose link may be down, and any set
+> PCI_EXP_DEVSTA_URD bit causes aer_print_error() to misreport the fatal error
+> as UnsupReq
+
+No, the "!PCI_POSSIBLE_ERROR(devsta)" prevents that.
+
+Below is a fixup patch for the two valid sashiko findings:
+
+-- >8 --
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 3c28afca5d03..83682bc7764e 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -680,12 +680,16 @@ static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
+ 	if (!pdev->aer_info)
+ 		return 0;
+ 
+-	if ((a == &dev_attr_aer_rootport_total_err_cor.attr ||
+-	     a == &dev_attr_aer_rootport_total_err_fatal.attr ||
+-	     a == &dev_attr_aer_rootport_total_err_nonfatal.attr) &&
+-	    ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
+-	     (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_EC)))
+-		return 0;
++	if (a == &dev_attr_aer_rootport_total_err_cor.attr ||
++	    a == &dev_attr_aer_rootport_total_err_fatal.attr ||
++	    a == &dev_attr_aer_rootport_total_err_nonfatal.attr) {
++		if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
++		    (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_EC))
++			return 0;
++
++		if (!pdev->aer_cap)
++			return 0;
++	}
+ 
+ 	return a->mode;
+ }
+@@ -1545,7 +1549,7 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
+ 
+ 	/* The device might not support AER */
+ 	if (!aer) {
+-		if (info->severity != AER_CORRECTABLE) {
++		if (info->severity == AER_NONFATAL) {
+ 			pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &devsta);
+ 			if (devsta & PCI_EXP_DEVSTA_URD &&
+ 			    !PCI_POSSIBLE_ERROR(devsta))
