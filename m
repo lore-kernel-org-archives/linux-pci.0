@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794995112;
-	b=JcyunrITwxR2ANSMtj944xBGgxSnojSyABooyr6lAidqfLHauvQwtxrXm1gmWs8TORMN
-	 ugIDLZvU9oXT+jxoydwTdOeaxtqxYyxEuHNUB0L9ny9LAdlbRIklbb1v9amKFkAVmMfao
-	 wBfXe2i6utsmxl+dYZhZoeNGx2YWsVa2OCZxFnQ3r9HQ1Q9JGQ6qNdQ7tR2dLrREHwgHQ
-	 2HTmAnkV+DnXbQjW4AY9F/7SZS94ze9KUyNBZeD337UDgqlPLhRCjWMQSvykrcVZ15+0L
-	 oQ58VGdyyaUhmUa6YpCy2JSHKzunGDKbrMwh2wVGO7D13bpiL7hDDBXgUoxXY2SvleQ==
+	t=1794995336;
+	b=waTvqCQRPS38f1FWpfHANpxoqqrFvQuac1J0Lk8c3wkXMoF2gy8Uhc7XsDBmCXALuOj2
+	 0puctdhRGqkqRfoV6FLIfdWUwvmtNFOKWgTO0DsPao9r9eG9WOmHapZvnMRPFHVOrjVGS
+	 YLeJJtJBUgrSgBskkYmtzVuQImfffrTD8lBn3Y4RH7K3GlB6+3Rvt/oRK2Plk9Wq+Ox60
+	 L6tElivlJGuoXDOx0mHuC2plD9fYYxHRF3wKwVZY88BkA67dlypABokH7f12Grk67a+aI
+	 InLzgf/9LmRbwqK6n3j2rYzcyfVcJ8xyk2shg09QrPyCLkf9yvcu6f9fawIeW1qCj7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794995112;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794995336;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=bRPjc2JjigNH9mRfPvHc2N8bOlbagcNyL25ktTVYLPU=;
-	b=wJ95NryHpmc6qqMLU6nWR+Q4V8g91jsQa+w8qNga7jHEJ4YbI5/5E5hQu+vaf01I/6sx
-	 XE0nCVr0hwFkVLZDjq52+OoP+8AwBJ0ooNryXOmzwrd6KpAVy+W7EIHalr2KyH7hveSiH
-	 +XbK497zzXA9W0hFSlxrfjiwTkNnN0JiqhcSjwNbSrIHGnPUyRLdtPk+tNBEHMHdi/Yax
-	 1kvrlHPtyHFZiyZ6QJ6D/vXNqt8fLHLywe+23ofX+PbEGHyFso8bCBz/mbDaDZOmSNns1
-	 ze820BKEAbEXCzAxUVD9otwQTJ7rBBY9tVm+YTkNQTx0omlp3cuALoNP96mi3UNzehQ==
+	bh=IULhMVDG2hJUiDeMU7QJbzvXSqyYqkRs52ic94b9ivM=;
+	b=ZBZhfRgUf6tFhqEqxI0AYezMs6bpz2ztoezn3nF0ctM69Ph+7Fj0fF44LIfxwYKUjzU1
+	 wKTTgqABXjpJBpqxbPCFm2i+Qdcp0fOI7/8WqSIjzpZ/B3pr/US/bPumAoxncLveC2fzk
+	 2ARbicslUATAmV32ic4iL1bI5cpXXbVfy36QTDmYoRF9P1hra3buRQjpHdKlUGq+iqMv7
+	 0RCCp9PEBPSgWFwgeUEsaEATpo8WWxbtM/1tdGWzT1IXd5k1yRlYqdByGpnFByD0WZnx4
+	 GliVjHYsOAlWGY6K3bjhw+5jkXVivcIAHEabQgV+FG+LiIUT5QYNmhr38EKgu9n8GSg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U9+KXl6B;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oSG5NVi3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17A2606A31C
-	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 09:45:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79D62606A31C
+	for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 09:48:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U9+KXl6B
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DF201F000C4;
-	Wed, 18 Nov 2026 09:45:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oSG5NVi3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E72281F000CC;
+	Wed, 18 Nov 2026 09:48:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794995112;
-	bh=bRPjc2JjigNH9mRfPvHc2N8bOlbagcNyL25ktTVYLPU=;
+	s=k20260515; t=1794995336;
+	bh=IULhMVDG2hJUiDeMU7QJbzvXSqyYqkRs52ic94b9ivM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=U9+KXl6BuPQhw/QR6kEMU/9fIZrbXzyHbQ5cz+NMziMeKvkn3D6RkAoVBv+cjz7av
-	 U10Rc3VCy0w45wW4LbD07RvlnADiw/r71D5X3Dra6E4aSwUvteV7+nrlJpZK8wl5Fg
-	 wDXmC9fegn4ZeDREE9ugc3Fx9rqH1WZRcpZe3JqrR/H8MEjnG18vySMX4HdATpYpGm
-	 YQwFzr/l4GlhAMOXm+7rdAKlL8uKE50ZWrjWrIGOWbZjgfUDbsVYARyBaCIsDzeVgL
-	 DoiUaGkMklvBiU7ewsTMu2f/cLLbRBlfn+OJtTKMwnKlrrWmWGvkbJFi7KsIwYnGHd
-	 uBiUnV8Lpr9eA==
-Message-ID: <sashiko-outbox-220620@kernel.org>
+	b=oSG5NVi3ZKcZ2A8MfWOPKAjYhhmQ8ez43hUUijwEwYXdLWTqXaxLVPwhtYxP+uwYm
+	 0ZTJ3oZUkJQV47O9P5tAyRkDnklQL1gz79AxRnCQUNIlXmLLjcyCXseam327+5qHg+
+	 s0M6Jqq/8wAvhEFhvvTfhaE78k01XwHJjhl1IMR02bETRiv+vkLWTOftKFBqxE5Xe+
+	 65fH8HmrBHEThi5wNsxG6nZrqTTqK7fzBFJAL/y+sw67GqYQYhp3CTJk/ujfyZsdgH
+	 mkZygxhs2vXj1AWseVQNdE50OtsVsRp+DC4b+ZJydRxVrHbPTYsaDKZko0HbOR4Sc+
+	 G2rZMZkRb2mMg==
+Message-ID: <sashiko-outbox-220626@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: mobiveil: Drop unnecessary msi-parent check in
- ls_g4_pcie_probe()
+Subject: Re: [PATCH v21 04/13] PCI/TPH: Refactor pcie_enable_tph and add
+ requester variant
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vishal Satle" <vishalsatleit24@gmail.com>
+To: "Chengwen Feng" <fengchengwen@huawei.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261118093731.43980-1-vishalsatleit24@gmail.com>
-References: <20261027094427.143733-1-vishalsatleit24@gmail.com>
- <20261118093731.43980-1-vishalsatleit24@gmail.com>
+In-Reply-To: <20261118091238.45992-5-fengchengwen@huawei.com>
+References: <20261118091238.45992-1-fengchengwen@huawei.com>
+ <20261118091238.45992-5-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 09:45:11 +0000
+Date: Wed, 18 Nov 2026 09:48:55 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,40 +61,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] PCI: mobiveil: missing Fixes trailer for device_node leak in
-  ls_g4_pcie_probe()
---
+> Refactor the core TPH enable logic by renaming the original function to
+> pcie_enable_tph_ext(), which accepts an explicit requester type argument.
+>=20
+> - Keep the original pcie_enable_tph() as a compatibility wrapper; it uses
+>   the pre-cached tph_max_type negotiated capability automatically, so
+>   existing drivers calling pcie_enable_tph() require no modification.
+> - Export new pcie_enable_tph_ext() to support explicit requester type
+>   selection, intended for use by the upcoming VFIO TPH series.
+> - Add requester type validation to reject values out of hardware negotiat=
+ed
+>   range or invalid reserved types.
+>=20
+> Update pci-tph.h header and CONFIG_PCIE_TPH stub inline definitions
+> to match the new function signatures.
+>=20
+> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 
-commit f42a1868186c1406c426daa13adc92dc71419de8
-Author: Vishal Satle <vishalsatleit24@gmail.com>
-
-> PCI: mobiveil: Drop unnecessary msi-parent check in ls_g4_pcie_probe()
->
-> ls_g4_pcie_probe() calls of_parse_phandle(np, "msi-parent", 0) solely as
-> a boolean existence check without releasing the returned device_node via
-> of_node_put(), leaking a reference count on probe.
->
-> Instead of keeping the check with of_node_put(), drop the check
-> altogether. The driver does not use the phandle directly (the irqchip
-> layer handles it), other PCI controller drivers do not enforce this
-> check, and without "msi-parent" INTx still works even though MSIs will
-> not, so probing does not need to fail.
->
-> Also remove the now-unused local variable np.
->
-> Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Vishal Satle <vishalsatleit24@gmail.com>
-
-[Severity: Low]
-Since this fixes the device_node reference count leak in
-ls_g4_pcie_probe(), should this include:
-
-  Fixes: d29ad70a813b ("PCI: mobiveil: Add PCIe Gen4 RC driver for Layersca=
-pe SoCs")
+Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118093731.4398=
-0-1-vishalsatleit24@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118091238.4599=
+2-1-fengchengwen@huawei.com?part=3D4
+
