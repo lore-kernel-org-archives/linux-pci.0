@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795030090;
-	b=w3NA+cUGbcVB3xOVkdhvlqD0fHOjAF8I89o/dZIqXrvBD8rEN7By+gOnxxaWdjCAGviJ
-	 TxeecqA/QpujB8RUz2KqXxn8Q7m+i4IYRgM94aTpPz5Xo4RNLVl2K5zg52O9aAoOaq8TQ
-	 3UrRf6I6SsA89srGt+QaYButSjx7KnX+E3lcyP1Df8efmhGHgwXgh5hOTH+8VTa/V9zu5
-	 Ym747gX07PHoYesmHwu7735/JxCnuydpXKfYzjyN9rtOLu+aECbwkFmHvjhe70mK4QFZg
-	 wxlcd+CYh9zKfrSgNe97zKDzQT9HaUpI8w0+dal1LTp57RfZJVYje47Emhbrz6DPgbw==
+	t=1795030094;
+	b=1Ek/5YasNNmBKIPHuwbmt+VnAlhWnoqi4GuXaK1E/dYFKoa10wHyQOFFQ7qV+XZiDWdm
+	 Zn2a3344WZQT3VSnIC6AVIbuSHy62iuu5zBYeE8Kugq48hj+e6jXRdTXDdizqnHHdrZvB
+	 yiDSsXtrem3NEbEblw3bFWCe6IzK9TgKOVWR1EYc4Bh9UuhNkZv7KnPqvOOV02FkQibEY
+	 RqGEJ9gqaTxA2eZXMytJ6HOZDqt4JO3c/sb1vbYgmMfsqn+MR7c+oKezDsOuXyGQVdEQ0
+	 3RF/cnc2Yqov0MoMdhS0BH5LAgSyIBpUyi/4/UnLyGFicrBXeM8nYXuXjF56ayTm42w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795030090;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795030094;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=AI23EedCHOkVt2bUFVxVq0Tw4jV6qHaXsCMKfKtBCb8=;
-	b=BhIzPldRCabPCIZrILnz6zgQ349jaWvrV8d8R/BFnlDWM/p4Q4WEz5IBaIzkqZZ5rUCP
-	 iDFXPpq+niCX2fTfVqPXPR3+qsNcD/I7Rd1nnU7708Lgt7Gj9+jG4eMS+oS4tdJdffsz+
-	 2cGF50eCaLsBTVfoQzkBZPnzVJNQSbO2ppvqoUUAgRoPxtuTTBM0ZIb01c5agGOPkDe0n
-	 ynjGpbW18f2+aWvS+3BnhpaSHGsVYtzXEe3mIt8ViBwxWkb3C3xX12soUbCrU3YU0bW6k
-	 IvljjIsKPSGsdWnSovcbKLf2N6Cgm/Mm9EQi8L6VjgLIx360R3du8pORMuEK9XSp3iQ==
+	bh=svn/2tWKkyjohVxB7EW8S8pN30sPScn5Y9r6tebxa/E=;
+	b=e3OCNDNHTdpNzUibRLoiGZt62JAxjAybyy9tC4CefABiENWnBqy7kuGybejvD69Kr8XL
+	 DxFpX5cpSpIYcw9fUmw6IqXEimiV0O3pwuW26v6/0QLujU177Ek+o6gFV+z+mN+YoaZcU
+	 84MPC+NGCfZHGQ8CPscPvkO5u2U/tHDpR3X5TD3qqFY8kidD6qlNP0MmS348K54V6KcqS
+	 n4jKiyBide1E3wVJRLQNFvdv7rxjnd3aezVnY8YdH+LgXtYqJZbj56c2VQW0KM7WJZpxL
+	 P/sZJk6eTUGzHbHehNQpFnvoh6h0K01E/TPNntlv3ou/WBt5LenoJ0qzL/n/cqtFPMw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bO3NjK55;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XVDGL09d;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0671606DD12;
-	Wed, 18 Nov 2026 19:28:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EB77606E7C8;
+	Wed, 18 Nov 2026 19:28:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bO3NjK55
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE2941F000C7;
-	Wed, 18 Nov 2026 19:28:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XVDGL09d
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B8B51F000CF;
+	Wed, 18 Nov 2026 19:28:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795030089;
-	bh=AI23EedCHOkVt2bUFVxVq0Tw4jV6qHaXsCMKfKtBCb8=;
+	s=k20260515; t=1795030094;
+	bh=svn/2tWKkyjohVxB7EW8S8pN30sPScn5Y9r6tebxa/E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=bO3NjK55ns1629VdRftCmyGPsBjYPnXV9gEkr7QhP0WpECrtF8MvO+YnVRWnLKSUW
-	 k2u/T6Om4T5qkH0FSnf3Qx8NzMmaqQWaZc+npQXX/lL55XMUHIO5WvPa8HTfZWdXqs
-	 j/LCriv/5ZRyf45K6cbbNSa/gw/SF9WefYSM0SQMUO0y2Zzs8GLVHFIn0L+9HwPMpx
-	 rdZA40+5IR0evh1jHt4zg4KdLd7aTY31voXbpMNHnK28RSUy61C+mAtKkcwmleyD0P
-	 YZndbAHvGDEd3meMwDosu/rVkioU/iyBqSjb0NNdIlRJ4KKG2hZWm/yNsqRWFb8So3
-	 Mv6BN5sRIMTvA==
+	b=XVDGL09defh2GiX8dr2vKpGLKulIzuk0St/2t3HaDgFfsAxZ0+/e/43jplzeNyjHh
+	 bxRyfwgJi2CE0EjrTegwtbT8NNTKNTIAoqYQ/V1E3t16czqDSB+1ywhZXOQpJwZBlH
+	 Knv4UHtnLfBedjQmN5AEbnD/Nk4FCQPmJ5kA4fw3d9sEBUOmM46fQr13+6eSbsnA4R
+	 F2TYHsWA/KBsuun7hyl/23ftdK7yvWn22KHhQy4kPSQUbaHyWDq+eBWw3v80On2SbI
+	 RnyZBNjXtyao5CWum6BLHMkY0sZygZIZpszpd+VJxeCgiNpZNjbigvoaOoYltV6baa
+	 oTBo7k0JiKosQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -96,9 +96,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v3 14/31] driver core: Report deferred probes through sysfs drivers_probe
-Date: Wed, 18 Nov 2026 21:26:44 +0200
-Message-ID: <20261118-device-trust-core-v3-14-d655875c4bfb@nvidia.com>
+Subject: [PATCH v3 15/31] driver core: Add a compatibility API for manual driver attachment
+Date: Wed, 18 Nov 2026 21:26:45 +0200
+Message-ID: <20261118-device-trust-core-v3-15-d655875c4bfb@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
 References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
@@ -117,84 +117,331 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-commit b8c5cec23d5c ("Driver core: udev triggered device-<>driver
-binding") introduced the concept of "Systems who want to control the
-driver binding with udev" can use the drivers_probe sysfs to trigger a
-driver bind based on the kernel's match list.
+Manual attachment can race normal probing and removal, releasing another
+probe's resources. Callers cannot always acquire the device mutex under
+subsystem locks.
 
-If attaching the driver is deferred before its probe callback runs,
-userspace sees EINVAL and cannot tell it should try again, maybe after
-loading other drivers.
+Add device_driver_attach_unrestricted() with a binding mutex shared by
+attachment, removal and deletion. Trylock it to reject competing
+transactions. Supplier-status reads must avoid sysfs lock inversion and
+private-state access after registration failure.
 
-Map that deferral to EAGAIN and add missed documentation for the
-drivers_probe sysfs. A deferral requested by the probe callback itself
-is still not reported.
+This compatibility API must not be used in any new code: it prevents use
+of the device trust authorization infrastructure. New code must use
+device_driver_attach().
 
-Fixes: b8c5cec23d5c ("Driver core: udev triggered device-<>driver binding")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- Documentation/ABI/testing/sysfs-bus-drivers-probe | 14 ++++++++++++++
- MAINTAINERS                                       |  1 +
- drivers/base/bus.c                                |  9 +++++++--
- 3 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/base/base.h    |   3 ++
+ drivers/base/core.c    |  32 +++++++++++---
+ drivers/base/dd.c      | 117 +++++++++++++++++++++++++++++++++++++++++++------
+ include/linux/device.h |   2 +
+ 4 files changed, 134 insertions(+), 20 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-drivers-probe b/Documentation/ABI/testing/sysfs-bus-drivers-probe
-new file mode 100644
-index 0000000000000..ed8828e55d6bf
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-drivers-probe
-@@ -0,0 +1,14 @@
-+What:		/sys/bus/.../drivers_probe
-+Date:		February 2007
-+Contact:	driver-core@lists.linux.dev
-+Description:
-+		(WO) Writing a device name requests driver attachment on this
-+		bus, even when drivers_autoprobe is disabled. A successful
-+		write does not guarantee that a driver bound. The driver link
-+		can appear before probe completes; a bind uevent signals
-+		successful binding.
-+
-+		EAGAIN means attachment was deferred before the driver's probe
-+		callback, for example while a supplier or the device itself
-+		is not ready. ENODEV means the device was not found. Other
-+		attachment errors return EINVAL.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 93abbb315065d..b726344362b41 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8149,6 +8149,7 @@ M:	Johan Hovold <johan@kernel.org>
- L:	driver-core@lists.linux.dev
- S:	Supported
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-core.git
-+F:	Documentation/ABI/testing/sysfs-bus-drivers-probe
- F:	Documentation/core-api/kobject.rst
- F:	Documentation/driver-api/driver-model/
- F:	drivers/base/
-diff --git a/drivers/base/bus.c b/drivers/base/bus.c
-index 396097fdb3162..ecff32c3704b5 100644
---- a/drivers/base/bus.c
-+++ b/drivers/base/bus.c
-@@ -310,13 +310,18 @@ static ssize_t drivers_probe_store(const struct bus_type *bus,
- 				   const char *buf, size_t count)
+diff --git a/drivers/base/base.h b/drivers/base/base.h
+index 866b2beb6baa2..61f49fc142f45 100644
+--- a/drivers/base/base.h
++++ b/drivers/base/base.h
+@@ -105,6 +105,7 @@ struct driver_private {
+  *			   dev_err_probe() for later retrieval via debugfs
+  * @device: pointer back to the struct device that this structure is
+  *	    associated with.
++ * @driver_lock: serializes binding and removal, including compatibility attach
+  * @dead: This device is currently either in the process of or has been
+  *	  removed from the system. Any asynchronous events scheduled for this
+  *	  device should exit without taking any action.
+@@ -121,6 +122,8 @@ struct device_private {
+ 	const struct device_driver *async_driver;
+ 	char *deferred_probe_reason;
+ 	struct device *device;
++	/* Taken after the device mutex, except by compatibility attach. */
++	struct mutex driver_lock;
+ 	u8 dead:1;
+ };
+ #define to_device_private_parent(obj)	\
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index cbe05197d4a0b..92d25bf4f8632 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -1315,13 +1315,23 @@ static ssize_t waiting_for_supplier_show(struct device *dev,
+ 					 const struct device_attribute *attr,
+ 					 char *buf)
  {
- 	struct device *dev;
--	int err = -EINVAL;
-+	int err;
++	struct kernfs_node *kn;
++	ssize_t ret = -ENODEV;
+ 	bool val;
  
- 	dev = bus_find_device_by_name(bus, NULL, buf);
- 	if (!dev)
- 		return -ENODEV;
--	if (bus_rescan_devices_helper(dev, NULL) == 0)
-+	err = bus_rescan_devices_helper(dev, NULL);
-+	if (!err)
- 		err = count;
-+	else if (err == -EPROBE_DEFER)
-+		err = -EAGAIN;
-+	else
-+		err = -EINVAL;
- 	put_device(dev);
- 	return err;
++	kn = sysfs_break_active_protection(&dev->kobj, &attr->attr);
++	if (!kn)
++		return -ENODEV;
++
+ 	device_lock(dev);
+-	scoped_guard(mutex, &fwnode_link_lock)
+-		val = !!fwnode_links_check_suppliers(dev->fwnode);
++	if (dev_ready_to_probe(dev) && !dev->p->dead) {
++		scoped_guard(mutex, &fwnode_link_lock)
++			val = !!fwnode_links_check_suppliers(dev->fwnode);
++		ret = sysfs_emit(buf, "%u\n", val);
++	}
+ 	device_unlock(dev);
+-	return sysfs_emit(buf, "%u\n", val);
++	sysfs_unbreak_active_protection(kn);
++	return ret;
  }
+ static const DEVICE_ATTR_RO(waiting_for_supplier);
+ 
+@@ -3609,6 +3619,9 @@ static int device_private_init(struct device *dev)
+ 	if (!dev->p)
+ 		return -ENOMEM;
+ 	dev->p->device = dev;
++	mutex_init(&dev->p->driver_lock);
++	/* Driver callbacks can bind or unbind child devices. */
++	lockdep_set_novalidate_class(&dev->p->driver_lock);
+ 	klist_init(&dev->p->klist_children, klist_children_get,
+ 		   klist_children_put);
+ 	INIT_LIST_HEAD(&dev->p->deferred_probe);
+@@ -3889,6 +3902,8 @@ EXPORT_SYMBOL_GPL(put_device);
+ 
+ bool kill_device(struct device *dev)
+ {
++	bool killed = false;
++
+ 	/*
+ 	 * Require the device lock and set the "dead" flag to guarantee that
+ 	 * the update behavior is consistent with the other bitfields near
+@@ -3898,10 +3913,13 @@ bool kill_device(struct device *dev)
+ 	 */
+ 	device_lock_assert(dev);
+ 
+-	if (dev->p->dead)
+-		return false;
+-	dev->p->dead = true;
+-	return true;
++	mutex_lock(&dev->p->driver_lock);
++	if (!dev->p->dead) {
++		dev->p->dead = true;
++		killed = true;
++	}
++	mutex_unlock(&dev->p->driver_lock);
++	return killed;
+ }
+ EXPORT_SYMBOL_GPL(kill_device);
+ 
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 52123251965de..6ac1486b9fbb5 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -526,6 +526,21 @@ static void driver_sysfs_remove(struct device *dev)
+ 	}
+ }
+ 
++static int __device_bind_driver(struct device *dev)
++{
++	int ret;
++
++	ret = driver_sysfs_add(dev);
++	if (ret) {
++		bus_notify(dev, BUS_NOTIFY_DRIVER_NOT_BOUND);
++		return ret;
++	}
++
++	device_links_force_bind(dev);
++	driver_bound(dev);
++	return 0;
++}
++
+ /**
+  * device_bind_driver - bind a driver to one device.
+  * @dev: device.
+@@ -545,16 +560,85 @@ int device_bind_driver(struct device *dev)
+ {
+ 	int ret;
+ 
+-	ret = driver_sysfs_add(dev);
+-	if (!ret) {
+-		device_links_force_bind(dev);
+-		driver_bound(dev);
++	mutex_lock(&dev->p->driver_lock);
++	ret = __device_bind_driver(dev);
++	mutex_unlock(&dev->p->driver_lock);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(device_bind_driver);
++
++/**
++ * device_driver_attach_unrestricted - attach a driver using subsystem serialization
++ * @drv: driver to attach
++ * @dev: device to attach it to
++ *
++ * This compatibility API must not be used in any new code. It prevents
++ * devices from using the device trust authorization infrastructure.
++ * New code must use device_driver_attach().
++ *
++ * Callers must provide their subsystem's existing manual-binding
++ * serialization. This function does not acquire device or parent locks.
++ * Binding and removal are serialized separately; an overlapping transaction
++ * returns -EBUSY instead of waiting under the caller's subsystem locks.
++ * It calls the bus or driver probe callback and publishes the binding without
++ * performing the normal driver-core DMA, pinctrl or power-domain setup.
++ *
++ * Return: 0 on success, -EAGAIN if registration or probing must be retried,
++ * or another negative error before binding.
++ */
++int device_driver_attach_unrestricted(const struct device_driver *drv,
++				      struct device *dev)
++{
++	int ret;
++
++	if (!device_is_registered(dev))
++		return -ENODEV;
++	if (!mutex_trylock(&dev->p->driver_lock))
++		return -EBUSY;
++	if (dev->p->dead) {
++		ret = -ENODEV;
++		goto unlock;
+ 	}
++	if (!dev_ready_to_probe(dev)) {
++		ret = -EAGAIN;
++		goto unlock;
++	}
++	if (dev->driver) {
++		ret = -EBUSY;
++		goto unlock;
++	}
++
++	device_set_driver(dev, drv);
++	if (dev->bus->probe)
++		ret = dev->bus->probe(dev);
+ 	else
+-		bus_notify(dev, BUS_NOTIFY_DRIVER_NOT_BOUND);
++		ret = drv->probe(dev);
++	if (ret)
++		goto clear_driver;
++
++	ret = __device_bind_driver(dev);
++	if (ret)
++		goto bus_remove;
++
++	mutex_unlock(&dev->p->driver_lock);
++	return 0;
++
++bus_remove:
++	if (dev->bus->remove)
++		dev->bus->remove(dev);
++	else
++		drv->remove(dev);
++clear_driver:
++	devres_release_all(dev);
++	device_set_driver(dev, NULL);
++	dev_set_drvdata(dev, NULL);
++	if (ret == -EPROBE_DEFER)
++		ret = -EAGAIN;
++unlock:
++	mutex_unlock(&dev->p->driver_lock);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(device_bind_driver);
++EXPORT_SYMBOL_GPL(device_driver_attach_unrestricted);
+ 
+ static atomic_t probe_count = ATOMIC_INIT(0);
+ static DECLARE_WAIT_QUEUE_HEAD(probe_waitqueue);
+@@ -1035,15 +1119,15 @@ static int __device_attach_driver(struct device_driver *drv, void *_data)
+  * @dev: Device we will update driver info for
+  * @parent: Parent device. Needed if the device type requires parent lock
+  *
+- * This function will take the required locks for manipulating dev->drv.
+- * Normally this will just be the @dev lock, but when called for a USB
+- * interface, @parent lock will be held as well.
++ * Take the device lock and binding lock, together with the parent lock
++ * when the device type requires it.
+  */
+ static void __device_driver_lock(struct device *dev, struct device *parent)
+ {
+ 	if (dev->type && dev->type->need_parent_lock && parent)
+ 		device_lock(parent);
+ 	device_lock(dev);
++	mutex_lock(&dev->p->driver_lock);
+ }
+ 
+ /*
+@@ -1051,12 +1135,12 @@ static void __device_driver_lock(struct device *dev, struct device *parent)
+  * @dev: Device we will update driver info for
+  * @parent: Parent device. Needed if the device type requires parent lock
+  *
+- * This function will release the required locks for manipulating dev->drv.
+- * Normally this will just be the @dev lock, but when called for a
+- * USB interface, @parent lock will be released as well.
++ * Release the binding and device locks, together with the parent lock
++ * when the device type requires it.
+  */
+ static void __device_driver_unlock(struct device *dev, struct device *parent)
+ {
++	mutex_unlock(&dev->p->driver_lock);
+ 	device_unlock(dev);
+ 	if (dev->type && dev->type->need_parent_lock && parent)
+ 		device_unlock(parent);
+@@ -1104,6 +1188,7 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 	bool async = false;
+ 
+ 	device_lock(dev);
++	mutex_lock(&dev->p->driver_lock);
+ 	if (dev->p->dead) {
+ 		goto out_unlock;
+ 	} else if (dev->driver) {
+@@ -1111,7 +1196,7 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 			ret = 1;
+ 			goto out_unlock;
+ 		}
+-		ret = device_bind_driver(dev);
++		ret = __device_bind_driver(dev);
+ 		if (ret == 0)
+ 			ret = 1;
+ 		else {
+@@ -1149,6 +1234,7 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 			pm_runtime_put(dev->parent);
+ 	}
+ out_unlock:
++	mutex_unlock(&dev->p->driver_lock);
+ 	device_unlock(dev);
+ 	if (async && !async_schedule_dev_nocall(__device_attach_async_helper, dev)) {
+ 		put_device(dev);
+@@ -1285,11 +1371,13 @@ static int __driver_attach(struct device *dev, void *data)
+ 		 */
+ 		dev_dbg(dev, "probing driver %s asynchronously\n", drv->name);
+ 		device_lock(dev);
++		mutex_lock(&dev->p->driver_lock);
+ 		if (!dev->driver && !dev->p->async_driver) {
+ 			get_device(dev);
+ 			dev->p->async_driver = drv;
+ 			async = true;
+ 		}
++		mutex_unlock(&dev->p->driver_lock);
+ 		device_unlock(dev);
+ 		if (async)
+ 			async_schedule_dev(__driver_attach_async_helper, dev);
+@@ -1374,6 +1462,9 @@ void device_release_driver_internal(struct device *dev,
+ 				    const struct device_driver *drv,
+ 				    struct device *parent)
+ {
++	if (!dev->p)
++		return;
++
+ 	__device_driver_lock(dev, parent);
+ 
+ 	if (!drv || drv == dev->driver)
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 429e39f647cf9..5433b2609ab30 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -1314,6 +1314,8 @@ static inline void *dev_get_platdata(const struct device *dev)
+  */
+ int __must_check device_driver_attach(const struct device_driver *drv,
+ 				      struct device *dev);
++int __must_check device_driver_attach_unrestricted(
++	const struct device_driver *drv, struct device *dev);
+ int __must_check device_bind_driver(struct device *dev);
+ void device_release_driver(struct device *dev);
+ int  __must_check device_attach(struct device *dev);
 
 -- 
 2.56.1
