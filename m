@@ -1,58 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=144.76.133.104
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795076477;
-	b=NQ0Q9OfiWMbsJBY6nAX65YE+6LYCWlsXJ4STQnFg6VSoQVeRFTjVtLOpU2V1GGBonj4T
-	 jkuI4DyFywnniTPl6PU8WNdudCqDEnTdzXzu8suzbkgoAB+/rRUDxzyMkbaNrgMAQrBFF
-	 /AZD2WRUpjUz1wkq+9ix5omFzt8op+axMUQm2LsfObqIScPYXcHEoBS4JP8+0Z8iGql0Q
-	 ATh1B28ov8r4+z0LggcJONghTf0x+c64ilOHR66UkMekmXmsRnsJBZW8w2OGOAox9svTu
-	 Q1oylOOi7G0+CSqcZ+8mRc7tY+BrC4uCC2xgYXWaqhfNPQfv974DNX+3vgmnCTjv7fg==
+	t=1795078894;
+	b=YK7Fb0+9skSO+XllyFLqeKcKrFvXydWyjFK5opeR3216Ks3YT83ZXeeJWol7uK/tQztM
+	 azlvmUX/56XseIA4tEdQtD1TuwJDQmNOvUFeMn+CSESaS1/GZbltkIsEOpFBjtytG/rLT
+	 w2W0m2P89k00W6LUxD2fPys3HGLR3Lwk4NuyEotF0qI+0oReW720DrF8gg7kFtQXnu0tI
+	 2peyWjbFHym6hI997ZZ8FEkBkS9J2jxCYVjH7q6sCzUIPlyoXolBZl+xp0E7FojcjwhOs
+	 D9AhaYip7FOiuG6qxYypPVXgIb023MGz7lB0zAw33MONnD1VgYUXXQmxmtcei6jJt1A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795076477;
-	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:CC:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
-	bh=gqtvafE9T3fe8llMe+Ya16DLFDJTIf0qbaCAwRFcMno=;
-	b=J5lSis2XQZBLMrK43Go79N90+Nx2UZIROcYIwhwtNStVCBg3alcw9ipDbDDgRDmHxUPi
-	 NGUTegKEvcSXyea348f7gAzuD1NhWN1F5uDnLx9KtwfswdTPZfrc3R/SAjS7svggoSkfu
-	 LRqTtt57NoQVjM0+KDj3pAikyUmhGwSST03hG36I2LOJeIwPZ6lAzOAGWOwbiMIefcQxW
-	 cVW3RaYJTXe15j9OqxyO4xmPaDSO+UuesyTmNiQOt8lbL4gBFJp6a/1ysuHHqsfciWr2Q
-	 pN93G9TGG7QzldcHDs34uP4HVPsUN6yf5HWModdANHw/+iTJ3Oej36puEjf/vl6Uecg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795078894;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=DKJBh0a5KRxKDoybtZ7jY1emcZaxszzwhA065JGfkvs=;
+	b=enlKCkMkceIwj3pD/h0jvJbFbkhtOlAXsXkOjMzTdDnr6zhLH/iFzE2RB9DsshVD1GQP
+	 BrP9Dbn/aU7J0mRDsVA383DP4o8TjjG81BT0ibcC/YsNPshUlbCKJkkwE3437+8fNDEIa
+	 oRkVb2+b0OyWHFgQIfb4W5WmfoXcJrEFYcerd9X5nhO1LysNS8hmebRWAazc+2qOnqN/3
+	 qmbLaZsW61L9X7qkXm+7uWUKXl5Kx+wcGsuk/yfmf1tmVxcMZghLtwTUvP3PpdBh/KwO3
+	 ShmvJUsLYcbUSiByDw34lpn5NaqHWVpsCYX1EUR/4Xn8VfOlBpTtoSudtp7ke0U6MyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=huawei.com;
-	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b="sBh/kIqK";
-	arc=none smtp.remote-ip=113.46.200.222
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=144.76.133.104
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5090B606A320;
-	Thu, 19 Nov 2026 08:21:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5090B606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=sBh/kIqK
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=gqtvafE9T3fe8llMe+Ya16DLFDJTIf0qbaCAwRFcMno=;
-	b=sBh/kIqKXXGeKc+toHcFsugHB8Iz+uTMQV2hD03gQahnJItKib8kBHXNtSTVNlyrQ8fjSmefu
-	SnQEo6TBSvTlZhydUwZ55NQll682Jm1DSjIrFDvuIZj5CyOFZsTUx6BYjMHmacN9byJu7ecuCP5
-	dqJdIhFU60utclDs5wxNjko=
-Received: from mail.maildlp.com (unknown [172.19.163.127])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4jVWcz5mS4zLlX9;
-	Thu, 19 Nov 2026 16:20:51 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id F2C2840561;
-	Thu, 19 Nov 2026 16:21:11 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Thu, 19 Nov 2026 16:21:11 +0800
-Message-ID: <191f1bc2-52db-4e1a-bd03-bf5e9fd5e553@huawei.com>
-Date: Thu, 19 Nov 2026 16:21:11 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E254D606A320;
+	Thu, 19 Nov 2026 09:01:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E254D606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id B9596C26;
+	Thu, 19 Nov 2026 10:01:29 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 93725600E1C6; Thu, 19 Nov 2026 10:01:29 +0100 (CET)
+Date: Thu, 19 Nov 2026 10:01:29 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: "Ziyou Wang (Lenovo)" <ziyou.dev@foxmail.com>
+Cc: helgaas@kernel.org, bhelgaas@google.com,
+	sathyanarayanan.kuppuswamy@linux.intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/DPC: Increase recovery timeout to 60 seconds
+Message-ID: <av666Q38S0q5HqYS@wunner.de>
+References: <20261106152143.GA1621130@bhelgaas>
+ <tencent_F14FD4212049828EDB98B55B6E0FE116CF07@qq.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,125 +58,62 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v21 09/13] vfio/pci: Add basic NO-ST TPH VFIO device
- feature support
-To: <sashiko-reviews@lists.linux.dev>
-CC: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <20261118091238.45992-1-fengchengwen@huawei.com>
- <20261118091238.45992-10-fengchengwen@huawei.com>
- <sashiko-outbox-220757@kernel.org>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <sashiko-outbox-220757@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemo500009.china.huawei.com (7.202.194.199)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <tencent_F14FD4212049828EDB98B55B6E0FE116CF07@qq.com>
 
-On 11/18/2026 6:51 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential
-> issue to consider:
-> - [Medium] vfio/pci: vfio_tph_config_write() fails when
->   pdev->tph_enabled is already set
+On Thu, Nov 19, 2026 at 11:30:36AM +0800, Ziyou Wang (Lenovo) wrote:
+>   [121.693046] pcieport 0000:00:03.1: EDR: EDR event received
+>   [121.695743] pcieport 0000:00:03.1: DPC: containment event, status:0x1f01: unmasked uncorrectable error detected
+>   [121.695825] pcieport 0000:00:03.1: PCIe Bus Error: severity=Uncorrectable (Fatal)
+>   [121.695829] pcieport 0000:00:03.1:   device [1022:1108] error status/mask=00200000/00000000
+>   [121.695831] pcieport 0000:00:03.1:   [21] ACSViol           | Receiver    | Transaction Layer (First)
+>   [121.695834] pcieport 0000:00:03.1: AER:   TLP Header: 0x60002080 0x010042ff 0x00000017 0x7e325c00
+[...]
+>   [123.018691] nvme 0000:01:00.0: not ready 1023ms after DPC; waiting
 
-Fix by following:
-1. Reorder the series, moving the "reset TPH state on open/close" patch earlier.
-   This clears `tph_enabled` when VFIO gains ownership of the device and resolves
-   state split after PCI reset or across user sessions.
-2. Inside `vfio_tph_config_write()`, we check `pdev->tph_enabled` before enabling
-   a new requester mode. If TPH is already active, we call `pcie_disable_tph()`
-   first to avoid -EBUSY when userspace switches directly between TPH_ONLY and
-   EXT_TPH without an explicit DISABLE write.
+I'm wondering why the ACS Violation Error is raised in the first place.
+The TLP causing the DPC event is a Memory Write Request from the NVMe
+drive to memory address 0x000000177e325c00.  The Requester ID 0x100
+seems to match the bus address 0000:01:00.0.
 
-Thanks
+What are the ACS settings at the Root Port and why is it signaling an
+ACS violation?
 
-> --
-> 
-> commit e4125940aba8b4e82c51ed4d75d938a51d421022
-> Author: Chengwen Feng <fengchengwen@huawei.com>
-> 
-> vfio/pci: Add basic NO-ST TPH VFIO device feature support
-> 
-> This commit adds VFIO PCI support for PCIe TPH in NO-ST mode, virtualizing
-> the TPH extended capability and exposing the VFIO_DEVICE_FEATURE_TPH ioctl
-> for userspace opt-in.
-> 
->> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
->> index 9914f3ac69aef..3946ed2ec0cfe 100644
->> --- a/drivers/vfio/pci/vfio_pci_config.c
->> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> [ ... ]
->> +static int vfio_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
->> +				 int count, struct perm_bits *perm,
->> +				 int offset, __le32 val)
->> +{
->> +	u16 start = vfio_find_cap_start(vdev, pos);
->> +	struct pci_dev *pdev = vdev->pdev;
->> +	u32 org_ctrl, new_ctrl, cap;
->> +	u8 mode, req, org_req;
->> +	__le32 ctrl_val = 0;
->> +	u16 cmd;
->> +	int ret;
->> +
->> +	if (!vdev->tph_opt_in || offset >= PCI_TPH_BASE_SIZEOF ||
->> +		offset < PCI_TPH_CTRL)
->> +		return count;
->> +
->> +	cmd = vfio_pci_memory_lock_and_enable(vdev);
->> +
->> +	/*
->> +	 * Synchronize the CTRL value of the hardware to the virt. Otherwise,
->> +	 * the value will be inconsistent when the device is reset.
->> +	 */
->> +	vfio_user_config_read(pdev, start + PCI_TPH_CTRL, &ctrl_val, 4);
->> +	vfio_default_config_write(vdev, start + PCI_TPH_CTRL, 4, perm,
->> +				  PCI_TPH_CTRL, ctrl_val);
->> +	org_ctrl = le32_to_cpu(ctrl_val);
->> +
->> +	/* Do write operation to virt. */
->> +	ret = vfio_default_config_write(vdev, pos, count, perm, offset, val);
->> +	if (ret != count)
->> +		goto out;
->> +
->> +	/* Reads the TPH_CTRL value after the write operation. */
->> +	new_ctrl = le32_to_cpu(*(__le32 *)&vdev->vconfig[start + PCI_TPH_CTRL]);
->> +	if (new_ctrl == org_ctrl)
->> +		goto out; /* Exit because there is no change. */
->> +
->> +	cap = vdev->tph_vcap;
->> +	mode = FIELD_GET(PCI_TPH_CTRL_MODE_SEL_MASK, new_ctrl);
->> +	req = FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, new_ctrl);
->> +	if (mode != PCI_TPH_ST_NS_MODE || !(cap & (1u << mode)) ||
->> +		req == 0x2 /* reserved */ ||
->> +		(req == PCI_TPH_REQ_EXT_TPH && !(cap & PCI_TPH_CAP_EXT_TPH)))
->> +		goto out; /* Drop invalid or unsupported write value. */
->> +
->> +	org_req = FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, org_ctrl);
->> +	if (req == org_req)
->> +		goto out; /* Only care about requester enable. */
->> +
->> +	if (req == PCI_TPH_REQ_TPH_ONLY || req == PCI_TPH_REQ_EXT_TPH)
->> +		pcie_enable_tph_ext(pdev, mode, req);
->> +	else if (req == PCI_TPH_REQ_DISABLE)
->> +		pcie_disable_tph(vdev->pdev);
-> 
-> [Severity: Medium]
-> Does pcie_enable_tph_ext() fail here if pdev->tph_enabled is already set?
-> 
-> pcie_enable_tph_ext() returns -EBUSY whenever pdev->tph_enabled is 1, and
-> its return value is ignored.  If userspace switches directly between
-> PCI_TPH_REQ_TPH_ONLY and PCI_TPH_REQ_EXT_TPH without an intermediate
-> PCI_TPH_REQ_DISABLE write, the hardware PCI_TPH_CTRL register is never
-> updated.
-> 
-> Similarly, if a device reset clears the hardware PCI_TPH_CTRL register to 0
-> while pdev->tph_enabled remains 1, subsequent writes of PCI_TPH_REQ_TPH_ONLY
-> or PCI_TPH_REQ_EXT_TPH fail with -EBUSY, and writing PCI_TPH_REQ_DISABLE
-> exits early at new_ctrl == org_ctrl without calling pcie_disable_tph(),
-> leaving TPH unable to be re-enabled.
-> 
-> Calling pcie_disable_tph(pdev) before pcie_enable_tph_ext() when
-> pdev->tph_enabled is set would avoid both issues.
-> 
+TLP decoded with tlp-tool (https://github.com/mmpg-x86/tlp-tool):
 
++----------+-------------+----------------------+
+| TLP Type | MemWriteReq | 4DW with Data Header |
++----------+-------------+----------------------+
++------------+--------+--------+-------+
+| Field Name | Offset | Length | Value |
+|            | (bits) | (bits) |       |
++------------+--------+--------+-------+
+| Fmt        | 0      | 3      | 3     |
+| Type       | 3      | 5      | 0     |
+| T9         | 8      | 1      | 0     |
+| TC         | 9      | 3      | 0     |
+| T8         | 12     | 1      | 0     |
+| Attr_b2    | 13     | 1      | 0     |
+| LN         | 14     | 1      | 0     |
+| TH         | 15     | 1      | 0     |
+| Td         | 16     | 1      | 0     |
+| Ep         | 17     | 1      | 0     |
+| Attr       | 18     | 2      | 2     |
+| AT         | 20     | 2      | 0     |
+| Length     | 22     | 10     | 128   |
++------------+--------+--------+-------+
++-----------------+----------------------+
+| TLP:            | 4DW with Data Header |
++-----------------+----------------------+
+| Req ID          | 0x100                |
+| Tag             | 0x42                 |
+| Last DW BE      | 0xF                  |
+| First DW BE     | 0xF                  |
+| Addr High (DW2) | 0x00000017           |
+| Addr Low  (DW3) | 0x7E325C00           |
++-----------------+----------------------+
+
+Thanks,
+
+Lukas
