@@ -1,65 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795049277;
-	b=ZIj56B5d9+wBcm7J2ZSMi6wyNH5EDgbq5MYBLkdOVH/BB1bmOqsOEw76aLwGy8+XyP1w
-	 8p9V0lSVvIhukY97ogVAfMGYq7/m1mYerMi9Jo6U04ZwijzSsg0fpxt7Z/5AzsGiFIRtP
-	 NZ3ed2E47uu4Tj/1S6L0oikS05cv2HV470wQnQmgdn+ZzK5PXPrgXFH/6gx1q6qdoFrwd
-	 hxy4cF4ts84GfC3tL6xuzvCVy9YqwSdnfxR7hu4MzvX2kiW1tWDfhWUFPoq8EKebxoZRg
-	 8EtmHcFLpDi2UebDgscO6/GxqXhtdKXpswbI2YKSEnhKY39Gder+Ndjhj+0Vbzc8m3w==
+	t=1795049561;
+	b=hW/9dx7zk3cMmI+V21sEALlN6eqd3RYxTosd4Vny8T6xdBhdNRcDMzDWZ7TSJ8QCi5XX
+	 3HSYcvdb/uUysoFnz6AAQbVujx4OUNrADuN38KPFyOJ4Lr9n1fUMISpaCP10NZLLNsK71
+	 z2oscMT8dM7P/2QKLNq75auJ4UXO7A+KvWtXLdvrn4EKSH59XhVy0wPnZuN11Jgly8dbf
+	 iXz58fI0RnzUnuSD0a9E/cDjt42ZhyJK2Y/V54uzGhRr1+t4dIpFmHwDGCNYxPlOL0oUM
+	 nssRI4X2n29MGBod+QWXAf/9kyZPJRm3Co1OKi9gHLUuAq7skE9bPkMW4UFMRuNSOXA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795049277;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:User-Agent:X-stable:X-Patchwork-Hint:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=h7hUkUcxsVRNGzDAFlLrY1jlloNSmH8iv2Q/mCtRGsA=;
-	b=RYhLLwshvMoWUHV9hNLUM6iYlbeOLsl8bfGqaedPNtwCSzBpdj/QNB+1T8QpHy8L54WO
-	 TttrBs0u2dwOQK2LsA9tjqJGGvlhQ951Wh0Vgt8sQcfI83fFLdk7VBlY7M7tIvuCiKI1e
-	 jWAJQ/zJ0tA2emgIvL4dlDEA6CfHS3M2/N1QAuX4U9+k/pOwlnQAQ3jHmaWIbngIZQ6U4
-	 D3K7g/j25kasg4BwDec0yfO8fnbe7uAsr8bSUayur15wuB3o0TEFSHQodJCcVY7AQp3Bs
-	 o0GSWZHwg+uLRvmINyEckF8kPUyObbnpSnyFio2gY9WnWg4YRogr7nCztgSpmmUOWGQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795049561;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:Date:Subject:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	 X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer;
+	bh=nymuC/5fpi5YK3jj3hRmkBJgLlOLdb1iU6gNf70BLcg=;
+	b=wM4zXTsGZa4nqYgZGe9Ban0KJMGhw10IY0hjdpKrUdG+JRCQDVU8zaDPs/zJwByQ7UiR
+	 AjH57zTuW6Cy4dHN3r37uyh+c6cvksf3zdUW8w0E1dUDyQRjrq1CstQz0dtsB7Ue9b0Dx
+	 lOG3oak/Ugx8kX8wEc4POLlm6jn0JWt7Z+GDEcl+sk1/12CQu9/PwhSktMINv093lRGJE
+	 iL55y+zLTDC7ed4LCb4isd5HE+EqsvOhszpvMlUHAq7qc3l6kQM9+vMVEA+q+YnAa6IzG
+	 hTKlngAoktazvnUPtTXum+kfRVESTxJ+01YJhmQF9eqxwAybj4o7WglZlfKifuO3k8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b="PU171Cx/";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=chromium.org;
+	spf=pass smtp.mailfrom=chromium.org;
+	dkim=pass header.d=chromium.org header.i=@chromium.org header.a=rsa-sha256 header.s=google header.b=Iq316Y0b;
+	arc=none smtp.remote-ip=209.85.222.182
+Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDC3A606A320;
-	Thu, 19 Nov 2026 00:47:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E90B4606A32A
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 00:52:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E90B4606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=PU171Cx/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53A421F000C4;
-	Thu, 19 Nov 2026 00:47:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1795049276;
-	bh=h7hUkUcxsVRNGzDAFlLrY1jlloNSmH8iv2Q/mCtRGsA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=PU171Cx/SN+7pCmK2+Qg/ntk/C+lQvgtZdJJ7+lUBn24uFdsWOHZ7EsEhsb/3gqbP
-	 nTiDo5SauwshBJsSDb09vYO5QRoAaBS/A2N9Da9UjER0yizA1YdQpAprhWIIFe6HSd
-	 kitlb0hEnDMY8Xyh3/1cwFGqykfNF1uK380mi8Yg=
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	patches@lists.linux.dev,
-	Terry Bowman <terry.bowman@amd.com>,
-	Robert Richter <rrichter@amd.com>,
-	Oliver OHalloran <oohall@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 6.1 2294/2857] PCI/AER: Forward RCH downstream port-detected errors to the CXL.mem dev handler
-Date: Wed, 18 Nov 2026 15:55:28 +0100
-Message-ID: <20261118150324.077759539@linuxfoundation.org>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261118150201.293410965@linuxfoundation.org>
-References: <20261118150201.293410965@linuxfoundation.org>
-User-Agent: quilt/0.69
-X-stable: review
-X-Patchwork-Hint: ignore
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.a=rsa-sha256 header.s=google header.b=Iq316Y0b
+Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-94962d80d34so122923285a.2
+        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 16:52:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1795049560; x=1795654360; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=nymuC/5fpi5YK3jj3hRmkBJgLlOLdb1iU6gNf70BLcg=;
+        b=Iq316Y0bGlG+Icqd6RlOOuDf9DVXgglC1lbVWj5XkNFRNyBPF0VU2Uk4yLsX227t/i
+         30m+0cYjgW3Y5k4GdEpqgt9couiCwmgqE0Lrzq28r51Kex8/sfBmFgIvurFE/DtaY2AC
+         cHTcwZIhaSvTfS30bI8NeudaJ7MLk7bQXl+Qo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795049560; x=1795654360;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=nymuC/5fpi5YK3jj3hRmkBJgLlOLdb1iU6gNf70BLcg=;
+        b=nRpa2AcZtwyxp5TMrPQ6Fyatf+AwnW6JvI+XCgw/ck8lQ7/HhwQem2Tmz7WZ3DpfEQ
+         nRg4nZeFKkFxse8ZiD0uwV8AHELdxKc/Bdcl51mBlhsEub/+eRonVJ900MhitjcX4d+K
+         cvtAKzqUXYKzxQtyfxieAM8uNrbXPXOTnj6rRabhit0m2bAo3Fz0Caieanf2X53sInAX
+         nXXacyDps9xa64wV3IR6jXFjNVuq0gzTJ6g6cBy8nkf61ngJ3Ta0O335q+gCWNfzFFj8
+         +DEDvSM3hUqD8Nm+5ejHH9y1tS+F8ORSamZM3yU4XRGZu2PnjC8xLi4piAlpED7h39eo
+         ZdJA==
+X-Gm-Message-State: APuU4Z/zACbXG50IvJoqxbTAGHdeV2ibcGPkczPExaerXOAee/LKMBj+
+	il3f8gVyCOiOuhP7kooTbhTd1S6C9CTrRdGbFySfsQo6yvsIVZeiNEt+5H2UuW38eg==
+X-Gm-Gg: AYBFou1qQxlTfK4IcW5MfWUiNZok5x38nzWebtjLLZ/kgYR0wSziGJNna0aslcsA9Jo
+	Q1CLpvMRB+v/bXoTzHtmePZc0ih85oIaVWkk7JqZUPOITtATmgqCjfV0BfOSQnwKKrKYIzBjqNQ
+	GhaKrwS/TWXgwNprxfMjeDFjcs3htGQnkoY0Gzos6bXUXLjpDJD3gfdzW/Yj5X5mOcR2+82pyQ6
+	Xl4i3txclau9xjKXvnwQmN5+5/3R6yJauYtnMu5Vu1zeJMA4jebH/FRwfpul9iP9oKmXj0pZhnb
+	eOh7ER2NnJ2bUz9pjR59xeFhSB5tY/BsiPPK3SIewjYGIVJCgjUkUPR3vUnKW2Y8xmGzWf4JMjj
+	o48EIZ4cwjd4U3zUnlnMCYFQZ3D4MpNokkiICCy2Qk7K9kVFFl4pIr5dF0feMPWiCF/ZXivwnNO
+	fmsYIG1vb+sQ3LwS27TGsziYlC8ZdABsdw1eTO5joHwk/qATdlJdHFJokCRb+0uE2lHkCtWdD+U
+	j3kWIJSc5aIutRFGjt4qbqY2fIISUPLa+cXVGB9xOGlQ4Ni4VfO2gSLn/FmVuy2cPsX/jGE0lQ6
+	Khtb2VyQI8GL8DCIdS7h2+zTRFswgVMlr99FObcqhY6ESB2JN2r4ysRgArNQeY+dyEvjtyVxNKP
+	zgFPDaRmSFVg=
+X-Received: by 2002:a05:620a:2586:b0:943:e946:8c6d with SMTP id af79cd13be357-94999667470mr875646085a.72.1795049559815;
+        Wed, 18 Nov 2026 16:52:39 -0800 (PST)
+Received: from ripwilburliny3.c.googlers.com (128.5.86.34.bc.googleusercontent.com. [34.86.5.128])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9499b818399sm308860785a.42.2026.11.18.16.52.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Nov 2026 16:52:39 -0800 (PST)
+From: Steven 'Steve' Kendall <skend@chromium.org>
+Date: Thu, 19 Nov 2026 00:52:19 +0000
+Subject: [PATCH] PCI: Override Intel Apollo Lake audio class on Gauteng W3S
+ laptops [8086:5a98]
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,223 +88,92 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261119-gauteng-audio-class-set-v1-1-e81d6fd620ad@chromium.org>
+X-B4-Tracking: v=1; b=H4sIAEJI/moC/yXMwQrCMAyA4VcZORswVSvzVcRD1mU1Ip00rQhj7
+ 76qx+/w/wuYZBWDS7dAlreazqmBdh2EO6coqGMzuL3zRNRj5FokReQ66ozhyWZoUtCd/HT2fWA
+ 6HKHVryyTfn7n6+1vq8NDQvnuYF03yQyccnsAAAA=
+X-Change-ID: 20261119-gauteng-audio-class-set-256f769ca134
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Takashi Iwai <tiwai@suse.com>, linux-sound@vger.kernel.org, 
+ Steven 'Steve' Kendall <skend@chromium.org>
+X-Mailer: b4 0.15.2
 
-6.1-stable review patch.  If anyone has any objections, please let me know.
+Gauteng Education Dept MODEL-W3S laptops advertise PCI class 0x040300
+to use the legacy HDA driver rather than the Audio DSP on the Intel
+Apollo Lake audio controller ([8086:5a98]). However, this board uses an
+I2S ES8336 codec with no analog HDA codec, and its firmware otherwise
+sets up the hardware to enable the DSP.
 
-------------------
+Add a PCI header fixup for [8086:5a98] on Gauteng W3S systems to
+override class 0x040300 to 0x040100 so the SOF driver can claim the
+device. Notably this fixes the internal speakers and headphones but
+not jack detection.
 
-From: Robert Richter <rrichter@amd.com>
+This patch and its initial changelog were generated by Gemini during
+an interactive debugging session given dmesg, lspci and similar
+dumps from Gauteng W3S and MODEL-W3S laptops. The resulting quirk
+was reviewed and tested on physical MODEL-W3S hardware and on a W3S
+with slightly different hardware.
 
-[ Upstream commit 0a867568bb0d203ca3d28634a611a1367d7c892d ]
-
-In Restricted CXL Device (RCD) mode a CXL device is exposed as an
-RCiEP, but CXL downstream and upstream ports are not enumerated and
-not visible in the PCIe hierarchy. [1] Protocol and link errors from
-these non-enumerated ports are signaled as internal AER errors, either
-Uncorrectable Internal Error (UIE) or Corrected Internal Errors (CIE)
-via an RCEC.
-
-Restricted CXL host (RCH) downstream port-detected errors have the
-Requester ID of the RCEC set in the RCEC's AER Error Source ID
-register. A CXL handler must then inspect the error status in various
-CXL registers residing in the dport's component register space (CXL
-RAS capability) or the dport's RCRB (PCIe AER extended
-capability). [2]
-
-Errors showing up in the RCEC's error handler must be handled and
-connected to the CXL subsystem. Implement this by forwarding the error
-to all CXL devices below the RCEC. Since the entire CXL device is
-controlled only using PCIe Configuration Space of device 0, function
-0, only pass it there [3]. The error handling is limited to currently
-supported devices with the Memory Device class code set (CXL Type 3
-Device, PCI_CLASS_MEMORY_CXL, 502h), handle downstream port errors in
-the device's cxl_pci driver. Support for other CXL Device Types
-(e.g. a CXL.cache Device) can be added later.
-
-To handle downstream port errors in addition to errors directed to the
-CXL endpoint device, a handler must also inspect the CXL RAS and PCIe
-AER capabilities of the CXL downstream port the device is connected
-to.
-
-Since CXL downstream port errors are signaled using internal errors,
-the handler requires those errors to be unmasked. This is subject of a
-follow-on patch.
-
-The reason for choosing this implementation is that the AER service
-driver claims the RCEC device, but does not allow it to register a
-custom specific handler to support CXL. Connecting the RCEC hard-wired
-with a CXL handler does not work, as the CXL subsystem might not be
-present all the time. The alternative to add an implementation to the
-portdrv to allow the registration of a custom RCEC error handler isn't
-worth doing it as CXL would be its only user. Instead, just check for
-an CXL RCEC and pass it down to the connected CXL device's error
-handler. With this approach the code can entirely be implemented in
-the PCIe AER driver and is independent of the CXL subsystem. The CXL
-driver only provides the handler.
-
-[1] CXL 3.0 spec: 9.11.8 CXL Devices Attached to an RCH
-[2] CXL 3.0 spec, 12.2.1.1 RCH Downstream Port-detected Errors
-[3] CXL 3.0 spec, 8.1.3 PCIe DVSEC for CXL Devices
-
-Co-developed-by: Terry Bowman <terry.bowman@amd.com>
-Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Signed-off-by: Robert Richter <rrichter@amd.com>
-Cc: Oliver O'Halloran <oohall@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Link: https://lore.kernel.org/r/20231018171713.1883517-18-rrichter@amd.com
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Stable-dep-of: e86ac10110d0 ("PCI/AER: Fix struct pci_dev reference leak in aer_process_err_devices()")
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Steven 'Steve' Kendall <skend@chromium.org>
 ---
- drivers/pci/pcie/Kconfig |  9 ++++
- drivers/pci/pcie/aer.c   | 93 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 100 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index 788ac8df3f9db..366a35fec776f 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -45,6 +45,15 @@ config PCIEAER_INJECT
- 	  gotten from:
- 	     https://git.kernel.org/cgit/linux/kernel/git/gong.chen/aer-inject.git/
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7f1f47ea2ee4..908d038fa29a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -754,6 +754,40 @@ DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_SYNOPSYS, PCI_ANY_ID,
+ 			       PCI_CLASS_SERIAL_USB_XHCI, 0,
+ 			       quirk_synopsys_haps);
  
-+config PCIEAER_CXL
-+	bool "PCI Express CXL RAS support"
-+	default y
-+	depends on PCIEAER && CXL_PCI
-+	help
-+	  Enables CXL error handling.
++/*
++ * Gauteng Education Dept MODEL-W3S laptops report PCI class 0x040300
++ * (PCI_CLASS_MULTIMEDIA_HD_AUDIO) on the Apollo Lake audio controller
++ * ([8086:5a98]) even though the Audio DSP (BAR 4), NHLT ACPI table, and I2S
++ * ESSX8336 codec are enabled and no analog HDA codec is present.
++ *
++ * Override the class to 0x040100 (PCI_CLASS_MULTIMEDIA_AUDIO << 8) so SOF can
++ * claim the device.
++ */
++static const struct dmi_system_id gauteng_w3s_dmi_table[] = {
++	{
++		.ident = "Gauteng Education Dept W3S",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Gauteng Education Dept"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "W3S"),
++		}
++	},
++	{}
++};
 +
-+	  If unsure, say Y.
-+
- #
- # PCI Express ECRC
- #
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 9ae9f64457d0f..49f825531b527 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -942,14 +942,97 @@ static bool find_source_device(struct pci_dev *parent,
- 	return true;
- }
- 
-+#ifdef CONFIG_PCIEAER_CXL
-+
-+static bool is_cxl_mem_dev(struct pci_dev *dev)
++static void quirk_gauteng_w3s_audio_class(struct pci_dev *pdev)
 +{
-+	/*
-+	 * The capability, status, and control fields in Device 0,
-+	 * Function 0 DVSEC control the CXL functionality of the
-+	 * entire device (CXL 3.0, 8.1.3).
-+	 */
-+	if (dev->devfn != PCI_DEVFN(0, 0))
-+		return false;
++	u32 class = pdev->class;
 +
-+	/*
-+	 * CXL Memory Devices must have the 502h class code set (CXL
-+	 * 3.0, 8.1.12.1).
-+	 */
-+	if ((dev->class >> 8) != PCI_CLASS_MEMORY_CXL)
-+		return false;
-+
-+	return true;
-+}
-+
-+static bool cxl_error_is_native(struct pci_dev *dev)
-+{
-+	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-+
-+	return (pcie_ports_native || host->native_aer);
-+}
-+
-+static bool is_internal_error(struct aer_err_info *info)
-+{
-+	if (info->severity == AER_CORRECTABLE)
-+		return info->status & PCI_ERR_COR_INTERNAL;
-+
-+	return info->status & PCI_ERR_UNC_INTN;
-+}
-+
-+static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
-+{
-+	struct aer_err_info *info = (struct aer_err_info *)data;
-+	const struct pci_error_handlers *err_handler;
-+
-+	if (!is_cxl_mem_dev(dev) || !cxl_error_is_native(dev))
-+		return 0;
-+
-+	/* protect dev->driver */
-+	device_lock(&dev->dev);
-+
-+	err_handler = dev->driver ? dev->driver->err_handler : NULL;
-+	if (!err_handler)
-+		goto out;
-+
-+	if (info->severity == AER_CORRECTABLE) {
-+		if (err_handler->cor_error_detected)
-+			err_handler->cor_error_detected(dev);
-+	} else if (err_handler->error_detected) {
-+		if (info->severity == AER_NONFATAL)
-+			err_handler->error_detected(dev, pci_channel_io_normal);
-+		else if (info->severity == AER_FATAL)
-+			err_handler->error_detected(dev, pci_channel_io_frozen);
++	if (dmi_check_system(gauteng_w3s_dmi_table)) {
++		pdev->class = PCI_CLASS_MULTIMEDIA_AUDIO << 8;
++		pci_info(pdev, FW_BUG "PCI class overridden (%#08x -> %#08x) so SOF driver can claim this instead of snd_hda_intel\n",
++			 class, pdev->class);
 +	}
-+out:
-+	device_unlock(&dev->dev);
-+	return 0;
 +}
++DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HDA_APL,
++			       PCI_CLASS_MULTIMEDIA_HD_AUDIO << 8, 0,
++			       quirk_gauteng_w3s_audio_class);
 +
-+static void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
-+{
-+	/*
-+	 * Internal errors of an RCEC indicate an AER error in an
-+	 * RCH's downstream port. Check and handle them in the CXL.mem
-+	 * device driver.
-+	 */
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
-+	    is_internal_error(info))
-+		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
-+}
-+
-+#else
-+static inline void cxl_rch_handle_error(struct pci_dev *dev,
-+					struct aer_err_info *info) { }
-+#endif
-+
- /**
-- * handle_error_source - handle logging error into an event log
-+ * pci_aer_handle_error - handle logging error into an event log
-  * @dev: pointer to pci_dev data structure of error source device
-  * @info: comprehensive error information
-  *
-  * Invoked when an error being detected by Root Port.
-  */
--static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
-+static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
- {
- 	int aer = dev->aer_cap;
- 
-@@ -973,6 +1056,12 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
- 		pcie_do_recovery(dev, pci_channel_io_normal, aer_root_reset);
- 	else if (info->severity == AER_FATAL)
- 		pcie_do_recovery(dev, pci_channel_io_frozen, aer_root_reset);
-+}
-+
-+static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
-+{
-+	cxl_rch_handle_error(dev, info);
-+	pci_aer_handle_error(dev, info);
- 	pci_dev_put(dev);
- }
- 
--- 
-2.53.0
+ /*
+  * Let's make the southbridge information explicit instead of having to
+  * worry about people probing the ACPI areas, for example.. (Yes, it
 
+---
+base-commit: aebb7274476403040d582c61478df8f4a7bf9cd3
+change-id: 20261119-gauteng-audio-class-set-256f769ca134
 
+Best regards,
+--  
+Steven 'Steve' Kendall <skend@chromium.org>
 
