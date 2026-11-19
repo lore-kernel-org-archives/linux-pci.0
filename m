@@ -1,54 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795078894;
-	b=YK7Fb0+9skSO+XllyFLqeKcKrFvXydWyjFK5opeR3216Ks3YT83ZXeeJWol7uK/tQztM
-	 azlvmUX/56XseIA4tEdQtD1TuwJDQmNOvUFeMn+CSESaS1/GZbltkIsEOpFBjtytG/rLT
-	 w2W0m2P89k00W6LUxD2fPys3HGLR3Lwk4NuyEotF0qI+0oReW720DrF8gg7kFtQXnu0tI
-	 2peyWjbFHym6hI997ZZ8FEkBkS9J2jxCYVjH7q6sCzUIPlyoXolBZl+xp0E7FojcjwhOs
-	 D9AhaYip7FOiuG6qxYypPVXgIb023MGz7lB0zAw33MONnD1VgYUXXQmxmtcei6jJt1A==
+	t=1795079106;
+	b=StKtw4eCiMXI5CBsvuvnZ7TnuOGQaroAupoeCQrhMj45mxWYCdNDHBilUteCOKaJbiSl
+	 fXMwZVUinaWIF55pna/tzoC7Fcz6wkkXQLXpplBOMh73ZeLkxckHFc2faLGg3USkFKcU7
+	 tRTydFrP9KPuh+7Bqsi1SqHsBGGzsh+7QcT41FyTIktzyTHcG1kBfpOQeDEtkRDv0YoV4
+	 +qd3TeWtpSV3Icyz+t86Kre5f4pAsBaYCs36LT7CE4eb5yxZKEAToxoWMVuskWWAMirGi
+	 N057wxU5L8JQJbdD+yAACCCVZatwGhgW8bStnNxNlzNNgVPN6LBY6jiCWgk8sEHNDYA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795078894;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=DKJBh0a5KRxKDoybtZ7jY1emcZaxszzwhA065JGfkvs=;
-	b=enlKCkMkceIwj3pD/h0jvJbFbkhtOlAXsXkOjMzTdDnr6zhLH/iFzE2RB9DsshVD1GQP
-	 BrP9Dbn/aU7J0mRDsVA383DP4o8TjjG81BT0ibcC/YsNPshUlbCKJkkwE3437+8fNDEIa
-	 oRkVb2+b0OyWHFgQIfb4W5WmfoXcJrEFYcerd9X5nhO1LysNS8hmebRWAazc+2qOnqN/3
-	 qmbLaZsW61L9X7qkXm+7uWUKXl5Kx+wcGsuk/yfmf1tmVxcMZghLtwTUvP3PpdBh/KwO3
-	 ShmvJUsLYcbUSiByDw34lpn5NaqHWVpsCYX1EUR/4Xn8VfOlBpTtoSudtp7ke0U6MyQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795079106;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To:
+	 Organization;
+	bh=d6kA/1xsJAWmvsFQBc9q8FWAGrD7HMA1X8iHy6g3vR4=;
+	b=rnI8fbVuENutzYOg4nf8zlvX/S2m1+8pGyB1qiQAC36hKMmdiKUmLAaRDzD+fCnZBNPV
+	 rpRfATTXH6Mqz4TbASlCoBg8J/u9gsLNaxp1fjWdWnK81FPyzxo7HuRgyWWNocloftB95
+	 FkDmmGfst6PqJgRO55MRjdoj/S+lkWo5cSYYypnhwbKksYIbEPYYB6aN18YaYImW5wKOH
+	 hoPs5FYgRE/A50Ama+JRZBS+fis3bRO5/JVyizn7MWgceq/uLcQiOBwW8BqSx6Qn5yGA/
+	 tsF19NBJVf8Lmn616LN4MRKlR1s74mtYQbUwhzhhw0NEgBjfCDG7y/7JnbE61xqoeyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=144.76.133.104
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VqGidOOd;
+	arc=none smtp.remote-ip=192.198.163.16
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E254D606A320;
-	Thu, 19 Nov 2026 09:01:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E254D606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id B9596C26;
-	Thu, 19 Nov 2026 10:01:29 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 93725600E1C6; Thu, 19 Nov 2026 10:01:29 +0100 (CET)
-Date: Thu, 19 Nov 2026 10:01:29 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: "Ziyou Wang (Lenovo)" <ziyou.dev@foxmail.com>
-Cc: helgaas@kernel.org, bhelgaas@google.com,
-	sathyanarayanan.kuppuswamy@linux.intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2] PCI/DPC: Increase recovery timeout to 60 seconds
-Message-ID: <av666Q38S0q5HqYS@wunner.de>
-References: <20261106152143.GA1621130@bhelgaas>
- <tencent_F14FD4212049828EDB98B55B6E0FE116CF07@qq.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3C6C60A2610;
+	Thu, 19 Nov 2026 09:05:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3C6C60A2610
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=VqGidOOd
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795079106; x=1826615106;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=FQL8eV4sRkL61iCN0vkwUyVt/9ZbkgRxf+TN5O34HLs=;
+  b=VqGidOOdVKZTixg0fVdkuMR5tBmc0AJmZ98Z+58KcaVHSC0iBpbQ9QY6
+   u8IbKBp9TR4sHIbcXYCMKEXr1OhRz9bwKVbJtHXraRtwQAwPJ/EELrSc1
+   ppOND5o9xth9opCzO+refz2R2zcOelmQF2/cWUtu7pdjNv6ntlAi69Xoj
+   JTTjffB6RhekNLLdKrAMSEMvB59J9wAh9T+VyOlTFjIYK3htQRnq+QyvR
+   wyFXy86W30DvO9G/pxqPCxso9sV7mXiN1+HQPe6vvi2cVIt68mEqj/pUv
+   m+yvO7vMmajlppw78RG/yW9fA+YgBbz2qE3bq1a/SaBw0I+l+7xiN+iIv
+   w==;
+X-CSE-ConnectionGUID: jKcU2wrJRXS9okr4wTcPjA==
+X-CSE-MsgGUID: zj7LmG90QBaxQZBjueUD4g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11970"; a="3946797"
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="3946797"
+Received: from fmviesa013.fm.intel.com ([10.60.135.153])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 01:05:05 -0800
+X-CSE-ConnectionGUID: h2v3AucXRfqq5fed2bRS6w==
+X-CSE-MsgGUID: 6mtu8x2AQ36gVprPng12qw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="12334238"
+Received: from klitkey1-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.61])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 01:05:01 -0800
+Date: Thu, 19 Nov 2026 11:04:59 +0200
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"H . Peter Anvin" <hpa@zytor.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] x86/quirks: Cast PCI_D0 to u16 in apple_airport_reset()
+Message-ID: <av67u5GSVL0KWolF@ashevche-desk.local>
+References: <20261118161559.63617-1-habilerenturker@hotmail.com>
+ <20261118181408.GA625801@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,62 +87,53 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <tencent_F14FD4212049828EDB98B55B6E0FE116CF07@qq.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261118181408.GA625801@bhelgaas>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu, Nov 19, 2026 at 11:30:36AM +0800, Ziyou Wang (Lenovo) wrote:
->   [121.693046] pcieport 0000:00:03.1: EDR: EDR event received
->   [121.695743] pcieport 0000:00:03.1: DPC: containment event, status:0x1f01: unmasked uncorrectable error detected
->   [121.695825] pcieport 0000:00:03.1: PCIe Bus Error: severity=Uncorrectable (Fatal)
->   [121.695829] pcieport 0000:00:03.1:   device [1022:1108] error status/mask=00200000/00000000
->   [121.695831] pcieport 0000:00:03.1:   [21] ACSViol           | Receiver    | Transaction Layer (First)
->   [121.695834] pcieport 0000:00:03.1: AER:   TLP Header: 0x60002080 0x010042ff 0x00000017 0x7e325c00
-[...]
->   [123.018691] nvme 0000:01:00.0: not ready 1023ms after DPC; waiting
+On Wed, Nov 18, 2026 at 12:14:08PM -0600, Bjorn Helgaas wrote:
+> [+cc Andy since he's fixed similar issues and may have better ideas]
 
-I'm wondering why the ACS Violation Error is raised in the first place.
-The TLP causing the DPC event is a Memory Write Request from the NVMe
-drive to memory address 0x000000177e325c00.  The Requester ID 0x100
-seems to match the bus address 0000:01:00.0.
+Thanks! Yes, bitwise types in sparse are interesting thing, but since we want
+to continue using them the easiest way out is to cast to pci_power_t.
 
-What are the ACS settings at the Root Port and why is it signaling an
-ACS violation?
+> On Wed, Nov 18, 2026 at 04:16:03PM +0000, Habil Eren Türker wrote:
+> > PCI_D0 is defined as pci_power_t, whereas pmcsr & PCI_PM_CTRL_STATE_MASK
+> > evaluates to a u16 integer.
+> > 
+> > This causes Sparse (make C=1) to report:
+> >         warning: restricted pci_power_t degrades to integer
+> > 
+> > Add (__force u16) casts on PCI_D0 to explicitly eliminate warnings.
+> 
+> We have a bunch of similar sparse warnings in drivers/pci, but I'm
+> kind of hesitant to just throw in a cast at each one to avoid the
+> warning.
+> 
+> About a third of the sparse warnings related to pci_power_t are
+> similar to this, where we're extracting the power state using
+> PCI_PM_CTRL_STATE_MASK and assigning to a pci_power_t variable or
+> comparing for equality with PCI_D0.  I think we can fix these with an
+> accessor something like this (better name ideas welcome):
+> 
+>   static inline pci_power_t pci_power_t_get(u32 csr)
+>   {
+>     return (pci_power_t __force) FIELD_GET(PCI_PM_CTRL_STATE_MASK, csr);
+>   }
+> 
+> There are a few more we could fix with an analogous pci_power_t_set()
+> or similar.  Most of the rest are arithmetic comparisons (>, <, >=,
+> etc).
 
-TLP decoded with tlp-tool (https://github.com/mmpg-x86/tlp-tool):
+So, we basically need only two (the rest can be derived with negation.
+_eq() [equal to] and _gt() [great than]. It may lead to have code in
+a better shape from readability point of view.
 
-+----------+-------------+----------------------+
-| TLP Type | MemWriteReq | 4DW with Data Header |
-+----------+-------------+----------------------+
-+------------+--------+--------+-------+
-| Field Name | Offset | Length | Value |
-|            | (bits) | (bits) |       |
-+------------+--------+--------+-------+
-| Fmt        | 0      | 3      | 3     |
-| Type       | 3      | 5      | 0     |
-| T9         | 8      | 1      | 0     |
-| TC         | 9      | 3      | 0     |
-| T8         | 12     | 1      | 0     |
-| Attr_b2    | 13     | 1      | 0     |
-| LN         | 14     | 1      | 0     |
-| TH         | 15     | 1      | 0     |
-| Td         | 16     | 1      | 0     |
-| Ep         | 17     | 1      | 0     |
-| Attr       | 18     | 2      | 2     |
-| AT         | 20     | 2      | 0     |
-| Length     | 22     | 10     | 128   |
-+------------+--------+--------+-------+
-+-----------------+----------------------+
-| TLP:            | 4DW with Data Header |
-+-----------------+----------------------+
-| Req ID          | 0x100                |
-| Tag             | 0x42                 |
-| Last DW BE      | 0xF                  |
-| First DW BE     | 0xF                  |
-| Addr High (DW2) | 0x00000017           |
-| Addr Low  (DW3) | 0x7E325C00           |
-+-----------------+----------------------+
+-- 
+With Best Regards,
+Andy Shevchenko
 
-Thanks,
 
-Lukas
