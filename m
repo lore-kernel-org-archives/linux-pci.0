@@ -1,47 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795090219;
-	b=cxr5eX/6kxrr0/wQG11uKwdkVoUVnHo0XZ+ASMoewQ6asinZwp09ZuaPspwa92q9maND
-	 lkabi+HoQGM50+s3WVhD6aieHqoMoXW/uMNs9O2nR7t6PEeV54iuCh4BdZluxI0qdE39H
-	 0F/njBC5ctO5OwMVfe6N9h68KxZ+JrJ9S93H3+mJsrK249TaBn3y2+3q/8uVY0NW6eoTF
-	 Y0nFfAsE5IJr6lwjJqiLqMt2eRFn23sDmquL4BB21LeBVvIHpHELtTNnLFFAE032xa3jE
-	 x4qAjkN4DKVkEYxTTARiwfaLjhM4cdV3LIwo//jJ5lEZ74RCBL1MKOCGMX3NZfEd4Uw==
+	t=1795090824;
+	b=rlGQ2bRT+QMAzz9ii+icStx5ANFw5ou3SKVd7txsgoQO7+QC5UTmQY/i2JzBZbNAJWZc
+	 buAX4ELYwmxu+CwuzIpodkSJbsUcwZFet9aWk4vTjP7Ej60Na2LRb+sWDBUsjEcC701vO
+	 dBHqMVWP+in6GxXvnUifY6C2uYy7qgcvwS80wFFDeJyccsTLvlpiiS/fz8oAZifSPNh3D
+	 ZUrBkydOu7dHQoPgqDOzu4200hoJKFkGb5qn9NyMSfzWyfdefATt18tXA5pv9slXvJ9b/
+	 4Ja7UuP4nupczHCi3UnvJS9BH9svYQg4NxEid2jAYmZmvwLa2lo2/sEJyTW4ErFdNiQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795090219;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:Content-Language:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=bVOglpsLdk42ZqnvQazF0A2L65y0wwaNXipQaLV5Dy8=;
-	b=PAH8b5cTspxbmAPOKkTBewhdEA5/ZMeXOfoNjPbZ4qag/Himu+cibGPGj4cBxyeL7AUi
-	 ynGmrJXCjUZ4G8l59BmUocoTExwpL7nQq/4tVmRGZniYTUZGG4jqS5Hpw3ol8wg8zgMbA
-	 ApOMR2/2HUnPUg/pQGkCiooYzDFKML7joqTlkd9fZ5JKh+OVxNyWx0Lx47K08kHOAjRbx
-	 ecwlPHnnSN3sqXTf34Dhg2WL2Y9GrvQC/WbgO5dQ73F4EEVFJHMuHZ1O1/H9N/C+ywRyL
-	 XsRF7toq9tGl30+Uzzqsm9sgj43SzKiXiE0vhx2I9Rlf1O5JWDQv5/KaHb3DgmC5RMQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795090824;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:
+	 X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=+7xRvEg+xwDhzUl0OpKcCBhyEZfVnsH/Bc/HKtadj5E=;
+	b=xsxvRrTsG6PK6AQSbm7t14r5L9GAHUGXm5QAD9Fjpe306umPkKWNN4q9bKsAXgO8bXHz
+	 prOodqLhaITJ7PhkOWWUUmXN5KznPAzOgkKOITu7WM0c7Zu1FAeX/5KwuExeJWBxofRYo
+	 z6v90CzYVzVoLzFsXT9EZIvKpS6BIOdmHJhJJ6ASK2RaFefZzClL0j4r+TMi4gjgemtAE
+	 cLMoKcZofQIRRqpyi58gonb6wiEF1OhxKL2AyFv04Ic6hb8InuCQp10BjxlKAR4x9srTv
+	 aMEFPwsu1B0tqCWGIGPbuswiWtLDnC5r6FXmTLHsDtxeFw4goXHozkFzigAsYyLPlfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NV+nC0tB;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=zVJTfLcZ;
+	arc=none smtp.remote-ip=209.85.128.43
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A2C606A320;
-	Thu, 19 Nov 2026 12:10:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44683606A333
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 12:20:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44683606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NV+nC0tB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49A691F000CF;
-	Thu, 19 Nov 2026 12:10:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795090219;
-	bh=bVOglpsLdk42ZqnvQazF0A2L65y0wwaNXipQaLV5Dy8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=NV+nC0tB/l6vhGKhDUnMdket8HGsXsD2s6NkAQ5lTK+pSkt40z12z7xIN2oxvodPX
-	 8I0bHapymBU0bV4sTW/P1zFK3RGpPsfSzBxaIKdoF9Xt8FAio0fhSozZ/tCPaNOfqZ
-	 1BMAnW+XPjhi/XXY7MHMIZcwyDrRw867CCyrfuLvAZuo4/joPD7lomgVAUabA8ApRP
-	 Ql8Xl8VXLXxLqd7ER6L5AuT0Ii3B9Mu6khKMNirs/nSLepiQaMN8cc7zBqjMck/vcw
-	 VyLJH1AIxRxeruBK4WrvnVvPoFK6jQxdjkqiyKcNO6T0Y2uSuUFYEwxp3SVw9r3W/v
-	 7qOlSSNXpA4VQ==
-Message-ID: <0a3b7886-3800-42ee-8e22-80944114dfcf@kernel.org>
-Date: Thu, 19 Nov 2026 13:10:14 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=zVJTfLcZ
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a1fbd52ab6so16628925e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 04:20:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795090823; x=1795695623; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+7xRvEg+xwDhzUl0OpKcCBhyEZfVnsH/Bc/HKtadj5E=;
+        b=zVJTfLcZU5QGrrkl+NOShXgsa9P57cNLvp46KvzrUobFfzi6Xp5+Ek/Gv3LIdqHCK0
+         Lja1D+auP2ObH18RnjTTX+Dt9+2ujqfjfKYDu3QA4OObNL8gI6f5vAZKwX903IutIdli
+         ObTX5DpO3Q8qwHi2e52Qrag7vCbVdjv0Q+wx1qgeJ5+AwqSEA/YVcOCDbdrQJy2Lw9lS
+         ZgPNj3n2ytG6bbnDzJjG8EHm936lXvBuRO1Vo5ruZZRsuFoAMLMVNGDcD44YXownYrla
+         lECUARfltydKKu1F0VcHdXH+mYg6M8ENCgzmyuuQ3walTRmKXB5OxUMMwer7GS/DmAwJ
+         WMvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795090823; x=1795695623;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+7xRvEg+xwDhzUl0OpKcCBhyEZfVnsH/Bc/HKtadj5E=;
+        b=exdScDG8cJ6/EnV58bCLR8J/ikrPtRdR6krrxouwOTP6AJ+I1Jeotn3Mk1DlRgzJIl
+         ESrdIVBM2rp7c7AzcV1vttfeuqT0sHBTAFi9x1zAZqAkfsTzx3JnpK4L2PXNys8Wz+4E
+         zHrlsjse+W1uO+LPiGju5WTrMWIuSmaZcVfjOL5UtTvqQAoOJCZRnwU8kbYT2cgqUDRo
+         B+FEKtsGkltJ1YsVfug64HyfxOUKiZvtDLkAGUw1xG0x7diQ6Ysfmqv+oQnzysb1q6cw
+         vSUyKTqAlqDvn4PoqEw3nATMdK3kkOBVlKmE1LBY4grPYS2Kb5tRH8aWpwEhWLpaVAN8
+         MEog==
+X-Gm-Message-State: APuU4Z+3Fjsj4Mi/U8OGp9fUvWRaaBslkgFUp2eJhfJ9fDnXYjBpu5IY
+	9JMmMqOt4KMBjWrWA5/FfJ9mTsfg5maxNLz/toyZUAm2ZGRiwfzqlqv+mtRjl1xBnpk=
+X-Gm-Gg: AYBFou2bk2mkW71S6A/eDCqZp0So7xw58tvaGAReZlsb0S8bn9Sr6orMe1m+LI/wZww
+	XzODRQT74NcXJ5QiFMbvb/txyLv41EWSFuYCQDheGTDJgrA6zN7JzKlZTMJua429+luK6aUY/1v
+	htwhfRSY/HZmiN0g+Uw/DuiWvS1/3nh9tCE4DHZdypqIsNmkD5p+6ib7NvB68kwzK0F/IEAq2Jf
+	ICyy58bGaCLHdHrRb0VB13m9lBoVrkdDCGBvenmtxa/mjqPU7Fp8MUqN5bVLHAvtho8YZc8kmr2
+	sWeIWd3XkFbHTTPcTiqJFPXOPutreTOnF655yY88ukivyPGx9Zx8eXn+bg5xzAesRAbHiReadk8
+	8slwRwUPGeXqibNVB9D//h8yfCDjkes5RYMCvxBwQU73JhjmFiI06nGCZBMnKvhZ4m1Pd3dWenm
+	b9F15OEUBPMtBK9JMCIBosZo0q8SOkzzH332KhCEK/7FjHjLfFk8MTCKwJDZs2m6l+RvTFUYm+B
+	QVmPLLiLEcho6fP9O770cbQNppeRclsQw7hA+GSNz3wLPg0ZKGY6YbZObA29oCIXDnoPSR19+Xl
+	GpdfPsLKfTsXc92VOrFNz+cU136eb3sdaU0xRf57GOVHdDeJuyiWXOOAWSUI79z0IOt9dNdJCX8
+	vXsPiOwyk2tHfU7z68N/aiaKo/OrqGMkxvdI0rg03dQPOTNjpy4xoqB5cMAb2tEj/8mw8tgd7pk
+	vzDrt5bnIIXkxtqaeLGtZz3w1dY1sclWD/PjblvWWpprZacQ7/LEJSP2baEY6ioh8rXPIzqHGes
+	JCjpF/XrssbOV5IYQ==
+X-Received: by 2002:a05:600c:4fc6:b0:4a1:83f0:7c91 with SMTP id 5b1f17b1804b1-4bb7da26333mr115390035e9.18.1795090822118;
+        Thu, 19 Nov 2026 04:20:22 -0800 (PST)
+Received: from coder-gsekar-hip-hyg-new-5c97b6d788-n6g25.coder.svc.cluster.local (ec2-13-205-193-176.ap-south-1.compute.amazonaws.com. [13.205.193.176])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb8532f08dsm32579225e9.2.2026.11.19.04.20.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Nov 2026 04:20:21 -0800 (PST)
+From: Gokulkrishna Sekar <gokulkrishnasr@gmail.com>
+X-Google-Original-From: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com,
+	mika.westerberg@linux.intel.com,
+	linux-kernel@vger.kernel.org,
+	Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>,
+	Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Subject: [PATCH v2] PCI: Correct PCIe port type field encoding
+Date: Thu, 19 Nov 2026 12:19:47 +0000
+Message-ID: <20261119121947.204565-1-Gokulkrishna.Sekar@harman.com>
+X-Mailer: git-send-email 2.56.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -51,100 +100,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8] PCI: exynos: Handle PCIe PHY initialization errors
-To: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
-Cc: alim.akhtar@samsung.com, bhelgaas@google.com, jingoohan1@gmail.com,
- kwilczynski@kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-samsung-soc@vger.kernel.org, lpieralisi@kernel.org, mani@kernel.org,
- peter.griffin@linaro.org, robh@kernel.org
-References: <20261029131006.2744-1-sreekuttan2156239@gmail.com>
- <20261031073548.3916-1-sreekuttan2156239@gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGPBBMBCgA5AhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJp2mE8AAoJEBuTQ307QWKbeaIP
- /ihHTkTW4KsN/DQ945JJbyu5tI0J80Wue7QyyLPglyKfhgb5cLLNPpOC8cCIJsc7+W3i2P38
- s2c1cOH6CYGE7E9ur3Vfme8NW2S2I/Z8VC7bZnzyS23wT17LrsdS/qCpx4o8U+pt/xdXDKph
- EGRYrIEmMpUWvyYzyYKGIe25FtaayIIKpq8eZYyFcp2f/sG5IkOW5uZzHPMPdcm87jU7fyuQ
- rAU2vx9r+ulUfQ/q9Z2roC/ode3l7t2pN7BCBCsUDp6JCrUyZrtT1e7EbA0ZRP3aOBNk2P2E
- DQOgJGjGdO5Yx2Y9LFtltu6JbsBJHi1syGRX3AtQYOMc4Y1WGoeZJmMlvKj2ZqqXNkcWi2DS
- IQEWB0uW6CqFsBBIMGDa+6OzdaVO/uAVXWDWml02Men3CILdI1MbVjoh8ECqYUY7OQ+JJvNN
- vnliuq5WM3Ghd3jg/LZZrxXjdIginRHFQCjIJYLKpLZWm1/iDFedcfzqRNYmTtqscdCNHW41
- oT3Z7BmO9xwdjuwBS6nmS6JJwkbf5Ot2QR4pB/DRU7ZwjT1qHe+9r9gF32wXVQatHNGK/VVu
- sfwOnkdxCWkp/qb2gdQRmZh+SedStWshigH6sNfuHBloF/q+hjMRc8b2m326OZdrbSHwY1Sz
- vti8Hn7n8NjdHO9LKB7BIdjkA9DA5WsqOuVCzsFNBFVDXDQBEADNkrQYSREUL4D3Gws46JEo
- Z9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLueMNsWLJBv
- BaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6eiOMheesVS
- 5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wAGldWsRxb
- f3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA6z6lBZn0
- WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9YegxWKvX
- XHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt91pFzBSO
- IpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gUBLHFTg2h
- YnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/JoFzZ4B0
- p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu4vXVFBYI
- GmpyNPYzRm0QPwARAQABwsF2BBgBCgAgAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtBYpsFAmna
- YUkACgkQG5NDfTtBYptX+BAApg32CkxwNucNEi8WfWA8oKkW0y8YDuY6ORMo9FWNGiT/OTy0
- vyJrLocrpn86zwfjVp+eCrssPYh8eqJfnWqmYv6ACQtHPYzPZQ3mSo8H97Z01oUxITzCxpXm
- ZkLgPIqtDPcC2E3dPM/fVxcyowM8XsaMA9wcsaUYrta8toOq2b9tKcjleKMfMrm0gQ9u7wUc
- QbLkwj6TCLOwucb07GXzLTNF9PZmaDUpKAZjMjmrW+le+SFvQbhamx0rxLWPR0NWntXpbCn+
- +ACch03p/JyTBVktxFsFyCt7pTPE1kEaeuXBTe/a2D9iQvRxRW19LvuO2e59/u1wYUiH/orz
- wbIC2S4dBsPAPihL3ztOU1yE86GPyQtSE0kU+/7snnLt4QGi6PChf3t5gnNjAzjUUovO8rgI
- c+5yN5heq5loYHgK6OQ9OlHzsPHO9e9MOQcKlFycs1pyijFGzDwdNUm/SchK8iWT2QApTx4A
- K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
- n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
- qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <20261031073548.3916-1-sreekuttan2156239@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 31/10/2026 08:35, Sreeraj S Kurup wrote:
-> Check the return values of phy_init() and phy_power_on() to avoid
-> continuing PCIe host initialization when PHY setup fails.
-> 
-> Track PHY initialization, PHY power, and regulator enable state
-> across probe, remove, suspend, and resume to ensure cleanup is
-> performed only when appropriate and to prevent unbalanced
-> reference counts.
-> 
-> Assert core reset on probe failure after PHY initialization has
-> been reached, and handle cleanup errors during teardown and
-> suspend.
-> 
-> Also check the return value of exynos_pcie_host_init() during
-> resume and abort the resume sequence if PHY initialization fails.
-> 
-> Signed-off-by: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
-> ---
-> v8:
->  - Fix state desynchronization in exynos_pcie_phy_exit() by returning
->    early if phy_power_off() fails, preventing calls to phy_exit() on a
->    still-powered PHY
->  - Prevent PM core desynchronization and orphaned controller states
->    during suspend-abort sequences in exynos_pcie_suspend_noirq() by
->    logging teardown errors and returning 0 instead of aborting system
->    suspend
-> v7:
+set_pcie_port_type() validates PCIe port topology and corrects
+invalid upstream/downstream port type information in the cached
+pcie_flags_reg value.
 
-How many of these are you going to send (even the same day...) till you
-get it right? The process is not random punching review system till you
-get it past it. Sending random code till bot stops to complain only
-proves that you do not understand what you sent.
+When performing these corrections, the code updates
+PCI_EXP_FLAGS_TYPE using PCI_EXP_TYPE_UPSTREAM or
+PCI_EXP_TYPE_DOWNSTREAM directly. The PCI_EXP_TYPE_* values are
+decoded port type numbers, not values encoded for the
+PCI_EXP_FLAGS_TYPE bitfield, so the corrected type is stored in the
+wrong bit position.
 
-I have zero confidence that you understand what you are doing and all
-this looks like LLM slop sent to us. Why would we want LLM slop?
+As a result, a device whose type has been corrected may subsequently
+be reported as PCI_EXP_TYPE_ENDPOINT instead of the intended
+upstream or downstream port type.
 
-Best regards,
-Krzysztof
+Use FIELD_MODIFY() to update PCI_EXP_FLAGS_TYPE so the corrected
+port type is encoded consistently with the format used in the PCI
+Express Capabilities Register.
+
+Fixes: ca78410403dd ("PCI: Get rid of dev->has_secondary_link flag")
+Link: https://lkml.org/lkml/2024/12/13/198
+Reported-by: Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Signed-off-by: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
+---
+v2:
+ - Use FIELD_MODIFY() as suggested by Bjorn Helgaas
+ - Clarify impact by describing the resulting PCI_EXP_TYPE_ENDPOINT
+ - Add Fixes tag
+ - Add Link tag to previous discussion
+ - Add Reported-by
+
+ drivers/pci/probe.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 9a178e0e5f7f..93e2e1f688ca 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1673,8 +1673,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 		 */
+ 		if (pcie_downstream_port(parent)) {
+ 			pci_info(pdev, "claims to be downstream port but is acting as upstream port, correcting type\n");
+-			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+-			pdev->pcie_flags_reg |= PCI_EXP_TYPE_UPSTREAM;
++			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg, PCI_EXP_TYPE_UPSTREAM);
+ 		}
+ 	} else if (type == PCI_EXP_TYPE_UPSTREAM) {
+ 		/*
+@@ -1684,8 +1683,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 		 */
+ 		if (pci_pcie_type(parent) == PCI_EXP_TYPE_UPSTREAM) {
+ 			pci_info(pdev, "claims to be upstream port but is acting as downstream port, correcting type\n");
+-			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+-			pdev->pcie_flags_reg |= PCI_EXP_TYPE_DOWNSTREAM;
++			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg, PCI_EXP_TYPE_DOWNSTREAM);
+ 		}
+ 	}
+ }
+-- 
+2.54.0
+
