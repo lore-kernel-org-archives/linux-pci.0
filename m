@@ -1,121 +1,126 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.5
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795125272;
-	b=cQ5h7oJ1H/LzZaHLJPfhI4kdJpI+adUsnnf9UQfXJUvgEvLwDmfhpGATd5UByoQnp7VQ
-	 VdfKphBvkaoEgCw1wH+Po/VKf9j40IDrb+7s9mTsNmq+sJJFdnlRRSQun8ihAT87KKT0f
-	 BsTa58hjF9dcw4bvDbdpSpRTdicEcWQm/uw+6Jhv5FseqXdq2mw3ThKfSdjySklgfbUH0
-	 yWFrbkD/mg6WovZWbEXXVri12cA5nzzI3p6hwqjtZrcuy+pTYU54DpNtvp01Gma2D3hEV
-	 1Uv6eORfeDkEwpkjj+q56kp4zdcFFA7dWhGTnXfwOQmuebg+8GpzRQPLnr9Yalyeczw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795125272;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding:Content-Type:
-	 X-Originating-IP:X-ClientProxiedBy:X-EOPAttributedMessage:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=oR30ekZYMu2C9cH8jeCrLe8nwMdZqXzf908DlFYgipk=;
-	b=nvpAUqs9a/YgmZNCfV3GwtSogZXfQVSM6pnH/Lepm3T79txgl7ajp5UFzMyvOludJeHe
-	 SgDDY6Fy0xBWznn1UQInASEEcnKTPlXTzK89PHzD4mJ5zSdD/ICGRArXtdF3YTPJ065hQ
-	 ELY7IEyALonYfqUmhfRY+EqASjpeIMnubjngS/yQ76R0iOCzs4qGIWl6k1BG+jL0RPtyi
-	 YYBzb213bCVT13faTUSDTZL1+VkjO6HeKmxBhrlAZAPfo+P67g3BknDYg8v6OjvnmxGvY
-	 6zbnVW7m+winnJ9Wg6afjc5I9ila7GLBPkqKczAiE3GnFmmeP4GSs2kV0vtb3v8yGkQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=I+hdinaN;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.5
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011005.outbound.protection.outlook.com [52.101.62.5])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=202.12.124.157
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795127565;
+	b=FVFSVjmYX9f1BGNX3dv9H7cQK2kRreZ1bEKfjWFtT94OPFiOkBbebhPOhqk9DYzqtMc3
+	 83kXrYdyaTgiWVzhOB2e3UvEHsuUKRUt4X8Oy2jkAYM1LSEqjRiZSGsU/axgy0+1z48OT
+	 CkSr1S8Ogajoo7duS0REBTo5FuVRhrjakJej+HaHgDnR5Ra2Mov4Js5a5AcGdHfXKn76F
+	 AI3aqpVHx18vfFMLFFWlZpxzpc2Aj9b6fH2BOb1FvIw2u4PXrCq6cBHCNNktQ/AbyNK82
+	 Yxg42gM6tF3Eqy6lSVSHngladInmOAJAEfe0jVWkBWk5Q7AKMp8EJ0gkJpBI06IFxKw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795127565;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
+	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
+	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
+	 Received:Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 X-Mailer:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=8diG5IpF+frcATzn1tCDRrk4aGE/jCsGXdXvNn/J5ck=;
+	b=elw07Us1+9qNKVos+0fBBTj71pYFlQvDbwYy9lL46OODtD3m5lc6X1x63SEY+ctu2l4i
+	 jfL6/LDmOEG8uSVv3Elu0l5GmDOwsRHABEniZJ4b4asZEp+UztZkhfBez+Rk4uwPxlKh4
+	 R8F926AQCFH5Fn/VWa8zY2DLcnf1VPRKVy8z7957EbrvJ/H108i5enyJSqVrpVGHDTsv4
+	 vl7wSe6kdZlmW6EW3Cq3BZz3bSMEiZYwMLkLd31Eyr5BioBtxlC23S2LKkOLdLkvwdGsS
+	 0/ZEUfkl26fHuetRO6NDgFJQiUCbiC2k4n5gwZed+pWHQpgn7ijTaESLV6kpwd4shpQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=shazbot.org;
+	spf=pass smtp.mailfrom=shazbot.org;
+	dkim=pass header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=cSl4wkgK;
+	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b="FS/aneqP";
+	arc=none smtp.remote-ip=202.12.124.157
+Received: from fhigh-b6-smtp.messagingengine.com (fhigh-b6-smtp.messagingengine.com [202.12.124.157])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9E6F606A320;
-	Thu, 19 Nov 2026 21:54:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E9E6F606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F044606A33B
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 22:32:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4F044606A33B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=I+hdinaN
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=NSwW2StPjIw5PqI+wRbN9PZQBVpNoqu1kjiNrzqQsF/bxlmlQbxsSUbFxt0uO9TWdxacjy62Y/pz1CGdp834AsSpuzP4hT+jfRjhwdSXGrBBuTFhZYk7ysILcqTx9Wwx3A8OzGchTEA3cR1LItYEafUY5mgOSNZ/158iSX/UhejzvS6EiSqGbz3P+jqgJIY9NVmpsNaF2JxF2RYm+wasB35vVAux4UySRKy2/yOn2jW1A/s6She+QydWfilISlz2NpoP8e+UIKSzx0/L2sBwm6w6NhyF9x4xohkHjboLozS286vJESOfca1fDz3xyf2OGE8DYc8zrUZFb7HpRXB6BQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oR30ekZYMu2C9cH8jeCrLe8nwMdZqXzf908DlFYgipk=;
- b=msJAuexTnVWWgH1GJxgp4BOtHoCj2XZIEVvSpDNn2K/yCS+QfY9/omZGb5aJClfVys6CSecn28OdAkIPL9wRDzKjnOIrqo78SQKIrzXDX1iLCNWZuaQ5rErpnpWlRExWfd3BBMBZrib8/MKTX3UgYGYlZ4j3frpCf6SPr8mHp1NNzncxGLs+Rg11KLY0w/DHmrC3X3XF3EtT77Eu+2sFtpFt56Vu5fr1muTijmkDbB8ztkHGdaEzljiA1a7AMJgdXVcgmchpSJMGO4InkyFjgPGalbL1/TILHMYwuln03UDoGWsEAe0MTbelTOqVhi5UJQ4G8uQHWSPt+ZzEZiF9OQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oR30ekZYMu2C9cH8jeCrLe8nwMdZqXzf908DlFYgipk=;
- b=I+hdinaNon0MzbU/N5ZWzOpkl7C6jPW2WTycFmMJ2tmCj4Qa+0Ohhv168kxe50gAaJD07f5j3dEmxsntZK/hFZvecIljVfz15P5/Cbll81Oih8lbW6NU9D1If85hFqSEAAtgSIEtLhZv0kte6GrZo6CyEf+yvf2CoQLHVrsLWmCc5vdjY9zvGnJmKuqnYnmUVMGM2+EJRh+dm8wHBD5OzVzaU/eXASbkd9yXr0qarQyHulvoexC+lTlxpJ7Y2pQozBbz48BhXEYk2/z0vrL63uVOptR8qEXdb99Zt+S0DEDd6Wfx9Fa7GxUdxCpnFpGN1VoQWiHKZiB8JnkbuQyJVw==
-Received: from MN0PR02CA0029.namprd02.prod.outlook.com (2603:10b6:208:530::32)
- by DSVPR12MB213845.namprd12.prod.outlook.com (2603:10b6:8:4ff::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Thu, 19 Nov
- 2026 21:51:40 +0000
-Received: from BL4PEPF000003F3.namprd04.prod.outlook.com
- (2603:10b6:208:530:cafe::79) by MN0PR02CA0029.outlook.office365.com
- (2603:10b6:208:530::32) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.639.10 via Frontend Transport; Thu,
- 19 Nov 2026 21:51:39 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- BL4PEPF000003F3.mail.protection.outlook.com (10.167.249.7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 21:51:38 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Thu, 19 Nov
- 2026 13:51:13 -0800
-Received: from xinmengs-dev-vm-linux.nvidia.com (10.126.230.37) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.57; Thu, 19 Nov 2026 13:51:11 -0800
-From: Simon Song <xinmengs@nvidia.com>
-To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
-	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
-	<linux-pci@vger.kernel.org>
-CC: Simon Song <xinmengs@nvidia.com>, <alex@shazbot.org>, <jgg@nvidia.com>,
-	<yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
-	<airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
-	<alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
-	<bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
-	<aliceryhl@google.com>, <tmgross@umich.edu>, <jhubbard@nvidia.com>,
-	<ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
-	<kjaju@nvidia.com>, <alkumar@nvidia.com>, <ankita@nvidia.com>,
-	<aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
-	<linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
-	<boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
-	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
-	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<peter@colberg.org>
-Subject: [PATCH v3 4/9] rust: pci: add reset callbacks
-Date: Thu, 19 Nov 2026 13:50:39 -0800
-Message-ID: <20261119215046.2892839-5-xinmengs@nvidia.com>
-X-Mailer: git-send-email 2.43.7
-In-Reply-To: <20261119215046.2892839-1-xinmengs@nvidia.com>
-References: <20261119215046.2892839-1-xinmengs@nvidia.com>
+	dkim=pass (2048-bit key, unprotected) header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=cSl4wkgK;
+	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=FS/aneqP
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id BE7FE7A0307
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 17:32:43 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-02.internal (MEProxy); Thu, 19 Nov 2026 17:32:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1795127562;
+	 x=1795213962; bh=8diG5IpF+frcATzn1tCDRrk4aGE/jCsGXdXvNn/J5ck=; b=
+	cSl4wkgKfjRP7WNr0a/cbQRv/zNmQSh5wdb/YjvF1FN7b1KL+aQFXzSJ98goWTPB
+	uSY9KySBtziYR6nts/wkVbdMf6P0aiHG7LYSGVhzsW+z7bmfAeySqxq1QJhi/2+5
+	NhUMAG+/6vZtyzToFbvJSO+SnXYPyiBQyNZ1cqiDIfrr6oSTmwZd6Qi7AZdD/l1f
+	hYZrKNHn5JNypzTtYf4N7iTzF28vlBYOZnC0mXF+8H3u+jhhmYhxyR+qQawFe/0Y
+	4AQdBuLF0SSKajxZUJn+9Vw4i/2GTk+MSBDC019O18V8HEXmzUO5TfIA+prxIits
+	QTlgAu7fx5IxSipUFRBx3A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1795127562; x=
+	1795213962; bh=8diG5IpF+frcATzn1tCDRrk4aGE/jCsGXdXvNn/J5ck=; b=F
+	S/aneqPozRGzBrvFEQCufODXIgHQCEKW84Dt3KWjayayQMwzoCzpGC+khyeHYP4s
+	vY796mGofLYA5D8Mr2xOYdRlmXzKs0k4kKfEiyn4GkcYSu/nah6Eg+1v6gAIrgR1
+	cx7ySqPqP8r2wSsCGBS4D+nIUl1OAVydUrBD994UIphEhjIFl2g8YJRuV1t2HJbP
+	4bhukU94Ye212LJmb+aWmpjDhYal+VB4Z+9irhY0i48/o3W0oTWo8HKoR7bzatNt
+	Ta+AvLc9a8HlhsgsKosVPe3BM0kYS8lNOUZk0DhCz4zNk2sTmMeVTKgPdb9W+Tg+
+	Q8LpnFG9mIFfnomKkJQjg==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=sign d=shazbot.org a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1795127562; d=shazbot.org;
+	mf=PGFsZXhAc2hhemJvdC5vcmc+;
+	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm2:rsa-sha256:s4TvgJY2AxQPHBPkml91cTua2a1NMb/FMQV+h3+1PcYZGwp
+	Y4/2aQFm1yBBbGjWE6gWIhPNSO7vJtFp6XxvWLXdN18ieeyyJTCQ5nmc8zjPlJnU
+	t7heO1nPTFPu1Mi9umdMPWDdejKrV3s6jz1/uV1/x8+MUkCcNaeAQqbwdbEIr2vW
+	72mOLS2NDLj27+X281vpUEByGy+Yp5C7+nauRawwBwwZZPgZtl8zX+UAyDlhmrwH
+	B9iit8noyRgdCk5MiaG5HGsPLdF0WJX1GPvrX/bBHPSXL7ZU7c8Kdn9QeG190CwV
+	O3q1iATeZ4oKLKQ6hcOxvB/tPem/WEBf2Z5HVpA==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
+	from,in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:AQNlEiex0ldxclYibpZOPfODfuT/zfuzD4Xg8gCmKWk=:bYeZfzXOr4Rhv4svyoyB+ZYS3EKLFU+K87x7maL3L00=;
+X-ME-Sender: <xms:Cnn_ajdaAd7I0UhnxHZNkBHR-b7UQBrjQss8APYopmC6qDKUMalUIg>
+    <xme:Cnn_avlRv-yjXsvP0GxpkVhBWrsVCPBSUXhFWEARzrwA-wW_S5lLI_G1Mr6_7U1Yi
+    Pj8w3EURxx0wQkCLGFEjvjhrhCqJOWYe5viQy-1szn47_ZpclWfhFU>
+X-ME-Received: <xmr:Cnn_aoy-l62MGZh2uIp5wwaZnF41kCT93qK64VeVR0_85di9mN0PU4Sn4e3v9w>
+X-ME-Proxy-Cause: dmFkZTFZJhTXKlYSH79FRKyJqfUU3CwaZRjJx1rze6Hqz9Rw4v/3eoVS9nbaIjU+j5QFld
+    jBsDPeSxNksX4fiXerstFo/n5mijIA7DHyU2Uqr3+pYjuaMveGp808l+a7lQhBB/AwjpHx
+    1eY1jdSeGNpmlVc5Bq0Ii/d4Ki81EvmKUhP32WPEZlBLvsGKkKaX7VczVbLLq8eh3yt7FY
+    HEwOnFCqEtKK72PL463J653AeU8vp+btN45J3a0FNhSBw0wGTvJ/Fg5etepjTNW7GJVYUm
+    tfHG3I2Pt7vxb67gpwhwUzt56IibJ/RvVkhfrhWw+HTZySLla2FNaknyNpleDyrlRlc9Iz
+    IJSZYj8acqhZR6XE+s/dT4mDWp3YbgplxUl92lZkJg3OKWUOFVzGl4BNJC0maEv7DxofYY
+    YyNKl0s8UcAjEKkkl4B3memcieFCGUPXbBCW4H5WC+btddQKN4rqootnwLkDHrR/HIibSj
+    puh1Okq+i4fqSFiHggpms4XsGkQt+k7o8AqltkNWxaD4YyrJ2Djmep09pzHL+cpcXs/Md/
+    S2Bmlm1oHKPphDzFOo/0jFnzU0xi4GIaZrCiMxFR0AotzDJ7eNXnuN8jckY4xrFmI1Pmh3
+    bHtIEhxRMOicBNTCGKPbg5eyhUPvoQQuIEh5mG5iWshwSJ8qdQVNtu9JTsSQ
+X-ME-Proxy: <xmx:Cnn_aiyJS7VSubvwd397BMsClbu4xRXLFm_2-I6dEiwqGvBNcYMQSg>
+    <xmx:Cnn_aoX64ENNZD9xnM9tjpZbISmuHJKcpBaU9A5PU9IezSBWITRmhQ>
+    <xmx:Cnn_apR0JF7nmNr_DTGOPA95r-JM_u8KaFd1dtfHlX1ZGo9xmop9vA>
+    <xmx:Cnn_agR-oCCEj1zp3r4-ju0ZOyln0t0eoAg-2YY1MRHgPjG0RRahZQ>
+    <xmx:Cnn_ahpKGAyTc_yDWUvhvR17sWsbeu7_78gsuqX-UoZK4FBb91TrB7bT>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 19 Nov 2026 17:32:40 -0500 (EST)
+Date: Thu, 19 Nov 2026 14:32:37 -0800
+From: Alex Williamson <alex@shazbot.org>
+To: Samiullah Khawaja <skhawaja@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Kevin Tian <kevin.tian@intel.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Anthony Pighin <anthony.pighin@nokia.com>,
+ Dave Jiang <dave.jiang@intel.com>, Dan Williams <dan.j.williams@intel.com>,
+ kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH] vfio/pci: Only lock the upstream bridge if the reset
+ may need it
+Message-ID: <20261119143237.4bf54796@shazbot.org>
+In-Reply-To: <20261118163706.7138d246@shazbot.org>
+References: <20261112235700.2029562-1-skhawaja@google.com>
+	<20261118163706.7138d246@shazbot.org>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -125,134 +130,137 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL4PEPF000003F3:EE_|DSVPR12MB213845:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0b5f20df-ab2e-46a9-3c73-08df46874a4f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|36860700016|82310400026|23010399003|56012099006|5023799004|11063799006|261021121427099003|261009223027099003|10067099003|261102123227099003|261026140227099003|261022075727099003|261022105027099003|261028144727099003|261026121527099003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	urPbnS+k/uM8AgaCd4QpojKyQT2g8VyfKzqcX7KJ7lfBJq8GWjK0cVGny01VaeqIvZqosNdmtB9wdMNaKPPX2y+Is9w0YPLETiEFo/eBSWzMcT1kLUgaD3FEldv1TI0Ru9HzHAUzCJc8j5q1cHLEFi4xzPzM+HHyy4tmpoRAR3pGVlvxP6dgWxR/+yaNtiv5LItNyI6tq+Uto7WThfeIQ1+h6MLRDgjkAD1Br5GZJHEKNRJZOBL0OxgN7jg78PVTCSNJVQqlMgo6OGOzxc2mWDfvG6vKolVeoyZH2ucQUV1SIpR2GOA9fze7pzEgF9PAAS3runQoejaTYE4Ki9CrcURqvKmLedhRCbcma+Sqrl+y3DVZZNEFBxA0caF84FSRSz3C3I710OjCbP+B7Kq4/e3XylKHB9mj9+mCyZ9cBiU04agqvuLKfDpnk5Wi/aBwxNWKAgtSvhoXtzD2dmObZxZQJNej1WqQdgMUtkllToP5ZsdlD6dqzssFGXOT44H+huJiXs7VFoK+BGnHgyFgwp9BV5MbMEg+ShEe9Fbwlnof7SKuqa/hk6du+pfMiIx4ZDYElDuqPK0tdwwqOYXdtdwR+Lk4rbe6cayAUvUMEpXMdd5E6zmGV1BqSIRy2/8sE8lIgWpU/WkI2YDC70H1WqmZ5Er7ysMkIWinqGSdobWCouvEgETBj71TERTCAZCX/CPNvgkNfPmrMwQbJeR2iA==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(36860700016)(82310400026)(23010399003)(56012099006)(5023799004)(11063799006)(261021121427099003)(261009223027099003)(10067099003)(261102123227099003)(261026140227099003)(261022075727099003)(261022105027099003)(261028144727099003)(261026121527099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	O8KWp5J4C4cmfCGSmle96LHgbTKQR+NnlcZx46IXV54HrPD7HmWmGJIB1yBL41fPt15HaeW/KMpOlEJNun+iF0xPP78UeZtxMLQXfjJfow+KssV1anHryWg+aQOq/3qrqdkxCaZ5BEvRpqPrCTz/dpsnjJQlAhF03Bry4wYtqQRIPgP/UrB4t3ntysWKHGBWIf5xuhyeaLhvSnslzEj4ulNf6ht5OeHZCXNuvyhIFzQs33vlzvjFmWla8a8/FYZTyDn4EpoEpw3LuET1FQmW7bwXDyvT4E9jPgoUHH+kR4Wsm3z5UTa5qeTiYY3aH3Ku0mu2odtCsWg71zif00oJ8651LCv8RpFi9hC981ejhApqsm06WByeXKAttMYwscIVlFYuJYvxXb6tyy2wUF8S9Hh2FtfnplGH+EIoq0yV1sGkry4OqZ/4+VOJwGJ27/VJ
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 21:51:38.9756
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0b5f20df-ab2e-46a9-3c73-08df46874a4f
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL4PEPF000003F3.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSVPR12MB213845
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Because a VFIO PCI variant driver may need to update its state when its
-device is reset, it needs notifications before and after the reset.
-The NVIDIA VFIO variant driver resets a VF's active vGPU instance.
+On Wed, 18 Nov 2026 16:37:06 -0800
+Alex Williamson <alex@shazbot.org> wrote:
 
-Add reset_prepare() and reset_done() as optional callbacks to
-pci::Driver.
+> On Thu, 12 Nov 2026 23:57:00 +0000
+> Samiullah Khawaja <skhawaja@google.com> wrote:
+> 
+> > Commit 962ae6892d8b ("vfio/pci: Lock upstream bridge for
+> > vfio_pci_core_disable()") makes vfio_pci_core_disable() trylock the
+> > upstream bridge before resetting the device, and skips the reset if the
+> > trylock fails.
+> > 
+> > All VFs of a PF have the same upstream bridge. Take a device with two
+> > VFs, both used by one process. When the process is killed, both VFs can
+> > be released at the same time. The first one takes the bridge lock and
+> > does its FLR, the second one fails the trylock and is never reset.
+> > 
+> > The bridge lock is only needed for a bus reset, which is done through
+> > the bridge. A VF is reset with FLR, and pci_parent_bus_reset() never
+> > resets the bus for it because the PF and the other VFs are on the same
+> > bus.
+> > 
+> > Add pci_reset_needs_bridge_lock(), which returns true if any reset
+> > method enabled for the device is a bus reset, and only lock the bridge
+> > in vfio_pci_core_disable() when it does.
+> > 
+> > Fixes: 962ae6892d8b ("vfio/pci: Lock upstream bridge for vfio_pci_core_disable()")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Samiullah Khawaja <skhawaja@google.com>
+> > ---
+> > Tested in QEMU with an igb PF behind a PCIe root port, bound to vfio-pci
+> > with two VFs. Both VFs are opened through VFIO and then closed from two
+> > threads at the same time, counting FLRs with a kprobe on pcie_flr().
+> > Without this patch one VF missed its FLR in 50 of 50 rounds, with it
+> > both VFs were reset in every round. I will send a VFIO selftest for this
+> > separately.
+> > ---
+> >  drivers/pci/pci.c                | 28 ++++++++++++++++++++++++++++
+> >  drivers/vfio/pci/vfio_pci_core.c |  3 ++-
+> >  include/linux/pci.h              |  1 +
+> >  3 files changed, 31 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 7c6f2aba8144..c44e4d4d8774 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -5256,6 +5256,34 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+> >  }
+> >  EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+> >  
+> > +/**
+> > + * pci_reset_needs_bridge_lock - check whether a reset of @dev may need the
+> > + * upstream bridge to be locked
+> > + * @dev: PCI device to check
+> > + *
+> > + * A bus reset of @dev is done through its upstream bridge, so the caller must
+> > + * hold the bridge lock. The other reset methods only access @dev itself.
+> > + *
+> > + * Return: true if any of the reset methods enabled for @dev is a bus reset.
+> > + */
+> > +bool pci_reset_needs_bridge_lock(struct pci_dev *dev)
+> > +{
+> > +	int i, m;
+> > +
+> > +	for (i = 0; i < PCI_NUM_RESET_METHODS; i++) {
+> > +		m = dev->reset_methods[i];
+> > +		if (!m)
+> > +			break;
+> > +
+> > +		if (pci_reset_fn_methods[m].reset_fn == pci_reset_bus_function ||
+> > +		    pci_reset_fn_methods[m].reset_fn == cxl_reset_bus_function)  
+> 
+> This looks like a maintenance nightmare.  What if instead we did
+> something like:
+> 
+> bool pci_parent_bus_reset_possible(struct pci_dev *dev)
+> {
+> 	struct pci_dev *pdev;
+>    
+> 	if (pci_is_root_bus(dev->bus) || dev->subordinate ||
+> 	    !dev->bus->self || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+> 		return false;
+> 
+> 	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+> 		if (pdev != dev)
+> 			return false;
+> 
+> 	return true;
+> }
+> EXPORT_SYMBOL_GPL(pci_parent_bus_reset_possible);
+>   
+> static int pci_parent_bus_reset(struct pci_dev *dev, bool probe)
+> {
+> 	if (!pci_parent_bus_reset_possible(dev))
+> 		return -ENOTTY;
+> 
+> 	if (probe)
+> 		return 0;
+> 
+> 	return pci_bridge_secondary_bus_reset(dev->bus->self);
+> }
+> 
+> Where we'd then condition acquiring the bridge lock on whether it's
+> even possible for a function scoped reset to perform a bus reset.
+> 
+> It's a bit broader of a test than whether we actually have the necessary
+> methods in our reset_fn list, but since we're not locking the reset_fn
+> list between test and function-reset, it's also safer.  Thanks,
 
-Suggested-by: Zhi Wang <zhiw@nvidia.com>
-Signed-off-by: Simon Song <xinmengs@nvidia.com>
----
- rust/kernel/pci.rs | 59 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
+After exploring Ionut's patch[1], what I propose above is probably
+wrong.  We don't have any guarantees that the sibling topology is
+static and this bus-reset-possible function presents it as immutable.
+The existing bus-reset function has the same race, but the gap is
+smaller, let's not make it bigger.
 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 6013c89bfb5e..8fcec16e6ccf 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -106,6 +106,9 @@ unsafe fn register(
-             (*pdrv.get()).remove = Some(Self::remove_callback);
-             (*pdrv.get()).id_table = T::ID_TABLE.as_ptr();
-             (*pdrv.get()).driver_managed_dma = T::DRIVER_MANAGED_DMA.is_some();
-+            if T::HAS_RESET_PREPARE || T::HAS_RESET_DONE {
-+                (*pdrv.get()).err_handler = &Self::ERROR_HANDLERS;
-+            }
-             if T::HAS_SRIOV_ENABLE {
-                 (*pdrv.get()).sriov_configure = Some(Self::sriov_configure_callback);
-             }
-@@ -178,6 +181,54 @@ extern "C" fn remove_callback(pdev: *mut bindings::pci_dev) {
-         // before `devres_release_all()` in `device_unbind_cleanup()` is sufficient.
-         drop(data);
-     }
-+
-+    extern "C" fn reset_prepare_callback(pdev: *mut bindings::pci_dev) {
-+        // SAFETY: The PCI core only ever calls the reset_prepare callback with a valid pointer to
-+        // a `struct pci_dev`, while holding the device lock.
-+        //
-+        // INVARIANT: `pdev` is valid for the duration of `reset_prepare_callback()`.
-+        let pdev = unsafe { &*pdev.cast::<Device<device::CoreInternal<'_>>>() };
-+
-+        // SAFETY: The PCI core only calls this callback for a device bound to this driver. The
-+        // device lock excludes `probe_callback()` and `remove_callback()`, so the stored pointer
-+        // has type `T::Data<'_>` and remains valid throughout this callback.
-+        let data = unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>>() };
-+
-+        T::reset_prepare(pdev, data);
-+    }
-+
-+    extern "C" fn reset_done_callback(pdev: *mut bindings::pci_dev) {
-+        // SAFETY: The PCI core only ever calls the reset_done callback with a valid pointer to a
-+        // `struct pci_dev`, while holding the device lock.
-+        //
-+        // INVARIANT: `pdev` is valid for the duration of `reset_done_callback()`.
-+        let pdev = unsafe { &*pdev.cast::<Device<device::CoreInternal<'_>>>() };
-+
-+        // SAFETY: The PCI core only calls this callback for a device bound to this driver. The
-+        // device lock excludes `probe_callback()` and `remove_callback()`, so the stored pointer
-+        // has type `T::Data<'_>` and remains valid throughout this callback.
-+        let data = unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>>() };
-+
-+        T::reset_done(pdev, data);
-+    }
-+
-+    const ERROR_HANDLERS: bindings::pci_error_handlers = bindings::pci_error_handlers {
-+        error_detected: None,
-+        mmio_enabled: None,
-+        slot_reset: None,
-+        reset_prepare: if T::HAS_RESET_PREPARE {
-+            Some(Self::reset_prepare_callback)
-+        } else {
-+            None
-+        },
-+        reset_done: if T::HAS_RESET_DONE {
-+            Some(Self::reset_done_callback)
-+        } else {
-+            None
-+        },
-+        resume: None,
-+        cor_error_detected: None,
-+    };
- }
- 
- /// Declares a kernel module that exposes a single PCI driver.
-@@ -402,6 +453,14 @@ fn unbind<'bound>(dev: &'bound Device<device::Core<'_>>, this: Pin<&Self::Data<'
-         let _ = (dev, this);
-     }
- 
-+    /// Called before a PCI function reset, with the device lock held.
-+    #[optional]
-+    fn reset_prepare<'bound>(_dev: &Device<device::Core<'_>>, _this: Pin<&Self::Data<'bound>>);
-+
-+    /// Called after a PCI function reset, with the device lock held.
-+    #[optional]
-+    fn reset_done<'bound>(_dev: &Device<device::Core<'_>>, _this: Pin<&Self::Data<'bound>>);
-+
-     /// Enables Single Root I/O Virtualization (SR-IOV) for a PF.
-     ///
-     /// This callback is only invoked when `CONFIG_PCI_IOV` is enabled.
--- 
-2.43.7
+There are however immutable properties we can test that cover a fair
+number of cases.  For example:
 
+bool pci_reset_function_needs_bridge_lock(struct pci_dev *dev)
+{
+	return pci_upstream_bridge(dev) &&
+		!(dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET) && !dev->is_virtfn;
+}
+EXPORT_SYMBOL_GPL(pci_reset_function_needs_bridge_lock);
+
+We should be able to use this as a condition on whether we acquire the
+bridge device lock, in pci_reset_function() and in vfio-pci code.
+Thanks,
+
+Alex
+
+[1]https://lore.kernel.org/all/20261119123504.25906-2-ionut.nechita@windriver.com/
