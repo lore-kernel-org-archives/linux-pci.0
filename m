@@ -1,100 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.67.10.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795095092;
-	b=oiFU8PF0uZ9f346quLFQDEfXUPpT98gW9AWGuaDWyRTVu5b3K4qq6qKdY3vk9TtfWtu7
-	 T9OB2wcOTVYqfW5WZTOQi8RrzSMMaMK6ibGFKUt3Jd2CymDRiBXNDp4dRSMZuLsegDN8g
-	 LsOKOcOxgxXSrZh3yeJ5IBbwfGlG1LoALg/0yt9E6+zKFyGiJ4qxEISrZHFVijsx4KbSn
-	 i+88lq5uTkKPbyeQjjsXOx+dDyEPEYeUhLsYSR1MjOMydYoYleUi2cjZUldcBUYgsu2uP
-	 prSZVWtO5dISyk72NExduSGdzSUtoUahiU+dubDsTuX35QAcqYdDK51h5dXftpp03Aw==
+	t=1795095209;
+	b=wid6MnkeerPFQbFczr88M1vfc9wS1Zklfa5s4WLkelekimWNY/CBF/BnYzSxVhd7bx9/
+	 ag7djpF+QOPz4Y9u3Q9lYoRSAFGSONbaXiwrkKi95aIo9ktJ2ea3Cz9PWwEatr7waO2h1
+	 I/YsZNI0HmX/5ZjDp8sdSaWUU+7AddCFzZjEcypZm3P81SXltJwnCpi5lXSZbTwyOMy+O
+	 g4GZmJe1MHrGIVmR2Cd1OEs8VcJDTJf5JxElRoPogsIcuS1zfnK6Gp+T2zvIAR3fuCwPd
+	 /75MD9RxZxlw+/EaUTqxRP4p4Vwez8BDZvT8Qzj8xNuc4tBhQDXjMPaFykBJyvLVu4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795095092;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To;
-	bh=j+Za7bMQTz/jGW5KKJ1wZv8OZM3LMy2RfyXXPrr5ddk=;
-	b=ZdRUG3+cmj/6Oc6tD2jZ7NaPDFMu7XSpV1cnBeAyPmzZJC8OhoHyW7EJbAT3yHHqNVMO
-	 8WJiVZTI2FNbzt4feN93k9TPaU2biv2oRotTRdIQv8+2V2NS5Rt4Qef5UesPVhEXoh8kf
-	 sKkDtwP1D3efcTKvIW5vbyv3KxUv+BSDN4aIU1KONoWLrkOmbz0IjLKkeRCzvOHJv5iBZ
-	 JjAvwSNITlHcUr9PxlBFSu279Z1J+ud2U4W2OfEblxOFRXHOwCd35mqBb0K566OEJrLb5
-	 FQmAkSd32+DY1iK0m+iMr8Qd+WWQbc4wHejy0uzQP5RDwAcNby8ZXYYDA/n4APpB9Wg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795095209;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=f84ZTb0Is/JEuUgfe+xn+07VPHBEGmbhmWywDa7s0OM=;
+	b=1dRsWUlShhDBvVEz+/ajb3nv09I4rjrCr4seb46Xp/KdP+rg6XTTFNDOARiwxkKbxq1H
+	 qytf18jOgU52eBbsojuXh9xTFRydlP0f6NY6IDfkVXYq7Dca+W5LLn1R+DjHW2iQcXrMi
+	 AJEhE8PIn2RpdZfJcGIDkrTv2YYG+ykOvcSBXqC65cZjsJdkq0FayxXPrAYTX577uGV57
+	 wiiM5y8mKpFkW3Mhqg0sYwhWkp6zY56ZKcGQ7IjuS90XjzV6knm4KB4f2NL0qH5hI9qfI
+	 qkn2WxX3hDSm/5Dk0Aq4ayeAHfAKV4G5LszmkTE8tGN7AGTR6csdVW/8uNcBKt3VlRg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lunn.ch;
-	spf=pass smtp.mailfrom=lunn.ch;
-	dkim=pass header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=mOPIqIOm;
-	arc=none smtp.remote-ip=156.67.10.101
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HCrt+vDh;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0CE8606A320;
-	Thu, 19 Nov 2026 13:31:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A0CE8606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
+	by smtp.subspace.kernel.org (Postfix) with UTF8SMTPS id E26F5606A325;
+	Thu, 19 Nov 2026 13:33:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=mOPIqIOm
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-	bh=j+Za7bMQTz/jGW5KKJ1wZv8OZM3LMy2RfyXXPrr5ddk=; b=mOPIqIOmu6kDdwVuemWcNK9Dnn
-	3scHm6yoxWlXhjKDg88oGkRMzRyRggfFiPC7IQHuffZ0g5VsQiVACcLcbYFf/YJimxzK2sEH4Ma7z
-	s46ArUotTLBJyzxjIYKthUVRWJnOH1H0QxoK1FCOjd282vF3lK0QU0S6Yx/wpK07j6KI=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-	(envelope-from <andrew@lunn.ch>)
-	id 1xU2Dn-0002Ui-FK; Thu, 19 Nov 2026 14:30:39 +0100
-Date: Thu, 19 Nov 2026 14:30:39 +0100
-From: Andrew Lunn <andrew@lunn.ch>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	Chris Lu <chris.lu@mediatek.com>, Mans Rullgard <mans@mansr.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Cornelia Huck <cornelia.huck@de.ibm.com>,
-	Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, linux-coco@lists.linux.dev,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-sound@vger.kernel.org,
-	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH v3 18/31] net: phy: Use the compatibility driver
- attachment API
-Message-ID: <7c87310f-e1c6-4a84-8161-11a6e5d91785@lunn.ch>
-References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
- <20261118-device-trust-core-v3-18-d655875c4bfb@nvidia.com>
- <71c1b931-c553-46e3-b49a-51167f168ac4@lunn.ch>
- <20261119071811.GG162713@unreal>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HCrt+vDh
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C099B1F000C5;
+	Thu, 19 Nov 2026 13:33:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795095208;
+	bh=f84ZTb0Is/JEuUgfe+xn+07VPHBEGmbhmWywDa7s0OM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HCrt+vDh9QnPo7hQVylfXGTyMADakLhx2YRAKar9jsF+ty007XBfYXuGwPq3vjMYx
+	 OJ+7bHN1ldtu5d/lJt5MiW3gwRUoLrvEu4zNkO4G1a1vV8PUdCFgOOrV7nrEcrhLWZ
+	 dB52xRttNfAoeJO9k1uW9UHLF6fCCddJlEkiyZAmEIpsFsoQbaGkKGfL0KfTKq+lP3
+	 Vd9EcYZrL8uKmVdLwrcxEOja+4z3WP7B4lZXpfqe3z/ONbH7+bX6LdEFM901aiU5dk
+	 EPwsiHqm7dCeRhNooivMlkn47oI4J6JXd//Uqt5UUM2OHGsRBWSc5if0yYT56ILPdv
+	 VCHoPaudAgFPQ==
+Date: Thu, 19 Nov 2026 14:33:25 +0100
+From: Bartosz Golaszewski <brgl@kernel.org>
+To: Xiaolei Wang <wangxiaolei01@kaihong.com>
+Cc: bhelgaas@google.com, jic23@kernel.org, aik@amd.com, djbw@kernel.org, 
+	linus.walleij@linaro.org, bartosz.golaszewski@oss.qualcomm.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/IDE: Destroy host bridge IDAs on release
+Message-ID: <4zoge3uvwwni6qixfxo5or7finph27hmg5nwfekb3wbyxhzjco@wbfhad4y374q>
+References: <20261119065429.1824738-1-wangxiaolei01@kaihong.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -106,26 +59,41 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261119071811.GG162713@unreal>
+In-Reply-To: <20261119065429.1824738-1-wangxiaolei01@kaihong.com>
 
-On Thu, Nov 19, 2026 at 09:18:11AM +0200, Leon Romanovsky wrote:
-> On Wed, Nov 18, 2026 at 09:21:45PM +0100, Andrew Lunn wrote:
-> > > @@ -3813,6 +3809,8 @@ static int phy_probe(struct device *dev)
-> > >  	int err = 0;
-> > >  
-> > >  	phydev->drv = phydrv;
-> > > +	phydev->is_genphy_driven = phydrv == &genphy_driver ||
-> > > +				 phydrv == &genphy_c45_driver;
-> > >  
-> > 
-> > Why do this here?
+On Thu, Nov 19, 2026 at 06:54:29AM +0000, Xiaolei Wang wrote:
+> pci_ide_init_host_bridge() initializes two IDAs embedded in the host
+> bridge and reserves stream ID 255 in ide_stream_ids_ida, which allocates
+> an 128-byte IDA chunk.  pci_release_host_bridge_dev(), however, only frees
+> the resource lists and kfree()s the bridge, leaving both IDAs undestroyed.
+> The chunk becomes unreferenced once the bridge is gone.
 > 
-> This flag marks that driver is already probed, which is reliably
-> happening in phy_probe() under right locks. It was the easiest
-> way to battle AI reviews which don't agree with how PHY subsystem
-> performs driver bound.
+> This is observed at boot with CONFIG_DEBUG_KMEMLEAK:
+> 
+>   unreferenced object 0xffff000100d4df00 (size 128):
+>   comm "kworker/u16:3", pid 52, jiffies 4294892598
+>   backtrace (crc 6f8346e1):
+>     kmemleak_alloc+0x34/0x40
+>     __kmalloc_cache_noprof+0x3c0/0x56c
+>     ida_alloc_range+0x42c/0x554
+>     pci_ide_init_host_bridge+0x130/0x170
+>     pci_alloc_host_bridge+0x16c/0x1e0
+>     devm_pci_alloc_host_bridge+0x1c/0xb4
+> 
+> The 128 bytes is IDA_CHUNK_SIZE, and the trailing 0x80 in the object hex
+> dump is bit 63 of bitmap[3], i.e. the reserved stream ID 255.
+> 
+> The leak only exists in builds with CONFIG_PCI_IDE (selected by
+> CONFIG_PCI_TSM), so it is invisible on kernels without TEE-IO support.
+> Every host bridge that is freed leaks one chunk: a probe that fails or
+> defers, and a driver unbind, all go through the same release callback.
+> 
+> Add pci_ide_destroy_host_bridge() to destroy both IDAs and call it from
+> pci_release_host_bridge_dev() just before kfree(), symmetric with
+> pci_ide_destroy() which handles struct pci_dev.
+> 
+> Fixes: 079115370d00 ("PCI/IDE: Initialize an ID for all IDE streams")
+> Signed-off-by: Xiaolei Wang <wangxiaolei01@kaihong.com>
+> ---
 
-I've not seen the netdev LLM do a review yet. It will be interesting
-to see what it says.
-
-   Andrew
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com> 
