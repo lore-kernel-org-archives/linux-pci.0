@@ -1,56 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795107230;
-	b=WaO+heQ84r3+xDwRBqoqrSh0REa7esqPvjk7fJ07WMOeiGgOpnCSm+Qe4/kZAMJMwzbB
-	 HurPomkICtOIWRvsdPP0dBcdP6CcCiU1OUNHVVExn0u7GVgsYPgx70aCF5yaOsaeTAnwV
-	 AIovtl1Ftf00C88vQ6wJYXUWDpVlP+ysFsh6pDCt428FG64XTwnQ1Zdfq12yoKoll7dMU
-	 4AbQ4iwijn9dVoKGGW+1TDpW0FHfpE55ncfPVXBXtwIWaPLkF2StddGlMQEPTmRXXXRpk
-	 YC5hqmO8sPrEMLmJcAZDPeHUS1S8EJ1gbvDM4awQ31DMW6nLLfHFZD5YPp53DzYBNyg==
+	t=1795108035;
+	b=FCldHF0POV2la+CAmn1lpB0SZaC/eYBLJn1ns3W5hkZw4DvtW5ZULzymX1kAvA7LcwYT
+	 nz4Udu3eOuTBOaYnQGmFZCxt+PKaWkdSMfn4M/9jOjXIWEvt9U0fXxxmPrIpkqqABVUcI
+	 FTxsyySVXZWVWkOPOPKSuwSvpPazTBxHsS8qT3of3rkB08Akcphgr9F/N2utNunuaVz4Q
+	 jB2QRf1KmSk7H1W2BeMG4LtSiUP2VQUCU4ddoRh0kSay6f4Rwgq1arGESXyl3/vIkKMiD
+	 LxnfCL8wcmXZXJaqChgOyXYorRyHnH74B0f0vN1OnXPopS1FJBvJrA1um+N6APdbpWQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795107230;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795108035;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=jlYRN4IDAwWpF0znirb6L6eZ+ybQKX349IWRr+H23P8=;
-	b=KApim9wQAxv45xjeL9HWpoA192fJDX4xIQJ8vJ78Xs0eLwBsHRWReUwWZA+ifkHjqOkv
-	 iA9C3Oc69TkBKo9lWmu3v+8KtdhdRwdaMiGHDW/tZ5GVDF6v66hKPOIDgv6hVonYccupK
-	 zeZBBQ/kuPZmMUS8hZCV46EYWNXwwv7gdb5mf9pt02HtCvoumtkFAQUPgpAzMGxuCZ1GP
-	 p+H4VHPcLtwzkatQa3y+DD/EMdkPbUWKr1uzMx0bCNGOGXi8NvqSxWK7UFmdBEh2E2IMF
-	 +qPTWEtQLGF46a5bCJV5US84wd6ESpnO7iBhopF464RZ9pDk8KCUrJv3FefMG9y7IRw==
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=WVY95VfAf6Dx/V+HeJOcaUpQA+1y6sdbaKc5qI0bdTE=;
+	b=ZzfnQuksaOHBGYdoDLF+kMhgb5gijLbwoQRpIoeUsC+bLxyVRdm2hGe+mmYuGlFc6xQ7
+	 tRg9V05/jGQSM3jPPiYlLAuZLZZPd4nZMnohZhOij0m6geQYZ1yqD1VZPBYicXfXKslN6
+	 50hY11uBtge4Ej1hkkTOlEmjfsiL7onDr2JLkvHjlgQ1b4iwztZIfFu7FVNhnIkDRPCgg
+	 iFLPvb/3GQ1azwhCmt86TcJNy47A1c477x+uV2DopulzFaEA6hfXC85bkownsmBSHdrt5
+	 GqAVOtG5iMHjEE2WuVo6dY9Z4gUsuVto6o39snOclp50SR58YLP6b14ySzMCEC2nBEQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BnrwKGO3;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WWqA6WKC;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3102606A336;
-	Thu, 19 Nov 2026 16:53:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FB3360A2606;
+	Thu, 19 Nov 2026 17:07:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BnrwKGO3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 650691F000C5;
-	Thu, 19 Nov 2026 16:53:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WWqA6WKC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1D881F000CA;
+	Thu, 19 Nov 2026 17:07:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795107229;
-	bh=jlYRN4IDAwWpF0znirb6L6eZ+ybQKX349IWRr+H23P8=;
+	s=k20260515; t=1795108035;
+	bh=WVY95VfAf6Dx/V+HeJOcaUpQA+1y6sdbaKc5qI0bdTE=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=BnrwKGO35kcG0dSILYcHGYt7cjZRRVlycOBQwAgy+/mOVWG56TQoJGIWKBiUsrSDH
-	 8O7cMwwfDjS08pQftM7RP4WY5h6/AKLna7wdjpNEKlxwHxeDcjxvzImzmmKx/7rEOb
-	 DUFpJMT0Zc+qA7BbMTBs/yy2kVi6wIe3Td8iGPundMq88cWpY3YX9CfJw6TlEO3QVO
-	 reD0U1hdMD7NpCp0Lrdu4QDSwhL97RxyR6zTxuegGI1/HWspHvORaX76Ba83Od5yAW
-	 dkgPZJzAM0ljWWS+0srvPCmMZ4+4R5exy1zQRHwqx/DvwPAxQH2yYlZejmTS86hay/
-	 nsfd9xefzzpoA==
-Date: Thu, 19 Nov 2026 10:53:48 -0600
+	b=WWqA6WKCjvlnykjou3CUFE4kgGvpzu2p2Ez78nvX+FoeYtSZSSlCSLwhz/GClZmKt
+	 TQXRCymIC1R9B7v0Q/h7xRF1sw15rEdm5oqx5z6mPfQMYFkAOBFm0QGWHvV47Wy3h7
+	 SvgTPkLwkELFHTg9ygZ6hEUl5Ig4gbKrxHieplRiFNSqsDZyvPg9XN2nz+by0juALc
+	 9WwgKHvpr7qXzp40vyTQGftAqCRBamRP+i9Rg9ym7wkPnQT5tI1bvucpEFPKMtroQr
+	 CdiG5+Hzv4T88C+5PaJZGt39lH/AKcGCxDX1aWP7x7gqxMdsAgn6zCZFhAF7FQOGby
+	 z1Xe7OyBDrsgA==
+Date: Thu, 19 Nov 2026 11:07:13 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, Lijo Lazar <lijo.lazar@amd.com>,
-	Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
-Subject: Re: [PATCH v7 2/3] drm/amdgpu: Match VFCT using initial PCI bus
- number
-Message-ID: <20261119165348.GA811401@bhelgaas>
+To: "andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>
+Cc: Habil Eren =?utf-8?Q?T=C3=BCrker?= <habilerenturker@hotmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"bp@alien8.de" <bp@alien8.de>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"hpa@zytor.com" <hpa@zytor.com>,
+	"mingo@redhat.com" <mingo@redhat.com>,
+	"tglx@kernel.org" <tglx@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH v2 1/4] PCI: Add pci_power_t helper functions
+Message-ID: <20261119170713.GA817259@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,104 +64,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261112-vfct-regression-v7-2-69b1e0cf45c2@amd.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <av8o-tHHScd0gjZM@ashevche-desk.local>
 
-[+cc Lijo]
+On Thu, Nov 19, 2026 at 06:51:06PM +0200, andriy.shevchenko@intel.com wrote:
+> On Thu, Nov 19, 2026 at 02:35:46PM +0000, Habil Eren Türker wrote:
+> > Add helper functions to extract, set and compare PCI power
+> > states in the Power Management Control/Status register.
+> ...
 
-On Thu, Nov 12, 2026 at 03:54:54PM -0600, Mario Limonciello wrote:
-> VFCT records the PCI bus number from BIOS POST. The current bus number
-> can change after PCI core renumbers the bus, while accepting a mismatch
-> based only on device identity can select the wrong VFCT image when
-> matching devices are present. Compare against the bus number captured
-> from the firmware bus assignment before bridge renumbering.
+> > +/* Helper functions for PCI power management */
+> > +static inline pci_power_t pci_power_t_get(u32 csr)
 > 
-> Reported-by: Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
-> Closes: https://lore.kernel.org/amd-gfx/20261014080523.186533-1-rezanikzadch@gmail.com/
-> Fixes: 11c141672045f ("drm/amdgpu: Fix VFCT bus number matching with soft filter")
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
->  drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 23 ++++++++++-------------
->  1 file changed, 10 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-> index 08ed1eb695586..0ee4c6462c4d0 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
-> @@ -386,16 +386,17 @@ static bool amdgpu_read_disabled_bios(struct amdgpu_device *adev)
->   * VFCT entries contain the PCI bus number as recorded during BIOS POST.
->   * On systems where the kernel renumbers PCI buses (e.g. pci=realloc or
->   * resource conflicts), the runtime bus number may differ from the POST
-> - * value.  Match by device identity (vendor + device + function) and use
-> - * the bus number as a preference: exact bus match is preferred, but when
-> - * the bus numbers disagree we accept the entry if the device identity
-> - * matches.
-> + * value.  Match using the bus number captured when the device was
-> + * discovered, before any bus renumbering.
->   *
->   * Returns: 0 on match, -ENODEV on no match
->   */
->  static int amdgpu_acpi_vfct_match(struct amdgpu_device *adev,
->  				  VFCT_IMAGE_HEADER *vhdr)
->  {
-> +	struct pci_dev *bridge = adev->pdev->bus->self;
+> Why u32 as it seems the value is 16-bit?
 
-pci_upstream_bridge() does this and handles the case where pdev is an
-SR-IOV VF (that case probably never applies here, but we can still
-avoid that assumption).
-
-> +	unsigned char initial_bus;
-> +
->  	/* Vendor and device IDs must always match */
->  	if (vhdr->VendorID != adev->pdev->vendor ||
->  	    vhdr->DeviceID != adev->pdev->device)
-> @@ -405,16 +406,12 @@ static int amdgpu_acpi_vfct_match(struct amdgpu_device *adev,
->  	    vhdr->PCIFunction != PCI_FUNC(adev->pdev->devfn))
->  		return -ENODEV;
->  
-> -	/* Exact bus number match - preferred */
-> -	if (vhdr->PCIBus == adev->pdev->bus->number)
-> -		return 0;
-> +	if (bridge && bridge->fw_sec_bus_valid)
-> +		initial_bus = bridge->fw_sec_busnr;
-> +	else
-> +		initial_bus = adev->pdev->bus->number;
-
-Why can't we use bridge->fw_sec_busnr unconditionally?  The bus number
-at FW/OS handoff is the only bus number firmware could possibly know
-about.
-
-It seems like this should just be:
-
-  if (vhdr->PCIBus == bridge->fw_sec_busnr &&
-      vhdr->PCIDevice == PCI_SLOT(adev->pdev->devfn) &&
-      vhdr->PCIFunction == PCI_FUNC(adev->pdev->devfn))
-          return 0;        /* match */
-
-  return -ENODEV;  /* no match */
-
-It seems like the bus/device/function match should be solid by itself,
-so I don't know why you need to check Vendor/Device IDs (but I don't
-object if you do).
-
-Maybe this boolean style is typical in DRM, and it does match the
-strcmp() style, but it seems weird to me to write
-
-  if (!amdgpu_acpi_vfct_match(...))
-    /* do the matching case */
-
-> -	/* Bus mismatch but device identity matches (PCI renumbering case) */
-> -	dev_notice(adev->dev,
-> -		   "VFCT bus number mismatch: table %u != runtime %u, matching by device identity (vendor 0x%04x device 0x%04x)\n",
-> -		   vhdr->PCIBus, adev->pdev->bus->number,
-> -		   adev->pdev->vendor, adev->pdev->device);
-> -	return 0;
-> +	return vhdr->PCIBus == initial_bus ? 0 : -ENODEV;
->  }
->  
->  static bool amdgpu_acpi_vfct_bios(struct amdgpu_device *adev)
-> 
-> -- 
-> 2.43.0
-> 
+I think there's one reader of PCI_PM_CTRL that does a 32-bit read, and
+I figured a u16->u32 promotion would be better than a u32->u16
+truncation.  But maybe that reader should be changed to a 16-bit read.
