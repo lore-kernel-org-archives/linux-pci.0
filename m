@@ -1,60 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.17
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795069456;
-	b=FaA/xof81uqad8EX4siCWgEwYvp4VjMuftujfCSqy9VPHbDAE/vjFUsYSL+UJC+D+YkY
-	 iAE6CZ0zGBTMnnfgSGP9YwZ25CGYrslrdRnkcfmCAZd/rfsXPgfwjXonfJ8q3evxeAbEu
-	 E5dNVQXqBYIKJErlcdq1VTWzgrtTCMCouvjVCADxVUEfkKgJMfRcwXBJXPQpoloFe4bVi
-	 XHViIwQn2rY9n/tWax51RxwBwBVHJyPQRSdbm9gVCyJt8ez3cv/azlaTP302xfpRvTtKH
-	 w/ncxbJyTFDNjaWWfo50BrsJuRt0Fk7/I+IZezN39zsDhDEUpDfjsdqLTNH4KxMNyPA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795069456;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=DE8O97+cLTb2fOL+TR06WyWM36lYsEezlYTIeuQx1X4=;
-	b=OGIstq48ScOkyj+IQ0+YQg1bZ3SbjYJWlt55v939ir/NEyH5yITKu/aN6wMvNZC1590K
-	 Nq9Kv+ahU59amZb82ftJkjnTxCIq3rPsg3yuhPmzLN28wymv1jGoGkWSBqrTOmcHH66Mf
-	 hzmh2fcUFChMNZTImZ2WdotdW6pDXrDqzDX+k2XAe5RrrLw0OBHVc7FIgCKuBD2dr95wD
-	 kjKXRINzvXH0QRLNHVJGgn+ZSg+puwwN1N1tDuBS5Mvsfh29i/bHV8yco1AFSpT0shyY9
-	 qtr63PX29sqKeIJYoL6lDgJa9NRIRA5lo/21CK5+SrlwBClxDJAI+j0OxIGVuzeu/9A==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=none header.from=iav.lv;
-	spf=pass smtp.mailfrom=iav.lv;
-	dkim=pass header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=DfBt5dy8;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=136.143.169.17
-Received: from sender-op-o17.zoho.eu (sender-op-o17.zoho.eu [136.143.169.17])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.222
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795069557;
+	b=2pLeTvvPlRby0LG4V4H99dJP8EsfPJuGL9O/hHsnIGQgbI09bymPst0cdYxiYIZ7sqyF
+	 NGOL62WVSJo8Bf5dhwgoi+tHJA73EozRcR1Pxo1rIV0OZkmuXbO8i1OC1nVaNZDrTtOi/
+	 pu7oRmja2C6tF0gpoxzUYPAtxSyxW9N0+RqRznKo0k6HQsWcb/M2JLNTKwin7xtbGEXJ9
+	 +4pSnVCh2ZTCxdkvnCKN3ShFYtd6CrIkKXedEJhTbPSWBWyGr+aTaXJor/6F92vTXkyRa
+	 40C0j+5OjggEZHrWlSIbIhHMX4Aqzx74YrSG0rxM5qjJ5QukIuWn706VsknBx/Mi0NA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795069557;
+	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:CC:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
+	bh=04B/Kbaj4vrvBkYG9X6BLP4J62xiOfE4d23QuEZ2PlQ=;
+	b=2H7AAL5M4GDmjP39SFoPg9xXpOb1tPxcSHpHVbXwfgA3KFBhlCR7klbJLZ8Nvf+t0mMY
+	 X3o3G3Cqiw2dFc/XlaSpYwcmtNd3iBV2KzMvtRHNn4VNoWyDC+oL+WjZ14ycnynQLYgyd
+	 +FA87sv+VC0rXBwJes8CcgAN1TuvY72RLQX5/e6GMZ10Xsc+RaWIuGII178AOLsH2vXmT
+	 YcOkQb0LImuctNiQz6qxSk/xWbLrUjZrpYEyAX8eOol5BVzNXhS/iuVPo4BCexnkR04H6
+	 O4gkrlHcxgGmcG1tca8zSskQlSdwFhQwlXSmZZP+L7Cw0ZiK5uIUkwb8/vGto7X2x6g==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=huawei.com;
+	spf=pass smtp.mailfrom=huawei.com;
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=HwvqI6Ik;
+	arc=none smtp.remote-ip=113.46.200.222
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA6C606A325;
-	Thu, 19 Nov 2026 06:24:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9EA6C606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iav.lv
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iav.lv
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3990B606A320;
+	Thu, 19 Nov 2026 06:25:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3990B606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=iav.lv header.i=@iav.lv header.a=rsa-sha256 header.s=zoho header.b=DfBt5dy8
-ARC-Seal: i=1; a=rsa-sha256; t=1795069423; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=dtRWGpjk7C/pH1f81J5merSCphSkEokQv/E8YaSkNF4k7a9/7qYEp8t960nhaVwg+eTDXlSYWuFXbK9poDVZSQuHwY4HPQka6PxrWpR6SXnzgNUgNc9+CRw/VHis4kjcQnF1/XE3tWxEBxkKCpJG7wNJCbGqlte/CRAyRQN5XD8=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1795069423; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=DE8O97+cLTb2fOL+TR06WyWM36lYsEezlYTIeuQx1X4=; 
-	b=Ie00+LxniYfy5vjl7DO1UNTBoLmgX48CSWYC8PwVqMag/G4TuzDxYbZVX3UdC4yXe6WbdVccTyBUKfuABcHwBMXrhsR9cqfmkg+vrJQfOASVX9d2pa9BTEH1K4qJIPQYo2XusckmACB+yY/B2X0mKNologMFCW2X2lWDOxcjthE=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	dkim=pass  header.i=iav.lv;
-	spf=pass  smtp.mailfrom=iav@iav.lv;
-	dmarc=pass header.from=<iav@iav.lv>
-DKIM-Signature: a=rsa-sha256; b=DfBt5dy8/PibWVPur2s+Bn5rh5CwcSYwxqhCP3s2WuzOOGnnyNePpGxC8dPueCpaqaRGgaLLNBgI3gcnl8ldp5MxxHGROxl87QvNH5PzJWUaN504uu+fGlMI6HoCyn+YsQtkFoaDY5UzcJC5ZbWhx5FB9IEdYuPcIqa90BYiSRE=; c=relaxed/relaxed; s=zoho; d=iav.lv; v=1; bh=DE8O97+cLTb2fOL+TR06WyWM36lYsEezlYTIeuQx1X4=; h=Content-Description:Content-ID:Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:List-Subscribe:List-Post:List-Owner:List-Id:List-Archive:List-Help:List-Unsubscribe:MIME-Version:Message-ID:Resent-Sender:Resent-Cc:Resent-Date:Resent-To:Reply-To:Resent-Message-ID:Resent-From:Sender:Subject:To:Date:From:Message-Id:Reply-To:Subject:To:Cc;
-Received: by smtp.zoho.eu with SMTPS id 1795069422691713.2242534782733;
-	Thu, 19 Nov 2026 07:23:42 +0100 (CET)
-Date: Thu, 19 Nov 2026 08:23:41 +0200
-From: Igor Velkov <iav@iav.lv>
-To: Anand Moon <linux.amoon@gmail.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>, linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>, iav@iav.lv
-Subject: Re: [PATCH] PCI: rockchip-host: Support hibernation with endpoints in D0
-Message-ID: <20261119-re-anand-rockchip-hib-rails@iav.lv>
-In-Reply-To: <CANAwSgRaHubdh8o5Zd3k5Sa_jf5fWuEuCXqbQu7gGL71MwC+8g@mail.gmail.com>
-References: <20261119-b4-rockchip-pcie-hib-v1-1-05df24cc77e6@iav.lv> <CANAwSgRaHubdh8o5Zd3k5Sa_jf5fWuEuCXqbQu7gGL71MwC+8g@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=HwvqI6Ik
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=04B/Kbaj4vrvBkYG9X6BLP4J62xiOfE4d23QuEZ2PlQ=;
+	b=HwvqI6IkrbAt2Nn1mMM+JnTydUqvIxKY01wrQEbnr2uzyQmUgJHl+buYs8IzGxwwQ7ekttN7O
+	pLY/G6wxZDnL1csUzuKiFfroqKOVnRmxkezogHIbCLpvTMHJbaAbHb9gMNfRITcAJRKf4zPvP3o
+	Hi/oERqmQkVL2u8JdKkqW3c=
+Received: from mail.maildlp.com (unknown [172.19.163.214])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4jVT3v2lgKzLlSk;
+	Thu, 19 Nov 2026 14:25:31 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 810BA4056C;
+	Thu, 19 Nov 2026 14:25:51 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 19 Nov 2026 14:25:51 +0800
+Message-ID: <142d6813-8677-4524-97a3-fabe77624b39@huawei.com>
+Date: Thu, 19 Nov 2026 14:25:50 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,20 +62,99 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v21 06/13] PCI/TPH: Add macros to check standard and
+ extended TPH support
+To: <sashiko-reviews@lists.linux.dev>
+CC: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+References: <20261118091238.45992-1-fengchengwen@huawei.com>
+ <20261118091238.45992-7-fengchengwen@huawei.com>
+ <sashiko-outbox-220654@kernel.org>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <sashiko-outbox-220654@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-On Thu, 19 Nov 2026, Anand Moon wrote:
-> It looks like we aren't disabling all the PCIe regulators (0.9V, 1.8V,
-> 3.3V, and 12V)
-> during suspend and re-enabling them during resume.
-> Shouldn't we power down all of them on suspend and bring them back up on resume?
+On 11/18/2026 6:06 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential
+> issues to consider:
+> - [Medium] PCI/TPH: pcie_*_tph_supported() macros return true when
+>   pci=notph is set
+> - [Medium] PCI/TPH: pcie_*_tph_supported() macro stubs do not evaluate
+>   or type-check pdev
+> --
+> 
+> commit 80062e3e48e12a212317dc82386d43fd4c4bb4c9
+> Author: Chengwen Feng <fengchengwen@huawei.com>
+> 
+> PCI/TPH: Add macros to check standard and extended TPH support
+> 
+> This commit adds the pcie_std_tph_supported() and pcie_ext_tph_supported()
+> helper macros to query standard and extended TPH requester support via
+> pdev->tph_max_type, along with stub definitions for !CONFIG_PCIE_TPH.
+> 
+>> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+>> index b2bec02f3ea0e..50640fdc84e14 100644
+>> --- a/include/linux/pci-tph.h
+>> +++ b/include/linux/pci-tph.h
+> [ ... ]
+>> @@ -21,6 +23,18 @@ enum tph_mem_type {
+>>  };
+>>  
+>>  #ifdef CONFIG_PCIE_TPH
+>> +/**
+>> + * pcie_std_tph_supported - check standard TPH requester support
+>> + * @pdev: PCI device
+>> + */
+>> +#define pcie_std_tph_supported(pdev) \
+>> +	((pdev)->tph_max_type >= PCI_TPH_REQ_TPH_ONLY)
+>> +/**
+>> + * pcie_ext_tph_supported - check extended TPH requester support
+>> + * @pdev: PCI device
+>> + */
+>> +#define pcie_ext_tph_supported(pdev) \
+>> +	((pdev)->tph_max_type == PCI_TPH_REQ_EXT_TPH)
+> 
+> [Severity: Medium]
+> Do pcie_std_tph_supported() and pcie_ext_tph_supported() return true even
+> when the kernel is booted with pci=notph?
 
-This patch keeps the rails as they are: suspend_noirq() already turns
-off only vpcie0v9, and the other rails stay on from probe to remove.
-The 3.3 V and 12 V rails power the endpoint; cutting them in suspend
-loses the state that the PCI core and the endpoint driver expect to
-keep in D3hot. Doing that would be a separate change.
+The helper pcie_std_tph_supported() / pcie_ext_tph_supported() report hardware
+TPH capability, which is separate from the global pci_tph_disabled knob. The
+pci=notph knob only blocks pcie_enable_tph(), it does not erase hardware
+capability.
 
---
-Igor Velkov <iav@iav.lv>
+> 
+> pci_tph_init() populates pdev->tph_max_type during probe without checking
+> pci_tph_disabled, while pcie_enable_tph_ext() checks pci_tph_disabled and
+> returns -EINVAL.  With pci=notph on the command line, callers such as the
+> VFIO TPH code later in this series treat TPH as supported and expose it in
+> virtual config space, only for hardware enablement to fail with -EINVAL.
+> 
+>>  int pcie_tph_set_st_entry(struct pci_dev *pdev,
+>>  			  unsigned int index, u16 tag);
+>>  int pcie_tph_get_cpu_st_ext(struct pci_dev *dev, enum tph_mem_type mem_type,
+>> @@ -33,6 +47,8 @@ int pcie_enable_tph(struct pci_dev *pdev, u8 mode);
+>>  u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
+>>  u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
+>>  #else
+>> +#define pcie_std_tph_supported(pdev) false
+>> +#define pcie_ext_tph_supported(pdev) false
+> 
+> [Severity: Medium]
+> Should pcie_std_tph_supported() and pcie_ext_tph_supported() be static
+> inline functions taking struct pci_dev *pdev instead of macros?
+
+OK, will fix in static inline
+
+> 
+> Because the !CONFIG_PCIE_TPH macros discard pdev without evaluating or
+> type-checking it, callers whose local pdev variable is only passed to
+> these helpers (such as vfio_tph_vcap_rewrite() later in this series)
+> trigger a -Wunused-variable warning and break the build under
+> CONFIG_WERROR=y when CONFIG_PCIE_TPH is disabled.
+> 
+
