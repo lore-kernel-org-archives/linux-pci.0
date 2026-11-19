@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.49
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.12
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795120187;
-	b=FTicgfS9gn15LpBMZSvI39mYIJMYRuvYv6ITYQ56jKbWHqwIkb9hqPtvP0dtONXNcz/P
-	 noDPmuZk1BzN6rnpCopmTrKQwZabO/nY7+I0DURGD+j2oAYg1n2CefWNEHl22SP3fOZ+K
-	 u+we6mCDHaJCtB5yHnCiUQnCyMc3tIg4MORRtQjKYnnWG/tbBlyB/qlW+0sQqoh8C/0e9
-	 pL6EyTROTgMKZJPQeQLZolTt0Zd2vfK3LvjYlNgpIfPzeogmZCyqhL6j2yY/U6kMyGzuv
-	 Q+twLqJ8cVSo02daYYTnKNJoL9Z6KjXU+TcAe/0e6krKKczAjH7xLgXLSkfhy8H51jg==
+	t=1795120201;
+	b=ebeaZCQzSU2yTCw9NjC5caLKS/ce+v3Q6DNrrzli+OqX8a5KHaAv+55Bokl+AGTPOjBH
+	 U4WAgZaJAZHo7RgBHCEJX3+qVui0QKFbcNxOqBq6qzXc3hjNPHlTCUNCemq6Ey5sItPZU
+	 JMgtXI555Wa+d3/QMd+2siSxp29U2zegwD9wckLkCHzfSPcdtHLVHy/TdnCVOfMMd2ddJ
+	 wiBqLaIYX4rgpLofqgmnQ++6CsaV3e/bq1pcl5ATalVgEaAA02EHzXxoEC0OsPzE1oMIL
+	 Nq3CRZObv6H5i3bdpsr5NdyT3zqKtBS/tEuKjM7jPKR7LGLaRRpBhoNrJ0GfPwz6Xfg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795120187;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795120201;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
@@ -26,53 +26,53 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=EWDSN4LlShSQW9W8s/r7hLS++Lndl+cw6aBcjCj2hmE=;
-	b=k4mOyv3plPMQqLX7AfbTYoBMel/UaTlPr8H1qkjXBmB3ZX4DPZvTbQVMQ7PtkXdQC6hQ
-	 6R6aTytvDAYYfKFfTo4ZTjwY+vqp2reTiGeG8Sc/It2juLz/DWuuSaD8nIFbLRS5MsUum
-	 VyuphPqQBva2wmIfew6W/j6mV6CuO3pDGQHJ/I+OmFJn2XqGocpaYuo4S3vhz9BPQHu+L
-	 6fwa2TalG60nMy8R++CiyREZj45ZGVEl2QIF99I8Aasfc4fU7pYuM4JJiK4wAhUNP2Kui
-	 Fy3lPnWeUXs1NVzuCvCLN3QPKJPGaTGbuNODsbYLpwbPNhCsphuvm/ROT1HbD5QJptA==
+	bh=S1APifwzJ+I0NYZ7SwPxTo+nw1nVmfQyRClwj6VQJ/s=;
+	b=kuKItRVh7ddonAInUgTzWqQoTY8vg5a4ljO0D7iG4WNMsUugkHRb07tHh+JWJgJ4aBj7
+	 MKw5oDdO68hWBWDmHBHs9u123ObHxiUnbccXdHuHokA9fI6otjxcdjLTYBuyrUuA0yAIB
+	 d6G6U0grUc9XA8Fq79ZMWIKDWsrqqLim+HtMqHa2NABy6zoHO9YhY+fQqXHxDVv+tiK94
+	 BSthKy4qg7ErBUWtbxUc9ImgnslYdOYylQlUrj8It2pzFa4y0wNttEi+i13Sai76moRSU
+	 18sLtpBntN1kC1fiIXtLbo3iaSjS4VlvnI9vKMMkadWeSQqa9Hs+jgotk0N+DZDzibQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=uikgT5Gf;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.49
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010049.outbound.protection.outlook.com [52.101.61.49])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=anvuvoGR;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.201.12
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010012.outbound.protection.outlook.com [52.101.201.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A244C60A2609;
-	Thu, 19 Nov 2026 20:29:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A244C60A2609
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A3B2606A331;
+	Thu, 19 Nov 2026 20:30:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1A3B2606A331
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=uikgT5Gf
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=anvuvoGR
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RyVqrA/mTSdDCMlIYyN75F6z2MibnreN5p1mJXGnDgt3fcvdfXHffNiWh71eQIswPNjwldrY0q4lkj23w2jCB4ndVWY2UTrqpjOw0XJs1THQvxGoBVpU2AOvxrnCDaQu/J8Gef8Z+xvER2RgH1NzSCjcCgtGDfkJSO9mRkaJAFn+CbU3dCj5GIqCwdTKG22gfjWRo0xilrWGZNruMu9w1jbx3VfTdxfKe0JPzIj6dmylz9sch7XMeOsEHqVlW1/D59nzYYs6lwW3nrNE4qfvsswGnOdl+AjefgoT3z/oM4dUkiIOCVm3lsLKlYzvr8MAIQi1LvUpKzV9+uwYRaryLw==
+ b=UagCFxkee6A2+QZetRpVFGRl7WV3Ws62jfEMaPvf0xrnC+Lp654TXksIKbB9c8m2IX3XZzTbdi++3y9OkweU3Czg7bidbq1lbVWsmRC7qQLf/X47V3cZydfogqYOU5e4V8s6xvy6MJRuvyC4zJQqpTH1ozWe1Jj78UMwr+qVTDOXfUL5KLABztnzHZMuh+WEP6JOhw5TEf/O4UJ01J/4ZQuI42kH/1WPYrWEqlMl/+YRYU0r6aYpcsBFnOT/boLg7myZkeE1U5/xaokzTaZNSzVQALCFUrS4AvJv/XhWrmvdVMtk3LI5kAqvirKBtkNNsRHqMhAGRspxwS0dRdBYyg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EWDSN4LlShSQW9W8s/r7hLS++Lndl+cw6aBcjCj2hmE=;
- b=tcye+7YKum4EfMKodbvTg7DcgR3zkrmk6CQ38xpSzZDjdzI4u4npBrBnJXIfVgGaEDh5I3+RsMpVTOr5wCenPHq93z26tSDCwOv6LvJ1GZbEyGN3aK069nmDVjw+gxoT/5hD/94c32Ei0uEZjR8hYFNJprAwu2OGxV2hUxc3j+mpaGPQo7FhwdCmPvmPSCMwzoX/pEMMdXPtdLWQgHWe7Ij/CKGybSVto3HFIyspkn82diAezeh4d7/WPiKHwlAZcVHNpmC8klmNjbKUN4IeMDeKprFFsbhN3/icq/eCT6rf+AR15t2haVnCj9zRla43F8xCpNDh3KYy0qS3AxIppQ==
+ bh=S1APifwzJ+I0NYZ7SwPxTo+nw1nVmfQyRClwj6VQJ/s=;
+ b=RKb1B2M6b3mDz5M7A52HQit6GwjPZEdDSc1+51Y4IaiQ9TmDbVRPr9CmzEdx65zYsFLwTd5P7fp0UuDSjdlfg9AkEX0/aNK/IS3ngdVj97ZtDV4fZi3KS2jnwC/rtvOIGyqpQhekR2GHpVPH2s40ryshuwvMz+ZbptbxC3tMchnfv9Y0+ROMh6hFzzk+A5HGWtb6W7zTDXjx7SoAKybe4q+RT+C5y2LOJ5ADyN8GAMtyV4RpjhtbyG12YdyviCJJejDfDAATHXUegpDEtyFg+jwQxy4tMTvzjHJT2wq0Uy4LFOwt4gidHdWt+fol7r5wBS+jLU5BHb8UIVCeMGZOig==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EWDSN4LlShSQW9W8s/r7hLS++Lndl+cw6aBcjCj2hmE=;
- b=uikgT5GfW4eXOOHN4gyuRDzvrGFPgGRwz7CMCB4WAwclgSPYDXJdqAY6thVNOTYvpVR5T98AgHrWGmizTJmDdqJ11TwefWD0cf3zrIX54y0ePTuU1F4RAWZ4bIWN/BgNp0lGXZqZvV29JB6OWsS9VPezWy7Etg4OHxT0uk+YQtg=
-Received: from CY5PR18CA0008.namprd18.prod.outlook.com (2603:10b6:930:5::11)
- by CH3PR12MB8074.namprd12.prod.outlook.com (2603:10b6:610:12b::9) with
+ bh=S1APifwzJ+I0NYZ7SwPxTo+nw1nVmfQyRClwj6VQJ/s=;
+ b=anvuvoGRV/a05LfqNP6mLzsWYWT13sXS97iFIpzICkKMaix39Wd3+CT4cSPrVfSwPIUWFFXRah6V6mv76uDLlN8kA3qo/3ucDysOl8zR1ZPG7EhRUo2upP0Cqqlx+7v0HxUNhLXMn4joVMgf9upyoKMDvXFbjZ9TFBBO/Tv/j18=
+Received: from CYXPR03CA0036.namprd03.prod.outlook.com (2603:10b6:930:d2::20)
+ by CH2PR12MB4149.namprd12.prod.outlook.com (2603:10b6:610:7c::13) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Thu, 19 Nov
- 2026 20:29:12 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.10; Thu, 19 Nov
+ 2026 20:29:56 +0000
 Received: from CY5PEPF00000E86.namprd05.prod.outlook.com
- (2603:10b6:930:5:cafe::61) by CY5PR18CA0008.outlook.office365.com
- (2603:10b6:930:5::11) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.13 via Frontend Transport; Thu,
- 19 Nov 2026 20:29:11 +0000
+ (2603:10b6:930:d2:cafe::a8) by CYXPR03CA0036.outlook.office365.com
+ (2603:10b6:930:d2::20) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.10 via Frontend Transport; Thu,
+ 19 Nov 2026 20:29:56 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -82,11 +82,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from satlexmb07.amd.com (165.204.84.17) by
  CY5PEPF00000E86.mail.protection.outlook.com (10.167.247.186) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:29:11 +0000
+ 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:29:56 +0000
 Received: from weiserver.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Thu, 19 Nov
- 2026 14:29:09 -0600
+ 2026 14:29:55 -0600
 From: Wei Huang <wei.huang2@amd.com>
 To: <dmaengine@vger.kernel.org>
 CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
@@ -96,9 +96,9 @@ CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
 	<weixugc@google.com>, <bhelgaas@google.com>, <Shyam.Iyer@dell.com>,
 	<linux-kernel@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>
-Subject: [PATCH v1 27/44] dmaengine: sdxi: support suspend and resume
-Date: Thu, 19 Nov 2026 14:23:03 -0600
-Message-ID: <20261119202321.1734355-28-wei.huang2@amd.com>
+Subject: [PATCH v1 31/44] dmaengine: sdxi: amd: prevalidate QoS operations
+Date: Thu, 19 Nov 2026 14:23:07 -0600
+Message-ID: <20261119202321.1734355-32-wei.huang2@amd.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261119202321.1734355-1-wei.huang2@amd.com>
 References: <20261119202321.1734355-1-wei.huang2@amd.com>
@@ -117,455 +117,222 @@ X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY5PEPF00000E86:EE_|CH3PR12MB8074:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9b085a4c-cd09-4db4-215f-08df467bc582
+X-MS-TrafficTypeDiagnostic: CY5PEPF00000E86:EE_|CH2PR12MB4149:EE_
+X-MS-Office365-Filtering-Correlation-Id: ab34d851-106b-4133-7fda-08df467be006
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|82310400026|36860700016|7416014|1800799024|376014|18002099003|22082099003|261009223027099003|56012099006|11063799006|260925021311599003|260925021911599003|260925022911599003|261026140227099003|10067099003|261026121527099003|261102123227099003|261028144727099003|261022075727099003|261022105027099003|261102130727099003|261021121427099003;
+	BCL:0;ARA:13230040|376014|1800799024|7416014|36860700016|23010399003|82310400026|10067099003|11063799006|56012099006|261021121427099003|261022075727099003|261102123227099003|261009223027099003|22082099003|6133799003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	glbfu1+/mQWWY60g9qD3skB6I2cs5jxB+y+kORZ2ztFrBOsy90uD8q1pfvxtXf7ZGKNLli8WqOBrnLc+Lov57mMVvCnKbQkzOIOWGMqHgNkbNuVhDEmgEnEu6a72bTTb6Zn9VrJlmhMhcxL0eZ8XjPft1VNQgsLQ1mvF8Cd/s4CV+yVPlH2RlBcqOPO+UMkNfaz0FJyJSTYlLAgH3bMQ65Ssx5Ky/oP1JLjCSMlbwmUCsbTfPm8G5PpqLT7OwP9VABhAAED/wjXoSiOOj5/x8JZP2x5WA0hKKx+yZDJn7yeqDICPkhTb5aWCfyo28sEqoATBQVNutn6H08ImmFMTCdXXKJ1UcvDMosZ6Rt4slBcMZmX7tHDC/gOFzVEsa+i04cGlSs5FHnp31hK4q6KOq2pKKw6vmvTax8bz9frlpMecHbCw1y/AN2E6vKzKfa1n/IjuxT1PKBDua+zF1IAaPug4oK31QFdXyCWUGF0lGVpMglthbqPBnboqZMAwsvUrCSjkiYtoB/VjalZuL9Y6JeRcbaJrsXw/KNju35U77A/vW3HKNOdv0QiQEGB1gI4e2wp+702utzx7tBK7lP4DY2PV0BYwm04Z83MaPQuKHXeOkMbOclDlpEFsO3YJedvEoyeQUnx/SyqMDqFootnGhlR+rVKd+g91Ggly83BS3jG2UFvSEjmxF/jzWprLR5Yrz0IIrB2bf5Q7Tc8VnQoa1g==
+	gpNvXSKUSequ8bxrWM1sjomQjZ21GBgop9NmEVdwFWzo1G+cqYBwecVkT20TjDwoaDPfT0b6kBp5coUdoKgzXl5HwiUC8LLmWRrE6R9/TEdUZZN3jxql9vUKqXXrynEI2aLNSBc6cXtNR4PsbK8RBom8aaum8F5+nog0GQ0KsvOiaz1NxTs1Eupp7YJiDunZ0gSosmqRx3BrdAk2bK0b6aSTVszghJj+GPBiK0u+qvPK+i9NURsN8PMbMyWR8PxVwaws8KAbnz/vLVwfbrqyXeB+O6hpwDDtzpWxDYepFpqYKAmt10GwrlXZv3ESjIIX31jHyQ1yTjJy5laGV+uwy10Qjpi0nA+657zv/t6yrHqsAV5v4QvpT1qrAqT5eSm14PoFlRqBaKxyokLLpaVok3G7KtZJHvQrsmxp31yJqgMA5XC2ISjvnm52XZqb9wZpfMoSn/BLY6MnxedqC4YMWZXqocaA8lc7OiOuL5LEgVFqshjSK5EYTJjVFLyAQpbzk0fDO7ye7kLGSa3mS1e7MtiDWL8kTYt4cjAPaPI8mA6GlxnF8GmzEc9EYXWa9OOMqIB7Fl23Fp2jSM0/aPzKt/ao3ouYAsimgRBZ1PsMkplhVDk/rWuof7cyhZCm7uUPljnxH+sJFBDfBOxqeHDYGz75X315sPJTjvJ81N0CsLe8iHh6WazWTJh2Nz7hEnWoE0UfcLtS7gJHIbMOCqoLEg==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(82310400026)(36860700016)(7416014)(1800799024)(376014)(18002099003)(22082099003)(261009223027099003)(56012099006)(11063799006)(260925021311599003)(260925021911599003)(260925022911599003)(261026140227099003)(10067099003)(261026121527099003)(261102123227099003)(261028144727099003)(261022075727099003)(261022105027099003)(261102130727099003)(261021121427099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(36860700016)(23010399003)(82310400026)(10067099003)(11063799006)(56012099006)(261021121427099003)(261022075727099003)(261102123227099003)(261009223027099003)(22082099003)(6133799003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	2THy1fcONFl3H7KP3yvQ4dOeKQJ9+CM9a9KoFTulGITFDMhCaW79owFbD+C/vPCD4czNVfMzqs5bnHCUJl+rdcGpm63qaZQUag4vYAxHgoyBCGkS9s7AiSMtNEw4Bg3ZJzD6Az6aXyYSz05zKyR6hacE/rLdkOK5Bht6j2BAxwFp44X6rxmAEsaxhG0z3h299PsqKHYmakon7F4pmozpGjcy/eaYiYqYlCTDzh0wlvVrjTShlI8IVetaN2BN4lh5WMxmW81oznxDreXO/wUUv98HNYZcIY+72HGTpHqsilUlwpuDVr/9xFjOIHgi+FQvRBavGUvX+3S5P4Sj1gu0CZHS5bHuU/DHotmPGwVkT56Qd4GTCrMOSwC2h2yewICwZr62EIdq88+jD+ArteeUqzhZ2PLo5IagrTmnBCopQSsjEjd7gYkgKRxiB8us3EvO
+	CWta43xNihIWeMh0HuSj9l7HEmpd89cm+Frz+mCjROJ/mM+WY5aANroG5Wx5kaz02uBgAzYqUMKlkB2jAoFY2UuoebkX6sjUBi/u9sKRYK52097yFm/7IUgJT5n3Ea9BkNFg4LMrCtAlK2cXOC63xU8rj+VgTU+B4G0fZWKB+4vLfoumMMl45ZvXQEILWWGGObvQBHyWfxG5Wj/4Pat64zKaRGzQbx2LCJsJKd3KPNnKcFSDvSzrgs/kIj2In36C2LXWk7nlsicwO+YGd15pNlixvbcly6Df4VA1KWoMlBYdoWpZjxlHfc19YE8pJ4qWe8gJ9VwCm0YoQYgIYn2eUkht4ljhupAY579jlSMB0+D5qgsuuZDh0iyRTcQHaMoQ12/qln0kCR32X1XO7XBDy+QOQcT6kSas53wJ65UaV5U8VG/U7c16Kr9RyueNXNFJ
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:29:11.7594
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:29:56.2463
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9b085a4c-cd09-4db4-215f-08df467bc582
+X-MS-Exchange-CrossTenant-Network-Message-Id: ab34d851-106b-4133-7fda-08df467be006
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	CY5PEPF00000E86.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8074
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4149
 
-During suspend, save function control state, stop the function with
-error interrupts disabled. Similarly restore context tables, RKeys,
-error logging, the admin context, and previously running client contexts
-on resume. Keep PCI responsible for wiring the core PM callbacks.
+Add software prevalidation for QoS pool updates, function assignments
+and telemetry requests so predictable admin faults are rejected early.
+These helpers will be used by code introduced later.
 
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 ---
- drivers/dma/sdxi/context.c |  11 +++
- drivers/dma/sdxi/context.h |   1 +
- drivers/dma/sdxi/device.c  | 186 +++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/error.c   |  56 +++++++++++
- drivers/dma/sdxi/error.h   |   2 +
- drivers/dma/sdxi/keys.c    |  14 +++
- drivers/dma/sdxi/keys.h    |   1 +
- drivers/dma/sdxi/pci.c     |   5 +
- drivers/dma/sdxi/sdxi.h    |   8 ++
- 9 files changed, 284 insertions(+)
+ drivers/dma/sdxi/amd/qos.c | 174 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 174 insertions(+)
 
-diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-index 91c2837bbe82..12502021600d 100644
---- a/drivers/dma/sdxi/context.c
-+++ b/drivers/dma/sdxi/context.c
-@@ -1245,6 +1245,17 @@ int sdxi_cxt_notify_mm_release(struct sdxi_cxt *cxt)
- 	return ret;
- }
- 
-+void sdxi_cxt_resume_cleanup(struct sdxi_cxt *cxt)
-+{
-+	if (!cxt)
-+		return;
-+
-+	mutex_lock(&cxt->cleanup_lock);
-+	if (sdxi_cxt_is_user(cxt) && sdxi_cxt_cleanup_requested(cxt))
-+		sdxi_cxt_queue_cleanup_locked(cxt, 0);
-+	mutex_unlock(&cxt->cleanup_lock);
-+}
-+
- void sdxi_cxt_vma_open(struct sdxi_cxt *cxt)
- {
- 	if (!cxt)
-diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
-index 22a33291020f..c3f3353874a0 100644
---- a/drivers/dma/sdxi/context.h
-+++ b/drivers/dma/sdxi/context.h
-@@ -116,6 +116,7 @@ void sdxi_cxt_kill(struct sdxi_cxt *cxt);
- void sdxi_cxt_kill_stopped(struct sdxi_cxt *cxt);
- void sdxi_cxt_release_user_handle(struct sdxi_cxt *cxt);
- int sdxi_cxt_notify_mm_release(struct sdxi_cxt *cxt);
-+void sdxi_cxt_resume_cleanup(struct sdxi_cxt *cxt);
- void sdxi_cxt_vma_open(struct sdxi_cxt *cxt);
- int sdxi_cxt_vma_acquire(struct sdxi_cxt *cxt);
- void sdxi_cxt_vma_close(struct sdxi_cxt *cxt);
-diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
-index cb7056916c3d..f0e447e7a81b 100644
---- a/drivers/dma/sdxi/device.c
-+++ b/drivers/dma/sdxi/device.c
-@@ -22,6 +22,7 @@
- #include <linux/time.h>
- #include <linux/xarray.h>
- 
-+#include "admin.h"
- #include "context.h"
- #include "dma.h"
- #include "error.h"
-@@ -526,6 +527,190 @@ static void sdxi_dev_release(struct device *chardev)
- 	kfree(sdxi);
- }
- 
-+static void sdxi_restore_admin_cxt(struct sdxi_dev *sdxi)
-+{
-+	struct sdxi_cxt *adm = sdxi->admin_cxt;
-+	u64 doorbell;
-+
-+	if (!adm || !adm->sq)
-+		return;
-+
-+	WRITE_ONCE(adm->sq->cxt_sts.state,
-+		   FIELD_PREP(SDXI_CXT_STS_STATE, CXTV_RUN));
-+	dma_wmb();
-+	doorbell = le64_to_cpu(READ_ONCE(adm->sq->write_index));
-+	writeq(doorbell, adm->sq->doorbell);
-+}
-+
-+static int sdxi_restart_contexts(struct sdxi_dev *sdxi)
-+{
-+	struct sdxi_cxt *entry;
-+	unsigned long index;
-+	int result = 0;
-+
-+	xa_for_each(&sdxi->client_cxts, index, entry) {
-+		struct sdxi_cxt *cxt;
-+		int ret;
-+
-+		if (!entry)
-+			continue;
-+		cxt = sdxi_cxt_get_by_id(sdxi, index);
-+		if (!cxt)
-+			continue;
-+
-+		mutex_lock(&cxt->cleanup_lock);
-+		if (cxt->fatal || cxt->handle_closed || cxt->mm_dead ||
-+		    cxt->cleanup_stopping ||
-+		    cxt->resources_released || !cxt->started) {
-+			mutex_unlock(&cxt->cleanup_lock);
-+			sdxi_cxt_put(cxt);
-+			continue;
-+		}
-+
-+		ret = sdxi_adm_start_cxt(cxt);
-+		mutex_unlock(&cxt->cleanup_lock);
-+		if (ret) {
-+			dev_err(sdxi->dev, "failed to restart context %u: %d\n",
-+				cxt->id, ret);
-+			sdxi_cxt_kill(cxt);
-+			result = ret;
-+		}
-+		sdxi_cxt_put(cxt);
-+	}
-+
-+	return result;
-+}
-+
-+static void sdxi_resume_cleanup_contexts(struct sdxi_dev *sdxi)
-+{
-+	struct sdxi_cxt *entry;
-+	unsigned long index;
-+
-+	xa_for_each(&sdxi->client_cxts, index, entry) {
-+		struct sdxi_cxt *cxt;
-+
-+		if (!entry)
-+			continue;
-+		cxt = sdxi_cxt_get_by_id(sdxi, index);
-+		if (!cxt)
-+			continue;
-+		sdxi_cxt_resume_cleanup(cxt);
-+		sdxi_cxt_put(cxt);
-+	}
-+}
-+
-+int sdxi_suspend(struct device *dev)
-+{
-+	struct sdxi_dev *sdxi = dev_get_drvdata(dev);
-+	int ret;
-+
-+	if (!sdxi)
-+		return -ENODEV;
-+
-+	mutex_lock(&sdxi->pm_lock);
-+	if (sdxi->pm_suspended) {
-+		ret = 0;
-+		goto out_unlock;
-+	}
-+	down_write(&sdxi->state_lock);
-+	if (!sdxi->online) {
-+		up_write(&sdxi->state_lock);
-+		ret = -EIO;
-+		goto out_unlock;
-+	}
-+	sdxi->online = false;
-+
-+	mutex_lock(&sdxi->reg_lock);
-+	sdxi->pm_ctl0 = sdxi_read64(sdxi, SDXI_MMIO_CTL0);
-+	sdxi->pm_ctl2 = sdxi_read64(sdxi, SDXI_MMIO_CTL2);
-+	mutex_unlock(&sdxi->reg_lock);
-+	sdxi->pm_fn_was_active = sdxi_dev_gsv(sdxi) == SDXI_GSV_ACTIVE;
-+
-+	sdxi_error_suspend(sdxi);
-+	ret = sdxi_dev_stop(sdxi);
-+	if (ret) {
-+		/* Recovery failed; keep users out and fence DMA. */
-+		sdxi_dev_force_quiesce(sdxi);
-+	} else {
-+		sdxi->pm_suspended = true;
-+	}
-+	up_write(&sdxi->state_lock);
-+
-+out_unlock:
-+	mutex_unlock(&sdxi->pm_lock);
-+	return ret;
-+}
-+EXPORT_SYMBOL_NS_GPL(sdxi_suspend, "SDXI");
-+
-+int sdxi_resume(struct device *dev)
-+{
-+	struct sdxi_dev *sdxi = dev_get_drvdata(dev);
-+	u64 cxt_l2;
-+	u64 ctl0;
-+	bool error_resumed = false;
-+	bool make_online = false;
-+	bool state_locked = false;
-+	int ret = 0;
-+
-+	if (!sdxi)
-+		return -ENODEV;
-+
-+	mutex_lock(&sdxi->pm_lock);
-+	if (!sdxi->pm_suspended)
-+		goto out_unlock;
-+	down_write(&sdxi->state_lock);
-+	state_locked = true;
-+
-+	ctl0 = sdxi->pm_ctl0;
-+	FIELD_MODIFY(SDXI_MMIO_CTL0_FN_GSR, &ctl0, SDXI_GSRV_STOP_SF);
-+	mutex_lock(&sdxi->reg_lock);
-+	sdxi_write64(sdxi, SDXI_MMIO_CTL0, ctl0);
-+	mutex_unlock(&sdxi->reg_lock);
-+
-+	ret = sdxi_dev_stop(sdxi);
-+	if (ret)
-+		goto resume_failed;
-+
-+	mutex_lock(&sdxi->reg_lock);
-+	sdxi_write64(sdxi, SDXI_MMIO_CTL2, sdxi->pm_ctl2);
-+	mutex_unlock(&sdxi->reg_lock);
-+	cxt_l2 = FIELD_PREP(SDXI_MMIO_CXT_L2_PTR,
-+			    sdxi->L2_dma >> ilog2(SZ_4K));
-+	sdxi_write64(sdxi, SDXI_MMIO_CXT_L2, cxt_l2);
-+	sdxi_keys_resume(sdxi);
-+	sdxi_error_resume(sdxi);
-+	error_resumed = true;
-+
-+	if (sdxi->pm_fn_was_active) {
-+		ret = sdxi_dev_start(sdxi);
-+		if (ret)
-+			goto resume_failed;
-+		sdxi_restore_admin_cxt(sdxi);
-+		ret = sdxi_restart_contexts(sdxi);
-+		if (ret)
-+			goto resume_failed;
-+	}
-+	sdxi->pm_suspended = false;
-+	sdxi->online = true;
-+	make_online = true;
-+	goto out_unlock;
-+
-+resume_failed:
-+	if (error_resumed)
-+		sdxi_error_suspend(sdxi);
-+	if (sdxi_dev_stop(sdxi))
-+		sdxi_dev_force_quiesce(sdxi);
-+
-+out_unlock:
-+	if (state_locked)
-+		up_write(&sdxi->state_lock);
-+	mutex_unlock(&sdxi->pm_lock);
-+	if (make_online)
-+		sdxi_resume_cleanup_contexts(sdxi);
-+	return ret;
-+}
-+EXPORT_SYMBOL_NS_GPL(sdxi_resume, "SDXI");
-+
- int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops)
- {
- 	struct sdxi_dev *sdxi;
-@@ -546,6 +731,7 @@ int sdxi_register(struct device *dev, const struct sdxi_bus_ops *ops)
- 	mutex_init(&sdxi->reg_lock);
- 	mutex_init(&sdxi->admin_lock);
- 	mutex_init(&sdxi->rkey_lock);
-+	mutex_init(&sdxi->pm_lock);
- 	sdxi->error_irq = -1;
- 	sdxi->minor = -1;
- 	dev_set_drvdata(dev, sdxi);
-diff --git a/drivers/dma/sdxi/error.c b/drivers/dma/sdxi/error.c
-index d4c1e64dbf2b..ae649985a424 100644
---- a/drivers/dma/sdxi/error.c
-+++ b/drivers/dma/sdxi/error.c
-@@ -313,3 +313,59 @@ void sdxi_error_exit(struct sdxi_dev *sdxi)
- 	sdxi->err_log = NULL;
- 	sdxi->err_log_dma = 0;
+diff --git a/drivers/dma/sdxi/amd/qos.c b/drivers/dma/sdxi/amd/qos.c
+index 1899f89bcb90..746e4c8b11e7 100644
+--- a/drivers/dma/sdxi/amd/qos.c
++++ b/drivers/dma/sdxi/amd/qos.c
+@@ -590,3 +590,177 @@ static int sdxi_amd_qos_get_assigned_functions(struct sdxi_dev *sdxi,
+ 			  buf, dma);
+ 	return err;
  }
 +
-+void sdxi_error_suspend(struct sdxi_dev *sdxi)
++static int sdxi_amd_qos_prevalidate_poolupd(struct sdxi_dev *sdxi,
++					    struct sdxi_cxt *adm,
++					    u16 opcode_type,
++					    unsigned int timeout_ms,
++					    const struct sdxi_amd_qos_cap_info *cap,
++					    const struct sdxi_amd_qos_poolupd_req *req)
 +{
-+	u64 reg;
++	struct sdxi_amd_qos_dev_info dev_info;
++	struct sdxi_amd_qos_pool_info pool_info;
++	u32 new_minbw;
++	u32 total_minbw;
++	size_t bytes;
++	u8 *bitmap;
++	bool pool_known;
++	int err;
 +
-+	if (!sdxi->err_log)
-+		return;
++	err = sdxi_amd_qos_validate_poolupd_req(req, cap->max_pools,
++						cap->granularity_bw);
++	if (err)
++		return err;
 +
-+	disable_irq(sdxi->error_irq);
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_CFG, 0);
++	err = sdxi_amd_qos_get_dev_info(sdxi, adm, opcode_type, timeout_ms,
++					&dev_info);
++	if (err)
++		return err;
 +
-+	mutex_lock(&sdxi->reg_lock);
-+	reg = sdxi_read64(sdxi, SDXI_MMIO_ERR_CTL);
-+	FIELD_MODIFY(SDXI_MMIO_ERR_CTL_EN, &reg, 0);
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_CTL, reg);
++	bytes = (size_t)(cap->max_pools + 7U) / 8U;
++	bitmap = kcalloc(bytes, sizeof(*bitmap), GFP_KERNEL);
++	if (!bitmap)
++		return -ENOMEM;
 +
-+	reg = sdxi_read64(sdxi, SDXI_MMIO_CTL0);
-+	FIELD_MODIFY(SDXI_MMIO_CTL0_FN_ERR_INTR_EN, &reg, 0);
-+	sdxi_write64(sdxi, SDXI_MMIO_CTL0, reg);
-+	mutex_unlock(&sdxi->reg_lock);
++	err = sdxi_amd_qos_get_active_pools(sdxi, adm, opcode_type,
++					    timeout_ms, cap->max_pools,
++					    bitmap);
++	if (err) {
++		kfree(bitmap);
++		return err;
++	}
++
++	pool_known = !req->pool_num ||
++		     sdxi_amd_qos_pool_active(bitmap, req->pool_num);
++
++	switch (req->pool_operation) {
++	case SDXI_AMD_QOS_POOL_OP_CREATE:
++		if (sdxi_amd_qos_pool_active(bitmap, req->pool_num))
++			err = -EEXIST;
++		kfree(bitmap);
++		if (err)
++			return err;
++
++		new_minbw = sdxi_amd_qos_align_bw(req->pool_minbw,
++						  cap->granularity_bw);
++		if (dev_info.total_allocated_bw > dev_info.device_maxbw)
++			return -EIO;
++		if (new_minbw > dev_info.device_maxbw - dev_info.total_allocated_bw)
++			return -EINVAL;
++		return 0;
++	case SDXI_AMD_QOS_POOL_OP_UPDATE:
++		kfree(bitmap);
++		if (!pool_known)
++			return -ENOENT;
++		err = sdxi_amd_qos_get_pool_info(sdxi, adm, opcode_type,
++						 req->pool_num, timeout_ms,
++						 &pool_info);
++		if (err)
++			return err;
++
++		if (pool_info.pool_minbw > dev_info.total_allocated_bw)
++			return -EIO;
++		if (dev_info.total_allocated_bw > dev_info.device_maxbw)
++			return -EIO;
++
++		new_minbw = sdxi_amd_qos_align_bw(req->pool_minbw,
++						  cap->granularity_bw);
++		total_minbw = dev_info.total_allocated_bw - pool_info.pool_minbw;
++		if (new_minbw > dev_info.device_maxbw - total_minbw)
++			return -EINVAL;
++		return 0;
++	case SDXI_AMD_QOS_POOL_OP_DESTROY:
++		kfree(bitmap);
++		if (!pool_known)
++			return -ENOENT;
++		err = sdxi_amd_qos_get_pool_info(sdxi, adm, opcode_type,
++						 req->pool_num, timeout_ms,
++						 &pool_info);
++		if (err)
++			return err;
++
++		return 0;
++	default:
++		kfree(bitmap);
++		return -EINVAL;
++	}
 +}
 +
-+void sdxi_error_resume(struct sdxi_dev *sdxi)
++static int sdxi_amd_qos_prevalidate_fnupd(struct sdxi_dev *sdxi,
++					  struct sdxi_cxt *adm,
++					  u16 opcode_type,
++					  unsigned int timeout_ms,
++					  const struct sdxi_amd_qos_cap_info *cap,
++					  const struct sdxi_amd_qos_fnupd_req *req)
 +{
-+	unsigned int size_order;
-+	u64 reg;
++	size_t bytes;
++	u8 *bitmap;
++	int err;
 +
-+	if (!sdxi->err_log)
-+		return;
++	err = sdxi_amd_qos_validate_fnupd_req(req, cap->max_pools,
++					      sdxi_amd_qos_max_vfs(sdxi),
++					      sdxi->max_cxts,
++					      cap->feature_flags);
++	if (err)
++		return err;
 +
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_CFG, 0);
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_STS,
-+		     SDXI_MMIO_ERR_STS_STS_BIT |
-+		     SDXI_MMIO_ERR_STS_OVF_BIT |
-+		     SDXI_MMIO_ERR_STS_ERR_BIT);
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_WRT, 0);
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_RD, 0);
++	if (!req->pool_num)
++		return 0;
 +
-+	mutex_lock(&sdxi->reg_lock);
-+	reg = sdxi_read64(sdxi, SDXI_MMIO_ERR_CTL);
-+	FIELD_MODIFY(SDXI_MMIO_ERR_CTL_EN, &reg, 1);
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_CTL, reg);
++	bytes = (size_t)(cap->max_pools + 7U) / 8U;
++	bitmap = kcalloc(bytes, sizeof(*bitmap), GFP_KERNEL);
++	if (!bitmap)
++		return -ENOMEM;
 +
-+	reg = sdxi_read64(sdxi, SDXI_MMIO_CTL0);
-+	FIELD_MODIFY(SDXI_MMIO_CTL0_FN_ERR_INTR_EN, &reg, 1);
-+	sdxi_write64(sdxi, SDXI_MMIO_CTL0, reg);
-+	mutex_unlock(&sdxi->reg_lock);
++	err = sdxi_amd_qos_get_active_pools(sdxi, adm, opcode_type, timeout_ms,
++					    cap->max_pools, bitmap);
++	if (!err && !sdxi_amd_qos_pool_active(bitmap, req->pool_num))
++		err = -ENOENT;
++	kfree(bitmap);
++	if (err)
++		return err;
 +
-+	size_order = ilog2(SDXI_ERRLOG_SIZE) - ilog2(SZ_4K);
-+	reg = FIELD_PREP(SDXI_MMIO_ERR_CFG_PTR,
-+			 sdxi->err_log_dma >> ilog2(SZ_4K)) |
-+	      FIELD_PREP(SDXI_MMIO_ERR_CFG_SZ, size_order) |
-+	      SDXI_MMIO_ERR_CFG_EN;
-+	sdxi_write64(sdxi, SDXI_MMIO_ERR_CFG, reg);
-+	enable_irq(sdxi->error_irq);
-+}
-diff --git a/drivers/dma/sdxi/error.h b/drivers/dma/sdxi/error.h
-index 756a4fe45158..866117559aa3 100644
---- a/drivers/dma/sdxi/error.h
-+++ b/drivers/dma/sdxi/error.h
-@@ -12,5 +12,7 @@ struct sdxi_dev;
- 
- int sdxi_error_init(struct sdxi_dev *sdxi);
- void sdxi_error_exit(struct sdxi_dev *sdxi);
-+void sdxi_error_suspend(struct sdxi_dev *sdxi);
-+void sdxi_error_resume(struct sdxi_dev *sdxi);
- 
- #endif /* DMA_SDXI_ERROR_H */
-diff --git a/drivers/dma/sdxi/keys.c b/drivers/dma/sdxi/keys.c
-index 0d570daefd34..8397d575c06a 100644
---- a/drivers/dma/sdxi/keys.c
-+++ b/drivers/dma/sdxi/keys.c
-@@ -289,6 +289,20 @@ void sdxi_keys_exit(struct sdxi_dev *sdxi)
- 	sdxi->rkey_cap = false;
- }
- 
-+void sdxi_keys_resume(struct sdxi_dev *sdxi)
-+{
-+	u64 reg;
-+
-+	if (!sdxi->rkey_cap || !sdxi->rkey_table)
-+		return;
-+
-+	reg = FIELD_PREP(SDXI_MMIO_RKEY_PTR,
-+			 sdxi->rkey_table_dma >> ilog2(SZ_4K)) |
-+	      FIELD_PREP(SDXI_MMIO_RKEY_SZ, sdxi->rkey_order) |
-+	      SDXI_MMIO_RKEY_EN;
-+	sdxi_write64(sdxi, SDXI_MMIO_RKEY, reg);
++	return 0;
 +}
 +
- int sdxi_ioctl_get_rkey_list(struct file *file, struct sdxi_file *sf,
- 			     void *data)
- {
-diff --git a/drivers/dma/sdxi/keys.h b/drivers/dma/sdxi/keys.h
-index 6e36527b610a..775dd381e3f3 100644
---- a/drivers/dma/sdxi/keys.h
-+++ b/drivers/dma/sdxi/keys.h
-@@ -16,6 +16,7 @@ struct sdxi_file;
- 
- int sdxi_keys_init(struct sdxi_dev *sdxi, u64 cap1);
- void sdxi_keys_exit(struct sdxi_dev *sdxi);
-+void sdxi_keys_resume(struct sdxi_dev *sdxi);
- int sdxi_ioctl_get_rkey_list(struct file *file, struct sdxi_file *sf,
- 			     void *data);
- int sdxi_ioctl_get_rkeys(struct file *file, struct sdxi_file *sf, void *data);
-diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
-index abef318cfd7c..fa080dc004ab 100644
---- a/drivers/dma/sdxi/pci.c
-+++ b/drivers/dma/sdxi/pci.c
-@@ -221,12 +221,17 @@ static const struct pci_device_id sdxi_id_table[] = {
- };
- MODULE_DEVICE_TABLE(pci, sdxi_id_table);
- 
-+static const struct dev_pm_ops sdxi_pm_ops = {
-+	SYSTEM_SLEEP_PM_OPS(sdxi_suspend, sdxi_resume)
-+};
++static int sdxi_amd_qos_prevalidate_tel(struct sdxi_dev *sdxi,
++					struct sdxi_cxt *adm,
++					u16 opcode_type,
++					unsigned int timeout_ms,
++					const struct sdxi_amd_qos_cap_info *cap,
++					const struct sdxi_amd_qos_tel_req *req)
++{
++	size_t bytes;
++	u8 *bitmap;
++	int err;
 +
- static struct pci_driver sdxi_driver = {
- 	.name = "sdxi",
- 	.id_table = sdxi_id_table,
- 	.probe = sdxi_pci_probe,
- 	.remove = sdxi_pci_remove,
- 	.sriov_configure = pci_sriov_configure_simple,
-+	.driver.pm = pm_sleep_ptr(&sdxi_pm_ops),
- };
- 
- MODULE_IMPORT_NS("SDXI");
-diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-index 93b4eb80358c..ce0959bbed90 100644
---- a/drivers/dma/sdxi/sdxi.h
-+++ b/drivers/dma/sdxi/sdxi.h
-@@ -146,6 +146,12 @@ struct sdxi_dev {
- 	bool online;
- 	struct rw_semaphore state_lock;	/* online state and user operations */
- 
-+	struct mutex pm_lock;		/* suspend and resume serialization */
-+	bool pm_suspended;
-+	bool pm_fn_was_active;
-+	u64 pm_ctl0;
-+	u64 pm_ctl2;
++	err = sdxi_amd_qos_validate_tel_req(req, cap->max_pools,
++					    sdxi_amd_qos_max_vfs(sdxi),
++					    sdxi->max_cxts,
++					    cap->feature_flags);
++	if (err)
++		return err;
 +
- 	const struct sdxi_bus_ops *bus_ops;
- };
- 
-@@ -202,6 +208,8 @@ void sdxi_unregister(struct device *dev);
- bool sdxi_dev_in_error(const struct sdxi_dev *sdxi);
- void sdxi_dev_force_quiesce(struct sdxi_dev *sdxi);
- void sdxi_dev_fail(struct sdxi_dev *sdxi);
-+int sdxi_suspend(struct device *dev);
-+int sdxi_resume(struct device *dev);
- int sdxi_chardev_init(void);
- void sdxi_chardev_exit(void);
- int sdxi_chardev_register(struct sdxi_dev *sdxi);
++	switch (req->query_type) {
++	case SDXI_AMD_QOS_TEL_QTYPE_POOL_CONFIG:
++	case SDXI_AMD_QOS_TEL_QTYPE_POOL_REPORT:
++	case SDXI_AMD_QOS_TEL_QTYPE_POOL_VARIANCE:
++		if (!req->pool_num)
++			return 0;
++
++		bytes = (size_t)(cap->max_pools + 7U) / 8U;
++		bitmap = kcalloc(bytes, sizeof(*bitmap), GFP_KERNEL);
++		if (!bitmap)
++			return -ENOMEM;
++
++		err = sdxi_amd_qos_get_active_pools(sdxi, adm, opcode_type,
++						    timeout_ms, cap->max_pools,
++						    bitmap);
++		if (!err && !sdxi_amd_qos_pool_active(bitmap, req->pool_num))
++			err = -ENOENT;
++		kfree(bitmap);
++		return err;
++	default:
++		return 0;
++	}
++}
 -- 
 2.56.1
 
