@@ -1,60 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795109002;
-	b=ioe9cGuyHQOxWT/5ncIJqgBtoE+8JtFt8moLuS2a90oVSlmx1w+JKkYYXFX/XUjFP8TN
-	 Kq5aemc2yG0oLaydjoI6ghogLggngTygQKC3y+g9/U6fI8lYG/btWLjoOyRBDxX3L5//Z
-	 GdR1jit3WDW4cFr/ULtwVms2j+/PmZlpAbNe96gZm93y03OZUUZOa7ejzjBOlk5DZJJcW
-	 P+3NXJEOzsC0EihS2BS6p3fbK3iiVllM0RCJ7E/SMLS8L1k2NFrZhoHfhMO017nz23wJS
-	 UNM9mThRCTS4eWAMwGy6OQzM+gy7LGTjXnidPgC0DlTT5+zhBekAas9Ac0MY6caX9IQ==
+	t=1795109630;
+	b=q6FRX8KhYrWA76C6Y6ggThbFrx3+MIfo10P3tT+R+8sb70RkA2b+wG7EjrluSfnQDD7C
+	 oeOZjTdWCGSOPFNt5TrbSUMhkZvskJnpOiRnZE2+g4YmK3cie0RIvJTQACOdPcOOIGmMu
+	 ErxG7EcRiONwY1coTf+qLEccnw4K/6DCduy2WC8M5wdRKOvR3B1+CnYmiNs4y/OT/vPkB
+	 8mjAVNF3m3NFyKcqprCky+9MmLj7TMNmeYdzUhITTqojx9VDEbiayc2qiXNbpUAftgXqA
+	 kUjrMR1V5vtpou+oq/yk+ogF1eQAKB2Ob2xSlhBVLmlIwBD7+RzWm7xsUHDDXa7OdUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795109002;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795109630;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=oG15c41ZCpZQNvxF6sTCZaD3NnnBG9uH9Ql0/dc+j8c=;
-	b=AAxdZmkZ3IRYbJv1m1THQ/+0A5wQJJMz5QHLdLEodaNpKo1wzMb8dk/swYeCFy+It1hA
-	 jkqJrCmK2ZpnS8stpgQ4OMzwAxMXnSQaALwN4Cm5jZf7Q3sBgdn9f+Xd4hKsF7ncVd/oa
-	 SPk3F7rCJe2psQ08w61RUxRwilGDCJ3Fh3cVXPbkFXtMw4fCfPBtkhFfiXa2t0TZ6xIoa
-	 3ZOTncTOaE1SNXSo+U8vxkijkbF+LiG3dDl4M9o2VGEISlvbEmsYL7rdvNNikYvlc9P81
-	 qH/7j1y4i67NhKy46CwPwyEQA8V0Zg7YaLNB8O9ryhmQd1Otwzft6PwK+R942lN1NyA==
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=wvwVd3tHy7bv/RkSCLKDWLT+1vn5zHbPuogKcTwr6Hk=;
+	b=EvwB9s8TEA8gSRaRzKLQIBwHgQ5l4nDYpMgHJmmw1TS1Cv0ReQ+pXp0OTdKtbLYnvd5d
+	 ArXT+qqnr0LFmfvztQhKLU2WWq4+tRK6k0S1/3eMp14GZ1Uyw9D0wjPzTdub8fkUuoFnN
+	 g+n+nIWH32svtl092hTQ8OIAP5omJuL2pG7Bat3MGk6//I9mQsskO+TnQGgZ17USBIYs1
+	 HHG4DXvt65dMQ5eirCDDXFKjOQCZuMs0WDottLHiurt4sm+2Qum4HMYIzMPd8Z+9idTsQ
+	 XukNvTakB8K1RUb/Qy4fZA9CoTVAk8rsAYwPBjJRnkLUPVKfobv6uh3kwsov19Rb/3Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RjDs61XI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m21lOo2Z;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3020C606A33F;
-	Thu, 19 Nov 2026 17:23:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89C6B606A320;
+	Thu, 19 Nov 2026 17:33:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RjDs61XI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C1591F000CD;
-	Thu, 19 Nov 2026 17:23:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m21lOo2Z
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35F321F000C4;
+	Thu, 19 Nov 2026 17:33:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795109001;
-	bh=oG15c41ZCpZQNvxF6sTCZaD3NnnBG9uH9Ql0/dc+j8c=;
+	s=k20260515; t=1795109630;
+	bh=wvwVd3tHy7bv/RkSCLKDWLT+1vn5zHbPuogKcTwr6Hk=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=RjDs61XIgonkH9vpbrzUGLyj7OEgV93wQ8sNJNIkNmHJX72C7dMHidRR8ZtvFTGVY
-	 OHhvrqF3jft4IBlmwc1dD6OQeG9BLW/1457VsJdjCHVn/fwl1IgQ26tUaNIqpcQ7Qr
-	 okPp7AMoPlEqxo1CaxEOmoiHUwfCLTl4X1Q7way7djNyIwZcPORyWPkG4GFDsx3T/8
-	 CCzDgr7bpQ8AcSyPMneLUpmPZ+pF08RBuBUAI2Vei1ySKZNKSO7Sr7exEGFDj4pF/t
-	 kGgQSfKvdWL89pQHrfX45+RxB5hDhpUpa3SMSavd/K+AQ9lrw+/vjjZSs/oX2m/qVI
-	 d2y/6vSVxEaWA==
-Date: Thu, 19 Nov 2026 11:23:20 -0600
+	b=m21lOo2Z9pnh2cNaBhxA56SCaixYLhLqsyOqnE/NGBRUUWEKafsfjMk0zCGoheS57
+	 W8/LA8W8MHLZxoiY7ASuQNGCKCn3u4IjiBI7cS4gd50t2BZ8aMi8qhzG9xY8icQ1Lz
+	 lXQ/Vtp5kZTudljlsdtv/pXX1D9gSIpmM5Ls9mFVDAbcVCjHN3+VZPZ7ge7I+0pAI7
+	 vhBXH8M2fC4WDLoUmdZUikba/ykniR4P0D8P71aufvgKZhKXXtvNMWoe1yWuWdeZqq
+	 DBnQPyy69Bq2CaPiY+U9nkZ92XLd6w9n5rSAR/7DEODtDqSEmrJDC9w3Pbh+USTGgh
+	 I77l+TvVFfsaw==
+Date: Thu, 19 Nov 2026 11:33:49 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Habil Eren =?utf-8?Q?T=C3=BCrker?= <habilerenturker@hotmail.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>,
-	"bp@alien8.de" <bp@alien8.de>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"hpa@zytor.com" <hpa@zytor.com>,
-	"mingo@redhat.com" <mingo@redhat.com>,
-	"tglx@kernel.org" <tglx@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH v2 1/4] PCI: Add pci_power_t helper functions
-Message-ID: <20261119172320.GA817954@bhelgaas>
+To: Gokulkrishna Sekar <gokulkrishnasr@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	mika.westerberg@linux.intel.com, linux-kernel@vger.kernel.org,
+	Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>,
+	Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Subject: Re: [PATCH v2] PCI: Correct PCIe port type field encoding
+Message-ID: <20261119173349.GA822885@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,79 +57,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <29fcfa729d7f687f66578781c2e23db9e3367c86.1795097970.git.habilerenturker@hotmail.com>
+In-Reply-To: <20261119121947.204565-1-Gokulkrishna.Sekar@harman.com>
 
-On Thu, Nov 19, 2026 at 02:35:46PM +0000, Habil Eren Türker wrote:
-> Add helper functions to extract, set and compare PCI power
-> states in the Power Management Control/Status register.
+On Thu, Nov 19, 2026 at 12:19:47PM +0000, Gokulkrishna Sekar wrote:
+> set_pcie_port_type() validates PCIe port topology and corrects
+> invalid upstream/downstream port type information in the cached
+> pcie_flags_reg value.
 > 
-> This follows the discussion with Andy Shevchenko and
-> Bjorn Helgaas in response to:
+> When performing these corrections, the code updates
+> PCI_EXP_FLAGS_TYPE using PCI_EXP_TYPE_UPSTREAM or
+> PCI_EXP_TYPE_DOWNSTREAM directly. The PCI_EXP_TYPE_* values are
+> decoded port type numbers, not values encoded for the
+> PCI_EXP_FLAGS_TYPE bitfield, so the corrected type is stored in the
+> wrong bit position.
 > 
-> "[PATCH] x86/quirks: Cast PCI_D0 to u16 in apple_airport_reset()"
-> https://lore.kernel.org/lkml/20261118161559.63617-1-habilerenturker@hotmail.com/
+> As a result, a device whose type has been corrected may subsequently
+> be reported as PCI_EXP_TYPE_ENDPOINT instead of the intended
+> upstream or downstream port type.
+> 
+> Use FIELD_MODIFY() to update PCI_EXP_FLAGS_TYPE so the corrected
+> port type is encoded consistently with the format used in the PCI
+> Express Capabilities Register.
+> 
+> Fixes: ca78410403dd ("PCI: Get rid of dev->has_secondary_link flag")
+> Link: https://lkml.org/lkml/2024/12/13/198
 
-Andy had good comments about the style of references like this, but
-IMO if your cover letter includes links to previous versions of the
-series, that's enough of a breadcrumb, and previous review comments
-and suggestions don't need to be explicitly called out.
+Patch looks good, but this link doesn't work for me.  Probably a
+temporary issue with lkml.org, but https://lore.kernel.org links are
+always better.  Looks like it might be
+https://lore.kernel.org/all/20241213070241.3334854-1-gthiagarajan@marvell.com/?
 
-https://lore.kernel.org/all/20261112-vfct-regression-v7-0-69b1e0cf45c2@amd.com
-is a good example of the previous version link documentation in the
-cover letter.
-
-> @@ -2953,4 +2954,31 @@ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
->  	WARN_ONCE(condition, "%s %s: " fmt, \
->  		  dev_driver_string(&(pdev)->dev), pci_name(pdev), ##arg)
->  
-> +/* Helper functions for PCI power management */
-
-I think these should go right next to the pci_power_t definitions,
-e.g., right after pci_power_name(), so they are easy to find when
-using PCI_D0 etc.
-
-> +static inline pci_power_t pci_power_t_get(u32 csr)
-> +{
-> +	return (pci_power_t __force)FIELD_GET(PCI_PM_CTRL_STATE_MASK, csr);
-> +}
-> +
-> +static inline void pci_power_t_set(u16 *csr, pci_power_t state)
-> +{
-> +	*csr &= ~PCI_PM_CTRL_STATE_MASK;
-> +	*csr |= FIELD_PREP(PCI_PM_CTRL_STATE_MASK, (__force u32)state);
-
-FIELD_MODIFY().
-
-> +}
-> +
-> +static inline bool pci_power_eq(u32 csr, pci_power_t state)
-> +{
-> +	return pci_power_t_get(csr) == state;
-> +}
-> +
-> +static inline bool pci_power_gt(u32 csr, pci_power_t state)
-> +{
-> +	return pci_power_t_get(csr) > state;
-
-I'm not a __bitwise expert, but I'm surprised this works.  I expected
-that __bitwise values would not be ordered, so only testing for
-equality would be legit.
-
-I do think these should take two pci_power_t values instead of a PMCSR
-value and a pci_power_t.  The extra internal conversion on one
-argument feels a little bit non-intuitive.
-
-> +}
-> +
-> +static inline bool pci_power_lt(u32 csr, pci_power_t state)
-> +{
-> +	return pci_power_t_get(csr) < state;
-> +}
-> +
->  #endif /* LINUX_PCI_H */
+> Reported-by: Gowthami Thiagarajan <gthiagarajan@marvell.com>
+> Signed-off-by: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
+> ---
+> v2:
+>  - Use FIELD_MODIFY() as suggested by Bjorn Helgaas
+>  - Clarify impact by describing the resulting PCI_EXP_TYPE_ENDPOINT
+>  - Add Fixes tag
+>  - Add Link tag to previous discussion
+>  - Add Reported-by
+> 
+>  drivers/pci/probe.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 9a178e0e5f7f..93e2e1f688ca 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1673,8 +1673,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  		 */
+>  		if (pcie_downstream_port(parent)) {
+>  			pci_info(pdev, "claims to be downstream port but is acting as upstream port, correcting type\n");
+> -			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+> -			pdev->pcie_flags_reg |= PCI_EXP_TYPE_UPSTREAM;
+> +			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg, PCI_EXP_TYPE_UPSTREAM);
+>  		}
+>  	} else if (type == PCI_EXP_TYPE_UPSTREAM) {
+>  		/*
+> @@ -1684,8 +1683,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  		 */
+>  		if (pci_pcie_type(parent) == PCI_EXP_TYPE_UPSTREAM) {
+>  			pci_info(pdev, "claims to be upstream port but is acting as downstream port, correcting type\n");
+> -			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+> -			pdev->pcie_flags_reg |= PCI_EXP_TYPE_DOWNSTREAM;
+> +			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg, PCI_EXP_TYPE_DOWNSTREAM);
+>  		}
+>  	}
+>  }
 > -- 
-> 2.47.3
+> 2.54.0
 > 
