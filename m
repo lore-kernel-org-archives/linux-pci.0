@@ -1,95 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.48
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795098098;
-	b=evL3qg/XpA6TWRU3xiQ/cOLP/kdlafqbZt+4uTvGQ2wsNo64UKSCYOYve9PN8I7r3eoD
-	 fbyN5fw2IhQRU4TexAXh9dqgqS6CUQInL6t1IvkM53y5pQoCC2jRBo19XfXw0UDnTA45K
-	 8ztUr/LYeFLkTt2Ua/XLeUBMRfbjjonRurgqtbEKho2NuSLFsEHzivNU+tNDRZGizHjUG
-	 m3tXbFusfyspzOYxMLJ3DpVk90TBbdrHSVQ33LTg28ECzbbH3qzhSs4hEiHN1cpmijlCb
-	 2rAnshixS/W3uXBIOCUAJeyrtzBtr4PYoTtFSKGE+a2klrYyu3iwOyzZF2GVUK9LD0Q==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795098098;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.49
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795098199;
+	b=T4ZrA+rkY/hU/7WMMe2aPI8ty9/O2e3AULfjfb/jcJ9iXF9oNSIwwwzS1F1FhiEsybPL
+	 Ndn/q1oJGEstKw25bnmlvTuzdZV2H9Ug+6K+a93GVVN4j2CSilet1X75JyOTTqnwVWFQX
+	 VCSNsjrW6wwTAhBhkFX30rjyCdLZhqGXSbXLb6aKAyHiRND213lk2UdFg2CDqj1fTL/3F
+	 9p1o2BimTRT+juHtcQQFYfsMsiI/87sbPZzCZlSTiP62ssBRTu8dM08R4UpCBXsNGvCfT
+	 CZ64UxZZpjZB6Gl6HR/t3ZG3QBWHg/FH2jG7CXJwnBSie3F1Q/fDvOYN8PwBLajCvFQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795098199;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
-	bh=QDudp/CNsMw0Q7hm89AwTv0NhCP0Hgb7jNITfRNvQy0=;
-	b=4+dDIylbtpkKXUiGjZ7pbpcx0ZJR85lA+kh6/6k3eOnpjtS99xaSG/JfdRKGWBE4Wd26
-	 aIvvST4LnKj+Kg0XO9SHlrv0s6mT5wnP3iShiCKqXmEzQBsBYc5fkfu/B0PBsfRSgCGqg
-	 AfDOkVOe/3TmWV421HqyFX6an+4eiCoT6w1tK6ZNS2NpBlLFP2SRXfDys+EePCO+mS4Jm
-	 lk2eotV7gTuK1eadEbnlUIF06dE3eTD/NwxnlIdk5OXASGrbENQSDUEha43gNWbnPxucw
-	 v0zdNatputF35SWeRV65pHNygBe3irdQU8Ng0gUQKAlOgD/7/KA8YvIcbbdsTvvHnzw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=msdP55vXlTy09UO8puWvvjC8jVxycl34xfHbtsiaeYU=;
+	b=3gODqo2HiL98KP7mdEwGau6idGybJUGTeebluZpFgzrVsbKTuBI3zpqcisXAhntmjrcr
+	 qqiru0UOOwEMzx5fyhB0hDge0h48sRZdytxMDv9/u7Eiky3aBgxxK0n2TbXIOh/laN6Kx
+	 NPvBqGA3GuD8WDLddU4fY+IW4/gG6aCwUNDYv2XNfbneR52+Y9fTu6NL62bWqeLjChOj/
+	 znL7YuDkA2f6TdeXM8yhsCXUmO3VhKTDQxRqG78B43RWKHFI7DwT2rPQ8ZjAjLWc1qmeo
+	 KUR/xWzR1f2GNG1DMTXvPoINwDIn3daOT9K7k04g/WjBYIgDzCMh84v9vCJ+4Zj8lpA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hyuTEaUz;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.48
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZQZx+Caf;
+	arc=none smtp.remote-ip=74.125.82.49
+Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7713606A338
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 14:21:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7713606A338
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D585606A334
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 14:23:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D585606A334
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hyuTEaUz
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-6b8977f2785so2967104a12.3
-        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 06:21:37 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795098096; cv=none;
-        d=google.com; s=arc-20260327;
-        b=VwzQj39R0NKmNqLu7e4icQMBiQ/uFZQTwUQyKoP9kYOTidhqAgVqtw+zjVTeUt7qWq
-         lbn49tSj1zjH4aju5+fmcpAiQTHooVBmDcJ5vH9mxpPuHNdypalUtYyCvFsLbuVhiIvX
-         8ppqAWknS3JHv32yTiOIEsQVNy7UZutHWR6fjag7TDv8gUEwwu7I2nICw1nv7N0sj0ty
-         ZGwZa1sAAJkGMnQ8yEIYLSQ9YclVovWcc4dnuDCr8xY0mD29JYEfhZNRlGlBoMoliaYO
-         Pq8R57mHfCxgFNzcNWiUvhD+mZ9WDZLR3wvyxTKTWvxKUdh8Zgzq168W2IrR2FG+JgBR
-         aLxg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=QDudp/CNsMw0Q7hm89AwTv0NhCP0Hgb7jNITfRNvQy0=;
-        fh=Z9mDe1eC32U9RekoG61o3iOCD5eBq+LHRaxOoreJGPg=;
-        b=e8315M8+PUl5zzBMGRDS9nVgUjMLDLuCjTt+g0HDGHsqlv1Fq9SHf+C8ZWSmxzmJrT
-         x3S8Y/q5xONXXgXeLcdn0ACE1MBK7HAzkJU0tVH6DrLYomOH1gBpyWZL1fOudvOG9T4i
-         X6e/aanJ9B/nAcm5xIDX/5wy3pYn1aGE4FFHcKgpyUwzbHbLiFJl1KCD4UMWW/Olpu76
-         PPmJkI1eQNrZKMa7gE/DydtgUuMaFD/JH92LJwfpcNhmYOO+eiUYIatfFNMAv8C6zfY4
-         gYys6PjdO2/YlN+PsjkLCqvHQpyfN5Mour1IPIM9u7SjstOPGWUB7uDXATOmPLLxTBVx
-         Ki1w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZQZx+Caf
+Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-1b3acec6677so3303502c88.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 06:23:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795098096; x=1795702896; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=QDudp/CNsMw0Q7hm89AwTv0NhCP0Hgb7jNITfRNvQy0=;
-        b=hyuTEaUzmYESUMENRugMRtpbTrnwI20f0isotRNyHeWRJKcXR6ZXeYGbtjUBrHhF12
-         syee6P85njyH6xfi1InZa8AJv2lnxU8B4rJeT6i9Ld28I7jzrXPc6o5r9wnCxS+qchUJ
-         o4efHp9sTKCoCCGWN5lQLQuaM6Qdrja22Cedf9YUFSPWERzBFrhvFtgZR5YKO+C3JoGq
-         8Z0FxnBf3TP0TBBJjgcgaJEI5Pjxg6qYrXWhcZnYRfJD44/E/r6AOf0iRK3+BhIdl5Il
-         VSkR8ipqNzSJ79gWfYKe83/P0WhpKI+zTJAJh9usoCFLUfEuFZ/u9MAFIDVTgkFf3fvr
-         7YjQ==
+        d=gmail.com; s=20260707; t=1795098198; x=1795702998; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=msdP55vXlTy09UO8puWvvjC8jVxycl34xfHbtsiaeYU=;
+        b=ZQZx+CafJ5sxSFPQQyG/F1QUdmwM+0jyz51i3cLNmRf0AGkpQ+ZnCpBfBA3HXufm/Q
+         Ra+N8okJV3kOThm9oQsZNK89WDQDpzgsvgjiZo+09l8NdlFuhaXfs52Mnz9h6frCUFOc
+         EGefdz1RZ3j1CGmvo+566APwO8MNo0OS5m+BsgKG+brlLQsmsaBrAte5hyTKQokS8kQP
+         MFYu/TP3mPJuYCEW6UsLsmae8BramVwEubGfKQJd/qHW3Nelkru39Wx0r4BoMyUcC1xK
+         8IYI6pRineGwyRr8fGLu0tfblqqACuO7In20mbZSwNXZ+KAlkOJ99QdWYHE8x255pSC/
+         cX8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795098096; x=1795702896;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=QDudp/CNsMw0Q7hm89AwTv0NhCP0Hgb7jNITfRNvQy0=;
-        b=fNQxS1Ea8vh2KeDMo+4KCOTJmtU2ov7b66xU+ZkiMx+RhCbptzAZ+0LZozIOT2QJqP
-         Uuf5if5a5/5lualUrKH3fSj24bGO2CuheD8vu5vrDUXdKfVv+hXminMagN14DAPDAu+i
-         jyYv2GpFlVkDh5mhfoLZPwh22COmG73+gLyv/OJRQdjaDMT/V3f3FndTY1zz0Zo/JLMI
-         N4iLGTa8EdguQWYuIyWaHf2vew0r6l5W2HBuiwWC2VF0goFERz9VqIfJgct6DdZypn0r
-         E0aM0xxPIVd+S/ldzhgyJPUQKyg3TNmNKyd324XRGW0DhQXFb4biTdZntQsn+jqHc0Pj
-         Phmw==
-X-Gm-Message-State: APuU4Z9JkWB+lSbHxXdA7XJ0mNgGCkDsaK4JJiSniNGFE8PT6e7BVFV+
-	v4pP0N+DSMqbDw76udCsqFheGhlN3sqhqeX5BNA/ACZpjWz34CDQCR/O41yBGvhEoE4nrqYw9uA
-	zDmFAeM1anp1anZbMKTyc6YC/GY5sLrqkrPcB+H4=
-X-Gm-Gg: AYBFou3SRHEtoQKDmFV+3sJDFAN6gxCSAp2OZ/MUAR6k+RSj+XfnWRrc1ic1Xm1jkd4
-	oxjjyqiY1RGSPnZm2xx/Ym79kYCUkQ65SjNyG3dC32dh4oDkdcN61+5ywA52A75qvWmaTiGEsrb
-	eEuz4HjS+/NfGsP7pa2PNSP1ZLdW1W84fJn5X8i+x5KIuW786H/N4thSW9V6vuroO8aGw6pmvXQ
-	hQiEUgvwY04Zm2lxjAlK5pDl/5wsQcSexgrWlPlvKh2iaJC69yyyWR6y49iKnXXm5FvI/yBhcFg
-	+0NLJk72uTTmH2LDwxYXt2UfnJQHXZnylTC6IpJ0p44dYtJBU4BmOTNHQbejXPPw6xQLIfES9ti
-	W1m2WBTclP7dA3j8LAiuHwLeQj8kLmq0eeykl
-X-Received: by 2002:a05:6402:a513:20b0:6b7:df0c:18bc with SMTP id
- 4fb4d7f45d1cf-6b887eacfe0mr3932874a12.17.1795098095861; Thu, 19 Nov 2026
- 06:21:35 -0800 (PST)
+        d=1e100.net; s=20260707; t=1795098198; x=1795702998;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=msdP55vXlTy09UO8puWvvjC8jVxycl34xfHbtsiaeYU=;
+        b=f7g83KqGHXhuoU2kGcP5a4/T9G9NcLhOQIdr3GXGUBK4epUBmOx9rn1vjLwEQk7+x5
+         jDubWkIVYhQY8sJL4GaVQaVhGpKD+fBAgEAeL9Zya7MjS2CAjYkL5E9Bstmo8icIC9Se
+         mIz/iWSp7l1LOM6e5qPK0P7lz0kgNDMf26Rmplns9UBXGyQBuDT4Iy490OlCpmk8Qb+M
+         k+yRugw4vyreJ2NB0MTiXhG/uCplP5FZUG5RYrAt4zBkdeGdmbd1jxTW+Oq1Ol69LKP1
+         ZUO82mDk9oJ8mR/x5iDuijZUPGONqYrE6+b2Rid6jjWMn4Lof1YHEcu+TPSC1twKl3Bl
+         9+zg==
+X-Forwarded-Encrypted: i=1; AL+hErEf90ZvPWVgOF6A6Lej7wvpoZyFuzmGEmttc2+rmWZtuHjrxO9W3HLusrUsh76V8Fl6l5jz89Px9zI=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/c3MbjFF+NAVPqvkO4uOSlR/Ucl7G/ph2ACLBxM4edV0D1oL9y
+	Nr9kdOyQKsz+RK0rFT45ds0S0re6l8fQ466A5Ia6JMWsMiEZus7ZeoVF
+X-Gm-Gg: AYBFou02yVUwbmgOpk81mUlAZMvjo7YAZueiKNECi+Q2R0oTAQBrIrwphOY0fgYZ8Uh
+	/fTX+qVy61Xzm0w15mUmr6FutVafstU7QQ68EGfkKbmidIos7XjR4DCBuG1JortlNAAmYvbYi8P
+	ZM8UQoEh5WhSuD7sco+dCFuy002G209uPvfEqOIUdNnJzzAD3+PR/YM6AAUaQaYkc6IE64nj64A
+	/QFnyjepiocL/cvxo72CdGN6sbzQzMFgbnVqeVcbGhzbKXIUNsLxVCuwsNqyL2qyhRSXQIxP6vA
+	y0azI9wVvivcLK/U65B7HG5YT1U75Tby2oqIxHvH/orT92a3vecxFvEl3WkmpHeUERsA3SVQy8Q
+	P72I+Nm6Ss6WIFPnvmPYvnDByxXIymHAj6P5S7abjeKwjj54rFDyn0XwVRqD5VF7+nF20m3eK4a
+	HdpABNp6E4jy+l1p3gxL1MbRPi/MmHUkyUakPvwzlG37CLKZ8Em1bqxSafvXtbhzIDdEJBhz37m
+	r2fzkKYHd5vF6eLUGy3VFM/Ejxk6E3LgY5nWJMmlMMmmDg7zvHN77D2wCb9x7HSdxYTTs+nzcpc
+	hcQv5fbKxjmu2nrWz1tBZUKE19rHc/0jEXwQAUAoSAMpol8Ews6V
+X-Received: by 2002:a05:701a:c961:b0:1b5:10cf:c402 with SMTP id a92af1059eb24-1b543d09a83mr5609963c88.10.1795098197560;
+        Thu, 19 Nov 2026 06:23:17 -0800 (PST)
+Received: from localhost.localdomain ([103.149.158.188])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b549e398e4sm10306022c88.15.2026.11.19.06.23.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Nov 2026 06:23:17 -0800 (PST)
+From: Sreeraj S Kurup <sreekuttan2156239@gmail.com>
+To: krzk@kernel.org
+Cc: alim.akhtar@samsung.com,
+	bhelgaas@google.com,
+	jingoohan1@gmail.com,
+	kwilczynski@kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	lpieralisi@kernel.org,
+	mani@kernel.org,
+	peter.griffin@linaro.org,
+	robh@kernel.org,
+	sreekuttan2156239@gmail.com
+Subject: Re: [PATCH v8] PCI: exynos: Handle PCIe PHY initialization errors 
+Date: Thu, 19 Nov 2026 14:22:51 +0000
+Message-ID: <20261119142251.2665-1-sreekuttan2156239@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <0a3b7886-3800-42ee-8e22-80944114dfcf@kernel.org>
+References: <0a3b7886-3800-42ee-8e22-80944114dfcf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -99,81 +108,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: Nursultan Yergaliyev <n.h.yergaliyev@gmail.com>
-Date: Thu, 19 Nov 2026 19:21:23 +0500
-X-Gm-Features: AclHuK-GPbU-n10FioifDd6zyXPcE9XxsktzVAibinWZC7QRfmlMnwK7uTQ1184
-Message-ID: <CACWbNdxohFg52KLwfH6fd95dGXiviffX9kNLw_1=j7ZpCCuMjg@mail.gmail.com>
-Subject: [BUG] pciehp: spurious "Card not present" on soldered dGPU port after
- resume deadlocks dpm_resume (Lenovo Legion 5 15IAH7 / 82RB)
-To: linux-pci@vger.kernel.org
-Cc: lukas@wunner.de, bhelgaas@google.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi,
+Hi Krzysztof,
 
-On a Lenovo Legion 5 15IAH7 (machine type 82RB, BIOS J2CN57WW,
-Alder Lake-P + soldered RTX 3060 behind root port 0000:00:01.0),
-resume from suspend hangs reliably (s2idle and deep, also with
-pm_test=platform). Kernel 7.0.0-43-generic (Ubuntu 26.04); also
-reproduced on 6.17. Windows suspend works on the same machine.
+Thank you for your feedback. I would like to clarify a few things regarding the patches 
+and the concerns you raised.
 
-The dGPU root port advertises hotplug although the GPU is soldered:
+The code is not entirely AI-written, as you claim. The reason I sent multiple patches on 
+the same day is that I was working on them over time and submitting them as they were ready. 
+They were not all written and sent at once. There was a time gap between the submissions, so 
+please don't assume that I was blindly sending random patches just to get past the review process.
 
-  pcieport 0000:00:01.0: pciehp: Slot #1 AttnBtn- PwrCtrl- MRL-
-  AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ IbPresDis-
-  LLActRep+
+Regarding the v2 to v9 revisions, I admit that I blindly trusted your Shashiko reviews. I submitted 
+the patches on my holiday, assuming that Shashiko was properly trained on the latest Linux kernel 
+source code. I also assumed that, since the PCI subsystem uses Shashiko for patch reviews, its 
+feedback would be reliable enough to trust.
 
-Before suspend the port is in D3cold (dGPU runtime-suspended).
-On resume (no_console_suspend, pstore):
+If Shashiko repeatedly reports issues that are incorrect or misleading, why is it being used as a 
+review tool in the first place? Isn't relying on such feedback equally problematic? I trusted its 
+suggestions because I assumed that the review system was reliable and that its feedback had been 
+properly validated.
 
-  ACPI: PM: Waking up from system sleep state S3
-  pci 0000:01:00.0: VC save buffer size does not match @0x100
-  pcieport 0000:00:01.0: pciehp: Slot(1): Card not present
+Manivannan Sadhashivam also advised me not to blindly trust automated review tools. However, he 
+explained his concerns constructively and helped me understand where I was going wrong. 
+He understood that I had trusted Shashiko's feedback in good faith. I appreciate that kind of 
+review because it helps contributors learn and improve rather than simply questioning their 
+understanding or dismissing their work as AI-generated slop.
 
-pciehp then removes the GPU functions while dpm_resume() is still
-running and user space is frozen, which deadlocks (sysrq-w via pstore):
+I'm not claiming that my patches are perfect, and I'm willing to take responsibility for genuine 
+mistakes. But dismissing the work as "100% AI-written slop" simply because I submitted multiple 
+revisions is unfair. Humans can also submit multiple patches in a single day. That alone does not 
+prove that the code is AI-generated or that the author doesn't understand it.
 
-With nvidia loaded:
-  irq/122-pciehp: pciehp_ist -> pciehp_disable_slot ->
-    pci_stop_and_remove_bus_device -> device_release_driver ->
-    nv_pci_remove -> ... -> down_read [nvidia_modeset]
-With nvidia blacklisted:
-  irq/122-pciehp: ... -> pci_stop_and_remove_bus_device ->
-    azx_remove [snd_hda_intel, 01:00.1] -> snd_card_free ->
-    wait_for_completion
-In both cases:
-  kworker (async): async_resume -> device_resume -> mutex_lock
-  kworker (kacpi_hotplug): acpi_device_hotplug -> mutex_lock
-  systemd-sleep: dpm_resume -> async_synchronize_full
+I understand your concerns about code quality, and I will take greater care to verify every review 
+comment instead of blindly trusting automated feedback in the future.
 
-The "Card not present" is spurious: with PCIe hotplug disabled the
-GPU is present and fully functional after resume (nvidia-smi OK).
+I respect your experience and feedback, and I am willing to learn from genuine technical criticism. 
+My intention has always been to contribute quality code to the Linux kernel and improve through the 
+review process. I hope you can understand my perspective as well.
 
-Results:
-  pcie_port_pm=off                      -> s2idle OK, deep hangs
-  pcie_ports=compat                     -> hangs (acpiphp removes the
-                                           device -> same deadlock)
-  pcie_ports=compat acpiphp.disable=1   -> s2idle and deep OK
-  00:01.0 kept in D0 at runtime (child d3cold_allowed=0 +
-  power/control=on)                     -> still hangs
-  removing 00:07.0 (TBT) and 00:1d.0    -> still hangs
-
-With hotplug disabled, I compared lspci -vvvxxx of 01:00.0 and
-lspci -vvv of 00:01.0 before and after an S3 cycle. The only
-difference is the PMCSR power state of 01:00.0 (D3hot before, D0
-after); vendor/device and subsystem IDs are unchanged and the port's
-slot status is identical, so this does not look like a "device
-replaced" case. The "VC save buffer size does not match" message also
-does not appear when hotplug is disabled.
-
-Questions:
-1. Should pciehp ignore/defer a presence or link change seen during
-   system resume until the link to the device has been retrained?
-2. Or would a DMI-based quirk that disables hotplug on 00:01.0 for
-   this machine be acceptable? I can test patches.
-
-Full logs (pstore traces, dmesg, lspci -vvv of 00:01.0, acpidump):
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2174812
-
-Thanks,
-Nursultan Yergaliyev
+Best regards, 
+Sreeraj
