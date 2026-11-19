@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795127920;
-	b=O9tXoYRFwpunB8Stsivpma5jw8lAX2kat7nY1Rl1c3IYMeYeVtv1lgHeVoRgDDQ/a2TO
-	 HUnyfhzmF0OZlAd2SWDqwugSWlBQWK8tecuXrnNctq3YLaaxYKZDZqBbLPIux0DGaL1Ts
-	 w29AehMI3RaaQs7AKjXQE1949ea250OH7R0Z93K4alFOG/EYreMiGMhLUGX+9NrH9Azrt
-	 h2Vj3fFCQ0daBryfdU1+bwMntlJ4S2kVz/thrJLCh5voTFuZRIRQUpvhEc90LUHkxW4ti
-	 vxfOH+PYIrLT2QrhsoxyAZ7H6IGq6NHngrTBYsLHwjq/pmM4USd3Fb3UG/AjifkxKYQ==
+	t=1795127925;
+	b=cQj3BhNYHyrZ3zyFMrvbua8G2iNePpgeLTuT9QbNalJqpjcudynTkeZoDx7J+hdfar9K
+	 0z97ObndQE8op+5NvA8Q0vInrx0E7L1h2qQ00QhL4GP1Hqq9gKWM+2uDoTQznwO1YG0BF
+	 jIi9hQWtNSMHmx4YJ9Cw5vXWjwoJ27rt+iCPLODQrUdWUUeoVjwevT70mK1Yp02VoZuwJ
+	 VbwnahxjhGmq2znz0ek0x//oxa5owDwZY8uMbSCt2bhbMV3G01/D9rMOkclwyClaB809s
+	 jVSA+kq1dFl/EUm8M0zczv5uXZr/OtPvytGIeO3wnqbV17a1Mj0FPEocOYZAqiTvncA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795127920;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795127925;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=cj8MKy2tc3Sx1JwUpxECQgdXmsrh1YRqOP4Sl+8Dj74=;
-	b=5Q6DT5axwzeUHcJoSDXqCyyBUa1JWYF/wXgy42q8LG5chMbCUX1l7eln5JGz/BGz9qpz
-	 vLlnrjNZuTOdmSwaNCtZ0S2kXHY+yCayVRBcWfHC1PrbJtgZFkojw4A2ECEXT+kUcLeg6
-	 THFcXNKtP14heMO2fR6XbEyIIN24YSE4iy/KUZHQvrTQgzCKxPLy83XDwELqscMLQ57sD
-	 uGMss8ykqn5vN+uwh9tZAvLgnVaS3pz9jhVT0gLznOQtUFPFOe6Tg59Y8synC2itf4s1P
-	 dCvzZPGkmnipUCfigF9hN4Mp0WfRn8H9TOIzTA9nNYwTe+tM6pV6kuQ6k8Vcugv6OeA==
+	bh=Oub/Ol/8+MHQZEeLyeMANUxv5ii8PId82e+apI4K+qk=;
+	b=jER6hrizVFPT2BWu6j7V0r03RxgD0R6+rWHId1pFQ7iL6S/oLpbJDKwWoXkuOnjPAxjw
+	 st82wJZqoT/eK7BA7t7y7EVMvf5RNku+W4sort259mKSNws2mnCpQC2qRYEWBaAUv1q80
+	 12CQ+/+bN/PuM0HFdCKC4YHiEWeZRc9tyyGf8H1ZUfLNclNtLIkS/8hymLDe904xey0DM
+	 NIhdZri6DfsnQUZEhBIuFSBdRYALRH2PZVGyvD6tBxZXWnQCZ9WXPB6U+sD9qlpnpdaWo
+	 hek94BDDDhF89ADCzOpHNU9HYcnqezckjnRUAJawvdZo64Aptp+qJ+cbMVJoPND48ug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NuwjnRJ7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K84lAhix;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C995606A325
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 22:38:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58443606A32A
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 22:38:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NuwjnRJ7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2EBA1F000CF;
-	Thu, 19 Nov 2026 22:38:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K84lAhix
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F7FB1F000C6;
+	Thu, 19 Nov 2026 22:38:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795127920;
-	bh=cj8MKy2tc3Sx1JwUpxECQgdXmsrh1YRqOP4Sl+8Dj74=;
+	s=k20260515; t=1795127925;
+	bh=Oub/Ol/8+MHQZEeLyeMANUxv5ii8PId82e+apI4K+qk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NuwjnRJ77VaBWoVlfrRYMOPJitsXnO0CmQ0ewhyBdvVQIUMa/2Lla85Nd6sVLcqSO
-	 rBSZstLLajgdg7CE+ZtMUiIPEv7PaFl58FO+wjyZERXsQJXc1P+8EZBEsc/pc0Li1r
-	 dSkKtAQNhJuxTDl75YrxBtqZBBY5rTx9XQlDa6MrD3Mm2Dx+CX2hcFoQ7EkEK4jzX2
-	 ix5bmcrCXaw7nWXSZsh23FNASS8JJ6jpmZa+nRvl4KCo6luiLjhnX2QZ86aYoWNNTT
-	 gsxJFCM+Haoqlx6Fd3JAZz1snnrO7gz1yCU4oh1Hz3OR/4LMVYS79qCG5O55gft1aC
-	 rAn9WVkFg2HcA==
-Message-ID: <sashiko-outbox-224145@kernel.org>
+	b=K84lAhix8cpsbsDJfvQeFZGr+Kk8Lz8wqX8LsgOt1bVOP+kEieFCct6YVOzjhHp7x
+	 OpyQVrxppkAYDnQubFP54zWqkFntRE+SzwrlCoyTrb6gIfcBHRgyAl9fNELbzT9wIP
+	 6f9ZdkqZ6lOgxy7x4VJM1SJ1d4POd7ZESTcYetGoupVdU2w1on2fb0QaqmkLBOqhtC
+	 TKbTLWHkGCIcLv8A0bmo4qecQBFq9m10SQYtCJ3KEVvJEMkjG4sq8l96fdqwsvGenS
+	 Y6q1K78HFEyAwsZkjf+8XUozb1Vkb18oCul+Cu3Ve0N4JuLuM2KR6sZBu2CYgu1gIv
+	 JK4CKeGZzvC5A==
+Message-ID: <sashiko-outbox-224146@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 10/13] PCI: liveupdate: Adopt ARI Forwarding Enable
- on preserved bridges
+Subject: Re: [PATCH v11 11/13] PCI: liveupdate: Freeze preservation status
+ during shutdown
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Matlack" <dmatlack@google.com>, kexec@lists.infradead.org, linux-mm@kvack.org, linux-pci@vger.kernel.org
 Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@amazon.com>, "Alex
@@ -57,12 +57,12 @@ Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf" <graf@ama
  Mahameed" <saeedm@nvidia.com>, "Samiullah Khawaja" <skhawaja@google.com>, "Shuah
  Khan" <skhan@linuxfoundation.org>, "Vipin Sharma" <vipinsh@google.com>, "William
  Tu" <witu@nvidia.com>, "Yi Liu" <yi.l.liu@intel.com>
-In-Reply-To: <20261118223704.3286085-11-dmatlack@google.com>
+In-Reply-To: <20261118223704.3286085-12-dmatlack@google.com>
 References: <20261118223704.3286085-1-dmatlack@google.com>
- <20261118223704.3286085-11-dmatlack@google.com>
+ <20261118223704.3286085-12-dmatlack@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 19 Nov 2026 22:38:38 +0000
+Date: Thu, 19 Nov 2026 22:38:40 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -74,65 +74,66 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [Medium] PCI: liveupdate: stale ARI state in pci_configure_ari() with
-  pci=3Dnoari
+- [High] pci: liveupdate: panic on session teardown after
+  pci_liveupdate_freeze()
 --
 
-commit ee2b5e1cebde3231a1c9acaaf68c272dbf3c6e8e
+commit a3120ec70b92ea26f3e1d92d3bd0d1531b5a73b6
 Author: David Matlack <dmatlack@google.com>
 
-PCI: liveupdate: Adopt ARI Forwarding Enable on preserved bridges
+PCI: liveupdate: Freeze preservation status during shutdown
 
-This commit adopts the ARI Forwarding Enable bit from hardware on
-incoming-preserved bridges during a Live Update, even when pci=3Dnoari is
-passed on the kernel command line.
+This commit freezes a PCI device's outgoing live update preservation
+status in pci_device_shutdown() so that devices cannot be preserved or
+unpreserved once shutdown begins.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ebc565b4780a1..b5b578355a1b6 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3748,7 +3748,7 @@ void pci_configure_ari(struct pci_dev *dev)
->  	u32 cap;
->  	struct pci_dev *bridge;
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index a45ad86370d5d..e26d2f5c2338c 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+
+[ ... ]
+
+> @@ -520,6 +523,11 @@ static int pci_liveupdate_unpreserve_device(struct p=
+ci_flb_outgoing *outgoing,
+>  {
+>  	struct pci_dev_ser *dev_ser =3D dev->liveupdate.outgoing;
 > =20
-> -	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
-> +	if (!pci_is_pcie(dev) || dev->devfn)
->  		return;
-> =20
->  	bridge =3D dev->bus->self;
-> @@ -3759,6 +3759,12 @@ void pci_configure_ari(struct pci_dev *dev)
->  	if (!(cap & PCI_EXP_DEVCAP2_ARI))
->  		return;
-> =20
-> +	if (!pci_liveupdate_adopt_ari(bridge))
-> +		return;
-> +
-> +	if (pcie_ari_disabled)
-> +		return;
-> +
->  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
->  		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
->  					 PCI_EXP_DEVCTL2_ARI);
+> +	if (dev->liveupdate.frozen) {
+> +		pci_warn(dev, "Cannot unpreserve device after it is frozen!\n");
+> +		return -EINVAL;
+> +	}
 
-[Severity: Medium]
-Does returning early on pcie_ari_disabled leave PCI_EXP_DEVCTL2_ARI and
-bridge->ari_enabled set to 1 if a new device is hot-plugged after the
-preserved devices below the bridge have finished Live Update?
+[Severity: High]
+Can rejecting pci_liveupdate_unpreserve_device() on a frozen device trigger=
+ a
+panic in pci_check_all_devices_released() when a Live Update session is
+closed during a non-kexec shutdown?
 
-When booting with pci=3Dnoari, pci_liveupdate_adopt_ari() sets
-bridge->ari_enabled =3D 1 while bridge->liveupdate.incoming is set.  Once
-the preserved devices finish Live Update and bridge->liveupdate.incoming
-is cleared, hot-plugging or rescanning a non-ARI multi-function device
-below the bridge causes pci_liveupdate_adopt_ari() to return -EINVAL and
-pci_configure_ari() to return at pcie_ari_disabled without reaching the
-else branch that clears PCI_EXP_DEVCTL2_ARI and bridge->ari_enabled.
-Because bridge->ari_enabled stays 1, next_fn() calls next_ari_fn(), which
-returns -ENODEV and skips enumerating functions 1..7 on the new device.
+Unlike kernel_kexec(), which calls liveupdate_reboot() to serialize sessions
+before device_shutdown(), non-kexec shutdown paths (kernel_restart(),
+kernel_halt(), and kernel_power_off()) call device_shutdown() ->
+pci_device_shutdown() -> pci_liveupdate_freeze() without serializing Live
+Update sessions.
 
-Checking !pcie_ari_disabled alongside pci_find_ext_capability(dev,
-PCI_EXT_CAP_ID_ARI) instead of returning early would allow the else branch
-to clear PCI_EXP_DEVCTL2_ARI and bridge->ari_enabled.
+If a task closes an open session FD with a preserved PCI device during or
+after pci_device_shutdown(), luo_file_unpreserve_files() invokes the file
+handler's .unpreserve() callback and then unconditionally drops the outgoing
+FLB reference:
+
+kernel/liveupdate/luo_file.c:luo_file_unpreserve_files() {
+    ...
+		luo_file->fh->ops->unpreserve(&args);
+		luo_flb_file_unpreserve(luo_file->fh);
+    ...
+}
+
+Because dev->liveupdate.frozen is set, pci_liveupdate_unpreserve_device()
+returns -EINVAL without decrementing dev_ser->refcount or
+outgoing->ser->nr_devices.  When luo_flb_file_unpreserve() drops the final
+FLB reference, pci_flb_unpreserve() calls pci_check_all_devices_released(),
+which panics because outgoing->ser->nr_devices is still non-zero.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118223704.3286=
-085-1-dmatlack@google.com?part=3D10
+085-1-dmatlack@google.com?part=3D11
