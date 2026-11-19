@@ -1,53 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.67.10.101
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795093961;
-	b=MoVW1kGBHgYKzazNV1of9J01oL8wmsEDSbYyksnFfdUezswGSvybYCkAJsURDqAFMDG6
-	 l28uAhFmal+mDOyLR+ZWafUNqQs2tNUwrC/xv586Sgz+aN3nY+kcT4tqKHG8ONg7KcA4T
-	 yPRvcRzmHFk6SOP06T6VSPQLf5iSQPhMdcRBl/thUTtzLIx2kOIp66i2DbIFD3dv0lLYc
-	 buH1g6AflY/FeMn/wcBzKwCxku1ZeGubQu/3WEiaxq3AieVGi5WL1XkgYBqmXti+9LEmC
-	 nBFReMzj2UDoSE3BNHin3l5pLlQkVWgbfZpCagLoZkk8ogb5EfKOy4dlRXKVChbZLDA==
+	t=1795095092;
+	b=oiFU8PF0uZ9f346quLFQDEfXUPpT98gW9AWGuaDWyRTVu5b3K4qq6qKdY3vk9TtfWtu7
+	 T9OB2wcOTVYqfW5WZTOQi8RrzSMMaMK6ibGFKUt3Jd2CymDRiBXNDp4dRSMZuLsegDN8g
+	 LsOKOcOxgxXSrZh3yeJ5IBbwfGlG1LoALg/0yt9E6+zKFyGiJ4qxEISrZHFVijsx4KbSn
+	 i+88lq5uTkKPbyeQjjsXOx+dDyEPEYeUhLsYSR1MjOMydYoYleUi2cjZUldcBUYgsu2uP
+	 prSZVWtO5dISyk72NExduSGdzSUtoUahiU+dubDsTuX35QAcqYdDK51h5dXftpp03Aw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795093961;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=lkXZm5NKaXwLnDwDjIWKPOUBRSTD+JqAiGd26MhjLyA=;
-	b=cwLBudbTDZK7fjQCfjCNZkSgh5aF90177EQUk1VtHtUiDibUJSi+Hw/gkOU9RZG/z0jy
-	 MAZF4VpKy9gE5xpjvpCz1W3yJ3cVKpUF2QoFan7z3maJd2uM7VorFU7rgQnqn0cHCPlaI
-	 omDsIyHsdaisI5JwEqBUkh5WO2Cp7RlrEps9j406EIgk41ME/5EUjKzJfo86FIWCDcq+v
-	 x6q1lCCpEkSZD5V7tgGcTbVfa+ijW3iD+zp79UzenQDo7lM75D1/njZyxg6pwC6GDg22u
-	 NCOed7CIby9580GWk9g6h1MxOtijiyBQq0Otmobu/G6HI4SBtEQsGxPwbxuuf2rU0ZA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795095092;
+	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=j+Za7bMQTz/jGW5KKJ1wZv8OZM3LMy2RfyXXPrr5ddk=;
+	b=ZdRUG3+cmj/6Oc6tD2jZ7NaPDFMu7XSpV1cnBeAyPmzZJC8OhoHyW7EJbAT3yHHqNVMO
+	 8WJiVZTI2FNbzt4feN93k9TPaU2biv2oRotTRdIQv8+2V2NS5Rt4Qef5UesPVhEXoh8kf
+	 sKkDtwP1D3efcTKvIW5vbyv3KxUv+BSDN4aIU1KONoWLrkOmbz0IjLKkeRCzvOHJv5iBZ
+	 JjAvwSNITlHcUr9PxlBFSu279Z1J+ud2U4W2OfEblxOFRXHOwCd35mqBb0K566OEJrLb5
+	 FQmAkSd32+DY1iK0m+iMr8Qd+WWQbc4wHejy0uzQP5RDwAcNby8ZXYYDA/n4APpB9Wg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GTciaAdD;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=lunn.ch;
+	spf=pass smtp.mailfrom=lunn.ch;
+	dkim=pass header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=mOPIqIOm;
+	arc=none smtp.remote-ip=156.67.10.101
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with UTF8SMTPS id 270FA606A320
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 13:12:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0CE8606A320;
+	Thu, 19 Nov 2026 13:31:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A0CE8606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GTciaAdD
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 067EF1F000C6;
-	Thu, 19 Nov 2026 13:12:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795093960;
-	bh=lkXZm5NKaXwLnDwDjIWKPOUBRSTD+JqAiGd26MhjLyA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=GTciaAdDwr/woqstlq6RxNaAGJprNMhYO6bKYsb+uZnzJ7mE4LsXFKMxOLz4jN8cS
-	 HjIZhFHpLcODIdCmDdskffnw6jxBgsyeNli1dCTfU4SUaRYMoqfw4Sr1PHGvppDk/n
-	 vIcT6P9cT7T2PzEE+vM+WrDnL2cQcs4xVrBCtndAGgK7Icl1GvsCu6PxuLd5IUw33q
-	 6wb32mQOibJTk/hKsg2NkordvVOz1M6oMMHDYyLqXq0Ok17c7xhI4r7qi7e39wU8UE
-	 jv44r7WxdTOKfz8PPo4+5WGTgvkmssEgSwTqGCK1tT0yHT/+sWgo0wW/6Qu0V0k6cG
-	 LyuLBeS8gMmUA==
-Date: Thu, 19 Nov 2026 14:12:37 +0100
-From: Bartosz Golaszewski <brgl@kernel.org>
-To: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, krishna.chundru@oss.qualcomm.com
-Subject: Re: [PATCH] PCI/pwrctrl: tc9563: Enable 8 GT/s equalization
- fine-tuning
-Message-ID: <3ru5dshu5gpp3qj3g5aselcwkdlffzl5uwrzdkengukmbttd6f@yfcbwayazcpr>
-References: <20261119-tc9563_fine_tune-v1-1-b83c74bf1e94@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.a=rsa-sha256 header.s=20171124 header.b=mOPIqIOm
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
+	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
+	bh=j+Za7bMQTz/jGW5KKJ1wZv8OZM3LMy2RfyXXPrr5ddk=; b=mOPIqIOmu6kDdwVuemWcNK9Dnn
+	3scHm6yoxWlXhjKDg88oGkRMzRyRggfFiPC7IQHuffZ0g5VsQiVACcLcbYFf/YJimxzK2sEH4Ma7z
+	s46ArUotTLBJyzxjIYKthUVRWJnOH1H0QxoK1FCOjd282vF3lK0QU0S6Yx/wpK07j6KI=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+	(envelope-from <andrew@lunn.ch>)
+	id 1xU2Dn-0002Ui-FK; Thu, 19 Nov 2026 14:30:39 +0100
+Date: Thu, 19 Nov 2026 14:30:39 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	Chris Lu <chris.lu@mediatek.com>, Mans Rullgard <mans@mansr.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Cornelia Huck <cornelia.huck@de.ibm.com>,
+	Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>,
+	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev, linux-coco@lists.linux.dev,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-sound@vger.kernel.org,
+	Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v3 18/31] net: phy: Use the compatibility driver
+ attachment API
+Message-ID: <7c87310f-e1c6-4a84-8161-11a6e5d91785@lunn.ch>
+References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
+ <20261118-device-trust-core-v3-18-d655875c4bfb@nvidia.com>
+ <71c1b931-c553-46e3-b49a-51167f168ac4@lunn.ch>
+ <20261119071811.GG162713@unreal>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,23 +106,26 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261119-tc9563_fine_tune-v1-1-b83c74bf1e94@oss.qualcomm.com>
+In-Reply-To: <20261119071811.GG162713@unreal>
 
-On Thu, Nov 19, 2026 at 04:57:12PM +0530, Abhishek Kumar wrote:
-> On some boots, links on the PCIe switch report a continuous flood of
-> correctable AER errors (RxErr, BadTLP and Replay Timer Timeout) at
-> 8 GT/s. This happens because the 8 GT/s equalization fine-tuning
-> setting is never programmed: max_num_of_fine_tuning_iterations_at_8gt
-> in K_EQUTUNING_033_028 resets to 0, so equalization only selects a
-> preset and never fine-tunes the transmitter coefficients for the
-> channel, leaving the link with marginal signal quality.
+On Thu, Nov 19, 2026 at 09:18:11AM +0200, Leon Romanovsky wrote:
+> On Wed, Nov 18, 2026 at 09:21:45PM +0100, Andrew Lunn wrote:
+> > > @@ -3813,6 +3809,8 @@ static int phy_probe(struct device *dev)
+> > >  	int err = 0;
+> > >  
+> > >  	phydev->drv = phydrv;
+> > > +	phydev->is_genphy_driven = phydrv == &genphy_driver ||
+> > > +				 phydrv == &genphy_c45_driver;
+> > >  
+> > 
+> > Why do this here?
 > 
-> Fix this by programming one fine-tuning iteration on the upstream port
-> and downstream ports 1 and 2 at power-on, so that 8 GT/s equalization
-> adapts the transmitter coefficients to the channel. With this setting
-> the links no longer report any AER errors.
-> 
-> Signed-off-by: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
-> ---
+> This flag marks that driver is already probed, which is reliably
+> happening in phy_probe() under right locks. It was the easiest
+> way to battle AI reviews which don't agree with how PHY subsystem
+> performs driver bound.
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+I've not seen the netdev LLM do a review yet. It will be interesting
+to see what it says.
+
+   Andrew
