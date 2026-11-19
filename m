@@ -1,57 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.150
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795084321;
-	b=c3w/kO8aeNYbTe8ZpWthdjG3YokQpbZ6qGZ/jC5mUgq1meiAQmDtsVY+uhujd8kQKYjF
-	 0LCR2nkv59fji7YR+tl1HEONTeMUIji7LylEB/3vvAYjYHo9VpplA0yAwnU/a3FMtS+Eh
-	 jcNCnVogpjDmSVJAu+N3Hi3q0LtL5f1R5RNrVdePls45VNaivG6+DYq0Ppxu3EMWfc8hD
-	 dZG+zgFM+lR0JLMdT6Brc32MexTgvpaFj9Bgc7DzO/vIfhwDZerzdpt8NprFjmFeItLv7
-	 4C+sXzEqfPmPUVvnToRf2yyc/0Lk2/oNvSMez5GzV6IVs/wBIxu5sqjP7v0Teo56Hrg==
+	t=1795084880;
+	b=YBOyPm7tRLU0eibk2/EHhIJY6UjUdn+bLDecTeqM4RGJO4UsEGk/cx8r0F+bPPH6wlVg
+	 c7Uy4OfOrO1jgW55EguhUQkUer8TUOuq5zDYaOPtY9dcTWgV4Z0wVwllet6ehGGCAN/ha
+	 zAT8bM0DdXVlr3s7UJd7ysCJQw3DIXU1YAI+WO/JcBFzpkTil9LJKWxQSxW+Dc2fHh+ri
+	 iZbc1X8cWyb1uxeHx+205Uput/TOoYA/SGPAq01Tor+TaHExwaqlAqzw3Vfckkl5JEmrB
+	 +S5VirPnDbEu4ZWfpOVx/+ywyZg9HALc/JeQenDn/shvNtZ2osNwJkuKzTus0b+a9UA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795084321;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=MLYV/9BUIfSbAtHLFVQ3CU/GXZVVfT6FDvd8k66d3E4=;
-	b=qJmGkBraLXSHkLaVDRDFnXo7AE8j9At2n80i543ecNHI8YcjYM2w5fvDwndakTHHvwfr
-	 QR6EAomNn9MQuzGgveuwLcZFjm8+3ERhd0kFLGcFrvhSbcZhuvljIBMLvfVBCazONhCe4
-	 ue0m/3aTuz1G/eG7IGz2OvDAzw6QU0K3oERYvPYiBQ/OFNWyGepPxwTKhdOe5c9xmKTks
-	 vxlKU8bJ8d3JYwUS72QXrBM7gI7Tg4L+me6I0sxFFg9ur+/wIiYELpZVtCNG7J1Ly7Qhk
-	 u1upN9g9IwS6DnTEGqjkggXUa2IJRCLx4e3xXAZVOYzantb1bExaElpu4rjuzL8d9sw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795084880;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=SqewZBuM8W9dFnIHmwbhkjA1res2Yb2Puzim9ot0z7Q=;
+	b=UkMaWc7YmF507y+/muXwZIT/OisiiKJ/CQOG2A6O5GqfMihPtNUftDcbVYg7ngMyiD4+
+	 Iztqj53F1RoV9hzkw2dSo87uaaBK/suZ7nkNHhFPYh5Gp8NKncnGj9U+xEnC2/WSOdA+n
+	 agvIMxc84CYaFUw3bGXfslUjhv8msBoQ7Pnjh+WpqzLAm8bi4e95pbiJRDl5F/Z6WSjuw
+	 CU7ZFm7VXqVCp5CqfKnDgmQ1BX9+6dn033tQZePi0dAlNE52mDwy8ZpiwOgDIgMs2PZl8
+	 c7cFaqFWW14sr87BuNqM+fzKkvfNQZx7ctOHqa1uLHYC/9HnN1W1UpVOdNeQWae5Y4Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BE68qbr8;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BXvKnVwq;
+	arc=none smtp.remote-ip=95.215.58.150
+Received: from mta1.migadu.com (out-150.mta1.migadu.com [95.215.58.150])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3E4606A320
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 10:32:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D369606A325
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 10:41:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D369606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BE68qbr8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D74E1F000CA;
-	Thu, 19 Nov 2026 10:32:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795084321;
-	bh=MLYV/9BUIfSbAtHLFVQ3CU/GXZVVfT6FDvd8k66d3E4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BE68qbr8xhkYwxGwgsHSR2imMHi4f6P8NBZGgfOUC7QZ3r9mbXrvIOCoXYTxCpexM
-	 YYNjsN0EgZfO1WrasymcE6vMNvx4a2C3nPU4Fy1eyYbb+L9JEZRtQWqpm40+KQ+qcF
-	 27Iy7gGo5v2jkZVrGw7epQsXHGwSmq+B45vZgS8TcENk44Ji1HPPjBgXQE4XKBhReL
-	 gyuJNzACKCoHv++Q3zHCTJ4yGjh0rBZFi4aSZ4RPoGOodTq0/spH8+SRPfkDO+5L/l
-	 0yxRn9EfAD24jDGOUoERILrAfk8a/IsM7nOaI3ArTVLChM1YFq0yrTFT06mpOk6Cqq
-	 JyVAxssKTOveQ==
-Message-ID: <sashiko-outbox-222957@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V1 4/4] PCI: Re-check function 0 reset methods after
- scanning its slot
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vidya Sagar" <vidyas@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261119100628.1948990-5-vidyas@nvidia.com>
-References: <20261119100628.1948990-1-vidyas@nvidia.com>
- <20261119100628.1948990-5-vidyas@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 19 Nov 2026 10:32:00 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BXvKnVwq
+X-Envelope-To: linux-pci@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=hHV4wmzRo7/QebuMoNM7638o7gz26MY6+dWlsZX3ePM=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795084877; v=1; x=1795689677;
+ b=BXvKnVwqbBXBF/S2cqOFQ6NvWmItsmp+bSF/X4MnyqKqrAnfGJPTYxwJ9VBOjX1hBeot7mSI
+ Kq3e8H+mtmOBFbuhDhXciM0EvtOdd4YBFsuz9hM4R/QjIX6lNQVISu7UGRoun9rikn4ynC4/Yze
+ vhqw4jcbqHLQadVdyV/lWEg8=
+X-Envelope-To: linux-pci@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id d7dbceaa39de39d7;
+	Thu, 19 Nov 2026 10:41:17 +0000
+X-Mizu-Trace-ID: d7dbceaa39de39d7
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <13462768-b7c2-4049-8e0e-44bd1e0fd659@linux.dev>
+Date: Thu, 19 Nov 2026 11:35:57 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,201 +57,92 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: Override Intel Apollo Lake audio class on Gauteng
+ W3S laptops [8086:5a98]
+To: Steven 'Steve' Kendall <skend@chromium.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Takashi Iwai <tiwai@suse.com>, linux-sound@vger.kernel.org
+References: <20261119-gauteng-audio-class-set-v1-1-e81d6fd620ad@chromium.org>
+Content-Language: en-US
+From: Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>
+In-Reply-To: <20261119-gauteng-audio-class-set-v1-1-e81d6fd620ad@chromium.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential
-issues to consider:
-- [High] PCI: AB-BA deadlock between pci_scan_slot() and pciehp
-  reset_lock
-- [Medium] PCI: stale reset sysfs attributes after
-  pci_prune_reset_methods()
-- [Medium] PCI: incomplete reset method pruning conditions in
-  pci_scan_slot()
-- [Medium] PCI: late or missing multifunction flag breaks hotplug slot
-  reset probe
---
+On 11/19/26 01:52, Steven 'Steve' Kendall wrote:
+> Gauteng Education Dept MODEL-W3S laptops advertise PCI class 0x040300
+> to use the legacy HDA driver rather than the Audio DSP on the Intel
+> Apollo Lake audio controller ([8086:5a98]). However, this board uses an
+> I2S ES8336 codec with no analog HDA codec, and its firmware otherwise
+> sets up the hardware to enable the DSP.
+> 
+> Add a PCI header fixup for [8086:5a98] on Gauteng W3S systems to
+> override class 0x040300 to 0x040100 so the SOF driver can claim the
+> device. Notably this fixes the internal speakers and headphones but
+> not jack detection.
+> 
+> This patch and its initial changelog were generated by Gemini during
+> an interactive debugging session given dmesg, lspci and similar
+> dumps from Gauteng W3S and MODEL-W3S laptops. The resulting quirk
+> was reviewed and tested on physical MODEL-W3S hardware and on a W3S
+> with slightly different hardware.
+> 
+> Signed-off-by: Steven 'Steve' Kendall <skend@chromium.org>
+> ---
+>  drivers/pci/quirks.c | 34 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 34 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
 
-commit a12801a8cda3240b7730ba41ca17db3de977e4a2
-Author: Vidya Sagar <vidyas@nvidia.com>
+Humm, this sort of quirks is usually in sound/hda/core/intel-dsp-config.c.
 
-PCI: Re-check function 0 reset methods after scanning its slot
+I don't think we've ever touched drivers/pci/quirks.c for DSP-related
+changes, did we?
 
-This commit adds pci_prune_reset_methods() and calls it on function 0 at
-the end of pci_scan_slot() when multiple functions are discovered,
-removing reset methods that no longer probe successfully once sibling
-functions are on the bus.
+And last you could do this driver selection with the kernel parameter
+snd_intel_dspcfg.dsp_driver=2.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 05d049f7ba75b..4175cca8e6e31 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5489,6 +5489,41 @@ void pci_init_reset_methods(struct pci_dev *dev)
->  	dev->reset_methods[i] =3D 0;
->  }
-> =20
-> +/**
-> + * pci_prune_reset_methods - drop reset methods that no longer work
-> + * @dev: PCI device to check
+> index 7f1f47ea2ee4..908d038fa29a 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -754,6 +754,40 @@ DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_SYNOPSYS, PCI_ANY_ID,
+>  			       PCI_CLASS_SERIAL_USB_XHCI, 0,
+>  			       quirk_synopsys_haps);
+>  
+> +/*
+> + * Gauteng Education Dept MODEL-W3S laptops report PCI class 0x040300
+> + * (PCI_CLASS_MULTIMEDIA_HD_AUDIO) on the Apollo Lake audio controller
+> + * ([8086:5a98]) even though the Audio DSP (BAR 4), NHLT ACPI table, and I2S
+> + * ESSX8336 codec are enabled and no analog HDA codec is present.
 > + *
-> + * Probe each of @dev's current reset methods again and remove the ones
-> + * that fail, keeping the order of the rest.  Unlike pci_init_reset_meth=
-ods(),
-> + * this never adds a method, so a list set through sysfs is kept, except=
- for
-> + * methods that can no longer work.
-> + *
-> + * Context: The caller must hold the device lock of @dev, which serializ=
-es
-> + * this against resets and writes to the "reset_method" sysfs file.
+> + * Override the class to 0x040100 (PCI_CLASS_MULTIMEDIA_AUDIO << 8) so SOF can
+> + * claim the device.
 > + */
-> +void pci_prune_reset_methods(struct pci_dev *dev)
+> +static const struct dmi_system_id gauteng_w3s_dmi_table[] = {
+> +	{
+> +		.ident = "Gauteng Education Dept W3S",
+> +		.matches = {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Gauteng Education Dept"),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "W3S"),
+> +		}
+> +	},
+> +	{}
+> +};
+> +
+> +static void quirk_gauteng_w3s_audio_class(struct pci_dev *pdev)
 > +{
-> +	u8 methods[PCI_NUM_RESET_METHODS] =3D {};
-> +	int m, i, n =3D 0, rc;
+> +	u32 class = pdev->class;
 > +
-> +	might_sleep();
-> +	device_lock_assert(&dev->dev);
-> +
-> +	for (i =3D 0; i < PCI_NUM_RESET_METHODS; i++) {
-> +		m =3D dev->reset_methods[i];
-> +		if (!m)
-> +			break;
-> +
-> +		rc =3D pci_reset_fn_methods[m].reset_fn(dev, PCI_RESET_PROBE);
-> +		if (!rc)
-> +			methods[n++] =3D m;
-> +		else if (rc !=3D -ENOTTY)
-> +			break;
-> +	}
-> +
-> +	memcpy(dev->reset_methods, methods, sizeof(dev->reset_methods));
-> +}
-
-[Severity: Medium]
-What happens to the reset and reset_method sysfs attributes if pruning
-removes every method from dev->reset_methods[]?
-
-When function 0 of a multi-function device supports no function-level
-reset methods, bus (and cxl_bus) initially succeed during
-pci_device_add() while bus->devices is empty.  device_add() then sees
-pci_reset_supported(dev0) =3D=3D true and creates the reset and reset_method
-files.  When pci_prune_reset_methods() later zeroes
-dev0->reset_methods[], pci_reset_supported(dev0) becomes false, but the
-sysfs groups are not updated, leaving an empty reset_method file and a
-reset file that fails with -ENOTTY on function 0 while functions 1..N
-omit both files.
-
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 222ad696a1581..0f9b4115abd8d 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2882,7 +2882,7 @@ static int only_one_child(struct pci_bus *bus)
->   */
->  int pci_scan_slot(struct pci_bus *bus, int devfn)
->  {
-> -	struct pci_dev *dev;
-> +	struct pci_dev *dev, *dev0 =3D NULL;
->  	int fn =3D 0, nr =3D 0;
-> =20
->  	if (only_one_child(bus) && (devfn > 0))
-> @@ -2895,6 +2895,8 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
->  				nr++;
->  			if (fn > 0)
->  				dev->multifunction =3D 1;
-> +			else
-> +				dev0 =3D dev;
-
-[Severity: Medium]
-Can bus and cxl_bus still be left enabled on multi-function devices in a
-hotplug slot that implements reset_slot?
-
-__pci_reset_bus_function() tries pci_dev_reset_slot_function() before
-pci_parent_bus_reset(), and pci_dev_reset_slot_function() rejects
-multi-function devices by checking dev->multifunction rather than
-dev->bus->devices:
-
-drivers/pci/pci.c:pci_dev_reset_slot_function() {
-	if (dev->subordinate || !dev->slot ||
-	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
-	    (dev->multifunction && !dev->slot->per_func_slot))
-		return -ENOTTY;
-
-	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
-}
-
-On ARI multi-function devices, PCI_HEADER_TYPE_MFD is hardwired to 0b in
-config space and pci_scan_slot() never sets dev0->multifunction =3D 1 when
-fn > 0 is found, so pci_prune_reset_methods(dev0) still succeeds in
-pci_dev_reset_slot_function() and keeps bus on function 0.  In addition,
-for fn > 0 whose own Header Type register does not set
-PCI_HEADER_TYPE_MFD, dev->multifunction is only set to 1 here after
-pci_scan_single_device() has already probed reset methods, so fn > 0
-records bus during probe and is never pruned.
-
->  		} else if (fn =3D=3D 0) {
->  			/*
->  			 * Function 0 is required unless we are running on
-> @@ -2907,6 +2909,18 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
->  		fn =3D next_fn(bus, dev, fn);
->  	} while (fn >=3D 0);
-> =20
-> +	/*
-> +	 * Function 0's reset methods were probed before the other functions
-> +	 * were on bus->devices, so a bus reset looked possible then.  Its
-> +	 * "reset_method" file already exists and userspace may have changed
-> +	 * the list, so only drop the methods that can't work now.  The device
-> +	 * lock keeps a write to that file from landing in the middle.
-> +	 */
-> +	if (dev0 && !pci_dev_is_added(dev0) && nr > 1) {
-
-[Severity: Medium]
-Does this condition miss other cases where the first device on a bus is
-probed alone and later shares bus->devices?
-
-pci_parent_bus_reset() refuses a bus reset whenever any other device is
-on dev->bus->devices, but pruning only runs when fn 0 and another
-function are both newly discovered in the same pci_scan_slot() call.
-The first device on a bus still keeps an unusable bus reset method when:
-- hypervisor_isolated_pci_functions() scans multiple non-zero functions
-  without fn 0 (dev0 remains NULL),
-- a later rescan adds a newly enabled sibling function alongside an
-  already-added fn 0 (pci_dev_is_added(dev0) is already true and nr can
-  be 1), or
-- a bus has multiple devices at different slot numbers scanned across
-  separate pci_scan_slot() calls.
-
-> +		guard(device)(&dev0->dev);
-> +		pci_prune_reset_methods(dev0);
+> +	if (dmi_check_system(gauteng_w3s_dmi_table)) {
+> +		pdev->class = PCI_CLASS_MULTIMEDIA_AUDIO << 8;
+> +		pci_info(pdev, FW_BUG "PCI class overridden (%#08x -> %#08x) so SOF driver can claim this instead of snd_hda_intel\n",
+> +			 class, pdev->class);
 > +	}
 
-[Severity: High]
-Does taking device_lock(&dev0->dev) inside pci_scan_slot() invert the
-lock order against pciehp's ctrl->reset_lock?
+also is SOF really used for an ApolloLake product? I thought all
+SOF-based Chromebooks started with GeminiLake?
 
-During hotplug enumeration, pciehp_configure_device() holds
-ctrl->reset_lock across pci_scan_slot() and pci_hp_add_bridge(), and only
-drops ctrl->reset_lock around pci_bus_add_devices() to avoid an ABBA
-deadlock with device_lock.  Meanwhile, slot and function resets acquire
-device_lock(&dev->dev) before pciehp_reset_slot() takes ctrl->reset_lock
-for write:
 
-CPU0                              CPU1
-----                              ----
-down_read(&ctrl->reset_lock)
-                                  device_lock(&dev0->dev)
-                                  down_write(&ctrl->reset_lock)
-device_lock(&dev0->dev)
-
- *** DEADLOCK ***
-
-CPU0: pciehp_ist() -> ... -> pciehp_configure_device() -> pci_scan_slot()
-CPU1: pci_reset_function() / reset_method_store() / pci_slot_reset() ->
-      ... -> pciehp_reset_slot()
-
-Because device_add(&dev0->dev) and list_add_tail(&dev0->bus_list,
-&bus->devices) have already run before functions 1..N are scanned, CPU1
-can lock dev0 while CPU0 is still scanning the remaining functions in
-pci_scan_slot().
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261119100628.1948=
-990-2-vidyas@nvidia.com?part=3D4
