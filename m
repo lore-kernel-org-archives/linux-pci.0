@@ -1,109 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.216
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795087640;
-	b=g2AhE8kVeYUo3QVUWNjiIw7tyVaM5dN6GBHPLS79G7QLnpsRO0wzFbiektvF8cxGq8fe
-	 unEQWbeBhcTKW9fWzBQEoHsV1SJYhzVilkVv/6hF4rkWXYhehb6WBKw0AZCRY0yFAAejN
-	 eBJ3IwI5PoWLmmFZ8nO0ursLXc4NOZFBqgTfFB9tuDEl/5R8LZDLZc9ymjIguON6he34t
-	 Hn5RuJPZ2PWbFYz1ss9DVBfWAPYJ/rj6ICwmvLvQSHF2dgGMl3cTNHY6FUnN/DEMzAk3S
-	 MvmHdgIBlwlWuet9q6dYBSO5Yn25V3TkFInzxXFvimd7yvFdewGrMSLXUfAjwfVj1TQ==
+	t=1795087849;
+	b=nak702jr3QGfk0/zRhvDp8xsL6IsOe8tLampmRfUgJVvt5m3ZWmxE9NM1AKXfd6TcW3c
+	 GT+v1n6snx/eylCskEUUWr7k7w8LUv1yG30q/xXtbx27o4WPllECyPN/52tUF2e3Y0O5I
+	 VK+JnUKZ+3PlIgR6/N6XLbeFPtgOcG0nSEAsGr96F6Pt+UVIqUWKNLj5nJ2HGMPqEy30F
+	 6lj7DICHkZkI/Q+JcpVapFCsA5gvpcO462s1crfR/+HQQjQkLfmON4ybJdiGF2TRGwHPa
+	 9a/s8vxqdNqy0yQhtJnKxucaCBHVyy3IbYJJP42Nrxme4t9tuXeRMXi91XGrWsG5vUQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795087640;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
-	 X-Received:X-Received:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
-	 X-Authority-Analysis:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=7NgWLd61caeetSDwQ+8TNWhgbja1dOPLFdjr+q4WIrI=;
-	b=X7tLi1uMTUl6qpG2NWDMD3GthLj79GT89bRL2G0T4B9IU8D4twkqMgVvF2KROQBK7v9m
-	 um+dpHC7UUNWWjquAtYKYBELM0y8I+BU3H/WCa7FKT32nf3TjayBCiKiK3CdAjs/R2N3t
-	 BCsVA3I/ao8YtzYrgbNj+ashpFIJv/yoUas7thV2KW7FBDyZRnw1AGqVK0vAjdzdcI9Gw
-	 MiKwVRLkxky5pifoe70YcKmmbsuwC4RxaniW3GlRwnoHT2OVAZJfDggEQbBIWxiDfengp
-	 oS5AJeDkIhPvEqdkJ4Hk1VsQJ/hfrcfEkthoC867uJe5FabXe7B70MD5yB9HJANc92Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795087849;
+	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:CC:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
+	bh=z0E2lZlV2yoBMZ56bSiufGGAa3c0rIjegx9XME1SsuA=;
+	b=q48nJ2Yjc/5g70dQx4MRzWgfkbVCMKbC38lvLl2TedqCBUTeMa/WK54WQfV11cYoM1hT
+	 7eDax9UJJ76RpaI1k6MiCevD5xQbs8r/Pj+yQGZZ14uP1N/TqoHXKpVoxQmNAe6VLOubd
+	 pZyipE3Udfj0lX29P2KpVS398RgS2r65UtJQ4oJ+4ksSFhsjTGpmeNTVA78dAPapl7H0E
+	 cR1AugaaUGhDLtXAck+jbSzV2ot9Y/x4zFIfjH1KzkX+R5+68/xb6VoEzP7nH6J4pCUKd
+	 gVK8SOOn3cvxzVYXBlq64vAhmyqjbw/sId8ePC8r1GvZqKomRb6GkrFbtda7pOxCXGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=CJTwwDW7;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=jv5lEhVS;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	dmarc=pass header.from=huawei.com;
+	spf=pass smtp.mailfrom=huawei.com;
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=FO7D36Ur;
+	arc=none smtp.remote-ip=113.46.200.216
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12BD9606A320
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 11:27:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12BD9606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 085DE606A320;
+	Thu, 19 Nov 2026 11:30:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 085DE606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=CJTwwDW7;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=jv5lEhVS
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AJBFi4g2151630
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 11:27:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=7NgWLd61caeetSDwQ+8TNW
-	hgbja1dOPLFdjr+q4WIrI=; b=CJTwwDW7Xv+6lVrV0Us294tT2ASlRsb0e1hyRn
-	eOsmbKEQhgAQEmgenS1EdGbBQynTX8M7TK2vt9ZI8/Ngwuhm2i/wcYLVfKhsOGpR
-	EWtP6zffXxXmUO7faz9HYuv6ppNa/vtp3LgGfbkAXbfqdxMVOWAnmJEgCTJu7CJ5
-	jJs0wRcnhCgmQWsNMgfDo3i504lcGeLf85d4Do9DyljOPhv6Wsv8MnmdJAWqin25
-	awYm/GopNz9fIHlv0vQrYl2WzjWiUlaOzT/65zg4cW0QP4TCMmGUwc19oFtsVvhq
-	9lk68mINRhDHvvWqvlaOKEVmv0sesr5qHk+7cMQ+GzxjCrkw==
-Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j1uux99uf-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 11:27:18 +0000 (GMT)
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-33713e5e6daso2770059eec.0
-        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 03:27:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1795087638; x=1795692438; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=7NgWLd61caeetSDwQ+8TNWhgbja1dOPLFdjr+q4WIrI=;
-        b=jv5lEhVS2iyR1511yi4ReOHuD0jAXB9obsxli4IsDLwzKt+1bZN4wQb2dE2pTepRzs
-         5f+tvRPsDuEdzbZgy+YQ/fVqXJKe4TE1GsdDAcUv3fmXrJWENJPeeNVzbvdmngklqE0S
-         Vogd8Rcwjb7yz5L10BOlYm1P5ijtHwK6eyFlJXlw4uWITWQjLpM0hCjjRdtn639aDaYs
-         bSV8DHIJuSsN8YfhasoFWsuvRo5OcW5txOAMSDPMp7/ZRjsNT7EichsNjwfvX0s4xJL0
-         c25QhgPbAjWbsQvJ2IRPYKNsRPT663XiesRLzc78++wXdI1L21CtavFNaItDOZGKx/kL
-         D5pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795087638; x=1795692438;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=7NgWLd61caeetSDwQ+8TNWhgbja1dOPLFdjr+q4WIrI=;
-        b=Oa5rAizR33sUvzRfT3u5ohhc56mLzAT61MmS6sry6/cCipxeckHAUVz4JvVrlFIR9y
-         uC+lg0Xr70OZxKW1an+SA3axCDBwNRUPbmg1cWRwgGwibCLMwPA9V1sysTO/rxuwhpUQ
-         Jb5RCTjLIAfgNzKjCzwEY7ujy7c3mKE/xIh5BY/ZsbQcvtcmWpK62vryfpEHHGxy2oNi
-         dw/GjAqemWJmCCUQ/ne74rTTvqS5FY+TRZIrTayyiGfvYJph3kGB30BvjyzFI0D2HMUj
-         +tfrzM3iwPZ1fVZFxlb/05Ui9/HyAxhwGFp+0bLesQRau4hDK6VywVWvLJydKIAtThvG
-         U+jw==
-X-Gm-Message-State: APuU4Z82X9/RLNm++FScIdaUFGT8fjUj9+IZo9Ty9xaZ2ab56WM0dZsU
-	60g9aIRZVEc01FPgfh6FR6IEk4WUXSgrHR8CLaxFy0AHj1JeggxpImqK8AV1Dux4yWrzwYQvYET
-	NUD5XmBPYfeozAyALnJTMSQw3Zwt0lb2qusy0DeyxWbi6S77vnns3kbc1b6Vm6bQ=
-X-Gm-Gg: AZFdTZcp2DsKehXk4INmUjvfKT32r2FUO+/X9pcgZ4jnGixnBNu0BUmjQz1EmOVu073
-	wXKnWznAYjkjRCh91p3OlJ1TfTULGO4BN4ftdHQmszEilVJXred00ao7n0fK2htJhqaFGoJac+z
-	JG0wow5kkSTyrtZRocTDhRqFQDrDb3oBlA+7ADI36AFOKEemOJHboVLKt/x+tU3wkScWWJbt3+9
-	ME517t5dfUf0nThs7zKu8RdQs5riWbICB0pN0zo52wokkjte/gWjr+8ANyybW/3y7OgrxbuLCN4
-	03wn+8cx/NJY9XDz0KjD9q1nAgD/qXKaHw3Nlt1gcEORiso6XbjoJ8tHpPEWQDj8B34S8uF9z6D
-	q+L6W4Bi8/Jug6VZk7XPUPiBj/EOTGqK6jbQHqUVKFFJHAvE5upuF2/Mf+0/+AKHTeiX7L+2zwf
-	eumAVUkyAcaA==
-X-Received: by 2002:a05:7301:711:b0:376:203e:7d7b with SMTP id 5a478bee46e88-3827d8225c7mr4973547eec.2.1795087637502;
-        Thu, 19 Nov 2026 03:27:17 -0800 (PST)
-X-Received: by 2002:a05:7301:711:b0:376:203e:7d7b with SMTP id 5a478bee46e88-3827d8225c7mr4973535eec.2.1795087636995;
-        Thu, 19 Nov 2026 03:27:16 -0800 (PST)
-Received: from hu-kumarab-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-382a75d401fsm16602693eec.20.2026.11.19.03.27.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Nov 2026 03:27:16 -0800 (PST)
-From: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
-Date: Thu, 19 Nov 2026 16:57:12 +0530
-Subject: [PATCH] PCI/pwrctrl: tc9563: Enable 8 GT/s equalization
- fine-tuning
+	dkim=pass (1024-bit key, unprotected) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=FO7D36Ur
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=z0E2lZlV2yoBMZ56bSiufGGAa3c0rIjegx9XME1SsuA=;
+	b=FO7D36UrX7bZtaxDXteU563jvlJyGcPLEvuvew7jirOzcsUkDJa7r7jipCvKI8QW9Q9+GAfSX
+	OLVaxJqNUhlQrJYkx6dT67m1ValxjILRAyaHmHEePh3QnIslz3nu9q7SbRoGklcUaKb41jl5qMf
+	oqfOAoKIJ/3UbJ12SIiCmok=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4jVbqG1Ywcz1T4Fp;
+	Thu, 19 Nov 2026 19:30:02 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7759D4057D;
+	Thu, 19 Nov 2026 19:30:43 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 19 Nov 2026 19:30:42 +0800
+Message-ID: <d66eb438-97d3-4f75-9d43-06b994e8edba@huawei.com>
+Date: Thu, 19 Nov 2026 19:30:42 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -113,126 +62,157 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v21 12/13] vfio/pci: Reset PCIe TPH state on device open
+ and close
+To: <sashiko-reviews@lists.linux.dev>
+CC: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+References: <20261118091238.45992-1-fengchengwen@huawei.com>
+ <20261118091238.45992-13-fengchengwen@huawei.com>
+ <sashiko-outbox-220903@kernel.org>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <sashiko-outbox-220903@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261119-tc9563_fine_tune-v1-1-b83c74bf1e94@oss.qualcomm.com>
-X-B4-Tracking: v=1; b=H4sIAA/d/moC/yXMQQqDMBBG4avIrBtwoobqVYqITf/odBFLEkUQ7
- 97YLr/FewdFBEGkrjgoYJMoi8/gW0F2Hv0EJa9s0qU2zNyqZNvGVIMTjyGtHoodcDdOox4rytk
- nwMn+Wz76v+P6fMOm60Pn+QVkIB1ydAAAAA==
-X-Change-ID: 20261119-tc9563_fine_tune-1fee86f2e4a3
-To: Bartosz Golaszewski <brgl@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, krishna.chundru@oss.qualcomm.com,
-        Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795087634; l=2700;
- i=abhishek.kumar15@oss.qualcomm.com; s=20261119; h=from:subject:message-id;
- bh=W+Ek/FXl/YHZtPvfISVMSCtee0YtYtVYdPTP3dUIXuA=;
- b=lXaN0ytDNAwp4xKM6oKfaDluqmGRtCnd7Ub05KoxkPsTT65fVOC2tmAHivdenBZWPfs9iBfOn
- CHPiTjJB6IEBrI0T2RRKER1taxL14vv7gAmFYV7Z1jN8hgMDZEYApp4
-X-Developer-Key: i=abhishek.kumar15@oss.qualcomm.com; a=ed25519;
- pk=9+XmrSHYMfaqDuFEwfVrJC3Sv5YurOo5aeFZ+59/h2w=
-X-Proofpoint-ORIG-GUID: mkiJlc4NichjMK8xj573w5lr2T_wQYz8
-X-Proofpoint-GUID: mkiJlc4NichjMK8xj573w5lr2T_wQYz8
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTE5MDA0NSBTYWx0ZWRfX6QHVXxC8WKsf
- 4wtPBjPnv82aVq9tj8mCac8Iq0bbpdP5KTesZPDpjMMpHs/PdbT/urWHFHiK6qbYqxD+LOb+IcW
- 0xcSNFJuYE+AFAGjP4R+kwX7aMfyNMg=
-X-Authority-Analysis: v=2.4 cv=Q89HcI2a c=1 sm=1 tr=0 ts=6afedd16 cx=c_pps
- a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=EUspDBNiAAAA:8 a=rkvmEHgfrVuJKAzVtpwA:9 a=QEXdDO2ut3YA:10
- a=6Ab_bkdmUrQuMsNx7PHu:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTE5MDA0NSBTYWx0ZWRfX0+puXa1gnyiY
- DEHoaHJjzFfoZ+EhpCdOsqsDk8RTOM+ksa95bWrs6oQmylBtnQBS5tGsldvi0GEfZDgQTWKohNq
- QQ1bJto88lWha+G1uOm1ndiQLVSqXmQtTx4C53+JmSGEQZniy3w39ifNAe+sZHQFCjaz64ItFJp
- 6FIWG9htSk2fb1PomA09qOy6jIdmP2ub/V377VxVwPCPkpSOTdKh2bBdkSQxKL6HlOYNQNvZsag
- hvCi06NiwXYRCkcizApNye+tApKyIqh/s4gfFgZtYCOsNJQ2fHEEwf7dLzGM9OoPWTZVZgVz0qN
- Rb5R+AJUgZIMayce2dnMw0EA8unfGuoFPss8M7yYbPNlebFj0+SVxVqjRdyV2jKSST8ZWNtcOwj
- 0/apjs6S93cwswQy+pBwushdec9bD9BNvjIBBHCP7qhj3ZLWD6/VtTeNovqAADzum7vGFgV1Lyn
- EzK5FHtX/c1n8aFsgkw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-19_03,2026-11-16_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 clxscore=1011
- priorityscore=1501 spamscore=0 bulkscore=0 phishscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611190045
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-On some boots, links on the PCIe switch report a continuous flood of
-correctable AER errors (RxErr, BadTLP and Replay Timer Timeout) at
-8 GT/s. This happens because the 8 GT/s equalization fine-tuning
-setting is never programmed: max_num_of_fine_tuning_iterations_at_8gt
-in K_EQUTUNING_033_028 resets to 0, so equalization only selects a
-preset and never fine-tunes the transmitter coefficients for the
-channel, leaving the link with marginal signal quality.
+On 11/18/2026 8:20 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential
+> issues to consider:
+> - [Medium] vfio/pci: pcie_disable_tph() after reset in
+>   vfio_pci_core_enable()
 
-Fix this by programming one fine-tuning iteration on the upstream port
-and downstream ports 1 and 2 at power-on, so that 8 GT/s equalization
-adapts the transmitter coefficients to the channel. With this setting
-the links no longer report any AER errors.
+We move pcie_disable_tph() before pci_try_reset_function() in
+vfio_pci_core_enable().
+With tph_enabled cleared before reset, PCI core will not save and
+restore stale TPH_CTRL and ST table entries during reset.
+The new user session starts with a clean hardware TPH state, and the
+subsequent pci_save_state captures this clean state.
 
-Signed-off-by: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
----
- drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+> - [Medium] vfio/pci: unsafe TPH teardown order and cpuhp race in
+>   vfio_pci_core_disable()
 
-diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-index 4091a2f30aa7..d27b009430f1 100644
---- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-+++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
-@@ -29,6 +29,9 @@
- #define TC9563_PORT_L0S_DELAY		0x82496c
- #define TC9563_PORT_L1_DELAY		0x824970
- 
-+#define TC9563_K_EQUTUNING_033_028	0x824a10
-+#define TC9563_EQ_FINE_TUNING_ITER	1
-+
- #define TC9563_EMBEDDED_ETH_DELAY	0x8200d8
- #define TC9563_ETH_L1_DELAY_MASK	GENMASK(27, 18)
- #define TC9563_ETH_L1_DELAY_VALUE(x)	FIELD_PREP(TC9563_ETH_L1_DELAY_MASK, x)
-@@ -346,6 +349,20 @@ static int tc9563_pwrctrl_set_nfts(struct tc9563_pwrctrl *tc9563,
- 				      ARRAY_SIZE(nfts_seq));
- }
- 
-+static int tc9563_pwrctrl_set_eq_fine_tuning(struct tc9563_pwrctrl *tc9563)
-+{
-+	int ret;
-+
-+	ret = regmap_write(tc9563->regmap, TC9563_PORT_SELECT,
-+			   BIT(TC9563_USP) | BIT(TC9563_DSP1) |
-+			   BIT(TC9563_DSP2));
-+	if (ret)
-+		return ret;
-+
-+	return regmap_write(tc9563->regmap, TC9563_K_EQUTUNING_033_028,
-+			    TC9563_EQ_FINE_TUNING_ITER);
-+}
-+
- static int tc9563_pwrctrl_assert_deassert_reset(struct tc9563_pwrctrl *tc9563,
- 						bool deassert)
- {
-@@ -557,6 +574,12 @@ static int tc9563_pwrctrl_power_on(struct pci_pwrctrl *pwrctrl)
- 	if (ret)
- 		goto power_off;
- 
-+	ret = tc9563_pwrctrl_set_eq_fine_tuning(tc9563);
-+	if (ret) {
-+		dev_err(dev, "Failed to enable 8 GT/s EQ fine-tuning\n");
-+		goto power_off;
-+	}
-+
- 	for (i = 0; i < TC9563_MAX; i++) {
- 		cfg = &tc9563->cfg[i];
- 		ret = tc9563_pwrctrl_disable_port(tc9563, i);
+The root issue is use-after-free caused by freeing tph_st_cpu before
+draining in-flight CPU hotplug offline callbacks.
+We reorder the TPH deinit to run before MSI-X teardown:
+- Call pcie_disable_tph() first to block new TPH programming;
+- Use cpuhp_state_remove_instance() instead of
+  cpuhp_state_remove_instance_nocalls(), which waits for running offline
+  handlers to complete;
+- Free tph_st_cpu only after all cpuhp callbacks finish.
+Since TPH deinit completes before MSI-X is disabled, the cpuhp offline
+handlers run while MSI-X is still valid, so the spurious -ENXIO error is
+naturally resolved without extra memory lock wrapping inside the callback.
 
----
-base-commit: e8017d29067fd1310a65c3494ce1a1b492adbac6
-change-id: 20261119-tc9563_fine_tune-1fee86f2e4a3
+> - [Medium] vfio/pci: stale PCIe TPH state across runtime resets and
+>   config writes
 
-Best regards,
---  
-Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
+This case is already handled by existing VFIO state restore logic. VFIO
+restores hardware registers after runtime reset, so we do not need additional
+pcie_disable_tph() calls in FLR/hot-reset/ioctl-reset paths.
+
+Thanks
+
+> --
+> 
+> commit 339ada87f2084ce58d1ead31609b94d5bab56bf3
+> Author: Chengwen Feng <fengchengwen@huawei.com>
+> 
+> vfio/pci: Reset PCIe TPH state on device open and close
+> 
+> This commit calls pcie_disable_tph() in vfio_pci_core_enable() and
+> vfio_pci_core_disable() to reset PCIe TPH state when opening and closing
+> a VFIO PCI device.
+> 
+>> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+>> index 049392831b35f..8d3d532cd51ab 100644
+>> --- a/drivers/vfio/pci/vfio_pci_core.c
+>> +++ b/drivers/vfio/pci/vfio_pci_core.c
+>> @@ -606,6 +606,8 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+>>  		goto out_disable_device;
+>>  
+>>  	vdev->reset_works = !ret;
+>> +	/* Reset TPH state for new user session */
+>> +	pcie_disable_tph(vdev->pdev);
+>>  	pci_save_state(pdev);
+>>  	vdev->pci_saved_state = pci_store_saved_state(pdev);
+>>  	if (!vdev->pci_saved_state)
+> 
+> [Severity: Medium]
+> Should pcie_disable_tph() run before pci_try_reset_function() instead of
+> after it?
+> 
+> If pdev->tph_enabled is still set when entering vfio_pci_core_enable(),
+> pci_try_reset_function() calls pci_save_tph_state() before the reset and
+> pci_restore_tph_state() after it, writing the stale PCI_TPH_CTRL and
+> capability-located Steering Tag table entries back into hardware.
+> pcie_disable_tph() then clears only PCI_TPH_CTRL and sets
+> pdev->tph_enabled = 0, leaving the restored ST table entries in hardware.
+> Because pdev->tph_enabled is now 0, the following pci_save_state() ->
+> pci_save_tph_state() returns early without updating the saved buffer, so
+> vdev->pci_saved_state retains the stale pre-disable TPH state.
+> 
+>> @@ -762,6 +764,9 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
+>>  
+>>  	vfio_pci_zdev_close_device(vdev);
+>>  
+>> +	/* Reset TPH state on user session exit */
+>> +	pcie_disable_tph(vdev->pdev);
+>> +
+>>  	/*
+>>  	 * If we have saved state, restore it.  If we can reset the device,
+>>  	 * even better.  Resetting with current state seems better than
+> 
+> [Severity: Medium]
+> Is calling pcie_disable_tph() this late in vfio_pci_core_disable() safe
+> against MSI-X teardown and CPU hotplug?
+> 
+> vfio_pci_set_irqs_ioctl() disables MSI-X and vfio_pci_tph_dev_deinit()
+> runs before pcie_disable_tph() is reached here.  Meanwhile,
+> vfio_pci_tph_dev_deinit() frees vdev->tph_st_cpu without vdev->tph_lock
+> before removing the cpuhp instance:
+> 
+> CPU0                                  CPU1
+> vfio_pci_core_disable()               vfio_pci_tph_cpuhp_offline()
+>   vfio_pci_set_irqs_ioctl()
+>   ...
+>   vfio_pci_tph_dev_deinit()
+>                                         if (vdev->tph_st_cpu == NULL)
+>     kfree(vdev->tph_st_cpu);
+>     vdev->tph_st_cpu = NULL;
+>                                         mutex_lock(&vdev->tph_lock);
+>                                         vdev->tph_st_cpu[i]
+>                                           <-- use-after-free / NULL deref
+>     cpuhp_state_remove_instance_nocalls()
+> 
+> In addition, if a CPU goes offline after vfio_pci_set_irqs_ioctl()
+> disables MSI-X on a PCI_TPH_LOC_MSIX device while pdev->tph_enabled is
+> still 1, vfio_pci_tph_cpuhp_offline() -> pcie_tph_set_st_entry() ->
+> pci_msix_write_tph_tag() fails with -ENXIO and logs a pci_err().
+> vfio_pci_tph_dev_init() similarly registers vdev->tph_cpuhp_node before
+> allocating and initializing vdev->tph_st_cpu to -1, and
+> vfio_pci_tph_cpuhp_offline() calls pcie_tph_set_st_entry() without
+> vfio_pci_memory_lock_and_enable().
+> 
+> [Severity: Medium]
+> What happens to pdev->tph_enabled across runtime resets during an active
+> user session?
+> 
+> This patch disables TPH on open and close, but runtime reset paths
+> (vfio_pci_ioctl_reset(), vfio_pci_dev_set_hot_reset(), and PCIe/AF FLR in
+> vfio_exp_config_write() and vfio_af_config_write()) do not call
+> pcie_disable_tph() or reset vdev->tph_st_cpu.  When pdev->tph_enabled is
+> 1 across pci_try_reset_function() or pci_reset_bus(), pci_save_tph_state()
+> and pci_restore_tph_state() restore PCI_TPH_CTRL after the reset, leaving
+> TPH enabled with wiped device-specific ST tables and causing subsequent
+> guest writes to PCI_TPH_CTRL in vfio_tph_config_write() to either drop
+> ST mode changes when req == org_req or fail in pcie_enable_tph_ext() with
+> -EBUSY.  If a reset clears hardware PCI_TPH_CTRL to 0 without restoring
+> it while pdev->tph_enabled remains 1, vfio_tph_config_write() reads
+> org_req == 0 from hardware, so enabling TPH fails with -EBUSY in
+> pcie_enable_tph_ext() while writing PCI_TPH_REQ_DISABLE exits early at
+> req == org_req without calling pcie_disable_tph().
+> 
 
