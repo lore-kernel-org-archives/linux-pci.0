@@ -1,96 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.56
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.50
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795102244;
-	b=F042i8C5Cnb9lWHsnRdbyfmRUxeNIFKmFVl8Ef1jxR3ndGVrxG4BRUowfd4Q2ANGiEQs
-	 clGpuKwnHGXq2d/Z42rmAWDX7aZdKqB5HP0c7NNYIknKE7ws+uFSThmX7lHJg3oRsJ2x4
-	 Q4LNn3Fw/GXQJhf08KG96umEAaNFE1oR0JuX0nbt8ce4jSei9dcIdr2+G5Y9uQtzuqyp2
-	 /S82wex+qyL19ZJA0yHbNE3YqA7TT/heLVHoBmPwv6P3DBlYGGWdN/7FDt/VK+/zZOCKM
-	 4HyYq+1ppqOXBDMxYz78IhzkM61EpO/W3Swjlw2mywCsw8xIFrNWQycIc4Cf+gseTtg==
+	t=1795103632;
+	b=w06frEEezhFE23GCf5qJorqvmYf6/+00mrRYXDBn+3hm7do/GtQ77yzGZvcyYt7Y+fBI
+	 dIoMov2EEnXImWHO9bTYihUyd6LMG2xrvbBG1ZdvOPGwdGZ0xD4jodQILnQGU+GUUZfET
+	 Hilkh2SwslIFaBFY+KTpS57iyxEBYN0wlkjbEwCxTNkFsiytl5yJmDc0sZRRfaXGxtTjo
+	 mC0doQlocFrOGRlWZcbeRJJsypxSAXCjkQvr8hONPfBysEtjSrekhKgpbXlJnzc3QZXC0
+	 lnizASYi27XKdXIO5xpuJlejoSIbwHJQ7HnyeKHlQjq6/b+qhLs9IvqSisS0+l9SIQw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795102244;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:Content-Language:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=qGTxG4yDvY4fi3aqryS0E9NgEOdTfrWO1a/+NFDB1GU=;
-	b=TjyCNFjgrfc1QwYwOBd4/xy4z3Y7oFZHUuoKb+nbODCeNd+lTkM507pJWciEGPe0teVN
-	 tL+v5OOAckBTRPCGdm5BaUwcCmsGLSoVYPW5VTjWIvR3zxhrpUV5A4Hj76lSfXR5Wdu7G
-	 AGB/1ljyKTdDiTr+wif9sN9VCxkjqURvYxaEtD6MsFMYogOqiC07ydRHISRhrxjbm0LMF
-	 AZF2gTLlHozPjj0sVo3Fo7+W8h/Y1ayEUyGw7O124BuJUNtxa/h2o0ywAaqEDb2XkqYi4
-	 idutspjyMPitzPyIgbMSR9jNQf5KNgljvAQv/5GZw9TUNuclCN2KWvSx6I0Tp5Msofg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795103632;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type;
+	bh=jJcFJ3eu4IGO4aq8ch/i718Km3SL5FkAJDmQGQ4UhVI=;
+	b=DvQ95jRKhOd7iV5RApMYs4zVQaMAQmMao2zEjOxWSvFeZq6xdsPX43hcusGM09S1bEDe
+	 srwt5W1TiNZq8QWOrwHr5O8J/TfSS+Fk9mmbnguyVuP/Y4U3B3q9cbeXNwt5uDv8Xn6x0
+	 n39Lnkmgrwnmxu6QiFD9rudsWokgie2ErCOZinGruTUq9BFDnW9ptfkRWGTBC+tl9WmcJ
+	 och7IZdPFFER1IL0R9PApMIrUWPjrPI5rO7dIfYaXxhDa5VdMN2lQ0sX+o6s8X49cQKWY
+	 Oyh8WHrNaqlQVgR4f3mw79WYNPhlsJwbe/y3IUlVrE+miZz0zpn1CUfObKrfN8+Almg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=DofbKSk+;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.56
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011056.outbound.protection.outlook.com [40.107.208.56])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="y/1rEu4H";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.50
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E1AE606A324;
-	Thu, 19 Nov 2026 15:30:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2E1AE606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF861606A32F
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 15:53:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF861606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=DofbKSk+
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CD0P+zgCnDok4I00NSJtOGM8uciaddX7J5GoOxGzb2B3xcv/a1qhAQFU+jlE2OPOcaEEN+4E1gj4zDhpv+xXn5p1rO5EL/IGAYMojfYRLG9et9D36kFW8gGmS3plM22ujprrYaas4mAlNPNralQtOVxYn9sDtCxGMOyjR7CrZJQatRJHwJXpNJ6OZG7f/uFGvCUse33EuxYvxq9v7dTzlDiGE7v0/zxuQ8G6w3Uiab8isFdTjC5ZJjqoaw8YBQRjq3NoJ1C88/AX/yNs4dDYDgmT/EhWaeiwkbGcRIMWI2N6nKIzfeRH4JCwFJ6f3V5WQ7rji8v0gQMLKJiPGoy0nw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qGTxG4yDvY4fi3aqryS0E9NgEOdTfrWO1a/+NFDB1GU=;
- b=efTKI+t2pvHpf2JLbDZbo/ui83B2xtsEzmudkOBsbhcFIeyAzoZ+FAs3xh2NvcRJuh9/imNuzl/k8Y2824uwMwt+MXV5WSsXubiQpj0/+UH+EKmD26/KYXirj3xYdY0l874x5Oz0Sf3Q5eAxnIcZnphr248Jo55MRM+CvCYRaLjyZ9y8AtzrRwX/EBK9nKyI8kmwp218fgZYLYvBdbJ/djcdzEUeSBvsUhxT8Rtpl+mqY2iJbel0dU0iOocLo9xneLy5pQA5jLJmGBA/KfD7AvYLwDKeqSzv5EkEWsifWe9KGoz4lpAgT4e8/SyR/kWa2hbWhaFwPSHqblJOXXJkEA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qGTxG4yDvY4fi3aqryS0E9NgEOdTfrWO1a/+NFDB1GU=;
- b=DofbKSk+WbrXbkor7jhEECmtPAXYlYH++LozxxfjuBFTmqhGR4nrYNDiJ7mCtbv5qkgWTdPD7tn3KncxvKZ2iJjp4IbLmKcJFfUnAa66MNbUR19UXL9q6nXcqpW4RMIUY7KoBe0fxDiZKXNTHTOxKTYjsuDdoaO7h+fErdlhAdA=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH7PR12MB9174.namprd12.prod.outlook.com (2603:10b6:510:2ed::9)
- by MW4PR12MB7142.namprd12.prod.outlook.com (2603:10b6:303:220::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.10; Thu, 19 Nov
- 2026 15:30:34 +0000
-Received: from PH7PR12MB9174.namprd12.prod.outlook.com
- ([fe80::eaaa:b430:ba9:5dc]) by PH7PR12MB9174.namprd12.prod.outlook.com
- ([fe80::eaaa:b430:ba9:5dc%7]) with mapi id 15.21.0615.013; Thu, 19 Nov 2026
- 15:30:33 +0000
-Message-ID: <5cf8f937-acc8-475e-ba0c-6be00defbb53@amd.com>
-Date: Thu, 19 Nov 2026 09:30:29 -0600
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 0/3] Fix amdgpu detection of pci=realloc
-Content-Language: en-US
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org,
- Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
-References: <20261111-vfct-regression-v6-0-393797bbb6e3@amd.com>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20261111-vfct-regression-v6-0-393797bbb6e3@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SN7PR04CA0029.namprd04.prod.outlook.com
- (2603:10b6:806:f2::34) To PH7PR12MB9174.namprd12.prod.outlook.com
- (2603:10b6:510:2ed::9)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=y/1rEu4H
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6b8627e0eb2so3478018a12.2
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 07:53:51 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795103630; cv=none;
+        d=google.com; s=arc-20260327;
+        b=eVr8L4e+D70OaKCXPDYUyuefqI+X2GN4yFrhFq/YF3b2ji3ZujcqCnPdX7x6atFt+z
+         +zO+/Iyv1pKzJwhX9PRbjIjB9orqlULjbFCicdqKBkIerlr+2kc2Yevm9Fxtf18Q20/9
+         YKEZOADs2lIpjGBza1dOXuUMQhrniYodsMNWkBX50KAMIcjCga4p/9RwPUNDVoVLV4tO
+         WyUW49eMhjTTpHFbeC4wnjoTvJkyrIO44CI5aZufWanMWmqncxPGsLPpgIXeUCQ6mv7e
+         VN/SbO+UFozgew/WDwkJFffr23k/ShVIBB9xevdynl6o3+/nXoczkXgGMU/Ua1ATegd+
+         bd/Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=jJcFJ3eu4IGO4aq8ch/i718Km3SL5FkAJDmQGQ4UhVI=;
+        fh=Z9mDe1eC32U9RekoG61o3iOCD5eBq+LHRaxOoreJGPg=;
+        b=LGbvHXoZphQNY/T1r4awnYo8vEEvC/rKCd8EJ8ggX4Dq5KG9OBinN+/3MRwyzEYzlu
+         MTpRgj66rvg4WZOVIvM9B0BLbKhVL+QzRfYOrkqMeRbuakVP0in3kK2xhOVDYUsJCLW4
+         4BxaOhJBCUXMHFpxYSJAK//Gl8TWax6GHYvVy4GYO4GYaNxBmz2OquobK0afJFF/a7hk
+         lUD/fGHU6fALGBfFJkjdQDWu/XZp80OqdSbZ1/kikc3t7mvZOeGbPN5SV6PVXzlfVzNP
+         f2zYwEl6gJC7V7rYFNlmeGKcic4xYMO47DNFYbL6K6i4m0iMZixwT8lyhaWkHvXKE3gF
+         tjcw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795103630; x=1795708430; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jJcFJ3eu4IGO4aq8ch/i718Km3SL5FkAJDmQGQ4UhVI=;
+        b=y/1rEu4HdRhw+lxt0DHibP3Q5gQRsB9972hWX2qprluzpGhulh1i4GO2truCiZFgns
+         nkY7Hl0PBUfUOR9pC+7dfZQGfrsOCe0eJRObDW9d9/Obx8kvjq3BmEGEWbNgD3pJYdhw
+         csvt9z9N7OVL+Xss1LSKDLM3fi3n3CWpBzkS3Zjj0BBKWuoStkOP1A6XeK5oY5KZiJqH
+         RtRHE817CUxZhJ//l36pfOwEZ5X7D59uY6pncyvA+2ql58IPVohgUKyDwEEgbmOKg388
+         oB4eOEJHIsGYprd998e0R1hUw4sOx9ZVYB8I2ckGVsa3XBi26AvCcBYWOzHPulEfGZ0a
+         SlHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795103630; x=1795708430;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=jJcFJ3eu4IGO4aq8ch/i718Km3SL5FkAJDmQGQ4UhVI=;
+        b=K+u/LNwqkmnY7rFB6Al7wIZ/Xv8x5hVko9Q2Z8gEqXeQH6L6WOxn64l3y+mHvRifme
+         f9qF/uK6G8/kp2GgUbkRmv/Pdz5pQxi3FyFdpI3+eVidaR2WiCj8pUkTckcjDg8EhGec
+         XILQi7E1cXQF5tdW/89guV5cQjEAL36JvjRalZnDrolY1fiDN2tRppT4MWqag8QxiWCw
+         EC1aiiZ1irlanHyDj5i7GQP9YP+ez/BwJdlIKbnsjZ96HpeYqaNyAtD5J/Ci72sfIPrr
+         BrXo/EQ208PFk4l5Xo0EgkPahI/tI6HjqKfazO8Md51iue49ZlHqO3kcdt+ShNEdmR6B
+         Klgg==
+X-Gm-Message-State: APuU4Z+D86UGd+Db/6baqJXX5J3/KKpDopeXa15HcLUuHD7Nvi6TGHec
+	92ehI1/baR4EezISb12OsYSnwgVHzVynsz7ADy9MH7fqo2s2GADVk3I5mpMRE/hDoE9Qf9DR3FQ
+	HuXMIoCojPNx2vgj0+7zquheIRtTQ4V2Mx73ruXk=
+X-Gm-Gg: AYBFou0U5j/B7v+HeCS1wa3yBSBRoFuYeZYW1rJFgCHDoIQ9X+tWG2WLTr0vY0VXz+D
+	UbrqS5znNnUWuYBnOtEvp9Q9GHYwDJhNU8i6sn7he0AXj4xQYyDBWxEl+tRIBtYmht3sfm2H72h
+	qjqugoAMyPkd5C9kjDQrBe1qXCeg85yOJAH7pNgCb7FobBlqiLotTzJJG9xE9GoNaJ2UVJXzKR9
+	ZJXw63jrjeNLYPCwTx15UYtWhIbtQFF1bFn9QlzBrUQnzBhF7+S6RjVO01655o/gDue05EZeV5M
+	8mJZOG9Pp2GuykoqxMp7cc6QfVEHE1slhpzFTpueEiZJjDftH6zVH0Ll5EUzQ7iEhG80vv3IfRx
+	qSnPSncte01PvbRMerLM/Y9L1tZ+TbriD+V3PexpYT1F9Wo/ODu7UqwDcjw==
+X-Received: by 2002:a05:6402:1e8a:b0:6b7:fe9a:23fd with SMTP id
+ 4fb4d7f45d1cf-6b887c89865mr5822363a12.6.1795103630064; Thu, 19 Nov 2026
+ 07:53:50 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -100,139 +102,103 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH7PR12MB9174:EE_|MW4PR12MB7142:EE_
-X-MS-Office365-Filtering-Correlation-Id: 43508cbd-7cc9-4938-a244-08df46520cb4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|366016|376014|22082099003|18002099003|6133799003|261009223027099003|11063799006|56012099006|261028144727099003|261102123227099003|261026140227099003|261026121527099003|261022075727099003|261021123027099003|261021121427099003|261022115727099003|261022105027099003|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	HF9NMoLw+YukjeS3UN6dMRstEdECEPCJWnDSYCY7fSHqJUzj3EuwzICnEs4B/6pBHhzdkz0jvbfdnSO0TNGru7P3bv1ensiG2qaP3juWQelNqryu6ibv4FhEzSlqa31NQ6hmJWn0qeOtJCB718Gb7LoJyHIOVItSEDHrx9cvfbsmJsLf+AinT2j2LLuDAPM+9vE2y8ZShMA3EF6DaVVTwn5VGFe7DydU9oDzpSO1uGKntLsqAtFYjUom8H4pHGHAeZfFaq3RpRnb7CxDLFal5q63Ep2cM1pNNl6JjTknxtZnL7KHPgEjUMOTG34iQQHwrVeqZlllaj/mLT8/HSzhXbLiAm6zVVSR7Q2Up2yblyzuvkVwYOhFZezDkSaX59P8Hw4vLR3ygXYXICviMGNEPVPW8CMOjo0xvuEH6futtZ1Yc8EGCMlcneHs3O+8FGnazJuGnf6MqyyKczt4ivhiS3hU1aaK7BgK4PjWXRqxQwTPfKOdPp7CIhLLDXi2jmEz1O6nT04Nce0px1cLZkgPH7H/dIyXi5xQieqebL0HFbRS0QJliQ+aqjP5LCaIxCbjvOU9iptEKu3yhu9BT1gAJj0QtK4aRBmBzGhsqIfrqekyh/LTQpWR/0MKjiC1TUd/
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB9174.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(366016)(376014)(22082099003)(18002099003)(6133799003)(261009223027099003)(11063799006)(56012099006)(261028144727099003)(261102123227099003)(261026140227099003)(261026121527099003)(261022075727099003)(261021123027099003)(261021121427099003)(261022115727099003)(261022105027099003)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?S2U4SjNzR2NockJvMWdEd3NVYXJQYU81azlqUUUwUXVLeHkyb2F5ZCtyQ20v?=
- =?utf-8?B?OThIQWtYeXIxRjRncUR5elF2SGZLdDRIVks5bGVlVjVDdnk0Z0hzWWFVTzZz?=
- =?utf-8?B?UUNVcFBOaW5MVW5Za2hwclpxdWlybThNTld4R1BKZndSbkZ2RjIzdWl0SzRT?=
- =?utf-8?B?aUpjQ1VGTXNheElNQ2t5dkh3MzM1amJ2OXRwdXVXc1FScUlKOGo2L1FhcHlQ?=
- =?utf-8?B?UzBHSGtkbFd5UnZUMm9GNlFrcVM3ZnZHVys2bi93MDhNakJXTmdnUjlML3Vw?=
- =?utf-8?B?bjJRMCtaeVZvTEYrQThyRVJWTHI1TkJweG0vbUROWVYzV0dmRjIwVDlyZHVy?=
- =?utf-8?B?Zk1UVkZiNDRFdEQwSVNtUE0wUjQwekF5c1NqQU45WnhOYXlYbktuNWJkKzFk?=
- =?utf-8?B?djBLZmxqNUIzb3lXUlJzSzhMYjRvY2YrVjkzUEJQaTg1UURacFRKK2xyR0ox?=
- =?utf-8?B?Z09PTVpEeXBLZ1ovVGk0TWNUalRuVG5iaHowbmhZZnV2SGk4Y2l2eWdpL2oy?=
- =?utf-8?B?TW85YXYya1Bzcjh1aE9BNU05SXRmY3pXaHg4NVlBcE9zUFBHM0ROa3VrU2xK?=
- =?utf-8?B?dnMxZ0ZGNWdib3I4VGdVakJ2OVRhbFlhOGtuVml0dW1XTUpaNXlvQXJzVW8y?=
- =?utf-8?B?bnYvTFIzSXNPdVR6Z1BtbXdNUnVpdFYwMWtSaVAraTB5bjJsMGJVbVJ2NERh?=
- =?utf-8?B?SDBrbFpvQ21YUWp5U1ZtUVJseTU5bWJHMVZDb2VPU0NQcXpYdVVlMU1mSlZy?=
- =?utf-8?B?SWQ3YXYwU25UaW8vd0w2SUl1NkR0OWVFZXVYbnkvMWkzL2VRODFzK2V1bUZG?=
- =?utf-8?B?cjhhVWlHRkdQaEh1aDNsQ3lCZ3d6VE5UQlk3bFRYYktXVGx5azJyS25wZnR5?=
- =?utf-8?B?YmpzalRpcU5pSmp5L0FQeUI2NzV3Q0VERWxvZ2ZKT3cvYlJORDdYdS9xaHZv?=
- =?utf-8?B?dHhBdEgvaVJHbWxsYVZ1Qy94cHRZKzRKZUVodmJ3RXZ0cW5CNVdQTDQ3NVZz?=
- =?utf-8?B?aEhIS3lhcGVhSjlCdUJ1TGNhaXpSbG1JODlOSSs0d0RGMUNuVkFkODVYc0J5?=
- =?utf-8?B?L0Qwb3VUVDlINW4vdmtrZ2QyUDloYnBQcEMwSGR5ZnB2Nk1aWXh6NUc2d0Zq?=
- =?utf-8?B?dFB5L2lReEIyM2g0bDN3Qm5wK1JoRFdsNGwxdHYyeTYrQTFzMEJxQUNxWVh6?=
- =?utf-8?B?RlpkTUhyN2RPakJxeS9vTWJkc1FacWhQNGFIRzkzRWliaWZNRUlxWUtRdkUx?=
- =?utf-8?B?bUQwNGwxZzZUSmJZOWRxdkVLTVJCamFzcGp3Y2tKd3FKM2VpTEN5Q2xDMmV1?=
- =?utf-8?B?WHl6OEQ2dGx1eUhCRzdYTEFib3Q4MlptSTNjcW9VR2NmMkIzcEFHSXd0N3JD?=
- =?utf-8?B?Q3lDL1JHQ0ZscWlSYkE4elcvV3ZqTGNmQTE1ZnlNN0NHYzgwdGlJYlBVaGI2?=
- =?utf-8?B?OU5CSFQ3TlBVVXhreE9WR3Y1YWp5dHV2b0I1ZzBGc0FlU0FYWGJKV0NDenpV?=
- =?utf-8?B?dHdlaE1PVm1QQmlKN2RVc1JZT0FHeWxyVGNrMXBhbklIY3RHRWdNQ3JlK3E2?=
- =?utf-8?B?eld0UEJrb0ZyY1JERFNCMnVGeHd6dHNUZkJESm5VdzRhVkJXcDE1Y1BmeUtm?=
- =?utf-8?B?c2tJb2xCclRYZFppZUhrTzlBWTZ2VTVkdGdIdElpZXo4Z0kxaGVsd3ZpNXJq?=
- =?utf-8?B?ektmbTNWYXFSeWRyWkczaElMTDNocjFhaVhmQlBZeW1acHBDSk9ab1RhZlV4?=
- =?utf-8?B?NVdaYjhWdDNJNU1wQWg4T05BVUhMM1BrNERrcDRwTTEyWVQ0VmFiSm1Dc21F?=
- =?utf-8?B?US81cGhCNjhBd3pIN0tXc1hUM3JiL2srMkxKNjN5TTRiZDhkUmIzbFBTcTl2?=
- =?utf-8?B?ZFhWckRXcTJ6RW1GeURKMjBXNlU2TE1wa1FjbmNycGNLODJUM2h6SlZiZE1o?=
- =?utf-8?B?dUZaN0FVVmdkVXNaOXJGZFM4ejIxN0NLWDM3elB4WDhiVzI4SFoyeG1RSjFX?=
- =?utf-8?B?SXYvbVM4NDlIaGltazd6NXVMMFBrMWVQdUxnUk5qOTZRNExtTjJ3VUJlL0ZP?=
- =?utf-8?B?SmVuOWx0Q1pmb0tFRWMrUW9STDRGT0hnQkN1ekpqTWt5VFdBYlkyallPWkpI?=
- =?utf-8?B?QUdrQmxYYnFyWXg2bWYweVNoRC9oOVZyaVVUSGxDb2M1WTQwRWluOC80bUZM?=
- =?utf-8?B?d3Rtb1lsSC9vRmFtY3dwQVNLWHRzUHN6ekhiWGQ2ZDZMY1Rhb051ZWtjd2pC?=
- =?utf-8?B?dHRFNVZKWCtLaWhmam5LaXBscCtKUjFLZEZKUWF5aHFvTjRGODdGQXMyK1k1?=
- =?utf-8?Q?9MsPvfYHM2hjbbGVpX?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 43508cbd-7cc9-4938-a244-08df46520cb4
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB9174.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 15:30:32.8818
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CCs2sj/wUJfKiovraQBt/f6Guk9T7sEwfTB92xCDELB+yzBxG/gNmJk55Dml7NHKCfq5aALEmyJ8i0GnKJosQg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB7142
+References: <CACWbNdxohFg52KLwfH6fd95dGXiviffX9kNLw_1=j7ZpCCuMjg@mail.gmail.com>
+In-Reply-To: <CACWbNdxohFg52KLwfH6fd95dGXiviffX9kNLw_1=j7ZpCCuMjg@mail.gmail.com>
+From: Nursultan Yergaliyev <n.h.yergaliyev@gmail.com>
+Date: Thu, 19 Nov 2026 20:53:38 +0500
+X-Gm-Features: AclHuK9ZIE_P4IjqdbHIiGMXeG-GP5DxKQ8hEkOwSF186LbQAoh-k4ZRrIBcPug
+Message-ID: <CACWbNdzUWe_Ej4sJpe44PC=c1g0NTjyPjfqDSmCbT057Xab5kA@mail.gmail.com>
+Subject: Re: [BUG] pciehp: spurious "Card not present" on soldered dGPU port
+ after resume deadlocks dpm_resume (Lenovo Legion 5 15IAH7 / 82RB)
+To: linux-pci@vger.kernel.org
+Cc: lukas@wunner.de, bhelgaas@google.com
+Content-Type: text/plain; charset="UTF-8"
 
+Follow-up with a narrower test:
 
+Booting with default parameters and only unbinding pciehp from the
+dGPU root port
 
-On 11/11/26 10:43, Mario Limonciello wrote:
-> amdgpu needs to know the bus number the platform assigned a device to
-> be able to match firmware images against the right device.
-> 
-> This was previously adjusted to be a soft filter due to
-> commit 11c141672045f ("drm/amdgpu: Fix VFCT bus number matching with
-> soft filter") where if everything but the number matched to take a device.
-> 
-> This however fails when there are two identical devices.  Instead save the
-> initial bus number to the PCI device structure and then match that.
-> 
-> Link: https://lore.kernel.org/linux-pci/20261015124843.203905-1-mario.limonciello@amd.com/
-> Link: https://lore.kernel.org/amd-gfx/20261019194106.2796150-1-alexander.deucher@amd.com/
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
-> Changes in v6:
-> - Capture the firmware secondary bus number when reading bridge windows and
->    ignore unconfigured values so rescans cannot replace it with runtime data
->    (Sashiko).
-> - No change needed in the VFCT consumers; they continue to read the cached
->    value from the upstream bridge.
-> - Link to v5: https://patch.msgid.link/20261110-vfct-regression-v5-0-f49fae981bf3@amd.com
-> 
-> Changes in v5:
-> - Record the firmware secondary bus number only on the bridge struct pci_dev,
->    guard it with a validity bit, and keep it across rescans (Bjorn, Lijo).
-> - Drop pci_bus::number_initial and have amdgpu/radeon read the saved bridge
->    number when matching VFCT entries.
-> 
-> Changes in v4:
-> - Retain secondary bus bus number for a bridge across rescans, and the child bus is initialized
->    from it during allocation, before registration callbacks run. (Sashiko)
-> - Rename variable to clarify it's for bridges (Lijo)
-> - Link to v3: https://patch.msgid.link/20261026-vfct-regression-v3-0-fe9586ed6978@amd.com
-> 
-> Changes in v3:
-> - Preserve the firmware bus number across bridge renumbering, capturing the
->    secondary bus number before pci_scan_bridge_extend() clears it.
-> - Adjust member name in all patches
-> - Add tags
-> - Link to v2: https://patch.msgid.link/20261020-vfct-regression-v2-0-d2394d11450a@amd.com
-> 
-> Changes in v2:
-> - pci_alloc_dev(NULL) remains safe.
-> - For buses behind a reassigned bridge, the PCI core now saves the firmware secondary bus
->    number before clearing the bridge configuration and carries it into the newly allocated bus.
->    Devices discovered there inherit that original number.
-> - Add changes for radeon too.
-> - Link to v1: https://patch.msgid.link/20261019-vfct-regression-v1-0-5a63ddd378dd@amd.com
-> 
-> ---
-> Mario Limonciello (3):
->        PCI: Cache bridge firmware secondary bus number
->        drm/amdgpu: Match VFCT using initial PCI bus number
->        drm/radeon: Match VFCT using initial PCI bus number
-> 
->   drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 23 ++++++++++-------------
->   drivers/gpu/drm/radeon/radeon_bios.c     | 25 +++++++++++--------------
->   drivers/pci/probe.c                      | 16 ++++++++++++++--
->   include/linux/pci.h                      |  4 ++++
->   4 files changed, 39 insertions(+), 29 deletions(-)
-> ---
-> base-commit: c03c1a14507dfaf8b856c2608f9ac216021fc222
-> change-id: 20261019-vfct-regression-2142fc52852a
-> 
-> Best regards,
-> --
-> Mario Limonciello <mario.limonciello@amd.com>
+  echo 0000:00:01.0:pcie004 > /sys/bus/pci_express/drivers/pciehp/unbind
 
-<ping on this series>
+(pciehp stays bound to 00:07.0 and 00:1d.0) is sufficient: pm_test=
+platform passes, real deep S3 resume works and the GPU is fully
+functional afterwards (nvidia-smi OK).
+
+So the hang is caused only by pciehp on 00:01.0. Happy to test a
+patch or provide more data.
+
+Thanks,
+Nursultan
+
+On Thu, 19 Nov 2026 at 19:21, Nursultan Yergaliyev
+<n.h.yergaliyev@gmail.com> wrote:
+>
+> Hi,
+>
+> On a Lenovo Legion 5 15IAH7 (machine type 82RB, BIOS J2CN57WW,
+> Alder Lake-P + soldered RTX 3060 behind root port 0000:00:01.0),
+> resume from suspend hangs reliably (s2idle and deep, also with
+> pm_test=platform). Kernel 7.0.0-43-generic (Ubuntu 26.04); also
+> reproduced on 6.17. Windows suspend works on the same machine.
+>
+> The dGPU root port advertises hotplug although the GPU is soldered:
+>
+>   pcieport 0000:00:01.0: pciehp: Slot #1 AttnBtn- PwrCtrl- MRL-
+>   AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ IbPresDis-
+>   LLActRep+
+>
+> Before suspend the port is in D3cold (dGPU runtime-suspended).
+> On resume (no_console_suspend, pstore):
+>
+>   ACPI: PM: Waking up from system sleep state S3
+>   pci 0000:01:00.0: VC save buffer size does not match @0x100
+>   pcieport 0000:00:01.0: pciehp: Slot(1): Card not present
+>
+> pciehp then removes the GPU functions while dpm_resume() is still
+> running and user space is frozen, which deadlocks (sysrq-w via pstore):
+>
+> With nvidia loaded:
+>   irq/122-pciehp: pciehp_ist -> pciehp_disable_slot ->
+>     pci_stop_and_remove_bus_device -> device_release_driver ->
+>     nv_pci_remove -> ... -> down_read [nvidia_modeset]
+> With nvidia blacklisted:
+>   irq/122-pciehp: ... -> pci_stop_and_remove_bus_device ->
+>     azx_remove [snd_hda_intel, 01:00.1] -> snd_card_free ->
+>     wait_for_completion
+> In both cases:
+>   kworker (async): async_resume -> device_resume -> mutex_lock
+>   kworker (kacpi_hotplug): acpi_device_hotplug -> mutex_lock
+>   systemd-sleep: dpm_resume -> async_synchronize_full
+>
+> The "Card not present" is spurious: with PCIe hotplug disabled the
+> GPU is present and fully functional after resume (nvidia-smi OK).
+>
+> Results:
+>   pcie_port_pm=off                      -> s2idle OK, deep hangs
+>   pcie_ports=compat                     -> hangs (acpiphp removes the
+>                                            device -> same deadlock)
+>   pcie_ports=compat acpiphp.disable=1   -> s2idle and deep OK
+>   00:01.0 kept in D0 at runtime (child d3cold_allowed=0 +
+>   power/control=on)                     -> still hangs
+>   removing 00:07.0 (TBT) and 00:1d.0    -> still hangs
+>
+> With hotplug disabled, I compared lspci -vvvxxx of 01:00.0 and
+> lspci -vvv of 00:01.0 before and after an S3 cycle. The only
+> difference is the PMCSR power state of 01:00.0 (D3hot before, D0
+> after); vendor/device and subsystem IDs are unchanged and the port's
+> slot status is identical, so this does not look like a "device
+> replaced" case. The "VC save buffer size does not match" message also
+> does not appear when hotplug is disabled.
+>
+> Questions:
+> 1. Should pciehp ignore/defer a presence or link change seen during
+>    system resume until the link to the device has been retrained?
+> 2. Or would a DMI-based quirk that disables hotplug on 00:01.0 for
+>    this machine be acceptable? I can test patches.
+>
+> Full logs (pstore traces, dmesg, lspci -vvv of 00:01.0, acpidump):
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2174812
+>
+> Thanks,
+> Nursultan Yergaliyev
