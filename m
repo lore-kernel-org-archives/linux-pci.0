@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795107223;
-	b=OurcQMS4E1LzrEDBgqj3hV448YYo1/eC4UZyRMGEdp4AguOXQQbu0/MtEsRhIfl5bwv9
-	 sgoavSc3xMZKzlW6mCgFST1xLW2LkkAno9SXei5QBK1zXyELhJy6A6OfA+Oz1bitZ9Gfa
-	 yQb1+ZyBK/uB1nrz7iE20ZYxPUZQsFE5Go0XQhfnXjoaJvpCM9ANGsyCnEA9p+1ZT/kgy
-	 BX0eY/dwDOXW8hB3RdNk6YfnoRuyZI0XV0lCzaswIJG31tjlgK90lxqVhCPBc4Zm3MURa
-	 k1lmpHQcsoTpBGvr09z9BT9HDLijsEIck4HgT54EH7wyyNZVpbuKPI2PmNJIEMEXzGQ==
+	t=1795107230;
+	b=WaO+heQ84r3+xDwRBqoqrSh0REa7esqPvjk7fJ07WMOeiGgOpnCSm+Qe4/kZAMJMwzbB
+	 HurPomkICtOIWRvsdPP0dBcdP6CcCiU1OUNHVVExn0u7GVgsYPgx70aCF5yaOsaeTAnwV
+	 AIovtl1Ftf00C88vQ6wJYXUWDpVlP+ysFsh6pDCt428FG64XTwnQ1Zdfq12yoKoll7dMU
+	 4AbQ4iwijn9dVoKGGW+1TDpW0FHfpE55ncfPVXBXtwIWaPLkF2StddGlMQEPTmRXXXRpk
+	 YC5hqmO8sPrEMLmJcAZDPeHUS1S8EJ1gbvDM4awQ31DMW6nLLfHFZD5YPp53DzYBNyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795107223;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795107230;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=o5ro9sxBOzh3u1cTo2kPlByJv2MwyjzC2PC0yLmvz+0=;
-	b=f6RD/lrJdQ93oGB6mwchlVlNuEXw4wnO0ra8VrdyPEE/4I1jk1VzCI+900ztwaQm+1C4
-	 24QpC0uQXSuLi9+xH2qEMw7KSowKa4gooQXc9k4HBesL3Mz7QLys2OXSv7O349rWudCAq
-	 hieTStEQmhWqpV8VFCBrenrrHd+E1Iz3ysM9lia6bMWzPGjigPaT/j5i2bk2g6oj2wroz
-	 76JkvUo6vqiVZNziD17dEfM1IGaygKWpCjua6jRzwf8m9h6ijOVSNGqPOFLVzm2tyDkoo
-	 89j2aDNxTnY2ZcM2gmraL4LO7Z1m/npcoR5H+Vf+qV00UqUvMwcmFPDe7rgaPI89aGA==
+	bh=jlYRN4IDAwWpF0znirb6L6eZ+ybQKX349IWRr+H23P8=;
+	b=KApim9wQAxv45xjeL9HWpoA192fJDX4xIQJ8vJ78Xs0eLwBsHRWReUwWZA+ifkHjqOkv
+	 iA9C3Oc69TkBKo9lWmu3v+8KtdhdRwdaMiGHDW/tZ5GVDF6v66hKPOIDgv6hVonYccupK
+	 zeZBBQ/kuPZmMUS8hZCV46EYWNXwwv7gdb5mf9pt02HtCvoumtkFAQUPgpAzMGxuCZ1GP
+	 p+H4VHPcLtwzkatQa3y+DD/EMdkPbUWKr1uzMx0bCNGOGXi8NvqSxWK7UFmdBEh2E2IMF
+	 +qPTWEtQLGF46a5bCJV5US84wd6ESpnO7iBhopF464RZ9pDk8KCUrJv3FefMG9y7IRw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Gz77kTyU;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BnrwKGO3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF03606A320;
-	Thu, 19 Nov 2026 16:53:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3102606A336;
+	Thu, 19 Nov 2026 16:53:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Gz77kTyU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7EEA1F000C4;
-	Thu, 19 Nov 2026 16:53:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BnrwKGO3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 650691F000C5;
+	Thu, 19 Nov 2026 16:53:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795107223;
-	bh=o5ro9sxBOzh3u1cTo2kPlByJv2MwyjzC2PC0yLmvz+0=;
+	s=k20260515; t=1795107229;
+	bh=jlYRN4IDAwWpF0znirb6L6eZ+ybQKX349IWRr+H23P8=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Gz77kTyULd22WG+7E9JGS+7bco+ZRwUyrBbK8XV/6pVeRgCOLYLkRxGZ5f5tqtG6i
-	 IMe3V9yMjtdkoZWtKIXKdEHEfvp0vWHnNEUDPN7IATtQP+tUc2vIO0JNaqx4n+iq4J
-	 0g+wIZ4V3oYX6Y8joNThwzshVQGrJ+o6VJ9hyXMRhrveGpjl4rgj8sAtbgMMlogx7Z
-	 YcJAwwOw962JKiRbO9YReGkczcBzceCMj7FzlmJvDa6Dpn1J7/PRytOBKmo0Vocska
-	 i48u5z5SggFRqBmF9PqDtXFjdEVroBE7nrGDld4ABknnZLA5DoBhtdbZPaYQ2q+nbi
-	 WeVlPmNLgBHlQ==
-Date: Thu, 19 Nov 2026 10:53:41 -0600
+	b=BnrwKGO35kcG0dSILYcHGYt7cjZRRVlycOBQwAgy+/mOVWG56TQoJGIWKBiUsrSDH
+	 8O7cMwwfDjS08pQftM7RP4WY5h6/AKLna7wdjpNEKlxwHxeDcjxvzImzmmKx/7rEOb
+	 DUFpJMT0Zc+qA7BbMTBs/yy2kVi6wIe3Td8iGPundMq88cWpY3YX9CfJw6TlEO3QVO
+	 reD0U1hdMD7NpCp0Lrdu4QDSwhL97RxyR6zTxuegGI1/HWspHvORaX76Ba83Od5yAW
+	 dkgPZJzAM0ljWWS+0srvPCmMZ4+4R5exy1zQRHwqx/DvwPAxQH2yYlZejmTS86hay/
+	 nsfd9xefzzpoA==
+Date: Thu, 19 Nov 2026 10:53:48 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Mario Limonciello <mario.limonciello@amd.com>
 Cc: Alex Deucher <alexander.deucher@amd.com>,
@@ -48,8 +48,9 @@ Cc: Alex Deucher <alexander.deucher@amd.com>,
 	linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
 	dri-devel@lists.freedesktop.org, Lijo Lazar <lijo.lazar@amd.com>,
 	Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
-Subject: Re: [PATCH v7 1/3] PCI: Cache bridge firmware secondary bus number
-Message-ID: <20261119165341.GA809730@bhelgaas>
+Subject: Re: [PATCH v7 2/3] drm/amdgpu: Match VFCT using initial PCI bus
+ number
+Message-ID: <20261119165348.GA811401@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,106 +62,101 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261112-vfct-regression-v7-1-69b1e0cf45c2@amd.com>
+In-Reply-To: <20261112-vfct-regression-v7-2-69b1e0cf45c2@amd.com>
 
-[+cc Lijo, Reza]
+[+cc Lijo]
 
-On Thu, Nov 12, 2026 at 03:54:53PM -0600, Mario Limonciello wrote:
-> Drivers such as amdgpu and radeon need the bus number firmware assigned
-> to a device to match it against firmware tables like VFCT. The PCI core
-> may renumber buses (e.g. with pci=realloc), after which the runtime
-> number no longer reflects what firmware programmed.
+On Thu, Nov 12, 2026 at 03:54:54PM -0600, Mario Limonciello wrote:
+> VFCT records the PCI bus number from BIOS POST. The current bus number
+> can change after PCI core renumbers the bus, while accepting a mismatch
+> based only on device identity can select the wrong VFCT image when
+> matching devices are present. Compare against the bus number captured
+> from the firmware bus assignment before bridge renumbering.
 > 
-> Record the firmware secondary bus number on the bridge's struct pci_dev
-> the first time pci_read_bridge_windows() reads the bridge's bus numbers,
-> which happens before any renumbering. Devices behind the bridge can then
-> retrieve the original bus number via their upstream bridge.
-> 
-> Only store the value if it is usable: ignore unconfigured (0) and 0xff
-> secondaries. Use a separate "sampled" flag so that later rescans, which
-> would read the renumbered runtime value, never overwrite the cached
-> number, and a "valid" flag so users can tell whether anything was
-> recorded.
-> 
+> Reported-by: Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
+> Closes: https://lore.kernel.org/amd-gfx/20261014080523.186533-1-rezanikzadch@gmail.com/
+> Fixes: 11c141672045f ("drm/amdgpu: Fix VFCT bus number matching with soft filter")
 > Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 > ---
->  drivers/pci/probe.c | 16 ++++++++++++++--
->  include/linux/pci.h |  4 ++++
->  2 files changed, 18 insertions(+), 2 deletions(-)
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 23 ++++++++++-------------
+>  1 file changed, 10 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27008e2ea5afc..f20a4b8f7a23b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -505,14 +505,26 @@ static void pci_read_bridge_mmio_pref(struct pci_dev *dev, struct resource *res,
->  static void pci_read_bridge_windows(struct pci_dev *bridge)
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+> index 08ed1eb695586..0ee4c6462c4d0 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c
+> @@ -386,16 +386,17 @@ static bool amdgpu_read_disabled_bios(struct amdgpu_device *adev)
+>   * VFCT entries contain the PCI bus number as recorded during BIOS POST.
+>   * On systems where the kernel renumbers PCI buses (e.g. pci=realloc or
+>   * resource conflicts), the runtime bus number may differ from the POST
+> - * value.  Match by device identity (vendor + device + function) and use
+> - * the bus number as a preference: exact bus match is preferred, but when
+> - * the bus numbers disagree we accept the entry if the device identity
+> - * matches.
+> + * value.  Match using the bus number captured when the device was
+> + * discovered, before any bus renumbering.
+>   *
+>   * Returns: 0 on match, -ENODEV on no match
+>   */
+>  static int amdgpu_acpi_vfct_match(struct amdgpu_device *adev,
+>  				  VFCT_IMAGE_HEADER *vhdr)
 >  {
->  	u32 buses;
-> +	u8 secondary;
-> +	u8 subordinate;
->  	u16 io;
->  	u32 pmem, tmp;
->  	struct resource res;
->  
->  	pci_read_config_dword(bridge, PCI_PRIMARY_BUS, &buses);
->  	res.flags = IORESOURCE_BUS;
-> -	res.start = FIELD_GET(PCI_SECONDARY_BUS_MASK, buses);
-> -	res.end = FIELD_GET(PCI_SUBORDINATE_BUS_MASK, buses);
-> +	secondary = FIELD_GET(PCI_SECONDARY_BUS_MASK, buses);
-> +	subordinate = FIELD_GET(PCI_SUBORDINATE_BUS_MASK, buses);
-> +	res.start = secondary;
-> +	res.end = subordinate;
+> +	struct pci_dev *bridge = adev->pdev->bus->self;
+
+pci_upstream_bridge() does this and handles the case where pdev is an
+SR-IOV VF (that case probably never applies here, but we can still
+avoid that assumption).
+
+> +	unsigned char initial_bus;
 > +
-> +	if (!bridge->fw_sec_bus_sampled) {
-> +		bridge->fw_sec_bus_sampled = true;
-> +		if (secondary > 0 && secondary < 0xff) {
-
-A bridge with secondary==subordinate==0xff (with a single bus 0xff
-below the bridge) is actually valid, isn't it?
-
-I guess we could check for a config read failure with
-PCI_POSSIBLE_ERROR(buses), but that would open the can of worms about
-what we should do with the *rest* of this function if it failed.
-
-I'm not sure we need to check "secondary > 0" either; obviously a
-bridge with secondary bus 0 is not valid, but if the idea is to match
-firmware's idea of a bus number, it seems like we need to capture the
-bridge configuration at FW/OS handoff.
-
-IIUC, the sashiko review [1] suggests that neither fw_sec_bus_sampled
-nor fw_sec_bus_valid is actually necessary.
-
-[1] https://lore.kernel.org/all/sashiko-outbox-212033@kernel.org
-
-> +			bridge->fw_sec_busnr = secondary;
-> +			bridge->fw_sec_bus_valid = true;
-> +		}
-> +	}
->  	pci_info(bridge, "PCI bridge to %pR%s\n", &res,
->  		 bridge->transparent ? " (subtractive decode)" : "");
+>  	/* Vendor and device IDs must always match */
+>  	if (vhdr->VendorID != adev->pdev->vendor ||
+>  	    vhdr->DeviceID != adev->pdev->device)
+> @@ -405,16 +406,12 @@ static int amdgpu_acpi_vfct_match(struct amdgpu_device *adev,
+>  	    vhdr->PCIFunction != PCI_FUNC(adev->pdev->devfn))
+>  		return -ENODEV;
 >  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5ffcf5ce8c966..045157488b8e7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -363,6 +363,8 @@ struct pci_dev {
->  	struct pci_slot	*slot;		/* Physical slot this device is in */
+> -	/* Exact bus number match - preferred */
+> -	if (vhdr->PCIBus == adev->pdev->bus->number)
+> -		return 0;
+> +	if (bridge && bridge->fw_sec_bus_valid)
+> +		initial_bus = bridge->fw_sec_busnr;
+> +	else
+> +		initial_bus = adev->pdev->bus->number;
+
+Why can't we use bridge->fw_sec_busnr unconditionally?  The bus number
+at FW/OS handoff is the only bus number firmware could possibly know
+about.
+
+It seems like this should just be:
+
+  if (vhdr->PCIBus == bridge->fw_sec_busnr &&
+      vhdr->PCIDevice == PCI_SLOT(adev->pdev->devfn) &&
+      vhdr->PCIFunction == PCI_FUNC(adev->pdev->devfn))
+          return 0;        /* match */
+
+  return -ENODEV;  /* no match */
+
+It seems like the bus/device/function match should be solid by itself,
+so I don't know why you need to check Vendor/Device IDs (but I don't
+object if you do).
+
+Maybe this boolean style is typical in DRM, and it does match the
+strcmp() style, but it seems weird to me to write
+
+  if (!amdgpu_acpi_vfct_match(...))
+    /* do the matching case */
+
+> -	/* Bus mismatch but device identity matches (PCI renumbering case) */
+> -	dev_notice(adev->dev,
+> -		   "VFCT bus number mismatch: table %u != runtime %u, matching by device identity (vendor 0x%04x device 0x%04x)\n",
+> -		   vhdr->PCIBus, adev->pdev->bus->number,
+> -		   adev->pdev->vendor, adev->pdev->device);
+> -	return 0;
+> +	return vhdr->PCIBus == initial_bus ? 0 : -ENODEV;
+>  }
 >  
->  	unsigned int	devfn;		/* Encoded device & function index */
-> +	/* Firmware secondary bus number saved across bridge scan passes */
-> +	unsigned char	fw_sec_busnr;
->  	unsigned short	vendor;
->  	unsigned short	device;
->  	unsigned short	subsystem_vendor;
-> @@ -414,6 +416,8 @@ struct pci_dev {
->  	unsigned int	pme_poll:1;	/* Poll device's PME status bit */
->  	unsigned int	pinned:1;	/* Whether this dev is pinned */
->  	unsigned int	config_rrs_sv:1; /* Config RRS software visibility */
-> +	unsigned int	fw_sec_bus_valid:1; /* Firmware secondary bus number usable */
-> +	unsigned int	fw_sec_bus_sampled:1; /* Firmware secondary bus number captured */
->  	unsigned int	imm_ready:1;	/* Supports Immediate Readiness */
->  	unsigned int	d1_support:1;	/* Low power state D1 is supported */
->  	unsigned int	d2_support:1;	/* Low power state D2 is supported */
+>  static bool amdgpu_acpi_vfct_bios(struct amdgpu_device *adev)
 > 
 > -- 
 > 2.43.0
