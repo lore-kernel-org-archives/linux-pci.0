@@ -1,81 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.64
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.112
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795059070;
-	b=T8oNw5vliEEb3BawrvPlKagXr84BEQvo9rA3mtCY/36TGdUbb8vO0Yik2m1HCH1X+8Hb
-	 J1kysJg4bYlahZE5r1drChGuveC9NcQu6BvPznGHMqAYWsDC3qaycHCK9K8uxvApxRc53
-	 A+MIKGtO00CChedPiE43qk+dAlT7qKPBgyZuuQ9smSQWFHOTEJXLD3BGpgYTTEPP++HIw
-	 kCLrPMaQL6/1lBhKUbB1fiTKKpIFOlLCuME01S+OvbTJAuRZcwyiRvo0Q+ByvMtKLtNPq
-	 /Ne7vIMj2m+0xeOj9fTEMhI+nhoRdrANAgRXwnzujFXgak78KA9DBdvfmPUODkt+VPg==
+	t=1795059132;
+	b=S1kK1a1A1YZXon9fFiFq4BjSJcGdur3ok6TlkbmWwfWhsDdGONZ8ehVkfjwztB1G9jEO
+	 UHjBQgz2mzFf7wLzAGmM5APusJdbxW+9ELLC94h9EXyFsXSg2Ueh9hmYWkTWsEIW4sDf0
+	 riMea+DIFvzluWFZ1BDlnrephNr0fWpUkL/pxTzXBnPSFFr2ZzdZUlNdE+J2fww2vO6L3
+	 clInwOBafyso3ChMttVtnRT2rbAZ221+5Uo/nOvh2vn6hZGhJKz98Lzv7qdM/k1K6H4Tp
+	 sYMNxM8ET+uzeuFcudMM6mutsyBexL73w3G4YpVfg0i+4vKJOBHSRoRE4aBpe1FuVIg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795059070;
-	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
-	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=ph+NGWmmYq1FDGFTa3cFuctLB01rHiDu5fL3wT4eWEw=;
-	b=AvrqDJAF3Bi9mkm7pLBxnotUdX6DJsqsU+7o1trj2taeSgZ/oOBvfivxzbhmIPcJ/QKU
-	 E/OEXJo37aL4u2zOgmeziyqpQMcmuQi3KGE92tocbYgdKrWDzdjKxHe+YXKWPStsWjOXx
-	 mi0ExOuWd/4TeLEBz7X4E7cNs2aoAsdWge3u0Uf0W2ogHnlOwi1aat3IuZmllFfg69E1F
-	 HZ51bT2TDUNht+J0Np4c1VNOd1G7WgdC5ztuknHxZrE0Qd/Nx3TGlcETV8jhggS5jao3Z
-	 85gwx6RzD4sxX7odhKnRs2zj06nUgO2q/zQ7euEeGf2IGwbvx/4xO9v/Nta/NxsGz5w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795059132;
+	h=DMARC-Filter:DKIM-Signature:Cc:Mime-Version:From:Subject:In-Reply-To:
+	 Date:Message-Id:Content-Transfer-Encoding:References:X-Original-From:
+	 To:X-Lms-Return-Path:User-Agent:Content-Type;
+	bh=PJA8HI/26n09BDtdxwvrwKrlkq0uzVECslo8UM0vFOE=;
+	b=mwMM4ifN3e47Os7sv89DcLp2ld84Yo3x9SNRW/RHAMNOnkqyTmJKjQHGITdiDyIVCdho
+	 FcAKDBzQhbiHG2Vw+enbj+DISVYaI9EM34ncbc6PKXFPmmnEnshqaBFm0TXI+rd2QbiFg
+	 /YasxbqGlTwuhQUJ4ymn2+5j0l02djkkhd+p9t6Gcqqw8m4HGk/dC71sopAB+Ald1qrVU
+	 V/S1pbtb31ojSbUKmpW3Ms/8Jw7K+M9/j2trKMLcP3O62JEpmut8g/Or+Yl+5UMNjlLb4
+	 KrdYtLOfcIC9iH7q2dAVN0s4PfK4GIaVFbYkol5tHhuuD/L4+Tq7Ef/tY70f2CBCChw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=foxmail.com;
-	spf=pass smtp.mailfrom=foxmail.com;
-	dkim=pass header.d=foxmail.com header.i=@foxmail.com header.a=rsa-sha256 header.s=s201512 header.b="zY2hX4/K";
-	arc=none smtp.remote-ip=162.62.57.64
-Received: from out162-62-57-64.mail.qq.com (out162-62-57-64.mail.qq.com [162.62.57.64])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=bytedance.com;
+	spf=pass smtp.mailfrom=bytedance.com;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=pwIcxiyu;
+	arc=none smtp.remote-ip=209.127.230.112
+Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA15606A31C;
-	Thu, 19 Nov 2026 03:31:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1FA15606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42478606A31C
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 03:32:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 42478606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=foxmail.com header.i=@foxmail.com header.a=rsa-sha256 header.s=s201512 header.b=zY2hX4/K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-	s=s201512; t=1795059043;
-	bh=ph+NGWmmYq1FDGFTa3cFuctLB01rHiDu5fL3wT4eWEw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=zY2hX4/KVpaiq9IAJa05Vc8tHdB2slFEQSiXQpb82DnwgkcUqI6hXHEW6ThvC5BHv
-	 0daCpP2BA+ReM/oV1w1IVbwLJV1KkUH8hQ6TTW3cpVEd+FEWWUp03Kbxjz6t7xcF45
-	 9bJvN94oZaBVKQvrc/teDPWpVKEASXnFSoVpQkI8=
-Received: from localhost.localdomain ([107.173.101.132])
-	by newxmesmtplogicsvrszc50-0.qq.com (NewEsmtp) with SMTP
-	id 7A6052CB; Thu, 19 Nov 2026 11:30:38 +0800
-X-QQ-mid: xmsmtpt1795059038tre2pkvgj
-Message-ID: <tencent_F14FD4212049828EDB98B55B6E0FE116CF07@qq.com>
-X-QQ-XMAILINFO: OW+Aa38L0qVBPF71u6y/GgmQhnrfohGjPxkly7mnvBDRtLQetEZfgyBr0O5OGm
-	 Uaz3oG+WNgMulm5nsKNn7TD17QZuUTUCYUkGjiTwwn1oqVvxWn4+z0N4bhKdzTg8BkQg0Ct77GC0
-	 B47ZajaA3ivV6HZsf1VbyNbux0ZfIubiXIyWx0GkUXppsqg94DzAGff1FyJDAKXkylToeqrmedq4
-	 SLLFDroi/Y0HdRghZ9Sxiy1K01GMr0dBd+IMaur2n0+Ruy2zwdB24L1auEMqq7nvV9u43wE4DI+r
-	 gwPNLbZvZAmvQqeGe38Vp/KKj7gN7FsiK1bF5ds8iCWbwMkCn82HZ5RtSk0YjTY/ryz/3q5QA2A8
-	 z+Nt+8M4UbsaKdG55ZyLShweVPFo/iLCOclTxFqA/M04pXV1HjZnY5CgTkahgGVlNYqcyrPs3Fuy
-	 uoIWEh4uu49OKZcaY1QHJ9fQGXnPtFTaV+O4W/WgEfFUAHveqs4txarSPBoFbLJu0S57HTFMRTOH
-	 +GdMGw7XmppPNjKI6AotYgBezUZm9OBWdwRTlprp2zruqspjYH/q1U+WMgc55Lgrovkld4a4PG7j
-	 gU/O3E6r0iRqIEwIOypQppcxj+M/hkx2FVFx89Zd/JavyNHICYqDX4YMgjDpHWfJr0exkEDVDb3b
-	 g2WVQNdX1PFwlcL39qsWjQUtK52VQrKQVSZnwlRxahBJSTNlekUnudbyji6KNiqxMQyCkC2OpH09
-	 ZGdj4UBtzWu6c7zeirWizoUC77kNqVD0LQKRyJWd5qnvWTvTpMTuXmWT5J5G7LOWEXDuMfkf28VO
-	 OAnUwfPitwXII6jynDlpHD2Lqp5I0cYrp8A5lHQXgOMVQIDEox5zpq6AxNYV7yYC3k1DelZ3+OEA
-	 MYntawzM+MdXoYHSI8jSkfFoXD9SuufWma8Ypho64NnbI7oNaL7FYl6Z1HSBJgrxfE7WGS/o0MD7
-	 xYSDKwxjK6MLvodVXyWccVaaYLT5N+0QF8s5T8RC3zTSFpNxkw6I7Vfg4OFAX9zB2go1qIb89d1u
-	 k50uQIaCej1pws93Pl
-X-QQ-XMRINFO: OD9hHCdaPRBwH5bRRRw8tsiH4UAatJqXfg==
-From: "Ziyou Wang (Lenovo)" <ziyou.dev@foxmail.com>
-To: helgaas@kernel.org
-Cc: bhelgaas@google.com,
-	lukas@wunner.de,
-	sathyanarayanan.kuppuswamy@linux.intel.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	ziyou.dev@foxmail.com
-Subject: Re: [PATCH v2] PCI/DPC: Increase recovery timeout to 60 seconds
-Date: Thu, 19 Nov 2026 11:30:36 +0800
-X-OQ-MSGID: <20261119033036.2039885-1-ziyou.dev@foxmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261106152143.GA1621130@bhelgaas>
-References: <20261106152143.GA1621130@bhelgaas>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=pwIcxiyu
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1795059126; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=PJA8HI/26n09BDtdxwvrwKrlkq0uzVECslo8UM0vFOE=;
+ b=pwIcxiyu58O8mtEa60Kd5PHF/aqExu1gO+sMih2b3/WHi55PHH/m53gFeaokF/bfpcURpa
+ ibYacbeG4ja6S9EGC0mGjsgT7ACKfZpa8+pomwMnuCGkoo3++m3AA6AGJllBxAzl/BPpFq
+ gbtSzE7Pl/ecLr5WSZucAqIT83ivSJlSRHaKbUggMiOSyL6BuB4gw8rwx2Xq+Ax9x0/VgP
+ PLBx4ijd90kkfZHPm61rDtcCeKjTzTEI8QVPtZ86spKTrb5M9ykd+U36g2fO/TdrOGS1LB
+ 8yahnIZSdGAaneXpkt+jVH8/iH6n2FlV+VhilUllr4FC4UFlFfE3PG2lmzG+gg==
+Cc: "Keith Busch" <kbusch@meta.com>, <linux-nvme@lists.infradead.org>, 
+	<linux-pci@vger.kernel.org>, <tglx@kernel.org>, 
+	<namjain@linux.microsoft.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,88 +54,117 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+From: "Fengnan" <changfengnan@bytedance.com>
+Subject: Re: [RFC PATCH 0/3] nvme-pci: dynamic interrupt moderation
+In-Reply-To: <8d42a690-79f7-4431-bffb-73decfc97dad@bytedance.com>
+Date: Thu, 19 Nov 2026 11:31:50 +0800
+Message-Id: <e5de8bb4-6605-47f0-98f0-d7246602e566@bytedance.com>
+Content-Transfer-Encoding: quoted-printable
+References: <20261013223543.395054-1-kbusch@meta.com> <16e8bc03-42c2-4bc8-bce9-dab49aad66b8@bytedance.com> <20261028150712.GA16374@lst.de> <auIRf1QATQjVDtkH@kbusch-mbp> <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.9ea1a2e5.340e.41d7.bbaa.69129ddcead9@bytedance.com> <8d42a690-79f7-4431-bffb-73decfc97dad@bytedance.com>
+X-Original-From: Fengnan <changfengnan@bytedance.com>
+To: "Keith Busch" <kbusch@kernel.org>, "Christoph Hellwig" <hch@lst.de>
+X-Lms-Return-Path: <lba+26afe6db4+9347c7+vger.kernel.org+changfengnan@bytedance.com>
+User-Agent: Mozilla Thunderbird
+Content-Type: text/plain; charset=UTF-8
 
-Hi Bjorn,
+=E5=9C=A8 02/11/26 20:22, Fengnan =E5=86=99=E9=81=93:
 
-Thanks for your review!
+Hi Keith:
 
-On Fri, Nov 06, 2026 at 09:21:43AM -0600, Bjorn Helgaas wrote:
-> Was there a "not ready ... after DPC; giving up" message here?
-> pci_dev_wait() should log *something* about how it resolved this
-> situation.
+Any comments?
 
-No.  Here is the complete log from the DPC event to the re-enumeration:
-
-  [121.693046] pcieport 0000:00:03.1: EDR: EDR event received
-  [121.695743] pcieport 0000:00:03.1: DPC: containment event, status:0x1f01: unmasked uncorrectable error detected
-  [121.695825] pcieport 0000:00:03.1: PCIe Bus Error: severity=Uncorrectable (Fatal)
-  [121.695829] pcieport 0000:00:03.1:   device [1022:1108] error status/mask=00200000/00000000
-  [121.695831] pcieport 0000:00:03.1:   [21] ACSViol           | Receiver    | Transaction Layer (First)
-  [121.695834] pcieport 0000:00:03.1: AER:   TLP Header: 0x60002080 0x010042ff 0x00000017 0x7e325c00
-  [121.695841] nvme nvme0: frozen state error detected, reset controller
-  [121.721168] nvme0n1: I/O Cmd(0x2) @ LBA 67600640, 256 blocks, I/O Error (sct 0x3 / sc 0x71)
-  [121.721182] I/O error, dev nvme0n1, sector 67600640 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 2
-  [121.721193] nvme0n1: I/O Cmd(0x2) @ LBA 67600384, 256 blocks, I/O Error (sct 0x3 / sc 0x71)
-  [121.721196] I/O error, dev nvme0n1, sector 67600384 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 2
-  [123.018691] nvme 0000:01:00.0: not ready 1023ms after DPC; waiting
-  [124.106690] nvme 0000:01:00.0: not ready 2047ms after DPC; waiting
-  [125.642703] pcieport 0000:00:03.1: pciehp: Slot(64): Link Down
-  [125.647840] Buffer I/O error on dev nvme0n1, logical block 8450048, async page read
-  [125.647846] Buffer I/O error on dev nvme0n1, logical block 8450049, async page read
-  [125.647847] Buffer I/O error on dev nvme0n1, logical block 8450050, async page read
-  [125.647848] Buffer I/O error on dev nvme0n1, logical block 8450051, async page read
-  [125.647850] Buffer I/O error on dev nvme0n1, logical block 8450052, async page read
-  [125.647850] Buffer I/O error on dev nvme0n1, logical block 8450053, async page read
-  [125.647851] Buffer I/O error on dev nvme0n1, logical block 8450054, async page read
-  [125.647852] Buffer I/O error on dev nvme0n1, logical block 8450055, async page read
-  [125.647853] Buffer I/O error on dev nvme0n1, logical block 8450056, async page read
-  [125.647854] Buffer I/O error on dev nvme0n1, logical block 8450057, async page read
-  [125.849608] pcieport 0000:00:03.1: pciehp: Slot(64): Card present
-  [125.849614] pcieport 0000:00:03.1: pciehp: Slot(64): Link Up
-  [126.218696] pcieport 0000:00:03.1: AER: subordinate device reset failed
-  [126.218700] pcieport 0000:00:03.1: AER: device recovery failed
-  [126.705745] pci 0000:01:00.0: [1dbe:5668] type 00 class 0x010802 PCIe Endpoint
-  [126.705786] pci 0000:01:00.0: BAR 0 [mem 0x00000000-0x00003fff 64bit]
-  [126.705793] pci 0000:01:00.0: ROM [mem 0x00000000-0x0000ffff pref]
-  [126.705801] pci 0000:01:00.0: Max Payload Size set to 512 (was 128, max 512)
-  [126.705987] pci 0000:01:00.0: _HPX attempts Link Control setting (AND 0xffff OR 0x0040)
-  [126.706073] pci 0000:01:00.0: supports D1 D2
-  [126.706074] pci 0000:01:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-  [126.706432] pci 0000:01:00.0: Adding to iommu group 16
-  [126.706481] pci 0000:01:00.0: ROM [mem 0xde300000-0xde30ffff pref]: assigned
-  [126.706483] pci 0000:01:00.0: BAR 0 [mem 0xde310000-0xde313fff 64bit]: assigned
-  [126.706491] pcieport 0000:00:03.1: PCI bridge to [bus 01]
-  [126.706494] pcieport 0000:00:03.1:   bridge window [io  0x1000-0x1fff]
-  [126.706498] pcieport 0000:00:03.1:   bridge window [mem 0xde300000-0xde3fffff]
-  [126.706500] pcieport 0000:00:03.1:   bridge window [mem 0x10021600000-0x100217fffff 64bit pref]
-  [126.709685] nvme nvme1: pci function 0000:01:00.0
-  [126.709692] nvme 0000:01:00.0: enabling device (0140 -> 0142)
-  [126.712068] nvme nvme1: D3 entry latency set to 10 seconds
-  [126.720936] nvme nvme1: 129/0/0 default/read/poll queues
-  [126.727879]  nvme0n2: p1 p2 p3
-
-pci_dev_wait() never reached its timeout.  The 4s pci_dpc_recovered()
-timeout expired first, so pciehp removed the device and marked it
-disconnected.  When pci_dev_wait() woke up, it took the
-pci_dev_is_disconnected() path, which only logs at debug level and
-returns -ENOTTY.  That is why the -ENOTTY surfaced as "AER:
-subordinate device reset failed" instead.
-
-The device needs a little over 4s to become ready ("ready 4095ms
-after DPC" with this patch), so the 4s timeout is losing that race.
-
-One thing worth noting: before e8df1d194c39b ("PCI: Don't treat ~0 as
-ready in pci_dev_wait() with RRS SV"), this failure was masked on this
-system.  The RRS SV path only checked for the 0x0001 RRS Vendor ID, so
-a ~0 read from the not-yet-ready device was treated as "ready",
-pci_bridge_wait_for_secondary_bus() returned early, and the DPC
-"recovery" appeared to succeed within the 4s window, even though the
-device was not actually usable (nvme then failed with -19 after the
-"successful" recovery).  With e8df1d194c39b, pci_dev_wait() correctly
-waits, which re-exposed this 4s race.
-
-Best regards,
-Ziyou Wang
-
+>=20
+>=20
+> =E5=9C=A8 29/10/26 10:14, changfengnan =E5=86=99=E9=81=93:
+>>
+>>> From: "Keith Busch"<kbusch@kernel.org>
+>>> Date:=C2=A0 Wed, Oct 28, 2026, 23:15
+>>> Subject:=C2=A0 Re: [RFC PATCH 0/3] nvme-pci: dynamic interrupt moderati=
+on
+>>> To: "Christoph Hellwig"<hch@lst.de>
+>>> Cc: "Fengnan"<changfengnan@bytedance.com>, "Keith Busch"<kbusch@meta.co=
+m>, <linux-nvme@lists.infradead.org>, <linux-pci@vger.kernel.org>, <tglx@ke=
+rnel.org>, <namjain@linux.microsoft.com>
+>>> On Wed, Oct 28, 2026 at 04:07:12PM +0100, Christoph Hellwig wrote:
+>>>> On Thu, Oct 22, 2026 at 05:43:54PM +0800, Fengnan wrote:
+>>>>> Hi Keith:
+>>>>> =C2=A0
+>>>>> I made some modifications to DIM and then implemented a solution
+>>>>> using the DIM framework.=C2=A0
+>>>>> Based on current testing, the results are now comparable to those of
+>>>>> the previous patch.
+>>>>> Here are the preliminary test results:
+>>>>> https://docs.google.com/spreadsheets/d/1e8LQPnaDhmv50XlAM3XxI0TMQkhbk=
+0bTZwlJP1Hzzdk/edit?gid=3D188992110#gid=3D188992110
+>>>>> =C2=A0
+>>>>> If you agree with this approach, I=E2=80=99ll continue testing and op=
+timizing.
+>>>> =C2=A0
+>>>> =D0=86 can't speak for Keith, but I'd really love to see this going fo=
+rward!
+>>> =C2=A0
+>>> Same! This is a great problem to solve, but I'm just sorry I don't have
+>>> more cycles to work on the cause. I can quickly respin the msix noflush
+>>> pre-patches to address the naming issues tglx mentioned, and we can tak=
+e
+>>> nvme in whichever direction has the best performance.
+>>> =C2=A0
+>>
+>> That sounds good.
+>> I'm currently working on continuously optimizing and testing both
+>> approaches (using DIM and not using DIM).=C2=A0
+>> I plan to update the code and add new data again next Monday.
+>>
+>> Thanks.
+>=20
+>=20
+> Hi Keith and Christoph,
+>=20
+> I've prepared two implementations of adaptive IRQ polling: one reusing
+> the DIM tuning state machine and one using an NVMe-specific policy.
+>=20
+> I tested both with a 158-case fio matrix and additional latency and
+> CPU-contention tests. The results show broadly similar throughput gains
+> over their respective OFF baselines in the tested workloads.
+>=20
+> Test data:
+> [1] Non-DIM version:
+> https://docs.google.com/spreadsheets/d/17kmXH9Zkr2jrN-19BwaInSx53HwOdRPJF=
+rZ-Hjlk0_Y/edit?gid=3D300100#gid=3D300100
+>=20
+> [2] DIM version:
+> https://docs.google.com/spreadsheets/d/18JADnBXWAGkffY_3LsPJ6ftA9DGH6qpNb=
+KvP-lQWLnE/edit?gid=3D300200#gid=3D300200
+>=20
+> Both implementations are opt-in and choose between IRQ completion and
+> timer-driven polling per I/O queue. They evaluate samples of at least
+> 32,768 completions and use a target polling interval of 10 us. A polling
+> trial must improve the completion rate by more than 1%. Once successful,
+> polling can continue while its rate stays within roughly 1% of the saved
+> IRQ baseline, subject to a completion-progress guard.
+>=20
+> Neither implementation uses I/O latency as a tuning metric.
+>=20
+> The non-DIM implementation uses explicit rules inside the NVMe driver.
+> It admits polling trials at an IRQ completion rate of about 100k
+> completions/s per queue and applies a fixed completion-count backoff
+> after three consecutive failures.
+>=20
+> The DIM implementation uses IRQ and POLL as two profiles. It explores
+> polling without that fixed admission threshold and requires a trial
+> to gain more than both 1% and one completion/ms. While parked on IRQ,
+> it increases the wait between trials from 1 to 2, 4, 8 and then 16 valid
+> IRQ samples. It also discards stale samples and stops the polling timer
+> when the queue drains.
+>=20
+> During development, I felt that the version with `dim` required more
+> rules to achieve a similar effect. So, I still prefer the version
+> without `dim` because it=E2=80=99s simpler, easier to understand, and eas=
+ier
+> to maintain.
+>=20
+> Which approach would you prefer?
+>=20
+>=20
+> All the patches are in the attachment.
