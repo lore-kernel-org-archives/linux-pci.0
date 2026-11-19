@@ -1,57 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.216
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795047044;
-	b=Zc0lWTWORebAsSZpHWKnK2iN2UgbxU5da+gDWjlDuOYhPmZD2JpuywZyHN5QJhQoXgZJ
-	 Y/Bxe/KeOe5bJ7JJ0rA+194jc8L/3+bN+lDxVW3Eq5amdQGaE9uG64k17axMpRm/SMldt
-	 gS25uipGCDzPfqWspNTtUncuhYq/ct1M3wbP3gHXk/8eA7ism9z8VeXAm9SpGHl0AHByC
-	 2rE5rKCG0SHOzWawDUPEsTRgCUJVOeDyJtW4VbvsSOu/NAsCPJM/9DXZy/JgbdRybMtZT
-	 vlibN1+EKMxgSh8paC/+PBal8qseuWbMeyoKgc08dSpTDyno4dZleVCa6Ggw2UWgNeQ==
+	t=1795047513;
+	b=HvPlbEPKLO1RYHS5Cenp5ABFWx/m4gB3KB2SJSlCfeo8XY355t0WzLc8BBi30nbRGF6U
+	 C3N/3GRA+kRDZ1h7aoyTzlagngblE8dBzzzpjwZN6Ays2gPOfyzjI9Q1JfNwMeZAU0qbf
+	 rtEbTTNtEM1beF2Rpj4IuOp40vf1AQY9hKq6WKGrkPdltTON0ioic3w31Ml1boGAu6iEr
+	 J5vfBleekWnfXTEQF23IdsCqqpc7mIiiIV8nBzlXXNXxws6ctd2guk/OxUkuvnKbA+9ng
+	 ddw86hwLCccWN+F8iWJGuRt3/CoaL+vD82ivV++gptmE8kpjx9HkkquBPZfDb2Xk6KQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795047044;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=RWnLnc+F0qTFDx5l6YFG1jdIeTtq63px4MNbLuTdYgc=;
-	b=hWtBCWHCSPgOI32t21P0CDHPrIk5MK2HnEpEGgSFx8aK3cZxE/p08YasvACNJQhky4l1
-	 CGc1x2V+BVOufdh7nAD8jYoX2Orxb3Qgt7UYPOzYRgZo/2C5tDlfQTGQbN2fFV6Fpqv78
-	 gNzL022DTU8lEyKx3gCzoL1UWEYO8SL90ZslvrnZvQIPqmVF59TlB03X/fz11/9ekKcoq
-	 5Sv4J/7sxZjN3FPb0Z1f/xmDOXgj9+IV5VB9A/dj0oBw/j8WVXpCCvb2YUrzpVypvOl4u
-	 xAczryMKKKcp0dfS8ji9dS8nPVpOj756AnDuHUW+xJpsV0gXHWFYW9fufgtALDSOO9Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795047513;
+	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:CC:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
+	bh=3nuiJL55J4ZCZAI79sI6l4xLD0umn2jK5X763sqembw=;
+	b=jwh2aolwysjNVyGAIo8i9RBB921jAWeMOYtqsiBitYLUE1KLVpaYFmHXrifvf0aFQ9Vn
+	 yOkWNfYE93s0W5F6gV1jpOrVS08XQOBb1ymbLmcY6IIyeGW/zxEQGz79jQxDzMi4GwP8q
+	 kePrfXqhOE6e0Tt3+rp57Qsw3qeun1E8AC1eBfz3Onzi64/oYZe37bt+10hYfrIcIRxXa
+	 jzcgeFg1WEFowC5i3KcCFsTiLRj+El2QjqwJpv3/MQfkI80VjOd9J4YLbWMSaFv2dY+di
+	 UchPPIzz/UsQ0KRF0znBioZf2xskCzOd8PZakOiZ0sSf8OlwZ4UTL+Ac7IYNFWdja8w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D0ch+DRf;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=huawei.com;
+	spf=pass smtp.mailfrom=huawei.com;
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=SXef0+nJ;
+	arc=none smtp.remote-ip=113.46.200.216
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73632606A32C;
-	Thu, 19 Nov 2026 00:10:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B667C606A32A;
+	Thu, 19 Nov 2026 00:18:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B667C606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D0ch+DRf
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 089B21F000C4;
-	Thu, 19 Nov 2026 00:10:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795047044;
-	bh=RWnLnc+F0qTFDx5l6YFG1jdIeTtq63px4MNbLuTdYgc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=D0ch+DRf/ZWw8JMTcLgJEGLGl7dAZRP/Av4mOMglrPSW8wYJl4fOeYavRZ5gSMO0u
-	 HGrBt4KfUnsdr7ZwgqRonZhOLZledFtYrw3aX6WARz7yOgx9dKRUJFKtWFPrzq6fDa
-	 4uzaVgVTzysinp+jhaU9LdkwCldduEayHNNumw7S7mtsclHbOfVYrOv+XHuZPF+2kA
-	 /3n1Df+VADv4QXvfc1cwQdSWKpk4lQkx+g8xBGgA1OQextJzBozmbq/qdS44Mec82T
-	 SgRgv72ZQJJMLLvBNvpJlzk5fToULfEIvAzb02Zcg4B1m7xl3JRfgN30VUqSXJi3pf
-	 p02AJ6NeumQXQ==
-Date: Wed, 18 Nov 2026 18:10:42 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
-	Yazen Ghannam <yazen.ghannam@amd.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/6] PCI/DPC: Decide DPC ownership with
- host_bridge->native_dpc
-Message-ID: <20261119001042.GA759430@bhelgaas>
+	dkim=pass (1024-bit key, unprotected) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=SXef0+nJ
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=3nuiJL55J4ZCZAI79sI6l4xLD0umn2jK5X763sqembw=;
+	b=SXef0+nJtJS+bxci0yRC+A+SZxOKvLmtdu+oAWyZLN31VrCibOAGmIRuhVdQN9YML8Bx6DhRN
+	xdd+ZB5s08KBlKERGuce8wiNG4vaX37eIF1PMz2DX9JET6EGYaeL0nO3L6NApTyqr8kLqWmBdZI
+	bWhTHvtesiIklYnn8HsU62I=
+Received: from mail.maildlp.com (unknown [172.19.162.144])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4jVJvb6w39z1T4GV;
+	Thu, 19 Nov 2026 08:17:47 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8DEC240685;
+	Thu, 19 Nov 2026 08:18:28 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 19 Nov 2026 08:18:28 +0800
+Message-ID: <96f7b5bd-2295-42b4-89c5-e548cc1791a9@huawei.com>
+Date: Thu, 19 Nov 2026 08:18:27 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,86 +62,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261118181718.3907441-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 1/3] PCI/TPH: Factor out the ST _DSM evaluation
+To: Wei Huang <wei.huang2@amd.com>, <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <skhan@linuxfoundation.org>,
+	<corbet@lwn.net>, <rdunlap@infradead.org>
+References: <20261001155551.4182899-1-wei.huang2@amd.com>
+ <20261001155551.4182899-2-wei.huang2@amd.com>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20261001155551.4182899-2-wei.huang2@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-On Wed, Nov 18, 2026 at 10:17:12AM -0800, Kuppuswamy Sathyanarayanan wrote:
-> This series makes host_bridge->native_dpc the single decider for whether
-> Linux uses DPC, as Bjorn asked during the review of "Simplify PCIe native
-> ownership".
-> 
->   https://lore.kernel.org/r/20261001221408.GA2731929@bhelgaas
-> 
-> Today the DPC service binds on host_bridge->native_aer, AER availability
-> and "pcie_ports=dpc-native".  host_bridge->native_dpc is only consulted
-> by pci_dpc_recovered().  After this series, native_dpc is the end result
-> of everything that decides DPC ownership, and portdrv binds the DPC
-> service on it.
-> 
-> Patches 1-2 are the two DPC patches from v2 of Lukas's "Error reporting
-> for AER-incapable devices", which are included here directly.
-> 
->   https://lore.kernel.org/r/34c9ee153876bac953135b4518035194b7c07c6c.1794997749.git.lukas@wunner.de
->   https://lore.kernel.org/r/58d8a99cc6c2ecba6dadc450ecb4501d47816732.1794997749.git.lukas@wunner.de
-> 
-> Patch 1 keeps the DPC driver from accessing a non-existent AER
-> capability.
-> 
-> Patch 2 drops the AER ownership check from dpc_probe(), so DPC also
-> works on ports without an AER capability.
-> 
-> Patch 3 builds EDR whenever DPC is enabled on ACPI, so CONFIG_PCIE_EDR
-> is no longer a separate knob in deciding whether to request DPC control.
-> 
-> Patch 4 stops requiring pci_aer_available() to bind the DPC service,
-> since the DPC driver does not depend on MSI or on the AER driver.
-> 
-> Patch 5 requests DPC control only together with AER control, as PCI
-> Firmware r3.3, sec 4.5.2.4, requires.
-> 
-> Patch 6 binds the DPC service on host_bridge->native_dpc and logs a
-> message when the OS assumes DPC control that _OSC did not grant.
-> 
-> Changes since v2:
-> 
->   - Pick up v2 of Lukas's two DPC patches.  Patch 1 now uses the AER
->     capability to find the error severity when the port has one.
-> 
->   - Keep CONFIG_PCIE_EDR as a hidden option instead of removing it, and
->     remove the pci_dpc_recovered() check that becomes dead (Yazen).
-> 
->   - Fold the PCI Firmware spec reference into the existing comment in
->     calculate_control() (Yazen).
-> 
->   - Shorten the comment in acpi_pci_root_create() (Yazen).
-> 
->   - Rebase on v7.4-rc1 and add Reviewed-by and Acked-by tags.
-> 
-> v2: https://lore.kernel.org/r/20261020181924.3003553-1-sathyanarayanan.kuppuswamy@linux.intel.com
-> v1: https://lore.kernel.org/r/20261007165840.1604136-1-sathyanarayanan.kuppuswamy@linux.intel.com
-> 
-> Kuppuswamy Sathyanarayanan (4):
->   PCI/EDR: Build EDR whenever DPC is enabled on ACPI
->   PCI/portdrv: Don't require AER to bind DPC service
->   PCI/ACPI: Request DPC control only together with AER control
->   PCI/portdrv: Bind DPC service based on host_bridge->native_dpc
-> 
-> Lukas Wunner (2):
->   PCI/DPC: Avoid access to non-existent AER capability
->   PCI/DPC: Reinstate support for AER-incapable ports
-> 
->  drivers/acpi/pci_root.c    | 19 +++++++++++--
->  drivers/pci/pcie/Kconfig   |  8 +-----
->  drivers/pci/pcie/dpc.c     | 58 +++++++++++++++++++++-----------------
->  drivers/pci/pcie/portdrv.c |  7 +----
->  4 files changed, 51 insertions(+), 41 deletions(-)
+Acked-by: Chengwen Feng <fengchengwen@huawei.com>
 
-Applied to pci/aer for v7.5, thank you!
+On 10/1/2026 11:55 PM, Wei Huang wrote:
+> The ACPI _DSM that returns the CPU to Steering Tag (ST) mapping is
+> evaluated in one place today, with the lookup of the ACPI device providing
+> it open coded in pcie_tph_get_cpu_st().
+> 
+> Factor the handle lookup and the per-CPU query into tph_dsm_handle() and
+> tph_get_cpu_st_info() so other callers can reuse them, name the _DSM
+> revision instead of repeating the bare number, and constify the ST info
+> passed to tph_extract_tag().
+> 
+> No functional change introduced.
+> 
+> Signed-off-by: Wei Huang <wei.huang2@amd.com>
 
-B4 seems to collect historical things, e.g., Yazen's reviewed-by and
-another Fixes: tag on "PCI/DPC: Reinstate support for AER-incapable
-ports".  I *guess* that's all great, but I didn't dig out where they
-originally came from.  I don't see them in the v3 thread on lore
-(https://lore.kernel.org/all/20261118181718.3907441-1-sathyanarayanan.kuppuswamy@linux.intel.com/),
-so they must be from a previous posting.
