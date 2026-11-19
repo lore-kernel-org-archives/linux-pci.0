@@ -1,56 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.13
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795087934;
-	b=TfpM3elasFnI4p8SvWbvibyMfNAgmWdx81lCGxeWMal2R7+ZGl4W52RbSQyGzgeZUmDE
-	 B6Pxm0OU1to1L6Hju2bEw+tHrvXMrFARLZhIN6CNqCULn6wP4uqsnb9rRX2Q6OlsKvagP
-	 ils9RM9e0u/2zf5fIbB5U1Fv5hACUAuV1cDMT/1zNkJ3C4e+p0q4rGyX1HwekqI+9uSyt
-	 zKWIrll1awiq5XpGczCdd1B/UE9yoeWfkZr6mE6kFnFNOcdZiEy90FZaK4uBij1QjyttK
-	 N6wX5biE1lAXXyRQro0Z05YtCfsDY00SvsM0Jhq4SM4lJnXGEABNIcgJ/6zlUXRJ19g==
+	t=1795088505;
+	b=EzQswnpeolNvAORHsdLoeLbM6ojHoTy486xeCvTTqAQiT58aqEvTa3QZSyiVejx5581M
+	 +U/Xbj5o8MlWOo1rU4+dee3YCemvMm7R9gurfFS042qLMyVNnM/DHRgUpJKIGp6MeKyf5
+	 oS0H0Z4R6QOKonJToplqN1pjXauQN0RZi5UqQ2ncsWdCXzVPzhQnZbFHSWTKAAj4GWAXh
+	 mluTfr1bO67MqBPjE0qSiDPwlF9K9YTCJCVtE3f8jH7bmDxD+JOVYXWAZlLZQTzsgQvye
+	 VUsehfZqFSe5SxTN9ujigR2Upw/fkwjA8dV6pFmTpq92GGQqrQaT26ohJp/Z7VluRfQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795087934;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=6k3tH9TKN1TnGT33CUyucHXJ72SzaR3qOUPA5Uz5d38=;
-	b=qVJzeuJRl9Ny/cHjs1Yke2yvsWtP+NhEHXobotjEMLxQIWZV8SUNrzsRCvFPTA/L3z9F
-	 FBCgZa6DE9VSRTwvPo6jizYGW3oiMpwTqaGk9icKAHsrV2XjXvkxdRuAoAmr7CEoZ9oi/
-	 meSNphPRxchBkRjdYuIi0SzLSgp9bIXK1nkHur/3jV4pMHIoNn37pleUj6THSqfw5Q5O2
-	 VxnBaXK43mifyBEAxqGPdoKmn7XSTLh7RRYKq0THjZMbtF7WV8wSwNhWF5LX1VEM/lrAm
-	 itG1wTQ6UZqLwg1JH4oPjxfIreLf0FfbfjVIh2LewU3t/3xKiui3Ph9U3dif00RbvDQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795088505;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To:
+	 Organization;
+	bh=8eKoZw1mVmkJ3K7SZbFPxrA38iOqUD3IVk7ZFve3imk=;
+	b=3r5sY+HEt3zfmv6NnH5FWK9pBgmp8+5wwPJ0xFLStzNkvZg1HT9xsy/QV8u2TAWkTHA9
+	 Z4co8iONe6004oMR9JX3VywH9u4Y4N3Pk4ryUcaTfUTPcOFZw5lPVbGCe4D61dY7N5/Zm
+	 4UwRT9/DuqqGR7S1GRAo1HbrHjaYCCWsmDhX/53NGNjbpcrEXU8RihCMMeXUub2gc/QLp
+	 GUb9xmyx+m2Qg3+qfPv72sTmTM5CxDlJK1yMddN5FEvuE1fTPC6nzO0tj1UkV/kAjf7lX
+	 m5NXCUkQ2CqWModUZrAAdXQ/tgdW+JtqvVmFYRbTLpky5taMd89GxrPoHlbMjxP1/Lg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UqTUw5OF;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Cio76uFl;
+	arc=none smtp.remote-ip=192.198.163.13
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DA72606A320
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 11:32:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75771606A338;
+	Thu, 19 Nov 2026 11:41:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 75771606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UqTUw5OF
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D989A1F000C5;
-	Thu, 19 Nov 2026 11:32:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795087934;
-	bh=6k3tH9TKN1TnGT33CUyucHXJ72SzaR3qOUPA5Uz5d38=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UqTUw5OFZ9qNm1M4Fk+DjcBKgGo1XyRhmB3tynRh3BMMVi1hKqpLjQEjTH91wGi38
-	 qNXIz76lU2yfMyTvKAgoJ4rKvfoztSgjJ1CraGqNbEfQZLHVQokB0Indu67UTWcVhR
-	 FcKQgsWMJXBAb30SF8GNHnwO/EbbWuH0cuBQDBmXQgVylaZTVtIREF2QwE8KTX4eO8
-	 t1ih8sKFry5iYekJQS2d3hMtP/6vkJeswNExIuFdTkY3bC/faFiWm6nzau5Ku9A1lv
-	 WzSZIDG9hePf0GdQFU5nL7AGcJpCuBm2Sh1SiT/I53nNejl3KvB13GYDBNwMbfI6Oc
-	 emn9kNhqVbqbg==
-Message-ID: <sashiko-outbox-223042@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/pwrctrl: tc9563: Enable 8 GT/s equalization
- fine-tuning
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abhishek Kumar" <abhishek.kumar15@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261119-tc9563_fine_tune-v1-1-b83c74bf1e94@oss.qualcomm.com>
-References: <20261119-tc9563_fine_tune-v1-1-b83c74bf1e94@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 19 Nov 2026 11:32:13 +0000
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Cio76uFl
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795088504; x=1826624504;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=64inJ+zvx5b91QZnT9piUE+RNJKiuW3jDRJB09tJ0jo=;
+  b=Cio76uFlvijcqrl4qtmbAo+HAgzXPHD5Lny1nZ6yt+7zQKsaikvFP8t6
+   uNICvpukOojAxJUR/U+MSbruVbTz4xD040zonzlJBFg0FRE3RFG/sV0EI
+   /udxQBlCv6FuQ0zXb9gH6SNGijn4x/+2K1m/6OXCJ/1KXXsmwjm2AWrpE
+   vy7JEuu7po9BKr2koVgAu5SAUhNmdEosFuEB+rXZj/lqTJSTdMSW+8AEo
+   wtqZxsvABT62iB9Xab5mBSVK33bYn0055K5gFr3/IxXX0uDcx5rysjHif
+   fPQVbLSxJdPjWb5tzwfUk29iMkY0EfgEyPdLTPG38L3E/VDMPPux3fnDm
+   w==;
+X-CSE-ConnectionGUID: m/l0Gut5TWeGHNNjxDZoNQ==
+X-CSE-MsgGUID: koQSWfQrRwmpl3dI9Xg0Vw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11971"; a="3923948"
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="3923948"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 03:41:41 -0800
+X-CSE-ConnectionGUID: 0fiNSSL5S2y9PcAMgQbpLA==
+X-CSE-MsgGUID: ciXcDNloRhm1WigoUp5/gw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="10448565"
+Received: from klitkey1-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.61])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 03:41:38 -0800
+Date: Thu, 19 Nov 2026 13:41:36 +0200
+From: "andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>
+To: Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"bp@alien8.de" <bp@alien8.de>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"habilerturker@hotmail.com" <habilerturker@hotmail.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"hpa@zytor.com" <hpa@zytor.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"mingo@redhat.com" <mingo@redhat.com>,
+	"tglx@kernel.org" <tglx@kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH] x86/quirks: Cast PCI_D0 to u16 in apple_airport_reset()
+Message-ID: <av7gcEykk-Sp2V8n@ashevche-desk.local>
+References: <av67u5GSVL0KWolF@ashevche-desk.local>
+ <20261119112124.6442-1-habilerenturker@hotmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,39 +88,34 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261119112124.6442-1-habilerenturker@hotmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] PCI/pwrctrl: tc9563: missing Fixes trailer for 8 GT/s EQ
-  fine-tuning fix
---
+On Thu, Nov 19, 2026 at 11:21:25AM +0000, Habil Eren Türker wrote:
+> Thank you both for the feedback. I agree that helper functions are a much
+> better approach than spreading (__force u16) casts throughout the code.
+> 
+> These are the main types of warnings (roughly 30 in total) in
+> drivers/pci, run with `make C=2 drivers/pci/`:
+> 
+> - warning: restricted pci_power_t degrades to integer (~25 instances)
+> - warning: incorrect type in assignment (different base types)
+>    (~4 instances)
+> - warning: invalid assignment: |= (~3 instances)
+> 
+> The four helpers pci_power_t_get(), pci_power_t_set(), pci_power_eq()
+> and pci_power_gt() would cover all three groups.
 
-commit ae3834e64204d960937f7bf637e84695589097d7
-Author: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
+For the completeness the _lt() also needed, with that we will cover all
+<, >, <=, and >=.
 
-> PCI/pwrctrl: tc9563: Enable 8 GT/s equalization fine-tuning
->
-> On some boots, links on the PCIe switch report a continuous flood of
-> correctable AER errors (RxErr, BadTLP and Replay Timer Timeout) at
-> 8 GT/s. This happens because the 8 GT/s equalization fine-tuning
-> setting is never programmed: max_num_of_fine_tuning_iterations_at_8gt
-> in K_EQUTUNING_033_028 resets to 0, so equalization only selects a
-> preset and never fine-tunes the transmitter coefficients for the
-> channel, leaving the link with marginal signal quality.
->
-> Fix this by programming one fine-tuning iteration on the upstream port
-> and downstream ports 1 and 2 at power-on, so that 8 GT/s equalization
-> adapts the transmitter coefficients to the channel. With this setting
-> the links no longer report any AER errors.
->
-> Signed-off-by: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
+-- 
+With Best Regards,
+Andy Shevchenko
 
-[Severity: Low]
-This fixes a missing initialization step from when the TC9563 power control
-driver was introduced.  Should this include:
 
-  Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261119-tc9563_fin=
-e_tune-v1-1-b83c74bf1e94@oss.qualcomm.com?part=3D1
