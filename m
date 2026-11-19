@@ -1,99 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795075418;
-	b=VBnqkHdCsLle4unFiXnkXczFEadq9/LIzXnd7dDFe1E10PlGP7hsUowHnl0l+nY97Ea3
-	 lbmydpwTv61QziJMtkLkxxxy2+FPSmjD0YnNxUsp4H3J3AUnwMp3LkoYV6Tw6PCRNljun
-	 12ZH6O7hh2rxYBPtCBShZ6cRLp304ZrW5TTE46t9dSKJNKXFNjYre2DtYh6KeNpAdwi4o
-	 NLF3nRhaLDsSdtQ0YEjIgelUlHrKGNJwt6GCndvfhJavmsaMaJR+wJ6bkki7I9CVhaKVZ
-	 GVuISI9yHMtXo7tf89dTSOKS6quO05lupnSIdJ8t/yWdB9nDdM9CJpys6QXf+Qn6hYA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795075418;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=4zyWgbXx4Q5+0M3EcfdpGNiWN2ml7oLzqm2D2qT58oE=;
-	b=BIdm8q/aqSl0X8YfnezCWb5+90qZUWTNkez/rhfedUWZYhPidXBmLZBSSYe+NXv5PXAY
-	 NZlCgJqI0NylgNxXUGhg7x9tFpQq1GD3gZsqwbOF8Grn43enbM3RdxAQQy6ozW5xef/Fi
-	 n6WfdGFa5H/qGOk23N6YnNhd9p3V6OwGlkhs4BJDNM5CaK7AvpGXTsxwyJD27ulowlrmf
-	 LwdrNcBDwdWoLKdIm6aRaKMOyyfcR0lWsmjnd8yN850BMZGku0vNBQldPHvJHeks02q2v
-	 ep7ZkN9J1eVYYgWjKqcOBk9OoeqHJLC9adHYbrS2B5T8J8COUZDeru+dkQl2v2jXkfw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=txf9AEnn;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795076059;
+	b=qVmmBLY4c/9vdKhl81C3QsmqmTbwGhUX+zBt2DM0Bqi41y5lw9tDsQhLxwhegBw0f/rq
+	 uU/oZIa5ANIDrJgCGXQQw219nPOQeuC7bZpLZbAbpbSbXV6pymMj4wd0CIW9HTl9fm5BV
+	 8j4j+ZoL2RGXKw8MqEAf6QI+M3nxumH0rzMyfQYslpy4XViBWjWl6aU6MG1dbfs1RjLIg
+	 PD7Clq8M3eqLVUhAr7IKWxnJdUptUqwadMwX8f+i7pgRmwk8p1OCTPMgtpwf3AEF5w5oM
+	 0xN10emNwKgNERSrHtnt1ajcDIw/XVvOIBuXurg60yeBNDBP7+DfKr9kXl347VciUwA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795076059;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Cc:Subject:To:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=Va/Oxtu6vlA30n7TkoMr9m9dnyboRnI7B5KkvZShXuk=;
+	b=rtEC7ruAOWn/uMeoghwwozYjlg59/B+F/uIl9GJSncNs0u805nYaXreChtcXNIO3uPx5
+	 124JoIQCMHFi1P/8QMYBPeWoYX2LAT38P3LIs8nc3ZvfrF4yxNga4K55wQAbIAXIZuFvR
+	 GICD6vZCRaa8ol11WkMvB+gi/ip0hFRnRHKaU4R9jmD+I0nXNFqlttq+/rVOY/B1CuBAq
+	 8erK3LMPcRt1xn+AsPG37B4Zz6Wzgso0gGsK78/UBeStCwb4d2crt1obRS0+2iq1Hml/9
+	 TC9vCzgBrbCUQMMINd3XHbMsn7mACfICJTFFSdh82uG1YP3FpI1aAs/4i+6Kf6nsPiw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JHtfP26L;
+	arc=none smtp.remote-ip=192.198.163.18
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CAEA606A330
-	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 08:03:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7CAEA606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11792606A325;
+	Thu, 19 Nov 2026 08:14:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11792606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=txf9AEnn
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6b86fcbd647so1277946a12.1
-        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 00:03:38 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795075417; cv=none;
-        d=google.com; s=arc-20260327;
-        b=kUQupGWhtH0DHoJMEGti25f1f+m+SDSTtVqbPKv65FAGaCY2zE4K0BAnTLcj8mE634
-         aJgnD48FaX2qrF2ekFHkIoei3H6nJgSC9l3mZrRh1WakzuvQs0iATnK8otjNhE4ImM4g
-         Ev5qfl2Xe2T4tuyh5sF9H3kPmdg6sNkhJkTBY4Xh+7mjgW3n5BwZYykUXRd678ZTsz0T
-         mTTWjcOrwk8yDetMdyHWJpJs87iIXqWkbgE/E8cXPgNm2++OIvdHo9daozJW/zj3UBKl
-         OrIbmpGn31dF/Q92td1vdff/xcpW+lN6gs0OgTiyFrftxPzR5mWrTdAHo7TBn+JJeZAK
-         jqjA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=4zyWgbXx4Q5+0M3EcfdpGNiWN2ml7oLzqm2D2qT58oE=;
-        fh=nt9iCRTSxTY6/RTZC/dyR99mDA4cxJeIu//Rgl8qKVo=;
-        b=lehs9xPlbUFmObQ500/iSwO0YboigJopEfanCAHZECuDbdBVkCEY7kvqpg6cAoZtU/
-         sax62ums19VIltOTmrjil6vyHSx1VE0Bz3UETd3MItgRnDXqOHyAuHIgtB+HVP2pmTHE
-         KJqaIvjL/mxJXVZMA/funmJP/Nl5uzGJ9AkS6jfaDrZlOI1b/ZsCyNEU6PA7yasn4PW6
-         tydQrm1pBBLnVweHqawbDOsbWphSr94qA6U8TLDntQGxGGnV7+1RT03A+e588nu+5uk8
-         zdI7e0MPCr7C8hUvf/bjQrqn6eCXkI4VHaNPD+ngmbOVj9kuGW5AAgMHvdxiVChQ2bCf
-         jyHQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795075417; x=1795680217; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=4zyWgbXx4Q5+0M3EcfdpGNiWN2ml7oLzqm2D2qT58oE=;
-        b=txf9AEnnq3VU5Rth/crTDgb2s4PApg8WmeRgoiQ0ILTAvewf+e28/4/CnBqJcnV+ZP
-         E0rHclgvNTL2GCwk+A/TJorgUCWVVW/+k3La6gl7QetAhRYmRerQC/gmmTkPU/rXIiRC
-         lSxMUG6Bz5tFM+tXFwXgKTfAs8Njh2aqPzVAvGWSa04lsDICVUWFBGlKQBW1GVJ7ItAK
-         2Ftdka4dj5GGvdx8Hj1zwmcYQC3adrtzWh/erZc4GOvagaFZyIWf2ZzmhO8zXGyJAl7U
-         eU9KARgQ7gwMAd/zzoC5i5xxACyzy3kMwPcQMjC3brX+NuCn7957iw89Es4rZn1Z0gq/
-         FGcQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795075417; x=1795680217;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=4zyWgbXx4Q5+0M3EcfdpGNiWN2ml7oLzqm2D2qT58oE=;
-        b=OoDeU/IqyMzrNktvTqB8wEStDmSzO7qveKBKQ/MLt9ZaCSrIlgO0cUhdEzKJaVPOGj
-         Uz8xkQTVCb9ADHuDRXPwJqXlAzVSEpBYPEQM6rklfQZ2oMff5sogDQT/xqL6QHpznwbu
-         5UH08kRDhbZT+M3/owzovBTeLAzKYNp8y9tVkgR3Vy46fyu8csFUlSuv9QT6dkO2BMdg
-         QBDQlchx/27V5NvgGDU5URTALkd/Nyjva/8byvzVmoiKk6jxWej7zBcoRaYUI2/6s7rf
-         qzuDFhbzaYWbgch86yRY426U1fwwwoPez/Tz+nTyLGnDqP9KCJBKFTES5+WqoueXPCrx
-         M6cw==
-X-Forwarded-Encrypted: i=1; AL+hErHmJ1ccGUYBJ4n7el4f4D2dWNapJ32iBHEFHwiq+GdPIp5F0h4RC7oA6G9N98yfeRTC8hfczF2JZQ8=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8e/NhnIPljBY70+nCxu8h40g2VWC7wY3+nEYhqM2le4ULuRtSX
-	+/unqEtY5A+ZH1BCFdXhB7vRhJeCz5TLu/mee7e5wgxMbJn5mo/pcvkUlK2LQds8iO+Xck9Fw9+
-	BtV8pVWou6XIHlIVIeqRqfwWs0efR2n8=
-X-Gm-Gg: AYBFou3In6FCZC2w5FlpMbQ1lAI2AGTNSYeeyIhRPC27NZrRYcvAqRzKN6o9mWMNrzT
-	HAtfqqNa+MLRLeeHlKtlqLnP0s/Dfe5DFpxp+0aX03ZbcBPkZGO6ChHsOOsGNOPV2RshRhFu+Y9
-	3LAN1US+as7uUsRHI/CRf5VOOOL2IvtRh76wuWTR/ebYz4LzgIRtty6MUXJzt22yryUVC6LKrX7
-	wSWMhnBeMv9QHFFd1h+iDKXsdGJhX5sKlOBdNwDyr/fLmE7vb2S4sbixPBt4/hOk8Whlj46Y6gP
-	uHhfRjPjS9jBwWKIqWh/s/OgY99oMZkxBVhaX9bNInVuG1cVbCw11WH/A/QaWTopqp8TODBsyPr
-	s2GvejD2fOkXsi4iq/IzIU+4De13OMl94UTQ=
-X-Received: by 2002:a05:6402:c51b:10b0:6ba:12d7:69b1 with SMTP id
- 4fb4d7f45d1cf-6ba1f9ad159mr266992a12.12.1795075416554; Thu, 19 Nov 2026
- 00:03:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JHtfP26L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795076058; x=1826612058;
+  h=message-id:date:mime-version:cc:subject:to:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=kzJo+8BaOAZhUntz86DhI1HKcpzg32Rvn/ODVmcnDig=;
+  b=JHtfP26LfKGpzsHg0MB2vZ6ix6lSedBydZdHOc/+kGNo4PR95dK1KcHN
+   WbtGF0ga04gRvZIBYOXkBdlMLYlAhG60y7ckdX2yEb7P3lOQESXH1KY8Y
+   GBYYkMycrosbEfe2IDaGFCTyNWUYyga9mHkEdxVdKoYxpy9oJaiXVnMh1
+   ZdXfs6WSggm+kJNCjGGyHeD89I6/3CXFHROYt1fccGHpZFABsxJbgiwwD
+   0ysCv/mdWRKp6mDE78z2X2g5gH6Rtqm2wU/H2WgJzhEcZeEICYIKxfxnU
+   GJSXTXfh+QbtlYL9q2cgk3FUO1+tR5N4VEFYWaJaH0z/Dq6cxeP0QweN1
+   w==;
+X-CSE-ConnectionGUID: 4e49otlhRVahd0EUqIeBzg==
+X-CSE-MsgGUID: rSKWx26kSkGB9RxUjshOaw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11970"; a="3944391"
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="3944391"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 00:14:00 -0800
+X-CSE-ConnectionGUID: 0tlw9+aHSg2IlofLNzybUA==
+X-CSE-MsgGUID: EoPnrkujQkWheEz1swf5JQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="10730909"
+Received: from unknown (HELO [10.238.1.144]) ([10.238.1.144])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 00:13:49 -0800
+Message-ID: <fac3d200-e1e8-4a0f-bd41-8e1c0d727d1a@linux.intel.com>
+Date: Thu, 19 Nov 2026 16:13:46 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -103,44 +72,92 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261119-b4-rockchip-pcie-hib-v1-1-05df24cc77e6@iav.lv>
- <CANAwSgRaHubdh8o5Zd3k5Sa_jf5fWuEuCXqbQu7gGL71MwC+8g@mail.gmail.com> <20261119-re-anand-rockchip-hib-rails@iav.lv>
-In-Reply-To: <20261119-re-anand-rockchip-hib-rails@iav.lv>
-From: Anand Moon <linux.amoon@gmail.com>
-Date: Thu, 19 Nov 2026 13:33:19 +0530
-X-Gm-Features: AclHuK8PCuggsZEUPGrild3UXx1VS_EuxaX_wfHV2ilz6neGEig8c1iMSX4XEY4
-Message-ID: <CANAwSgSs75e6ACaP-bw_JGJ1=VrMGmvduDCx6HMhXSmLsOJddg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rockchip-host: Support hibernation with endpoints in D0
-To: Igor Velkov <iav@iav.lv>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	Heiko Stuebner <heiko@sntech.de>, linux-rockchip@lists.infradead.org, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	Rob Herring <robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Cc: baolu.lu@linux.intel.com, Alex Williamson <alex@shazbot.org>,
+ Alexey Kardashevskiy <aik@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Joerg Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>,
+ Jonathan Hunter <jonathanh@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
+ Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+ Nicolin Chen <nicolinc@nvidia.com>, Robin Murphy <robin.murphy@arm.com>,
+ Samuel Ortiz <sameo@rivosinc.com>,
+ Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+ Steven Price <steven.price@arm.com>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Suzuki K Poulose <suzuki.poulose@arm.com>,
+ Thierry Reding <thierry.reding@kernel.org>,
+ Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+ Xu Yilun <yilun.xu@linux.intel.com>, Ashish Kalra <ashish.kalra@amd.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, iommu@lists.linux.dev,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-tegra@vger.kernel.org, patches@lists.linux.dev,
+ Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH v9 04/13] iommufd/device: Associate KVM file pointer with
+ iommufd_device
+To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ linux-coco@lists.linux.dev
+References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
+ <20261116081935.85372-5-aneesh.kumar@kernel.org>
+Content-Language: en-US
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <20261116081935.85372-5-aneesh.kumar@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Hi Igor,
+On 11/16/2026 4:19 PM, Aneesh Kumar K.V (Arm) wrote:
+> From: Shameer Kolothum<shameerali.kolothum.thodi@huawei.com>
+> 
+> TSM vDevice support needs access to the KVM associated with a VFIO device
+> after the device has been bound to iommufd.
+> 
+> Extend iommufd_device_bind() to accept the device's KVM file and store it
+> in the iommufd_device. The KVM file reference is owned by VFIO and is
+> already held for the duration of the device open path.
+> 
+> Reviewed-by: Kevin Tian<kevin.tian@intel.com>
+> Reviewed-by: Jason Gunthorpe<jgg@nvidia.com>
+> Signed-off-by: Shameer Kolothum<shameerali.kolothum.thodi@huawei.com>
+> [nicolinc: fix build error in iommufd_test_mock_domain()]
+> Signed-off-by: Nicolin Chen<nicolinc@nvidia.com>
+> [aneesh.kumar: Switch to use kvm_file]
+> Cc: Jason Gunthorpe<jgg@ziepe.ca>
+> Cc: Kevin Tian<kevin.tian@intel.com>
+> Cc: Joerg Roedel<joro@8bytes.org>
+> Cc: Will Deacon<will@kernel.org>
+> Cc: Robin Murphy<robin.murphy@arm.com>
+> Cc: Alex Williamson<alex@shazbot.org>
+> Cc:iommu@lists.linux.dev
+> Signed-off-by: Aneesh Kumar K.V (Arm)<aneesh.kumar@kernel.org>
+> ---
+>   drivers/iommu/iommufd/device.c          | 7 ++++++-
+>   drivers/iommu/iommufd/iommufd_private.h | 2 ++
+>   drivers/iommu/iommufd/selftest.c        | 2 +-
+>   drivers/vfio/iommufd.c                  | 3 ++-
+>   include/linux/iommufd.h                 | 4 +++-
+>   5 files changed, 14 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/iommu/iommufd/device.c b/drivers/iommu/iommufd/device.c
+> index 1b0bdf57ac8a..935f42616a65 100644
+> --- a/drivers/iommu/iommufd/device.c
+> +++ b/drivers/iommu/iommufd/device.c
+> @@ -295,6 +295,7 @@ static int iommufd_bind_noiommu(struct iommufd_device *idev)
+>    * iommufd_device_bind - Bind a physical device to an iommu fd
+>    * @ictx: iommufd file descriptor
+>    * @dev: Pointer to a physical device struct
+> + * @kvm_file: VM file if device belongs to a KVM VM
+>    * @id: Output ID number to return to userspace for this device
+>    *
+>    * A successful bind establishes an ownership over the device and returns
 
-On Thu, 19 Nov 2026 at 11:54, Igor Velkov <iav@iav.lv> wrote:
->
-> On Thu, 19 Nov 2026, Anand Moon wrote:
-> > It looks like we aren't disabling all the PCIe regulators (0.9V, 1.8V,
-> > 3.3V, and 12V)
-> > during suspend and re-enabling them during resume.
-> > Shouldn't we power down all of them on suspend and bring them back up on resume?
->
-> This patch keeps the rails as they are: suspend_noirq() already turns
-> off only vpcie0v9, and the other rails stay on from probe to remove.
-> The 3.3 V and 12 V rails power the endpoint; cutting them in suspend
-> loses the state that the PCI core and the endpoint driver expect to
-> keep in D3hot. Doing that would be a separate change.
->
-Makes sense. Thanks
-I will check the disable and enable regulators to help with this issue
-and will update you.
-> --
-> Igor Velkov <iav@iav.lv>
+As discussed during the v8 review, how does this series address the risk
+that the KVM file pointer could become invalid if REMOVE_WAIT times out?
+The changelog says the extra KVM file reference was dropped. Is the
+timeout expected never to occur, or should it be addressed by a broader
+fix if it does? How about explaining this in the commit message so
+future readers understand why the extra reference isn’t needed.
 
-Thanks
--Anand
+Thanks,
+baolu
