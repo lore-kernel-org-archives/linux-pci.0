@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795116563;
-	b=BMXA/Yyakqd5O10nYGyMJ20foxbGqDBUOKgKVH5/0JEpq/v61LPYCMwscaanoQCQWTOd
-	 W+6AfAyYRo5dn25wkrrCUCe0HBVowoX+rKfoMeNdsJtaOMoVSgbac46BdcKr6Ks963JQt
-	 DAK5c6s+hmDTaQJw+c1m9NG7oDWQ3RALFGFeIbZb2Mz7dng5E70Qm1jZIV3IRA0s1EYEa
-	 FhVrxMtz/QVuUCPbvnzpW0pwKXK23iBkARQAhPCYYDMfBkJbzKq+3fG2EN7Cc5Z5ficrv
-	 7o1aiAYpU8Sl0XLMOMIlp9To/5mkPOr8cT1Iwz47Kf+IcroKpIoWtGoYqfolji+Vpkg==
+	t=1795116569;
+	b=f1sBgS+ueMcX/s/7Tun61Zq3ysqBRpTPo1hB8/pzjXejIfSerY3o1SkzvoRBv3PpuENA
+	 p2YLb/2AHGRVfP2aCpRgmLweLHYnat43ni+hEgwZmKQWZEqRNx4oEY2v6EAKHM9sPSbSH
+	 03IOaSR4dq20sguJ3MBidkmJD3hNyPRQbCUrgCNn81WMHyo+Z16EnpQimZuGK/MZ2OYWH
+	 h9TPmq+s1bpAkXtOzvXRm0PB4sVKG/0JbBWdqQaZNYl59Bcz28RRVCKpLa6bIRfkLnFr8
+	 jGEFAGEUUzdv/okb2YXni43N6jwUxV+H8ZwcfhTMdtkgBfJLIscRW2k7MRXKAtoQFVw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795116563;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795116569;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=h36NijIFiLpyNcA+ZUwhHWRIm6TVs6UUJLhgbu0YExI=;
-	b=qUynpWHHBkJQ0qCM4FX59OjLsmUuq3jcC5yNNA6nbyOPk+4FOTgQ6i7BFS+DqQpyD6Y6
-	 GqCK7WQphALw2bzGwkkCf9YvlfZj34vCGamA8X8wgpkiAcg9hpt0YiVZBZ9JSTPAV4Djh
-	 MMr0JnFNR/231BPK09tfydoQO/UIishV6pOs4yYYtoHalwuroikEnv4WgqWvM5BmPtY4c
-	 P9aXIEb9IgLgeZ4gtNCS1vb4WJMTrkBxKWu2EYs91t3QddOwGvYtL5AdiCudBz87Xv1y3
-	 VnYyvSNtJdUenR7sIY9Y2osHnW/82y2ISKYT5QY7W3FNB+hHiG2CNmo32rY6rsK7Tnw==
+	bh=toAgYbtZb0oJs8UwIlt+vvneLKacaIQVzGBaEBtzkMo=;
+	b=ZRAdrN9CJFPsV8/L8Rs1BspbohVg6jhDgrUZPFF3iezZnTu6erHF967vMkezetAAXINi
+	 eSiyeaIj1zvO3fmx1ppkVH8MX0nqoTZeQwBseCbtmGXFZHIY4oRuuK+tF+Nnt4r2zhwAZ
+	 CwOu1XQb0QAovIsWhpCHtDnAWP48dDa7yeR2AX7yv+podLh8Q7PUxKaWRyQ860G4a5lga
+	 UqPv1vXocO/NbrNGtSKod7jykCj2YHzq7pYsmF0bPKF+4MEWQQdIBL6WqhITNL9V7/vRo
+	 i/YMyBMUK2CGaSH/kLCkvXoLNP31r8L2slQBj2ohwtUwDctAxyYgrvB1leJqHnv4rkQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EQ2z3c5a;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n+0LABxI;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38E0606A332;
-	Thu, 19 Nov 2026 19:29:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6517860A2605;
+	Thu, 19 Nov 2026 19:29:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EQ2z3c5a
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62F0D1F000C5;
-	Thu, 19 Nov 2026 19:29:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n+0LABxI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A34BA1F000CE;
+	Thu, 19 Nov 2026 19:29:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795116563;
-	bh=h36NijIFiLpyNcA+ZUwhHWRIm6TVs6UUJLhgbu0YExI=;
+	s=k20260515; t=1795116568;
+	bh=toAgYbtZb0oJs8UwIlt+vvneLKacaIQVzGBaEBtzkMo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EQ2z3c5aAY0rUgMYJhADfnv8AchMIAFgnnLJ1hMb3poRlU7hy4R3Fm3uGDPhVf5S+
-	 PU7fR0aIaGeRreQg/EYCJwKrIdDU+MA71sE/oPA1JWTMzGFXffDyDPCaXtWctD/trh
-	 EBWNVPNYfNb+LX13AnwZwMONyo2yZbcFg+zwDE25o/wwJ1XfNOdk4PjSolybYnG84a
-	 rmtFD1s8wGQqfQNPTJlROrl3KDiALFJcH59QhSganFj26JKEDFA4oBY5lYI5ZjLN6p
-	 4RbkYkL8m3KsVg88t5uQRzYLNqR3HOj/+CpT7rgkZEgUjWaXm4f8551AOVhlWiQwFr
-	 kSosB7TdlP2vw==
-Message-ID: <sashiko-outbox-223889@kernel.org>
+	b=n+0LABxIr5oUGcCzY/wTU8ctpKxtwZyfSpZfM6QR4LZc2UHFoJA70OtSNreVrCH1p
+	 6ttsdnGt05PJkEGhQ/RbgK+fzzKEvxq9z4wQbLM+1s0BC2NxYI/jnT2kCzf+hDPB07
+	 xnb4jLP5NknN6qwnK0Rgpozyulh4ZMoAVDdgj7Tnf0gl7GBUFMkaNOawYQT0fptMkT
+	 bA/4uAqXbB3G53ilae1X6VSNGsdYLjdFVl2Erc6L/tVNLIoas2ZMrHyoxUrRfxkfxj
+	 X+oyAGPsKFonb42CAhnBG5d1r6CdHBDH7vD46xbPO1aqJVQDateLSC7FC6EZ+WO85j
+	 JNDo2Rwo8J5ng==
+Message-ID: <sashiko-outbox-223896@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 03/31] USB: Lock interfaces during manual driver
- binding
+Subject: Re: [PATCH v3 10/31] USB: Add helpers to release unpublished
+ interface claims
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Leon Romanovsky" <leon@kernel.org>
 Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261118-device-trust-core-v3-3-d655875c4bfb@nvidia.com>
+In-Reply-To: <20261118-device-trust-core-v3-10-d655875c4bfb@nvidia.com>
 References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
- <20261118-device-trust-core-v3-3-d655875c4bfb@nvidia.com>
+ <20261118-device-trust-core-v3-10-d655875c4bfb@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 19 Nov 2026 19:29:23 +0000
+Date: Thu, 19 Nov 2026 19:29:28 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,8 +63,12 @@ Precedence: list
 
 > From: Leon Romanovsky <leonro@nvidia.com>
 >=20
-> Driver core requires the claimed interface's device lock during binding.
-> The parent USB device lock alone does not satisfy this requirement.
+> An early USB claim can require disconnect even though driver core never
+> bound the interface. Binding failure may also have cleared the claimant
+> pointer.
+>=20
+> Add release helpers so registration rollback and configuration removal
+> can unwind these claims through USB.
 >=20
 > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
@@ -72,5 +76,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118-device-tru=
-st-core-v3-0-d655875c4bfb@nvidia.com?part=3D3
+st-core-v3-0-d655875c4bfb@nvidia.com?part=3D10
 
