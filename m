@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.63
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.29
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795120244;
-	b=SYKwYSMj9B53QmWf/xO1y/DNG8aFAP4F80Fiyby00xPApM+T/Qp5mOcr2VdLRWPlBayz
-	 Z+Ov2fbQ+NpZn2nronrkhJW8LMQDvf290vlpER99JEJryubfl2mPMlWBtsJyZBB+sOAHx
-	 R5W0TB8oeDBbdTMYLJBdpsdiYKR1eWTkdHQpmFcdQory3l5eFZUdIgC0SDS24Vbv0zIWa
-	 oJKWSZVtzujccB8KGHj6H/s5cQMmSRjrXg90eVTdFGiOTBpfDNWyCJa+YHnFF9n7SRxHw
-	 TNhUA/UnH8n0nQxbMQvt8Kiczc2kMGtPkKXAmNVIQoqMkcuGXCowSl6oH11IFTHtTrg==
+	t=1795120273;
+	b=q5Z/h4ES7EihyExaHgx6AicF94Y3zyymmPIUaLhAHUl1G5iW7kHF7lSQyFbjc/nLDoqf
+	 QGiTjD1ub284yZyJWgv2RPMOtYUVVs66bIHaQGysrCn/CN1jx8bjn786pFAJGwwFlsZF1
+	 M3KGgkNIH5+bnxT+f4cjgJQJCfueLw/VQ65gdo9H8rkNbFPoOFj6VxYtK5IuX15DyX6Mh
+	 /UGUw9GOQueyEuiFfcD02j19tgFzqLPbsaw+v/bMsT1wsH6tyyDOyGiLVradCWgZ+TKW7
+	 M63xZzkFIfDHQElt3ZsshkJr1Ap6OOKm3v5X7joFfL7nM+T4kuzwjG6R/XVNoz+4IwQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795120244;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795120273;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
@@ -26,53 +26,53 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=NjmIqHflQ+F26H8TINkAyz/+kKSSHovVqt0YJ9gpK+o=;
-	b=Sn+67YS/rkqy+AugXKET8mWXTgFVWEM6wZKaHrvXji/ityNEufkqbIYWjEpIEErHmbxS
-	 xli7qu5QNxs7FMEy8uxXEzQPYy8uuluk90nZuitLPiVMmpmpvui+Y2yUtPr1A6RgdARRP
-	 YtZ6o5+KDczGR8fng7ZGLGIZsYBilHHVw+OsRnzNmWqYzRrwtr9OrOWdq/as0EqcMfkEh
-	 bA1oLfYQ5hyQfp1wzhuCvMUpEq/uX9+suzTJj11Y9wqP1EIrvlbJAdEx/AUm4zBrsV+p+
-	 mRc1462Z4wBpMIbf6sb8w5I3m+dzwZcADS5q8KTvBNoBIiUtc8j1Kyvx9O1TXsa4VUg==
+	bh=FSG2RR9CR+CX8A37nUT8ewlesURVaIx88lE3eWQuMBE=;
+	b=dTaCceN0AuhhLair4J040suv9kD/LVOVUOnAND3b5XwB1pIHLtoFyf4UtB0UIYIQw9AX
+	 OClFkY/wR3nVKvhxHyWmRH131qWnBcf9XgBp8H+GrKgEGvfHh4hIF1al5tlL64HLMAYFD
+	 0eZYz597nP9ShOBGnoDMieMmI8WBtf9l6WHELEBxYFdQ9Qog73N+SeWe2gNnFIrXdMRFc
+	 lkSA6xgPsMjcvxyVoTC7Zthk4sxbDY/19lxD/GJdikU0kxk0fAUJfGwTxWT9kMqskD1HY
+	 2e9Q+4HLfPMIpngTXr2LUQBZPk6oMYb31vpajHRXjI4Y0RCFxg9xEulxgREZaNNcQcw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=kmWMKogG;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.63
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012063.outbound.protection.outlook.com [52.101.43.63])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=YcsbuByi;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.29
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010029.outbound.protection.outlook.com [52.101.61.29])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 670E4606A326;
-	Thu, 19 Nov 2026 20:30:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 670E4606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43CC1606A332;
+	Thu, 19 Nov 2026 20:31:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43CC1606A332
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=kmWMKogG
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=YcsbuByi
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OoDJfIgzWcz3gkqVEHEgjWW7rL1Wp2B0A4KR1g4Y5FF1A8rRxi/It+R7GbgpvJ/su/ca9HYZlexzCC3nXIbt6PHWtU9ilmW+tIi6167T12BzH1whvrqQ0dp9RK8cJdeiK4IPqOnpiXZ6eByuoDBRC2HX0okCJerf4EArMR/yqxOaolQ4bi8Gy0w/ANhFKG79zgYEnf1x71JkZvB4uzolCPQgWM38VYHtpxDq8Rr6kOdUq/aUQ3j68PqNEg12slK/CYPp6Dc3kE7bKJ49yEXQ/8saNDnXJCLkqBc7uBPu7K/hNGtm+A+ih7sRkYU2fK3HYJnAHrc3nwu1rh8Ez3UCWA==
+ b=JANplRUzbu+oETbBDEAHRqpfx2tQhvyKAfiotmAFblWZGS90D0oZ4mVILtNm42jFgaS/uFDGlUXn0AeMXWotrB7xdnZ9IQ0ImtnM+EBijIz2GYabkleiOZ5WHe1GwSfLj4roNmChhO79a/eiUKXLpS78hA+Gl6Lqlb2C2Ne8etTvX5v90qqhWeZr2pwoWNpNOcXmyJXw0EMFF6BvQeUBz+4lnkFHJAEpshNHaOppjQzG09cozgApvdvI3RBh0Fax822A0vN7ZLsLCCkppJpoJE900GkuAZTL2mB4G6qBz0HIqavVGEPfrFBMBuCqNpucH/qDNtKWH2r60zc4vovbYA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NjmIqHflQ+F26H8TINkAyz/+kKSSHovVqt0YJ9gpK+o=;
- b=A7m/GOGYyAKeY0homNH2xKDFfQiGNveqsCnG8rHYHyl/+DBPqWH7Ue175LlUBz1CxMIzm2OnF3r0lt/IFUbXTgH9WJdZkovlvduhTzqW7a1gMCfzzYBiVF8isVbkxht0q6nzlIm0Thh6cluVe7abgQuQJ4XWYAc2ThCd9bU6TDQCX0Sl55+bk+pwE/yyMzEftXDwciOCPkQhriC8j2krY1g6Sn3LflUF/oaBQCbmgKwzrqz0zYEoYsi69PwD8Qdk3LFW4wy0pxxt/sI71C8kDoXFlW0kP7yxRFZoPymPcTGiXn7Q2Ku+Q/93AW4/DAsnmolnuYd5KzeVGfy5DPGkiw==
+ bh=FSG2RR9CR+CX8A37nUT8ewlesURVaIx88lE3eWQuMBE=;
+ b=eFPi1DiwdDC+8loHwrnfSIADtFyLNwP2Ih2t1yaolGbdSjV8udQdg3kWWDAIiiTfdOOvY25ZLKPLGQCYlk2I31wBDI0DO5mKHxkJE3LUJc/0awi8crFkjCyFsdf082ZFcvPpUBonhgCcjF3GaiF8ieBtZ6DOkDxiekHEBOf+ZTbyy2Bk6yBUjfyePUNl8TbG4AqQEeDD8/qregF0va/nPDkTqah3dTPgrqSkmKo8RcqcjW9Qx4mEKZEjpU3X/TyMvwn6BjAm8/pjDMcsdgZttXp2fpkH5Y1dPH5BDM5DJSOwCa129sb0Eb8A6xtf+60Nsh0zmb5/vN/LB1H3tRhmxQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NjmIqHflQ+F26H8TINkAyz/+kKSSHovVqt0YJ9gpK+o=;
- b=kmWMKogGHowrDADdRvxr3N5Ah64JAOc3YRpsiwxR8fNy6oeB4e6xBVacfcpCRGPnQlXRVlcWJq9mhCR1kxFBFDN8C3v+2CsbvhEG3vhXxd7bgncS4LJBlkvk8XBV60wuedgT2L9qUyNcAAzkW1/3WUzjS+G9mmFvwPuyH/RXa+s=
-Received: from CY5PR17CA0033.namprd17.prod.outlook.com (2603:10b6:930:12::8)
- by CYYPR12MB8655.namprd12.prod.outlook.com (2603:10b6:930:c4::19) with
+ bh=FSG2RR9CR+CX8A37nUT8ewlesURVaIx88lE3eWQuMBE=;
+ b=YcsbuByiBsoBHl88u3joFh7PKJ1+Bo5ifXFjL8d+vGlEuPNgCy3+m2E+39sc9woTWDHrZC0pBS2081sojwLbZXIazyPPvwz4Quk2vc2Ea5kMGZlyMuF7zDxHot23KdZbfB5DXT+WCXkM8XPe4lpdqVMXi6sYVu+vQkZu6gfJmnQ=
+Received: from CYXPR02CA0015.namprd02.prod.outlook.com (2603:10b6:930:cf::16)
+ by CY8PR12MB7122.namprd12.prod.outlook.com (2603:10b6:930:61::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.10; Thu, 19 Nov
- 2026 20:30:36 +0000
-Received: from CY5PEPF00000E83.namprd05.prod.outlook.com
- (2603:10b6:930:12:cafe::74) by CY5PR17CA0033.outlook.office365.com
- (2603:10b6:930:12::8) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.10; Thu, 19 Nov
+ 2026 20:30:52 +0000
+Received: from CY5PEPF00000E82.namprd05.prod.outlook.com
+ (2603:10b6:930:cf:cafe::37) by CYXPR02CA0015.outlook.office365.com
+ (2603:10b6:930:cf::16) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.14 via Frontend Transport; Thu,
- 19 Nov 2026 20:30:36 +0000
+ 19 Nov 2026 20:30:52 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -80,13 +80,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- CY5PEPF00000E83.mail.protection.outlook.com (10.167.247.182) with Microsoft
+ CY5PEPF00000E82.mail.protection.outlook.com (10.167.247.181) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:30:36 +0000
+ 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:30:52 +0000
 Received: from weiserver.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Thu, 19 Nov
- 2026 14:30:34 -0600
+ 2026 14:30:51 -0600
 From: Wei Huang <wei.huang2@amd.com>
 To: <dmaengine@vger.kernel.org>
 CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
@@ -96,9 +96,9 @@ CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
 	<weixugc@google.com>, <bhelgaas@google.com>, <Shyam.Iyer@dell.com>,
 	<linux-kernel@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>
-Subject: [PATCH v1 34/44] dmaengine: sdxi: amd: test QoS validation with KUnit
-Date: Thu, 19 Nov 2026 14:23:10 -0600
-Message-ID: <20261119202321.1734355-35-wei.huang2@amd.com>
+Subject: [PATCH v1 35/44] selftests: sdxi: add build scaffold
+Date: Thu, 19 Nov 2026 14:23:11 -0600
+Message-ID: <20261119202321.1734355-36-wei.huang2@amd.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261119202321.1734355-1-wei.huang2@amd.com>
 References: <20261119202321.1734355-1-wei.huang2@amd.com>
@@ -117,251 +117,77 @@ X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY5PEPF00000E83:EE_|CYYPR12MB8655:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3bdb9b55-9c82-4930-cea5-08df467bf7dc
+X-MS-TrafficTypeDiagnostic: CY5PEPF00000E82:EE_|CY8PR12MB7122:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3bcba39e-0d14-4ea1-f65d-08df467c01a3
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|82310400026|7416014|376014|1800799024|23010399003|22082099003|18002099003|261009223027099003|11063799006|56012099006|261102130727099003|261102123227099003|261026121527099003|261028144727099003|261022105027099003|261021121427099003|261026140227099003|10067099003|261022075727099003;
+	BCL:0;ARA:13230040|82310400026|23010399003|376014|7416014|36860700016|1800799024|6133799003|18002099003|22082099003|11063799006|56012099006|261022075727099003|261009223027099003|261021121427099003|261102123227099003|10067099003;
 X-Microsoft-Antispam-Message-Info:
-	aDJPdyLSCDXct9xNBQK4pT25bIIKWs94XWMH9sKUvk+Tbpu2MO2+7DhJ/jI+64n5bok25FKGrd6ImndDOTdxYmBC2ZSita0m0nSdLaHyc2o321llWPILhZjjfW0aP8XlwLEFiFyzAHw+41lv4/XW60MPQeNlHCh4AWRYtSj0jBb9yUHQ9/Wd2fWIQKhR/0p9qCx83BY4Z34Upt6JDH2k7TLGTnVEseNlRnr1BpVh/C5VpjwRnCTnXJBESnSi9YOtm1Rk1TYS2stzY2AAgWg6EPn0eCw0SAOAuVXhslpljS6Jw8cIYaLWxXBkXLf8pmjD2L4KJqr1a78rc+q8r3QmNhO60EO2PTqCBmf1gHEGjForvKGtTdarfNbY9SgJIRACujVJ+Ua7HA3jhkGrbg1iha19lcgucLK+fkdkgwG9ibH2LHki2UcYq7w8rZ0ie79Usy9gm4HWgeEn4BOfjRlquuzZhahcR6nnVLVrG+GEX5B9/2gvkD4kH82z1PnHUlVdP1/0fg9TPixOJ3qNyXeIq3w/1f/uJ0u3Ov18tae14qRv8bS7coreMDfCyL5SNgRVHhAbXfKezvXIewBmnhSXqCFRw98NKn6E5kurc3bj+bsuzOozfPtF5UcvD8L/d+7Lq0H8GsHBg8FiIymIBQ3y0+HZEsgF2igJaguzhqMogIXbaeDBjftIkxQhIAKl2bjw5+6xyc6MXDjG2QzW6c0hfw==
+	QrW4q83xOTIiRLoXcb8uN8HxxNf5hf+NDqa3v/bVMKkQM8MFLFot9lR4mGTTyqnnh1yKBrBBmuQrjiRnQBkpVZ0h6uqlR2tJE1rxPe2ExuGWNyRaZncCHFTl6BLyQdK3eg73WORpUwP57iqbN46AIJbQFYDSnSRWa1rd2PtSi4J+J4VHUPiA9RMat3jFf/VKLyIHFmgvunjUg3bEYfF14jezV6jTqm1Kt7lURyjYJ2X3JfsxraXbMiXp8cheny2AH2fDR4Pe0KsP/xdN8kclqpoS6sphu2zn0UfcE5OeUf9q5AeUC8TVhtaURKN95JZtdx6BFLhksLCLjPgPRnSVzEZsuIXrmHXtlFereMOTb/rBB+zVLK2iHXXxHpKYQTAYYztHZqJUQvhEEWxKsoKNoiW1vcOGHPUrXwWgP8Cgf9uHx5QAAqgOHcF1V/e7Ay3qY/Xuai2epcNdd1iA+ioIKX6axH37c9pocTVjnVH4yAbdTXl+86LzPzbALqiUnXmpEBZAKBohootFrxD28xz2Kud/EhX3Ty5/lxlmnVSfu9NJXqDHpgxXKsI+SGCuI8juybYbZuCTA6U0UUAky/Upy/hkrbNishfT8bR3ZecgJWyOgjq7fC4/hW8F5L9toOJS7jS5xAglKQHfdkQPiI0Mn5cWRubrIbIKsADYujqdg3X+DEay9N0TMtIjvnNMpzEmLxzS0dNMMxhXLf75QUD86w==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(7416014)(376014)(1800799024)(23010399003)(22082099003)(18002099003)(261009223027099003)(11063799006)(56012099006)(261102130727099003)(261102123227099003)(261026121527099003)(261028144727099003)(261022105027099003)(261021121427099003)(261026140227099003)(10067099003)(261022075727099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(23010399003)(376014)(7416014)(36860700016)(1800799024)(6133799003)(18002099003)(22082099003)(11063799006)(56012099006)(261022075727099003)(261009223027099003)(261021121427099003)(261102123227099003)(10067099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	bqBui/QQ1H2+b9NzFGPaMIfzzj2N5pzGpo9/i0/J/X/53qKmwCRZ/KokJKPzNmoWt0V7sW7CQKbb0UJ4rTvwYLFfmLwehQZO/7A9cc4qGDvj3lUnxDGMqvgYVfh6OZixIQmsCOK4fjECiasSoR1FPcsfpR5RxMRiqtv6BgcYLku+aPq6JF4zAxWwcwa4w268c1XMxx5x6HWhXwgvUzgCx+UnhmpGX4xKuSyzd42lX8pj3f23H/kRaxaSNbY4NJieLOgcbh6RBAYscz3zJWuqBxg2RgC/nmYfnE1IxKofphu7O+jf+R4fxVga0BrNAssbzhwBAEqNvYlpq7n6qRuShfrmJj9S6DoSX2rzEijyfBTSKr9YOYFTcevkV7z/XwvRMsfJWgwtt5xtkhyfakR5k7FF9d/yOzGX0z4v/Q9ZwLn+FOelxgfgwovUoR3n3Y8T
+	EW5IFsR7F/aKexKMycB29dDzKHJkdt9ZUzJF/qdOm1Gp3/iOTbC6wg/B6XsE8Y1Ef7rHmhLpqLCgXI9wzY0eypf9kl2/RDCS8vTiiOGsRqc/ZZiE325u4qRyroAPQATVT0n4yBoq2unad6zScfbxdnc2p6kXciLelWNsvW2lfZqzOs+Oo7hUASkYyuY0BX10dTwW6YfU0CwMHz2YfzD9X0KHfxmFYI/THBH+p0tR+Rm7D7tti30vByry0YofoH8luajMkSaBpU2E3cUc/vMPV6fNIfQfxQp4ZFs/7YvLwLr78og1Ea1zj23g8v1jbMkeICocycQyvEumqrYJ4/bmdF+cop7JsU6wUfpGqRkMkTUtugy94Ey957NfFu9xfMybHZMkYUJP5c0+ceLD7PSqSM5JRFay38Xp4478EIJ6XRB9CPPHNRWaiEyoG3ncrKrC
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:30:36.2387
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:30:52.6425
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3bdb9b55-9c82-4930-cea5-08df467bf7dc
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3bcba39e-0d14-4ea1-f65d-08df467c01a3
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CY5PEPF00000E83.namprd05.prod.outlook.com
+	CY5PEPF00000E82.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYYPR12MB8655
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7122
 
-Add KUnit coverage for AMD QoS validation helpers. Note that hardware
-execution paths still remain covered by other functional kunit tests.
+Add the SDXI selftest directory and the initial build scaffold. Test
+programs are added later by the patches that introduce individual test
+sources.
 
+Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/Kconfig         |   5 +
- drivers/dma/sdxi/amd/Makefile    |   2 +
- drivers/dma/sdxi/amd/qos_kunit.c | 180 +++++++++++++++++++++++++++++++
- 3 files changed, 187 insertions(+)
- create mode 100644 drivers/dma/sdxi/amd/qos_kunit.c
+ tools/testing/selftests/Makefile      | 1 +
+ tools/testing/selftests/sdxi/Makefile | 5 +++++
+ tools/testing/selftests/sdxi/config   | 2 ++
+ 3 files changed, 8 insertions(+)
+ create mode 100644 tools/testing/selftests/sdxi/Makefile
+ create mode 100644 tools/testing/selftests/sdxi/config
 
-diff --git a/drivers/dma/sdxi/Kconfig b/drivers/dma/sdxi/Kconfig
-index ec89d976c3d3..fc71f1d3bc78 100644
---- a/drivers/dma/sdxi/Kconfig
-+++ b/drivers/dma/sdxi/Kconfig
-@@ -52,3 +52,8 @@ config SDXI_AMD_QOS
- 	  descriptors on the admin context on behalf of userspace.
- 
- 	  If built as a module, this will be called sdxi-amd-qos.
-+
-+config SDXI_AMD_QOS_KUNIT_TEST
-+	tristate
-+	depends on SDXI_AMD_QOS
-+	default SDXI_KUNIT_TEST
-diff --git a/drivers/dma/sdxi/amd/Makefile b/drivers/dma/sdxi/amd/Makefile
-index 5aee7e8a2414..7a7baad0247a 100644
---- a/drivers/dma/sdxi/amd/Makefile
-+++ b/drivers/dma/sdxi/amd/Makefile
-@@ -2,3 +2,5 @@
- 
- obj-$(CONFIG_SDXI_AMD_QOS) += sdxi-amd-qos.o
- sdxi-amd-qos-objs := qos.o
-+
-+obj-$(CONFIG_SDXI_AMD_QOS_KUNIT_TEST) += qos_kunit.o
-diff --git a/drivers/dma/sdxi/amd/qos_kunit.c b/drivers/dma/sdxi/amd/qos_kunit.c
+diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
+index 07c3719f8b04..fcc361c97224 100644
+--- a/tools/testing/selftests/Makefile
++++ b/tools/testing/selftests/Makefile
+@@ -122,6 +122,7 @@ TARGETS += rtc
+ TARGETS += rust
+ TARGETS += sched_ext
+ TARGETS += seccomp
++TARGETS += sdxi
+ TARGETS += sgx
+ TARGETS += signal
+ TARGETS += size
+diff --git a/tools/testing/selftests/sdxi/Makefile b/tools/testing/selftests/sdxi/Makefile
 new file mode 100644
-index 000000000000..237e9ad79b19
+index 000000000000..107a9bd08f04
 --- /dev/null
-+++ b/drivers/dma/sdxi/amd/qos_kunit.c
-@@ -0,0 +1,180 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * AMD SDXI QoS helper tests.
-+ *
-+ * Copyright (C) 2026 Advanced Micro Devices, Inc.
-+ */
++++ b/tools/testing/selftests/sdxi/Makefile
+@@ -0,0 +1,5 @@
++werror := -Werror
++CFLAGS += -std=gnu17 -Og -Wall -Wextra $(werror) $(TOOLS_INCLUDES) $(KHDR_INCLUDES)
++CPPFLAGS += -I../../../include/ -Ilib/
 +
-+#include <kunit/test.h>
-+#include <linux/bitfield.h>
-+#include <linux/module.h>
-+
-+#include "qos.h"
-+
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
-+
-+static void sdxi_kunit_qos_query_selector(struct kunit *t)
-+{
-+	u64 query_selector =
-+		sdxi_amd_qos_query_selector(0x1234,
-+					    SDXI_AMD_QOS_TEL_QTYPE_POOL_CONFIG);
-+
-+	KUNIT_EXPECT_EQ(t, (u16)0x1234,
-+			(u16)FIELD_GET(GENMASK_ULL(15, 0), query_selector));
-+	KUNIT_EXPECT_EQ(t, (u8)SDXI_AMD_QOS_TEL_QTYPE_POOL_CONFIG,
-+			(u8)FIELD_GET(GENMASK_ULL(18, 16), query_selector));
-+	KUNIT_EXPECT_EQ(t, 0U,
-+			(u32)FIELD_GET(GENMASK_ULL(31, 19),
-+					query_selector));
-+}
-+
-+static void sdxi_kunit_qos_align_bw(struct kunit *t)
-+{
-+	KUNIT_EXPECT_EQ(t, 0U, sdxi_amd_qos_align_bw(39, 40));
-+	KUNIT_EXPECT_EQ(t, 40U, sdxi_amd_qos_align_bw(40, 40));
-+	KUNIT_EXPECT_EQ(t, 40U, sdxi_amd_qos_align_bw(79, 40));
-+	KUNIT_EXPECT_EQ(t, 80U, sdxi_amd_qos_align_bw(80, 40));
-+}
-+
-+static void sdxi_kunit_qos_validate_devupd(struct kunit *t)
-+{
-+	KUNIT_EXPECT_EQ(t, 0,
-+			sdxi_amd_qos_validate_devupd_req(119, 120, 80, 40));
-+	KUNIT_EXPECT_EQ(t, -EINVAL,
-+			sdxi_amd_qos_validate_devupd_req(121, 120, 80, 40));
-+	KUNIT_EXPECT_EQ(t, -EINVAL,
-+			sdxi_amd_qos_validate_devupd_req(79, 120, 80, 40));
-+}
-+
-+static void sdxi_kunit_qos_validate_poolupd(struct kunit *t)
-+{
-+	const struct sdxi_amd_qos_poolupd_req create = {
-+		.pool_num = 1,
-+		.pool_operation = SDXI_AMD_QOS_POOL_OP_CREATE,
-+		.pool_minbw = 41,
-+		.pool_maxbw = 79,
-+	};
-+	const struct sdxi_amd_qos_poolupd_req invalid_bw = {
-+		.pool_num = 1,
-+		.pool_operation = SDXI_AMD_QOS_POOL_OP_UPDATE,
-+		.pool_minbw = 79,
-+		.pool_maxbw = 41,
-+	};
-+	const struct sdxi_amd_qos_poolupd_req create_pool0 = {
-+		.pool_operation = SDXI_AMD_QOS_POOL_OP_CREATE,
-+	};
-+	const struct sdxi_amd_qos_poolupd_req destroy_pool0 = {
-+		.pool_operation = SDXI_AMD_QOS_POOL_OP_DESTROY,
-+	};
-+
-+	KUNIT_EXPECT_EQ(t, 0,
-+			sdxi_amd_qos_validate_poolupd_req(&create, 8, 40));
-+	KUNIT_EXPECT_EQ(t, -EINVAL,
-+			sdxi_amd_qos_validate_poolupd_req(&invalid_bw, 8, 40));
-+	KUNIT_EXPECT_EQ(t, -EINVAL,
-+			sdxi_amd_qos_validate_poolupd_req(&create_pool0, 8, 40));
-+	KUNIT_EXPECT_EQ(t, -EINVAL,
-+			sdxi_amd_qos_validate_poolupd_req(&destroy_pool0, 8, 40));
-+}
-+
-+static void sdxi_kunit_qos_validate_fnupd(struct kunit *t)
-+{
-+	const struct sdxi_amd_qos_fnupd_req function = {
-+		.pool_num = 1,
-+		.vf_num = 4,
-+		.cxt_start = 16,
-+		.cxt_end = 16,
-+	};
-+	const struct sdxi_amd_qos_fnupd_req context = {
-+		.pool_num = 1,
-+		.flags = SDXI_AMD_QOS_TARGET_F_CXT,
-+		.cxt_start = 1,
-+		.cxt_end = 1,
-+	};
-+	const struct sdxi_amd_qos_fnupd_req invalid_context = {
-+		.pool_num = 1,
-+		.flags = SDXI_AMD_QOS_TARGET_F_CXT,
-+		.cxt_start = 16,
-+		.cxt_end = 16,
-+	};
-+	const struct sdxi_amd_qos_fnupd_req invalid_vf = {
-+		.pool_num = 1,
-+		.flags = SDXI_AMD_QOS_TARGET_F_VF,
-+		.vf_num = 4,
-+	};
-+	const u16 features = SDXI_AMD_QOS_FEATURE_FLEXIBLE_POOL_SCOPE;
-+	int ret;
-+
-+	KUNIT_EXPECT_EQ(t, 0,
-+			sdxi_amd_qos_validate_fnupd_req(&function, 8, 0, 16, 0));
-+	KUNIT_EXPECT_EQ(t, 0,
-+			sdxi_amd_qos_validate_fnupd_req(&context, 8, 0, 16, 0));
-+	ret = sdxi_amd_qos_validate_fnupd_req(&invalid_context, 8, 0, 16, features);
-+	KUNIT_EXPECT_EQ(t, -EINVAL, ret);
-+
-+	ret = sdxi_amd_qos_validate_fnupd_req(&invalid_vf, 8, 4, 16, 0);
-+	KUNIT_EXPECT_EQ(t, -EINVAL, ret);
-+}
-+
-+static void sdxi_kunit_qos_validate_tel(struct kunit *t)
-+{
-+	const struct sdxi_amd_qos_tel_req device = {
-+		.query_type = SDXI_AMD_QOS_TEL_QTYPE_DEVICE,
-+	};
-+	const struct sdxi_amd_qos_tel_req pool = {
-+		.pool_num = 7,
-+		.flags = SDXI_AMD_QOS_TARGET_F_VF,
-+		.vf_num = 99,
-+		.cxt_num = 99,
-+		.query_type = SDXI_AMD_QOS_TEL_QTYPE_POOL_CONFIG,
-+	};
-+	const struct sdxi_amd_qos_tel_req unsupported = {
-+		.flags = SDXI_AMD_QOS_TARGET_F_CXT,
-+		.cxt_num = 1,
-+		.query_type = SDXI_AMD_QOS_TEL_QTYPE_POOL_ASSIGN,
-+	};
-+	const struct sdxi_amd_qos_tel_req invalid_context = {
-+		.flags = SDXI_AMD_QOS_TARGET_F_CXT,
-+		.cxt_num = 16,
-+		.query_type = SDXI_AMD_QOS_TEL_QTYPE_POOL_ASSIGN,
-+	};
-+	const struct sdxi_amd_qos_tel_req invalid_query = {
-+		.query_type = 6,
-+	};
-+	const u16 features = SDXI_AMD_QOS_FEATURE_FLEXIBLE_POOL_SCOPE;
-+	int ret;
-+
-+	KUNIT_EXPECT_EQ(t, 0,
-+			sdxi_amd_qos_validate_tel_req(&device, 8, 4, 16, 0));
-+	KUNIT_EXPECT_EQ(t, 0,
-+			sdxi_amd_qos_validate_tel_req(&pool, 8, 4, 16, 0));
-+	ret = sdxi_amd_qos_validate_tel_req(&unsupported, 8, 4, 16, 0);
-+	KUNIT_EXPECT_EQ(t, -EOPNOTSUPP, ret);
-+
-+	ret = sdxi_amd_qos_validate_tel_req(&invalid_context, 8, 4, 16, features);
-+	KUNIT_EXPECT_EQ(t, -EINVAL, ret);
-+
-+	ret = sdxi_amd_qos_validate_tel_req(&invalid_query, 8, 4, 16, 0);
-+	KUNIT_EXPECT_EQ(t, -EINVAL, ret);
-+}
-+
-+static struct kunit_case sdxi_qos_cases[] = {
-+	KUNIT_CASE(sdxi_kunit_qos_query_selector),
-+	KUNIT_CASE(sdxi_kunit_qos_align_bw),
-+	KUNIT_CASE(sdxi_kunit_qos_validate_devupd),
-+	KUNIT_CASE(sdxi_kunit_qos_validate_poolupd),
-+	KUNIT_CASE(sdxi_kunit_qos_validate_fnupd),
-+	KUNIT_CASE(sdxi_kunit_qos_validate_tel),
-+	{}
-+};
-+
-+static struct kunit_suite sdxi_qos_suite = {
-+	.name = "AMD SDXI QoS helpers",
-+	.test_cases = sdxi_qos_cases,
-+};
-+
-+kunit_test_suite(sdxi_qos_suite);
-+
-+MODULE_DESCRIPTION("AMD SDXI QoS helper tests");
-+MODULE_AUTHOR("Wei Huang");
-+MODULE_LICENSE("GPL");
++include ../lib.mk
+diff --git a/tools/testing/selftests/sdxi/config b/tools/testing/selftests/sdxi/config
+new file mode 100644
+index 000000000000..ac044d4da732
+--- /dev/null
++++ b/tools/testing/selftests/sdxi/config
+@@ -0,0 +1,2 @@
++CONFIG_SDXI_PCI=m
++CONFIG_SDXI_AMD_QOS=m
 -- 
 2.56.1
 
