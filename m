@@ -1,58 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.219
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795050003;
-	b=POuIfYu04Zg1lab8I25jylSlp0mMD61MMLPNACVYnIHYXvtvyfgJzoLX6GOLiDz1QNaQ
-	 PJOt/DeNAW7kt9LwfjE+6RXEzNEzgayKMi+jiVFanr1TKwEIGG84f6T4bizZXQRf3jQzF
-	 s3GfCIBB6z1e8WFykiS1c5mBs8JnLELEKguVuNzneRlyOkeZGronmqJUw4cx+ISk3VB3y
-	 D+GRUm335QSrhfzmD+9Hf/RU2BWWEjqKkERR9OJ02VQlgNyOO3DrAOELRm0VrSGhsq+G3
-	 yo6Q1HXJwOOaAFr4dawpigo3D0I3fD/kiC0j/EAGs5GicsEKBT3qs8uhJ1wtHiG6ICw==
+	t=1795050219;
+	b=WfqFW0h+TiRDFEeNsQrou5WL56vDBJghQ/x+wTjGT71W67kRrWmdlI81S+HgjumqPATa
+	 VuFUBtdfy6YQR3KAG7yCbY6ENDh5EXdYTiZad2rkzKbQqMbdxOvTYAE6qw2wwuIJHuzfF
+	 IlmGrUpUOxUksJXvoIeSbFCwmanVXLZ8SbuKU5hr6YMgt+fzYOpaurziJFKmZFFBGa+b3
+	 nnhVUcrDPGK3eqXU9dRVlv9ljXVYgdWnkVFAj6bwNk7oWFgi4dD3kQDrS39xlQ8rEkmtH
+	 QGEwEBBYM6YwkhRB6zx8l3LlTqAJ9sVFlAZ3QPuDGJAO6bIKWNC73anTG4WZjwYsguA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795050003;
-	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:CC:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Originating-IP:X-ClientProxiedBy;
-	bh=gYBZLlT9+eTfIVcY4yw0H/nwcJfUCT3G192Af+Y5LkY=;
-	b=mvGw2SZodZSBzS39TNL3PM55vSQB6HAvFPMTpjzrJxZQygqwO9pI4CHSYyVvXj89RnpV
-	 2iAatqZFCqhHbVSNOdFCJamIgAnz8OCIszDGkS2s777iTPSXADo1S+1mAR7VfhsIw9fgM
-	 sGi4HXo3jmpaCymKhqNUvp0me60GxEDmBJBVvcvMZ8dhE3uojb9eRoCwfwJDP+fnwB8Di
-	 xTBzdbwLb/Vpc5409Le54ZFqzFWmINP6GOOqku3noQWHsnRnRSsbQsGwSbk3dguIqqfeX
-	 EbTCtnQ8ou32p8wZkF8zyKMcJS1sl66q7hKc7S4ai/c6CiVl57zleKMFHWpD2EBppTg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795050219;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=BaPoYSbIyDlQXZcSUegLWZ8oW2t8UfS7havD4Ue3nPc=;
+	b=rk2c98mohZ/5C5Md9oE4BLaO5pa1R1mQX1LQyKs/qGcrGNzpZHQOIED/A1dyRBBxkN4V
+	 cbpPmgIbyhhEPJ4buYysJVHWnDxdht7M0uDCJK3bIUKU5zUjOzxddRudb9B8i6wwK0Yd5
+	 0x/iCBaqKgGQhU0w/8mXoyb++6wO/2qqWJbDxxSKFR6BnsliBPOj3TsMGSQIiXmizFvPa
+	 R0XnttRjf6VcrIiECxPaKe1v56Y1cXxkLJNH4Rt0uv0mD/MdrwFH1mKew4lXc3WUDiTHE
+	 WJHjHZ7PG+QaWXwmkvngclG0daM8mZHOwUt6hnKi/CPMSEKFNoUzBVC127FJ6v3ZzxA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=huawei.com;
-	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=UZC09U8v;
-	arc=none smtp.remote-ip=113.46.200.219
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Uldwb+Va;
+	arc=none smtp.remote-ip=74.125.224.48
+Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE35660A2604;
-	Thu, 19 Nov 2026 01:00:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DE35660A2604
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95872606A31C
+	for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 01:03:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 95872606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=UZC09U8v
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=gYBZLlT9+eTfIVcY4yw0H/nwcJfUCT3G192Af+Y5LkY=;
-	b=UZC09U8vbHHntx9+CYN+9GShw4Lvxg7P8md4490ra3mANpr3fdoeEpVvrsXgMszlm3kIjE1mf
-	byzScLfs0mfjheiPsgmlonur5bZ1vq3zKoQfTnBSnDQRri8RwetaU8zONOUGvKC9qzIqSdXZX00
-	TDVrbVodF8GSxmBgvv7k4IU=
-Received: from mail.maildlp.com (unknown [172.19.162.140])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4jVKqw1SJ3z1prMf;
-	Thu, 19 Nov 2026 08:59:40 +0800 (CST)
-Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7E98B202E6;
-	Thu, 19 Nov 2026 08:59:53 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Thu, 19 Nov 2026 08:59:52 +0800
-Message-ID: <975e32a9-357f-4550-8309-54259b78c26a@huawei.com>
-Date: Thu, 19 Nov 2026 08:59:52 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Uldwb+Va
+Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-6767d92cde6so1816854d50.0
+        for <linux-pci@vger.kernel.org>; Wed, 18 Nov 2026 17:03:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795050217; x=1795655017; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=BaPoYSbIyDlQXZcSUegLWZ8oW2t8UfS7havD4Ue3nPc=;
+        b=Uldwb+VawTnK8K3jJCIdkQhT0L/siqbPW9w+yl1kH2oozPuqZQ9bLnh16nzT4SmGDq
+         Er0mz1wK35PbgohcnosQnNnyUaI6+98hLeUXkSBYDQ5AL1rsEtZbktAe2m+t6hGcd2GW
+         N9o5V4SgPySoQvyp6xtka32Etm7kvRhp8sMlA5BTr9H7JXAsy2EW/4iYOq2UN84GdQ16
+         Wes/h+wxCol/Sbdl+phf4Il+dTVwRBznOITbty3YKa6yaoG0086KXwk68iw8SBlyUi7Z
+         +o8mefwkCEdpUca92DeF4p7yykEdeAN28FzCuvXuw2KZhmnTzwhNnnT2ZewoOswg5D+w
+         3YhQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795050217; x=1795655017;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=BaPoYSbIyDlQXZcSUegLWZ8oW2t8UfS7havD4Ue3nPc=;
+        b=rE5R/wO2Mvwspf4ssGP8d1d24IZJYQvj44Ka70BlkiqQPy9f//4DwVjiUoLqvuB9Wu
+         eBtqjx2rDlqHF10DTgdPKKl/7wlt7iOb0pBWbpQyTJtMmrMLsVQmNis/1OQ01Bs4D7eK
+         j75a0WCFi2NMGORe3SZB1AFFvtV+PlFMimdCYiAJ8r6QP6irppO+2rA/nMcUbIqY2CoK
+         hwIMP8+gqf2ct3ik1xxIcHDxnorZ/omcDMww49YdlNAMdbF5UGJowIv89AJJub2ajCFX
+         umKsJ6Q14x1o7QZlq5v4CWKXI2RqJZQ9k/MxdkiWJyzXzTq22wxeo0HLiUeHxvHH/V6J
+         jFdw==
+X-Forwarded-Encrypted: i=1; AL+hErGZnkXcZOYHClDzC8LiN0piKF4TrYARAwdNIA70YI+osoFaOf7sScTM1rsoUE5s+m0wvmcU3zsZ2zY=@vger.kernel.org
+X-Gm-Message-State: APuU4Z85V/xQsR1DrJvYk0FqzTxSVoFHrgxkNBVaNBrN+g9A9pP2pDrg
+	tFcIp0ArCLXEcRQKswwVuzNnWrNJmlsafVgem/l7uDG7nCIAlaYu8d7dPtarUA==
+X-Gm-Gg: AZFdTZdD9NDwVtaWdJwFPdk+s8x5rBzZJYHFq8CZvbJzaIvsNcsdQuNKAbmNnkvYj6a
+	rieGVv/fyCFHGwHGBTO+sqJlWRTxt73ceLoCgc2IWEIoVRlimFNQmFbLJb5RO4k4hfxsUPknfhy
+	WmY9rdb2kcpAVX2oDC1TCgyxtBAZs9jcEnABHNch3DYeHRh38jDN0fU4cnL02dMsM99iweR1c5r
+	OkLCqsKZ0MrB/4LKu2bNI5BH+G7KVLo2aTs+j00LCFNzzaSQOqM3tc8lA98ZAP6DFdlCD4rOF6a
+	s6XPzw3c7bI9FWapSEL+oRIE8H4YFlnru319mLczIOcwpIZbFsjNOil8JLi2b9mB5+oQMz0CAFn
+	dBPnXZFvp4UsG/gpRU79rQgT4zGjDor6ov5GaZ1qK+iHMR5M3/0O4fsRqTFRGbceoVKuZ8rvMtm
+	lpa3h8BJaQfOw2hJ+gl47RbZ8zweojyxLFCFfxNHzq+n9gA2yW4LwtkDsNVLc6ledvSbTgbilTQ
+	WGyI99jjWk9lChDHEr45SxfMDYjI50nfdLxq0g+RQ8orH4YOKuSGpoLdRxW0EITO+BqvdPh4yJS
+	SQ9RAZXhAGflJ7u50iWTC280YUNz2QyB/eQ6QZbNXmOEwnyFEcOkv6bNvkqQmqaX6/ELcoFU1+I
+	vaHuYVkKfcIj3Q4mVz8fLw2ZQp/7J3PcfeLqmTcHj4mDObQv9w3SLv7I+Yy7epdNPbo8bvKnmDa
+	paf6n8o3rkPJWJYv54BWbKKLA88Ud9qZyTnXEjW1aJj328PW8B+eF38aX9Cb5XTNqoD2B7I0CIg
+	YN+hJCe6S23ALhS5fk=
+X-Received: by 2002:a05:690e:bca:b0:67d:e460:789c with SMTP id 956f58d0204a3-67de4608307mr670582d50.88.1795050217400;
+        Wed, 18 Nov 2026 17:03:37 -0800 (PST)
+Received: from localhost.localdomain (104-12-105-135.lightspeed.miamfl.sbcglobal.net. [104.12.105.135])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67de9c992a5sm127476d50.8.2026.11.18.17.03.36
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 18 Nov 2026 17:03:36 -0800 (PST)
+From: Jason Perlow <jperlow@gmail.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Raag Jadav <raag.jadav@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/7] Error reporting for AER-incapable devices
+Date: Wed, 18 Nov 2026 20:03:35 -0500
+Message-ID: <20261119010335.84545-1-jperlow@gmail.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <cover.1794997749.git.lukas@wunner.de>
+References: <cover.1794997749.git.lukas@wunner.de>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,59 +101,28 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 3/3] Expose the CPU/Steering Tag mapping via debugfs
-To: Wei Huang <wei.huang2@amd.com>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <skhan@linuxfoundation.org>,
-	<corbet@lwn.net>, <rdunlap@infradead.org>
-References: <20261001155551.4182899-1-wei.huang2@amd.com>
- <20261001155551.4182899-4-wei.huang2@amd.com>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20261001155551.4182899-4-wei.huang2@amd.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemo500009.china.huawei.com (7.202.194.199)
+Content-Transfer-Encoding: 8bit
 
-Hi Wei,
+Tested the full v2 series on v7.4-rc3 (plus out-of-tree T2 patches) on
+four x86 machines: two MacBookPro16,1 (Apple T2), an ASUS ROG Zephyrus
+M15 GU502LV, and an HP desktop with an Intel 800-series chipset.
 
-1. Should we consider cpu hotplug ? How about add cpus_read_lock() in start() and
-   release it in stop()
-2. Does this support RCiEP device?
+Before/after with the same base kernel built with and without the
+series: the number of devices that have no AER capability but have all
+four Device Control error-enable bits (CorrErr, NonFatalErr, FatalErr,
+UnsupReq) set went from 0 of 6 to 5 of 6 (MacBookPro16,1), 0 of 3 to
+2 of 3 (ASUS, which needs pcie_ports=native because its firmware
+answers "platform does not support [AER]" in _OSC), and 0 of 4 to 2 of
+4 (HP). AER-capable devices were already fully enabled. I did not look
+into why the remaining devices (for example the integrated GPU on the
+ASUS) stay off.
 
-Other LGTM
+Thunderbolt 4 dock unplug/replug on both MacBooks: no AER or DPC events
+and the link came back normally. 10 suspend/resume cycles on each of
+the two MacBooks and the ASUS, plus one 25-minute suspend: no AER or
+DPC messages and no device loss.
 
-Thanks,
-Chengwen
+I did not test error injection, so the error-handling paths in patches
+3 and 4 were not exercised.
 
-On 10/1/2026 11:55 PM, Wei Huang wrote:
-> Steering Tags (ST) are opaque, platform specific values obtained from the
-> ACPI ST _DSM, and are only visible to the driver that asks for them. That
-> makes it hard to validate whether firmware reports a sane mapping at all.
-> 
-> Expose the mapping read-only in the debugfs directory of each Root Port
-> that has ST _DSM support:
-> 
->   # cat /sys/kernel/debug/pci/0000:00:01.1/tph_cpu_st
->   cpu  vm_st  vm_xst vm_ph_ignore pm_st  pm_xst pm_ph_ignore
->   0    0x03   0x0103 0            -      -      0
->   1    0x03   0x0103 0            -      -      0
-> 
-> Each line holds the raw ST info the _DSM returns for one online CPU;
-> invalid tags and failed queries are reported as "-".
-> 
-> The interface is per Root Port because the _DSM is evaluated on the ACPI
-> device of the host bridge above it. A system with multiple host bridges may
-> return different tags for the same CPU, and the value that matters to a
-> driver is the one for the Root Port its device sits below. Root Ports below
-> the same host bridge report identical contents.
-> 
-> The file is created during enumeration and removed with the device's
-> debugfs directory in pci_destroy_dev(), which returns only once no read is
-> running, so the pci_dev the file refers to stays valid.
-> 
-> Signed-off-by: Wei Huang <wei.huang2@amd.com>
-
-
+Tested-by: Jason Perlow <jperlow@gmail.com>
