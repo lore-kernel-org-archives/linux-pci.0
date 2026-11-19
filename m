@@ -1,94 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795072696;
-	b=MFcRk3HbZttDSb9YFb9/l1rxWJbe/sd8zESubT5W82Orsf3FxyZdlBDc7oW7obo6B5az
-	 BD15cu7VrgioLTq77HNvyPF77gjypGLYEgDvoDwK3rGR4x5zFsRrT6ToQ/fK2MwunrReO
-	 Myl0XvdnmlqjggXkai0cuiSedUy4ywP1oREWgrp2UDePs3ivbnVP1ieuXTkf3bBTYnAt5
-	 S4QvJQIlM+oM4vzfy0QFre5O1didaO+rGImRRSqcAJRAFkf8I+YMab5cqM5idzWGPkwAl
-	 OOIEcR4Q0GzqIMPDesiLHdeVIyOLC+Y2hmlT1Q4e4KdlZbOYHpa9NW1Scc+RJgA2zQw==
+	t=1795072747;
+	b=2Zjx/nbAjOZACuwKttclDxXjCZdVfTO1hdYfJaczMisR6J/vaq3L0RNs0vTx+s14zqjI
+	 LDcOrgQA8/PaXuTTtGuflstH0+bHngws3C2dBRnQlcpf1XrLHdwolR4I8o3a2xK27IcWd
+	 zEUNfouf3B3hQYiKF6dM2b1dZZac8UO4r2CW3LX5HP2ifV2+Q/XiRnpJYlBEqnmXijYMr
+	 zxysOq6y/WkHaDbd6EOiWsTg3wXCThZmOQnV4iC8W/fI4oWLZulpF/oqkuzyj0bxGJtQc
+	 SFWOJKBbMQ2+ztz7zHaPLfKs3ZFry1wQ8ACQI3WVQiqogEA/CMbMMknrNwHJjgadQ0g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795072696;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=APuvn7f/7sMW86yp8ozwMRqfBj0JO9PvrdgmAwgAkXc=;
-	b=VyR3HPweDGlkcRHEhgyHO0XM0aQuXf21yjbO1ZZxC5fUz+36oN3nGALUqxwNz2SQ39Q+
-	 4/Nt55b7ek55S6ew3gdfbIt4YLp2h7dFr9PDCpKdkggPaByl+qc3porw++3jmoIaBU8e0
-	 Jy3Oqm1s6ZT8O1mP6TA34cupTPhwvRfi6bDHNYZHqc6e72WTufRi9/kK3QL6O7LHDi9dH
-	 j2Ci7KwkHaUQZ+/tidgdgrcFOK7nggGmapmxbSFHKxQO0xuRtpFaoYzFcbKDYAVxcje3x
-	 1F7cqEtzyVqiYy1Trf6fYInmUdzEoV7amAdWygLEqA1p0ihUodEtYEyqt/ZTYL1K8Dw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795072747;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Cc:Subject:To:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=E7h8y9q5NeM+rdkgTl7ssLz1V6qUb/C0JHpQHZ+0bxs=;
+	b=Ffk2YWrnmb8jar0LITwxh7zlrxj+USiLTza4YEF+Rp1Hj6iMnTKUjr2fBaV7XkF0BRTH
+	 p3mLdBAcOl8z9eFoVbzUaV0mT9Drd7RsZYzvVromqF6DHxIvQ6y8ABOYxR6gIqGZbdSlw
+	 xUj+axykA8hvkSkz308iwOcj06KO0+Zc0IYLll4/qfZU/cjO0W+yiSjQEsZh4IMxDvVPk
+	 t0m5KNSuKzIKLGveJeDrhJnOh1U1gmZ+Q2o6P9jmiuD34S85muuWiicWnetAU/mBef1mX
+	 7e206/uoZoFQO+boAEU0aovcY/t+KJ8TTyttJG0pB6UeZeG5st1opwgZGfI6BRKHffA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nuLJV8fV;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=PZ0zE6AQ;
+	arc=none smtp.remote-ip=198.175.65.21
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E6D5606A324;
-	Thu, 19 Nov 2026 07:18:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2273A606A333;
+	Thu, 19 Nov 2026 07:19:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2273A606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nuLJV8fV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ADF91F000C4;
-	Thu, 19 Nov 2026 07:18:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795072696;
-	bh=APuvn7f/7sMW86yp8ozwMRqfBj0JO9PvrdgmAwgAkXc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nuLJV8fVc2D0MrbPEKZ35IXVmf8L6ICWqA805Tk7LAAIPJx7UCKjmZxc59fyigx2g
-	 lXSSphsOzAQfsebmstu0+O4eMgGF3exHrvIfhuxGoLmOWey18JBKmVK1Xw/VyHaPsZ
-	 hfSjl8WYYm65pvvel75Be0ysgbB4Ky87xuvAoyV/SvuqTIEdmRvPaiJ7T4S3a+bVQR
-	 nIn2nQUotBnrGo9Xzn8ESPCAU8Vj6UhKaMIFf33OD9RSf1ChY6r0xVN3/BxnU55Hlh
-	 R9hY6EZN2X9huqMJHvsXgm3b3LVgn9x4FSZvgXfvSUj2AY4v6IcCAS4emNvE/VqD+b
-	 R2bmr+esy2LCA==
-Date: Thu, 19 Nov 2026 09:18:11 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Nipun Gupta <nipun.gupta@amd.com>,
-	Nikhil Agarwal <nikhil.agarwal@amd.com>,
-	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
-	Chris Lu <chris.lu@mediatek.com>, Mans Rullgard <mans@mansr.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Cornelia Huck <cornelia.huck@de.ibm.com>,
-	Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>,
-	linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux.dev, linux-coco@lists.linux.dev,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>, linux-sound@vger.kernel.org,
-	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH v3 18/31] net: phy: Use the compatibility driver
- attachment API
-Message-ID: <20261119071811.GG162713@unreal>
-References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
- <20261118-device-trust-core-v3-18-d655875c4bfb@nvidia.com>
- <71c1b931-c553-46e3-b49a-51167f168ac4@lunn.ch>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=PZ0zE6AQ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795072747; x=1826608747;
+  h=message-id:date:mime-version:cc:subject:to:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=3DN1/OgZfO6kqe/noeYjCjobh7lUNxQjvfpeYc0fl00=;
+  b=PZ0zE6AQUr7rSBE2UfbYoC68H7paaWqJGSO4qi3nTvPeqaeU6XyM+kIC
+   p0J6V40KWpUqUxhiCdFSM2Eg5KSBJ4658BjdpmA3ZIKPrLbpPOqUF80+W
+   /yHCVzC04/Sl9hh8cERH83ie2B/z7hiDAZp/bvI450e/4wMpoOwrgyKp4
+   3rVCbFZltMLEpJQuntX61CRgbeI47TPV5IASkVhbGL8QkDwBOaG/cZjzs
+   B3JFvK3kdVfvlmXgCBKikOdJcg/yANTVjcgVsxLQVdsiuK2WSsiyzNYyW
+   umkF+IWWjvvdGY4DiySzUQmuP23hA+4JynRwC9jnujTTR7II84HgeFeMw
+   w==;
+X-CSE-ConnectionGUID: NgG+aoPnQMKyQtRM75okpw==
+X-CSE-MsgGUID: pU1lUkqKS+WFmTV2li4feQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11970"; a="3991642"
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="3991642"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 23:19:06 -0800
+X-CSE-ConnectionGUID: iHQUrNNQQoW2AgElOEgTwA==
+X-CSE-MsgGUID: 4Ehj8R4lSQCZoiG7usmh1g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,220,1787036400"; 
+   d="scan'208";a="10453034"
+Received: from unknown (HELO [10.238.1.144]) ([10.238.1.144])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2026 23:18:56 -0800
+Message-ID: <a594edd6-6184-4381-9b48-004c18efa56f@linux.intel.com>
+Date: Thu, 19 Nov 2026 15:18:54 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -98,40 +72,52 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <71c1b931-c553-46e3-b49a-51167f168ac4@lunn.ch>
+User-Agent: Mozilla Thunderbird
+Cc: baolu.lu@linux.intel.com, Alex Williamson <alex@shazbot.org>,
+ Alexey Kardashevskiy <aik@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Joerg Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>,
+ Jonathan Hunter <jonathanh@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
+ Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+ Nicolin Chen <nicolinc@nvidia.com>, Robin Murphy <robin.murphy@arm.com>,
+ Samuel Ortiz <sameo@rivosinc.com>,
+ Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+ Steven Price <steven.price@arm.com>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Suzuki K Poulose <suzuki.poulose@arm.com>,
+ Thierry Reding <thierry.reding@kernel.org>,
+ Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+ Xu Yilun <yilun.xu@linux.intel.com>, Ashish Kalra <ashish.kalra@amd.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, iommu@lists.linux.dev,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-tegra@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v9 01/13] virt: coco: tsm: Require PCI operations when
+ registering a TSM
+To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ linux-coco@lists.linux.dev
+References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
+ <20261116081935.85372-2-aneesh.kumar@kernel.org>
+Content-Language: en-US
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <20261116081935.85372-2-aneesh.kumar@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Nov 18, 2026 at 09:21:45PM +0100, Andrew Lunn wrote:
-> > @@ -3813,6 +3809,8 @@ static int phy_probe(struct device *dev)
-> >  	int err = 0;
-> >  
-> >  	phydev->drv = phydrv;
-> > +	phydev->is_genphy_driven = phydrv == &genphy_driver ||
-> > +				 phydrv == &genphy_c45_driver;
-> >  
+On 11/16/2026 4:19 PM, Aneesh Kumar K.V (Arm) wrote:
+> Reject a NULL pci_ops argument in tsm_register(). Every registered TSM
+> then has PCI operations, so registration no longer needs separate paths
+> for TSMs without them.
 > 
-> Why do this here?
+> Cc: Alexey Kardashevskiy<aik@amd.com>
+> Cc: Jason Gunthorpe<jgg@ziepe.ca>
+> Cc: Lukas Wunner<lukas@wunner.de>
+> Cc:linux-coco@lists.linux.dev
+> Signed-off-by: Aneesh Kumar K.V (Arm)<aneesh.kumar@kernel.org>
+> ---
+>   drivers/virt/coco/tsm-core.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
 
-This flag marks that driver is already probed, which is reliably
-happening in phy_probe() under right locks. It was the easiest
-way to battle AI reviews which don't agree with how PHY subsystem
-performs driver bound.
-
-> 
-> It also makes the code asymmetric. If you set it in phy_probe, you
-> should unset it in phy_remove. At the moment, it is symmetric,
-> phy_attach_direct sets it, phy_detach clears it.
-
-is_genphy_driven management was moved from attach/detach to
-probe/remove, so it is not set in attach anymore. It aligns now
-with how phydev->drv is handled, which was set to NULL phy_remove(),
-see commit 00db8189d984 ("This patch adds a PHY Abstraction ...").
-
-So I would say that now it is more aligned with what PHY does and more
-symmetric than before.
-
-Thanks
-
-> 
-> 	Andrew
+Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
