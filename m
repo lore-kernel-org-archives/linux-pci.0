@@ -1,72 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795108869;
-	b=JOp/J+x4VssnHkXsmSL5Dq9TJKzlKNoiCZAaxaEySJnRGvr5qX8l1ZQDhOfZ1QzsWwmp
-	 vZblHM159WdX0M0q9e6Nfh35tuh4YRzjvVNQgUES9DdjX2+lpuwgQEQTPqRfDYonpIjfl
-	 acIaC96XCs96LCfCO0ijHewBXgrr2D6wLzcj3bT4XYGYqWYAFrghvQMJ62bnuA8zZOT5P
-	 CSHFCW8RSLYJ9BYswzsBm54MkLJIr5z18T+SrADJSVLsBdV0vNTtNHFg+WHT0bFddpTSx
-	 4snSsmx3k08V92Ubz17My3RDzG5uxZCt8w/BE4F0uqfZI/0kzw1FzHICWPweEu1gRpA==
+	t=1795109002;
+	b=ioe9cGuyHQOxWT/5ncIJqgBtoE+8JtFt8moLuS2a90oVSlmx1w+JKkYYXFX/XUjFP8TN
+	 Kq5aemc2yG0oLaydjoI6ghogLggngTygQKC3y+g9/U6fI8lYG/btWLjoOyRBDxX3L5//Z
+	 GdR1jit3WDW4cFr/ULtwVms2j+/PmZlpAbNe96gZm93y03OZUUZOa7ejzjBOlk5DZJJcW
+	 P+3NXJEOzsC0EihS2BS6p3fbK3iiVllM0RCJ7E/SMLS8L1k2NFrZhoHfhMO017nz23wJS
+	 UNM9mThRCTS4eWAMwGy6OQzM+gy7LGTjXnidPgC0DlTT5+zhBekAas9Ac0MY6caX9IQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795108869;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To:
-	 Organization;
-	bh=NIOjyQwa1huamyiWSyAG0v1EOaAoTvb0DcjMke+yswU=;
-	b=v2EG6XZM6oXhn+fCSm42lXpZ8fCycdpr9pOHb9AZCDVP1LP+XUK6nwpsQxXydpZ+trMu
-	 6ztidWzJio3EabsRpO+W3FORFbIUaIw39w8qw9eRum9UkYOCTOUAH9dLn47gzMSaA/Zpe
-	 HNlCDvKGfKRd8XRc+jthCnhn82rcwDcFs4DySSKFVMUTwI2PSZG7jlLHw1XpEE5HTj3bt
-	 ft7YdSOee3hBnB8y+iE3OKpt+5jq/lDvBWPd6kqzg1Epa74uaWq60/WWXD5FIjeDYqM06
-	 SKWOCLyAYZjWhnn641D8tS+Q6qNqm8MH4xn6pWyck1ebtK0ukqJ+XE/z5sj2giBne8Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795109002;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=oG15c41ZCpZQNvxF6sTCZaD3NnnBG9uH9Ql0/dc+j8c=;
+	b=AAxdZmkZ3IRYbJv1m1THQ/+0A5wQJJMz5QHLdLEodaNpKo1wzMb8dk/swYeCFy+It1hA
+	 jkqJrCmK2ZpnS8stpgQ4OMzwAxMXnSQaALwN4Cm5jZf7Q3sBgdn9f+Xd4hKsF7ncVd/oa
+	 SPk3F7rCJe2psQ08w61RUxRwilGDCJ3Fh3cVXPbkFXtMw4fCfPBtkhFfiXa2t0TZ6xIoa
+	 3ZOTncTOaE1SNXSo+U8vxkijkbF+LiG3dDl4M9o2VGEISlvbEmsYL7rdvNNikYvlc9P81
+	 qH/7j1y4i67NhKy46CwPwyEQA8V0Zg7YaLNB8O9ryhmQd1Otwzft6PwK+R942lN1NyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=DYcftx6F;
-	arc=none smtp.remote-ip=198.175.65.16
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RjDs61XI;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B334606A336;
-	Thu, 19 Nov 2026 17:21:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B334606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3020C606A33F;
+	Thu, 19 Nov 2026 17:23:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=DYcftx6F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795108868; x=1826644868;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=UpkMnnrGzJrw64nYsSqPlALwNPD8c8U90kWS3ZDpvbw=;
-  b=DYcftx6FXPw/SNofG2olt7gqa0ecrcE0wWFz3J9NWdLNuveM3mknRXxD
-   mKFZaDEgt8/BTSMyeT1XxpjIwPz3g0RRcudOJ0ecY9QvcthJzzL9qNoMa
-   KdHEOLQBgIXjKw3iwBWCM0hylXhcZPdg87vaet9nEUNtaxHBoM2a56V89
-   9zniFQYkrK1U3FIuNCNfkZ+pDS3Rgw58L86m9i/VYHH5VwS0XkNGZ9tzl
-   Cgwajw4Pqe82GfEuWd1x5PR+DudzdcSdg2cUIw23uKDXtpQlRSYBgMO0i
-   SeykHtowMATvzkLtHKRoAzneLPZQdF7WeofV+FEDBNYU2CqfjdVa8lr4I
-   Q==;
-X-CSE-ConnectionGUID: WNt8LAihTli0rt1RTxhNNw==
-X-CSE-MsgGUID: 5bnz/iLgQy+ExqYj8QdlFA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11971"; a="3959479"
-X-IronPort-AV: E=Sophos;i="6.27,221,1787036400"; 
-   d="scan'208";a="3959479"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 09:18:50 -0800
-X-CSE-ConnectionGUID: 2l+HAzB7RNS9BI9wb0ivSw==
-X-CSE-MsgGUID: PBxuaL8ES/yrwFqO6Ss2Qg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,221,1787036400"; 
-   d="scan'208";a="10382679"
-Received: from klitkey1-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.61])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 09:18:47 -0800
-Date: Thu, 19 Nov 2026 19:18:44 +0200
-From: "andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RjDs61XI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C1591F000CD;
+	Thu, 19 Nov 2026 17:23:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795109001;
+	bh=oG15c41ZCpZQNvxF6sTCZaD3NnnBG9uH9Ql0/dc+j8c=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=RjDs61XIgonkH9vpbrzUGLyj7OEgV93wQ8sNJNIkNmHJX72C7dMHidRR8ZtvFTGVY
+	 OHhvrqF3jft4IBlmwc1dD6OQeG9BLW/1457VsJdjCHVn/fwl1IgQ26tUaNIqpcQ7Qr
+	 okPp7AMoPlEqxo1CaxEOmoiHUwfCLTl4X1Q7way7djNyIwZcPORyWPkG4GFDsx3T/8
+	 CCzDgr7bpQ8AcSyPMneLUpmPZ+pF08RBuBUAI2Vei1ySKZNKSO7Sr7exEGFDj4pF/t
+	 kGgQSfKvdWL89pQHrfX45+RxB5hDhpUpa3SMSavd/K+AQ9lrw+/vjjZSs/oX2m/qVI
+	 d2y/6vSVxEaWA==
+Date: Thu, 19 Nov 2026 11:23:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Habil Eren =?utf-8?Q?T=C3=BCrker?= <habilerenturker@hotmail.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>,
 	"bp@alien8.de" <bp@alien8.de>,
 	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
 	"hpa@zytor.com" <hpa@zytor.com>,
@@ -76,9 +54,7 @@ Cc: Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"x86@kernel.org" <x86@kernel.org>
 Subject: Re: [PATCH v2 1/4] PCI: Add pci_power_t helper functions
-Message-ID: <av8vdHPJhXII2955@ashevche-desk.local>
-References: <av8o-tHHScd0gjZM@ashevche-desk.local>
- <20261119170713.GA817259@bhelgaas>
+Message-ID: <20261119172320.GA817954@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -88,36 +64,79 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261119170713.GA817259@bhelgaas>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+In-Reply-To: <29fcfa729d7f687f66578781c2e23db9e3367c86.1795097970.git.habilerenturker@hotmail.com>
 
-On Thu, Nov 19, 2026 at 11:07:13AM -0600, Bjorn Helgaas wrote:
-> On Thu, Nov 19, 2026 at 06:51:06PM +0200, andriy.shevchenko@intel.com wrote:
-> > On Thu, Nov 19, 2026 at 02:35:46PM +0000, Habil Eren Türker wrote:
-> > > Add helper functions to extract, set and compare PCI power
-> > > states in the Power Management Control/Status register.
-
-...
-
-> > > +/* Helper functions for PCI power management */
-> > > +static inline pci_power_t pci_power_t_get(u32 csr)
-> > 
-> > Why u32 as it seems the value is 16-bit?
+On Thu, Nov 19, 2026 at 02:35:46PM +0000, Habil Eren TÃ¼rker wrote:
+> Add helper functions to extract, set and compare PCI power
+> states in the Power Management Control/Status register.
 > 
-> I think there's one reader of PCI_PM_CTRL that does a 32-bit read, and
-> I figured a u16->u32 promotion would be better than a u32->u16
-> truncation.  But maybe that reader should be changed to a 16-bit read.
+> This follows the discussion with Andy Shevchenko and
+> Bjorn Helgaas in response to:
+> 
+> "[PATCH] x86/quirks: Cast PCI_D0 to u16 in apple_airport_reset()"
+> https://lore.kernel.org/lkml/20261118161559.63617-1-habilerenturker@hotmail.com/
 
-Is it specific read on the specific HW that is always done as 32-bit?
-(Personally I do not believe there is such a requirement to even weirdest
- PCI HW. This register is way too standard.)
+Andy had good comments about the style of references like this, but
+IMO if your cover letter includes links to previous versions of the
+series, that's enough of a breadcrumb, and previous review comments
+and suggestions don't need to be explicitly called out.
 
--- 
-With Best Regards,
-Andy Shevchenko
+https://lore.kernel.org/all/20261112-vfct-regression-v7-0-69b1e0cf45c2@amd.com
+is a good example of the previous version link documentation in the
+cover letter.
 
+> @@ -2953,4 +2954,31 @@ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
+>  	WARN_ONCE(condition, "%s %s: " fmt, \
+>  		  dev_driver_string(&(pdev)->dev), pci_name(pdev), ##arg)
+>  
+> +/* Helper functions for PCI power management */
 
+I think these should go right next to the pci_power_t definitions,
+e.g., right after pci_power_name(), so they are easy to find when
+using PCI_D0 etc.
+
+> +static inline pci_power_t pci_power_t_get(u32 csr)
+> +{
+> +	return (pci_power_t __force)FIELD_GET(PCI_PM_CTRL_STATE_MASK, csr);
+> +}
+> +
+> +static inline void pci_power_t_set(u16 *csr, pci_power_t state)
+> +{
+> +	*csr &= ~PCI_PM_CTRL_STATE_MASK;
+> +	*csr |= FIELD_PREP(PCI_PM_CTRL_STATE_MASK, (__force u32)state);
+
+FIELD_MODIFY().
+
+> +}
+> +
+> +static inline bool pci_power_eq(u32 csr, pci_power_t state)
+> +{
+> +	return pci_power_t_get(csr) == state;
+> +}
+> +
+> +static inline bool pci_power_gt(u32 csr, pci_power_t state)
+> +{
+> +	return pci_power_t_get(csr) > state;
+
+I'm not a __bitwise expert, but I'm surprised this works.  I expected
+that __bitwise values would not be ordered, so only testing for
+equality would be legit.
+
+I do think these should take two pci_power_t values instead of a PMCSR
+value and a pci_power_t.  The extra internal conversion on one
+argument feels a little bit non-intuitive.
+
+> +}
+> +
+> +static inline bool pci_power_lt(u32 csr, pci_power_t state)
+> +{
+> +	return pci_power_t_get(csr) < state;
+> +}
+> +
+>  #endif /* LINUX_PCI_H */
+> -- 
+> 2.47.3
+> 
