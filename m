@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.71
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.8
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795120147;
-	b=K+kmomHprVP72nQtb97YVgr4DKRNIPYJdiuK1juZWtHcMRM65WCtSVgViR3Yqd1cZBHm
-	 1kgWYj8lzA8u+1m4DwW+BlAZu7Ho6QHfIMxOtH24hsMvUaEdAmnWJeFQeSEH3XMjtH/61
-	 IgNKr8lcodxLGA4l9zI0Mnd/4V0u36RfhBJJocGA/7OEBtlTRXeoB9XtbEPzqoKPxl5j9
-	 /VvKrdXPIbSPnZQlx/LYrykm2A5SUVrpVsRzilFbRUHkCkzbILPoiQG9v7jcw916bzBS6
-	 N4fZjKOKoCqXwQyvRfCEhHTH0d1Ua2GY+m5OgJrqquBp6Kh1WHxN3FllDtRX1JAYqhA==
+	t=1795120173;
+	b=HSsLcVbX8UHuqeiV/tcncm00p37q03EXwklbtbEXAY43Fnl9VcCIc1rRVChjPa56s/hl
+	 rkdLn9sumCeEark4Mv1HI8bpKsc3xrOHLcq6hYr6z2BwkU8W240pwtsvAAZExe18K+rI/
+	 LRHT+xM+2tGVHTTcEjUbGyBDL+ipIvFhNq035ro8rtQrB/IX+FSH07O03MeYiTitnNvbW
+	 6+DTfwPb/n2D+z7cDCevdVx5ShCxPwRpfSBjM/Tbes+ZgTBon2S2G21wGjLxHqh3pVWol
+	 K2IBt6ww8TPP94gDBhuG/k1ndiQ+cgBaiZPzOzOoIy6aimfuqvDXvTYIvJxBH9ah/jg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795120147;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795120173;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
@@ -26,53 +26,53 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=bei9j55cxvKPbRiA3KO0Gm/kDcQhJ2YxXlaIzJRDqR8=;
-	b=VNPmhp9ElElUHg48pVH515jdOT3OpTCc4OqvPqnxZ4H3kVf9FPnkt6yZMqOVFwoZLrCs
-	 wqUEqhfg8bnihIyEBqF+1Icj/WDEONcbEhgAsxmJgrWjHrtPMGfwYvk4KULRFuxw/0W7/
-	 0ZEyaMjKeoOXC3rBSVUQoGisqHJNryK8CjzhXbJ6wKAhPv7C+uFnMxo4Eihj9xTkEivGr
-	 jqRxGsU4Jbgk50WlsCZ1/BRnaHTwvNDObTm8UEJC8GQWQ0uS8jnNch6Vqm1hTH+4c4rek
-	 L3c0+e1bo+osJNE/stBdWiumyQYl+T27+ElHtvnV7rvNU8MlMZ6YSXiXDPmjoVU0ilg==
+	bh=v2slYim12y1qFGu+XtFXIB5B3SSyMkzTIWy6Pa34qvA=;
+	b=FoMHVDGXmJ1tPJb+JDGkkr9LD1YVPmX5LTAn5VzibjUE4U20M3E3x/Ne1DkJf5zXigk/
+	 I1hqFtUNhyFkWPWKX9fvUWBzjsUOmI/Mlhj6p1GEJjzDEWxj46QV5RI7qdOJvWNeSfw6b
+	 E5xwoHDIf8NjKHnyIv6ETH2wOxL4uoVFAp676gvG6P+gc3ia++fGdelISYbikdnqoZXtJ
+	 JCkoKVKVQ34IBl2zNUuPXAjXU4RGXoBwsiQaCBBJvBFVPOeLkNtlQqwBA7LgIpPs8XGa+
+	 FNdcX6qy9tU7wSh3Uf4SvRoV83OmqRiOvxHdmrVnaz1q48vRcvhNNJSTNeUoHtkEDXQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=CKh1WDE4;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.71
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013071.outbound.protection.outlook.com [40.107.201.71])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=hIVXCa4t;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.8
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010008.outbound.protection.outlook.com [52.101.56.8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B43B6606A330;
-	Thu, 19 Nov 2026 20:29:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B43B6606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB50E606A324;
+	Thu, 19 Nov 2026 20:29:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CB50E606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=CKh1WDE4
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=hIVXCa4t
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=IqirimgnYO6ILIenKODvZIZP6gz2Bqz+KSMLGIjjgs/ZsVHj4lt2H5MpVR1qF6F1mdwQWlkWCyg3vHmO+3l+pASnoBaNUHOA15363X7pSS4UlchY/dfpZkHfFBqK7FzEUORVgWotzLBfHQAasLbnc+cfLZ5jaoliPU2jlTB/DV11G1RpZ0K7lWLajs9xoLOuGaAsf++dqkjY/X+arrr34nI/j/b2Olw4WybrWGLdme2OGPdqW/uFynZK1W3ngW7O7PBUixpAHSlZ8r2Lov6lr+7tma5fzgHrwsO+dR+dweiGhzlhU9YI2uRrM3Xm+/758ck2j84qRMOF3hjiUHXvBQ==
+ b=lzRZGjb2TmyWIN2Mo1+5o73OnVxhzycvnQlclLj2odcFj4F29AqXR7Hh7skawdH5MQUfIDTgUJFZq2uVRpykbN3IJ5puowoyj0SLWC6HO4vLOrcecf+vR79zqlEB2zko7VNHef6pdSok9PxKReqob/sASzEP46kErPf0umb+qkxdGz/PXpw/qu8nKUVFGhPzgcxZ1jZFRI1EprUBnCBOofoCr9wjvf0RiyhrehioZUJdi6je3NaIdgcubv9Gxm2NHD+cXqKhnoyHC2IBI64QIvK7IjTajlGCrcZsuXZP+lAv79osWQXfZ+0+15sHphjeWHUGqnv0t3jzQPyfikcv2g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bei9j55cxvKPbRiA3KO0Gm/kDcQhJ2YxXlaIzJRDqR8=;
- b=jzkMtLAvNRLjD1Cabqe1PMdWXYwHN4mibYAcBK4/MoqZbvTPazJKZA+6Okl4ZvxWvsj1rZ3FiILmEKPOWKWRiaDpIhlUdW0zyAyxeUFd9AdAR0fFaJIgSBAH7KcNQE9v0v8P4zQ+Q5K9bS5ZeAXqgRzNpql6I2ingq5exNmagX0Y3UvwtRZ9MU2H6jD/yaQuWjHNgKyETNFQkAnrOQ31zc/izkobznbfVZL9gP8HXGHJuh7dUH0ZZXkVOvjijAlQy8lZoh/3+F7TlZ/khY6YazDbHIMk4eDdcKQK6xVNvvqPDfmr2/OIqv4EupEgnBI131czH+aw2R+34H/yn/P6Ng==
+ bh=v2slYim12y1qFGu+XtFXIB5B3SSyMkzTIWy6Pa34qvA=;
+ b=U5Pb5NP+Ud4xITC+8Buv+CykIeAXfHOAK9zPI9yWHD8KBFg44wYd0JMJT3MIHPioFsYc8BGMbkd8TAmp0yrJlLwvCIqLZSMvn5YgkorsWzHoZU32RUebN2pY67u4l5T5csEKOm9vQSCdekclBO7F9OmeDTWfEbWq/btvI0teyCeVA5YiB+hg32yBp4Pm3airSnU7koKZmuqRFC7gyU3dbxQdYKKHZwCsqlpWua2skcyFMTKsf0x8RvBRHRsJukta33o1Upt0eBCbWTsXPYEuNefaSOf+0uS6KIAfFLnlYoshTmMgqrm6d2aAkyI95t52Ba12kb69GKxN6sQqcKm27A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bei9j55cxvKPbRiA3KO0Gm/kDcQhJ2YxXlaIzJRDqR8=;
- b=CKh1WDE4ojLBpup0Ygf40D/JkJoOJTtw6k9hwwLoD9SwrPAAIq4gBd9WVYTDUoF/C8PoYkGAGf7DbHClXf7Vj2/zTwrW9ThQCHho/yrXoH7TuTNuRqVCRnD6gnhwbkOlqoPMPfdg7QxjYCaood6kbd4GbItlbsoqLgiHvKDh/HI=
-Received: from CY5PR16CA0016.namprd16.prod.outlook.com (2603:10b6:930:10::26)
- by CH4PR12MB164784.namprd12.prod.outlook.com (2603:10b6:610:522::10) with
+ bh=v2slYim12y1qFGu+XtFXIB5B3SSyMkzTIWy6Pa34qvA=;
+ b=hIVXCa4t9IG2XnpGa3RRTNhaZP/Ux/8z7FxUNTMbLIR2BuCA8Sd6zBsYiIWRjI5uBENIIaaV1aWjEuJZtoxRbIwt6wUYOeJIgP6tbZVnZWFJzO5cRtud1TNCjorLqoEdgs9UX0DpwVtwSSwC+1HVZAMgF5v4hl64bv604wW0m9I=
+Received: from CY8PR12CA0031.namprd12.prod.outlook.com (2603:10b6:930:49::9)
+ by SJ0PR12MB6711.namprd12.prod.outlook.com (2603:10b6:a03:44d::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.10; Thu, 19 Nov
- 2026 20:29:01 +0000
-Received: from CY5PEPF00000E84.namprd05.prod.outlook.com
- (2603:10b6:930:10:cafe::72) by CY5PR16CA0016.outlook.office365.com
- (2603:10b6:930:10::26) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.13 via Frontend Transport; Thu,
- 19 Nov 2026 20:29:01 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Thu, 19 Nov
+ 2026 20:29:22 +0000
+Received: from CY5PEPF00000E81.namprd05.prod.outlook.com
+ (2603:10b6:930:49:cafe::27) by CY8PR12CA0031.outlook.office365.com
+ (2603:10b6:930:49::9) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.639.12 via Frontend Transport; Thu,
+ 19 Nov 2026 20:29:22 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -80,13 +80,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- CY5PEPF00000E84.mail.protection.outlook.com (10.167.247.184) with Microsoft
+ CY5PEPF00000E81.mail.protection.outlook.com (10.167.247.180) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:29:01 +0000
+ 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:29:22 +0000
 Received: from weiserver.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Thu, 19 Nov
- 2026 14:28:58 -0600
+ 2026 14:29:21 -0600
 From: Wei Huang <wei.huang2@amd.com>
 To: <dmaengine@vger.kernel.org>
 CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
@@ -96,9 +96,9 @@ CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
 	<weixugc@google.com>, <bhelgaas@google.com>, <Shyam.Iyer@dell.com>,
 	<linux-kernel@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>
-Subject: [PATCH v1 26/44] dmaengine: sdxi: add SDXI trace events
-Date: Thu, 19 Nov 2026 14:23:02 -0600
-Message-ID: <20261119202321.1734355-27-wei.huang2@amd.com>
+Subject: [PATCH v1 28/44] dmaengine: sdxi: amd: define QoS request formats
+Date: Thu, 19 Nov 2026 14:23:04 -0600
+Message-ID: <20261119202321.1734355-29-wei.huang2@amd.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261119202321.1734355-1-wei.huang2@amd.com>
 References: <20261119202321.1734355-1-wei.huang2@amd.com>
@@ -117,335 +117,142 @@ X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY5PEPF00000E84:EE_|CH4PR12MB164784:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4df9aeb5-132a-4664-8be9-08df467bbf69
+X-MS-TrafficTypeDiagnostic: CY5PEPF00000E81:EE_|SJ0PR12MB6711:EE_
+X-MS-Office365-Filtering-Correlation-Id: c507a117-e606-4920-d571-08df467bcbbd
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|23010399003|376014|7416014|36860700016|1800799024|18002099003|22082099003|11063799006|56012099006|261026121527099003|261021123027099003|261009223027099003|261021121427099003|261102123227099003|10067099003;
+	BCL:0;ARA:13230040|1800799024|82310400026|23010399003|36860700016|7416014|376014|22082099003|18002099003|261009223027099003|261102124527099003|11063799006|56012099006|10067099003|261102123227099003|261021121427099003|261022075727099003|261026121527099003;
 X-Microsoft-Antispam-Message-Info:
-	Crl8KrF3BI6Ke22c01I8wQo+ZQZ/Igdei3PIDxpckccibzUrAzyNyLybkTOr2T9HS+CuQJhOTkApFdCKj/SBi65aSng4ChO/9ChtD4JV4B5bWlDJwREkI74N3BITP8rWsgJa0V4OTMAuhDLFCY6xc0BBdUym4qO4vGJuBFBAfmk7UHJ70dMv2YJxdHhZ+s9OkOUgQcOeiB7Rn8pi4x7FLe/xlqOdB0DLnYda7AwEp5BPS6TtcJhI9yAqz1ARqsJHLHtbLRkpp76Sm6cFlQoeSrM7dwEtSrP4jxtOdsMGJdwKHMpjTfJjld3Cg4tngHFUSziyliIlMLC/vE7DU8pw5g4qHznvuORklY7yvfh0O9xajmuaxa6NDApW//5ddctOmFrs8GbRL8gYKofE0swUl81kujTREdfxiojh336CZUOvJ25AFw07h+DCKH7qP74ezJgVD7W+p7jLerm9/uTS9ajKpRKt0Rd9zzQT1Si/dQQxr+hyCKlOMRCAOy/pZrP8Eped4kLMU4Bd41s9WBSn0fPaXSdXkeS7zQYChCGDh7euaFD97hfkTb9dEvD2vfD+GpPrUC+gtgrNoAUqB6yBfRgX108E4cz4RgfmrrGRyFYOZYWbZyuzk6/c9ihYQ/fPO0Jk7EANpYmk8oBQfhmjM0YvCQlIkNpPGfJWEH5M4fOlala171b0vPxsO/KpaFI5GlqiL156xlL4e0/nrOrhmQ==
+	MacdXzLEe4VpOFeJcGcqCR5QZ5eZ8xEcbLYZpTeH0aHJ2y7vnVf/2VQgUsZK+eiXTTyQaV7av8vLhfgJmbWmdgxf8X3C2oN3BJZOtd/dwpFP95E1t3NwIxFkyapgu0iJu+8ZZfEvtostWcpBdfmyJBELMqPiShgyXXS1Ly7EWkHb86udLxXoh7MbFsPmv15voWDyZsK6IV/O0hitQ7EOlY+vXwhcWl27J5iXD00QlH+I3TB8GkqOsHfKqNiEQQy0cKeNXQ6Pto7HwWGGI3ICgs5sTDxPY4M45PKXd/k9LCVMnaMzc7rGhr4yC4/II7aO4zYJg/jOSkmrOrWabI+MoKMC7RwtTjG9JFSK00q6WvdzgL6OXlv0PD8z+nYrO3JIYdpRLzT0npguo6bAtjWKCeUv0AtGvVB+3RX4zFFObqt6um6jJxX0nolGKigcA2PZYq+R/hjasV5eaWqiZgivE6oVjEgolwyC1EDhjMpKmn50rAUCOeELujrJZ/Tx7DaBt2Y7NYBNApOup8SuaAoht9LHioYmfnwWXceqFAjBpVJx2qqgf01D0tYgY50bypL8begkKakA10LTt4CBPZ7ajw/1vYHoVKfls22k7TkPOCuhpMy8vj5+ZitJ6lOWTi+D3HVB7j4nVv718YpSz01o73lBtSk9NcDR3BIs71QoShSEM8ZAHybSIr4wErcsJMsUdYt48WOyv03jt+mEDkYLow==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(23010399003)(376014)(7416014)(36860700016)(1800799024)(18002099003)(22082099003)(11063799006)(56012099006)(261026121527099003)(261021123027099003)(261009223027099003)(261021121427099003)(261102123227099003)(10067099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(23010399003)(36860700016)(7416014)(376014)(22082099003)(18002099003)(261009223027099003)(261102124527099003)(11063799006)(56012099006)(10067099003)(261102123227099003)(261021121427099003)(261022075727099003)(261026121527099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	M8ZdGLOmr5/X2JWVqQzwdc7+Jqrv0DyPk8TFdGFfgpiiAni5Kap/ldDRgCn0bUO/t4JxZ+hAn3pJCkwhy2orA2K4ZgJ1NbKNlgDLcHYljK6iMi+Ig4zQb8uTx3QTcYaav+P9bUh1g339X+Nv0DQfu+rtFXM/wddTMxYeU7VVlozsYr4sjuhe/xaIhHtYph/NI5rBWxN+LiRaQlmFUDZDVssetzIwRYcFFMfBqq+D45R86b0h9keMNjd0V9/NubglLBYWEmaEa5qGzUpasw5YFIlzZF5bIRQEjqVNJfXj4EVOiWU2Xqs/xUTz4CwcFgfkbuo+j6QmFi7rF0uesZf0hG46u5PoIGAkwNdLajaWaLbetW0YHbdwThUF8b3MKdunlO8M/8kXDTh3RZWNqa5+Q06Wlp7CjbwZhBxlgtYu/+7h+KS4jZqPQ8q+jmNL02zi
+	UQJ9a1AGLglEXbi9qoMs4IS2de6NYO77uaAXVOL8IPbc42RMGVZQRgBT8HBXCuNYnCMlFXPvnSPUgcMkjTGJGbdUUAzaisYC3G8I3UYneROEQ1OnxjQdSmhNVe18YvtVhNNb0IReLNodAFhuNhdCRlEblEZA0bjHKsh3UCXp7tDZ+4UumR0MwlAQc8zIJ9ig2nD/67Lwuuj/WzCNERANbp8FUQvs7TXZhEfEkWxr5I0+mlOmajvV+C/nW8eOXP5N/id1yUgE4T1PbL4lhY3K3vtyuCTeQ/h21JMwiRbQVi6iOJGlM1y+1xnRt/KQ24nn6RjHA4eDNtzofkos1f9b8oXd/AhIdbytWkgupFzknXUqOprrextEWgYnixq4ro5wPfJZuu0Ecp0HdyQeaDCxAf0t/6leBneWQyQXiUfwBh8eSDnpT0gczgNcbzcc9hYz
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:29:01.5271
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:29:22.2135
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4df9aeb5-132a-4664-8be9-08df467bbf69
+X-MS-Exchange-CrossTenant-Network-Message-Id: c507a117-e606-4920-d571-08df467bcbbd
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CY5PEPF00000E84.namprd05.prod.outlook.com
+	CY5PEPF00000E81.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH4PR12MB164784
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6711
 
-Add trace events for context and submission queue creation and
-destruction, along with process SVA bind and unbind operations. Insert
-the trace points into the corresponding call sites in SDXI driver.
+AMD QoS monitors and controls resource utilization through the SDXI
+physical function (PF). Add AMD QoS vendor request formats, operation
+identifiers, and helper prototypes for code introduced later.
 
-Co-developed-by: Nathan Lynch <nathan.lynch@amd.com>
-Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 ---
- drivers/dma/sdxi/Makefile  |   1 +
- drivers/dma/sdxi/context.c |  31 ++++++---
- drivers/dma/sdxi/process.c |   6 +-
- drivers/dma/sdxi/trace.c   |   9 +++
- drivers/dma/sdxi/trace.h   | 137 +++++++++++++++++++++++++++++++++++++
- 5 files changed, 173 insertions(+), 11 deletions(-)
- create mode 100644 drivers/dma/sdxi/trace.c
- create mode 100644 drivers/dma/sdxi/trace.h
+ drivers/dma/sdxi/amd/qos.h | 95 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 95 insertions(+)
+ create mode 100644 drivers/dma/sdxi/amd/qos.h
 
-diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-index 019038cc91bc..34f62b7366eb 100644
---- a/drivers/dma/sdxi/Makefile
-+++ b/drivers/dma/sdxi/Makefile
-@@ -14,6 +14,7 @@ sdxi-core-y := \
- 	process.o     \
- 	ring.o        \
- 	sysfs.o       \
-+	trace.o       \
- 	vendor.o
- 
- obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
-diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-index 43ffe132cf2e..91c2837bbe82 100644
---- a/drivers/dma/sdxi/context.c
-+++ b/drivers/dma/sdxi/context.c
-@@ -36,6 +36,7 @@
- #include "ring.h"
- #include "sdxi.h"
- #include "submission.h"
-+#include "trace.h"
- 
- #define DEFAULT_DESC_RING_ENTRIES 1024
- #define SDXI_CXT_QUIESCE_TIMEOUT_MS 5000U
-@@ -50,6 +51,16 @@ enum {
- 
- static void sdxi_cxt_cleanup_workfn(struct work_struct *work);
- 
-+static void sdxi_cxt_free_sq(struct sdxi_cxt *cxt)
-+{
-+	if (!cxt->sq)
-+		return;
-+
-+	trace_sdxi_free_sq(cxt, cxt->sq);
-+	sdxi_sq_free(cxt->sdxi, cxt->sq);
-+	cxt->sq = NULL;
-+}
-+
- /*
-  * Free context and its resources. @cxt may be partially allocated but
-  * must have ->sdxi set.
-@@ -70,8 +81,7 @@ static void sdxi_free_cxt(struct sdxi_cxt *cxt)
- 				  cxt->akey_table, cxt->akey_table_dma);
- 	if (cxt->cst_pool)
- 		sdxi_cst_pool_destroy(sdxi, cxt->cst_pool);
--	if (cxt->sq)
--		sdxi_sq_free(sdxi, cxt->sq);
-+	sdxi_cxt_free_sq(cxt);
- 	ida_destroy(&cxt->akey_ida);
- 	mutex_destroy(&cxt->akey_lock);
- 	mutex_destroy(&cxt->cleanup_lock);
-@@ -205,6 +215,7 @@ static int sdxi_alloc_kernel_submission(struct sdxi_cxt *cxt)
- 	cxt->sq = sdxi_sq_alloc(cxt->sdxi, DEFAULT_DESC_RING_ENTRIES);
- 	if (!cxt->sq)
- 		return -ENOMEM;
-+	trace_sdxi_create_sq(cxt, cxt->sq);
- 
- 	cxt->cst_pool = sdxi_cst_pool_create(cxt->sdxi,
- 					     DEFAULT_DESC_RING_ENTRIES);
-@@ -434,11 +445,13 @@ static int sdxi_publish_cxt(struct sdxi_cxt *cxt,
- 	mutex_unlock(&cxt->sdxi->cxt_lock);
- 	if (err) {
- 		invalidate_cxt_ctl(cxt->cxt_ctl);
--	} else {
--		cxt->published = true;
--		cxt->update_pending = false;
-+		return err;
- 	}
--	return err;
-+
-+	cxt->published = true;
-+	cxt->update_pending = false;
-+	trace_sdxi_create_cxt(cxt->sdxi, cxt);
-+	return 0;
- }
- 
- /* Invalidate a context. */
-@@ -451,6 +464,7 @@ static void sdxi_rescind_cxt(struct sdxi_cxt *cxt)
- 
- 	if (!cxt->published)
- 		return;
-+	trace_sdxi_free_cxt(sdxi, cxt);
- 
- 	mutex_lock(&sdxi->cxt_lock);
- 	L1_table = sdxi->L1_tables[l2_idx];
-@@ -575,10 +589,7 @@ static void sdxi_cxt_release_resources(struct sdxi_cxt *cxt)
- 		sdxi_cst_pool_destroy(sdxi, cxt->cst_pool);
- 		cxt->cst_pool = NULL;
- 	}
--	if (cxt->sq) {
--		sdxi_sq_free(sdxi, cxt->sq);
--		cxt->sq = NULL;
--	}
-+	sdxi_cxt_free_sq(cxt);
- 	kfree(cxt->ring_state);
- 	cxt->ring_state = NULL;
- }
-diff --git a/drivers/dma/sdxi/process.c b/drivers/dma/sdxi/process.c
-index b64f2307e4e3..31847af18e83 100644
---- a/drivers/dma/sdxi/process.c
-+++ b/drivers/dma/sdxi/process.c
-@@ -14,6 +14,7 @@
- #include "context.h"
- #include "process.h"
- #include "sdxi.h"
-+#include "trace.h"
- 
- static void sdxi_process_cleanup(struct sdxi_process *process)
- {
-@@ -95,8 +96,10 @@ void sdxi_process_unbind_sva(struct sdxi_process *process,
- 		mmu_notifier_unregister(&process->notifier, process->mm);
- 	}
- 
--	if (sva)
-+	if (sva) {
- 		iommu_sva_unbind_device(sva);
-+		trace_sdxi_unbind_process(process->sdxi, pasid);
-+	}
- }
- 
- static void sdxi_process_free(struct sdxi_process *process)
-@@ -157,6 +160,7 @@ int sdxi_process_bind(struct sdxi_process *process)
- 
- 	process->pasid = pasid;
- 	process->sva = sva;
-+	trace_sdxi_bind_process(process->sdxi, pasid);
- 	return 0;
- 
- unbind:
-diff --git a/drivers/dma/sdxi/trace.c b/drivers/dma/sdxi/trace.c
+diff --git a/drivers/dma/sdxi/amd/qos.h b/drivers/dma/sdxi/amd/qos.h
 new file mode 100644
-index 000000000000..8fcde4538c94
+index 000000000000..e5e3e5cf9a50
 --- /dev/null
-+++ b/drivers/dma/sdxi/trace.c
-@@ -0,0 +1,9 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * SDXI tracepoints.
-+ *
-+ * Copyright Advanced Micro Devices, Inc.
-+ */
-+
-+#define CREATE_TRACE_POINTS
-+#include "trace.h"
-diff --git a/drivers/dma/sdxi/trace.h b/drivers/dma/sdxi/trace.h
-new file mode 100644
-index 000000000000..e39db0e3debd
---- /dev/null
-+++ b/drivers/dma/sdxi/trace.h
-@@ -0,0 +1,137 @@
++++ b/drivers/dma/sdxi/amd/qos.h
+@@ -0,0 +1,95 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
-+ * SDXI tracepoints.
++ * AMD SDXI QoS internal definitions.
 + *
-+ * Copyright Advanced Micro Devices, Inc.
++ * Copyright (C) 2026 Advanced Micro Devices, Inc.
 + */
 +
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM sdxi
++#ifndef __DMA_SDXI_AMD_QOS_H
++#define __DMA_SDXI_AMD_QOS_H
 +
-+#if !defined(_TRACE_SDXI_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_SDXI_H
++#include <linux/bits.h>
++#include <linux/types.h>
 +
-+#include <linux/tracepoint.h>
++enum sdxi_amd_qos_admin_vendor_op {
++	SDXI_AMD_QOS_ADMIN_OP_CAP = 1,
++	SDXI_AMD_QOS_ADMIN_OP_DEVUPD = 2,
++	SDXI_AMD_QOS_ADMIN_OP_POOLUPD = 3,
++	SDXI_AMD_QOS_ADMIN_OP_FNUPD = 4,
++	SDXI_AMD_QOS_ADMIN_OP_TEL = 5,
++};
 +
-+#include "context.h"
++enum sdxi_amd_qos_admin_target_flags {
++	SDXI_AMD_QOS_TARGET_F_CXT = BIT(0),
++	SDXI_AMD_QOS_TARGET_F_VF = BIT(1),
++};
 +
-+TRACE_EVENT(sdxi_create_cxt,
-+	    TP_PROTO(struct sdxi_dev *sdxi, struct sdxi_cxt *cxt),
-+	    TP_ARGS(sdxi, cxt),
-+	    TP_STRUCT__entry(
-+		    __field(u16, sfunc)
-+		    __field(unsigned int, cxt_id)
-+		    __field(void *, cce)
-+		    __field(u64, cce_dma_addr)
-+		    __field(void *, akey)
-+		    __field(u64, akey_dma_addr)
-+	    ),
-+	    TP_fast_assign(
-+		    __entry->sfunc = sdxi->sfunc;
-+		    __entry->cxt_id = cxt->id;
-+		    __entry->cce = cxt->cxt_ctl;
-+		    __entry->cce_dma_addr = cxt->cxt_ctl_dma;
-+		    __entry->akey = cxt->akey_table;
-+		    __entry->akey_dma_addr = cxt->akey_table_dma;
-+	    ),
-+	    TP_printk("cxt=%u sfunc=%#x cxt_ctl=%p cxt_ctl_dma=%#llx akey=%p akey_dma=%#llx",
-+		      __entry->cxt_id, __entry->sfunc, __entry->cce,
-+		      __entry->cce_dma_addr, __entry->akey,
-+		      __entry->akey_dma_addr)
-+);
++enum sdxi_amd_qos_feature_flags {
++	SDXI_AMD_QOS_FEATURE_DYNAMIC_POOL_RECONFIG = BIT(0),
++	SDXI_AMD_QOS_FEATURE_DYNAMIC_POOL_REASSIGN = BIT(1),
++	SDXI_AMD_QOS_FEATURE_TEL_TIMESTAMPS = BIT(2),
++	SDXI_AMD_QOS_FEATURE_FLEXIBLE_POOL_SCOPE = BIT(3),
++};
 +
-+TRACE_EVENT(sdxi_free_cxt,
-+	    TP_PROTO(struct sdxi_dev *sdxi, struct sdxi_cxt *cxt),
-+	    TP_ARGS(sdxi, cxt),
-+	    TP_STRUCT__entry(
-+		    __field(u16, sfunc)
-+		    __field(unsigned int, cxt_id)
-+	    ),
-+	    TP_fast_assign(
-+		    __entry->sfunc = sdxi->sfunc;
-+		    __entry->cxt_id = cxt->id;
-+	    ),
-+	    TP_printk("cxt=%u sfunc=%#x", __entry->cxt_id, __entry->sfunc)
-+);
++struct sdxi_amd_qos_devupd_req {
++	u32 device_maxbw;
++};
 +
-+TRACE_EVENT(sdxi_create_sq,
-+	    TP_PROTO(struct sdxi_cxt *cxt, struct sdxi_sq *sq),
-+	    TP_ARGS(cxt, sq),
-+	    TP_STRUCT__entry(
-+		    __field(u16, sfunc)
-+		    __field(unsigned int, cxt_id)
-+		    __field(void *, desc_ring)
-+		    __field(u64, desc_ring_addr)
-+		    __field(void *, write_index)
-+		    __field(u64, write_index_addr)
-+		    __field(void *, cxt_status)
-+		    __field(u64, cxt_status_addr)
-+	    ),
-+	    TP_fast_assign(
-+		    __entry->sfunc = cxt->sdxi->sfunc;
-+		    __entry->cxt_id = cxt->id;
-+		    __entry->desc_ring = sq->ring;
-+		    __entry->desc_ring_addr = sdxi_sq_ring_dma(sq);
-+		    __entry->write_index = &sq->write_index;
-+		    __entry->write_index_addr = sdxi_sq_write_index_dma(sq);
-+		    __entry->cxt_status = &sq->cxt_sts;
-+		    __entry->cxt_status_addr = sdxi_sq_cxt_sts_dma(sq);
-+	    ),
-+	    TP_printk("cxt=%u sfunc=%#x ring=%p/%#llx widx=%p/%#llx sts=%p/%#llx",
-+		      __entry->cxt_id, __entry->sfunc, __entry->desc_ring,
-+		      __entry->desc_ring_addr, __entry->write_index,
-+		      __entry->write_index_addr, __entry->cxt_status,
-+		      __entry->cxt_status_addr)
-+);
++struct sdxi_amd_qos_poolupd_req {
++	u16 pool_num;
++	u8 pool_operation;
++	u8 rsvd0;
++	u32 pool_maxbw;
++	u32 pool_minbw;
++};
 +
-+TRACE_EVENT(sdxi_free_sq,
-+	    TP_PROTO(struct sdxi_cxt *cxt, struct sdxi_sq *sq),
-+	    TP_ARGS(cxt, sq),
-+	    TP_STRUCT__entry(
-+		    __field(u16, sfunc)
-+		    __field(unsigned int, cxt_id)
-+	    ),
-+	    TP_fast_assign(
-+		    __entry->sfunc = cxt->sdxi->sfunc;
-+		    __entry->cxt_id = cxt->id;
-+	    ),
-+	    TP_printk("cxt=%u sfunc=%#x", __entry->cxt_id, __entry->sfunc)
-+);
++struct sdxi_amd_qos_fnupd_req {
++	u16 pool_num;
++	u16 flags;
++	u16 vf_num;
++	u16 cxt_start;
++	u16 cxt_end;
++	u16 rsvd0;
++};
 +
-+TRACE_EVENT(sdxi_bind_process,
-+	    TP_PROTO(const struct sdxi_dev *sdxi, u32 pasid),
-+	    TP_ARGS(sdxi, pasid),
-+	    TP_STRUCT__entry(
-+		    __string(devname, dev_name(sdxi_to_dev(sdxi)))
-+		    __field(u32, pasid)
-+	    ),
-+	    TP_fast_assign(
-+		    __assign_str(devname);
-+		    __entry->pasid = pasid;
-+	    ),
-+	    TP_printk("device=%s pasid=%u", __get_str(devname), __entry->pasid)
-+);
++struct sdxi_amd_qos_tel_req {
++	u16 pool_num;
++	u16 flags;
++	u16 vf_num;
++	u16 cxt_num;
++	u8 query_type;
++	u8 rsvd0[3];
++};
 +
-+TRACE_EVENT(sdxi_unbind_process,
-+	    TP_PROTO(const struct sdxi_dev *sdxi, u32 pasid),
-+	    TP_ARGS(sdxi, pasid),
-+	    TP_STRUCT__entry(
-+		    __string(devname, dev_name(sdxi_to_dev(sdxi)))
-+		    __field(u32, pasid)
-+	    ),
-+	    TP_fast_assign(
-+		    __assign_str(devname);
-+		    __entry->pasid = pasid;
-+	    ),
-+	    TP_printk("device=%s pasid=%u", __get_str(devname), __entry->pasid)
-+);
++/* AMD SDXI Quality-of-Service Extensions (ASQOSE). */
++#define SDXI_AMD_QOS_DSC_SUBTYPE_CAP		0x00
++#define SDXI_AMD_QOS_DSC_SUBTYPE_DEVUPD		0x01
++#define SDXI_AMD_QOS_DSC_SUBTYPE_POOLUPD	0x02
++#define SDXI_AMD_QOS_DSC_SUBTYPE_FNUPD		0x03
++#define SDXI_AMD_QOS_DSC_SUBTYPE_TEL		0x04
 +
-+#endif /* _TRACE_SDXI_H */
++#define SDXI_AMD_QOS_TEL_QTYPE_DEVICE		0x0
++#define SDXI_AMD_QOS_TEL_QTYPE_POOL_CONFIG	0x1
++#define SDXI_AMD_QOS_TEL_QTYPE_POOL_ASSIGN	0x2
++#define SDXI_AMD_QOS_TEL_QTYPE_ACTIVE_POOLS	0x3
++#define SDXI_AMD_QOS_TEL_QTYPE_POOL_REPORT	0x4
++#define SDXI_AMD_QOS_TEL_QTYPE_POOL_VARIANCE	0x5
 +
-+#undef TRACE_INCLUDE_PATH
-+#define TRACE_INCLUDE_PATH ../../drivers/dma/sdxi
++#define SDXI_AMD_QOS_POOL_OP_CREATE		0x0
++#define SDXI_AMD_QOS_POOL_OP_UPDATE		0x1
++#define SDXI_AMD_QOS_POOL_OP_DESTROY		0x2
 +
-+#undef TRACE_INCLUDE_FILE
-+#define TRACE_INCLUDE_FILE trace
++u64 sdxi_amd_qos_query_selector(u16 cxt_num, u8 query_type);
++u32 sdxi_amd_qos_align_bw(u32 bw, u32 granularity);
++int sdxi_amd_qos_validate_devupd_req(u32 device_maxbw, u32 total_allocated_bw,
++				     u32 granularity_bw);
++int sdxi_amd_qos_validate_poolupd_req(const struct sdxi_amd_qos_poolupd_req *req,
++				      u16 max_pools, u32 granularity_bw);
++int sdxi_amd_qos_validate_fnupd_req(const struct sdxi_amd_qos_fnupd_req *req,
++				    u16 max_pools, u16 max_vfs, u32 max_cxts,
++				    u16 feature_flags);
++int sdxi_amd_qos_validate_tel_req(const struct sdxi_amd_qos_tel_req *req,
++				  u16 max_pools, u16 max_vfs, u32 max_cxts,
++				  u16 feature_flags);
 +
-+#include <trace/define_trace.h>
++#endif /* __DMA_SDXI_AMD_QOS_H */
 -- 
 2.56.1
 
