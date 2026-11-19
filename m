@@ -1,47 +1,116 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795104303;
-	b=ZkCN2j2E/iBF0A3eAzCd+8wvuFIk5DA8gzE1AtRjZKd9bsSq7ynSHzTn4PtyEJs0r05H
-	 VVXIEU7KSnpRPSMfXzeqGKch8NBLeVc3T61923/MzY4WxQaiibk8vT4JhrQfz49zNWEm6
-	 f85q6p4aqpIH4Ug52qMsKWkATnh48+REnJ9Tj0ksVWwvOM22KHwBRS2ZWe48wIO3ErT9A
-	 EbB+lXkMjUDzPSKqfiTtTg6I25XDBeFiJ3/6/JasOvIvNgjgdNoSoACAYv20yANHYHtEI
-	 85TvvAyOiLflWtp7/oe6QP0f/gSMwW/xTktbw3mwY+zcFH42iXMQH1vrLD1tc7oL92Q==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795104303;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:Content-Language:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=hbK+kWkYYKm/efLUoBKOSkktiP3/Wop2eoAi4ChS1QA=;
-	b=U+lAuqP9ibvqbTE2DQEy/jT2sL4/Y9SGMj6t/6lh4cgFVj80gM8aypFNriBSiYSFUNtE
-	 qYKBCezF/6xEKKEsvEdKyRk3l3n0/NALpdCapyI4yf95EvnENLuPM0VAK8+0dzrboGGI3
-	 mpENxDjDUZ4eNr+h3Y3COXvY+SaDEBK+mQpFm39D042j190/rlcR1nr3PmjdVVQxIJ0Qd
-	 1xsEVwFZN09KFRcBqkpo1LS9BUCERKzr2IZz/ohyNfGMKhJX6dXVDQY6bLInfKdv0MDr9
-	 h3ra330ETc3rZpu85Uh5ftG4yE/jZP5W9yWA7z1ntzbHMC276qBryaq1X1+DrZp+KXA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d9WwW2ar;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.45
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795106390;
+	b=UiX6iALB6FZbQQTgzGowuGpiE/XmTSV9o4AK6hL2Ykim+zqpv0pbzcgkCByFxoOdyYii
+	 PBYaNp4EQG62LkaXdfnt3YSyOj3sfpQvfrNsVbTdB2NK+UlfsxQEHkl995zPx+XNBdmfD
+	 btakmk4fY84l18TRkGjzNl5iw2eUzY1p4Tsg7FUv558LDzecByQvuCLbc4oFUfoakeOlg
+	 pyVzFpdNWLTYYoEw9QlosBg6FaclEgecttKIF8+rmWV3K0ulXgn7LLh0nKLe7SH1io7ni
+	 6YEZoKEWHvLiHrv7laoVr9AuB/zbf1LNuJtocOxRbLcm8XTg5FM3F3wEsi4I5RN6U/w==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795106390;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 Received:Received:Date:From:To:CC:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:
+	 X-NV-OnPremToCloud:X-EOPAttributedMessage:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=kn/dK24Qe1uKj0FjgQU4/HEVvppIQ1y0U9NPAOLPehc=;
+	b=RjW7AZKcH2UYis1fFNLwSkyR9JwLq71zl/htJkFG9A3pg1MGLPQPq+nJgkhLY1I46QSW
+	 H8mGbj4+2LdPNrZ2ohZJ5baiTq7eNNZYOhNiANZ1q5oZSLzgDjiyyih4jz8nKovl+TTZ3
+	 Y6lYcghwDpX3NeUM7nWRkCjJ63GabfujvQtcbo4hdeR8gmQK//p0HfVtvT2xDHxpUcWID
+	 nSG69vkPU+mZ6Ta1nOG8OtiMoxkfYzD7bfCSL2VZC/qZ19kMoxvm3YJWQfex39vYnpPgx
+	 W3JyFnIa5uH1J0EqjW1keV9SAVhxoBX6P4Cv6e+da7vBg7R7CrfntJ98X3o439yr2wg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=JOxZ0QGG;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.45
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010045.outbound.protection.outlook.com [52.101.56.45])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC7E606A324;
-	Thu, 19 Nov 2026 16:05:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33791606A320;
+	Thu, 19 Nov 2026 16:39:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33791606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d9WwW2ar
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD7631F000C7;
-	Thu, 19 Nov 2026 16:05:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795104302;
-	bh=hbK+kWkYYKm/efLUoBKOSkktiP3/Wop2eoAi4ChS1QA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=d9WwW2ar0YOTWbnyoAZZOi6xLhgyjF+NG7ZochlTRKamLVWoY9yrclWCRcsMHo3zW
-	 8qrPXHFN9J6HJKjcHz6sCgf+oZiPHGmTTdMyMB91gKzkzhxElmrwZW6cGd8euvjMGq
-	 1Ehir73ksQGmS2lNCWJ2uI+Z5+hW6X1pXlQwW+RZWwaC5CJRouw3q0W9kw31G5mnT9
-	 QwtstSKgVHu8L4g6Zv76NEEnoMLqEVGaDWV6kWzeZ9ptLSvq735A5h6tMOWMitaFaa
-	 xwOmtfpOK+0R2wx1hD6BqcMc1By2Y6YtyqxvENb4t7nr2xQyJtknRE318tG9+c5AzT
-	 V8fJZFr7i9jdw==
-Message-ID: <3657995d-b4f7-4a0d-9615-1c56a0127de1@kernel.org>
-Date: Thu, 19 Nov 2026 10:04:56 -0600
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=JOxZ0QGG
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jmNZ7FEaYmqT5WMItb/bUIMzQcOLmcrK1EtQMvFiQWESBxSVVD1XDelYiIEGABu9vx+gq+4IJxrdchgHMYDkBFafnkRvLbW3TgJtHnZ2nlMGfeBBIx7JkqVygxNYbh2RuqTFVNRUMlQm6phfFuVaZGmRauNxbFRgD9I2UJWqR5kQMOSib89PqQ8wEgnApaTZH9/t/e1/o1HUv+5+tfgcpRAIOHkyW9FX/phbEytztaru+b6p92/unTWU6B7NW8+hCNxZEWJ2g1B2ARqSfAjTp9UyVQCTkh346fk64rs89du2euD1nfgrXkhKoIg4LrOo20O+6kkBRgvh5sFa3bh9pw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=kn/dK24Qe1uKj0FjgQU4/HEVvppIQ1y0U9NPAOLPehc=;
+ b=GOJslwJd4h7uRM0sFyEX5vL7FgO8RQTjRuJR7aOHoYicNvzXvsjpq+x1MSXbPjNtC1IxYa33XHXgCVVZiFADExZ/urvnkDzv51uKUeXOtKV13jte7/jDbG2cp6xpwUV/p4KQiqjvafCBJYpYZcsfLZadKpEaQuAb/+xRN5JSi3ojni1E+Gbz2s42G//JbxvNYdkVvZ6asJ5PXu018j7kytMhcK8+K4V7MdXKIAO5VVcV7c5QukR6wp/687McX3UDKKmpWtSiFIHnunKB69UOBE4Uj7KwBsdWkuL4TeU1Dj1TVWu9GvwxQO/y1+XoYi8THz5ihjiAa7XABZ6zQ2CpTA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=kn/dK24Qe1uKj0FjgQU4/HEVvppIQ1y0U9NPAOLPehc=;
+ b=JOxZ0QGGdAbKjgaN+RmtpmnDsGejmoNI+uDF8NQb/FlWVMSHxXtbsF1cK+MfwBg6XDTtRQBkzP6/C0JDW6oKRBxznO2+5zXiVGUqfj4nc6d9pgHowv5gdMi7aQvN8hX7J5Vdemyi/QEJ8FWABB+qP49M3yXBsoBOtM2Iau/pGe9Lrwnpk/B66nNqB28bM1h2aG0aMdyDsrPezH8bWqKEzCchj0DaIJ0lLSqgumRy1ojhsanF4zrmCZc89O21jNvJ1Yir+FGveHMLGOns6J8fnC+8X8GeLroJZFtIBFQ1KC3C3+lQXJWRsTU73pKBAAmx3SV7pXSe6loy9jCtNiKJoQ==
+Received: from BN9PR03CA0676.namprd03.prod.outlook.com (2603:10b6:408:10e::21)
+ by SA1PR12MB999107.namprd12.prod.outlook.com (2603:10b6:806:4a2::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Thu, 19 Nov
+ 2026 16:39:43 +0000
+Received: from BN7PEPF00000093.namprd03.prod.outlook.com
+ (2603:10b6:408:10e:cafe::11) by BN9PR03CA0676.outlook.office365.com
+ (2603:10b6:408:10e::21) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.13 via Frontend Transport; Thu,
+ 19 Nov 2026 16:39:43 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ BN7PEPF00000093.mail.protection.outlook.com (10.167.245.71) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 16:39:43 +0000
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Thu, 19 Nov
+ 2026 08:39:16 -0800
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail202.nvidia.com
+ (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56; Thu, 19 Nov
+ 2026 08:39:16 -0800
+Received: from nvidia.com (10.127.8.14) by mail.nvidia.com (10.129.68.6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.56 via Frontend
+ Transport; Thu, 19 Nov 2026 08:39:15 -0800
+Date: Thu, 19 Nov 2026 08:39:13 -0800
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Vidya Sagar <vidyas@nvidia.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <djbw@kernel.org>, "Dave
+ Jiang" <dave.jiang@intel.com>, Jonathan Cameron
+	<Jonathan.Cameron@huawei.com>, Joerg Roedel <joerg.roedel@amd.com>, Jason
+ Gunthorpe <jgg@ziepe.ca>, "Kevin Tian" <kevin.tian@intel.com>,
+	<vsethi@nvidia.com>, <kthota@nvidia.com>, <mmaddireddy@nvidia.com>,
+	<kumarahul@nvidia.com>, <sagar.tv@gmail.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V1 2/4] PCI: Don't run IOMMU reset hooks when only
+ probing reset methods
+Message-ID: <av8mMSeRUyobKMgJ@nvidia.com>
+References: <20261119100628.1948990-1-vidyas@nvidia.com>
+ <20261119100628.1948990-3-vidyas@nvidia.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -51,107 +120,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 0/3] Fix amdgpu detection of pci=realloc
-Content-Language: en-US
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Oz Tiram <oz@shift-computing.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org,
- Reza Nikzad Chaleshori <rezanikzadch@gmail.com>
-References: <20261111-vfct-regression-v6-0-393797bbb6e3@amd.com>
- <5cf8f937-acc8-475e-ba0c-6be00defbb53@amd.com>
- <CADnq5_PAarNZ24xOU3MqVfEra1hSOqgrKQxvLppyCWZQebr_yw@mail.gmail.com>
-From: Mario Limonciello <superm1@kernel.org>
-In-Reply-To: <CADnq5_PAarNZ24xOU3MqVfEra1hSOqgrKQxvLppyCWZQebr_yw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20261119100628.1948990-3-vidyas@nvidia.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN7PEPF00000093:EE_|SA1PR12MB999107:EE_
+X-MS-Office365-Filtering-Correlation-Id: fe1ced02-0d9e-4c35-de21-08df465bb6d6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|36860700016|1800799024|82310400026|23010399003|261026140227099003|260925021311599003|260925021911599003|260925022911599003|56012099006|11063799006|4143699003|261021135927099003|261026121527099003|261021121427099003|261022105027099003|5023799004|261102123227099003|261022075727099003|261009223027099003|261028144727099003|10067099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	OQ+2VKKRW0IFh3YnfjWGH+6qoe3RGZKjjNXBZUJz2PN7fBNmpoSFo/+DOZMZ1qZ5xd/r6Jkbdea9gUuWwY58RhmEp1wmLPaGE6sSWRAWmyH/MYaCHp0p60nGMh/zh6wSI09bcPG/UhC9IdZYh5ov7lRklqLBcCxMIP2Szt3J1mak0ha4zr5RvbrxaD35571KIQYb2oUomCo2uNtddbmFQbAzcfuA7wgY/O2S/KUp1lwaPd0ls120CME/fJjFoUc6tUn9pDwvE4w1rmGlX3lgrq3ekRiXqfKtUVK8AWpFsfmTZl9QKBDphB5R6zjVB8puVSaXA83IzWm/Cbhz4bSg222IrDmwajQI1OfKKQuVBPJorZN4+uFiLk+h//jopFTwFzDB2mD6nCl+Pw7ZNO/m72MWY4NaE8AFc1EIYtJfxaVnFNVH7V+qRL9WBHx+8rcMHIDhZ+xZBTnGc3HQ4WjS+Pcr6I553GZyj9M0JeLbhiOP2pCIeI7dNj76GzazxUGnvIkl5ZnM7nSu0TTMqNQ5nnaNvsQueUIZtAJ/0LC/Z+XB0Tr5WAJBgsBdmVI5wBqA3KIFFsnvnRfblgHA5nR48UEbnFupk10DqY9HhiGqkbYRZr1/aAgGx9+wfGTnsUxQFnkC5hx13C0PyTM/xFdd19IsCmpqxOnpb+czihYdZ0WgTPKzpzYmOdHb71O5XslwSlYt51Pwt0uMv5O0UzvCnw==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(7416014)(36860700016)(1800799024)(82310400026)(23010399003)(261026140227099003)(260925021311599003)(260925021911599003)(260925022911599003)(56012099006)(11063799006)(4143699003)(261021135927099003)(261026121527099003)(261021121427099003)(261022105027099003)(5023799004)(261102123227099003)(261022075727099003)(261009223027099003)(261028144727099003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	IU+dcgqr8r3usKPxpXD6Tc29D4smojW37hWkL42gnCaUePnn3BW+UQU5BTVt89DeTbvm3X8VfRnzN42PBPzuAvQkoe7pBCM4kL1gAjq45QyAZsSsTvyVqGpYluG9QpocMcFmp1mXWLPiMQVwGGpdgqR08NctdASecVMupPGDMm5b0SJrNPKbaLFGG+h6J/tP8rEvy1E+H2r8MUEFTQgfLeeUjDwTbNhaVp108Bp7foxCh1NCRha4v5MgIcBoJeyj/et5Y2f++zgaCryWtwTTfCJPnJ60/dFyZdkWUZ4JeWba9+h7gTBwjOicvnt1TTI8k59xwgTQE5Gh/wJ2sA4WzadID4rryLJOobNIr3Z+6FswftOJd43ZILLK0LHLGE5zH2S6AcFOHoFyVCy3rhN/+DCIOLBnMOk33InG5ilfwDdqthBzpzazEZrhNLb1u4Wg
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 16:39:43.1701
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: fe1ced02-0d9e-4c35-de21-08df465bb6d6
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN7PEPF00000093.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB999107
 
-
-
-On 11/19/26 09:57, Alex Deucher wrote:
-> On Thu, Nov 19, 2026 at 10:30 AM Mario Limonciello
-> <mario.limonciello@amd.com> wrote:
->>
->>
->>
->> On 11/11/26 10:43, Mario Limonciello wrote:
->>> amdgpu needs to know the bus number the platform assigned a device to
->>> be able to match firmware images against the right device.
->>>
->>> This was previously adjusted to be a soft filter due to
->>> commit 11c141672045f ("drm/amdgpu: Fix VFCT bus number matching with
->>> soft filter") where if everything but the number matched to take a device.
->>>
->>> This however fails when there are two identical devices.  Instead save the
->>> initial bus number to the PCI device structure and then match that.
->>>
->>> Link: https://lore.kernel.org/linux-pci/20261015124843.203905-1-mario.limonciello@amd.com/
->>> Link: https://lore.kernel.org/amd-gfx/20261019194106.2796150-1-alexander.deucher@amd.com/
->>> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
->>> ---
->>> Changes in v6:
->>> - Capture the firmware secondary bus number when reading bridge windows and
->>>     ignore unconfigured values so rescans cannot replace it with runtime data
->>>     (Sashiko).
->>> - No change needed in the VFCT consumers; they continue to read the cached
->>>     value from the upstream bridge.
->>> - Link to v5: https://patch.msgid.link/20261110-vfct-regression-v5-0-f49fae981bf3@amd.com
->>>
->>> Changes in v5:
->>> - Record the firmware secondary bus number only on the bridge struct pci_dev,
->>>     guard it with a validity bit, and keep it across rescans (Bjorn, Lijo).
->>> - Drop pci_bus::number_initial and have amdgpu/radeon read the saved bridge
->>>     number when matching VFCT entries.
->>>
->>> Changes in v4:
->>> - Retain secondary bus bus number for a bridge across rescans, and the child bus is initialized
->>>     from it during allocation, before registration callbacks run. (Sashiko)
->>> - Rename variable to clarify it's for bridges (Lijo)
->>> - Link to v3: https://patch.msgid.link/20261026-vfct-regression-v3-0-fe9586ed6978@amd.com
->>>
->>> Changes in v3:
->>> - Preserve the firmware bus number across bridge renumbering, capturing the
->>>     secondary bus number before pci_scan_bridge_extend() clears it.
->>> - Adjust member name in all patches
->>> - Add tags
->>> - Link to v2: https://patch.msgid.link/20261020-vfct-regression-v2-0-d2394d11450a@amd.com
->>>
->>> Changes in v2:
->>> - pci_alloc_dev(NULL) remains safe.
->>> - For buses behind a reassigned bridge, the PCI core now saves the firmware secondary bus
->>>     number before clearing the bridge configuration and carries it into the newly allocated bus.
->>>     Devices discovered there inherit that original number.
->>> - Add changes for radeon too.
->>> - Link to v1: https://patch.msgid.link/20261019-vfct-regression-v1-0-5a63ddd378dd@amd.com
->>>
->>> ---
->>> Mario Limonciello (3):
->>>         PCI: Cache bridge firmware secondary bus number
->>>         drm/amdgpu: Match VFCT using initial PCI bus number
->>>         drm/radeon: Match VFCT using initial PCI bus number
->>>
->>>    drivers/gpu/drm/amd/amdgpu/amdgpu_bios.c | 23 ++++++++++-------------
->>>    drivers/gpu/drm/radeon/radeon_bios.c     | 25 +++++++++++--------------
->>>    drivers/pci/probe.c                      | 16 ++++++++++++++--
->>>    include/linux/pci.h                      |  4 ++++
->>>    4 files changed, 39 insertions(+), 29 deletions(-)
->>> ---
->>> base-commit: c03c1a14507dfaf8b856c2608f9ac216021fc222
->>> change-id: 20261019-vfct-regression-2142fc52852a
->>>
->>> Best regards,
->>> --
->>> Mario Limonciello <mario.limonciello@amd.com>
->>
+On Thu, Nov 19, 2026 at 03:36:26PM +0530, Vidya Sagar wrote:
+> pci_reset_bus_function() and __pci_dev_specific_reset() call
+> pci_dev_reset_iommu_prepare() and pci_dev_reset_iommu_done() even when
+> "probe" is set and no reset follows.  The other reset methods that use
+> these hooks, pcie_flr(), pci_af_flr(), pci_pm_reset() and
+> pci_dev_acpi_reset(), only call them when actually resetting.
 > 
-> Is v6 preferred to v7?
+> Reset methods are probed at enumeration, before the IOMMU is set up, but
+> also whenever "reset_method" is written in sysfs.  For an ATS-capable
+> device behind an IOMMU, each such probe of "bus" or of a device-specific
+> reset attaches the blocking domain and then re-attaches the device's
+> domains.  That blocks any DMA in the window and, on arm-smmu-v3, sends
+> ATC invalidations, even while a driver is bound and using the device.
 > 
-> Alex
+> Return before the IOMMU hooks when probing, as the other reset methods
+> do.
+> 
+> Fixes: f5b16b802174 ("PCI: Suspend iommu function prior to resetting a device")
 
-My local linking between message IDs got messed up.  Yes comments on v7 
-please, thanks for catching.
+We already have a similar fix here that Bjorn acked:
+https://lore.kernel.org/linux-iommu/c66d5221a8e4356316d4f614c8584a80dc9d71b6.1793729707.git.nicolinc@nvidia.com/
 
+I am waiting for Joerg to take the series.
+
+Nicolin
