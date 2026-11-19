@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.1
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.42
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795120122;
-	b=kzM+kOIMhuC3tq4mZy8biGR4jmj5jhGUW0BBLjFDX0dXsLr26vRH6EwHYQiMdEZv/sZW
-	 KTkFUfPAumt12KQwgjxyDOgmfO1yQpowYRiu0lf0fG+Y9L1ppGlR7AlkSHYjLXTvnf4oz
-	 ws+rbKUZb61tGS1FGM/rCvYX269wQjw/Q1YgzZDmLr+Vs4YeT7u3T+DBhDyJr5XiwKmJY
-	 kGFrvwZGS3dVn8IKrQnqzqNeYZ7xMSJmIIoDQ87DvDHUHrme6jrvqggY6WxFdE8o1CwCY
-	 UDHzsb1Uw/0hfzilIUcEUoPWvBeb+Po9cHIVVUslSpZsxyNJBG3yK+YubXiaQPr8Pcw==
+	t=1795120118;
+	b=ymR1vHu4p+NvtHL8iZali8+JfXZaw08GvTqDDVQGa0PuFnpDM/lyaXwgZEzcywG2fR4M
+	 dQL4zdcJO3zsPy97hs8bCKsq6kNQOmgQJk3+i6g4/zveJje+diC7bPfY6mbM8su07V6GW
+	 tnyO1I5hizSmE34XaD/+EA/MhQVzpb3QpP+AJ+42+Cxluy4T/7x7cixWwN2y0nEL9ojvp
+	 FtuFsziCv8oyIU5GRhVE6mYgc5VmtziQa5ftoHMrazhrhwgL/5Ft5UsD35GSc+R4eeROZ
+	 finMDIG5N18J8T7Ev2ahaJq7aGQ1kFs/iEYkBzMdaKrbHvEJ05t8es0bBlMdqpC+TXg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795120122;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795120118;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
@@ -26,53 +26,53 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=clcKmXPROLSkcD51/rwf4d3hToWhRa4PwGvLY9MbA4c=;
-	b=rGtkXTWWpUlA8wLvLvBDXHN6JHQvlvBQJrndIePh4pmJ2879M0ANkys+rkvDroG35kE9
-	 ODXW6aDZEx1DKTOSxPrLYRz3tMUJFP2sU5ow/qhsYZDBU1RA9wgjjzitX47E4eb/yT3c9
-	 dXCF13MEblMFc6UFmNNUJA3+R9WSP4YCAnzoNCqzXn2DZTykTBygxjygDRF81nH2IR5xi
-	 Rr0X6VBvgfN/SS3FhLetKfP1Kx6N+Oh6k9lApmoEiZz/BWL35gcCJyChlNGWmasWcxJzu
-	 vV6mO3nlv6iboKsTEWXsS+WGOgPa+WwiKKSzb1PvQy8KMY57jPnHtlcW7dh6O5AILgQ==
+	bh=S5JCaW1vaJulFhB5w1GdWAL+REOMEsjLhN25zguucL0=;
+	b=kiHjx5aV1WRxxd8iyDLIZgjjryBEFZKCwBe3yw1XwjN1TjHeP4Xv8WoaCyk0m2qChGfm
+	 geEF1O+8dIjP+PfR6UgNwBU/ZE/5mVHrifHNSUlzO+551fqgFrzTQg1tNiEXkNqORSuOZ
+	 JiHkyCqPGIdJzQL6cb4EWl17QB7iZ+/aKBpP68Zssg/OnMm3PlNCTgCMl7ypri38Yh2f4
+	 3hmek9PjeCaFvYYd6BEQb8PbuGrgDNJwmJGymoUhoXO4XDFF1NQypZEksq8mZbDtgtf+E
+	 VPSo3PANlDwc03in7zHzRQ35fqtYO8VUQFcpRHOdYq5cHl7k3md5siJUgmBSdXQ8RZQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=0fbwYJ6p;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.85.1
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010001.outbound.protection.outlook.com [52.101.85.1])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=mwbWvgWQ;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.42
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010042.outbound.protection.outlook.com [40.93.198.42])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F6D3606A324;
-	Thu, 19 Nov 2026 20:28:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5F6D3606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 910A8606A337;
+	Thu, 19 Nov 2026 20:28:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 910A8606A337
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=0fbwYJ6p
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=mwbWvgWQ
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uvezHYXWWae1n3elcTZr2sT4Og0kjrh4Ep/YL/5tHN6mj+cODkPB+hLVtN+lS1Kn2Y2uDLmYOZ6BbWIzQ7vwa3SJRciYr1NfCfzl7SlKEeVHdc/hdyihyUjvluETxxypIQD2vWuiIcPg2/CkJV6vBDfveBi9VEGhQ00HAF+y4hwUmKtiwNvg2kiDHbwlZsOYIU/Y2G4jC82nPLj+dmYuJYtT5I/XX4t2GbuA8aeVPvh4zgtsp4H8MzdfzhvJLpRUf2QUuzxEnC2sotv+X+zi+LmtCXu8eqhnZak34YGKpN6aB/SUMHVjX7fC5xa5YtcMalv7uoWdnwfyIyHU22r5+Q==
+ b=QXq9G+S/wFXA4HRHqQlp/XCtM6bl+U4gN5dF8d1uoDDUsiQGzFL7JL1BlJZSH7Ne4rSC/m01EM/h3VvzKVluU0zdGyhNhNAPI5JKvs4lMz3gKyNdRfmwaVtvV55x28edgK32Yb2kx7bULesDPyEZOfR/bEoLQb/xEno0JVU93iMRZhRFjiPcR/h0wVUoLJ47qPEBFBCN5Qj3ZavTjFyzVZHsnWyzMT3SkCVpF1RdlKwgA4q8ZeZGFTLKoUho5Nnr6OzeXBCh2PBxdRoM3NE9mJmjWkhvXlaOjgWaNlTzRHDVLSMjWEWi4xcHIjBwGfiqgspjYXpsXFglD/Tr4O06+A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=clcKmXPROLSkcD51/rwf4d3hToWhRa4PwGvLY9MbA4c=;
- b=W9zWAr1DKg3ZQC06hwl0gta9+bEN2U5rWgQYoj1FSVCF/w6RLdXrNNaYlU/EqKLgIZOjJi/PiBuGA4KSIO/OJcqmSN+LtqOMHD3Kakh/to4sncVe0zqHIwHMqSbN9UXlFQU1Lkxbo6gmAKNsnvU/v3H6duEscNXwKueMxmxl5Id0L1QwtTqIxmQCrCw9wVVehj3/LjE80oPO0Lz35iCU6UMNX3OQ21MrXiRxur3YljThGqWWvogpZOIPE3nfkoV+aJGBf1jqwgUE3VIs7KzjaxkshtfqTroNiP7BxQcftyaZg0LO5rlVpkBVsodenYf6ipSknVK8T4Ar7VdBTrQdWQ==
+ bh=S5JCaW1vaJulFhB5w1GdWAL+REOMEsjLhN25zguucL0=;
+ b=YwGZx/un90EqHtZuOVxfbotvgzdwoLqH4cEWtvIuINTkDcfWxPBTrMUhGJFZsFY0+kWdTi/3+7zyAgW2vtaJ+cG0XPyQSy9NHECULWE7Bk0f83BAQqwqbP+4yi8LWnMzPEqFxEgDEPLWSSpHvBeXH2RavqpxLKjuAPQ43jd0mxz+3u+PA4ywVGSotO8yIDwRcC+PekeWQ1Ev/McrI5T88IefaLtY8a31UxurD/iw0xLEsCvY9bLO7LDrXh88dzk68PEJbxhDw2o7/N8dJ5nbM/7e8nXhNdCPpGaH8QjjqRyMxGHxorFIlakMV6jnSA1mTWMtDeKCsp1kLBbp/5rh7Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=clcKmXPROLSkcD51/rwf4d3hToWhRa4PwGvLY9MbA4c=;
- b=0fbwYJ6pNwuyIcBsiDNboYt+AFxIH4B+WMjARXF93ATGSqVjj1AEG3ckuotReZE0C8oOEoo15+mukAJqH2fs79JA4ZIv33+ecf3bDzvo0ZF+/RahVaDlMyoX0dyz9rnRuTnm3hh9D8bXp15pgj7zPROEzP91XJ0JKeofMn0EmCs=
-Received: from CY8PR12CA0036.namprd12.prod.outlook.com (2603:10b6:930:49::29)
- by FT1PR12MB222952.namprd12.prod.outlook.com (2603:10b6:170:d::15) with
+ bh=S5JCaW1vaJulFhB5w1GdWAL+REOMEsjLhN25zguucL0=;
+ b=mwbWvgWQwK7A8vcPRE2D7EQpcH5wD1vNj3sCEMJ3ESsxUi2/9TkSsR5FGnFbeENZ67yvEpobEvX1k+dg0e35dJkW14NZrDhtd6DCBvPgp84M33R31Zzdi2MRLnRPGotC/Rd2yR4Yjj05/rx/2Wps20oF21cLdnpvRpWUhPRnyRU=
+Received: from DM6PR02CA0122.namprd02.prod.outlook.com (2603:10b6:5:1b4::24)
+ by IA1PR12MB8495.namprd12.prod.outlook.com (2603:10b6:208:44d::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Thu, 19 Nov
- 2026 20:28:37 +0000
-Received: from CY5PEPF00000E81.namprd05.prod.outlook.com
- (2603:10b6:930:49:cafe::a0) by CY8PR12CA0036.outlook.office365.com
- (2603:10b6:930:49::29) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.14 via Frontend Transport; Thu,
- 19 Nov 2026 20:28:37 +0000
+ 2026 20:28:25 +0000
+Received: from DM3PEPF000265B9.namprd04.prod.outlook.com
+ (2603:10b6:5:1b4:cafe::a3) by DM6PR02CA0122.outlook.office365.com
+ (2603:10b6:5:1b4::24) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.13 via Frontend Transport; Thu,
+ 19 Nov 2026 20:28:25 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -80,13 +80,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- CY5PEPF00000E81.mail.protection.outlook.com (10.167.247.180) with Microsoft
+ DM3PEPF000265B9.mail.protection.outlook.com (10.167.23.246) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:28:36 +0000
+ 15.21.639.5 via Frontend Transport; Thu, 19 Nov 2026 20:28:25 +0000
 Received: from weiserver.amd.com (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Thu, 19 Nov
- 2026 14:28:35 -0600
+ 2026 14:28:24 -0600
 From: Wei Huang <wei.huang2@amd.com>
 To: <dmaengine@vger.kernel.org>
 CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
@@ -96,9 +96,9 @@ CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <shuah@kernel.org>,
 	<weixugc@google.com>, <bhelgaas@google.com>, <Shyam.Iyer@dell.com>,
 	<linux-kernel@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>
-Subject: [PATCH v1 24/44] dmaengine: sdxi: expose character device attributes
-Date: Thu, 19 Nov 2026 14:23:00 -0600
-Message-ID: <20261119202321.1734355-25-wei.huang2@amd.com>
+Subject: [PATCH v1 23/44] dmaengine: sdxi: implement typed vendor admin transport
+Date: Thu, 19 Nov 2026 14:22:59 -0600
+Message-ID: <20261119202321.1734355-24-wei.huang2@amd.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261119202321.1734355-1-wei.huang2@amd.com>
 References: <20261119202321.1734355-1-wei.huang2@amd.com>
@@ -117,249 +117,421 @@ X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY5PEPF00000E81:EE_|FT1PR12MB222952:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5f5dd2ca-7027-4f1d-bdf3-08df467bb0a6
+X-MS-TrafficTypeDiagnostic: DM3PEPF000265B9:EE_|IA1PR12MB8495:EE_
+X-MS-Office365-Filtering-Correlation-Id: d82c4c03-da16-41a3-28df-08df467ba9d6
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700016|23010399003|7416014|376014|6133799003|22082099003|261009223027099003|18002099003|11063799006|56012099006|261102123227099003|261026121527099003|261028144727099003|261022105027099003|261021121427099003|261026140227099003|261021123027099003|10067099003;
+	BCL:0;ARA:13230040|1800799024|36860700016|82310400026|7416014|376014|23010399003|22082099003|18002099003|261009223027099003|261022075727099003|261021121427099003|261021123027099003|261022105027099003|56012099006|261026140227099003|261102123227099003|261026121527099003|261028144727099003|11063799006|5023799004|10067099003|261102130727099003;
 X-Microsoft-Antispam-Message-Info:
-	73CcOu1fdUJ5qZH5GXAb3XPA8bpSNx56MWjsPcRUvOGEVyB75vkdnS+xWZWPjU2cd9UFLT9d4ksR/GE2WWfIz0eb5XXenKP6bU16sbj1Q0R/FuBUjq7Aq1CyaTA2MBQhbOsXL3GgTkxrnb6EZY027z26w23GcSDwrANBYPOvb06gKYrm3mft0Xz+B7CUa8dI0ZP/WDr3Bnog6uEGgdxM+Z5Xxx+rMTH3kRdAo5efgSV8lCy0mHeIiHv6r1nF/yqZq2/cNKJU95Bzir3vQWShSRKdxD9eX8tbPLEa5G7NiwRW8j/8UsLw3X2xdVsBDL++qBcUOPiAIDu7cNMafuYU7YsDMNSdMpNoKku1kHxlGSw/h3iA/52FbAj0kGYixmyqzbBdixUZCv+wBYRC2PoOZWIsW/hPx5Yoq2lpBUNu58Z0WBhxAw9YjghzUBDJfe6I/f+2A7tLpGYb37qjmLY80740+T3edCYnx10PDKaAnl/92TU5KVfAjA3xioZGUVNX6itC2d/r2HKmUENTHqEGgt72HxIAdSlSM15Abiyrd8EuVrD+mSlXkqHbZLdTz5m+E3pB+qBvQ3LzZsYXetNKhYzBwXYM6WEy1sqVAbG0lPPkqNlRaVG5kVBr+buD/C8WwcMAPB7i4EsFtOROUxfCbd3Ga+7nPeIq10jYbPeB1PHe24Qt7amz7xdHQv0P7nzdOedxygcHDESevu/dXmQWdg==
+	OKnIMCUOR7scu+ljhvW8Ye/riUpCAX+YLmw5cg3FzDqkkPplWGDJC8m6ThtNAwLt18L2YBuKmu3ASdgl4hlSHVcdEUVTAp+3DXhaCFnGrSo+w4RgimfDrZC7bcpKLfg+1zM3LSfUWjtHYD52gdkbc9x5q45nO0hNR3CMbJ/pEuMCqwxwOSjnc/z7/0DtO4SvDKSENLKi5ii2yvwhM5TyY4d0u3a7Q/zS1odCp1Q/r5zMxCu6PGF03S5HDfxNhrG5mI8hTr9BVYxmxQIxyw1wT0uiXNkQUjO1bqny/5G+W52tLU4nZ3hfEumOqOQ8AlZwf6D8/eDpsSG1nahLYQkUWFfVZCFmFuOp4RYFimCNEyFku1vReUpUrVXmOo53UdvTVDSUx/uCsVo0apLgz5v6exXztpP/AHCGXY+7dDkShBh7o5kltJPJQGnAS5BSXdq/QYwTFZUWS3trnvvXe874XIzN64Eqh7l3QtqrtKLJDYmmnhsMqeaBtfQ1knJRJrWAjz1fmGmVyr5EtrRju5U7j/Doe/jhwsZ3yZe2TEKrEYA5HACnvmmGiHxK/3QVNIGQb8acTqPzWlL03SwpSLES5uC8QAxNHjB41XjON7YeQYderGO5i6GyWFiXCAjRIRMP8GoGOfsj4vxkrW5LhkYEOn5zLwMYZb/bnK4t8GR/BCF02GtH+tbF4lwZG746QGBbMwtTNq201OIPIeflFpW4BA==
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700016)(23010399003)(7416014)(376014)(6133799003)(22082099003)(261009223027099003)(18002099003)(11063799006)(56012099006)(261102123227099003)(261026121527099003)(261028144727099003)(261022105027099003)(261021121427099003)(261026140227099003)(261021123027099003)(10067099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(82310400026)(7416014)(376014)(23010399003)(22082099003)(18002099003)(261009223027099003)(261022075727099003)(261021121427099003)(261021123027099003)(261022105027099003)(56012099006)(261026140227099003)(261102123227099003)(261026121527099003)(261028144727099003)(11063799006)(5023799004)(10067099003)(261102130727099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	ElJZeZbzYg3/gLnGYVYAImVb6wd0X4HhBTwkElWMdif10Ns776QEaF6gnFMtP+BQy6V1xj6d3FLQOKdy1JCZ4sM+n736o9+rH2MiXU7VuBFhCBxBPbbHUZK94Z0FkvYxSmATwrPwRmJB2yzur+iQvvHd9xVwMccG6LyQd9ANOORxCq0U1ShzjxEUDigWcCanHSzyzguP+iUwxey0/gwzDZADCLtFhkSJEI650Tdj4GUl1W1mUWHCdGD9smy7Akcy9HXSmKJf9Y5bxfQHZQ2nvHPlxoUuuW0VcBdbMP/1eoezEh8C4YKgL27Zh+orCvOiw5Y/B6/yAGogvywsdRHhlQm3vLKeYWjT7VOrj6AoA1tZf2doHpk5K4snKIeB3P56bEi1zmrB78nKAK88CCxJJFUzp7p2CMBbHskQWk4ENHZ/RLi1EVk8KIHzYVJQF/vl
+	0tDgSfyYKSbsMc9kDx9h0RJjuXK5BFetYDiQEhonmE8vCA8W1bJX1pmMEYmbIQ2JP2VV+MfLfT4uj5HnERCbKp6JxrJ1z1QmC6bN77Q34ykbCApsTrGhhUyjRR0rH5aaRql+64aShKDRcDd4EgTMhLmmkIqOjwpiQ7naIU+bO0fy2uzcy4fa3CdbPyUd2KZ5b++i1/1JYzhIS1uwnh4ImyRQIZ73WDWKLOYgw5QUhsnLgbzMxZdYzt9RucPO4kXGBAsapmmZF5kFQ51DmX6hGwB/RinMcyVZOUU911kZcgTEUJQ3Nda10/o0XNVhFPB6sPNNQ4JP2egcc+nEUsLp5kBxeJOafUkFtnBulN1uQt3HIydTMkGwqcTIDHY8yjg8KBauszxmgpNXO0N8J/gPpdRuMFdrh8jyaSkOCY4uKDy7obrppd0PQfaSRn7J8Yq7
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:28:36.7655
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 20:28:25.3447
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5f5dd2ca-7027-4f1d-bdf3-08df467bb0a6
+X-MS-Exchange-CrossTenant-Network-Message-Id: d82c4c03-da16-41a3-28df-08df467ba9d6
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CY5PEPF00000E81.namprd05.prod.outlook.com
+	DM3PEPF000265B9.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: FT1PR12MB222952
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8495
 
-Add read-only version, context count, function identity, and NUMA
-attributes as sysfs to each SDXI character device. Derive context
-accounting from live sessions so users can retrieve accurate
-information.
+SDXI allows vendors to define vendor-specific descriptors. Add a
+module-pinned GUID handler registry and a typed vendor ioctl that never
+accepts raw descriptors from userspace. It probes the vendor's opcode
+through SDXI discovery, delegates authorization to the registered
+handler, and keeps execution on the kernel-owned admin context.
 
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 ---
- drivers/dma/sdxi/Makefile  |  1 +
- drivers/dma/sdxi/context.c |  9 ++++-
- drivers/dma/sdxi/context.h |  1 +
- drivers/dma/sdxi/device.c  |  1 +
- drivers/dma/sdxi/ioctl.c   |  2 ++
- drivers/dma/sdxi/sdxi.h    |  2 ++
- drivers/dma/sdxi/sysfs.c   | 70 ++++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/sysfs.h   | 13 +++++++
- 8 files changed, 98 insertions(+), 1 deletion(-)
- create mode 100644 drivers/dma/sdxi/sysfs.c
- create mode 100644 drivers/dma/sdxi/sysfs.h
+ drivers/dma/sdxi/Makefile |   3 +-
+ drivers/dma/sdxi/ioctl.c  | 107 +++++++++++++++++++++++------
+ drivers/dma/sdxi/vendor.c | 138 ++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/vendor.h |  42 ++++++++++++
+ 4 files changed, 270 insertions(+), 20 deletions(-)
+ create mode 100644 drivers/dma/sdxi/vendor.c
+ create mode 100644 drivers/dma/sdxi/vendor.h
 
 diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-index 253398a45c74..019038cc91bc 100644
+index a9eaf01df4aa..253398a45c74 100644
 --- a/drivers/dma/sdxi/Makefile
 +++ b/drivers/dma/sdxi/Makefile
-@@ -13,6 +13,7 @@ sdxi-core-y := \
+@@ -12,7 +12,8 @@ sdxi-core-y := \
+ 	ioctl.o       \
  	keys.o        \
  	process.o     \
- 	ring.o        \
-+	sysfs.o       \
- 	vendor.o
+-	ring.o
++	ring.o        \
++	vendor.o
  
  obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
-diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-index cdaa0f654429..43ffe132cf2e 100644
---- a/drivers/dma/sdxi/context.c
-+++ b/drivers/dma/sdxi/context.c
-@@ -424,8 +424,11 @@ static int sdxi_publish_cxt(struct sdxi_cxt *cxt,
- 	};
- 
- 	err = configure_L1_entry(ent, &L1_cfg);
--	if (!err)
-+	if (!err) {
- 		cxt->sdxi->L1_users[l2_idx]++;
-+		cxt->sdxi->cxt_count++;
-+		cxt->counted = true;
-+	}
- 
- out_unlock:
- 	mutex_unlock(&cxt->sdxi->cxt_lock);
-@@ -459,6 +462,10 @@ static void sdxi_rescind_cxt(struct sdxi_cxt *cxt)
- 		goto out_unlock;
- 
- 	sdxi->L1_users[l2_idx]--;
-+	if (cxt->counted) {
-+		sdxi->cxt_count--;
-+		cxt->counted = false;
-+	}
- 
- out_unlock:
- 	mutex_unlock(&sdxi->cxt_lock);
-diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
-index c245c7ee7841..22a33291020f 100644
---- a/drivers/dma/sdxi/context.h
-+++ b/drivers/dma/sdxi/context.h
-@@ -65,6 +65,7 @@ struct sdxi_cxt {
- 	bool registered;
- 	bool published;
- 	bool update_pending;
-+	bool counted;
- 	bool started;
- 
- 	struct sdxi_cxt_ctl *cxt_ctl;
-diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
-index 7ebecae3c541..c6b690c39b05 100644
---- a/drivers/dma/sdxi/device.c
-+++ b/drivers/dma/sdxi/device.c
-@@ -387,6 +387,7 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
- 
- 	/* Read capabilities and features. */
- 	cap0 = sdxi_read64(sdxi, SDXI_MMIO_CAP0);
-+	sdxi->sfunc = FIELD_GET(SDXI_MMIO_CAP0_SFUNC, cap0);
- 	sdxi->db_stride = SZ_4K;
- 	sdxi->db_stride *= 1U << FIELD_GET(SDXI_MMIO_CAP0_DB_STRIDE, cap0);
- 	if (sdxi->db_stride > sdxi->db_size)
+ sdxi-pci-y := pci.o
 diff --git a/drivers/dma/sdxi/ioctl.c b/drivers/dma/sdxi/ioctl.c
-index feef322a005e..dbd6a916392d 100644
+index 80648bed0e87..feef322a005e 100644
 --- a/drivers/dma/sdxi/ioctl.c
 +++ b/drivers/dma/sdxi/ioctl.c
 @@ -36,6 +36,7 @@
  #include "mmio.h"
  #include "process.h"
  #include "sdxi.h"
-+#include "sysfs.h"
- #include "vendor.h"
++#include "vendor.h"
  
  #define SDXI_MAX_MINORS	256
-@@ -1295,6 +1296,7 @@ int sdxi_chardev_register(struct sdxi_dev *sdxi)
- 	sdxi->chardev.devt = devt;
- 	sdxi->chardev.class = sdxi_class;
- 	sdxi->chardev.parent = sdxi->dev;
-+	sdxi->chardev.groups = sdxi_dev_groups;
- 	dev_set_drvdata(&sdxi->chardev, sdxi);
- 	ret = dev_set_name(&sdxi->chardev, "sdxi%d", minor);
+ 
+@@ -75,12 +76,6 @@ static int sdxi_file_check_owner(const struct sdxi_process *process)
+ 	return 0;
+ }
+ 
+-static int sdxi_ioctl_unsupported(struct file *file, struct sdxi_file *sf,
+-				  void *data)
+-{
+-	return -EOPNOTSUPP;
+-}
+-
+ static int sdxi_ioctl_get_uapi_info(struct file *file, struct sdxi_file *sf,
+ 				    void *data)
+ {
+@@ -101,7 +96,8 @@ static int sdxi_ioctl_get_uapi_info(struct file *file, struct sdxi_file *sf,
+ 			SDXI_UAPI_CAP_CXT_CREATE |
+ 			SDXI_UAPI_CAP_CXT_EVENTFD |
+ 			SDXI_UAPI_CAP_AKEY_MGMT |
+-			SDXI_UAPI_CAP_ADMIN_DISC,
++			SDXI_UAPI_CAP_ADMIN_DISC |
++			SDXI_UAPI_CAP_ADMIN_VENDOR,
+ 		},
+ 	};
+ 
+@@ -721,6 +717,59 @@ static int sdxi_ioctl_admin_disc(struct file *file, struct sdxi_file *sf,
+ 	return ret;
+ }
+ 
++static bool
++sdxi_admin_vendor_reserved_zero(const struct sdxi_admin_vendor_args *args)
++{
++	return !args->flags && !args->rsvd0 && !args->rsvd1 &&
++	       sdxi_u32_array_zero(args->rsvd2, ARRAY_SIZE(args->rsvd2));
++}
++
++static unsigned int sdxi_admin_timeout(u32 timeout_ms)
++{
++	return clamp_val(timeout_ms ?: 5000U, 1U, 60000U);
++}
++
++static int sdxi_ioctl_admin_vendor(struct file *file, struct sdxi_file *sf,
++				   void *data)
++{
++	struct sdxi_admin_vendor_args *args = data;
++	const struct sdxi_vendor_handler *handler;
++	struct sdxi_dev *sdxi = sf->process->sdxi;
++	unsigned int timeout_ms;
++	u16 opcode_type;
++	int ret;
++
++	if (args->argsz < sizeof(*args) ||
++	    !sdxi_admin_vendor_reserved_zero(args))
++		return -EINVAL;
++
++	args->argsz = sizeof(*args);
++	args->cst_flags = 0;
++	timeout_ms = sdxi_admin_timeout(args->timeout_ms);
++
++	ret = sdxi_vendor_get(args->guid, &handler);
++	if (ret)
++		return ret;
++
++	ret = sdxi_vendor_find_opcode_type(sdxi, args->guid, timeout_ms,
++					   &opcode_type);
++	if (ret)
++		goto put_handler;
++
++	if (args->op == SDXI_ADMIN_VENDOR_PROBE) {
++		if (args->in_size || args->in_uptr ||
++		    args->out_size || args->out_uptr)
++			ret = -EINVAL;
++		goto put_handler;
++	}
++
++	ret = handler->ops->exec(sdxi, opcode_type, args, timeout_ms);
++
++put_handler:
++	sdxi_vendor_put(handler);
++	return ret;
++}
++
+ #define SDXI_IOCTL_DEF(_nr, _cmd, _func, _files, _access)	\
+ 	[_nr] = {						\
+ 		.cmd = (_cmd),					\
+@@ -759,25 +808,41 @@ static const struct sdxi_ioctl_desc sdxi_ioctls[] = {
+ 		       SDXI_IOCTL_F_CONTEXT, SDXI_IOCTL_A_CONTEXT_OWNER),
+ 	SDXI_IOCTL_DEF(0x0d, SDXI_ADMIN_DISC, sdxi_ioctl_admin_disc,
+ 		       SDXI_IOCTL_F_DEVICE, SDXI_IOCTL_A_PUBLIC_DEVICE),
+-	SDXI_IOCTL_DEF(0x0e, SDXI_ADMIN_VENDOR, sdxi_ioctl_unsupported,
++	SDXI_IOCTL_DEF(0x0e, SDXI_ADMIN_VENDOR, sdxi_ioctl_admin_vendor,
+ 		       SDXI_IOCTL_F_DEVICE, SDXI_IOCTL_A_VENDOR_HANDLER),
+ 	SDXI_IOCTL_DEF(0x0f, SDXI_QUIESCE_CXT, sdxi_ioctl_quiesce_cxt,
+ 		       SDXI_IOCTL_F_CONTEXT, SDXI_IOCTL_A_CONTEXT_OWNER),
+ };
+ 
+-static int sdxi_ioctl_permit(const struct sdxi_ioctl_desc *desc)
++static int sdxi_ioctl_pre_permit(const struct sdxi_ioctl_desc *desc)
+ {
+-	switch (desc->access) {
+-	case SDXI_IOCTL_A_PUBLIC_DEVICE:
+-	case SDXI_IOCTL_A_CONTEXT_OWNER:
+-		return 0;
+-	case SDXI_IOCTL_A_ADMIN_DEVICE:
++	if (desc->access == SDXI_IOCTL_A_ADMIN_DEVICE)
+ 		return capable(CAP_SYS_ADMIN) ? 0 : -EPERM;
+-	case SDXI_IOCTL_A_VENDOR_HANDLER:
+-		return -EOPNOTSUPP;
+-	}
+ 
+-	return -EINVAL;
++	return 0;
++}
++
++static int sdxi_ioctl_permit(const struct sdxi_ioctl_desc *desc,
++			     struct sdxi_file *sf, void *data)
++{
++	const struct sdxi_vendor_handler *handler;
++	struct sdxi_admin_vendor_args *args;
++	int ret;
++
++	if (desc->access != SDXI_IOCTL_A_VENDOR_HANDLER)
++		return 0;
++
++	args = data;
++	if (!args || args->argsz < sizeof(*args) ||
++	    !sdxi_admin_vendor_reserved_zero(args))
++		return -EINVAL;
++
++	ret = sdxi_vendor_get(args->guid, &handler);
++	if (ret)
++		return ret;
++	ret = handler->ops->authorize(sf->process->sdxi, args);
++	sdxi_vendor_put(handler);
++	return ret;
+ }
+ 
+ static bool sdxi_ioctl_has_trailing_payload(unsigned int cmd)
+@@ -900,7 +965,7 @@ static long sdxi_ioctl_live(struct file *file, unsigned int cmd,
+ 	if (!allowed)
+ 		return -ENOTTY;
+ 
+-	ret = sdxi_ioctl_permit(desc);
++	ret = sdxi_ioctl_pre_permit(desc);
  	if (ret)
-diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-index 55ca853d6d1c..062ba4be90ad 100644
---- a/drivers/dma/sdxi/sdxi.h
-+++ b/drivers/dma/sdxi/sdxi.h
-@@ -92,6 +92,7 @@ struct sdxi_dev {
- 	struct sdxi_version sdxi_version;
+ 		return ret;
  
- 	/* hardware capabilities (from cap0 & cap1) */
-+	u16 sfunc;
- 	u32 db_stride;			/* doorbell stride in bytes */
- 	u64 max_ring_entries;
- 	u16 max_cxtid;			/* Maximum context ID allowed. */
-@@ -129,6 +130,7 @@ struct sdxi_dev {
- 	bool admin_dead;
- 	struct xarray client_cxts; /* context id -> (struct sdxi_cxt *) */
- 	u32 mmap_gen;
-+	unsigned int cxt_count;
+@@ -959,6 +1024,10 @@ static long sdxi_ioctl_live(struct file *file, unsigned int cmd,
+ 		}
+ 	}
  
- 	bool has_mailbox;
++	ret = sdxi_ioctl_permit(desc, sf, data);
++	if (ret)
++		goto out;
++
+ 	ret = desc->func(file, sf, data);
  
-diff --git a/drivers/dma/sdxi/sysfs.c b/drivers/dma/sdxi/sysfs.c
+ 	if (ret == -ENOSPC && sdxi_key_list_cmd(desc->cmd))
+diff --git a/drivers/dma/sdxi/vendor.c b/drivers/dma/sdxi/vendor.c
 new file mode 100644
-index 000000000000..808712952f37
+index 000000000000..6fb5967b0052
 --- /dev/null
-+++ b/drivers/dma/sdxi/sysfs.c
-@@ -0,0 +1,70 @@
++++ b/drivers/dma/sdxi/vendor.c
+@@ -0,0 +1,138 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * SDXI character device attributes.
++ * SDXI vendor operation handler registry.
 + *
 + * Copyright Advanced Micro Devices, Inc.
 + */
 +
-+#include <linux/device.h>
-+#include <linux/sysfs.h>
++#include <linux/dma-mapping.h>
++#include <linux/module.h>
++#include <linux/mutex.h>
++#include <linux/string.h>
 +
++#include "admin.h"
 +#include "sdxi.h"
++#include "vendor.h"
 +
-+static ssize_t version_show(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
++static LIST_HEAD(sdxi_vendor_handlers);
++static DEFINE_MUTEX(sdxi_vendor_lock);
++
++int sdxi_vendor_register(struct sdxi_vendor_handler *handler)
 +{
-+	struct sdxi_dev *sdxi = dev_get_drvdata(dev);
++	struct sdxi_vendor_handler *iter;
++	int ret = 0;
 +
-+	return sysfs_emit(buf, "%u.%u\n", sdxi->sdxi_version.major,
-+			  sdxi->sdxi_version.minor);
++	if (!handler || !handler->name || !handler->guid || !handler->ops ||
++	    !handler->ops->authorize || !handler->ops->exec)
++		return -EINVAL;
++
++	if (!handler->entry.next)
++		INIT_LIST_HEAD(&handler->entry);
++
++	mutex_lock(&sdxi_vendor_lock);
++	if (!list_empty(&handler->entry)) {
++		ret = -EBUSY;
++		goto out_unlock;
++	}
++
++	list_for_each_entry(iter, &sdxi_vendor_handlers, entry) {
++		if (!memcmp(iter->guid, handler->guid, 16)) {
++			ret = -EEXIST;
++			goto out_unlock;
++		}
++	}
++
++	list_add_tail(&handler->entry, &sdxi_vendor_handlers);
++
++out_unlock:
++	mutex_unlock(&sdxi_vendor_lock);
++	return ret;
 +}
-+static DEVICE_ATTR_RO(version);
++EXPORT_SYMBOL_NS_GPL(sdxi_vendor_register, "SDXI");
 +
-+static ssize_t cxt_count_show(struct device *dev,
-+			      struct device_attribute *attr, char *buf)
++void sdxi_vendor_unregister(struct sdxi_vendor_handler *handler)
 +{
-+	struct sdxi_dev *sdxi = dev_get_drvdata(dev);
-+	unsigned int count;
++	if (!handler)
++		return;
++	if (!handler->entry.next)
++		INIT_LIST_HEAD(&handler->entry);
 +
-+	mutex_lock(&sdxi->cxt_lock);
-+	count = sdxi->cxt_count;
-+	mutex_unlock(&sdxi->cxt_lock);
-+
-+	return sysfs_emit(buf, "%u\n", count);
++	mutex_lock(&sdxi_vendor_lock);
++	if (!list_empty(&handler->entry))
++		list_del_init(&handler->entry);
++	mutex_unlock(&sdxi_vendor_lock);
 +}
-+static DEVICE_ATTR_RO(cxt_count);
++EXPORT_SYMBOL_NS_GPL(sdxi_vendor_unregister, "SDXI");
 +
-+static ssize_t sfunc_show(struct device *dev,
-+			  struct device_attribute *attr, char *buf)
++int sdxi_vendor_get(const u8 guid[16],
++		    const struct sdxi_vendor_handler **handler_out)
 +{
-+	struct sdxi_dev *sdxi = dev_get_drvdata(dev);
++	const struct sdxi_vendor_handler *handler;
++	int ret = -EOPNOTSUPP;
 +
-+	return sysfs_emit(buf, "%u\n", sdxi->sfunc);
++	if (!guid || !handler_out)
++		return -EINVAL;
++
++	mutex_lock(&sdxi_vendor_lock);
++	list_for_each_entry(handler, &sdxi_vendor_handlers, entry) {
++		if (memcmp(handler->guid, guid, 16))
++			continue;
++		if (!try_module_get(handler->owner))
++			break;
++
++		*handler_out = handler;
++		ret = 0;
++		break;
++	}
++	mutex_unlock(&sdxi_vendor_lock);
++
++	return ret;
 +}
-+static DEVICE_ATTR_RO(sfunc);
 +
-+static ssize_t numa_node_show(struct device *dev,
-+			      struct device_attribute *attr, char *buf)
++void sdxi_vendor_put(const struct sdxi_vendor_handler *handler)
 +{
-+	struct sdxi_dev *sdxi = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", dev_to_node(sdxi->dev));
++	if (handler)
++		module_put(handler->owner);
 +}
-+static DEVICE_ATTR_RO(numa_node);
 +
-+static struct attribute *sdxi_dev_attrs[] = {
-+	&dev_attr_version.attr,
-+	&dev_attr_cxt_count.attr,
-+	&dev_attr_sfunc.attr,
-+	&dev_attr_numa_node.attr,
-+	NULL,
-+};
++int sdxi_vendor_find_opcode_type(struct sdxi_dev *sdxi, const u8 guid[16],
++				 unsigned int timeout_ms, u16 *opcode_type)
++{
++	const u16 first = 1;
++	const u16 last = 2047;
++	const size_t record_size = 16;
++	const size_t size = (last - first + 1) * record_size;
++	dma_addr_t dma;
++	u8 *records;
++	u16 index;
++	int ret;
 +
-+static const struct attribute_group sdxi_dev_group = {
-+	.attrs = sdxi_dev_attrs,
-+};
++	if (!sdxi || !guid || !opcode_type)
++		return -EINVAL;
++	if (!sdxi_dev_compatible(sdxi, SDXI_VERSION_1_1))
++		return -EOPNOTSUPP;
 +
-+const struct attribute_group *sdxi_dev_groups[] = {
-+	&sdxi_dev_group,
-+	NULL,
-+};
-diff --git a/drivers/dma/sdxi/sysfs.h b/drivers/dma/sdxi/sysfs.h
++	records = dma_alloc_coherent(sdxi->dev, size, &dma, GFP_KERNEL);
++	if (!records)
++		return -ENOMEM;
++
++	ret = sdxi_adm_disc(sdxi, first, last, dma, timeout_ms, NULL);
++	if (ret)
++		goto free_records;
++
++	dma_rmb();
++	for (index = first; index <= last; index++) {
++		const u8 *record = records + (index - first) * record_size;
++
++		if (!memcmp(record, guid, record_size)) {
++			*opcode_type = index;
++			ret = 0;
++			goto free_records;
++		}
++	}
++	ret = -EOPNOTSUPP;
++
++free_records:
++	dma_free_coherent(sdxi->dev, size, records, dma);
++	return ret;
++}
+diff --git a/drivers/dma/sdxi/vendor.h b/drivers/dma/sdxi/vendor.h
 new file mode 100644
-index 000000000000..91e672bb7adc
+index 000000000000..2a4e4582b21b
 --- /dev/null
-+++ b/drivers/dma/sdxi/sysfs.h
-@@ -0,0 +1,13 @@
++++ b/drivers/dma/sdxi/vendor.h
+@@ -0,0 +1,42 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
-+ * SDXI sysfs declarations.
++ * SDXI vendor operation handler registry.
 + *
 + * Copyright Advanced Micro Devices, Inc.
 + */
 +
-+#ifndef DMA_SDXI_SYSFS_H
-+#define DMA_SDXI_SYSFS_H
++#ifndef DMA_SDXI_VENDOR_H
++#define DMA_SDXI_VENDOR_H
 +
-+extern const struct attribute_group *sdxi_dev_groups[];
++#include <linux/list.h>
++#include <linux/module.h>
++#include <linux/types.h>
 +
-+#endif /* DMA_SDXI_SYSFS_H */
++struct sdxi_admin_vendor_args;
++struct sdxi_dev;
++
++struct sdxi_vendor_handler_ops {
++	int (*authorize)(struct sdxi_dev *sdxi,
++			 const struct sdxi_admin_vendor_args *args);
++	int (*exec)(struct sdxi_dev *sdxi, u16 opcode_type,
++		    struct sdxi_admin_vendor_args *args,
++		    unsigned int timeout_ms);
++};
++
++struct sdxi_vendor_handler {
++	struct list_head entry;
++	const char *name;
++	const u8 *guid;
++	struct module *owner;
++	const struct sdxi_vendor_handler_ops *ops;
++};
++
++int sdxi_vendor_register(struct sdxi_vendor_handler *handler);
++void sdxi_vendor_unregister(struct sdxi_vendor_handler *handler);
++int sdxi_vendor_get(const u8 guid[16],
++		    const struct sdxi_vendor_handler **handler);
++void sdxi_vendor_put(const struct sdxi_vendor_handler *handler);
++int sdxi_vendor_find_opcode_type(struct sdxi_dev *sdxi, const u8 guid[16],
++				 unsigned int timeout_ms, u16 *opcode_type);
++
++#endif /* DMA_SDXI_VENDOR_H */
 -- 
 2.56.1
 
