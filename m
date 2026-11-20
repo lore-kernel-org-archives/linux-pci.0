@@ -1,13 +1,13 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.178.238
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795161663;
-	b=pBrFzRneQ9OX/NZm/Jq4IlPQQCLsFTlBFHkIjGup4LpWdmMdzXGopRfpaKLMTxMgLepj
-	 xZ/vbK3+v2mu4m0vqz/Ple7YZIycdRCv69/CNXr/Haz9QeB3JOy56Lg4UCXLC128Lv5mY
-	 n5PfyNVvcjGh1+Ox3Ah0D1gwtqRtX33brOUixLn1/ubWOfrcuKD23v4W4P6tkCk8q+OZl
-	 o4dVJEu1NlWtv9BOXnbJHr9GURjLiy4/XdIbfv4aLIMCcn7eg3iXamgiJro0cIuwvf4xv
-	 XTObe7NO18+jijftpjpMSjugFhqAkELem97LMOboOl3B7KNrP7IvdP14+U8g0Co9SOw==
+	t=1795161738;
+	b=XR4FFVKI2hD+vpauZlTzsoZGEd0WRjP4mZ6lsVPa0Lxu24+Br2G9ug21hkLg0pI5RzKY
+	 YOZYV2OO7HvuM2Qq1oSG5t/XIeTpJsGTqTlrFHb4ikGtkglPBjePc0O3+UiYIOzLagZs4
+	 8tsrLh85nY4IChY9KnxnwbBSZ6nw9X6r73lkO7oGGdfbexQ3rtaEFTU6mCiPWF1XGsKob
+	 3nAool5FAx0mlc8C7364gwUxP40wMpUYhdozqKCbQ0f8MK4lavOavXfwcvFzyOIuT/eNS
+	 VIElGE6iGi0lmfnxL/wPf0VRC84k7CYNco83zK1zO/rQRygu67L+uaIPxQA72bRi9TA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795161663;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795161738;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:From:
 	 To:Cc:Subject:Date:Message-ID:X-Mailer:Content-Transfer-Encoding:
 	 Content-Type:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -28,51 +28,51 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Details-Enc:
 	 X-Proofpoint-Spam-Info:X-Authority-Analysis:
 	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=yo3chyFVbhYzN1PoeZK3Aw3KLX9Q3rSA0mqbVuoEGWk=;
-	b=ROSmNS4o2SR0xGvDYvqqkn3YG0O1HPptF9U4cYs10QCbL3IR+K6cs+l0HNN0ELOEJOpj
-	 XtOm+ZuqxonbQID4vA1fh4jjzVvvXDgiQqyw3p40dTHHmiCy/3D4cLZlkht/ZmSE/e6t2
-	 H5I2jcRD51koRfNsUKPRdXjg7ZmeiujurMZGOE5qcL0mCS7mD0c8T81HJS+RUZywZw3LF
-	 Y4C0y9ihXSLoRv5YD2DQRz+m0pFchKK4OvB/+i6ACb76hOoUcsUqr0/IoccN63HtS2Amx
-	 h9LB+vkQV98bDNHdB71jJ/7QMPz1BUFoDi5fu2B1sLtvGtz6ndGNtqaa+Fi0G/M42eA==
+	bh=OiWdKUgaIIc8OXLK26APZiwDx1El3p9eGZKfS9GQAh8=;
+	b=CmbNqPW2nnAEsrMxS5D6nfaRIadT8k7lg4lhHK1/ea6IC/UJkL6G8OZ5SKdU7p4XDWW3
+	 Bl0coeaPU+E5MsncQDbk9lEIY9Dlz7fZIOMAjskOjFxHwAvYuWFTTJWNKbx49yFXobvYx
+	 1kqG9E2ZnTCf5je40+BPUplv6g61aO3KgUkf3Dqgnt9BXL/kn09MIN+Zv1/Cmtk7mgErA
+	 DY3DPagJyR2vZwoaL+0seGNGHsIrElbYN6tU3mXjdoLA/C/5fETZT8C8Wai9f2FnzKHgV
+	 8xIN78KVqfhPFEE0IFPkfahkRjyLYFxhEMfkYP0GYFfo7Hgzv2m4Kup4P+dssM+kIeA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=windriver.com;
 	spf=pass smtp.mailfrom=windriver.com;
-	dkim=pass header.d=windriver.com header.i=@windriver.com header.a=rsa-sha256 header.s=PPS06212021 header.b="h/oBgG6+";
+	dkim=pass header.d=windriver.com header.i=@windriver.com header.a=rsa-sha256 header.s=PPS06212021 header.b=RMUUFTJq;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=205.220.178.238
 Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE592606A325;
-	Fri, 20 Nov 2026 08:01:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE592606A325
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E7CC606A320;
+	Fri, 20 Nov 2026 08:02:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5E7CC606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.a=rsa-sha256 header.s=PPS06212021 header.b=h/oBgG6+
+	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.a=rsa-sha256 header.s=PPS06212021 header.b=RMUUFTJq
 Received: from pps.filterd (m0250812.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AK7gYO4684672;
-	Fri, 20 Nov 2026 08:00:52 GMT
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AK7fqHj683496;
+	Fri, 20 Nov 2026 08:01:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
 	 h=cc:content-transfer-encoding:content-type:date:from
-	:message-id:mime-version:subject:to; s=PPS06212021; bh=yo3chyFVb
-	hYzN1PoeZK3Aw3KLX9Q3rSA0mqbVuoEGWk=; b=h/oBgG6+e5eJqYKL4VlWSJaS4
-	j0zTWUZ2MSMEP1/RFzpwhTYG5RNgkf6InacmyYTnk1TduXrpg8sDpyKKuL3dEwOP
-	nf+apafEnR0KzluaYxHpt89XBYZskA1+TRQfQtCcvWkvoHeiLacxxpRm5vKz1Qw2
-	ljscVpr0SV6Yk54sseY6vmqHToQuvVuZhAdfv84Zh9oYgyv6xSTjppcr3rXnudpa
-	n4oT/YTLjubvdvYWlZUdjF8DxAmcPVq6eyoL2m8tU4G6uE1hsAsdkjjir1+lYzIk
-	w+rWkUe6AtmxMA66GxTe4Urrupi6PlME0HzRJdNiJ88i6DsGy2RTRMNaWizRA==
-Received: from mw6pr02cu001.outbound.protection.outlook.com (mail-westus2azon11022124.outbound.protection.outlook.com [52.101.48.124])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4j0yvh8c60-1
+	:message-id:mime-version:subject:to; s=PPS06212021; bh=OiWdKUgaI
+	Ic8OXLK26APZiwDx1El3p9eGZKfS9GQAh8=; b=RMUUFTJq88eS321MOnzJBycQp
+	np2UewGkj2rIcfggPxYo+INtUN0S1rzmUJqV0pD6W/ShdIMdvV3ejEmtx0wiO3xO
+	olaXuUzfb1TYJRqBnX7YjGaQztuM/RJt8BRnHlaP26zgxL01ScGH3QnRC/kmNem8
+	FGptPA4sPEVqGo7b0ZBYDgthbA0lQ2AHcVK9JNnshox8BM/dNeCvxgNSbj3P84iX
+	7XEOiBMf0nEAVZq/eaEMqbRjzLHaTZA2b2Z3TlkEp2JqDS/FOXjYb6PXGoTOJYI+
+	wvoqhrJn0DjybZAway7h8RBhnTVqczEJUNFqsVGxdJyWIi+AIeiRkrqC6UiuA==
+Received: from mw6pr02cu001.outbound.protection.outlook.com (mail-westus2azon11022105.outbound.protection.outlook.com [52.101.48.105])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4j0yvh8c80-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 20 Nov 2026 08:00:52 +0000 (GMT)
+	Fri, 20 Nov 2026 08:01:58 +0000 (GMT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=j6MGs51mKCZnHIiJ+np8xjU8YIEMjwpi+lfe2bmPrKD7Vf+B4O5W2Jln0+7fzLgzdQ3ENx6nEv5gsavoLYw3XdhMnY2oiBDpmOQLWeLeKx7f5yIBkFPoUNHm9iMbGafoZD2/+YKUOPURmu4hjohrj97t5/RC+s50kooAa02mXcPXMmiCKbBwDno45CdHa602wKK84FaL9+8wHCJMiqWb4Al5YYvY4YEiG3ANTfhEDUYbcktiBS4F/qeoJK/3i8O7MutNPGrhCFlUfBb9l5cRUHc4NV23+a+I0A+vOzJrndAQZWJDqkkUoQqTNj9XmpGJlaw4Y7GEDAcIzX8t28sMlA==
+ b=ctfhpd1Nic7NXx8DeRv82B+6XQAUMqiuMfm86R2g4luHt9/zlmR038fWebJrOPnstgisLPUOl51jXAV11lBdTROCjQ6UcQB+IHtP1sI8InobHCrTwtHZ+CBLaq29NXfIXiBLmm3E8jpSS2wgrH/N1VFGf8UmYyQrcfWPE9a9L5Kpyveyi1NIQfGRAYa1XrSysD+dl59JcIyYfq1k9JKsPjRzkCcGeWdH6jqcR6fkBMXV+mNlPId57cpT50OOY4QyaQ7VNqjrK68PTPx1sM0uiLm9Kih1oWSEi8vYZ7eTpwtxnoY+jrdsFFQ8xCh1AnlpR5jYdfaXkFJdbRB/sIqZ9A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yo3chyFVbhYzN1PoeZK3Aw3KLX9Q3rSA0mqbVuoEGWk=;
- b=vV6og+5ijuIYFgHmXMy0kv7CbwgIGBTSWg1s69p2R+GJ6b4tQlJ6KYhCS6HDClW3c4RTF+u/FtxiYKQIcZ5zuMxtUjxQUgGUPl9hndczlTaTUoC8X8eEHzZoSW+TGu8DpgyoMN92Jd6rHA9fnXTmKXXT7STitXgGJTwcgKABhk53EBd61NU5npIC2oxJ7aFM4/mOiH6istUGaB1PPyeTvg45r7KbYjXwBaSr3RQ0I92hljQ1yHE+VdjYA7BKly6k87XSrxkzKKl9BF0c9F0ydorHgD6Pu9JnHTrsRvNS1jobnsKngdNaZAeev8NGjjSkNJzEhYvUoNRUd2+g23Cklg==
+ bh=OiWdKUgaIIc8OXLK26APZiwDx1El3p9eGZKfS9GQAh8=;
+ b=dqXSLuytQ8jDsCOhGBc+RWHPVkXY7gXWLKLSczB8xGASVy1yDSdEV27TEXOJHKN83QImvoeo115qFnZF6FMKHYY1G4tm4NwPug4MuQ6u9WZjeR5x9BIFVexlDOHa4w0VsyZ6Mn3YMo0/tHQMQ54vcCdoHxaED6PCPoAKXy5DJ9i+HA0xjvvhQES1egbb867lgCeiHCeQHXKpK7pvtU0CB9VBdMR36YV0GBrENjTgXQXDiQPKTF7GiXmN6cuI2FLV279o08iXbrFt7RmnKoDyXj46nE9E2CMvpiKsqSge0cF33SBzaFzHpdcvtWgIBW1RbG2N+HovCRjlF5lQ13bmQQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=windriver.com; dmarc=pass action=none
  header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
@@ -82,25 +82,25 @@ Received: from SJ2PR11MB7546.namprd11.prod.outlook.com (2603:10b6:a03:4cc::8)
  by CO1PR11MB4898.namprd11.prod.outlook.com (2603:10b6:303:92::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Fri, 20 Nov
- 2026 08:00:48 +0000
+ 2026 08:01:56 +0000
 Received: from SJ2PR11MB7546.namprd11.prod.outlook.com
  ([fe80::ca9b:dcf:8881:bced]) by SJ2PR11MB7546.namprd11.prod.outlook.com
  ([fe80::ca9b:dcf:8881:bced%4]) with mapi id 15.21.0639.010; Fri, 20 Nov 2026
- 08:00:47 +0000
+ 08:01:56 +0000
 From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dan Williams <djbw@kernel.org>, Keith Busch <kbusch@kernel.org>,
-        Dave Jiang <dave.jiang@intel.com>, Alex Williamson <alex@shazbot.org>,
-        Ionut Nechita <ionut.nechita@windriver.com>, stable@vger.kernel.org
-Subject: [PATCH] PCI: Don't block config access while waiting for device locks in bus reset
-Date: Fri, 20 Nov 2026 10:00:31 +0200
-Message-ID: <20261120080031.56565-1-ionut.nechita@windriver.com>
+        =?UTF-8?q?Pierre=20Cr=C3=A9gut?= <pierre.cregut@orange.com>,
+        Alex Williamson <alex@shazbot.org>,
+        Ionut Nechita <ionut.nechita@windriver.com>
+Subject: [PATCH] PCI/IOV: Don't make sriov_numvfs reads wait while VFs are enabled
+Date: Fri, 20 Nov 2026 10:01:43 +0200
+Message-ID: <20261120080143.56701-1-ionut.nechita@windriver.com>
 X-Mailer: git-send-email 2.56.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: VE1PR03CA0039.eurprd03.prod.outlook.com
- (2603:10a6:802:a0::19) To SJ2PR11MB7546.namprd11.prod.outlook.com
+X-ClientProxiedBy: VE1PR03CA0053.eurprd03.prod.outlook.com
+ (2603:10a6:802:a0::36) To SJ2PR11MB7546.namprd11.prod.outlook.com
  (2603:10b6:a03:4cc::8)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -113,81 +113,80 @@ Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SJ2PR11MB7546:EE_|CO1PR11MB4898:EE_
-X-MS-Office365-Filtering-Correlation-Id: d44a697b-b264-4895-4e89-08df46dc62df
+X-MS-Office365-Filtering-Correlation-Id: d48f7282-fcf1-4cc0-7d13-08df46dc8bdd
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|10070799003|52116014|366016|1800799024|261022105027099003|10067099003|261022075727099003|11063799006|56012099006|261009223027099003|261021123027099003|261102123227099003|261021121427099003|261028144727099003|261026140227099003|261026121527099003|18002099003;
+	BCL:0;ARA:13230040|23010399003|376014|10070799003|52116014|366016|1800799024|261022105027099003|10067099003|11063799006|56012099006|261009221227099003|261009223027099003|261021123027099003|261102123227099003|261021121427099003|261028144727099003|261026140227099003|261026121527099003|18002099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	sS6IZ2gO797s3ffAW52dAXUoSTUlqIgu6wpxDEv+7ZCW5m3LxuIqQM1jZhuBPWP4qrWCGTgj0tqXDCFr5xWQnxSJC5kGUyGeRVA+zOqBfdHY+CM0y/pNzRk+ZAA/9KsNqx66zKhBnuE19jcOCN2kAnpXmITfq6sYJEUz5nrxe64LOien0+ZbVKNMAl1Ag6n5Ma6BQe8N8ejy6lbgYp+HUzDj0BfdFKDyVjy8R9WeEF8dii0/k8TvME5mk1tXLH52pEkegfqbaOphqn/fMivDVW7MpqQ8tFD04j8K+AI/oNr9FQVSZT95fiq1xHaVYoEYDwtzva0zdg/O3i7v27gNMfNv7Ne4mPxFlnC9UvYOKfPYjE8Tqk4qtqqXUt8LuIZ272QprbDx+2xSscj4RHFrez0y0x7uTV6UlD4fOEgey52MLhRFtgJg/W8RvNI8rIoAjclviPIKZrH0LVQ/HmGEVu7WoCsoQfI+b4u6Seunn5GJzOpC6zNNBoS7ZWF+GK+csZLsNHeC8LjVEl9dmjV21gZ2JkaibM/go18ENnVEJDtSy1Z8GOauSRqp0SSlnrZiJ9ktk5OYVFx0wRw/+Oox5FZ2XBtva3kIadk+pdz7oFgdMWFXW85GF42NygzQIYT9zLDXFxBcXDHZZ7mP9qnEpyam2cxLf7hw0JAOwNNM4MM=
+	U9KzBXaNzHY0Cg2E7JhQmBHbHHo3Rkt8lA5jZMQrvMUyXll+WUc8DDExWxjNrgmrBLZ+FFih9WGbitFUFcqzfSWIW0HqTcK0io+TdehxImA7EeNFLJxS9jfY6KYGM2qKRQUSTfSgag6iPctnF6iFoUwRW9DbT235BaIomXD+eC0pYwLVY8PyzVsF+zX97LfiDX8glzQOhoO5qnUBS+InzFzGBY6P1DE0GFW+GVr/Oxrek/tGciQwxCjtCQSY44GJKKSHOIJqVdZ4ayHi9I2sUs4Hor6V41kLgLB6kqGJA0BRtu1OA2W0fahvHfRRUrlpN/yxlmcxR6Zc8AFxXPVl48W8y3GS4JXz/l4qGrrcp6LiHS9qIAZkSAQFx1JRLNLbyWtl8AyrGxgClXKUua4mNdldZqPmJMTne8RLwhHEgxPxRktcAz8EsRRknl4dFYadal8/2p7fMrLjJfdRpS2ZXUF2HnpB4N2TTJ0aKeXnNNq1F5SSJ8jZLAy6aRp8ZnjP7q4bZcRj14iUjKy5hmNM2D0qKlWOr56boxo0AjpC6MbULEYcFi7miTuDBJWzgvErXo3+bMuWFhE/3YWPxKIA1xYoNbdd/V7ACE4TzUnyH+OQV4VH+tbYrpZjXvqadvirgb5cYQPwoZ6RrS5eYNsTZ4xqUdY3xZXjQB8z7Wfmy1Y=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(10070799003)(52116014)(366016)(1800799024)(261022105027099003)(10067099003)(261022075727099003)(11063799006)(56012099006)(261009223027099003)(261021123027099003)(261102123227099003)(261021121427099003)(261028144727099003)(261026140227099003)(261026121527099003)(18002099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(10070799003)(52116014)(366016)(1800799024)(261022105027099003)(10067099003)(11063799006)(56012099006)(261009221227099003)(261009223027099003)(261021123027099003)(261102123227099003)(261021121427099003)(261028144727099003)(261026140227099003)(261026121527099003)(18002099003)(6133799003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?piu8sJPJ/UvVe96bHcwpEfpolBfbuHo1h0JcfCSu3ha/5OWG8ENWJWkw4hSq?=
- =?us-ascii?Q?d2WhbTLeC/VQo9QFzlkF4aEMcXM6ll/lxttV3VkpA/gWBQXhjGg2YJqh7+9G?=
- =?us-ascii?Q?4BPu5wllsmkmk1ILBTcDrtbXpkjPZfe/zCUzXBRGkmecSfVdPuTCbRzZbnBN?=
- =?us-ascii?Q?D802k03mRJfHy3tmphj0yA2i8CjFpxUF4puvpdijU4RbUOrojC9+jMogvk+n?=
- =?us-ascii?Q?kaz2EM9qoowtaKUjNX8z1Ntu8ecX3ALC66HBjZ3IMJIb3uFQbm3poURGwD3a?=
- =?us-ascii?Q?qJOG8UEK4ViiC/eFJKp0T9M4TbbFdS1xgUNzVNbhrSfluM6KXzbUdXGip9Ud?=
- =?us-ascii?Q?P5KaRy4y+DvxtmxX0B/gT6J7Z9sfnrpsL/NMnxi0fYuqMNJTOCmAkqFyuGTn?=
- =?us-ascii?Q?qCLiEcKs67nxpCbE9TBUfANPo99dYUd7g+we+i1jhYZWb36BoxZZ2mWp1aI4?=
- =?us-ascii?Q?5w9z7wV1qty5TBuk6Ti1blZVAOoXg7fV8QJzfPm3sQL5XWP5kyY8ZXBYxO2j?=
- =?us-ascii?Q?G5pjZtWVHCVj4Zbg/Zsoe5X5hSOdQE6ZqI1GVVlZF7yjUrDNyFgUysGnV6yt?=
- =?us-ascii?Q?TqZu7ebXuOcX18ZpChlKE9gut/q44eeYG9YRrFmFR0QrIlOUSrCZxHKiwFl0?=
- =?us-ascii?Q?qkbuLpQ7790B91neiKLgT0A5p2K8iv5WSoB2ceqfFMXnInFXjd1hH/MQfQEr?=
- =?us-ascii?Q?SFf316yGoVCWij24/9LZvahUMBwJxRhAlPa4ew3tkU2ayk8GrfOjSY68+qMG?=
- =?us-ascii?Q?3rUmcZQD5pjJd2vbY4XTvJxRUGua1nAZ5Xl/kzsjNCQg8qeMd3FV1GDHb0NC?=
- =?us-ascii?Q?7TrvLAnthOLO1MNrQXh9+BMgFnd9SAVBGnsV8PODlWN5DhFfHDdC43FThxkC?=
- =?us-ascii?Q?ouvzKbtApz15UI28KAxwg/XtWt9Si3rMWoGQiVmQd8dit+fPOFn4+PvSyocJ?=
- =?us-ascii?Q?Na7NXb8olwKEU1+miVPEphmjsjoXOhqxlysimQ29tvcv0deBLMA8rg+LNDuz?=
- =?us-ascii?Q?xGUXrQra6TBCgwy3akKzlqeb5XkLE3y0sQMZ/I2ToHGM3KA1FSvFV4013JuN?=
- =?us-ascii?Q?ULzwGr+GFfv2CmCXgI3uT2urjkG2SD62r/B/DWFx/9uvlB/i+zRHtJ2mB/LA?=
- =?us-ascii?Q?d6GdKSW+l00GafRpNoUBogzfG8SbHqc71DgxW7zLsr99Jm/wb9nySTGudSDe?=
- =?us-ascii?Q?C8aHtZuVWglJmyVvBsQ/AJI73YO0LHoal+Fb7uB+FLWHMyxH4zR07ue1UvCp?=
- =?us-ascii?Q?n7xAhOx2sYOkXABO+iSN8ljj94GmnFu2dAgPofsaAaq2UrlWbLoNUtTKB1ej?=
- =?us-ascii?Q?Xz79sUHjTZIw1ojw2jaW+5j7LOIpR3Ms1Gq6UM9kcK7Wg8spxOHnFbdGJl8o?=
- =?us-ascii?Q?UMqZia/wKCN8uIAL5h/8TharoX1pysaoQ4htiaueuPlRvJNbKqpv6DpTY0XJ?=
- =?us-ascii?Q?OdDSPk07av6CjZJO3scetFqUP3nKHbHkSNxtA0eIXAiqwz8FoGSgHp1fIigR?=
- =?us-ascii?Q?OdJguqevfmTCnIeftWVj1zremTJN0ZfYXcytypsG4QDCc2xUosB1vWEOIaYk?=
- =?us-ascii?Q?jPIIhFj1QC6VDjb3ojMbCDZ+RYo43Qt46tVO8RSkYkj8tHvcKfotCvwdVIEK?=
- =?us-ascii?Q?h6oc9G1UoWLtN33kb9Tk53Tlr3fgjhCNrChkPnJ0oVHbH8SHvLgKvKmkG25I?=
- =?us-ascii?Q?WH6La9TjpeDxKtpkvJvmbgqzpFhqPBVARHV1q4q+CEa5Pf+fD0gnjL5u9yjT?=
- =?us-ascii?Q?j/0wj5M5/l4cGwSaW2JtNsU4/aQPjBFS2KBf5k4EA9oDd5IXn1rQoQVNLNOa?=
-X-MS-Exchange-AntiSpam-MessageData-1: h1SZVauuRpBnDKvxwSu3Qh1vN99k2s2rZIA=
+	=?us-ascii?Q?lgs7Nc0y62fXbBabU0FrKxmlUc60EsfmtYsu8kICALiM3DjSjkQNVdidlQvc?=
+ =?us-ascii?Q?iE8ktpnhSYADwHTcsgG02GAgYnlgqorZHQej8cye+UJmJfqJ/YNuWKC30xXA?=
+ =?us-ascii?Q?Psh9gdD+ysMtfXYOFDaQe/sY5WvehP7GSLMTBSy9jBa7A5feZRui/aNz5MDW?=
+ =?us-ascii?Q?Uy2WjsczsF2QC2z7l48RARrouE2hf2eDpJXbQXiF78wo7KgrXAwh2h0DRMFi?=
+ =?us-ascii?Q?Khzpfn2y0GHNgkn7MqJhfKp1q2fVXYEybJ/zLMtfmNJ/IuI7hlVs206UKC97?=
+ =?us-ascii?Q?tPd5fydRy2B/hphOinp8qXqCwg3rj400P/i/8PbXrjgMrgjimeRRNS23pJG6?=
+ =?us-ascii?Q?su3sPnTOcP6xloYVnxZCbYTcAJA4GvXxgyNuSEFqi4o5PGON5CzjSSoL1AU/?=
+ =?us-ascii?Q?GeQ1xMIvOmtH4IxDRjfQCklG9RgGgfXIdq5w3eh7pXokLEbh14dkm6caj9DL?=
+ =?us-ascii?Q?gXUMNncdCVHUIsR/Qmd8rmDSSONR0+6va+JVd8iiV6ii0rrHK3vj1x4zf3U8?=
+ =?us-ascii?Q?6sd/IQNkfu7IRiVSjc5zvxpEaEhdpEPnoHdHrvGLlxaaP/7Z/e36f3S9slDN?=
+ =?us-ascii?Q?+sFMfKFqWvHhGNlAG4lCrvnMEeWpHYTVY8B7UgocaL089PQEbLe1Opwzsm8Z?=
+ =?us-ascii?Q?c0c7xYktKGyRPv9L7CcdB8ppuO4agJTIrkiq1T3ZEPO/FMXKoY7BcPAmG4uI?=
+ =?us-ascii?Q?TxFMJblmg0i6iuyYuz9AKsAke35J+bkNZGdvoeCvG9J2vtGln3Hw2LNRZsP8?=
+ =?us-ascii?Q?Ytw42LRnmmzLopI+4rfa/AQ76+DEsRAAOUOern02YL8QzU3t8LBnMPya/q2K?=
+ =?us-ascii?Q?xeEJpgpOkjWpztcH1U9ScQhbMYQdiCZZtBJKXF1MXgLwGBvR6wQ36xpCwF63?=
+ =?us-ascii?Q?lPUzuQDgMZiA8gIvi8nap8UHWJyY68RGzV6IGzChgT6QA82aoN2s8DKTzpZK?=
+ =?us-ascii?Q?Y7Pkw1Qo5kwgH6Y6oCLNMOYZvo/gKtXigQf4ONgoOzU0rGG2PeBIhi+RtKEJ?=
+ =?us-ascii?Q?xRVbm0AsB/pvHBoQ2E9Xy6vPhyW6maWRVUfjsqt6DfvrURGKSIk/sRWjSk4u?=
+ =?us-ascii?Q?qEwszFUV7TJQsWgAJLWlWJWFEYWrN0CUt3t4/UFZzSVxlgb2pHniNrqehXKb?=
+ =?us-ascii?Q?yFBJGIxaV+Zc2sFF2hq+94etk2YsPD+yZaLtod6q6Vo59nioVuCrgjWid5Tm?=
+ =?us-ascii?Q?RCaQrdXWpVf66GHTtuYSCW3yRn97ZSfUkofmcAHhjk5d3FJHUmaN4J8+3RSr?=
+ =?us-ascii?Q?JBkciv02kwo0ARky0YZkbUayT98fvC1jyk8Yy/qEHYnqD2782e127phLJbPq?=
+ =?us-ascii?Q?hXYypVMQel66/a/Qh05+M057uVeb2mZOJ5mYb/l21qiCWqIjLn4djyAnS54x?=
+ =?us-ascii?Q?COoTMXCFj5l+5rKj0vdvwChDEKfXjRuLBEXiXMUTwHIywVoMIOnl8XujT5iS?=
+ =?us-ascii?Q?lrWoER5sJxOcOzrsfRhURgYkZU0YZ2bUSxy3qeXevudZt5gynbAemzeBj7YZ?=
+ =?us-ascii?Q?i3nJBtckLlDVNhaWdNJa88qB4EaLZezAiJyvLZVHYe2oGAAw0eShtahgyEd3?=
+ =?us-ascii?Q?CSr/obuJR3y7qkxIhD6rglPcxmsoQddpRd4KzXfs7er6mfXn6XlBB0VG1SKv?=
+ =?us-ascii?Q?nrP1+TqHw1euOWOA9TA+J04b6ZdZ47jO8ymGZCuBbx0v69Nwcr+L02y83Pfh?=
+ =?us-ascii?Q?BJe8Wj+tRblgxPGqQTnJT/nZ1vg87qsHsrD/QpvYu9euuQnWN7yKpjCFj9yu?=
+ =?us-ascii?Q?eX63dLlKhqaB4kJfXCND0TBjLPum5vTTk4MZLiZq818FcVq+yztYe4epsUks?=
+X-MS-Exchange-AntiSpam-MessageData-1: T15//XNtb5mW4hdr5DlEnQgmlrsS0vLmsLk=
 X-Exchange-RoutingPolicyChecked:
-	KlcJ/TRK4Fef+rxbSgXZWOz4ONSOnJZ6AcHQV1877+WZCY59Wk+6BWh1Y11ezY4c+fMaVwhKoB7pSrINqU/lYCLDRZcPgFnp6VdUVrfgsb/lsvojtHuWWqBiIOZBpYH0x+yJuMHutqzIr2r/7ns9E5/Z1tJMVlGs0bJfq9qQC1iAH7y9oIlRBoNIzUDnFsNg0aaYKRDiwPx6ge1D6OdJsNeBgfjZoJRAtKsoZvPA7kf2T2tFI4jwZkbqJz9GrOsf53MBHCH8GG6dDTehfcLzcJkVwjV59hUeB7YYGufwdZOOUhP8fieeaMl5LhutMlWzPL6hoo6JNOydvooU5nXX8g==
+	MzWJ2+C5v2WhS7XVZuNkqkk5Yl5Ot5f2nuU8cQIC0kV5D7hz3jajlvBobVQCaLU6u2AH+J+t3qrKPKYcejAIPUzcYBcq/1JG8dQa3uG14R5XRMOw5Q1Aiu3vrGkSfCBIsvg+5dU2e5M8mRDTjYM921QnX+Yj2K91Q8OaQUfaVI1bSq5nZRSMvguaNafOWasm/frIc4Baedo/lcKLZdw5OW5HRGcQE1s133BWHymuKHpgK00a2vUPH4RwnRwwexeXVM2uMfAo29WEIpFH6HIV4gXYuUK8kDHLoOP80qfjjxsS1prap3oUd+dt6MNu0HNhEDyeBgPdsy2iOsbBLXXwXA==
 X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d44a697b-b264-4895-4e89-08df46dc62df
+X-MS-Exchange-CrossTenant-Network-Message-Id: d48f7282-fcf1-4cc0-7d13-08df46dc8bdd
 X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB7546.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Nov 2026 08:00:47.7679
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Nov 2026 08:01:56.6247
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: l1AOm7b0ZPoiS2PeRGRs/r2LyndYEXBS2995nOA6cXbNuhyH58p2VUHZ0OfctnA94wJ0aVr2pYODK9Gj3Lz2uwbCfffNHYp2oSZI2biWvoI=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5B4Gk8rVsVu64LOAXub4S37LD0d35AGydentzffAILJqPzYOv32sCsWLEUew171puWl+QnZZHnJ85JVZYk7PJAtEs8BAA1cTMZ7dIxRFyLM=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR11MB4898
-X-Proofpoint-GUID: YYVX7pan449rA_aItFq5T_TtxF5TWlzZ
-X-Proofpoint-ORIG-GUID: YYVX7pan449rA_aItFq5T_TtxF5TWlzZ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTIwMDAzMSBTYWx0ZWRfX5oTsPgiuZDJF
- /pTKFpfaEV1CwY+tWAkW5Gj/UkmDJiadhUIGyTl0GyJ3k2tLY9P3LbUt6kaMkpr445ZyseKDkjE
- CquoZLzPd/kdd73X1p6WiMty+JZLwwvVX0CQO316Nq29Tlid5WSfzqzpj2XQKm2+rHMUbygEt3F
- 1Yltby87MDXlOaZwlNZKBvUXLd8p+zH95ZmW2JGpPMnrel9l8gI5EgM/rRyq4DiY5fRyyteWuFA
- F08GL2Uuzs10EpLl3o/4iwSlGj8fUOrtfHkrKZ2Ivm6hgMwST+PyxivhPy+Otd0PXsOR66NtHDD
- m9cC7EopxPurE4bo3SegYi1mcukWLVq0bqWAnUFuekbdiFbReRysq1sogV28KvZNS23468jKN9D
- Pf8z/rwLAqW70wtlrZ+Oe1tyVV0lPAp2zbZn/tZUz0xo7mU33eTmzznqnWjD5hfBx1RTjNkK240
- i+G8WKAZ37RM1RAXU2g==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTIwMDAzMSBTYWx0ZWRfX6mVDe0qGFx1Z
- pM1dayxtyQPJULNg8J10z9u0qhEFnBda4rw3Wcp4eNigvP3PTypErl93LXd9F79HqzektK5B/1A
- xEu1eXYm8Qdwb4xiiuq6VEY1TCSC2oUL0vqns9In5mRCuzuNxLmU
-X-Authority-Analysis: v=2.4 cv=GNCdgeNK c=1 sm=1 tr=0 ts=6afffe34 cx=c_pps
- a=XxbkB/xl5Oo2uV1ivtvLFQ==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
+X-Proofpoint-GUID: KgBJGMpJh--zL4WLS5AMPLklrah_ckZr
+X-Proofpoint-ORIG-GUID: KgBJGMpJh--zL4WLS5AMPLklrah_ckZr
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTIwMDAzMSBTYWx0ZWRfXwaRtgQJYjbbD
+ wzEY0cdXB/36kZ4xnvVNJypCDh+ccz/mxrlDev1u3qswg3GTSO+AhPMxa0uJ7PosdUNvD+e97a7
+ UGbrD7Ya2pLVm8nADfUplg7BNGt+ObO6wDQF15wMSkZoaHTk+gTrRI5U9Pa8otYetNgdyhp5UM/
+ oxC7gzo9vixCVjVwIFX5CmPwEkSO2mrj3HUvTtPcpWr01+vwkwYeBoIXtMUiJq9uMaTa0gjLtgG
+ 7VmC0YLiwGjyUwKhpL71o5ebvdyPT3uEQySMGSp5AJ49SPABlgDzoPO4mJVe+Ipdz8H9eJ+iK+N
+ pOtvKmsPjLX76E6SqehX4xOMaXkhlULly+u8Bx1e4ch0Z+FS2Ws4EtRmk52W8Fz6tVdqtI3lx6b
+ +IBJLv4PLqYmpYBjsninbf/gbvyLJOxql9zi4ndtj2iaecdBo9N/005+33lkBDxEgMtlPMt/q6n
+ udF2IX5Gib6lfkbnGIA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTIwMDAzMSBTYWx0ZWRfX9ZmFVn0bDCTH
+ kN2Bouogj4N/kvK+Bco34yvWvwEGUx1q96YnSKzJEmSwB5yxr/z1i+CLGf06lhCpMkunzGdQFiV
+ F4j7rb/AWX3i5ZHwENaTWE1qDpXAMfcNmoL3DPxM5HogUVhtdykB
+X-Authority-Analysis: v=2.4 cv=GNCdgeNK c=1 sm=1 tr=0 ts=6afffe76 cx=c_pps
+ a=mtSqpVOEitwwaRRTiGNoZQ==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
  a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
  a=xqWC_Br6kY4A:10 a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22
  a=bi6dqmuHe4P4UrxVR6um:22 a=fTW__CHxibyLmBMfj2wP:22 a=t7CeM3EgAAAA:8
- a=VwQbUJbxAAAA:8 a=3cG76KC3p2bVIlBHU9wA:9 a=O8hF6Hzn-FEA:10
- a=FdTzh2GWekK77mhwV6Dw:22
+ a=nTNqVFG7ghiT4CK2tzEA:9 a=FdTzh2GWekK77mhwV6Dw:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-11-20_03,2026-11-19_01,2025-10-01_01
@@ -200,110 +199,105 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
 
 From: Ionut Nechita <ionut.nechita@windriver.com>
 
-__pci_bus_lock(), used by bus and slot resets, locks the bridge and every
-device below it with pci_dev_lock(), one device after the other.  Each
-pci_dev_lock() takes the device lock and then blocks config access to the
-device.  If another task holds the device lock of a device further down
-the list, the reset sleeps with config access already blocked to the
-bridge and to every device locked before it, and every user config read
-of those devices sleeps in pci_wait_cfg() for as long.
+Since commit 35ff867b7657 ("PCI/IOV: Serialize sysfs sriov_numvfs
+reads vs writes"), sriov_numvfs_show() takes the device lock so that a
+read does not return a stale num_VFs while sriov_numvfs_store() is
+enabling VFs and they are becoming visible. The store holds the device
+lock for the whole SR-IOV change, and disabling SR-IOV can hold it for
+a very long time: with vfio-pci, sriov_disable() waits for the VF
+driver unbind, which waits for the userspace driver to release the VF.
 
-This is the same problem as the one fixed for pci_reset_function(): a
-driver unbind of a function held open by a vfio user waits in
-vfio_unregister_group_dev() with the device lock held until the user
-releases the device.  A bus or slot reset that reaches that device during
-error recovery (pci_bus_error_reset()) keeps config access to the bridge
-blocked meanwhile, and lspci hangs in D state.
+  sriov_numvfs_store                       sriov_numvfs_show
+    device_lock(PF)                          device_lock(PF)  <-- waits
+    vfio_pci_core_sriov_configure
+      sriov_disable
+        pci_iov_remove_virtfn
+          device_release_driver(VF)
+            vfio_unregister_group_dev()      <-- waits for the vfio user
 
-Take all device locks first, from the top of the tree down as before, and
-block config access to the bridge and the devices only once all of them
-are held.  The order in which the device locks are taken is unchanged.
+Until the user releases the VF, every read of sriov_numvfs on the PF
+sleeps in D state. Inventory tools and agents that read sriov_numvfs
+for all PCI devices hang with it. This was hit with an Intel FEC
+accelerator on vfio-pci, where the SR-IOV FEC operator reconfigures the
+PF while a DPDK application holds one of its VFs.
 
-The trylock variant does not sleep on a device lock, and the unlock path
-releases each device's config access and device lock together, as
-before, so neither is changed.
+num_VFs is only set once the VFs have been added, and only cleared
+once they have all been removed. A non-zero num_VFs therefore never
+reports fewer VFs than exist, so it can be returned without the lock.
+Only wait for the device lock when it is contended and num_VFs is 0,
+which is the case the existing serialization is for: an enable in
+progress. Use READ_ONCE()/WRITE_ONCE() for the lockless access.
 
-Fixes: a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
-Cc: stable@vger.kernel.org
+While SR-IOV is being disabled, a reader now gets the old num_VFs
+until sriov_disable() clears it, instead of waiting for 0. That is the
+value it would have read just before the write started, and it is
+still an upper bound of the VFs that exist.
+
+The remaining wait, for an enable in progress or another holder of the
+device lock while num_VFs is 0, can still be long. Make it
+interruptible, so that a reader can at least be killed.
+
+Fixes: 35ff867b7657 ("PCI/IOV: Serialize sysfs sriov_numvfs reads vs writes")
 Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
 ---
- drivers/pci/pci.c | 47 +++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 41 insertions(+), 6 deletions(-)
+ drivers/pci/iov.c | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d35741eb3..ffeeef045 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5432,28 +5432,63 @@ static bool pci_bus_resettable(struct pci_bus *bus)
- 	return true;
- }
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 9185934a9..20d0d03e5 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -420,10 +420,28 @@ static ssize_t sriov_numvfs_show(struct device *dev,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	u16 num_vfs;
  
--static void pci_bus_lock(struct pci_bus *bus);
- static void pci_bus_unlock(struct pci_bus *bus);
- static int pci_bus_trylock(struct pci_bus *bus);
- 
--/* Lock devices from the top of the tree down */
--static void __pci_bus_lock(struct pci_bus *bus, struct pci_slot *slot)
-+/* Take the device locks from the top of the tree down */
-+static void __pci_bus_device_lock(struct pci_bus *bus, struct pci_slot *slot)
-+{
-+	struct pci_dev *dev, *bridge = bus->self;
-+
-+	if (bridge)
-+		device_lock(&bridge->dev);
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (slot && (!dev->slot || dev->slot != slot))
-+			continue;
-+		if (dev->subordinate)
-+			__pci_bus_device_lock(dev->subordinate, NULL);
-+		else
-+			device_lock(&dev->dev);
+-	/* Serialize vs sriov_numvfs_store() so readers see valid num_VFs */
+-	device_lock(&pdev->dev);
+-	num_vfs = pdev->sriov->num_VFs;
+-	device_unlock(&pdev->dev);
++	/*
++	 * Serialize vs sriov_numvfs_store() so readers see valid num_VFs
++	 * while VFs are being enabled.  num_VFs is only set once the VFs
++	 * have been added, and only cleared once they have all been
++	 * removed, so a non-zero value never reports fewer VFs than exist
++	 * and can be returned without waiting.  Disabling SR-IOV can hold
++	 * the device lock for a long time, e.g. while a VF driver unbind
++	 * waits for a vfio user to release the VF, and readers should not
++	 * sleep behind that.
++	 */
++	if (device_trylock(&pdev->dev)) {
++		num_vfs = pdev->sriov->num_VFs;
++		device_unlock(&pdev->dev);
++	} else {
++		num_vfs = READ_ONCE(pdev->sriov->num_VFs);
++		if (!num_vfs) {
++			if (device_lock_interruptible(&pdev->dev))
++				return -EINTR;
++			num_vfs = pdev->sriov->num_VFs;
++			device_unlock(&pdev->dev);
++		}
 +	}
-+}
-+
-+/* Block config access from the top of the tree down */
-+static void __pci_bus_cfg_access_lock(struct pci_bus *bus,
-+				      struct pci_slot *slot)
- {
- 	struct pci_dev *dev, *bridge = bus->self;
  
- 	if (bridge)
--		pci_dev_lock(bridge);
-+		pci_cfg_access_lock(bridge);
+ 	return sysfs_emit(buf, "%u\n", num_vfs);
+ }
+@@ -716,7 +734,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		goto err_pcibios;
  
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (slot && (!dev->slot || dev->slot != slot))
- 			continue;
- 		if (dev->subordinate)
--			pci_bus_lock(dev->subordinate);
-+			__pci_bus_cfg_access_lock(dev->subordinate, NULL);
- 		else
--			pci_dev_lock(dev);
-+			pci_cfg_access_lock(dev);
- 	}
+ 	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
+-	iov->num_VFs = nr_virtfn;
++	WRITE_ONCE(iov->num_VFs, nr_virtfn);
+ 
+ 	return 0;
+ 
+@@ -764,7 +782,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 	if (iov->link != dev->devfn)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+ 
+-	iov->num_VFs = 0;
++	WRITE_ONCE(iov->num_VFs, 0);
+ 	pci_iov_set_numvfs(dev, 0);
  }
  
-+/*
-+ * Lock devices from the top of the tree down.
-+ *
-+ * Take all device locks before blocking config access to any device.
-+ * device_lock() can sleep for as long as another task holds it, e.g. a
-+ * driver unbind waiting for a vfio user to release the device.  If config
-+ * access to the bridge and the devices locked so far were already blocked
-+ * at that point, every config read of them (lspci, sysfs "config") would
-+ * sleep in pci_wait_cfg() for the same time.  The order in which the
-+ * device locks are taken is unchanged.
-+ */
-+static void __pci_bus_lock(struct pci_bus *bus, struct pci_slot *slot)
-+{
-+	__pci_bus_device_lock(bus, slot);
-+	__pci_bus_cfg_access_lock(bus, slot);
-+}
-+
- /* Unlock devices from the bottom of the tree up */
- static void __pci_bus_unlock(struct pci_bus *bus, struct pci_slot *slot)
- {
 -- 
 2.56.0
 
