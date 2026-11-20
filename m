@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.197
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.200
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795134196;
-	b=czJz4VMscqNhc8LYpzLYSGYwEcI5X7Egtk05eg+X5iA2QbSHn8tptIORT0ZgL8lyuBrZ
-	 6AMa+ZlJt3GcprOiyWrCFcIKPcST71AU7cIda6qOpO5ux90kv6/3cxaCawqdotZNRf7wh
-	 DNWl+piY5BqLT1H/GtqxplyzJ+S1CN+/IvvaNVuXEht/h9jALhoaFXaIs1C14l9YQGBuM
-	 d3kH+geDFgAv8TEDbWe6JwZt3+Z82QRLAKue1EhQUhfVhJjAcsIrdfYn/1iFXiC475mSw
-	 WIYGkkOG+O9hXmNHbTnPakYpZBizCNMRG0tbhU0brsru4kmWLdFOjr32GSuL9O3H52g==
+	t=1795134198;
+	b=eSJNOdHMuN43wuTHOfe4sAk9Ahv4dD74UTSZMV9akMRtYkVFJZqXDn6/ZKTz29QNCc3u
+	 MF1ZizfZoPdGxdSM+7HPkoPjFqP8EuVLnU0LXwZEnnHqUDoy4Js8OkAdCbDM9+pPjZIXN
+	 FmGR6n/9lmOwUY+5R+ll9qIZrbaWo/z6gUm8eP+hKhftg5kKhzycDvYXWv6gAjgOLxzt8
+	 ffhI5ZHuH66ZivZSiwYrGp0RVTAMAXMi3Jzo/dPFJrQqMLXTzsZUS829ic48THEmHFihh
+	 Z2waU9lcqGHq4gcYN0uVxRIV1Y8QwlySaetQcXfONuolUnjOgJkAULRPJBnu8iNQC5Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795134196;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795134198;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=bhkF1tou9oRGyu4WdSTLg48eRchEDGSlV44uyD0mKCg=;
-	b=phmxPO24G8nP/qtrvK7kWLL3W1Zm9BTt/58YaUd9jL4C3WIgkztsrmywEE2X9phPoaVS
-	 z21LcART23uOHiR22qasNcA9f+1FLGXWUX4Q+6Uoefw8wTxFXJZhmWmCVspvaPJambXfV
-	 7v42nNPD/FmClBXqhfn872x2uEePgBWRbVEwQZc7RFfgBYOM5pQF9ERDruQ/tXyr0aC/4
-	 jpW/UGXvT8dAFirHLBHiyviPZ20G82Omxcn89pokqbwAJ6F0gDY2q2KdZSTGv1mi0QGlP
-	 XGunXipp2YcgEsUEmPyHI5GjwY8CllNnMasSlSNfL6iauUHck8Rydh12KfX1Ec/44cg==
+	bh=RhGQm/UF9vMhWbFcBfDkOgWYLiWfHuOG+Gc7mXjwfx8=;
+	b=GwQcEq1IzRw0tIo0YGzWdqKQF+oAQAGVSsSe84SreqKmljWZVJcb1kD3alhEf8kJ2/Tn
+	 VYIlc3pnScppnKvmp6kMPirG8GeqbAm8BZWjWYgYX41o5Rfye8u3eNitvh+SbwtpXhzQ7
+	 REddoSdDPbzAWye9h6V3q7lWNaTp6c4u0LOK92xXNKbglQjfOnDLBcKIZ1h4k/DSdPfGJ
+	 Dw4TDcwoq7p350jcdVK7j2GOlAaqG74SZe8BAs+jPbsCg0cJ6tmrtmfoxN4fDMB0XP4s9
+	 j1YoXOjpjJOinYSUqAh9mQVzkQ6WCm7HoI9zIHCb3lXrWfDtS4GmF4PSK4Hy2cDGAVw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--digonzal.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=U98y02JU;
-	arc=none smtp.remote-ip=74.125.82.197
-Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=DbtLXRIu;
+	arc=none smtp.remote-ip=74.125.82.200
+Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55541606A336
-	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 00:23:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 55541606A336
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E299B60A260C
+	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 00:23:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E299B60A260C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--digonzal.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=U98y02JU
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-383435e46f9so210321eec.0
-        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 16:23:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=DbtLXRIu
+Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-341eff9e381so423525eec.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Nov 2026 16:23:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795134195; x=1795738995; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1795134197; x=1795738997; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=bhkF1tou9oRGyu4WdSTLg48eRchEDGSlV44uyD0mKCg=;
-        b=U98y02JUPzWfEyaWiXEg+9KMnDnQIhUYkU05VKm87gzy4ra1hl8nPuCAVlnEPkmPWN
-         X22nPXiuxPQHPtfeQSRRbAlJuA3UJkpRjQxINFaRod6JtANgREtszj6iXV6zBo3QK4yY
-         evWhdLPFTz5WIpa2QGBYgnaUau0D6vHY3VNWZZ9xH2439+qz9S1RbLL1fcfks1yCYJ7E
-         Z/SbvkWPXQ9I/mRtyDPh81TAqKx7FgusO0pzFrDud+WtBOx580PT4SqSapvXoXtGtxAK
-         EwccjxX5+8jUUU09jxnovL/+mhUrPEzlDvHCEoZAejbeC29KqfaMNNeuwUFORuoEWvrm
-         FJzg==
+        bh=RhGQm/UF9vMhWbFcBfDkOgWYLiWfHuOG+Gc7mXjwfx8=;
+        b=DbtLXRIu3Ph7iF1hmZe9jA96DPyHZoPR+YhpvVw3xa+eD/ELZEQXa6OlMROdfLVYAl
+         958lXS/RAoR2dvUudKiJXL9rZC6dPK9LJjkz1bWNepr2Zn+92eGvhoyxP5Zzwno+WwTF
+         TYw1OHFqKxCGFv8ceDX805r/xQO/S1LKxQW9yDM4z9dr+gXW/ySabtQf8tyMc6IK+kLG
+         jsqh+CY5tSPIGoAgA+XFkqXIIgmUlQtiddsiInw/0OQaKLnR2ewXQF1rjI3gODM8QZPg
+         gbXIho5pfiLxbt8HglRkksHMt8vi0KaN1Eiift41OEZndaLm2VtS7Vq+kYe1DG6pRSjZ
+         5tIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795134195; x=1795738995;
+        d=1e100.net; s=20260707; t=1795134197; x=1795738997;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=bhkF1tou9oRGyu4WdSTLg48eRchEDGSlV44uyD0mKCg=;
-        b=j183aVB6dy5390gLR89AsvHmKjrPL35n1CNAV0D7FISvSagpoL9+F9PhtDz0pbMzQb
-         7FQyI3ZQmay7H6KT2hnctCJmy01q3XGH9jLw/Wq/FfEGW+zvOfVBMgXkORLELi6qj8Yw
-         SD6Z/plIeXjYO8wSRx2uf53AmlxZ8gOeB4z7onMfyndW+tL5uNcI2lu0cmvhslYIpSVE
-         sy70XiXiQVcKtRL9r/ui7Y9mb9U/ZgOxegXeExQrA66mVrf0tm7pydxvYdvkIhn9gsrN
-         RDcaYD0XkD0EjYDVivOiEkZMmBT3zqPw4Frko20/hWFBW4y918F9tmv7j518y/CyavZT
-         efcQ==
-X-Forwarded-Encrypted: i=1; AL+hErGH99XkdWVHu4Bq7Gp93/5DseZK99U7vQC9WuXhUMd+d/eR3SNYbW5NInMwAxn2i5KXiD6B8y2W5dU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8F3tTvhXnv4nQBeRrWLdkze1c6RSP/6ry/QTUc+QgDXrceCLgL
-	YPxw5HI0xHgZDtZxnwIeiW2tXXg+WFKLSX4NCKRozxho3g4lr7NePim7zs5gli0Y0aBPODO+jWS
-	8ezf+9CdKdeDsdQ==
-X-Received: from dybqf22.prod.google.com ([2002:a05:7301:6496:b0:382:8cee:3808])
+        bh=RhGQm/UF9vMhWbFcBfDkOgWYLiWfHuOG+Gc7mXjwfx8=;
+        b=A14Z30OjxOTul2u1ft56FgmNpbQl7baeRtnpxpVdwSlTxEyn/fXXApocdAzVpC8Z5D
+         wxkEv7IjrjLePfcGQld9QLndF0UhCTmZMiJ/UyjvNXU7ohcJh4/jNurXkyBSpiOMvgxq
+         IoP5LwrAvaUocH9gKhwimIZ0yQIBT3VLa68vMzzW/KWeKPCp78Sn86RKdYwlXqItMDoH
+         YkcWu/t+2NcPQSPyLogTntWTOU1IqejMDBuyD/EQiCQP+JvzsaCqI+q/B2QZnZxJUj47
+         v7tHzOX0NJNPuPDkosrs6BTpMw5osU7Toqt2Ek95/CXrCF8yFe+dqakQNsQm0SLY6RTQ
+         e25w==
+X-Forwarded-Encrypted: i=1; AL+hErFu0xSMv45jVO/umuogeUHFWq7EWJ7Rqhi3k+c7wu6wJubk8TCq/I6p/BX8QsVIf+VjZ/824TAW3i0=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/lsStBVJeZCyoB3kEh14jdiUjZA+n7vpVlY1Zlv+ZpeaoL+/tF
+	s8WPoI/7fudRc3F3NZ5eXKNtLrBzNeRsUFhGkXlSUMQyAu/7lTPq0tjjbGMlUAkBtnLPUh58fMC
+	I6DdFw/WxjtlIww==
+X-Received: from dlbrf24.prod.google.com ([2002:a05:7022:f218:b0:196:1ea7:17b6])
  (user=digonzal job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:7300:d509:b0:385:ac93:91f4 with SMTP id 5a478bee46e88-385ac939fc3mr560916eec.26.1795134194715;
- Thu, 19 Nov 2026 16:23:14 -0800 (PST)
-Date: Fri, 20 Nov 2026 00:23:10 +0000
+ 2002:a05:7022:220d:b0:1ab:fe29:5055 with SMTP id a92af1059eb24-1b556865255mr1475296c88.9.1795134196559;
+ Thu, 19 Nov 2026 16:23:16 -0800 (PST)
+Date: Fri, 20 Nov 2026 00:23:11 +0000
 In-Reply-To: <20261120002311.394649-1-digonzal@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,9 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261120002311.394649-1-digonzal@google.com>
 X-Mailer: git-send-email 2.56.1.750.gf70dc682cf-goog
-Message-ID: <20261120002311.394649-2-digonzal@google.com>
-Subject: [PATCH v3 1/2] iommu: Track whether pci_dev_reset_iommu_done() needs
- to restore state
+Message-ID: <20261120002311.394649-3-digonzal@google.com>
+Subject: [PATCH v3 2/2] PCI/ATS: Disable ATS when ACS TB is set upstream
 From: Danny Gonzalez <digonzal@google.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>, 
 	Robin Murphy <robin.murphy@arm.com>
@@ -95,312 +94,78 @@ Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Jason
 	Danny Gonzalez <digonzal@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Currently, pci_dev_reset_iommu_done() relies on the assumption that
-pci_ats_supported() and dev_has_iommu() always return the same values
-they returned in pci_dev_reset_iommu_prepare(). While that may be true
-today, relying on both calls evaluating identically is fragile: if they
-ever return different values, gdev->reset_depth, group->recovery_cnt,
-group->domain, and gdev->blocked will get out of sync.
+Enabling ATS allows an endpoint to cache translations and initiate DMA
+requests with Translated addresses, which an upstream bridge with ACS
+Translation Blocking (PCI_ACS_TB) set will block as ACS Violations.
+Because pci_enable_acs() preserves existing PCI_ACS_CTRL bits (e.g., from
+firmware, a kexec kernel, or "pci=config_acs=") without relaxing them,
+PCI_ACS_TB may remain set on upstream bridges.
 
-Have pci_dev_reset_iommu_prepare() track whether
-pci_dev_reset_iommu_done() needs to restore IOMMU state via a @restore
-output flag, and pass @restore to pci_dev_reset_iommu_done() instead of
-re-evaluating pci_ats_supported() and dev_has_iommu().
+Update pci_ats_supported() to walk upstream bridges and return false if
+any bridge has PCI_ACS_TB set, leaving the endpoint to use Untranslated
+addresses. Ignore bridges whose config read fails or returns an error
+response (PCI_POSSIBLE_ERROR()) so inaccessible bridges are not treated
+as having PCI_ACS_TB set.
+
+Tested by booting a machine with an endpoint advertising the ATS Capability
+behind a Root Port with PCI_ACS_TB set; verified ATS is disabled and the
+system boots cleanly.
 
 Signed-off-by: Danny Gonzalez <digonzal@google.com>
 ---
 
 v3:
- - New patch based on review feedback to avoid relying on
-   pci_ats_supported() and dev_has_iommu() returning identical values
-   across pci_dev_reset_iommu_prepare() and pci_dev_reset_iommu_done()
+ - Move the upstream ACS TB check back into pci_ats_supported(),
+   dropping pci_ats_check_acs() and changes to pci-driver.c and pci.h
+ - Read PCI_ACS_CTRL directly and check the return value and
+   PCI_POSSIBLE_ERROR() so inaccessible bridges are not treated as
+   having PCI_ACS_TB set
+ - Remove the pci_warn_once() logging and separate helper function
 
- drivers/iommu/iommu.c  | 14 ++++++++++----
- drivers/pci/pci-acpi.c |  5 +++--
- drivers/pci/pci.c      | 25 +++++++++++++++----------
- drivers/pci/quirks.c   |  5 +++--
- include/linux/iommu.h  |  9 +++++----
- 5 files changed, 36 insertions(+), 22 deletions(-)
+v2 (based on sashiko review):
+ - Move the upstream ACS TB check from pci_ats_supported() into
+   pci_ats_check_acs() called after pci_enable_acs()
+ - Use pci_acs_enabled() instead of reading PCI_ACS_CTRL directly
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index b486b8bbd1fc..8a563eb38bba 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -4010,6 +4010,7 @@ EXPORT_SYMBOL_NS_GPL(iommu_replace_group_handle, "IOMMUFD_INTERNAL");
- /**
-  * pci_dev_reset_iommu_prepare() - Block IOMMU to prepare for a PCI device reset
-  * @pdev: PCI device that is going to enter a reset routine
-+ * @restore: set to true if pci_dev_reset_iommu_done() needs to restore state
-  *
-  * The PCIe r6.0, sec 10.3.1 IMPLEMENTATION NOTE recommends to disable and block
-  * ATS before initiating a reset. This means that a PCIe device during the reset
-@@ -4031,7 +4032,7 @@ EXPORT_SYMBOL_NS_GPL(iommu_replace_group_handle, "IOMMUFD_INTERNAL");
-  * case, callers must ensure there will be no racy iommu_release_device() call,
-  * which otherwise would UAF the dev->iommu_group pointer.
+ drivers/pci/ats.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 9cb23780093d..e3c78a575800 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -40,12 +40,31 @@ void pci_ats_init(struct pci_dev *dev)
   */
--int pci_dev_reset_iommu_prepare(struct pci_dev *pdev)
-+int pci_dev_reset_iommu_prepare(struct pci_dev *pdev, bool *restore)
+ bool pci_ats_supported(struct pci_dev *dev)
  {
- 	struct iommu_group *group = pdev->dev.iommu_group;
- 	struct group_device *gdev;
-@@ -4039,8 +4040,12 @@ int pci_dev_reset_iommu_prepare(struct pci_dev *pdev)
- 	void *entry;
- 	int ret;
++	struct pci_dev *bridge;
++
+ 	if (!dev->ats_cap || dev->untrusted)
+ 		return false;
  
--	if (!pci_ats_supported(pdev) || !dev_has_iommu(&pdev->dev))
-+	if (!pci_ats_supported(pdev) || !dev_has_iommu(&pdev->dev)) {
-+		*restore = false;
- 		return 0;
+ 	if (dev->is_virtfn)
+ 		return pci_ats_supported(pci_physfn(dev));
+ 
++	/* Do not allow ATS if any upstream bridge blocks translation */
++	for (bridge = pci_upstream_bridge(dev); bridge;
++	     bridge = pci_upstream_bridge(bridge)) {
++		u16 ctrl;
++		int ret;
++
++		if (!bridge->acs_cap)
++			continue;
++		ret = pci_read_config_word(bridge,
++					   bridge->acs_cap + PCI_ACS_CTRL,
++					   &ctrl);
++		if (ret || PCI_POSSIBLE_ERROR(ctrl))
++			continue;
++		if (ctrl & PCI_ACS_TB)
++			return false;
 +	}
 +
-+	*restore = true;
- 
- 	guard(mutex)(&group->mutex);
- 
-@@ -4132,6 +4137,7 @@ static bool group_device_dma_alias_is_blocked(struct iommu_group *group,
- /**
-  * pci_dev_reset_iommu_done() - Restore IOMMU after a PCI device reset is done
-  * @pdev: PCI device that has finished a reset routine
-+ * @restore: whether pci_dev_reset_iommu_prepare() blocked the IOMMU
-  *
-  * After a PCIe device finishes a reset routine, it wants to restore its IOMMU
-  * activity, including new translation and cache invalidation, by re-attaching
-@@ -4143,14 +4149,14 @@ static bool group_device_dma_alias_is_blocked(struct iommu_group *group,
-  * Note that, although unlikely, there is a risk that re-attaching domains might
-  * fail due to some unexpected happening like OOM.
-  */
--void pci_dev_reset_iommu_done(struct pci_dev *pdev)
-+void pci_dev_reset_iommu_done(struct pci_dev *pdev, bool restore)
- {
- 	struct iommu_group *group = pdev->dev.iommu_group;
- 	struct group_device *gdev;
- 	unsigned long pasid;
- 	void *entry;
- 
--	if (!pci_ats_supported(pdev) || !dev_has_iommu(&pdev->dev))
-+	if (!restore)
- 		return;
- 
- 	guard(mutex)(&group->mutex);
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 1150f2fbabf4..83a581796001 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -955,6 +955,7 @@ void pci_set_acpi_fwnode(struct pci_dev *dev)
- int pci_dev_acpi_reset(struct pci_dev *dev, bool probe)
- {
- 	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+	bool restore;
- 	int ret;
- 
- 	if (!handle || !acpi_has_method(handle, "_RST"))
-@@ -963,7 +964,7 @@ int pci_dev_acpi_reset(struct pci_dev *dev, bool probe)
- 	if (probe)
- 		return 0;
- 
--	ret = pci_dev_reset_iommu_prepare(dev);
-+	ret = pci_dev_reset_iommu_prepare(dev, &restore);
- 	if (ret) {
- 		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
- 		return ret;
-@@ -974,7 +975,7 @@ int pci_dev_acpi_reset(struct pci_dev *dev, bool probe)
- 		ret = -ENOTTY;
- 	}
- 
--	pci_dev_reset_iommu_done(dev);
-+	pci_dev_reset_iommu_done(dev, restore);
- 	return ret;
+ 	return true;
  }
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7c6f2aba8144..087594cc8095 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4440,6 +4440,7 @@ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
-  */
- int pcie_flr(struct pci_dev *dev)
- {
-+	bool restore;
- 	int ret;
- 
- 	if (!pci_dev_config_accessible(dev, "FLR"))
-@@ -4449,7 +4450,7 @@ int pcie_flr(struct pci_dev *dev)
- 		pci_err(dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
- 
- 	/* Have to call it after waiting for pending DMA transaction */
--	ret = pci_dev_reset_iommu_prepare(dev);
-+	ret = pci_dev_reset_iommu_prepare(dev, &restore);
- 	if (ret) {
- 		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
- 		return ret;
-@@ -4469,7 +4470,7 @@ int pcie_flr(struct pci_dev *dev)
- 
- 	ret = pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
- done:
--	pci_dev_reset_iommu_done(dev);
-+	pci_dev_reset_iommu_done(dev, restore);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(pcie_flr);
-@@ -4498,6 +4499,7 @@ EXPORT_SYMBOL_GPL(pcie_reset_flr);
- 
- static int pci_af_flr(struct pci_dev *dev, bool probe)
- {
-+	bool restore;
- 	int ret;
- 	int pos;
- 	u8 cap;
-@@ -4526,7 +4528,7 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
- 		pci_err(dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
- 
- 	/* Have to call it after waiting for pending DMA transaction */
--	ret = pci_dev_reset_iommu_prepare(dev);
-+	ret = pci_dev_reset_iommu_prepare(dev, &restore);
- 	if (ret) {
- 		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
- 		return ret;
-@@ -4547,7 +4549,7 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
- 
- 	ret = pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
- done:
--	pci_dev_reset_iommu_done(dev);
-+	pci_dev_reset_iommu_done(dev, restore);
- 	return ret;
- }
- 
-@@ -4568,6 +4570,7 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
-  */
- static int pci_pm_reset(struct pci_dev *dev, bool probe)
- {
-+	bool restore;
- 	u16 csr;
- 	int ret;
- 
-@@ -4584,7 +4587,7 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
- 	if (dev->current_state != PCI_D0)
- 		return -EINVAL;
- 
--	ret = pci_dev_reset_iommu_prepare(dev);
-+	ret = pci_dev_reset_iommu_prepare(dev, &restore);
- 	if (ret) {
- 		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
- 		return ret;
-@@ -4601,7 +4604,7 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
- 	pci_dev_d3_sleep(dev);
- 
- 	ret = pci_dev_wait(dev, "PM D3hot->D0", PCIE_RESET_READY_POLL_MS);
--	pci_dev_reset_iommu_done(dev);
-+	pci_dev_reset_iommu_done(dev, restore);
- 	return ret;
- }
- 
-@@ -5033,6 +5036,7 @@ static bool cxl_sbr_masked(struct pci_dev *dev)
- static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
- {
- 	struct pci_dev *bridge = pci_upstream_bridge(dev);
-+	bool restore;
- 	int rc;
- 
- 	/*
-@@ -5042,7 +5046,7 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
- 	if (bridge && pcie_is_cxl(bridge) && cxl_sbr_masked(bridge))
- 		return -ENOTTY;
- 
--	rc = pci_dev_reset_iommu_prepare(dev);
-+	rc = pci_dev_reset_iommu_prepare(dev, &restore);
- 	if (rc) {
- 		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", rc);
- 		return rc;
-@@ -5054,7 +5058,7 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
- 
- 	rc = pci_parent_bus_reset(dev, probe);
- done:
--	pci_dev_reset_iommu_done(dev);
-+	pci_dev_reset_iommu_done(dev, restore);
- 	return rc;
- }
- 
-@@ -5062,6 +5066,7 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
- {
- 	struct pci_dev *bridge;
- 	u16 dvsec, reg, val;
-+	bool restore;
- 	int rc;
- 
- 	bridge = pci_upstream_bridge(dev);
-@@ -5079,7 +5084,7 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
- 	if (rc)
- 		return -ENOTTY;
- 
--	rc = pci_dev_reset_iommu_prepare(dev);
-+	rc = pci_dev_reset_iommu_prepare(dev, &restore);
- 	if (rc) {
- 		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", rc);
- 		return rc;
-@@ -5099,7 +5104,7 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
- 		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
- 				      reg);
- 
--	pci_dev_reset_iommu_done(dev);
-+	pci_dev_reset_iommu_done(dev, restore);
- 	return rc;
- }
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7f1f47ea2ee4..f6b26467c9e0 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4404,16 +4404,17 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- static int __pci_dev_specific_reset(struct pci_dev *dev, bool probe,
- 				    const struct pci_dev_reset_methods *i)
- {
-+	bool restore;
- 	int ret;
- 
--	ret = pci_dev_reset_iommu_prepare(dev);
-+	ret = pci_dev_reset_iommu_prepare(dev, &restore);
- 	if (ret) {
- 		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
- 		return ret;
- 	}
- 
- 	ret = i->reset(dev, probe);
--	pci_dev_reset_iommu_done(dev);
-+	pci_dev_reset_iommu_done(dev, restore);
- 	return ret;
- }
- 
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index ef5043752a36..7d6e27d0d918 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -1223,8 +1223,8 @@ ioasid_t iommu_alloc_global_pasid(struct device *dev);
- void iommu_free_global_pasid(ioasid_t pasid);
- 
- /* PCI device reset functions */
--int pci_dev_reset_iommu_prepare(struct pci_dev *pdev);
--void pci_dev_reset_iommu_done(struct pci_dev *pdev);
-+int pci_dev_reset_iommu_prepare(struct pci_dev *pdev, bool *restore);
-+void pci_dev_reset_iommu_done(struct pci_dev *pdev, bool restore);
- #else /* CONFIG_IOMMU_API */
- 
- struct iommu_ops {};
-@@ -1549,12 +1549,13 @@ static inline ioasid_t iommu_alloc_global_pasid(struct device *dev)
- 
- static inline void iommu_free_global_pasid(ioasid_t pasid) {}
- 
--static inline int pci_dev_reset_iommu_prepare(struct pci_dev *pdev)
-+static inline int pci_dev_reset_iommu_prepare(struct pci_dev *pdev, bool *restore)
- {
-+	*restore = false;
- 	return 0;
- }
- 
--static inline void pci_dev_reset_iommu_done(struct pci_dev *pdev)
-+static inline void pci_dev_reset_iommu_done(struct pci_dev *pdev, bool restore)
- {
- }
- #endif /* CONFIG_IOMMU_API */
+ EXPORT_SYMBOL_GPL(pci_ats_supported);
 -- 
 2.56.1.708.g77570a6a1d-goog
 
