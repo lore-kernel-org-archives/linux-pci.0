@@ -1,60 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795193329;
-	b=0epaOKCRxg1+5VAU4x/O0OgKfbUjFhTFr2xc14+72n1kvYewyTIJosOTEbI2JjsjQs35
-	 tkF3DQTQXQ0m/opvByZ1GumWuN09V8NB9+nlcl2g8YzfRGhFqqoimwsRmUuqV6W/AdqKM
-	 YT2jpRjQAHKcNaprk11P/AoKPrxityItQL6e9kudumrMyarrBjLknU6wip7TWS79m+ZgG
-	 /3gH3rLniLHsWnSItmXOZTUtPy/R7S86RIw/eqVf1h6hJ8YwbYAlj70z6K5JZ1ik5rvBV
-	 FQ0nhlB3zN0BE5xdcdfAJJm19NxzNS3PUzmVA3VdasPrBemS3ARqjTeDupoVxJ1qjTw==
+	t=1795193750;
+	b=GZ6W87mIsDiAf/J5AiCrG9IcaeHgkwpoE8I40Q725K2agWwnyweJCjqDsS3MAJ165X+X
+	 E+EB78AfmOGlmS2WpxuYNSOCYOIMCyIY8pSXDNMvMs/zkjxhy16j6l1b3cT9La/ylOwSF
+	 oJPSj4fBA0LFtkbKauisfOreockC8f1W9W2/5oFdinP2fce7oyc8xxriXp+xl8NaAMjDY
+	 IIdXe66gBuG1Rr+Lh/swSBj29VYo7AGWFSxn+LsXMYWZhUn7+/VKiI4hhw2E8CLhDoG6b
+	 WaHbzjIOv/8zpH2oVZdrCd1Cs9ncGlAu98s/mEXHcyGDab+aPZipN/bR6W7IfymlvUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795193329;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795193750;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=nf7ZvY803TNekaL5vmEd7TKoQhygNYuaeAFOBV+qHIY=;
-	b=S1MMlimF7CZa5qxGipz4J7+Ys9MQT/rqHjDTuEnuzlLIwB6AGhRIwDd+5Zb6GuEr/wNJ
-	 wEMPNqPcggaIVlgC1BZraEYuZiXhPcpRb0fcPKW1uMqYGMjrPDfNhnoQsRuqtIoLc4kp3
-	 YoyyuEwSHY+YctRHT7E/rOMZWqe930KU6c57Hcu5oUmwDEEl7cMQtFnsQxDjI9MH77mY2
-	 c2xUOoeTjc6qVnoDwFSDTKZhsLsgoARPxpsAmlnNJZRWFwRvWkGXMUJe8z0NvD+k//lZn
-	 yfs6tj5MsuZ7lVF0OED6TfhxdbxFv9SMiM7Nh42Gay4q1vajkPRWSMOA8NIhG2v6yYw==
+	bh=6XgHblxXTExitsxzkgHnfiFBSj/eKxbMVA10iAl9NaI=;
+	b=K4wb3PjObvZzyWNZZJZpAFjQAv2eTNHFIblIfegEy2x7pkn2DNNwd+XxVbfxGDwZLfWu
+	 8QLwD2BlZMyyz5EH+WnS2ElZyQpkLkQRIb812mg3trPPslFFQs/8lp2FrN233S5xBNNQy
+	 qv5S9cTcTzaEPo17mDOegA17jsO3B9u96TweVuStHCjXwG2twc/DaXxA9+Sv43cohZ3cb
+	 56HigioHtREcAfdbrKmlWdLRRNhUyzErpUWEPFaXamsR4bToykOCUN4r8soPKZwRaY/a0
+	 XMLCcygl5v77hGKiRgEk/wZ+/zAGRcoWLRAIiwc4vpiYWFqILQTH2THOBP2PZ6rjI0A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmwEFXDX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IwrGtZZw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CB54606A331;
-	Fri, 20 Nov 2026 16:48:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9F1260A2619
+	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 16:55:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmwEFXDX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3672D1F000CF;
-	Fri, 20 Nov 2026 16:48:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IwrGtZZw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6253B1F000D4;
+	Fri, 20 Nov 2026 16:55:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795193328;
-	bh=nf7ZvY803TNekaL5vmEd7TKoQhygNYuaeAFOBV+qHIY=;
+	s=k20260515; t=1795193750;
+	bh=6XgHblxXTExitsxzkgHnfiFBSj/eKxbMVA10iAl9NaI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=bmwEFXDXKyTx+0R2/7PyhMY+lL6CQdTn9OoCgvd/vi0lUEOMSBVqOu4auFFdRs/sQ
-	 2M9OG7yvDwEmfSjcjwtHNVt7j5YWTETFNFiYhDRNT8tUtlpzJ7P12g8N6fqC9mhkNW
-	 bC8REw99Emfrk/un/tGhhUPP3ExPLbfk7C0d8jE+YWKlhjhbsHhHUc3pLmDt2wvuiW
-	 QthuYHsLLyCJO4pw6H0ZW7ySakKlI0DCgbqKd8lcYTC5J/WQBmKwyv66iRmhLucSPo
-	 YhAnUNr2iwTYK1iD5HJvN8DLsyxzOsFcsyhKaauodEDqz9EVVIolcZ1dve4YhBD+nl
-	 ES1287K33hprA==
-Date: Fri, 20 Nov 2026 10:48:47 -0600
+	b=IwrGtZZwkBQkuwH5+qpPPgenahij3C6LMEwHNqv9ClvCisUsa/IE/0H3U9bS/+NPi
+	 fu1G4jJ2Lt2K3scjDh8mKm4OTLEg6YqF4/16Ky1Hj77xA0zudr0BKNGdDdQYmbU4qt
+	 7sA/sBKgW2r18lFvB1tmgFlh3qF3dbAM2URw6BeLBLTtmHNjdgYTTjETHWy+OMhLq9
+	 6/AyPFWVhY9IaE48H4PEsJldeZQRyVtuezOzaVt27y3THmMcldEHN1+rNbzBSYYD7r
+	 3tfagZbmLXwXLmoglt1ZP3SMuQstg6f4QVd6dEb0RYfs15hKKOxrzBONwXliuw+xlB
+	 BT/IXA6RbeAIg==
+Date: Fri, 20 Nov 2026 10:55:49 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>, lukas@wunner.de,
-	sebott@linux.ibm.com, schnelle@linux.ibm.com, bblock@linux.ibm.com,
-	linux@roeck-us.net, matthew.brost@intel.com,
-	michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
-	dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
-	lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
-	ionut_n2001@yahoo.com, sunlightlinux@gmail.com
-Subject: Re: [PATCH 1/1] PCI: Don't block bridge config access while waiting
- for the device lock
-Message-ID: <20261120164847.GA887103@bhelgaas>
+To: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	krishna.chundru@oss.qualcomm.com
+Subject: Re: [PATCH] PCI/pwrctrl: tc9563: Enable 8 GT/s equalization
+ fine-tuning
+Message-ID: <20261120165549.GA888766@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -66,106 +60,87 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261119123504.25906-2-ionut.nechita@windriver.com>
+In-Reply-To: <20261119-tc9563_fine_tune-v1-1-b83c74bf1e94@oss.qualcomm.com>
 
-On Thu, Nov 19, 2026 at 02:35:04PM +0200, Ionut Nechita (Wind River) wrote:
-> From: Ionut Nechita <ionut.nechita@windriver.com>
+On Thu, Nov 19, 2026 at 04:57:12PM +0530, Abhishek Kumar wrote:
+> On some boots, links on the PCIe switch report a continuous flood of
+> correctable AER errors (RxErr, BadTLP and Replay Timer Timeout) at
+> 8 GT/s. This happens because the 8 GT/s equalization fine-tuning
+> setting is never programmed: max_num_of_fine_tuning_iterations_at_8gt
+> in K_EQUTUNING_033_028 resets to 0, so equalization only selects a
+> preset and never fine-tunes the transmitter coefficients for the
+> channel, leaving the link with marginal signal quality.
 > 
-> pci_reset_function() locks the upstream bridge with pci_dev_lock(),
-> which takes the bridge's device lock and then blocks config access to
-> the bridge, and only then takes the device lock of the function being
-> reset. If another task holds that device lock, the reset sleeps with
-> config access to the bridge blocked, and every user config read of the
-> bridge sleeps in pci_wait_cfg() for as long.
+> Fix this by programming one fine-tuning iteration on the upstream port
+> and downstream ports 1 and 2 at power-on, so that 8 GT/s equalization
+> adapts the transmitter coefficients to the channel. With this setting
+> the links no longer report any AER errors.
 > 
-> This happens with vfio-pci when a userspace driver keeps a VF open:
-> 
->   1. A driver unbind of the VF waits in vfio_unregister_group_dev()
->      for the user to release the device, holding the VF device lock.
->   2. Writing 0 to sriov_numvfs on the PF takes the PF device lock and
->      waits in sriov_disable() for the VF device lock.
->   3. Writing 1 to the PF "reset" attribute calls pci_reset_function(),
->      which blocks config access to the PF's upstream bridge and waits
->      for the PF device lock.
-> 
-> From then on lspci, which reads the config space of every device,
-> hangs in D state, and so does any tool or agent that runs it, until
-> the userspace driver releases the VF:
-> 
->   lspci           D
->     pci_wait_cfg+0x60/0xc0
->     pci_user_read_config_dword+0xcc/0xf0
->     pci_read_config+0xf5/0x290
->     kernfs_fop_read_iter+0xb6/0x1b0
->     vfs_read+0x21f/0x340
-> 
-> This was hit with an Intel FPGA PAC N3000 FEC device bound to vfio-pci
-> (PF and VFs), where the SR-IOV FEC operator reconfigures the PF while a
-> DPDK application holds one of its VFs.
-> 
-> Take the device locks first, bridge before device as before, and block
-> config access to the bridge and the device only once both are held.
-> The order between the two device locks is unchanged. Config access is
-> now blocked only while the reset runs, not while waiting for a lock.
-> 
-> The reset itself still waits for the device lock, so the tasks in
-> steps 1-3 stay blocked until the user releases the VF. Only config
-> reads of unrelated callers stop being blocked.
-> 
-> Fixes: 7e89efc6e9e4 ("PCI: Lock upstream bridge for pci_reset_function()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
+> Signed-off-by: Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
 
-Applied to pci/reset for v7.5, thank you!
+Applied to pci/pwrctrl for v7.5, thank you!
+
+I added "Toshiba TC9563" to the commit log because this applies to
+only this device, not PCIe switches in general.
 
 > ---
->  drivers/pci/pci.c | 24 ++++++++++++++++++++----
->  1 file changed, 20 insertions(+), 4 deletions(-)
+>  drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d79f73b28..9c8d5dda9 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5345,19 +5345,35 @@ int pci_reset_function(struct pci_dev *dev)
->  	 * no upstream bridge configuration to hold consistent.
->  	 */
->  	bridge = pci_upstream_bridge(dev);
+> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+> index 4091a2f30aa7..d27b009430f1 100644
+> --- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+> @@ -29,6 +29,9 @@
+>  #define TC9563_PORT_L0S_DELAY		0x82496c
+>  #define TC9563_PORT_L1_DELAY		0x824970
+>  
+> +#define TC9563_K_EQUTUNING_033_028	0x824a10
+> +#define TC9563_EQ_FINE_TUNING_ITER	1
 > +
-> +	/*
-> +	 * Take the device locks, bridge before device, before blocking
-> +	 * config access to either of them.  device_lock() can sleep for as
-> +	 * long as another task holds it, e.g. a driver unbind waiting for
-> +	 * a vfio user to release the device.  If config access to the
-> +	 * bridge were already blocked at that point, every config read of
-> +	 * the bridge (lspci, sysfs "config") would sleep in pci_wait_cfg()
-> +	 * for the same time.
-> +	 */
->  	if (bridge)
-> -		pci_dev_lock(bridge);
-> +		device_lock(&bridge->dev);
-> +	device_lock(&dev->dev);
-> +	if (bridge)
-> +		pci_cfg_access_lock(bridge);
-> +	pci_cfg_access_lock(dev);
->  
-> -	pci_dev_lock(dev);
->  	pci_dev_save_and_disable(dev);
->  
->  	rc = __pci_reset_function_locked(dev);
->  
->  	pci_dev_restore(dev);
-> -	pci_dev_unlock(dev);
->  
-> +	pci_cfg_access_unlock(dev);
->  	if (bridge)
-> -		pci_dev_unlock(bridge);
-> +		pci_cfg_access_unlock(bridge);
-> +	device_unlock(&dev->dev);
-> +	if (bridge)
-> +		device_unlock(&bridge->dev);
->  
->  	return rc;
+>  #define TC9563_EMBEDDED_ETH_DELAY	0x8200d8
+>  #define TC9563_ETH_L1_DELAY_MASK	GENMASK(27, 18)
+>  #define TC9563_ETH_L1_DELAY_VALUE(x)	FIELD_PREP(TC9563_ETH_L1_DELAY_MASK, x)
+> @@ -346,6 +349,20 @@ static int tc9563_pwrctrl_set_nfts(struct tc9563_pwrctrl *tc9563,
+>  				      ARRAY_SIZE(nfts_seq));
 >  }
-> -- 
-> 2.55.0
+>  
+> +static int tc9563_pwrctrl_set_eq_fine_tuning(struct tc9563_pwrctrl *tc9563)
+> +{
+> +	int ret;
+> +
+> +	ret = regmap_write(tc9563->regmap, TC9563_PORT_SELECT,
+> +			   BIT(TC9563_USP) | BIT(TC9563_DSP1) |
+> +			   BIT(TC9563_DSP2));
+> +	if (ret)
+> +		return ret;
+> +
+> +	return regmap_write(tc9563->regmap, TC9563_K_EQUTUNING_033_028,
+> +			    TC9563_EQ_FINE_TUNING_ITER);
+> +}
+> +
+>  static int tc9563_pwrctrl_assert_deassert_reset(struct tc9563_pwrctrl *tc9563,
+>  						bool deassert)
+>  {
+> @@ -557,6 +574,12 @@ static int tc9563_pwrctrl_power_on(struct pci_pwrctrl *pwrctrl)
+>  	if (ret)
+>  		goto power_off;
+>  
+> +	ret = tc9563_pwrctrl_set_eq_fine_tuning(tc9563);
+> +	if (ret) {
+> +		dev_err(dev, "Failed to enable 8 GT/s EQ fine-tuning\n");
+> +		goto power_off;
+> +	}
+> +
+>  	for (i = 0; i < TC9563_MAX; i++) {
+>  		cfg = &tc9563->cfg[i];
+>  		ret = tc9563_pwrctrl_disable_port(tc9563, i);
+> 
+> ---
+> base-commit: e8017d29067fd1310a65c3494ce1a1b492adbac6
+> change-id: 20261119-tc9563_fine_tune-1fee86f2e4a3
+> 
+> Best regards,
+> --  
+> Abhishek Kumar <abhishek.kumar15@oss.qualcomm.com>
 > 
