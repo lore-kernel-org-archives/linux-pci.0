@@ -1,61 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795192751;
-	b=lBKIwZAv7b20VlkWtXAsgVqiknIPGZQsiHAAmuOpfiGJIg9/ySO3O/9ugfgXIJT1ii/4
-	 IhXCnQCGj3uqnaLn4uneJnAiZw2ev5lAlV3Q06Dv4x9taAafu8yfjvEs0kC8b1VLxsh8Y
-	 bRf2IbCECLwMX/1NQYGsgIsEZvIijuLkIb7k7GC/oo3nb5kk0N9hacAWuM+oXh1ZsPgwV
-	 qpiDm9QVKhtl4I6WJCj4LAGck3L6ICvbB+Tp2OjylXlJFyLYMMVXvDYIe5zbPCqB//aB/
-	 cS3Kr5nIv0ud4r75q/nxlqJhOZi1ctd8744KEqwQGtpC6FQpvqpsPzfedAwoodQ6xAw==
+	t=1795193329;
+	b=0epaOKCRxg1+5VAU4x/O0OgKfbUjFhTFr2xc14+72n1kvYewyTIJosOTEbI2JjsjQs35
+	 tkF3DQTQXQ0m/opvByZ1GumWuN09V8NB9+nlcl2g8YzfRGhFqqoimwsRmUuqV6W/AdqKM
+	 YT2jpRjQAHKcNaprk11P/AoKPrxityItQL6e9kudumrMyarrBjLknU6wip7TWS79m+ZgG
+	 /3gH3rLniLHsWnSItmXOZTUtPy/R7S86RIw/eqVf1h6hJ8YwbYAlj70z6K5JZ1ik5rvBV
+	 FQ0nhlB3zN0BE5xdcdfAJJm19NxzNS3PUzmVA3VdasPrBemS3ARqjTeDupoVxJ1qjTw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795192751;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795193329;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=o2Gchlovjpt7GczhTpNg1ZhDn2KN/WvMSeZUox3Hoa4=;
-	b=BeScogtzm/Cuv50qjrBhdSPegj1XYoLZN7lnoENmC82Es8LaS+vXlyhHMHHo6IdeQ/DU
-	 5lWjwFzLqoQWvEHYTgwuvhqLM3FlFyjhSz0UxO6ma72HY6WsnpeefUJ/MqmOvMHywGZC5
-	 5e1HOGEkyxl7Y0sAPCYoHI9vnaJgsuP0T9kIjOIefazuXb5xg10z3NT9UbFtbXjWT3gkj
-	 sRfAcbyQFx4v06FtcMj9k0ZIF8iOHKByVBsah4Xbd4HdXVVHOcPKV6D0OjNLg8dUTsK5u
-	 PdirvmcgIzc1YNGGKvLVsOx9Q7dFMrKxZYXxTWoyBFImN20ooKWSXKNgzKGU/IB9UuQ==
+	bh=nf7ZvY803TNekaL5vmEd7TKoQhygNYuaeAFOBV+qHIY=;
+	b=S1MMlimF7CZa5qxGipz4J7+Ys9MQT/rqHjDTuEnuzlLIwB6AGhRIwDd+5Zb6GuEr/wNJ
+	 wEMPNqPcggaIVlgC1BZraEYuZiXhPcpRb0fcPKW1uMqYGMjrPDfNhnoQsRuqtIoLc4kp3
+	 YoyyuEwSHY+YctRHT7E/rOMZWqe930KU6c57Hcu5oUmwDEEl7cMQtFnsQxDjI9MH77mY2
+	 c2xUOoeTjc6qVnoDwFSDTKZhsLsgoARPxpsAmlnNJZRWFwRvWkGXMUJe8z0NvD+k//lZn
+	 yfs6tj5MsuZ7lVF0OED6TfhxdbxFv9SMiM7Nh42Gay4q1vajkPRWSMOA8NIhG2v6yYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R0diO3R0;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmwEFXDX;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05CC606A338;
-	Fri, 20 Nov 2026 16:39:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CB54606A331;
+	Fri, 20 Nov 2026 16:48:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R0diO3R0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70BB11F000F0;
-	Fri, 20 Nov 2026 16:39:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmwEFXDX
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3672D1F000CF;
+	Fri, 20 Nov 2026 16:48:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795192750;
-	bh=o2Gchlovjpt7GczhTpNg1ZhDn2KN/WvMSeZUox3Hoa4=;
+	s=k20260515; t=1795193328;
+	bh=nf7ZvY803TNekaL5vmEd7TKoQhygNYuaeAFOBV+qHIY=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=R0diO3R0IwdCFQBi8ev6UvmGHq45+73ZelTh5K2rpzujd/HbZ0CqAoOtQdRCTuPzu
-	 YIrI0q+UudpMC3trJzl1eS6cCYK9kk2VtN0jEhD2ODYeXpeAeAsjuY+8IGegifY9aj
-	 JLriM43csRHqFXYmI5b029uPhNAKPYa3JPQ7v1a0kTw2/XQ+BD7jkGxdBNxZ+eI0lm
-	 FQuS2Xb1RB0wDngBTXTHMSHPMOth3MhnSF2fyx5CdKXN26ZhIQA8kKbEJpm4KPDPoL
-	 EFOSJ4I8MLb6F/LDKvT1Jc0KwNseYtZvUKo/5jzy9GDGW8Ipb7sxwqo59WUG3gMvrO
-	 XbmLk9Iib6yaw==
-Date: Fri, 20 Nov 2026 10:39:09 -0600
+	b=bmwEFXDXKyTx+0R2/7PyhMY+lL6CQdTn9OoCgvd/vi0lUEOMSBVqOu4auFFdRs/sQ
+	 2M9OG7yvDwEmfSjcjwtHNVt7j5YWTETFNFiYhDRNT8tUtlpzJ7P12g8N6fqC9mhkNW
+	 bC8REw99Emfrk/un/tGhhUPP3ExPLbfk7C0d8jE+YWKlhjhbsHhHUc3pLmDt2wvuiW
+	 QthuYHsLLyCJO4pw6H0ZW7ySakKlI0DCgbqKd8lcYTC5J/WQBmKwyv66iRmhLucSPo
+	 YhAnUNr2iwTYK1iD5HJvN8DLsyxzOsFcsyhKaauodEDqz9EVVIolcZ1dve4YhBD+nl
+	 ES1287K33hprA==
+Date: Fri, 20 Nov 2026 10:48:47 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Richard Cheng <icheng@nvidia.com>
-Cc: dave@stgolabs.net, jic23@kernel.org, dave.jiang@intel.com,
-	alison.schofield@intel.com, vishal.l.verma@intel.com,
-	helgaas@google.com, iweiny@kernel.org, ming.li@zohomail.com,
-	linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, tglx@kernel.org, wangruikang@iscas.ac.cn,
-	alifm@linux.ibm.com, shawn.lin@rock-chips.com,
-	lihaoxiang@isrc.iscas.ac.cn, 18255117159@163.com,
-	xiangzao@linux.alibaba.com, vidyas@nvidia.com, kaihengf@nvidia.com,
-	kobak@nvidia.com, newtonl@nvidia.com, kristinc@nvidia.com,
-	Benjamin Cheatham <benjamin.cheatham@amd.com>,
-	Alex Williamson <alex@shazbot.org>
-Subject: Re: [PATCH v3 1/2] PCI/MSI: Skip MSI/MSI-X restoration when config
- space is inaccessible
-Message-ID: <20261120163909.GA878361@bhelgaas>
+To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>, lukas@wunner.de,
+	sebott@linux.ibm.com, schnelle@linux.ibm.com, bblock@linux.ibm.com,
+	linux@roeck-us.net, matthew.brost@intel.com,
+	michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
+	dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
+	lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
+	ionut_n2001@yahoo.com, sunlightlinux@gmail.com
+Subject: Re: [PATCH 1/1] PCI: Don't block bridge config access while waiting
+ for the device lock
+Message-ID: <20261120164847.GA887103@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -67,167 +66,106 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <av_8-NLyjXUQC0lK@MWDK4CY14F>
+In-Reply-To: <20261119123504.25906-2-ionut.nechita@windriver.com>
 
-[+cc Ben, Alex]
-
-On Fri, Nov 20, 2026 at 04:09:13PM +0800, Richard Cheng wrote:
-> On Mon, Nov 16, 2026 at 01:09:39PM +0800, Bjorn Helgaas wrote:
-> > On Mon, Nov 16, 2026 at 02:52:28PM +0800, Richard Cheng wrote:
-> > > PCI state restoration runs even when a reset fails. If the device's
-> > > config space remains inaccessible, MSI-X restoration still writes the
-> > > MSI-X table. The table lives in device memory space, and these MMIO
-> > > accesses can trigger additional errors, including DPC.
-> > > 
-> > > MSI is programmed entirely through config space, so it doesn't issue
-> > > such MMIO accesses. Restoring it is still pointless when config space is
-> > > inaccessible: reads return all ones and the restore path writes back
-> > > values derived from them.
-> > > 
-> > > Check whether config space of pci device is accessible or not at the
-> > > start of both MSI and MSI-X path, after msi_enabled/msix_enabled test
-> > > and before any config access, and skip the restoration if the device is
-> > > inaccessible.
-> > > Make the helper non-static and declare it in pci.h so the MSI code can
-> > > use it, too.
-> > > 
-> > > Signed-off-by: Richard Cheng <icheng@nvidia.com>
-> > > ---
-> > > Changelog:
-> > > 
-> > > v2 -> v3:
-> > > - Cover MSI restoration path as well (Farhan)
-> > > - Use pci_dev_config_accessible() instead of open-coding the check, and
-> > >   make it non-static (Farhan)
-> > > - Move the check before any config space access in the restore
-> > >   functions (Farhan)
-> > > - The return value of the PCI Command read is no longer checked, since
-> > >   the helper only tests for an all-ones value.
-> > > - Update the subject and commit message accordingly
-> > > ---
-> > >  drivers/pci/msi/msi.c | 6 ++++++
-> > >  drivers/pci/pci.c     | 2 +-
-> > >  drivers/pci/pci.h     | 1 +
-> > >  3 files changed, 8 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-> > > index 8a0133a6a286..2865f73f5ead 100644
-> > > --- a/drivers/pci/msi/msi.c
-> > > +++ b/drivers/pci/msi/msi.c
-> > > @@ -524,6 +524,9 @@ void __pci_restore_msi_state(struct pci_dev *dev)
-> > >  	if (!dev->msi_enabled)
-> > >  		return;
-> > >  
-> > > +	if (!pci_dev_config_accessible(dev, "restore MSI state"))
-> > > +		return;
-> > 
-> > Sigh.  I hate the fact that pci_dev_config_accessible() is
-> > proliferating even though it's obviously racy.  Maybe it's the best we
-> > can do, but I just feel like we're digging this hole deeper.
-> >
-> Hmm I agree this is racy even though we're holding the device lock
-> throughout the reset/restore process.
+On Thu, Nov 19, 2026 at 02:35:04PM +0200, Ionut Nechita (Wind River) wrote:
+> From: Ionut Nechita <ionut.nechita@windriver.com>
 > 
-> I assume you mean something like a separate sources DPC happened and
-> make the device inaccessible , some scenario like that ?
-
-Yes.  A PCI device can stop responding at any time, e.g., it got
-physically removed from a slot, a cable was removed, its internal
-firmware crashed, power failed, etc.
-
-> > Also, this is called in the pci_restore_state() path, which is full of
-> > other things that also write to config space and will also fail in
-> > this situation.
+> pci_reset_function() locks the upstream bridge with pci_dev_lock(),
+> which takes the bridge's device lock and then blocks config access to
+> the bridge, and only then takes the device lock of the function being
+> reset. If another task holds that device lock, the reset sleeps with
+> config access to the bridge blocked, and every user config read of the
+> bridge sleeps in pci_wait_cfg() for as long.
 > 
-> Actually I was trying to cover the whole pci_restore_state() in v1 [1],
-> and Benjamin raise the concern about the drivers may depen on PCI state
-> having been restored by the time reset_done() runs.
-
-I think you're referring specifically to Ben's comment [2] that driver
-.reset_done() handlers expect that pci_restore_state() has already
-been completed, and your "[PATCH 3/4] PCI: Skip state restoration when
-configuration is inaccessible" patch calls .reset_done() without any
-restoration if the device was inaccessible:
-
-  static void pci_dev_restore(struct pci_dev *dev)
-  {
-        const struct pci_error_handlers *err_handler =
-                        dev->driver ? dev->driver->err_handler : NULL;
-
- -      pci_restore_state(dev);
- +      /* MSI-X restoration may access device MMIO. */
- +      if (pci_dev_config_accessible(dev, "restore state"))
- +              pci_restore_state(dev);
-
-        /*
-         * dev->driver->err_handler->reset_done() is protected against
-         * races with ->remove() by the device lock, which must be held by
-         * the caller.
-         */
-        if (err_handler && err_handler->reset_done)
-                err_handler->reset_done(dev);
-
-I think Ben is absolutely right that .reset_done() handlers expect the
-device to be accessible and config state to have been restored, and I
-don't think it's reasonable to expect every driver's .reset_done() to
-handle that generic problem.
-
-I think pci_restore_state() needs to return failure and callers need
-to figure out how to deal with that.  There are a lot of callers, so
-it's messy, but we should recognize that it can fail.
-
-> What my bug actually hit was MSI-X table write triggered DPC, I can't
-> justify for all kinds of driver, so I limited the scope.
+> This happens with vfio-pci when a userspace driver keeps a VF open:
 > 
-> If you think a broader check in pci_dev_restore() is a better place to
-> handle this, I'm happy to give a deeper research and revisit it.
+>   1. A driver unbind of the VF waits in vfio_unregister_group_dev()
+>      for the user to release the device, holding the VF device lock.
+>   2. Writing 0 to sriov_numvfs on the PF takes the PF device lock and
+>      waits in sriov_disable() for the VF device lock.
+>   3. Writing 1 to the PF "reset" attribute calls pci_reset_function(),
+>      which blocks config access to the PF's upstream bridge and waits
+>      for the PF device lock.
 > 
-> Best regards,
-> Richard Cheng.
+> From then on lspci, which reads the config space of every device,
+> hangs in D state, and so does any tool or agent that runs it, until
+> the userspace driver releases the VF:
 > 
-> [1]: https://lore.kernel.org/all/20260929020405.9724-1-icheng@nvidia.com/
+>   lspci           D
+>     pci_wait_cfg+0x60/0xc0
+>     pci_user_read_config_dword+0xcc/0xf0
+>     pci_read_config+0xf5/0x290
+>     kernfs_fop_read_iter+0xb6/0x1b0
+>     vfs_read+0x21f/0x340
+> 
+> This was hit with an Intel FPGA PAC N3000 FEC device bound to vfio-pci
+> (PF and VFs), where the SR-IOV FEC operator reconfigures the PF while a
+> DPDK application holds one of its VFs.
+> 
+> Take the device locks first, bridge before device as before, and block
+> config access to the bridge and the device only once both are held.
+> The order between the two device locks is unchanged. Config access is
+> now blocked only while the reset runs, not while waiting for a lock.
+> 
+> The reset itself still waits for the device lock, so the tasks in
+> steps 1-3 stay blocked until the user releases the VF. Only config
+> reads of unrelated callers stop being blocked.
+> 
+> Fixes: 7e89efc6e9e4 ("PCI: Lock upstream bridge for pci_reset_function()")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
 
-[2] https://lore.kernel.org/all/8a19d63c-db9a-40ab-a811-5d761252638f@amd.com/
+Applied to pci/reset for v7.5, thank you!
 
-> > >  	entry = irq_get_msi_desc(dev->irq);
-> > >  
-> > >  	pci_intx_for_msi(dev, 0);
-> > > @@ -877,6 +880,9 @@ void __pci_restore_msix_state(struct pci_dev *dev)
-> > >  	if (!dev->msix_enabled)
-> > >  		return;
-> > >  
-> > > +	if (!pci_dev_config_accessible(dev, "restore MSI-X state"))
-> > > +		return;
-> > > +
-> > >  	/* route the table */
-> > >  	pci_intx_for_msi(dev, 0);
-> > >  	pci_msix_clear_and_set_ctrl(dev, 0,
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 7c6f2aba8144..671ffe4da1c8 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -714,7 +714,7 @@ u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
-> > >  }
-> > >  EXPORT_SYMBOL_GPL(pci_find_dvsec_capability);
-> > >  
-> > > -static bool pci_dev_config_accessible(struct pci_dev *dev, char *msg)
-> > > +bool pci_dev_config_accessible(struct pci_dev *dev, char *msg)
-> > >  {
-> > >  	u32 val;
-> > >  
-> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > > index 77efa4c5c960..98dd3dbd5edb 100644
-> > > --- a/drivers/pci/pci.h
-> > > +++ b/drivers/pci/pci.h
-> > > @@ -240,6 +240,7 @@ enum pci_mmap_api {
-> > >  int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
-> > >  		  enum pci_mmap_api mmap_api);
-> > >  
-> > > +bool pci_dev_config_accessible(struct pci_dev *dev, char *msg);
-> > >  bool pci_reset_supported(struct pci_dev *dev);
-> > >  void pci_init_reset_methods(struct pci_dev *dev);
-> > >  int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
-> > > -- 
-> > > 2.43.0
-> > > 
-> > 
+> ---
+>  drivers/pci/pci.c | 24 ++++++++++++++++++++----
+>  1 file changed, 20 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d79f73b28..9c8d5dda9 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5345,19 +5345,35 @@ int pci_reset_function(struct pci_dev *dev)
+>  	 * no upstream bridge configuration to hold consistent.
+>  	 */
+>  	bridge = pci_upstream_bridge(dev);
+> +
+> +	/*
+> +	 * Take the device locks, bridge before device, before blocking
+> +	 * config access to either of them.  device_lock() can sleep for as
+> +	 * long as another task holds it, e.g. a driver unbind waiting for
+> +	 * a vfio user to release the device.  If config access to the
+> +	 * bridge were already blocked at that point, every config read of
+> +	 * the bridge (lspci, sysfs "config") would sleep in pci_wait_cfg()
+> +	 * for the same time.
+> +	 */
+>  	if (bridge)
+> -		pci_dev_lock(bridge);
+> +		device_lock(&bridge->dev);
+> +	device_lock(&dev->dev);
+> +	if (bridge)
+> +		pci_cfg_access_lock(bridge);
+> +	pci_cfg_access_lock(dev);
+>  
+> -	pci_dev_lock(dev);
+>  	pci_dev_save_and_disable(dev);
+>  
+>  	rc = __pci_reset_function_locked(dev);
+>  
+>  	pci_dev_restore(dev);
+> -	pci_dev_unlock(dev);
+>  
+> +	pci_cfg_access_unlock(dev);
+>  	if (bridge)
+> -		pci_dev_unlock(bridge);
+> +		pci_cfg_access_unlock(bridge);
+> +	device_unlock(&dev->dev);
+> +	if (bridge)
+> +		device_unlock(&bridge->dev);
+>  
+>  	return rc;
+>  }
+> -- 
+> 2.55.0
+> 
