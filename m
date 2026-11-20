@@ -1,98 +1,158 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795173099;
-	b=UHsTdlIMMShv3aGiFc75DWomQvwaQKl18ihf19b5WcIvVzTdddiUUXnr3o2kHqNJrFU4
-	 zDoOGaIER+Zz/3+jOQOzeQSWJXtc0ca0hZTqtQYc8rpin9i3RDxGHf7xRlY7Nmk+/87fL
-	 kXAOEU5bwhw2e87a3nTIM9kofNP+ODu/GPlN4IUNXaZNGrdQFC5jQIOANgBguTe+mZlTW
-	 Jqy+Nte/8a/Vxfc3eBRE4MAdPgBWgbf95nYrYLmw5QuuKSc91Oa/Ukt3J42SW06ujcWoA
-	 X1GpzrdPULVhhGziHl5FleGEwoF3FC5KB5qODPn1nLYedAPxgdqAg0zJnI6yfkqJ7iA==
+	t=1795173100;
+	b=3oW/OEn7aoRsEss5cMu4whbpPsXSKtDl4h5Y94s1+m6ZXtxKdDpI5VaZ+i/Qo7osi8kO
+	 GovZIdSZdPThvJxRfJOtfwyLEiKMRB3CI22I9ERIph+nId1KSHLcV3BLc3gp/2a3QC4mU
+	 eNXaAxExHVKn2tbjuZaWPzEuPr4ler2meC45FYpWeYJ3oevFWeptmBdt4T+UqatD/8Dqn
+	 Bp3aGe1ma7gb6qLuOjvPyyKZg+2Pc/cwUEJ1PtZv2TcKUXkyx3UDsBmscVhMp2hr+HCab
+	 2aob7IJiHdBUqz6sMHe05nSbWvLmE+NAVsT/4QOdzWUB+mIdBorT0qF7gXTcSkDirvQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795173099;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795173100;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Type:X-Developer-Signature:X-Developer-Key:
-	 Content-Transfer-Encoding;
-	bh=jCk7TrXv9jUrk4Gfl+UVBBzdL7B0+zwnyGk+aBsGGKk=;
-	b=zc3XDmWwJGKkmmMxfxgFGBOjbot8C+5yl/26gj79SFGG65Fi6pPLj+3J2mUhsKOxB0LC
-	 9PPqZPXL3FyGZjudI3aBisGwDcNLw9AY7eQRW8cbHmFZV9RroneJDGSqu1OGDUL01nOwH
-	 C2IvIiA3rwN2Vfg0agkTFKo0SuCbS4hdOhdU5iM0evzm5lKnQjCfOeRrB9EXET2Aocx5k
-	 aIk1hoD7IihmXYjb07yqMXzBYzOhug6oLX+WrJYsy72ZblFTtuLe4AdVDKaF+Cj8Se5Ga
-	 /z7Xg7U28wrjoKWITIat9LhtpljRi5CoVe2jh8BJh8+DbrBUCwEgMc34lOB93CrVT3A==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=6iowvnjr0RIgWlIDQQOFrlHY5uCtXtYYlYEEp/cOH20=;
+	b=wTuECPwViuhIfD6ciUwjT5YtPRkVp3cXYldJA7X8sfNsqf0BT+0Q5v6UihzKAqsywoCh
+	 ULSTCEtbgwtenwNZYjTuCZnZwRzKy+wK9cxWYTIeJ2ykpxT6ETi07AyINhJRz8SVA49XB
+	 9FStQJGkWg7SKKb0XBKJANaAgbtZ3NZfTnmsE/O2iOZGjqTTXmB6+dnKDuuUhh4Xzi2k4
+	 5rSOsE4TLJ/rOdKcju5O5K78vfaQK87l4QkGCxOJ91r0Rb7wKM+MDfs+VGYwVBdSYULdq
+	 k/yd0U0OMD0utow7Ty0DLhkb882JKUHmWld8Iiypm3rYtnCBUjLcRzB4KrCIWDNFc3A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=baylibre.com;
 	spf=pass smtp.mailfrom=baylibre.com;
-	dkim=pass header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=fue1tzI4;
-	arc=none smtp.remote-ip=209.85.221.51
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	dkim=pass header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=cy0T8JFY;
+	arc=none smtp.remote-ip=209.85.221.54
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D74560A381B
-	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 11:11:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7D74560A381B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BB9360A2635
+	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 11:11:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6BB9360A2635
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=fue1tzI4
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-4a2f4ca0dcfso382210f8f.1
-        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 03:11:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=cy0T8JFY
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-4a2f4ca0dcfso382154f8f.1
+        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 03:11:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1795173096; x=1795777896; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jCk7TrXv9jUrk4Gfl+UVBBzdL7B0+zwnyGk+aBsGGKk=;
-        b=fue1tzI4/kuCB2cGdMm5c80OylZihvMeq+oe9Y4WPgypSow1qTUVBzRoxv1prpN30F
-         Q/3gltySmOq6YIEkB7r7VsdZK8loZA/g0CWgJ8cF7cFXwv4j4N8UDR79MAXRP9GxSf9c
-         9/1qG/hOx6XKvqTKHBuhoOmEq2etQ5KBrhAqBEB3hGd+CiLSOleZVJ/6r5X/NGJKkwhn
-         DuD6vEmhVbRzQsq3oK+SJv4R2lsxHVsDmyV99TwwOtigbfgMAqFI2zCh1G7VMiTEeyCM
-         A/W+GYlkY3KgGUskp3Uc76dJTzVfzQJ7c9XHadcjBLNV65KkhHB2v/C+7qe1no4+Z4FI
-         c/PA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795173096; x=1795777896;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=baylibre.com; s=google; t=1795173093; x=1795777893; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=jCk7TrXv9jUrk4Gfl+UVBBzdL7B0+zwnyGk+aBsGGKk=;
-        b=gDx1qGzKKC3+Mrk9vcFD3r3mWZ/NIE6MH9LJe2KkjSkziJFn+mk4GMii4asdO6fvpw
-         y3vjEurzpud8SfO82b837U+9ivLwAPQuw84g8Apwh4Ej0sFoIfq2bAVCLccSa1Solak2
-         mKBZzLR5C4IkfSeqLsoTXNSOgC3ZArZ91D5/v0yeAmtcni+tnN+RvN1k+/UW7JMZBd2C
-         jWoJeOuiLpXRBAGUr7L1Fsi9JCC2swTexoGW1w0XBXlFKytLh1iAY8eWurn4CxpGXyrZ
-         gL31eOyuGPAl6Vb90I676a7hS4Xxv9uvlEkGnAVfCOdykNpbxAcvzEmIdrYyhODymLSm
-         SKxw==
-X-Forwarded-Encrypted: i=1; AL+hErFMeh2fWhdQsAo6QoiRec92lW66HQSYbTQym0GON1OSOv9SZPqXxWiGOskHVA2/NnEIK0HQ7nYIifA=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+grzLQ1Q3tgTgpqv5TKLZWXPj/qRtvNgAycxZRq1GEL1QD3dHV
-	rRcILddE6sIFiCm0bKCfU30wFoZvvdDDXk2ZnMUOFHzatP5P9sOrUoY95SKdPdYc5lL3YGsDGsx
-	d9dQ3
-X-Gm-Gg: AYBFou31E5RVtvMa4+jyv9deR7A7FwKWB/F8rNig5P1uVevWc9/N5OAt1+MUwj1wUna
-	a9Wj3Ao9R/ouQVZrDBeS4+Oc4fTW11x9E2070k7KKYXiR3O63nqwycI8601FQGGHiSYqbAhROYS
-	6cCr6ebv9UbW8OdJ97XPNoEyZSFea1a9qYYbgLJcWsTeMx9vjYyme2WZoawSkqmoafqHy6Qu21R
-	fJjNfwi6rfMafpGzNXhMN9j3tuWIMG/u+cTbXMNKU52R9RGD7h8AObQPQV3RTbMdtiN9aUHU4xi
-	PPaUIC1KMQ6m4G/1rZDiZTRluF32sH+jMClAnmD+uCq4oxujiqFRZVsbBOFChjz1P5lZhivnBSg
-	IRTj/G18bXWk/uswrlw4McQlJwg/YR2Xqg5F9pCVxBSnUD9sAYSYHwUYIpSokIRN5P+oectyTph
-	CrpHzScocw18tTjntNfHAh+CXknfEJxEb2SRMAqIxDTeRb2Issv+SJJOblg0vgfJjtgaDWsUK2t
-	k2zVSRFhChcznJWeIIhTzyAMOgl2fPJPOkwVlzB/NLbCM/9YdhaVtqXlSzJrLfth7T2ttfJSRt5
-	ttTho2G8wzso+JyIA1uZliI9jD9Tev7I0fuGR+57IE0kxOsR/FjjnK39IFqjXVQhwBhPpNmZkWt
-	I92CABSyV9mjAwXvg
-X-Received: by 2002:a05:600c:4f0f:b0:4bb:87f4:3674 with SMTP id 5b1f17b1804b1-4bb8880ef40mr71990655e9.15.1795173095850;
-        Fri, 20 Nov 2026 03:11:35 -0800 (PST)
+        bh=6iowvnjr0RIgWlIDQQOFrlHY5uCtXtYYlYEEp/cOH20=;
+        b=cy0T8JFYf6te/xTc1kjLehflkRMCyCLyy11kt5kR0iiTkUeh72a0VfbQtLsWdxQKbC
+         cFhL1NyNlrILzdeaX46VwkVy4MeXP+mFwxsgogALnuIqFabIzDYbfPIl3XyCnmwy3ai5
+         8T6EK3t8OE8eX7WpS5CBBnJ9gcHuPx45xGmWl0vctudKI11NB8OsFG4EaWegB9jAqjdE
+         yLVMj47I7qQc00jYFIsxNT/1utXJQ9rQvvCMZFbRZLgflQn5wfH6nc0qoZ6hPFJoQBZA
+         5jVraI3baGqMgrr/3P3ZFrjwysBQ3aAxoi2icTr9AnuVXVlkHmUvOvgDDhNFO4YMaSSw
+         JBMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795173093; x=1795777893;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=6iowvnjr0RIgWlIDQQOFrlHY5uCtXtYYlYEEp/cOH20=;
+        b=KyBCh45//EdWBgIbY7m0w2f1ChZeFXneMRWvBhqec6osQzqDtCRlm7/L2/+j6g2PoT
+         +ZS3wXl1aQs2zkJcP9YFn+/xZ3DULQ6yBXqPN+pTLtd954i9XiXYG6wXBVlET/y1A/lN
+         rifZ/+5OyVGUyFrhseOhEYnvIp9xSaoMkDUl20DC974J0K+KrgxtDZ0kFoWZhGQWi7MJ
+         /H6Ki9bTroWju8ow4Fh3yOxmLGfbqVaaoqdrAErWE/T5o/NRBdmm1R5ScePLzVU+7ROF
+         6koIGZUvAQkdSkqIcBhj+uNrhDhC9Z3hZ6lMaoZ5PahUunJPmurxUV19+zx/7AUdnrJi
+         eHqw==
+X-Forwarded-Encrypted: i=1; AL+hErFYq4VEzWjE4xU6s7jJj4EajD0b1AJ0nFWwMX5AF9XEe/I81pCLoJwkmpvW+yH4LXUV/Xq8PDhrNLk=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/6E49bU8r1dMh1TwxwDbPIdnNEnWDmJ0acbGaDr6iIQTKPigOr
+	mot/eXFuxyqjb0wudWi21xMVPJepDWWLWjQwWa9EHUUQz3HKNMgOdMbzk1hCVXS1M5o=
+X-Gm-Gg: AYBFou0WsgLSCBA4tsPuUk43RAKXn/lxwSY5cej4aOwUYRHAa/3Ch5YE4Af+7g0Q1TJ
+	W460XfebjcjFFhJ5P2eKt/3nljjAw32Xsh1QuUDA3/fDueGkt6EVp1cwSm7DPIFqKejsCMzydnB
+	JXGSBSmxtSgUOKArFibrhBLbLRb2QWE3cGk1HbUJbaiGB9s01xtUxHIgdnXwhTGgmNgDIuh0usg
+	rOTd6fhK78VyhQ1q9UJyiZ3xxBpKiTlH9TcBnZlA8Yblbpl7Q9Rm4mSmUIwkIymhy2pUnVqPvRq
+	6v6ieDXB+2sqYhlEWtcWsQiDPq0o7iabrNRTFMA4ukfbQRDaN/d8nxRDT8TGYiiNxb6fosxGAK1
+	TgfmWRrUjJA+XdpvniIZAvgtcqNzvlKwxrCTGnSaiAplXrryVtAP8eC7DhP/HmqfDa8UTCl9zX2
+	8tDhYsGWUSEpvrL3EVi1Vckk20dKB/qsCapEn3h1fO98J4QTcZ3BplsQS5UD2hAfyYq7jlQ27KJ
+	NYtvjBt7v23a7/j+uoZSAAPCekVmB9NW94SzlU2Zx2HNJqglp10jlGheKSVcieZGCyGb8pW+qCU
+	XVC8reGtbB8PsgbKA5N523KGSCS1XemodwRGJGwD1UxZI3MzesfVqbB9DMEC5Hta8a7T0cYGg2C
+	GnPmiZ4N1H10SkiOT
+X-Received: by 2002:a05:600c:3b0e:b0:4a1:efba:511 with SMTP id 5b1f17b1804b1-4bb8882508emr60110635e9.35.1795173092340;
+        Fri, 20 Nov 2026 03:11:32 -0800 (PST)
 Received: from localhost (p200300f65f19a904be03815e1634e776.dip0.t-ipconnect.de. [2003:f6:5f19:a904:be03:815e:1634:e776])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4bb88f6b6a6sm84111685e9.5.2026.11.20.03.11.34
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4bb884a15absm67887745e9.9.2026.11.20.03.11.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2026 03:11:34 -0800 (PST)
+        Fri, 20 Nov 2026 03:11:31 -0800 (PST)
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex@shazbot.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 02/10] PCI: Allow untainted driver_override for PCI stub drivers
-Date: Fri, 20 Nov 2026 12:11:03 +0100
-Message-ID:  <875df446719648081cae884073d8d50086dc16f6.1795171088.git.u.kleine-koenig@baylibre.com>
+	Danilo Krummrich <dakr@kernel.org>,
+	Johan Hovold <johan@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Ioana Ciornei <ioana.ciornei@nxp.com>,
+	Longfang Liu <liulongfang@huawei.com>,
+	Julian Ruess <julianr@linux.ibm.com>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Brett Creeley <brett.creeley@amd.com>,
+	Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+	=?utf-8?q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>,
+	Eric Auger <eric.auger@redhat.com>,
+	Eric Farman <farman@linux.ibm.com>,
+	Matthew Rosato <mjrosato@linux.ibm.com>,
+	Tony Krowiak <akrowiak@linux.ibm.com>,
+	Jason Herne <jjherne@linux.ibm.com>,
+	Harald Freudenberger <freude@linux.ibm.com>,
+	Holger Dengler <dengler@linux.ibm.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Mark Brown <broonie@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Brian Masney <bmasney+clk@redhat.com>,
+	Jerome Brunet <jbrunet+clk@baylibre.com>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Mathieu Poirier <mathieu.poirier@linaro.org>,
+	Srinivas Kandagatla <srini@kernel.org>,
+	Sylwester Nawrocki <s.nawrocki@samsung.com>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Jaroslav Kysela <perex@perex.cz>
+Cc: Jonathan Corbet <corbet@lwn.net>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Bradley Morgan <bradley.morgan@linux.dev>,
+	Armin Wolf <W_Armin@gmx.de>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	linux-doc@vger.kernel.org,
+	driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Alex Williamson <alex@shazbot.org>,
+	Mostafa Saleh <smostafa@google.com>,
+	kvm@vger.kernel.org,
+	qat-linux@intel.com,
+	virtualization@lists.linux.dev,
+	intel-xe@lists.freedesktop.org,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	Peter Oberparleiter <oberpar@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	linux-s390@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	linux-spi@vger.kernel.org,
+	Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	linux-clk@vger.kernel.org,
+	imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	linux-remoteproc@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	Takashi Iwai <tiwai@suse.com>
+Subject: [PATCH v2 00/10] driver core: Disable driver overriding by default
+Date: Fri, 20 Nov 2026 12:11:01 +0100
+Message-ID: <cover.1795171088.git.u.kleine-koenig@baylibre.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.1795171088.git.u.kleine-koenig@baylibre.com>
-References: <cover.1795171088.git.u.kleine-koenig@baylibre.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -103,58 +163,109 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1829; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=lkF1eBjn9Y6UWJ3MiU6AZAk2Feckz7JHeHwAlqjCoHY=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBrACrNZ1Jq9e11x52ErCQ+6JFtg5FGHMcI11UmD ohojlAGYUGJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCawAqzQAKCRCPgPtYfRL+ Tv1kCACjd7tsoIEr6ldwOmoosH+QGEkqsyAdpJzA5qZyGN0aK6aERGG6FPCPWLMgFw1iFWv+V/D 5G5W82HhE7CI05mFtFFu6qjsX7UX084ojo7be1ltxKmtoR3g+Z6y1jd+2UOhpnOxpQKo+2Zxj91 /1rDKdrumXp0bQ8SlubEx5id/xUB0dzTpLtEZn4si5Zap3ykIHnvg9zdB//qMX17ZJttiNNT7AG Kb+2krUQ5YBiOANxnB/IRNxE2r3zhhktoqb7iXKpCvQ5LeIh6e27DR7t8GsRJfFp+c2GMBYGnWc AEWWSmN5Qte4pO5Af7/wyoeXTKIvvXcOd3myENaKvjIb5E/i
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4896; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=zb+igsuXLt8tOTuUjhzAr7HaxCaZLq4II70BN40Br9Y=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBrACrJx1qga/LvoqPeQ2w7AGsIzkvZ0u8Ei7ilD OnkWyRDOleJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCawAqyQAKCRCPgPtYfRL+ TrT2B/4h+7Q3cE0LlxcXdMzSjo72DibWSV5sOQkmoVdvDT2jirOpWioUU86bki4NAIk6Z4fKuAQ Tq67UAFcdu/x0sb+TsWnSkdYqWbFXP1E9qqHzS6LbgG2Wo9AfXLnJRQPoIkCW5R3i/w6jmyDLiI LkWjw6qUO85o5cf3veZf7uvTVs/F1HlPcGi5H2XR8SEvtsTQoNcOqyDD/XO+JfY5VRim2QTygzC /LqpSYXX2fMI/PZcft+vtXeHkKEsua161Yxgcwt3mnXV1cWuUQhOgqkI5MNgrbn/8PHF60B4GWC cbYFOHiY7+15odYG/kF7YqO0HOLOodN9ndNTOKA9GdiXGD/D
 X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 
-From: Alex Williamson <alex@shazbot.org>
+Hello,
 
-As the name suggests, the pci-stub driver is only a stub, it performs
-no hardware access and is typically used only to prevent other drivers
-from binding to the device.
-
-Similarly, pci-pf-stub only interacts with devices through the SR-IOV
-capability, and may be used to create VFs on any PF that otherwise does
-not require a PF driver.
-
-Both of these are often used with driver_override, as this is our
-standard, non-racy mechanism for associating a driver to a device.
-With the introduction of support_driver_override in driver core, this
-use case needs to be explicitly flagged as safe or else the bind will
-be denied or taint the kernel.  Declare these drivers as safe for use
-with driver_override.
-
-Signed-off-by: Alex Williamson <alex@shazbot.org>
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
----
- drivers/pci/pci-pf-stub.c | 1 +
- drivers/pci/pci-stub.c    | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/pci/pci-pf-stub.c b/drivers/pci/pci-pf-stub.c
-index da4db4928907..328fb4a57092 100644
---- a/drivers/pci/pci-pf-stub.c
-+++ b/drivers/pci/pci-pf-stub.c
-@@ -36,6 +36,7 @@ static struct pci_driver pf_stub_driver = {
- 	.id_table		= pci_pf_stub_whitelist,
- 	.probe			= pci_pf_stub_probe,
- 	.sriov_configure	= pci_sriov_configure_simple,
-+	.driver.support_driver_override = true,
- };
- module_pci_driver(pf_stub_driver);
+here comes v2 which addresses the review feedback I got for (implicit)
+v1. See https://lore.kernel.org/linux-kernel/20261116110853.3418077-2-u.kleine-koenig@baylibre.com
+for the discussion about that previous submission.
  
-diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
-index 9bc478df4e8f..acbd43c17adc 100644
---- a/drivers/pci/pci-stub.c
-+++ b/drivers/pci/pci-stub.c
-@@ -37,6 +37,7 @@ static struct pci_driver stub_driver = {
- 	.id_table	= NULL,	/* only dynamic id's */
- 	.probe		= pci_stub_probe,
- 	.driver_managed_dma = true,
-+	.driver.support_driver_override = true,
- };
+The objective is to deny force binding a device to a driver that isn't
+prepared for that. There are many drivers that run in a null pointer
+exception when this happens and only very few drivers are supposed to be
+used like that. So the first patch implements an explicit opt-in for
+drivers and denies other matches; the remaining patches implement the
+opt-in for drivers that rely on it. This makes it unnecessary to fix
+individual drivers to explicitly refuse such bindings. See commit
+1e50a0349012 ("iio: adc: mcp3564: reject devices without match data")
+for an example of such a driver-specific fix.
+
+Changes since (implicit) v1:
  
- static int __init pci_stub_init(void)
+ - Rework parameter parsing to just use `allow_driver_override` on the
+   kernel commandline
+ - Add review tags
+ - Add patches by Alex Williamson setting .support_driver_override in
+   pci and vfio drivers
+ - Add patches for uio, spidev and a few more drivers setting
+   .support_driver_override
+ - align wording in Documentation/admin-guide/tainted-kernels.rst with 
+   tools/debugging/kernel-chktaint
+
+It is sensible to merge the driver core change (patch #1) together with
+the individual driver patches setting .support_driver_override because
+with the driver core change the driver override doesn't work any more
+for the unmodified drivers (unless the new kernel parameter is provided
+and a taint is accepted). So I suggest (once there is agreement that the
+patches are fine) to merge them all in one go and provide a stable
+branch in case a driver was missed to be adapted. I can create such a
+branch and ask Greg or Linus to pull it, or Greg can do that.
+
+So if you're the maintainer of one of the drivers touched by patches #2
+and later and assuming your ok with that patch, please provide your Ack
+(plus the required coordination if applicable) for not merging via your
+usual tree.
+
+Best regards
+Uwe
+
+Alex Williamson (3):
+  PCI: Allow untainted driver_override for PCI stub drivers
+  vfio: Allow untainted use of driver_override
+  s390/vfio: Allow untainted use of driver_override
+
+Uwe Kleine-König (7):
+  driver core: Disable driver overriding by default
+  uio: Allow untainted use of driver_override
+  spi: spidev: Allow untainted use of driver_override
+  clk: imx: scu: Allow untainted use of driver_override
+  remoteproc: Allow untainted use of driver_override
+  slimbus: qcom-ngd-ctrl: Allow untainted use of driver_override
+  ASoC: samsung: i2s: Allow untainted use of driver_override
+
+ .../admin-guide/kernel-parameters.txt         |  6 +++
+ Documentation/admin-guide/tainted-kernels.rst | 54 ++++++++++---------
+ drivers/base/bus.c                            | 51 ++++++++++++++++++
+ drivers/clk/imx/clk-scu.c                     |  1 +
+ drivers/pci/pci-pf-stub.c                     |  1 +
+ drivers/pci/pci-stub.c                        |  1 +
+ drivers/rpmsg/rpmsg_ctrl.c                    |  1 +
+ drivers/rpmsg/rpmsg_ns.c                      |  5 +-
+ drivers/s390/cio/vfio_ccw_drv.c               |  1 +
+ drivers/s390/crypto/vfio_ap_drv.c             |  1 +
+ drivers/slimbus/qcom-ngd-ctrl.c               |  1 +
+ drivers/spi/spidev.c                          |  1 +
+ drivers/uio/uio_dmem_genirq.c                 |  1 +
+ drivers/uio/uio_hv_generic.c                  |  1 +
+ drivers/uio/uio_pci_generic.c                 |  1 +
+ drivers/uio/uio_pdrv_genirq.c                 |  1 +
+ drivers/vfio/cdx/main.c                       |  1 +
+ drivers/vfio/fsl-mc/vfio_fsl_mc.c             |  1 +
+ .../vfio/pci/hisilicon/hisi_acc_vfio_pci.c    |  3 +-
+ drivers/vfio/pci/ism/main.c                   |  3 +-
+ drivers/vfio/pci/mlx5/main.c                  |  3 +-
+ drivers/vfio/pci/nvgrace-gpu/main.c           |  3 +-
+ drivers/vfio/pci/pds/pci_drv.c                |  3 +-
+ drivers/vfio/pci/qat/main.c                   |  3 +-
+ drivers/vfio/pci/vfio_pci.c                   |  3 +-
+ drivers/vfio/pci/virtio/main.c                |  3 +-
+ drivers/vfio/pci/xe/main.c                    |  3 +-
+ drivers/vfio/platform/vfio_amba.c             |  1 +
+ drivers/vfio/platform/vfio_platform.c         |  1 +
+ include/linux/device.h                        | 19 +------
+ include/linux/device/driver.h                 |  2 +
+ include/linux/panic.h                         |  3 +-
+ include/trace/events/module.h                 |  3 +-
+ kernel/panic.c                                |  3 +-
+ sound/soc/samsung/i2s.c                       |  1 +
+ tools/debugging/kernel-chktaint               |  9 ++++
+ 36 files changed, 144 insertions(+), 55 deletions(-)
+
+
+base-commit: 7cfbf79c66c63e807ea452abf0546e6f6d6833a6
 -- 
 2.56.0.rc1
 
