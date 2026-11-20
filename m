@@ -1,122 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.43
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.177
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795199705;
-	b=vefE7YsghnXHuwP2aCagFc4md7jVtZcYE464J8VdMR1OgSixy0gOwMSgCZgNg3Rb7Kmc
-	 pHzFB3l2Y6IvSkpJb7oO4kI4T0wMQVTcZL+ZeOCNokFDvJ6QD5JYnJvPshZnYe4Wcny9j
-	 q6PSbWyXD3d/x6PZMzXkEgJ8gqsa0RfBa6APiv8/C56YCVHgPuKxQTc8A+d3B4w/a0WE5
-	 eLz4/kfeKADG5se5R/krunhjQzqulvl8pHXiHW8ANVCcbyhR9mbqz6qw2IMNMuDBDn/Jl
-	 WAATgRLfPPLgy5SZeG7Z+DvSBgimXwtmB2foAG/t9jk4TlRRkENwkDSwTCPml3kjSXA==
+	t=1795201873;
+	b=iybiXQs+2+Raei9uZzxvvJjo1Gs5X2K3e1PU9J7J8niBb4paeq4WOremcU3uLJwm50qP
+	 MLmeXQEpPgg49VEHGbV0TFEjozysdFO5sZDq+XA0LFTXMsoWXyXo63aQWRL9C1dog+fJ6
+	 KZsfn0elmsQSbHHZyuxxIbkzGMchZWT8KbU9146t2ICWHLoSxJoXYEdr0/LajiMGRjzUR
+	 9Mhx0Lc86Lg03EnP/qqD/EWrXrig1Qs2rcExD53VNU1sZsQ58B/95OcIr7KaK0T51k+SI
+	 yRn2Gv6B9yJ0t9drtKogzJqaq4NCoIGRTtj6JF53Z5D6+bawdntZlEe4mRNVT4tSjIg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795199705;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795201873;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=jPtMMj+TNQI4z5t6onBp93FYMjBvk5RvCFaoZZ65vCY=;
-	b=F6XnK7Gnu8m5JMPyZMXOQHBiUD+5dJrSas0fR/A1HJJZCtVwd0doE6G7x+OxZtTcbTRp
-	 PFS2jUNRBRqBm+5oqHnDXWDW9F8TWwA6ziIdJq4h0GBwomY+Qql56H/NukSmB6CforIdR
-	 NTO5OGHuU5M4Np1JicPck+Y3bGiBsaHCdX98734MS5YuaNyHii8tfvNsF0zA830OxFpBj
-	 cTnHgzcAm3jKAYDbS/ktNQKath6Umtmej2WAyf2nUDlwOl7KnOs/urjyWspSkg1bJWzUA
-	 ubOpWkvyY1oB5edRKE5gr96fA+p0F8tnG+keRn+ghbDmetiKzt47ToTI1r9iF9sugPw==
+	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
+	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
+	bh=ckLOMz2fV3kY9YEywvc/HmidWwaCPHWXqmOxBtkfgk0=;
+	b=VI3H0gj2GPfnm1q/O5fbhrJxxezwZNuMjmtes0IYlBlCe+LZJOWd3Kq/xM3FKLQVcpLH
+	 XQdByubLhVY2Qtf7uux3xvgOqdv2GIygbERzk2UGSx82cuWkFs4AoocoIFOUHPhAc5+EX
+	 WuxyHT98aFbyvo9WdW04+aWJNg9J3hEHkC0l+UF7mMrDijkbqMY0RFXC4K+2rk5sNRA5C
+	 LpbEvjjey1o76/ZOVzYyados+n0VYdKQ7sJ4Z5kqNNTuqv2sZ4E8eRZihCwQB5jDC+Xpy
+	 nXkBczaqyrZJ6R0dJdEi234nlHnEyepq8JZr/RVj40zdZN9M9iusTAg/sRgGlRWXhig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=JM5nliiE;
-	arc=none smtp.remote-ip=209.85.219.43
-Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O+fxjRu1;
+	arc=none smtp.remote-ip=209.85.214.177
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26EBA60A2611
-	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 18:34:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 26EBA60A2611
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CA0D60A262C
+	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 19:11:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4CA0D60A262C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=JM5nliiE
-Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-91f0274f88cso17583706d6.0
-        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 10:34:59 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O+fxjRu1
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2f020d0169eso6752025ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 11:11:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1795199699; x=1795804499; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jPtMMj+TNQI4z5t6onBp93FYMjBvk5RvCFaoZZ65vCY=;
-        b=JM5nliiElBRIEJ+B90qYXzTnYzd/+stv+wN4hwHPgqTVP8FYNDHiBWaWDvaGRGBFxN
-         DqILVZ3+XhMDQbPxlO8nhrLm/3w+AS8V4/RKa0SdUR6IexGhtW/Uv60cJ4DkbyFlLhOE
-         Pl5l+2oZREQoIwCUMY+E4wr8rSVuY88AyEEMkOvGbhgTCninzjOvTw2NxmuFvZ7F+iej
-         DSP94PiPMzI29zQ2p9efX119ggGHZGyIOl6SqlcuiuwZZ8zvQMORhl9uXP/+Kg0BjB6g
-         LN1AMmDfqP8DHpgXbQTq5ecBBCz9h9vFIy3naJJn1zHRpF8CqaAU+DUip0emRErZQjgp
-         a4nA==
+        d=google.com; s=20260707; t=1795201866; x=1795806666; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=ckLOMz2fV3kY9YEywvc/HmidWwaCPHWXqmOxBtkfgk0=;
+        b=O+fxjRu1L8o/GQOmrbYEa0HGa6evkd3h+96eJ6qUcjeM30qdIrfklzDzXKYCiADbV4
+         dvKd5V1EtilzPW6404OoZ4ACppJpu8TsEUunsJxY8AiMnHxilwjTO8YjYgg69uRZe0bz
+         4icg4AaxpiOWfCx5uquPDiZ5EByXXQB60/Q45DpvSt1ncWdgmjJwkBiJMmxQWwHAtQAK
+         nOSCkmKy0BZv8lW4O6uBS88/ISLoSYQ//XVVDEq5wmGPyci8Mh+G2/HjyZTlMFWwlXEz
+         SposvM2yys1S5tBZ8DPOhJ4rgRWfKrze4w0PI9thsuIuTJVpL0hrgHArgQ96RtwqkLrq
+         QjSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795199699; x=1795804499;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1795201866; x=1795806666;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=jPtMMj+TNQI4z5t6onBp93FYMjBvk5RvCFaoZZ65vCY=;
-        b=PuuNCAQnAvK59i8dv18QW0wFh8FDpEtuAYSPXn6jStEuxT6R0pLiHHxyyhk8MF3I9k
-         wOhyux5LWrNwSpjMKNORpVVQZOeCTqYDO0cWvCE4iEKRWXqGnNDQtlCAdvC+ccoMkdVd
-         8/XhPyF2lkLEJxqh40hI/7Bdy1Xv3nfn5KZbwAk4Or6qk5wgt/wuoneC2rU91nAFF9pI
-         WKWPXPUaqSqEmDiEqwaDU+BzE9lC0CMZ4cKT4omzx+miLBmEtNyIgQXT9jHipKDVfdRf
-         /6W7BRk00HGVO7S43aoa/nML5Zfy2RTHJKkCltQyck1ozZOD1iGOQy2a/fslweS5I0p7
-         48Aw==
-X-Forwarded-Encrypted: i=1; AL+hErGEdPEE9sfw5QmRoQ8/gTfUjvZ6FubwSdH6DAatYVW1Kw+hpei423LHSB79Ripc3Is0guONxKHMCWE=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8NL5vX8x4I3+eXtn5IDAgPIJehK/9SQQY7zmO4DvwDPJNLOHtj
-	LHqpAjz9+7jyTRwUTgqEpBHW2bBA717QgoivBtcQMNsOCnSIUlfvqVCHxh96rI8nNnY=
-X-Gm-Gg: AZFdTZekJE6+PjxC6NNvBkMOn+jFzpfcXqv3ZAnHRMinUL3FtNnVuAnRDZ/E2pvPH2N
-	/6wflT1lXLfsWfBjoM3tFRK7mfpdHnib/Hy7QaLYhU4qTGaxdNztAGEAI4a9mi6vgnMv8YQTT9E
-	zo6p3d7iUPljuvp79ffnUD2SzcJge1+8iyx55mfJlrQr9VxdOK++t5h+aIb4n/5s/eZnGg5CF3O
-	YMBGxfD135lUjAMtQGaRuQXDo6hQpD0M2g2tfLdvPUw+pxyKpal/ayYxejKU5S6P7b5wvVEF/Qx
-	Fi8WFXYOoZKN3rCiC/UkHWG0wzYSP6MNKw4gt0iWv5JEJqzukgbCRYdhlbnwe8FNREl87hOhkqp
-	fC0uVNeNAaAnJasF3ZqBIcq/U+7jN8YhTLxfM8wBElrCrfZLCiFNaSEhb0GVKSwMbypyiG/h7wN
-	vp3Uy6OsVnfgGkGCYLxMi6YENhhyTuGc6/MYO0cGSKrfTAWWeASp1+gQ6/EylNrSnMahcOOLiG4
-	PyKQ4tstraQfd6gyOlYKB1aSG+K3S54RgfrXuXB6QAHPrwIHFjgKSRBPnjARgBoO3HNhkIqstEt
-	jNAVLA==
-X-Received: by 2002:a05:6214:4881:b0:921:152a:4e48 with SMTP id 6a1803df08f44-92134b1abb5mr65747176d6.32.1795199698766;
-        Fri, 20 Nov 2026 10:34:58 -0800 (PST)
-Received: from ziepe.ca ([142.166.156.71])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-92134a16754sm32821016d6.39.2026.11.20.10.34.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2026 10:34:58 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xUTRp-00000004jZ9-0OT6;
-	Fri, 20 Nov 2026 14:34:57 -0400
-Date: Fri, 20 Nov 2026 14:34:57 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
-	linux-coco@lists.linux.dev, Alex Williamson <alex@shazbot.org>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Steven Price <steven.price@arm.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Ashish Kalra <ashish.kalra@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>, iommu@lists.linux.dev,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v9 09/13] iommufd/viommu: Select vIOMMU operations before
- allocation
-Message-ID: <20261120183457.GQ3115493@ziepe.ca>
-References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
- <20261116081935.85372-10-aneesh.kumar@kernel.org>
- <20261120094207.00002e89@linux.microsoft.com>
+        bh=ckLOMz2fV3kY9YEywvc/HmidWwaCPHWXqmOxBtkfgk0=;
+        b=IhMVSkswtyEP9glA6pXZOB3sO1IFoGbk9hO+Et/9uyYJ3yMtavKGAlRjApHN8GvzQj
+         xSde/88OCYidDhZyI5P5JEH8YKj4en+viHaNKjZu0/mi/cAkbjhtkkxzX5PdFwBTSzUm
+         qHxqqHDQvbZLI/fRolY6ADiRkAvBG+0UBoi63RfckKsoTiYp6iEhlBIC0os0rQ6WfxuZ
+         uNjhWZUoqiCTNtOc10oG/KKdaucQUNaJmYYaXLq4DRLhVed1OjbffsreQUngVea8RVc/
+         vnDgVV2uwYkAti9YqNibTP1ii76xuNfo/4gCRrm3kXvjXq2NNtY02Q3+0UcXyoP9Gao5
+         sYhA==
+X-Forwarded-Encrypted: i=1; AL+hErEKw/biK4Z/xP9Wg/iXTEqwRCDklhPCal6YET/COz+l54Ra0ZBrg71Z/6kCB13Jb9dGzpgDceIxK2w=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9RZMoyQ1N9FHbssDfmidu3XV9oOO3/lGOwwJONa1OIIq3mRwkD
+	6rTZdbbUtPbS+pjYz3WSqBONx6cNa5NR++e1tqur8Q15GOW9RAVXjgLgY1oT+5Wq68uk596EB4x
+	j5m3PmPsp
+X-Gm-Gg: AZFdTZf3UPzQZ4t0frZx9TazVy196EDCKpL3yHW/0x0783JCOS1h9yCfT++HhmuasnP
+	RndrmCtYIDmLmvfzFeKtLxfm+pvkLNFwmin4qCaBmjri7nT0wOA4sRvLol9YJWhlGOHuRnxdqKQ
+	VBL+yhGrjnI4JJjW7NnjjP+6VRD8A1zSA4FRGrZppofHBRdD/W1mPqe8Qp6ZfFgKLk9esqSzlX1
+	Kl/NbTTcK7RX+00VU4JTh/fLSGWTtSin7nBo0l/nGqpzCUDdkZcwRZjfmUzQiKNc8Fpomb72eD6
+	M2OzMcR86cRygFejqHT60z8CrOWr09jxsap3EIQWUFS+NUQEWL7Y3+rpjQYp5gZ+uqUkVdGn61L
+	rGtR/e2kRLnFJd79Cop+djRqM5MEly7RqgTMrT06v0U2TEwPV5mWcICqQrmd4v9HU4iSS27ZZbM
+	cGNpx6kJ5N02sXe7qb5/ktseXRjsMLLh5oi9Kiew9/FTDgVkggbIqeHGviLWcQnOXqAIhTfLnfy
+	Cbwh//FEYhl1T4Dnr/LAAX4LfNXiMMQ79yzP3/WyCHTi7+ANfNwDUshTfsgZ02H+vdjMISB/YSv
+	Mr1fZNM+F3rBFFkvINt2rBxie+b+ywf7BTcRYckcSUVXJZfMMPBiXDkp3gunJ0xP
+X-Received: by 2002:a17:903:3b8d:b0:2e9:5714:6079 with SMTP id d9443c01a7336-2f03f1a4a0dmr40668915ad.31.1795201865671;
+        Fri, 20 Nov 2026 11:11:05 -0800 (PST)
+Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f1413f3sm17535745ad.68.2026.11.20.11.11.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 20 Nov 2026 11:11:04 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -125,20 +88,133 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261120094207.00002e89@linux.microsoft.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 20 Nov 2026 11:11:04 -0800
+Message-Id: <DN09Y7673R13.3GB4PTE9ZPXAE@google.com>
+Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf"
+ <graf@amazon.com>, "Alex Williamson" <alex@shazbot.org>, "Alex Williamson"
+ <alex.williamson@nvidia.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Chris
+ Down" <chris@chrisdown.name>, "Chris Li" <chrisl@kernel.org>, "David
+ Rientjes" <rientjes@google.com>, "Jacob Pan"
+ <jacob.pan@linux.microsoft.com>, "Jason Gunthorpe" <jgg@nvidia.com>,
+ "Jonathan Corbet" <corbet@lwn.net>, "Josh Hilke" <jrhilke@google.com>,
+ "Leon Romanovsky" <leonro@nvidia.com>, "Lukas Wunner" <lukas@wunner.de>,
+ "Mike Rapoport" <rppt@kernel.org>, "Parav Pandit" <parav@nvidia.com>,
+ "Pasha Tatashin" <pasha.tatashin@soleen.com>, "Pranjal Shrivastava"
+ <praan@google.com>, "Pratyush Yadav" <pratyush@kernel.org>, "Randy Dunlap"
+ <rdunlap@infradead.org>, "Saeed Mahameed" <saeedm@nvidia.com>, "Samiullah
+ Khawaja" <skhawaja@google.com>, "Shuah Khan" <skhan@linuxfoundation.org>,
+ "Vipin Sharma" <vipinsh@google.com>, "William Tu" <witu@nvidia.com>, "Yi
+ Liu" <yi.l.liu@intel.com>
+Subject: Re: [PATCH v11 11/13] PCI: liveupdate: Freeze preservation status
+ during shutdown
+From: "David Matlack" <dmatlack@google.com>
+To: <sashiko-reviews@lists.linux.dev>, "David Matlack"
+ <dmatlack@google.com>, <kexec@lists.infradead.org>, <linux-mm@kvack.org>,
+ <linux-pci@vger.kernel.org>
+X-Mailer: aerc 0.21.0
+References: <20261118223704.3286085-1-dmatlack@google.com>
+ <20261118223704.3286085-12-dmatlack@google.com>
+ <sashiko-outbox-224146@kernel.org>
+In-Reply-To: <sashiko-outbox-224146@kernel.org>
 
-On Fri, Nov 20, 2026 at 09:42:07AM -0800, Jacob Pan wrote:
-> > Temporarily disable AMD vIOMMU allocation by returning NULL from
-> > amd_iommufd_get_viommu_ops() while the vIOMMU interfaces are being
-> > updated.
-> > 
-> why? if this merged, it would break AMD driver vIOMMU functionality.
-> And not temporary as I didn't see enabling in this set.
+On Thu Nov 19, 2026 at 2:38 PM PST, sashiko-bot wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential
+> issue to consider:
+> - [High] pci: liveupdate: panic on session teardown after
+>   pci_liveupdate_freeze()
+> --
+>
+> commit a3120ec70b92ea26f3e1d92d3bd0d1531b5a73b6
+> Author: David Matlack <dmatlack@google.com>
+>
+> PCI: liveupdate: Freeze preservation status during shutdown
+>
+> This commit freezes a PCI device's outgoing live update preservation
+> status in pci_device_shutdown() so that devices cannot be preserved or
+> unpreserved once shutdown begins.
+>
+>> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+>> index a45ad86370d5d..e26d2f5c2338c 100644
+>> --- a/drivers/pci/liveupdate.c
+>> +++ b/drivers/pci/liveupdate.c
+>
+> [ ... ]
+>
+>> @@ -520,6 +523,11 @@ static int pci_liveupdate_unpreserve_device(struct =
+pci_flb_outgoing *outgoing,
+>>  {
+>>  	struct pci_dev_ser *dev_ser =3D dev->liveupdate.outgoing;
+>> =20
+>> +	if (dev->liveupdate.frozen) {
+>> +		pci_warn(dev, "Cannot unpreserve device after it is frozen!\n");
+>> +		return -EINVAL;
+>> +	}
+>
+> [Severity: High]
+> Can rejecting pci_liveupdate_unpreserve_device() on a frozen device trigg=
+er a
+> panic in pci_check_all_devices_released() when a Live Update session is
+> closed during a non-kexec shutdown?
+>
+> Unlike kernel_kexec(), which calls liveupdate_reboot() to serialize sessi=
+ons
+> before device_shutdown(), non-kexec shutdown paths (kernel_restart(),
+> kernel_halt(), and kernel_power_off()) call device_shutdown() ->
+> pci_device_shutdown() -> pci_liveupdate_freeze() without serializing Live
+> Update sessions.
+>
+> If a task closes an open session FD with a preserved PCI device during or
+> after pci_device_shutdown(), luo_file_unpreserve_files() invokes the file
+> handler's .unpreserve() callback and then unconditionally drops the outgo=
+ing
+> FLB reference:
+>
+> kernel/liveupdate/luo_file.c:luo_file_unpreserve_files() {
+>     ...
+> 		luo_file->fh->ops->unpreserve(&args);
+> 		luo_flb_file_unpreserve(luo_file->fh);
+>     ...
+> }
+>
+> Because dev->liveupdate.frozen is set, pci_liveupdate_unpreserve_device()
+> returns -EINVAL without decrementing dev_ser->refcount or
+> outgoing->ser->nr_devices.  When luo_flb_file_unpreserve() drops the fina=
+l
+> FLB reference, pci_flb_unpreserve() calls pci_check_all_devices_released(=
+),
+> which panics because outgoing->ser->nr_devices is still non-zero.
 
-It is broken already, it is missing some series to finish it. It was a
-mistake to leave it on like this.
+Yes, this can happen, although only in a narrow window.
+kernel_restart(), kernel_halt(), and kernel_power_off() do not freeze
+userspace or serialize Live Update sessions, so a task that still holds
+a session FD when reboot(2) is called (e.g. reboot -f, which skips
+killing userspace first) can close it after its devices have been
+frozen. In v10 this only resulted in a warning, but the panic added to
+pci_flb_unpreserve() in v11 turns it into a panic during reboot.
 
-Jason
+The freeze only matters during kexec. pci_device_shutdown() only checks
+pci_liveupdate_is_outgoing() when kexec_in_progress is set, and
+kernel_kexec() serializes all sessions via liveupdate_reboot() before
+device_shutdown(), so nothing can be unpreserved after devices are
+frozen.
+
+I will fix this in v12 by only freezing devices during kexec, so that a
+non-kexec shutdown no longer refuses to unpreserve devices:
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 08b768b9e905..2748ca22e9cf 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -560,7 +560,8 @@ static void pci_device_shutdown(struct device *dev)
+ 	struct pci_dev *pci_dev =3D to_pci_dev(dev);
+ 	struct pci_driver *drv =3D pci_dev->driver;
+=20
+-	pci_liveupdate_freeze(pci_dev);
++	if (kexec_in_progress)
++		pci_liveupdate_freeze(pci_dev);
+ 	pm_runtime_resume(dev);
+=20
+ 	if (drv && drv->shutdown)
