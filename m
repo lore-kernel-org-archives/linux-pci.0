@@ -1,63 +1,122 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795198787;
-	b=i5wFJg6RUjkHGGmvGDTUbS/gAZF6LjEYgRRfV6H7yoPlrHHpTnRa1nSOw7CP6sP6an5i
-	 VSSAnFKx62LEXvrSfx9gWNPkVQNVSk+HQ5CCm7Z6pDrm5BrwHxYt5o1883ZE0t68SvV4A
-	 vc327Ni+NG0JCX2AzO7TNTKvein5N1SjJ3NvFFrs2kpILTKN6j9dQDZ51GgX13hN5IHQf
-	 7TNaVbL9ywpVLO+p040pS2iWholPyhcbAOsI1N5DHjDXrXTY5qvNfdlGTsE2rd/t0YWEV
-	 DdJTFl3TTHNXzrKOLfpLCcm7hhB0MFAZIaOsYO7+MZRNFyIbQyc9tCwf4W2x00l7k9g==
+	t=1795199705;
+	b=vefE7YsghnXHuwP2aCagFc4md7jVtZcYE464J8VdMR1OgSixy0gOwMSgCZgNg3Rb7Kmc
+	 pHzFB3l2Y6IvSkpJb7oO4kI4T0wMQVTcZL+ZeOCNokFDvJ6QD5JYnJvPshZnYe4Wcny9j
+	 q6PSbWyXD3d/x6PZMzXkEgJ8gqsa0RfBa6APiv8/C56YCVHgPuKxQTc8A+d3B4w/a0WE5
+	 eLz4/kfeKADG5se5R/krunhjQzqulvl8pHXiHW8ANVCcbyhR9mbqz6qw2IMNMuDBDn/Jl
+	 WAATgRLfPPLgy5SZeG7Z+DvSBgimXwtmB2foAG/t9jk4TlRRkENwkDSwTCPml3kjSXA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198787;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=5Vhbt7aW3jWHIeGfBwm+6fRLbamSR1yw/0kxYWIIdZI=;
-	b=kgf0M52EcO30JuLnK48un9tHcZXVGXK2VsjU3VCBNbk7pVbzrwhOShQTP0yPzBtbCKSx
-	 6yRIJOR1jVmfNOJwdxOXQAoR3syo+O5Neweq59/nczYT1YoFHFJ/ZNa0dHx67rJVfdsNj
-	 CxaeOjJ9t3b+UJMDx2/RQ0I5yPsZi3P7nQPURAVJV9/QmLyS1DiryZ+iF9S3CzgIlHH7f
-	 xA/wgiFcf1VLnbwqttrn6gBfetC6TTRarV/qR5C01tawwwvcHp7EDCMjusDCaDQoTYT+g
-	 R8hr3aVYD6lOiZ0XzT+bveLrMyxEaVwheLZY7UH0BW/DTGkda/ILkEvT9ks/dKCI6zw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795199705;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=jPtMMj+TNQI4z5t6onBp93FYMjBvk5RvCFaoZZ65vCY=;
+	b=F6XnK7Gnu8m5JMPyZMXOQHBiUD+5dJrSas0fR/A1HJJZCtVwd0doE6G7x+OxZtTcbTRp
+	 PFS2jUNRBRqBm+5oqHnDXWDW9F8TWwA6ziIdJq4h0GBwomY+Qql56H/NukSmB6CforIdR
+	 NTO5OGHuU5M4Np1JicPck+Y3bGiBsaHCdX98734MS5YuaNyHii8tfvNsF0zA830OxFpBj
+	 cTnHgzcAm3jKAYDbS/ktNQKath6Umtmej2WAyf2nUDlwOl7KnOs/urjyWspSkg1bJWzUA
+	 ubOpWkvyY1oB5edRKE5gr96fA+p0F8tnG+keRn+ghbDmetiKzt47ToTI1r9iF9sugPw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="akpEE/dG";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=ziepe.ca;
+	spf=pass smtp.mailfrom=ziepe.ca;
+	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=JM5nliiE;
+	arc=none smtp.remote-ip=209.85.219.43
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A37C606A889
-	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 18:19:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26EBA60A2611
+	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 18:34:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 26EBA60A2611
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=akpEE/dG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBB121F000F0;
-	Fri, 20 Nov 2026 18:19:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198786;
-	bh=5Vhbt7aW3jWHIeGfBwm+6fRLbamSR1yw/0kxYWIIdZI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=akpEE/dGvzTVKXG44McHDOZeqdy4kbz+M72BYyCuS8m9ySpFgszqdxQwiAI9raS/Y
-	 x7UMfxeVB+x1/opIhppv5+xHQ2U9hrhCRfQSoNnCb9pSteB73hFRa7gjyzzHylqzBD
-	 wz+hRpFB35xxc5Tfj9JDXSf3pKZJ+eS54Jw3PPQ9krWwg0LmNosYlLmS5I8NOGUmOe
-	 LI2EcY7o7V9OBOY1q/N3FHBZnfjv3PqZr2zFqsGrZpKSJ9oJaLSU+t2Gt62TQ/HoE8
-	 P5q21HdhZsjxL3Qo92xU8KtSyKuTeMMtam8UXF/Wq2BzEs1QJIIXK2Tgn/Y8sAiHJL
-	 MPyKavkBMfmFg==
-Date: Fri, 20 Nov 2026 12:19:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Raag Jadav <raag.jadav@intel.com>, linux-pci@vger.kernel.org,
-	Sourabh Jain <sourabhjain@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org,
-	Aravind Iddamsetty <aravind.iddamsetty@intel.com>,
-	Srinivasa Adatrao <srinivasa.adatrao@intel.com>,
-	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Terry Bowman <terry.bowman@amd.com>,
-	Keith Busch <kbusch@kernel.org>,
-	Maciej Grochowski <Maciej.Grochowski@sony.com>,
-	Yazen Ghannam <yazen.ghannam@amd.com>,
-	Darshit Shah <darnshah@amazon.de>, Jason Perlow <jperlow@gmail.com>,
-	Riana Tauro <riana.tauro@intel.com>,
-	Yury Murashka <yurypm@arista.com>,
-	Matthew W Carlis <mattc@purestorage.com>
-Subject: Re: [PATCH v2 0/7] Error reporting for AER-incapable devices
-Message-ID: <20261120181945.GA904595@bhelgaas>
+	dkim=pass (2048-bit key, unprotected) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=JM5nliiE
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-91f0274f88cso17583706d6.0
+        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 10:34:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1795199699; x=1795804499; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=jPtMMj+TNQI4z5t6onBp93FYMjBvk5RvCFaoZZ65vCY=;
+        b=JM5nliiElBRIEJ+B90qYXzTnYzd/+stv+wN4hwHPgqTVP8FYNDHiBWaWDvaGRGBFxN
+         DqILVZ3+XhMDQbPxlO8nhrLm/3w+AS8V4/RKa0SdUR6IexGhtW/Uv60cJ4DkbyFlLhOE
+         Pl5l+2oZREQoIwCUMY+E4wr8rSVuY88AyEEMkOvGbhgTCninzjOvTw2NxmuFvZ7F+iej
+         DSP94PiPMzI29zQ2p9efX119ggGHZGyIOl6SqlcuiuwZZ8zvQMORhl9uXP/+Kg0BjB6g
+         LN1AMmDfqP8DHpgXbQTq5ecBBCz9h9vFIy3naJJn1zHRpF8CqaAU+DUip0emRErZQjgp
+         a4nA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795199699; x=1795804499;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jPtMMj+TNQI4z5t6onBp93FYMjBvk5RvCFaoZZ65vCY=;
+        b=PuuNCAQnAvK59i8dv18QW0wFh8FDpEtuAYSPXn6jStEuxT6R0pLiHHxyyhk8MF3I9k
+         wOhyux5LWrNwSpjMKNORpVVQZOeCTqYDO0cWvCE4iEKRWXqGnNDQtlCAdvC+ccoMkdVd
+         8/XhPyF2lkLEJxqh40hI/7Bdy1Xv3nfn5KZbwAk4Or6qk5wgt/wuoneC2rU91nAFF9pI
+         WKWPXPUaqSqEmDiEqwaDU+BzE9lC0CMZ4cKT4omzx+miLBmEtNyIgQXT9jHipKDVfdRf
+         /6W7BRk00HGVO7S43aoa/nML5Zfy2RTHJKkCltQyck1ozZOD1iGOQy2a/fslweS5I0p7
+         48Aw==
+X-Forwarded-Encrypted: i=1; AL+hErGEdPEE9sfw5QmRoQ8/gTfUjvZ6FubwSdH6DAatYVW1Kw+hpei423LHSB79Ripc3Is0guONxKHMCWE=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8NL5vX8x4I3+eXtn5IDAgPIJehK/9SQQY7zmO4DvwDPJNLOHtj
+	LHqpAjz9+7jyTRwUTgqEpBHW2bBA717QgoivBtcQMNsOCnSIUlfvqVCHxh96rI8nNnY=
+X-Gm-Gg: AZFdTZekJE6+PjxC6NNvBkMOn+jFzpfcXqv3ZAnHRMinUL3FtNnVuAnRDZ/E2pvPH2N
+	/6wflT1lXLfsWfBjoM3tFRK7mfpdHnib/Hy7QaLYhU4qTGaxdNztAGEAI4a9mi6vgnMv8YQTT9E
+	zo6p3d7iUPljuvp79ffnUD2SzcJge1+8iyx55mfJlrQr9VxdOK++t5h+aIb4n/5s/eZnGg5CF3O
+	YMBGxfD135lUjAMtQGaRuQXDo6hQpD0M2g2tfLdvPUw+pxyKpal/ayYxejKU5S6P7b5wvVEF/Qx
+	Fi8WFXYOoZKN3rCiC/UkHWG0wzYSP6MNKw4gt0iWv5JEJqzukgbCRYdhlbnwe8FNREl87hOhkqp
+	fC0uVNeNAaAnJasF3ZqBIcq/U+7jN8YhTLxfM8wBElrCrfZLCiFNaSEhb0GVKSwMbypyiG/h7wN
+	vp3Uy6OsVnfgGkGCYLxMi6YENhhyTuGc6/MYO0cGSKrfTAWWeASp1+gQ6/EylNrSnMahcOOLiG4
+	PyKQ4tstraQfd6gyOlYKB1aSG+K3S54RgfrXuXB6QAHPrwIHFjgKSRBPnjARgBoO3HNhkIqstEt
+	jNAVLA==
+X-Received: by 2002:a05:6214:4881:b0:921:152a:4e48 with SMTP id 6a1803df08f44-92134b1abb5mr65747176d6.32.1795199698766;
+        Fri, 20 Nov 2026 10:34:58 -0800 (PST)
+Received: from ziepe.ca ([142.166.156.71])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-92134a16754sm32821016d6.39.2026.11.20.10.34.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Nov 2026 10:34:58 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1xUTRp-00000004jZ9-0OT6;
+	Fri, 20 Nov 2026 14:34:57 -0400
+Date: Fri, 20 Nov 2026 14:34:57 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	linux-coco@lists.linux.dev, Alex Williamson <alex@shazbot.org>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Steven Price <steven.price@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Thierry Reding <thierry.reding@kernel.org>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>, iommu@lists.linux.dev,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v9 09/13] iommufd/viommu: Select vIOMMU operations before
+ allocation
+Message-ID: <20261120183457.GQ3115493@ziepe.ca>
+References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
+ <20261116081935.85372-10-aneesh.kumar@kernel.org>
+ <20261120094207.00002e89@linux.microsoft.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -69,81 +128,17 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1794997749.git.lukas@wunner.de>
+In-Reply-To: <20261120094207.00002e89@linux.microsoft.com>
 
-On Wed, Nov 18, 2026 at 11:40:00AM +0100, Lukas Wunner wrote:
-> Bjorn suggests "the PCI core should do pci_enable_pcie_error_reporting()
-> independent of whether the device has an AER Capability":
-> 
-> https://lore.kernel.org/r/20260826212619.GA1566339@bhelgaas/
-> 
-> This is done in patch [7/7].  The preceding patches contain prep work.
-> 
-> For context, PCIe r7.1 sec 6.2.1 defines two error reporting paradigms:
-> AER and baseline capability.  The latter relies (solely) on the error
-> enable/status bits in the Device Control and Device Status registers,
-> which exist on every PCIe device.  The kernel has supported the AER
-> paradigm for 20 years.  With the present series, it gains support for
-> the baseline capability paradigm.
-> 
-> Patches [1/7] and [2/7] reinstate DPC on AER-incapable Downstream Ports.
-> The kernel used to support this until 2018.  It is hereby fixed because
-> it eases introduction of baseline capability error reporting in the
-> subsequent patches.
-> 
-> 
-> Changes v1 -> v2:
-> 
-> * Patch [1/7]:
->   * On AER-capable devices, infer severity from AER Extended Capability
->     instead of Device Status register because the latter also logs masked
->     errors (Sathya).
->   * Fix storytelling in commit message because 4e5fad429bd1 changed
->     behavior, not 708b20003624 (Sathya).
-> 
-> * Patch [3/7]:
->   * New patch to clear error status bits more selectively (sashiko).
-> 
-> * Patch [4/7]:
->   * Clear Fatal Errors as well on recovery failure (Sathya, sashiko).
-> 
-> * Patch [6/7]:
->   * Amend kernel-doc of pci_aer_unmask_internal_errors() (Sathya).
-> 
-> * Patch [7/7]:
->   * Convert AER severity to Device Status bit with new severity2devsta[]
->     array, instead of renumbering AER severity (sashiko).
->   * On entry of aer_get_device_error_info(), clear info->mask and
->     info->first_error (Sathya, sashiko).
->   * Emit "(no details available)" message for AER-incapable devices
->     as well as for devices whose AER registers are deliberately not
->     read on Fatal Errors (Sathya).
->   * Amend commit message to inform that System Errors may be raised
->     by AER-incapable devices if they have no AER- or DPC-capable
->     port in their ancestry (Sathya).
-> 
-> Link to v1:
-> 
-> https://lore.kernel.org/r/cover.1790531238.git.lukas@wunner.de/
-> 
-> 
-> Lukas Wunner (6):
->   PCI/DPC: Avoid access to non-existent AER capability
->   PCI/DPC: Reinstate support for AER-incapable ports
->   PCI/ERR: Clear error status bits more selectively
->   PCI/AER: Drop AER native check from handles_cxl_errors()
->   PCI/AER: Move AER capability check out of pcie_aer_is_native()
->   PCI/AER: Enable baseline capability error reporting
-> 
-> Yury Murashka (1):
->   PCI/ERR: Avoid stale error status bits on recovery failure
-> 
->  .../ABI/testing/sysfs-bus-pci-devices-aer     | 26 +++++--
->  Documentation/PCI/pcieaer-howto.rst           |  9 +--
->  drivers/pci/pcie/aer.c                        | 76 +++++++++++++------
->  drivers/pci/pcie/aer_cxl_rch.c                |  3 +-
->  drivers/pci/pcie/dpc.c                        | 46 +++++++----
->  drivers/pci/pcie/err.c                        | 14 +++-
->  6 files changed, 120 insertions(+), 54 deletions(-)
+On Fri, Nov 20, 2026 at 09:42:07AM -0800, Jacob Pan wrote:
+> > Temporarily disable AMD vIOMMU allocation by returning NULL from
+> > amd_iommufd_get_viommu_ops() while the vIOMMU interfaces are being
+> > updated.
+> > 
+> why? if this merged, it would break AMD driver vIOMMU functionality.
+> And not temporary as I didn't see enabling in this set.
 
-Applied to pci/aer for v7.5, thanks!
+It is broken already, it is missing some series to finish it. It was a
+mistake to leave it on like this.
+
+Jason
