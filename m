@@ -1,68 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.210
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795143536;
-	b=cWFZZ4tuFGcbK8pFnJfj9mfB7kg053VfZoyRC/qOrABBGjzYpWBfAC7/sD/Un1s2nJji
-	 54MBiTWcYVNniIl6u88uDFnpiRDxRlBs2drA+ZS9JM2Bsu9r4ZXrRMBJ8IkqUpr8Vyaom
-	 ck1mmk3noaWkpp5+0/+w3WuCodwBI8qjNge5M2Z7jDOHYyK3ypFTBR6kRJq6uW4K2c6Hj
-	 eQUqEI1eTGyIO3RT70WD0nj+c8WzSybuxpeXycwH4gaUCiUK4WudjxloIcrWyogsyjPRk
-	 1Tvb3Zg89cEvuMZmuRjMqdtbQE18f6GbKLQE64YFZrKp5gFLyXZaCZUZUw23sGiHBgw==
+	t=1795144951;
+	b=XSgdx08X2tDjJ85M+hdmpwuPgJd+i0wJeXolB33a83CFCnHjFN2udbu4zizsODAD7Cbr
+	 QcyGPvziB+jSS+AF97kAvbPaTzAj5oLWuqUBa7ZpnEjeWzBsjlB1dv8GXsVUkwEDqDf2W
+	 i59JPcIVw7D5c5q5gYtxihaX+j97wR6RW9sfg8ntUiljNOIq7VrKPeUw2P6cRy1CpG2GO
+	 0Q6T/Ddw2xMgki2cw055TAL/bCDJsigzwzKGH1iek+f3JydIddm16VX8gQCQOq4X47OWW
+	 pnCFJV/m3VhP4bhbiHEeJ8sfRmnfn4quvCfHmQnocG/FL3Gbtzd6/Qm2WPRky90evHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795143536;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Cc:Subject:To:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=jwjWgtW4kRseoA0zVDGCPLIdUcXknOULKOmu6gYkLdw=;
-	b=mpA7oQFN7mt2fQlg3xgxUFqll5veFA0qsWdVJGZIqP6Mhb0ces/hFg9wJwBMP1vrxPNh
-	 HSb2AyMDEJ4plrZ/qFJWSzrLRRx66F4hbDVqpE1LDNgA9hmfUT4SXXCzueC1XHUXrwjnz
-	 CpsW9SVWIL01kfxhiqCMi+T0IfvcH8qo6fIXO8QrLyL/GaXpqmmOi9hnglZ0xq3rUplpx
-	 M9LeD2eCSqtiriH82Zj6HE03cAFmmjgZYdizgRbYWCaLt0vU8FD0XwMHOI8IovFWjI2g/
-	 7HX/N5UGbr+HCWm/HeMTP6clXWQ7huKJushdNjkb6jAaMqMY4xLq0wbYUPG/zDnIytg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795144951;
+	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=Lj800CrS6xgIALrmGK5YjkIsRh+/Mj8maNuJko9hCY8=;
+	b=iDZ6T1e1lpRRmRIVfqCdjPTOkalwTSGGcEL7Noz2PbJhYI9zeJvma6fSgRnOsLmHxcTo
+	 RE3HY9mqDt7rtMOBnh4TlDq6hDfDMKlVYf2/oYPaVjjihB4eZ/KmlY2f778JxCpfBCKLZ
+	 z4kLmhr/Xk08m2/YuZTLQdLbO/D1XJI1WTCmWlfQ4FqcEiQ8Io/8oaewBld9AsP1txOBu
+	 tpNclF+r4kdy/bXN0r1ll8ALJ7R4E92nvduLetn6+P5WFfnusJT1qcSHIfdD3BdK/st+B
+	 H5gwq2gXYkbP5vddYzNfiO9GCNnsbyaF4tQEE0GHkD8QH0Yt9JautYn08KY3CUrynEg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=PPI2Tz45;
-	arc=none smtp.remote-ip=198.175.65.10
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	dmarc=pass header.from=foxmail.com;
+	spf=pass smtp.mailfrom=foxmail.com;
+	dkim=pass header.d=foxmail.com header.i=@foxmail.com header.a=rsa-sha256 header.s=s201512 header.b=OUniGQQ4;
+	arc=none smtp.remote-ip=162.62.57.210
+Received: from out162-62-57-210.mail.qq.com (out162-62-57-210.mail.qq.com [162.62.57.210])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8627B606A326;
-	Fri, 20 Nov 2026 02:58:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8627B606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 309C7606A332;
+	Fri, 20 Nov 2026 03:22:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 309C7606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=PPI2Tz45
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795143537; x=1826679537;
-  h=message-id:date:mime-version:cc:subject:to:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=hj2txJligqlKIDnOrXcY2GWTzSNfobaEGxDoiQKT+JY=;
-  b=PPI2Tz45fCY26IlHxGlcVdrBe9LJcBwKiK+Lr1+Cp6OhwabuGGDATSYZ
-   2P/MBq0Y3ywqlWF6sshTrccU6JFoyOK5fB7GqFFudc4Zc5rdODNZlAVk1
-   G4YFa5L51tDd7O3r3FoW+YGiIEqoKHX2M/7rr7wfRiPj3n+0uzJ99/uXk
-   gQ/yd4+V3EWaNhxI/S+pCOEJdbuENmLlWnGNzsYzGK90K3bT4ism7LI/r
-   kRNGYKBgt63o6OcJ4iC3DQqDZL5/lYP916vHkB9nu+0WM/YLSr81W/nbd
-   3GA3n2j8o9ENSTiuypXsZv0Ot34UWZe8AKJFgqBcIA8SJ0nWup/3nr1d9
-   Q==;
-X-CSE-ConnectionGUID: nrH7I9XvTSqg6Se3hh8oAA==
-X-CSE-MsgGUID: pHY5ORR6S7OVd0XHKsuKFA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11971"; a="3931082"
-X-IronPort-AV: E=Sophos;i="6.27,222,1787036400"; 
-   d="scan'208";a="3931082"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 18:58:56 -0800
-X-CSE-ConnectionGUID: pk12LqTwRhqc5Oao+l9uWg==
-X-CSE-MsgGUID: fKSf6pqqQ4++4flk103ZCA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,222,1787036400"; 
-   d="scan'208";a="10591451"
-Received: from unknown (HELO [10.238.1.144]) ([10.238.1.144])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 18:58:46 -0800
-Message-ID: <0996eead-a63e-4a17-96d3-45ccd48cd4b1@linux.intel.com>
-Date: Fri, 20 Nov 2026 10:58:44 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=foxmail.com header.i=@foxmail.com header.a=rsa-sha256 header.s=s201512 header.b=OUniGQQ4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+	s=s201512; t=1795144935;
+	bh=Lj800CrS6xgIALrmGK5YjkIsRh+/Mj8maNuJko9hCY8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=OUniGQQ4hDbLAPaoHV85YFCxkU9wzohfSo1e860pREMTlMWzDB+CgtNdA+D8xRKDa
+	 r4adRxpGhDnkwMJ6Q+BESI7LcODNO3hEIUxUanzROj1X8WGBhIISVI6mdDCKl4jqxa
+	 tExLkT1onepEMx8MYUYC7IVOdeMhxkAK0DsOhOsU=
+Received: from localhost.localdomain ([107.173.101.132])
+	by newxmesmtplogicsvrszc56-0.qq.com (NewEsmtp) with SMTP
+	id 58AB2488; Fri, 20 Nov 2026 11:22:10 +0800
+X-QQ-mid: xmsmtpt1795144930t5ryoowne
+Message-ID: <tencent_BA4D887B4358C473171507488D60E3F66205@qq.com>
+X-QQ-XMAILINFO: N84LmEYa7WqonnJNjkkgz9yKuNHP3ZR0Rw2GoawiKUaAw3URlx9zl7I6xFbpb+
+	 9+AiEbEl4Ccg/YEbRQtCrmUdlGOCFpzxwrCQOc5LNnTOM+oJqumpXTLXZsAsY+XEprYxZN06Tcz5
+	 jip4x8vusfwW8VKmrflMQgi9Ezi6f04C8RtW/YMk7bqPUFOmO6vNMmPg5/teoiyzc+YrIaR/0zCJ
+	 dXAXvoi9bHglMzC4S2OaXHGnqPnFWXhf3XTIvUVnmYytrt6Sy4Sa5OkA+hhy+VnX4AC6qfp3CiD5
+	 H/hcAUPsqv3hc7AUaPLJfxgRSmXviaOyUhKuQdkVhvUq6RGC6bRLMwtynJtlVC3Vgf40c1rYZHrW
+	 mo5TF8zo2dagNd4/Wgbo7gC4bG8MyB9eKaPX+q9ASkb/X7JhVXrTqsrESg0PMxcXHCHYXHwqRwh+
+	 43qGpt+dU3rSB1O+/U5YCx79c4UkK4r3QNuFdbJtDerVukK0Lzx7G4O+RapMnwARQ6ky548aY7Iy
+	 LdIY3pmxOh8eG6gWIXrNkOP7nwP1TqrXVFusQRsipnZp93lC4tWHuBO35RnnfmD/bIU715Vf0IWZ
+	 FPcXBBEkG8NEaejHhd2mR2/CqbRDgn/nfcByZz6QH+b38GLVbxpSimF0QHnoIgiufQV+B4XA/vtU
+	 GIawsAJDAl+ZmTEcFThZp8bvrb+krdiSHbF2hycY+H8v+44ABjTYVPMplgNWjN08lykN63CMBeNn
+	 +zoghbDtMkKbRMrj34Ttpit4kxgi+iIzku1lN3mnlKckXA1vD681HQInq4J9sL6g7MG3oFQ4i8wz
+	 xX9bPPYqWCPCsWPm+fKdNMbBpofJcZVZLJ6Waode2TEVn4OiwodLPzKPWUv0y3hcWVcFuPNfU3OI
+	 AKBRvepsb5QIZHlrbXWedAHlF7uiwajJM8qlnMpAKSKgqUMMamGnPyJhLrU/SQENZqEVdborlC+U
+	 Hy/jYwQySbeBiHM5QJwVqgESNI9M0iEDdw5f6TuAwuvXChY2lbCeQAavTZXQbUJ2YwjJkvcGc=
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+From: "Ziyou Wang (Lenovo)" <ziyou.dev@foxmail.com>
+To: lukas@wunner.de
+Cc: helgaas@kernel.org,
+	bhelgaas@google.com,
+	sathyanarayanan.kuppuswamy@linux.intel.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/DPC: Increase recovery timeout to 60 seconds
+Date: Fri, 20 Nov 2026 11:22:09 +0800
+X-OQ-MSGID: <20261120032209.2061155-1-ziyou.dev@foxmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <av666Q38S0q5HqYS@wunner.de>
+References: <av666Q38S0q5HqYS@wunner.de>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -72,67 +83,53 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: baolu.lu@linux.intel.com, Alex Williamson <alex@shazbot.org>,
- Alexey Kardashevskiy <aik@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Joerg Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>,
- Jonathan Hunter <jonathanh@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
- Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
- Nicolin Chen <nicolinc@nvidia.com>, Robin Murphy <robin.murphy@arm.com>,
- Samuel Ortiz <sameo@rivosinc.com>,
- Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
- Steven Price <steven.price@arm.com>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Suzuki K Poulose <suzuki.poulose@arm.com>,
- Thierry Reding <thierry.reding@kernel.org>,
- Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
- Xu Yilun <yilun.xu@linux.intel.com>, Ashish Kalra <ashish.kalra@amd.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, iommu@lists.linux.dev,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-tegra@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v9 08/13] PCI/TSM: Keep connections active while device
- contexts exist
-To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
- linux-coco@lists.linux.dev
-References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
- <20261116081935.85372-9-aneesh.kumar@kernel.org>
-Content-Language: en-US
-From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <20261116081935.85372-9-aneesh.kumar@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/16/2026 4:19 PM, Aneesh Kumar K.V (Arm) wrote:
-> Add PCI TEE Security Manager (TSM) contexts that prevent PF0 disconnect
-> while in use. Verify that the device is connected to the requested TSM.
-> Each successful get returns a separate context and requires a matching
-> put. Reject disconnect with -EBUSY until all contexts are released.
-> 
-> Remove the legacy bind and unbind interface. Device security state is
-> managed by the backend, so also remove the associated "bound" sysfs
-> attribute and its ABI documentation.
+Hi Lukas,
 
-This patch does two things: add pci tsm contexts to keep the pf0 active
-while in use, and remove the old device bind/unbind interface. Could
-these changes be split into separate patches? That would make the
-changes easier to review.
+The ACS Violation in that log is not organic, it is injected on purpose.
+The platform is AMD and we use AMD's RAS Error Injection Test tool to
+inject an "ACS fatal" error at the Root Port.  The test steps are:
 
-> 
-> Cc: Bjorn Helgaas<bhelgaas@google.com>
-> Cc:linux-pci@vger.kernel.org
-> Cc: Alexey Kardashevskiy<aik@amd.com>
-> Cc: Jason Gunthorpe<jgg@ziepe.ca>
-> Cc: Lukas Wunner<lukas@wunner.de>
-> Signed-off-by: Aneesh Kumar K.V (Arm)<aneesh.kumar@kernel.org>
-> ---
->   Documentation/ABI/testing/sysfs-bus-pci |  15 +-
->   drivers/pci/tsm/core.c                  | 227 ++++++++++--------------
->   include/linux/pci-tsm.h                 |  71 +++++---
->   3 files changed, 136 insertions(+), 177 deletions(-)
+  1. Shorten the machine check polling interval:
+
+       echo 1 > /sys/devices/system/machinecheck/machinecheck0/check_interval
+
+  2. List the PCIe slot info to find the socket/die/NBIO, PCIe core and
+     port that the NVMe drive is attached to:
+
+       ./cmdline_amdraserrorinjectiontest --listpcieslotinfo
+
+  3. Start I/O traffic on the NVMe drive:
+
+       dd if=/dev/nvmeXnY of=/dev/null bs=64k status=progress conv=noerror,sync
+
+  4. Inject the ACS fatal error at that Root Port:
+
+       ./cmdline_amdraserrorinjectiontest --pcieerror \
+         --sockdienbio <socket:die:nbio> --errortype 4 \
+         --pciecore <core> --pcieport <port> --enablestatusregisterpolling 1
+
+This raises ACSViol in the Root Port's AER Uncorrectable Error Status.
+The BIOS has AER and ACS enabled and AER reporting is set to firmware
+first, so firmware signals the EDR event and DPC containment follows.
+
+The TLP you decoded is a regular in-flight DMA write from the NVMe drive
+that happened to be captured in the AER Header Log (there was read
+traffic on the drive at injection time).  Its Requester ID is valid and
+Source Validation is enabled, so nothing in it violates any ACS rule.
+The ACSViol comes from the injector, not from real ACS logic.
+
+The ACS settings on the Root Port (same platform, 1022:1108):
+
+  ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans+
+  ACSCtl: SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans-
+
+The goal of the test was to produce a DPC containment event on an NVMe
+device that needs about 4 seconds to become config-ready again, in order
+to exercise the recovery path.
 
 Thanks,
-baolu
+
+Ziyou
+
