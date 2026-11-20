@@ -1,68 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795217296;
-	b=Yj5hYAN5mTHUDa3EnJmitSjLXDAmZzX075VKW/mpPy2zusgPaFG7LTucaqtXJaSNFosX
-	 H9Rx7Ck9cwETQUy+nBYmhqFk4M+W7D3qZNIda9m8ifXUyt9aaagwoNYRZIDW8VFZVvUy7
-	 dtHaLysa/W6OCJtJR4ivfQm/TjlDA1VuRyZyxwu/Ezt65Ns3oI/J+VKQ4LZsN7o/zgDB4
-	 hLhSOKow0gJrIIuSwFL3fVHAM4jLrg5Afi1BR7fdtVCn31Q02ebjRgvwD/VyY/4nWiHYh
-	 c5UC6smfKe7q3iWBOGzjY4njUMEnjM/JTRfxVDULm38akXYEOSD3l6n6hFYWOHiZNoA==
+	t=1795217768;
+	b=mz5Gf0nfX5mnz6SB2BhFNV3XUJCpqyga8v9nRiq4SVwGHTZQsQI1UpoiSM2ZWu9ZyuiB
+	 QtmqE+Xg/fVCA4O0d+41OqNSdBXtLHzDBC7qm40Lj7fH4iyz/I4j7FtDsn6zToFB8gAlT
+	 w5du1sxhCTSjUTgpQL3bB4KLFfmUSZOJr5tWY54MJc67XaXWGUf7G2oZw38CI/5Q8fAJq
+	 pN1eJLUA9v6/uhJVRCT04E3hJziWHPqcoJGUhQdhGVB1UGvWeNPejDisRNmSpEVmZ34LE
+	 XiGyfr7LSgCHoVOo0zAld1Vfr0myyTIWjQry7L2JbwhF+jjdb+Sxbo6tnwZi5+ETSGw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795217296;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=CPO9nmMT4mstAKBU4CTC3Q9F8oIE4yXnIGKpDlg4Yoc=;
-	b=vPOBm6lLjFgdsCOcEvj0HQtphuj6f/HkTvzGmd2/qcdo52Pv3ARlx16c6j5OgZ6Dtno4
-	 XcWK+VzTTrr7Hy/lU3iHWthWEmrsmKhASxav1ubMmp+7QaaxmlPiy//5tu1WwpI9atnN3
-	 AiM0MTBBT+eGwrA1O4noG03i6Kp0Y9fupBgdFDKsKx9y/uPTT2blrz2cW2rhG0PlWkUlg
-	 IHNb8uLgYjUxSd+tngkmLHdG7Xa1heKmaV8i9w4rFZkitIM62gWGdNF+SyVW0yAzhwIiJ
-	 /S7um1m/SPoOr9EZ2p4c9lZzDDZroIeo+jJdJ+YIzDDST5fDFHQLD4gOO0rtJJiIG6g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795217768;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
+	 From:To:Cc:Subject:X-Mailer:References:In-Reply-To;
+	bh=6fq/GPepzkTLXxM8Wn2MMXhIXKeiLSAPdWNcRYRGgzY=;
+	b=255WBL1y7i9E7PY6ueAET04NuwTJ9ChHVnve7nCn+vtpNXBX4A8vesLUB3mBEIKhJjsP
+	 bi4gIg0Y+WwMZ3e7wIXywjduiqhvnqNpQO+wMaadDTkXoLdCRRCDJqn1QmPvZpkac/3xS
+	 nVg/uWhnBbFXDuj3kpQX6ORd+oZR+znPS/w7xDrQwjRHaeM4KZLPEkEJ+QYMGULfwh9f2
+	 fQ9Eq+wM/dslRaRbh/XXtpELjjEBxT+8go5Re/Jxn7kwFlkfaYyNG7GB4JPuDb/qFOXz8
+	 KRGQ1/7QbkLv/0Ayf1rwG0XadY4ykmuFtmSOmQQhaQsYttSFFXwtCWJ+rjAhYKi04cg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=cGi7XaBP;
-	arc=none smtp.remote-ip=198.175.65.20
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ZUEGUCqZ;
+	arc=none smtp.remote-ip=209.85.216.52
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B5E606A6A0;
-	Fri, 20 Nov 2026 23:28:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 19B5E606A6A0
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20BF760A263A
+	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 23:36:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20BF760A263A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=cGi7XaBP
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795217296; x=1826753296;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=omKcPLxUQu1BKjyWQmPDNLKdY8Rx6Ex/C3EIfYoiBYU=;
-  b=cGi7XaBP/85+1QNhubcMjJ0yrGRf837PquNYoVZTS5yYdJ/8Dabyk/VD
-   RTFw1NEZH5Z5Fq2jyp7PHn4uVpFmv774vDdkyaVIWsnQlvd/kKAGt5oyD
-   E77YvYtG1BIuc5Y1WB/5SXO+VU8k7qI9Bu+cz7KL8Q80tW/fDToFsK1AK
-   42S6AApZmCPdlrS4XYQe87bl+7ZdLOLKYyzPy782TmGJfxdM1Zlad6VRA
-   QmAe7Eo1QmvrGzCb3tRFm/hcRtN/vwHc1W+gC/JwSLTFjFaE5JUV5JIvF
-   sca9EINZ6Lig1poSTGLhXYbwyjjg3fce7W1N7Gw6W7kQBkQzjdawpWSD2
-   w==;
-X-CSE-ConnectionGUID: ucWVKtidRZq3VZdjXQVf7A==
-X-CSE-MsgGUID: BmkovMdNSjScRhsvpBQjzg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11972"; a="4147280"
-X-IronPort-AV: E=Sophos;i="6.27,223,1787036400"; 
-   d="scan'208";a="4147280"
-Received: from fmviesa011.fm.intel.com ([10.60.135.151])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2026 15:28:15 -0800
-X-CSE-ConnectionGUID: wQuEKpfvQwyb1/k7/bzV9Q==
-X-CSE-MsgGUID: dmm90FEfSiS0LlJa6AemUQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,223,1787036400"; 
-   d="scan'208";a="12631371"
-Received: from jjgreens-desk24.amr.corp.intel.com (HELO [10.125.109.138]) ([10.125.109.138])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2026 15:28:14 -0800
-Message-ID: <1a3738ce-38f7-43a8-9cb3-66de6fca2e0f@intel.com>
-Date: Fri, 20 Nov 2026 16:28:12 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ZUEGUCqZ
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-3ae6b4c669fso2266109a91.0
+        for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 15:36:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1795217764; x=1795822564; darn=vger.kernel.org;
+        h=in-reply-to:references:subject:cc:to:from:message-id:date
+         :content-type:content-transfer-encoding:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=6fq/GPepzkTLXxM8Wn2MMXhIXKeiLSAPdWNcRYRGgzY=;
+        b=ZUEGUCqZymxkARwzk95LE3pgK+mrs5V87KClzu2C/4i2e94GQT1MbI+MbTVBgRKNOH
+         17ybFXvvumVHByvme28ZSzFcDjpoAVkhXWAP+KDijkz4vI6PHG1xFVBqmaNup1qjwjEx
+         11erjN7uCO8yYl05ArJuIRZFAgOFFUY6N2KLCTzTngQlfdNgXXOGkh63mrPwXBtVxIk5
+         e4KDSmIm8nYU5VkSR9qvtGttANhVHorZunH41tMMXAs8nbGLOeZBTPR5dewhxUOb1pnp
+         ObY4IZwwOSSfqAapfxOrLH52IxyNUgqcve6ko9VSWLqjTzRvJK2YE5w6ClfAzcsw9nzy
+         Xzuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795217764; x=1795822564;
+        h=in-reply-to:references:subject:cc:to:from:message-id:date
+         :content-type:content-transfer-encoding:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=6fq/GPepzkTLXxM8Wn2MMXhIXKeiLSAPdWNcRYRGgzY=;
+        b=eS3sQ/d6b/zXVuHj7UiYJQKktDKPUodpF2z4zWU3X5b5R8RYGNUv+lPsSS9tYY25Ni
+         sB9ttnwe5kHNTVanNzb+Dkc3XjKYrYLWNfZRj2lh/iiRzDpmKOk6cU3CDizDwKzxU7Zl
+         Vu8UKEePSWT0uOfsQSKieS6DebBg9Vl1uAkfsBw7TLMG74dLYfKwBgcX16yfpjgvMaOw
+         b2in91LjatrimMPXBmzJXKAy5b/Cd0BckkoXxVcwaLq62AN7bd1f1BT1JcjH9vfiTHMb
+         vJaMVClPXyNSI2LMISW9QedHxPpeEx+isQnnC/9GgysE7Ix+3LicMUDszGXP9K4qInkb
+         0lnw==
+X-Forwarded-Encrypted: i=1; AL+hErFrJVcKYf6GtwYCEME2ZWpDQIDU8wVEW/q9TBuDj23k31Y2UOmcg3bkt9G6YcPaWOGjLk6EF5VAySs=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8sZ1sC3zWMKm8q4XqthMrdb3jY5SlxUkpwHuSeS/SpFq3//J4K
+	MHPUnAtpor3Nf+odJ9Mz311WpLRrbOHyteyQ4do+v6kURgkhY5MksvJnlOW/R80cUw==
+X-Gm-Gg: AZFdTZc3dQTaPUU6v9POookbWLbOujE2QqdZ+e+Ek/cqsFgDi/VZaN6y9FXbKmCOEEZ
+	nD7mzUDxj0uRDLohHmTxySOgUtsGWKBOrg6FOfBZ/87R+FgJxDDu1JbYzuxIeV8vDYHsbIgbkOY
+	6lkv1uZ/oqHeFHfqLQZ3Dk7ED1RGHLj7zuyjY8Ia1qzvzi0aXjWgHOp68EWPByW1YfFlndORoIa
+	8LLv91WR6atM3hLDAMOs5OyURGJbhW9q+FrbiLU8niv6+f2nNUp/F43ViwMud0MXbgU1PqRofoH
+	f3RLXrYHDruw5bB9CyEJugUaWEsll6vOywmwi0Wh8OomdIt08rI6H4tvRlCe9fBptw6bgVZFAKj
+	FnSgWDX/3EveX8i+NCgP+50Btg2H5FouVqdHp7YoZphvfWHwyH0BGvAXi4xeRsCUlSyxF54CfUk
+	USOujhJHAOp58mVc4XlxFWMvioi2molgPg0cPuMr73ETn6kSB2c/n0u2OXegqaCRaIK4+dxyfLn
+	+ZHUiTiHRk7D0JewOjhpsLRiaoBso5iGMcdYHG+OsCMRVI8XFgEmzowUHgc1n0N4zuxikG6iAzP
+	OdEfYnJakxKJXf1BdZ4rG6kge00mYTM+GhqXNDRTTtsbNqlQ4Fjh6qDfEVm8zmCU
+X-Received: by 2002:a17:90b:3c11:b0:3a7:9ec3:ea0e with SMTP id 98e67ed59e1d1-3b41c908114mr2771810a91.22.1795217763469;
+        Fri, 20 Nov 2026 15:36:03 -0800 (PST)
+Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b41aab4729sm5906545a91.0.2026.11.20.15.35.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 20 Nov 2026 15:36:00 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -71,221 +87,148 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 00/19] PCI/CXL: Add CXL reset support for Type 2
- devices
-To: Srirangan Madhavan <smadhavan@nvidia.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Ira Weiny <iweiny@kernel.org>, Jonathan Cameron <jic23@kernel.org>,
- Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Li Ming <ming.li@zohomail.com>, Joshua Machauer <machaujo@amazon.de>,
- Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261105185917.2667656-1-smadhavan@nvidia.com>
- <5616c825-454e-4eba-9352-b06d98dc123a@intel.com>
- <b35bcc93-9fb0-4fa2-a432-857eaa4dd31b@nvidia.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <b35bcc93-9fb0-4fa2-a432-857eaa4dd31b@nvidia.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Fri, 20 Nov 2026 15:35:58 -0800
+Message-Id: <DN0FL1752MH5.1FSZE620OJBM0@google.com>
+From: "David Matlack" <dmatlack@google.com>
+To: "David Matlack" <dmatlack@google.com>, <kexec@lists.infradead.org>,
+ <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-mm@kvack.org>, <linux-pci@vger.kernel.org>
+Cc: "Adithya Jayachandran" <ajayachandra@nvidia.com>, "Alexander Graf"
+ <graf@amazon.com>, "Alex Williamson" <alex@shazbot.org>, "Alex Williamson"
+ <alex.williamson@nvidia.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Chris
+ Down" <chris@chrisdown.name>, "Chris Li" <chrisl@kernel.org>, "David
+ Rientjes" <rientjes@google.com>, "Jacob Pan"
+ <jacob.pan@linux.microsoft.com>, "Jason Gunthorpe" <jgg@nvidia.com>,
+ "Jonathan Corbet" <corbet@lwn.net>, "Josh Hilke" <jrhilke@google.com>,
+ "Leon Romanovsky" <leonro@nvidia.com>, "Lukas Wunner" <lukas@wunner.de>,
+ "Mike Rapoport" <rppt@kernel.org>, "Parav Pandit" <parav@nvidia.com>,
+ "Pasha Tatashin" <pasha.tatashin@soleen.com>, "Pranjal Shrivastava"
+ <praan@google.com>, "Pratyush Yadav" <pratyush@kernel.org>, "Randy Dunlap"
+ <rdunlap@infradead.org>, "Saeed Mahameed" <saeedm@nvidia.com>, "Samiullah
+ Khawaja" <skhawaja@google.com>, "Shuah Khan" <skhan@linuxfoundation.org>,
+ "Vipin Sharma" <vipinsh@google.com>, "William Tu" <witu@nvidia.com>, "Yi
+ Liu" <yi.l.liu@intel.com>
+Subject: Re: [PATCH v11 00/13] PCI: liveupdate: PCI core support for Live
+ Update
+X-Mailer: aerc 0.21.0
+References: <20261118223704.3286085-1-dmatlack@google.com>
+In-Reply-To: <20261118223704.3286085-1-dmatlack@google.com>
 
+On Wed Nov 18, 2026 at 2:36 PM PST, David Matlack wrote:
+> Merge Plan
+> ----------
+>
+> This series is intended to go through liveupdate.git, the tree listed in
+> the new PCI LIVE UPDATE MAINTAINERS entry.
+>
+> v10 and a follow-up patch were applied to the lu-pci-preservation branch
+> of liveupdate.git. This version is meant to replace them, and applies on
+> v7.4-rc1, the base of that branch.
 
+Patches 08 and 09 have Reviewed-by tags from Alex now. I have a v12
+prepped with some small fixes from Sashiko and a comment cleanup from
+Pranjal.
 
-On 11/20/26 12:32 AM, Srirangan Madhavan wrote:
-> On 11/16/26 11:11 AM, Dave Jiang wrote:
->> External email: Use caution opening links or attachments
->>
->>
->> On 11/5/26 11:58 AM, Srirangan Madhavan wrote:
->>> Hi folks,
->>>
->>> This series adds CXL Reset for Type 2 devices through the existing PCI
->>> reset_method and reset sysfs attributes. It disables CXL.cache, performs
->>> supported cache writeback, initiates CXL Reset with Memory Clear, and
->>> restores cached HDM decoder and CXL Device DVSEC state before PCI use
->>> resumes. Active HDM ranges are reserved and CPU caches invalidated before
->>> and after reset. The method remains limited to eligible single-function
->>> devices with both CXL.cache and CXL.mem enabled. CXL bus reset restores
->>> the same cached state and flushes the host and device caches around the
->>> reset.
->>>
->>> The reset sequence follows the CXL 4.0 specification [4], including
->>> CXL.cache disable, optional cache writeback, CXL Reset Memory Clear,
->>> ResetComplete polling, and ResetError reporting. Sections 9.7.2 and 9.7.3
->>> define the completion timeout encodings and reset access restrictions.
->>>
->>> The userspace ABI is the existing PCI reset interface:
->>>
->>>      /sys/bus/pci/devices/.../reset_method
->>>      /sys/bus/pci/devices/.../reset
->>>
->>> Userspace selects "cxl_reset" in reset_method and triggers the reset
->>> through reset. Following Dan's v6 feedback, this uses the PCI interface
->>> instead of adding a memdev-specific sysfs ABI.
->>>
->>> For sysfs reset, the generic PCI path invokes the driver's reset_prepare()
->>> callback when provided and disables PCI I/O, memory decoding, and bus
->>> mastering. The CXL path reserves affected HDM ranges exclusively and
->>> blocks IOMMU translations where applicable. It does not offline memory
->>> or revoke mappings: userspace is expected to offline CXL.mem users before
->>> reset. The reservation enforces this for claimed ranges by failing the
->>> reset while a conflicting resource is claimed [9].
->>>
->>> The global region lock is held from snapshot through restoration. Memory
->>> Clear completion is awaited for the timeout the device advertises, up to
->>> 100 seconds, so the lock can be held for that long plus cache flushes.
->>
->> I think holding it across the bus reset can deadlock with pciehp and a
->> PCI remove. I tested in QEMU with two cxl-type2 devices from Manish's
->> RFC [1].
->>
->> For a device in a pciehp slot, pci_reset_bus_function() ends up in
->> pciehp_reset_slot(), which takes the slot's reset_lock. The reset still
->> holds cxl_rwsem.region at that point.
->>
->> Two other tasks can complete a cycle. pciehp_ist() for that slot can
->> hold reset_lock and wait for pci_rescan_remove_lock in
->> pciehp_unconfigure_device(). A PCI remove of a second Type 2 device can
->> hold pci_rescan_remove_lock while cxl_decoder_detach() waits for
->> cxl_rwsem.region.
->>
->> On v17 as posted, lockdep reports the cycle:
->>
->>    [   60.891789] WARNING: possible circular locking dependency detected
->>    [   60.893014] irq/24-pciehp/103 is trying to acquire lock:
->>    [   60.893367] ffff888072b4f128 (&cxl_memdev_key){+.+.}-{4:4}, at: device_del+0x8d/0x580
->>                   but task is already holding lock:
->>    [   60.894498] ffffffff84699e80 (pci_rescan_remove_lock){+.+.}-{4:4}, at: pciehp_unconfigure_device+0x93/0x210
->>    [...]
->>                   -> #3 (&ctrl->reset_lock){++++}-{4:4}:
->>    [   60.916794]        down_write_nested+0x80/0x170
->>    [   60.917826]        pciehp_reset_slot+0x6c/0xc0
->>    [   60.918893]        pci_reset_hotplug_slot+0x5c/0x90
->>    [   60.919928]        pci_reset_bus_function+0x161/0x330
->>    [   60.920951]        cxl_reset_bus_function+0x1c6/0x280
->>    [   60.921958]        __pci_reset_function_locked+0x96/0x170
->>    [   60.922990]        pci_reset_function+0xc8/0x180
->>    [   60.923977]        reset_store+0x84/0xd0
->>    [...]
->>                   -> #2 (cxl_rwsem.region){++++}-{4:4}:
->>    [...]
->>    [   61.013490] Chain exists of:
->>                     &cxl_memdev_key --> &ctrl->reset_lock --> pci_rescan_remove_lock
->>
->> With a test-only msleep() after cxl_region_quiesce_lock() in
->> pci_cxl_reset_prepare(), it turns into a real hang. The reset, a sysfs
->> remove of the second device and a power off of the first device's slot
->> all got stuck.
->>
->> Two region reads blocked behind the reset as well. A read of
->> region1/commit timed out after 5 s, and cxl list -R stayed in D state in
->> decoders_committed_show().
->>
->> To reproduce, I used Manish's RFC as posted. It allows one cxl-type2 per
->> pxb-cxl, so each device has its own host bridge and window. On q35 with
->> cxl=on, plus the memory backends:
->>
->>    -device pxb-cxl,id=cxl.0,bus=pcie.0,bus_nr=53
->>    -device cxl-rp,id=hb0rp0,bus=cxl.0,chassis=0,slot=0,port=0
->>    -device cxl-type2,bus=hb0rp0,volatile-memdev=t2mem0,id=cxl-t2,fmw-index=0
->>    -device pxb-cxl,id=cxl.1,bus=pcie.0,bus_nr=191
->>    -device cxl-rp,id=hb1rp0,bus=cxl.1,chassis=0,slot=2,port=0
->>    -device cxl-type2,bus=hb1rp0,volatile-memdev=t2mem1,id=cxl-t2b,fmw-index=1
->>    -M cxl-fmw.0.targets.0=cxl.0,cxl-fmw.0.size=4G,cxl-fmw.1.targets.0=cxl.1,cxl-fmw.1.size=4G
->>
->> The guest kernel needs CONFIG_CXL_REGION_INVALIDATION_TEST=y. Without it,
->> the cxl_bus reset fails in an x86 guest with "failed to prepare CXL bus
->> reset ranges: -6".
->>
->> I drove both devices with a small test module based on
->> tools/testing/cxl/test/accel.c. It attaches each firmware-committed
->> region with devm_cxl_probe_mem() and has no reset handlers. Then, with
->> lockdep on:
->>
->>    echo cxl_bus > /sys/bus/pci/devices/0000:36:00.0/reset_method
->>    echo 1 > /sys/bus/pci/devices/0000:36:00.0/reset
->>    echo 0 > /sys/bus/pci/slots/2/power     # second device, 0000:c0:00.0
->>
->> For the hang, add msleep(10000) after cxl_region_quiesce_lock() in
->> pci_cxl_reset_prepare(). Start the cxl_bus reset, remove 0000:c0:00.0
->> through sysfs two seconds later, and power off slot 0 two seconds after
->> that.
->>
->> Separately, pci_cxl_reset_prepare() returns with the quiesce held on its
->> success path only, and cxl_restore_state_after_pci_reset() releases it.
->> With Clang 23 and CONTEXT_ANALYSIS=y passed to make, that gives five
->> cxl_region_quiesce warnings in drivers/pci/cxl.c.
->>
->> [1]: https://lore.kernel.org/all/20261106035911.1280066-1-mhonap@nvidia.com/
->>
->> DJ
-> 
-> Hi Dave,
-> 
-> Thank you for the repro. Please let me know your opinion on the following fix.
-> It also covers Alison's lock scope question.
-> 
-> Reordering the locks won't work, since pci_reset_bus_function() itself
-> takes reset_lock. So I'd like to drop the region lock before the reset starts,
-> and take it only for two short windows:
-> 
->   pci_cxl_reset_prepare()
->       lock(region):  cxl_hdm_cache_snapshot(), set reset_pending,
->                      cxl_hdm_ranges_collect() + cxl_hdm_ranges_request()
->       cxl_hdm_quiesce_flush()                      [no lock]
->   pci_reset_bus_function()                         [no region lock]
->   cxl_restore_state_after_pci_reset()
->       lock(region):  cxl_hdm_cache_copy_decoders(), pci_cxl_restore_state(),
->                      clear reset_pending
->       cxl_hdm_quiesce_flush()                      [no lock]
-> 
->   cxl_decoder_commit():  reset_pending -> -EBUSY   [next to sanitize_active]
->   disable_hdm():         also update the cached global_ctrl
->   cxl_reset_execute():   same two windows for the DVSEC reset
-> 
-> With this,
->  - If a region gets torn down mid-reset, the cache is already refreshed
->    (cxl_hdm_cache_refresh_decoder()), so restore just re-reads it with
->    cxl_hdm_cache_copy_decoders(). Patch 17 had that call, and patch 18
->    dropped it when I moved the lock into prepare.
->  - A new commit mid-reset gets -EBUSY. Regions committed before the reset
->    shouldn't be able to come online, since the exclusive
->    request_mem_region() makes the kmem and pmem claims fail, as far as I
->    can tell.
+Mike do you want me to send a v12 with these changes or send separate
+fixes for you to apply on top?
 
+Here is the diff from v11 to v12:
 
-I think the direction looks good.
+diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+index 493576119a76..76e939ea52eb 100644
+--- a/drivers/pci/liveupdate.c
++++ b/drivers/pci/liveupdate.c
+@@ -127,7 +127,7 @@
+  *    Control Services (ACS).
+  *
+  * In addition, a device cannot be preserved or unpreserved once the PCI c=
+ore
+- * has started shutting it down (pci_device_shutdown()).
++ * has started shutting it down for kexec (pci_device_shutdown()).
+  *
+  * Driver Binding
+  * =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+@@ -409,7 +409,8 @@ static void pci_flb_finish(struct liveupdate_flb_op_arg=
+s *args)
+ {
+        struct pci_flb_incoming *incoming =3D args->obj;
 
-> 
-> Questions
->  1. Is reset_pending in struct cxl_hdm_info, checked in
->     cxl_decoder_commit(), OK?
+-       pr_debug("Finished struct pci_ser (0x%llx)\n", args->data);
++       pr_debug("Finished struct pci_ser (0x%llx)\n",
++                (u64)virt_to_phys(incoming->ser));
+        pci_check_all_devices_released(incoming->ser, &incoming->block_set)=
+;
 
-Yes. 
+        xa_destroy(&incoming->xa);
+@@ -937,9 +938,14 @@ int pci_liveupdate_adopt_ari(struct pci_dev *dev)
 
->  2. Can I keep cxl_hdm_cache_copy_decoders(), now used again, instead of
->     dropping it?
+        /*
+         * Unlike ACS, only adopt ARI while the bridge is incoming-preserve=
+d.
+-        * Once all devices below the bridge have finished, recomputing ARI
+-        * Forwarding Enable yields the same result for the same device, an=
+d
+-        * must be allowed to change if a different device is hot-plugged.
++        * Once all devices below the bridge have finished, pci_configure_a=
+ri()
++        * configures ARI Forwarding Enable as usual the next time a device=
+ is
++        * added below the bridge, e.g. if a different device is hot-plugge=
+d.
++        *
++        * The exception is pci=3Dnoari, where pci_configure_ari() does not=
+ touch
++        * the bridge, so the adopted ARI Forwarding Enable persists after =
+the
++        * preserved devices finish, even if a device without ARI is later
++        * hot-plugged below the bridge.
+         */
+        if (!dev->liveupdate.incoming)
+                return -EINVAL;
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 08b768b9e905..2748ca22e9cf 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -560,7 +560,8 @@ static void pci_device_shutdown(struct device *dev)
+        struct pci_dev *pci_dev =3D to_pci_dev(dev);
+        struct pci_driver *drv =3D pci_dev->driver;
 
-Yes.
+-       pci_liveupdate_freeze(pci_dev);
++       if (kexec_in_progress)
++               pci_liveupdate_freeze(pci_dev);
+        pm_runtime_resume(dev);
 
->  3. cxl_hdm_ranges_invalidate() and cxl_hdm_quiesce_prepare() assert the
->     region lock is held. To flush outside it I'd relax that and rely on
->     the HPA reservation. OK?
-
-Sounds reasonable. 
-
-> 
-> If this plan sounds okay, I can implement it this way in v18 (and rerun
-> your reproducer against it)
-> 
-
-Sounds good!
+        if (drv && drv->shutdown)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b5b578355a1b..f3d58b5e7a5d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1073,10 +1073,14 @@ static void pci_allocate_acs_save_buffer(struct pci=
+_dev *dev)
+        /*
+         * Devices that rely on device-specific quirks to enable an ACS
+         * equivalent keep that configuration outside of the ACS Control
+-        * register, so they are configured from scratch on restore. The
+-        * exception is devices preserved across a Live Update, which alway=
+s
+-        * adopt the ACS controls established by the previous kernel and ne=
+ed
+-        * the buffer to keep them across resets.
++        * register, so they are configured from scratch on restore.
++        *
++        * The exception is devices preserved across a Live Update. The
++        * previous kernel refuses to preserve devices that need such a qui=
+rk,
++        * so a quirk can only match here if the previous kernel did not ap=
+ply
++        * it (e.g. the quirk is new in this kernel). The previous kernel t=
+hen
++        * programmed the standard ACS Control register, so save it to keep
++        * the adopted controls across resets.
+         */
+        if (pci_need_dev_specific_enable_acs(dev) &&
+            !pci_liveupdate_was_incoming(dev))
 
