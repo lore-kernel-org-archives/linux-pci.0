@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795182843;
-	b=SzXcJxxvXx+IDmDsAAUApsW4NDV8dWAUh3PGmlke30vZKe/f+6m4gHU4hU0GCIuMsB8c
-	 TwSmO7EcoLkApTMEk0OCv5qyWMpjYR6dgWOkLXPohUrVWh1+T/qGqNlN4RxQ8+wRw6hXt
-	 O8qRTxh/AYR7pGWfduz/lpqWBt4VZZXL7v/LuYBBo3RQ/q4X+9wxVlJX3bW3/TtQZ8upi
-	 /ohUacxURtsh5yfZApOcwWeYtdBmEa2QGCfv07hZ/IpeVYZQIVlO0tBK9u2xUpCytKYsw
-	 PP2pQsG1MqHC2MyHPWknhYAePvaDAUn5d857HA35k58aD9DU5fepGGABxn5QfWJIJWQ==
+	t=1795182874;
+	b=BLizG5Y6IlPieHVgisuGpuj8iBie51qXzPLW5sh5CntCqf7h8fs+vgwukfiMFwea+6bT
+	 yh2B5DuMkWrqLnKLD8r0E3xLKj3s29W+p9zl/iuLQ1Vb2J7Sm/6/hxkj27UuZAx/Ulbij
+	 GSKfsP+u7uH62QxUTsCpcgnhpVxx3zog/MZe5N7ut6mK8X7nMz27Vb3zu5/aBHUkVudZg
+	 3lQNwRzARLe9q6kmmbkXqZNidtheXzptTfV180j39Hl5oK47gPgmAb3e9Iu/ZU1exKFdI
+	 43oR3i60FllW7PaH+Qs8Vu2SnPvH/0eBxl9wTzoRKnvTJvvyH3glpRqf7PXR6sFDGaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795182843;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795182874;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=6hZol7Pua8pig2etktVI0g9c+4xYi2atutDkrGQjGbw=;
-	b=TS5eUA1F0xCwwQXMf95XhDuOgzQopSje/ZSm5+cGBHctCuB+1J3x+IIaAOfZ+mLACvKU
-	 BVH5jS1ZQDjUt0gNUpPdHq6EkTr8QvjkqVaLMWVbPjAkHufsemp2nadQlpA2khCjOmZnw
-	 4J4h4Sz4x2RxJQ18ljDFPl0mw6oVYcTjqYU4DVUacIzli/Z3fjx1p2THhWPwnr8KtzJrd
-	 7abu9OLlq8MNp3p98nrrsgDV0BFrHHW9d33C72gcHktxFacskLcddC1L8HaV1FS5YP4Wm
-	 X58u5pMFTKyDh1hbNgmcRX+f2zwjSX2rc7k2v4HJi4H+IP1Sgs5ESQUWJgFMDrm/HGw==
+	bh=nK5bP5VkhTRgFse1vw4zto6q7sNlirKlR53q88XvN5U=;
+	b=K9yfvDj27JO7WCLo5ftV6c0IMvOBIxB5/5qZO1wgyC8yY3qI9m6Qiyag5XSENEuaJHtn
+	 DVswvpv1/jXQ+cc00epT5eic8fDXekCQpLKsCU2XI9g4N+kr0JyaU1GcxLtk/doM7d2K2
+	 6HrSaLPCLWeDZOu7+88KljnlxI6UfuJEZaUFX2MvXTq8cjD/FFUqqzjzTuePv+lLTsA/1
+	 fbU12teCKd0GPIEpJw29axZzM2bZlrVRP2hulGZcmnhFZK/qr5DKMTERJLwyVSaDEL7Wj
+	 ItU2ISN81WX4d/FDUgzg5LCbfnc4lOknxF3tuOPRDqqtmS2G5LVcWWkzaaGV+dRfzhw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XlOE6rcj;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="h/Ce1esT";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32C4160A2617
-	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 13:54:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D770606A326
+	for <linux-pci@vger.kernel.org>; Fri, 20 Nov 2026 13:54:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XlOE6rcj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991B51F000D8;
-	Fri, 20 Nov 2026 13:54:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h/Ce1esT
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2F411F000D1;
+	Fri, 20 Nov 2026 13:54:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795182842;
-	bh=6hZol7Pua8pig2etktVI0g9c+4xYi2atutDkrGQjGbw=;
+	s=k20260515; t=1795182873;
+	bh=nK5bP5VkhTRgFse1vw4zto6q7sNlirKlR53q88XvN5U=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=XlOE6rcj0KmZAND4E0wq5fTw9dJWramtLNXesHOXiJiJSvpTKtxHxTnkUNIspwWiN
-	 JzAIG+/et5VBgnVx8cmMe4nUEh+9YwhEaz2s+BPHqMiganji8lIaG2ZeIdGRMs7/1n
-	 cq/YBHm7q098LYqBAWYQgPraY+ixzOM/M8hzVVNwhglLWQ2C+DucMVwaZEl/jNqHAa
-	 eEwaHDfOyv5JDD5RHt0mIRnCQIJbp63mNISN3etd5P0RnbE+jrmJIhM3gmWjnleQcM
-	 cvqyEYe5ARZvaAisCc5AxyYMmrXVAerHx318tquunJLCSbL+RZ0/CJAVcdfbKuw8L+
-	 XWupEWqszhgvg==
-Message-ID: <sashiko-outbox-225294@kernel.org>
+	b=h/Ce1esTWF694f+BzuUIZMbteRHH/BWKA0rhGJFNlAhhAiwWDtDuAaJq4PKaWqJFl
+	 uibCSvOAfnOSY4J4x880FAdT+yf6fL0o+XRRym6es0JlAo0P2zjouIhR+bt2sQP2ua
+	 SHq1WeZro4X4B43u96kXakT9Tec7Ze8h2fWzErtXFatZjBkRzQtVa7LS5A3hUsMfgZ
+	 saGWAenT/QpGuj4D99KUKZxlS32urRtB2T+RjIF5TVackeB1UUq8f0EyIfpASutslU
+	 Rj51nJZ6ahNiAQg+cf0b4PQtH7N75oXD2RKTOd6rdyhEXwcXXNBmJZHARsYS4PyTPp
+	 zExCUuVkPvdwg==
+Message-ID: <sashiko-outbox-225295@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 03/16] PCI: Use guard() for pci_bus_sem in
- pci_do_resource_release_and_resize()
+Subject: Re: [PATCH v2 05/16] PCI: acpiphp: Use
+ pci_assign_unassigned_slot_resources()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?SWxwbyBKw6RydmluZW4=?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261120134716.3027-4-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <20261120134716.3027-6-ilpo.jarvinen@linux.intel.com>
 References: <20261120134716.3027-1-ilpo.jarvinen@linux.intel.com>
- <20261120134716.3027-4-ilpo.jarvinen@linux.intel.com>
+ <20261120134716.3027-6-ilpo.jarvinen@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 20 Nov 2026 13:54:02 +0000
+Date: Fri, 20 Nov 2026 13:54:33 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,14 +60,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-> pci_do_resource_release_and_resize() releases pci_bus_sem on its common
-> exit path, which it shares with freeing the saved resource list. Move
-> the body into __pci_do_resource_release_and_resize() and take
-> pci_bus_sem with guard() in pci_do_resource_release_and_resize() to make
-> adding more locking simpler without mixing goto-based cleanup with
-> guard().
+> enable_slot() calls the internal sizing and assignment functions
+> directly to size only the bridges in the slot. Use
+> pci_assign_unassigned_slot_resources() instead.
 >=20
-> pci_bus_sem now also covers selecting the bridge window.
+> Sizing now happens after scanning all bridges in the slot instead of
+> right after scanning each bridge. Sizing a bridge window only walks the
+> hierarchy below that bridge, so the order does not matter. Sizing now
+> also holds pci_bus_sem.
 >=20
 > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 
@@ -75,5 +75,5 @@ Sashiko has reviewed this patch and found no issues.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261120134716.3027=
--1-ilpo.jarvinen@linux.intel.com?part=3D3
+-1-ilpo.jarvinen@linux.intel.com?part=3D5
 
