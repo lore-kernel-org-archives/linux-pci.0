@@ -1,106 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.15
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795216478;
-	b=43ci0op3pxmobO6fB1gB6BDJVOui1zymn2tMH455lSMYsoCsw91kzxhi6AubV4jNhZOu
-	 GmoJVimjTlZO+/WGS5caPNNs0dazfqbYLyk2H4g8DTOUOeZ1ILgFKqOLqlP8nleQCF8XR
-	 XWzuf5XphA9eSsVJ1cui4pPTjyiCSVoTyU9Mqnh1q95TQ55hnn5PxmlRxCQlUFRgZLr/t
-	 M+Yg890pUhuRJOUQb88rz1i9lO8qRBZpOgt+f02E3dDOLyNsgg6VkgN7D9ozfo1dUkmHv
-	 OZMFCS/ZuVgASSZFXXZuf2imeBI7hvgNjRT0YM85U20l79DJ/HeFRDHEDjPFxSJoaew==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795216478;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=IWEH+hm1pSXTphJdEF63s63uONAUKvCwRhiTi+K1LP0=;
-	b=X53ZO/7Qu4+f5HdM+XdVeBm5JC9wPf2pRAde8t30EybHimf5kVk32dIW2EE+6N/csbip
-	 7KHGQHqIo2vfn/XPsc6S+as/kR8y9UhVC0u7vNR6tN9N3ABAfqwiarhMyAMy6lRuLHe/o
-	 C/Gk5M5ZpylcwoG1pMmDSgZV5MQKfadtMGis2APg2hhL/WjkKbD65KTOCsBboqewn0ZFR
-	 TiSomk4DfLgEuIdlPP9R9ejp6oO7kQz8Tgj0F3x8fmTEnnjdGDl/WfVPfcAo1WYvs7QjC
-	 gO4A6cHZ+2rbAFEVgTo2zz9aVxZDCNqJDG6rBJXzmQ9tY7620uCrzEaZT7YA9eeR03w==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=msLOrjCN;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.15
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011015.outbound.protection.outlook.com [40.107.208.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.20
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795217296;
+	b=Yj5hYAN5mTHUDa3EnJmitSjLXDAmZzX075VKW/mpPy2zusgPaFG7LTucaqtXJaSNFosX
+	 H9Rx7Ck9cwETQUy+nBYmhqFk4M+W7D3qZNIda9m8ifXUyt9aaagwoNYRZIDW8VFZVvUy7
+	 dtHaLysa/W6OCJtJR4ivfQm/TjlDA1VuRyZyxwu/Ezt65Ns3oI/J+VKQ4LZsN7o/zgDB4
+	 hLhSOKow0gJrIIuSwFL3fVHAM4jLrg5Afi1BR7fdtVCn31Q02ebjRgvwD/VyY/4nWiHYh
+	 c5UC6smfKe7q3iWBOGzjY4njUMEnjM/JTRfxVDULm38akXYEOSD3l6n6hFYWOHiZNoA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795217296;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=CPO9nmMT4mstAKBU4CTC3Q9F8oIE4yXnIGKpDlg4Yoc=;
+	b=vPOBm6lLjFgdsCOcEvj0HQtphuj6f/HkTvzGmd2/qcdo52Pv3ARlx16c6j5OgZ6Dtno4
+	 XcWK+VzTTrr7Hy/lU3iHWthWEmrsmKhASxav1ubMmp+7QaaxmlPiy//5tu1WwpI9atnN3
+	 AiM0MTBBT+eGwrA1O4noG03i6Kp0Y9fupBgdFDKsKx9y/uPTT2blrz2cW2rhG0PlWkUlg
+	 IHNb8uLgYjUxSd+tngkmLHdG7Xa1heKmaV8i9w4rFZkitIM62gWGdNF+SyVW0yAzhwIiJ
+	 /S7um1m/SPoOr9EZ2p4c9lZzDDZroIeo+jJdJ+YIzDDST5fDFHQLD4gOO0rtJJiIG6g==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=cGi7XaBP;
+	arc=none smtp.remote-ip=198.175.65.20
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDDBE606A337;
-	Fri, 20 Nov 2026 23:14:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EDDBE606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B5E606A6A0;
+	Fri, 20 Nov 2026 23:28:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 19B5E606A6A0
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=msLOrjCN
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=B/3I5tCVkz8m9b8dLghOI02XUCyalgdLHgu/TKtE+Jfb7dezhnt/yGjpa00Yst6aejJCK7BV3VWv0mdzpwHrKksKHjBhuCo0CTaFjTzUA8Og2DU5mdx2I7Zn2poBdzP1kejkC9JdM3gCgV3M1vpaNEajsqWZhRgJE2ty7SopL7COxnfRa+019YTVwV8CYHXhRXUiNLLECX9l6WUaYtVPQLXa1qCaydW5JBpVXnZdZa5GBIW1Nw4LClIz+ZAd7dvbnq1fVlVUDVjGSRKFKNCCGwQ8ViXZa2DqTpkDjQDlHSehmd/02NI4hA2ekOsNgt1mzrpq4MnSInJWH8m4w2bsJA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IWEH+hm1pSXTphJdEF63s63uONAUKvCwRhiTi+K1LP0=;
- b=XLw/XxAQpIm23QDGbRQ4rQFWRUUv5kZdm1SNUuVDMfmlYpyfidkHBDapYm7SN4yDqPgIHRGl17I08DJAvNAbA9Nl2pfTQLWAf4isRPqyN6o9AKYSrqfFC5k6GD7T1vC0WRFHOljn2soX10AjAvpY0uyvOcXqB/gojQSBsDdoqlmcNJo8dW0lzZqtvpJ5FDWjw2mvmGTTfPJ5YMvG5onhFNa2LoOHK9J8E8e50Rk/2JLxgljsbD/2CRYl89ysPHSyVnIf1rQVZx5FhccHqWxc/wZkYe3rIiKCENpF2wm2tBMERmUjqVhh8vHSijccB2PvndKO9W/ozkPkSbQmr/jN6A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IWEH+hm1pSXTphJdEF63s63uONAUKvCwRhiTi+K1LP0=;
- b=msLOrjCNe5lT/XG86ZNyTDJvZQffGdrP7k5/eieZ85ScHbNWVq/nG2LmtxHiLyg/fd1CSaxApiUCVwc027UNwFwqWDMV36TJzPDf+JSEzFtuHb47EWbW1KOgF+kUxOHTiUkd9DH6BrbgFMEKWDEBVvHiDRgbO+/+0yUWdneu8A7dfs0JwoBmjUMU33Palb3OYOluGQnExIgwvzs4+1f2uhVCWEAEAuJ4q+kYTwaMQgg1OnG6NVUDfE2I3gBpSGBBr7XwJkmZCgasQtFzHmUzJufY2+JnGPUnl+F3UuBJeyYHr8ffN1j1Cd4f6gI1qxL9OCiW+E/P36bfMCM5qhN3OA==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LY0PR12MB727857.namprd12.prod.outlook.com
- (2603:10b6:408:3ba::5) by CYXPR12MB9386.namprd12.prod.outlook.com
- (2603:10b6:930:de::20) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.10; Fri, 20 Nov
- 2026 23:14:33 +0000
-Received: from LY0PR12MB727857.namprd12.prod.outlook.com
- ([fe80::843e:82cd:41ca:f522]) by LY0PR12MB727857.namprd12.prod.outlook.com
- ([fe80::843e:82cd:41ca:f522%5]) with mapi id 15.21.0639.011; Fri, 20 Nov 2026
- 23:14:33 +0000
-Message-ID: <8a63033e-8f9a-4da0-95db-a3310cc0e585@nvidia.com>
-Date: Fri, 20 Nov 2026 15:14:30 -0800
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 12/19] PCI/CXL: Add CXL Device Reset sequencing
-To: "Lucero Palau, Alejandro" <alejandro.lucero-palau@amd.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
- Davidlohr Bueso <dave@stgolabs.net>, Ira Weiny <iweiny@kernel.org>,
- Jonathan Cameron <jic23@kernel.org>, Vishal Verma
- <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Li Ming <ming.li@zohomail.com>, Joshua Machauer <machaujo@amazon.de>,
- Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
- alwilliamson@nvidia.com,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20261105185917.2667656-1-smadhavan@nvidia.com>
- <20261105185917.2667656-13-smadhavan@nvidia.com>
- <f5fdc266-aed3-47e6-a10f-e8188b58c93f@amd.com>
-Content-Language: en-US
-From: Srirangan Madhavan <smadhavan@nvidia.com>
-In-Reply-To: <f5fdc266-aed3-47e6-a10f-e8188b58c93f@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SJ0PR03CA0364.namprd03.prod.outlook.com
- (2603:10b6:a03:3a1::9) To LY0PR12MB727857.namprd12.prod.outlook.com
- (2603:10b6:408:3ba::5)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=cGi7XaBP
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795217296; x=1826753296;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=omKcPLxUQu1BKjyWQmPDNLKdY8Rx6Ex/C3EIfYoiBYU=;
+  b=cGi7XaBP/85+1QNhubcMjJ0yrGRf837PquNYoVZTS5yYdJ/8Dabyk/VD
+   RTFw1NEZH5Z5Fq2jyp7PHn4uVpFmv774vDdkyaVIWsnQlvd/kKAGt5oyD
+   E77YvYtG1BIuc5Y1WB/5SXO+VU8k7qI9Bu+cz7KL8Q80tW/fDToFsK1AK
+   42S6AApZmCPdlrS4XYQe87bl+7ZdLOLKYyzPy782TmGJfxdM1Zlad6VRA
+   QmAe7Eo1QmvrGzCb3tRFm/hcRtN/vwHc1W+gC/JwSLTFjFaE5JUV5JIvF
+   sca9EINZ6Lig1poSTGLhXYbwyjjg3fce7W1N7Gw6W7kQBkQzjdawpWSD2
+   w==;
+X-CSE-ConnectionGUID: ucWVKtidRZq3VZdjXQVf7A==
+X-CSE-MsgGUID: BmkovMdNSjScRhsvpBQjzg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11972"; a="4147280"
+X-IronPort-AV: E=Sophos;i="6.27,223,1787036400"; 
+   d="scan'208";a="4147280"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2026 15:28:15 -0800
+X-CSE-ConnectionGUID: wQuEKpfvQwyb1/k7/bzV9Q==
+X-CSE-MsgGUID: dmm90FEfSiS0LlJa6AemUQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,223,1787036400"; 
+   d="scan'208";a="12631371"
+Received: from jjgreens-desk24.amr.corp.intel.com (HELO [10.125.109.138]) ([10.125.109.138])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2026 15:28:14 -0800
+Message-ID: <1a3738ce-38f7-43a8-9cb3-66de6fca2e0f@intel.com>
+Date: Fri, 20 Nov 2026 16:28:12 -0700
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -110,161 +72,220 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LY0PR12MB727857:EE_|CYXPR12MB9386:EE_
-X-MS-Office365-Filtering-Correlation-Id: a19a1ba6-f45a-4d78-3939-08df475c095c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|23010399003|921020|10067099003|261026140227099003|261026121527099003|56012099006|4143699003|11063799006|261022105027099003|261021123027099003|261009223027099003|261028144727099003|261102123227099003|261021121427099003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	poRXjbYYuZZbicXZklQs3s+MAzotRkxlnLFQhfI+fNXjwChif3k1hEzOlKLck4Dazf7MrEZl+IIXi6E9d+lc7xQfEp56kMRvl055WQJc25MKFAGN0ugYtD5ZpRYbAimSGiwrtOdx/kbD5Vwz3KgOEYVsKC869DWWHbN/4nlFVxA+CC8akQEOwIoonM9Q0GUxugX5TS8m0OWD7c8VDqXLNNkD607MgchD0WF7nwPYxYmCN6MFw55GkUpHJflNru6HXDr54VWQ+/InGFOEaCBdeJuNwRjDpszefbh4zSLtDy/Ec44waFz4z0UfcE9cb7RemejQsWxcxS9hC0rPihjTYFzLVVsOtdWd0SF0CCY31xdBKByjY1I7JNdhe163kkKt2sMMQ766XV4k+KEV44GtCJJtSwcZf6rizyh2E8pxrR1Gpg34yfTVKJt0I/Su1DVgoMCzW55yxgwkjARkXigbqqSlGFeZWqC8hA5KpnI7yCmBNuDThI4v25RDdjUYfHTzbGuxs75kq5ZET8m6HFoYvsMx5jTnUI+KM88Ahz7FoklC5Gc+vhhbvjWzijmg6dXNt/6Yfjn1tabC3HzgzW7XyE5BCu6QJ4y/76Ir0uVz2D/+wexgHrci4fz9OxTDGAxwS7a97zVmbDBBaXxGSIBt6bgBoSxdcz8bhtXWoG35RPcrvI+4ASrYZ709bFF/9Rk7UVG2GcX/e4Ma3vHkF//3IA==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LY0PR12MB727857.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(23010399003)(921020)(10067099003)(261026140227099003)(261026121527099003)(56012099006)(4143699003)(11063799006)(261022105027099003)(261021123027099003)(261009223027099003)(261028144727099003)(261102123227099003)(261021121427099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?c2xydHRXN0x4OTVCbVBERmVxb0ZxUU9BV2c2bkVPYmFzOGJsd2NIbUk1blBE?=
- =?utf-8?B?Zk13UU84M2czM0RoejVWUjVUYXF2cUJ4M0Y4dVl6ODlqN0VPQThaZDVGRkVM?=
- =?utf-8?B?RlVCOUljNnZFb1V0d2ZZWkFLSmJhZE9Lc1FjL1V5YitCUVhBb09PZFVLcmdt?=
- =?utf-8?B?NUJGZWpnWURnbGdSZnkzandHVmtoMndQeHNvWndpMCt6bENpSWFhT0ozUVFM?=
- =?utf-8?B?NUprYm9Na0wrZmtrcDZNMElTV1NlVmpxSWpGSHdiamNJajRkN2FtcStndlRC?=
- =?utf-8?B?aEZVd1JYaTRDeVRkL215RzhWZVNtYUFyS3gxdDNlUTdUcG8zWlZkZ1VnbllV?=
- =?utf-8?B?ZUNkMUhCUmxOWi9HUVI0TWFaR2pwa0U5alF3TnRib2E5VjA4MldWekVCQUtj?=
- =?utf-8?B?Mi9FclpIQUxWNEtMR1RZVkU0NTN1NVRGK3RkQktOMmV3QTVCUFNpRElaTmkx?=
- =?utf-8?B?R21YUndJQWM2VVdtc1VqUXhuT0VwQjJVNFpxbU5PNEJ5STNTbjBqRkxjVWkr?=
- =?utf-8?B?ZG5CMXJvTWc0ZG56MitiTVp4UEtDSHR3bnpHdkZDTldpSnF4NVUreFNiRmpS?=
- =?utf-8?B?RFQ4eW1YSDMyeU1kb29OS0YzUkZ0ZzZFWEhkRHV5K2tyM3gyUm5oMDJzcnZM?=
- =?utf-8?B?T0IwUmtORVEydW1iTmZhZTgrQUJFRUF0MWxvWUhxb0xkMmtVOVJhTStFdkh1?=
- =?utf-8?B?bGZEbjNHQUtjZXBFcWJjNFUvSVdpdzZGdVlYYytWbzc1VU96eXZrQkM4Z090?=
- =?utf-8?B?NmE2d0w1Z2R3R2tuR1pKcGpFVjMwYmRFemdXM3pxM0hyb241L3pneHNabkRj?=
- =?utf-8?B?SmxEY2tjbEhqUlU0VlkvR1N0RG9KZHZjdVBuc1JkT3drWEpWWmJzb2UyK0dw?=
- =?utf-8?B?TTZ6bmJXVkJRcHFZUjRveXlSSWV5ZnpYTmhmTmJMSm1kOHlTZEdrYy9MK1lY?=
- =?utf-8?B?TTk2QVdHK1BaeFU4Z3FER0tVOTY5eDZEVm9EMzh4bE0wdEk5bHEwYldxN1J3?=
- =?utf-8?B?NVVmdm84ZW1FWFRwa1R4bDdFREdYL29FMUxKR2dodWFyakF6VnNud1dSN2Zz?=
- =?utf-8?B?UkxkY0xKVFg1cFppRDBpSnFwUHhUOXMvUXFPVXI3dzlvbm84NmdkMnZ2ankw?=
- =?utf-8?B?V0J1THJZN2RuanlZUk1iL2pVdk43aFBNWEFNdVFhNVllNEdiaHdXOTVNZmM0?=
- =?utf-8?B?anQyZFhMS3hobk1CdXlqUVo2blpqc3NzamRFK0tQczN0OSs1U2x6eW5GMzdr?=
- =?utf-8?B?ZVFYRWQ4eXUyQk90cGZaTlJPM1duNkhIMEw4VnpNWE5TRmtqWE42K3RGdVpj?=
- =?utf-8?B?UHNIMXUzOW9mUEVCbkxhbENDTGh1NUY5eUxZaWZNODZWZStZOWl5WnFBM3NS?=
- =?utf-8?B?NTNDdFIzajQvYTUwU0hLbEdwWWZvb01aazZ4ZFhjNnRMa3U2SEIzUUMzeGRw?=
- =?utf-8?B?THI2c1MzeUVGOHFaNGxWa296NmlLVmoxbzJhenZ4Nlh2Y09HNUdTOXY3aWpK?=
- =?utf-8?B?RTFDYXAzWFlTMHI2Y1o4SjVVZkp4U0dRY251ZDVDbkluT1g1UTMyL3Q5Qit6?=
- =?utf-8?B?aE91UkhCVXF4WjVyYjJQTTQzelFYMUZYWXh0YmZCUVEyWDVDVUFoUGcyT3Zq?=
- =?utf-8?B?M0s3STA1bkdqYUkzTGh5Y3RZb0RPRHlHeC9ia3E2bGo1U0dTbFJBdG16SGtP?=
- =?utf-8?B?QXpnWnpNcVF3ZHBqTnJNRnR6U1BRanVmSlBwd2xlMUUxS1VBeFAzT21FVUV3?=
- =?utf-8?B?N0ZEUDdKVk5zdklWem5Fd2VzRytKemk1b3VEMWpwWHhyMEh5dW0rYmVOWXRm?=
- =?utf-8?B?WmNQcWxJWUllYTVLd1prVUxLalBoTFpDQTJ1OWpRTWdmWUNET2dtOEhsUEVR?=
- =?utf-8?B?OEVCdytncmx5bmpoRkI0YUdBdGVSWTdQM2xTcW5jNzZIMFFwZTl2OWRWRXVZ?=
- =?utf-8?B?cHA2eEp4Y1QwS2EwTGhWT1NlNEZ4a05wdVZXTFdVVGJNRjZLc09YM3ZqV2hM?=
- =?utf-8?B?NkpOalFVQ1lFRHhtU0lVc3J5SEdMQURTM1hVTzBneURvQzZOUUJzdXRKR0dh?=
- =?utf-8?B?MEx2SHQwYyt5TGZzY3UvN2p2blJ0dS9kZlVmVzVRSkZGOU84R1ozOERGbkE5?=
- =?utf-8?B?WWxDTWVJMytwSUFBNjZQSmRnajE1cmxSbTZMVmRMQjlBMmpITUhYVFVqM3JZ?=
- =?utf-8?B?ZHJET2JNaEdSSnRnR0RpN2tSb3gvM0swZ1lmeElFT1RERUljZDh6ZzJlMGJK?=
- =?utf-8?B?WFlETXAxbGdPVUhLNTVpMDROY1RmUUlZUEZ0UFJjdHQ1UERZS3Vtc2NrQTFw?=
- =?utf-8?B?eUhEenBza2QwZ0IzUDhXZ21Kam81TUFJMUxHRkVzeEEzMXlHVW52QT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a19a1ba6-f45a-4d78-3939-08df475c095c
-X-MS-Exchange-CrossTenant-AuthSource: LY0PR12MB727857.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Nov 2026 23:14:33.0647
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: WGrbaqb56/0RIt8mgyiNLDIpFyfMabJNwdNMBluX+0B7TJmHtJS2NPbkhVZ/9uWWZQ9ONWWNZbER6LtV1ma8zw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYXPR12MB9386
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v17 00/19] PCI/CXL: Add CXL reset support for Type 2
+ devices
+To: Srirangan Madhavan <smadhavan@nvidia.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Ira Weiny <iweiny@kernel.org>, Jonathan Cameron <jic23@kernel.org>,
+ Vishal Verma <vishal.l.verma@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Li Ming <ming.li@zohomail.com>, Joshua Machauer <machaujo@amazon.de>,
+ Alex Williamson <alex.williamson@redhat.com>, vsethi@nvidia.com,
+ alwilliamson@nvidia.com,
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
+ Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
+ Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
+ linux-tegra@vger.kernel.org
+References: <20261105185917.2667656-1-smadhavan@nvidia.com>
+ <5616c825-454e-4eba-9352-b06d98dc123a@intel.com>
+ <b35bcc93-9fb0-4fa2-a432-857eaa4dd31b@nvidia.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <b35bcc93-9fb0-4fa2-a432-857eaa4dd31b@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 11/11/26 2:12 AM, Lucero Palau, Alejandro wrote:
-> External email: Use caution opening links or attachments
-> 
-> 
-> On 05/11/2026 18:59, Srirangan Madhavan wrote:
->> Implement CXL Device Reset for eligible Type 2 devices: disable CXL.cache,
->> perform supported writeback, drain transactions, prepare the IOMMU,
->> initiate reset with Memory Clear enabled, and wait for completion.
+
+
+On 11/20/26 12:32 AM, Srirangan Madhavan wrote:
+> On 11/16/26 11:11 AM, Dave Jiang wrote:
+>> External email: Use caution opening links or attachments
 >>
->> Observe the 100 ms post-reset quiet period before polling Status2, and
->> treat an all-ones read as not ready. Wait for the timeout the device
->> advertises, up to 100 seconds, and access only Status2 until reset
->> completion, error or expiry, as CXL 4.0 section 9.7.3 requires. Control2
->> cleanup runs only afterwards. Treat Control2 command bits as
->> transient state, restore cache policy on exit, preserve the primary error,
->> and abort when IOMMU preparation fails.
 >>
->> Reuse Device DVSEC discovery from cache initialization and keep the
->> reset entry point declaration private to PCI core.
+>> On 11/5/26 11:58 AM, Srirangan Madhavan wrote:
+>>> Hi folks,
+>>>
+>>> This series adds CXL Reset for Type 2 devices through the existing PCI
+>>> reset_method and reset sysfs attributes. It disables CXL.cache, performs
+>>> supported cache writeback, initiates CXL Reset with Memory Clear, and
+>>> restores cached HDM decoder and CXL Device DVSEC state before PCI use
+>>> resumes. Active HDM ranges are reserved and CPU caches invalidated before
+>>> and after reset. The method remains limited to eligible single-function
+>>> devices with both CXL.cache and CXL.mem enabled. CXL bus reset restores
+>>> the same cached state and flushes the host and device caches around the
+>>> reset.
+>>>
+>>> The reset sequence follows the CXL 4.0 specification [4], including
+>>> CXL.cache disable, optional cache writeback, CXL Reset Memory Clear,
+>>> ResetComplete polling, and ResetError reporting. Sections 9.7.2 and 9.7.3
+>>> define the completion timeout encodings and reset access restrictions.
+>>>
+>>> The userspace ABI is the existing PCI reset interface:
+>>>
+>>>      /sys/bus/pci/devices/.../reset_method
+>>>      /sys/bus/pci/devices/.../reset
+>>>
+>>> Userspace selects "cxl_reset" in reset_method and triggers the reset
+>>> through reset. Following Dan's v6 feedback, this uses the PCI interface
+>>> instead of adding a memdev-specific sysfs ABI.
+>>>
+>>> For sysfs reset, the generic PCI path invokes the driver's reset_prepare()
+>>> callback when provided and disables PCI I/O, memory decoding, and bus
+>>> mastering. The CXL path reserves affected HDM ranges exclusively and
+>>> blocks IOMMU translations where applicable. It does not offline memory
+>>> or revoke mappings: userspace is expected to offline CXL.mem users before
+>>> reset. The reservation enforces this for claimed ranges by failing the
+>>> reset while a conflicting resource is claimed [9].
+>>>
+>>> The global region lock is held from snapshot through restoration. Memory
+>>> Clear completion is awaited for the timeout the device advertises, up to
+>>> 100 seconds, so the lock can be held for that long plus cache flushes.
 >>
->> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+>> I think holding it across the bus reset can deadlock with pciehp and a
+>> PCI remove. I tested in QEMU with two cxl-type2 devices from Manish's
+>> RFC [1].
+>>
+>> For a device in a pciehp slot, pci_reset_bus_function() ends up in
+>> pciehp_reset_slot(), which takes the slot's reset_lock. The reset still
+>> holds cxl_rwsem.region at that point.
+>>
+>> Two other tasks can complete a cycle. pciehp_ist() for that slot can
+>> hold reset_lock and wait for pci_rescan_remove_lock in
+>> pciehp_unconfigure_device(). A PCI remove of a second Type 2 device can
+>> hold pci_rescan_remove_lock while cxl_decoder_detach() waits for
+>> cxl_rwsem.region.
+>>
+>> On v17 as posted, lockdep reports the cycle:
+>>
+>>    [   60.891789] WARNING: possible circular locking dependency detected
+>>    [   60.893014] irq/24-pciehp/103 is trying to acquire lock:
+>>    [   60.893367] ffff888072b4f128 (&cxl_memdev_key){+.+.}-{4:4}, at: device_del+0x8d/0x580
+>>                   but task is already holding lock:
+>>    [   60.894498] ffffffff84699e80 (pci_rescan_remove_lock){+.+.}-{4:4}, at: pciehp_unconfigure_device+0x93/0x210
+>>    [...]
+>>                   -> #3 (&ctrl->reset_lock){++++}-{4:4}:
+>>    [   60.916794]        down_write_nested+0x80/0x170
+>>    [   60.917826]        pciehp_reset_slot+0x6c/0xc0
+>>    [   60.918893]        pci_reset_hotplug_slot+0x5c/0x90
+>>    [   60.919928]        pci_reset_bus_function+0x161/0x330
+>>    [   60.920951]        cxl_reset_bus_function+0x1c6/0x280
+>>    [   60.921958]        __pci_reset_function_locked+0x96/0x170
+>>    [   60.922990]        pci_reset_function+0xc8/0x180
+>>    [   60.923977]        reset_store+0x84/0xd0
+>>    [...]
+>>                   -> #2 (cxl_rwsem.region){++++}-{4:4}:
+>>    [...]
+>>    [   61.013490] Chain exists of:
+>>                     &cxl_memdev_key --> &ctrl->reset_lock --> pci_rescan_remove_lock
+>>
+>> With a test-only msleep() after cxl_region_quiesce_lock() in
+>> pci_cxl_reset_prepare(), it turns into a real hang. The reset, a sysfs
+>> remove of the second device and a power off of the first device's slot
+>> all got stuck.
+>>
+>> Two region reads blocked behind the reset as well. A read of
+>> region1/commit timed out after 5 s, and cxl list -R stayed in D state in
+>> decoders_committed_show().
+>>
+>> To reproduce, I used Manish's RFC as posted. It allows one cxl-type2 per
+>> pxb-cxl, so each device has its own host bridge and window. On q35 with
+>> cxl=on, plus the memory backends:
+>>
+>>    -device pxb-cxl,id=cxl.0,bus=pcie.0,bus_nr=53
+>>    -device cxl-rp,id=hb0rp0,bus=cxl.0,chassis=0,slot=0,port=0
+>>    -device cxl-type2,bus=hb0rp0,volatile-memdev=t2mem0,id=cxl-t2,fmw-index=0
+>>    -device pxb-cxl,id=cxl.1,bus=pcie.0,bus_nr=191
+>>    -device cxl-rp,id=hb1rp0,bus=cxl.1,chassis=0,slot=2,port=0
+>>    -device cxl-type2,bus=hb1rp0,volatile-memdev=t2mem1,id=cxl-t2b,fmw-index=1
+>>    -M cxl-fmw.0.targets.0=cxl.0,cxl-fmw.0.size=4G,cxl-fmw.1.targets.0=cxl.1,cxl-fmw.1.size=4G
+>>
+>> The guest kernel needs CONFIG_CXL_REGION_INVALIDATION_TEST=y. Without it,
+>> the cxl_bus reset fails in an x86 guest with "failed to prepare CXL bus
+>> reset ranges: -6".
+>>
+>> I drove both devices with a small test module based on
+>> tools/testing/cxl/test/accel.c. It attaches each firmware-committed
+>> region with devm_cxl_probe_mem() and has no reset handlers. Then, with
+>> lockdep on:
+>>
+>>    echo cxl_bus > /sys/bus/pci/devices/0000:36:00.0/reset_method
+>>    echo 1 > /sys/bus/pci/devices/0000:36:00.0/reset
+>>    echo 0 > /sys/bus/pci/slots/2/power     # second device, 0000:c0:00.0
+>>
+>> For the hang, add msleep(10000) after cxl_region_quiesce_lock() in
+>> pci_cxl_reset_prepare(). Start the cxl_bus reset, remove 0000:c0:00.0
+>> through sysfs two seconds later, and power off slot 0 two seconds after
+>> that.
+>>
+>> Separately, pci_cxl_reset_prepare() returns with the quiesce held on its
+>> success path only, and cxl_restore_state_after_pci_reset() releases it.
+>> With Clang 23 and CONTEXT_ANALYSIS=y passed to make, that gives five
+>> cxl_region_quiesce warnings in drivers/pci/cxl.c.
+>>
+>> [1]: https://lore.kernel.org/all/20261106035911.1280066-1-mhonap@nvidia.com/
+>>
+>> DJ
 > 
+> Hi Dave,
 > 
-> Hi Srirangan,
+> Thank you for the repro. Please let me know your opinion on the following fix.
+> It also covers Alison's lock scope question.
 > 
+> Reordering the locks won't work, since pci_reset_bus_function() itself
+> takes reset_lock. So I'd like to drop the region lock before the reset starts,
+> and take it only for two short windows:
 > 
-> A concern regarding IOMMU handling below. If it turns to be unfounded,
-> you can add my review tag.
+>   pci_cxl_reset_prepare()
+>       lock(region):  cxl_hdm_cache_snapshot(), set reset_pending,
+>                      cxl_hdm_ranges_collect() + cxl_hdm_ranges_request()
+>       cxl_hdm_quiesce_flush()                      [no lock]
+>   pci_reset_bus_function()                         [no region lock]
+>   cxl_restore_state_after_pci_reset()
+>       lock(region):  cxl_hdm_cache_copy_decoders(), pci_cxl_restore_state(),
+>                      clear reset_pending
+>       cxl_hdm_quiesce_flush()                      [no lock]
 > 
+>   cxl_decoder_commit():  reset_pending -> -EBUSY   [next to sanitize_active]
+>   disable_hdm():         also update the cached global_ctrl
+>   cxl_reset_execute():   same two windows for the DVSEC reset
 > 
-> Thank you,
-> 
-> Alejandro
-> 
-> 
-> <snip>
-> 
->> +static int __cxl_reset_execute(struct pci_dev *pdev, int dvsec, u16 cap)
->> +{
->> +     int rc, rc2;
->> +
->> +     if (!pci_wait_for_pending_transaction(pdev)) {
->> +             pci_err(pdev, "timed out waiting for pending transactions\n");
->> +             return -ETIMEDOUT;
->> +     }
->> +
->> +     rc = pci_dev_reset_iommu_prepare(pdev);
-> 
-> 
-> I'm not sure if this is safe enough. I can see a situation where a Type2
-> device could not be using CXL.mem and CXL.cache but CXL.io. This would
-> imply no CXL initialization from the Type2 driver but:
-> 
-> 
->      1) Such a driver could be giving functionality without CXL
-> 
->      2) The device belonging to an IOMMU domain which such functionality
-> is using
-> 
->      3) The HDM decoder range as a system resource is free.
-> 
-> 
-> If I am right, a CXL reset could happen, and although it should not be
-> triggered by user space under these circumstances, the door is open ...
-> 
-> 
-> The solution would be, currently, to check for a  driver not bound to
-> the device in an IOMMU enabled system. I say currently because CXL.cache
-> will need extra work with IOMMU mapping which are not yet there.
+> With this,
+>  - If a region gets torn down mid-reset, the cache is already refreshed
+>    (cxl_hdm_cache_refresh_decoder()), so restore just re-reads it with
+>    cxl_hdm_cache_copy_decoders(). Patch 17 had that call, and patch 18
+>    dropped it when I moved the lock into prepare.
+>  - A new commit mid-reset gets -EBUSY. Regions committed before the reset
+>    shouldn't be able to come online, since the exclusive
+>    request_mem_region() makes the kmem and pmem claims fail, as far as I
+>    can tell.
 
-Hi Alejandro,
 
-Thanks for the review.
+I think the direction looks good.
 
-I don't think I can add a bound-driver check in this series. For VFIO
-passthrough, vfio-pci is always the bound driver at every reset VFIO
-starts, and VFIO needs an IOMMU outside no-IOMMU mode, so the check would
-always fire. VFIO resets through the PCI reset methods, so a refusal would
-make every reset of a Type 2 device fail or fall back to FLR, which isn't
-what passthrough needs. Manish describes the vfio-cxl side in his reply
-to patch 15 of the v6 series:
-https://lore.kernel.org/linux-cxl/20261016161839.2765592-1-mhonap@nvidia.com/
+> 
+> Questions
+>  1. Is reset_pending in struct cxl_hdm_info, checked in
+>     cxl_decoder_commit(), OK?
 
-I guess the same exposure also exists for FLR and the other methods, which go 
-through the same pci_dev_reset_iommu_prepare()?
-For now, the reset file is root-only, and a CXL.io-only device doesn't reach 
-cxl_reset: cxl_reset_function() needs CXL.cache and CXL.mem enabled, otherwise 
-it returns -ENOTTY and the normal methods are used.
-If this is okay, can we revisit the point once vfio-cxl's reset model is settled 
-and the CXL.cache IOMMU side lands as you mentioned?
+Yes. 
 
--- 
-Regards,
-Srirangan
+>  2. Can I keep cxl_hdm_cache_copy_decoders(), now used again, instead of
+>     dropping it?
+
+Yes.
+
+>  3. cxl_hdm_ranges_invalidate() and cxl_hdm_quiesce_prepare() assert the
+>     region lock is held. To flush outside it I'd relax that and rely on
+>     the HPA reservation. OK?
+
+Sounds reasonable. 
+
+> 
+> If this plan sounds okay, I can implement it this way in v18 (and rerun
+> your reproducer against it)
+> 
+
+Sounds good!
+
