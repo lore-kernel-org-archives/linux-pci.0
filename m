@@ -1,68 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.11
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795137461;
-	b=tEehvPXur07DEhBbCQTc/bJ3LBpHSAZXEh/63zJU9VG/1l86jUzsqwP8UkVjh4ZoAHUi
-	 taosaZ4/vlFvxy9euFNLTxxzZ+WMxh39zUcIQqdvfh8kT2VMxYSp958bUH2Q8jm5qx12b
-	 n+jiyRQerV6JZ6uSv3WvDYndpV2LCL14fmEdmF5S1yq0QcBJ093t08SpcrMd8ImrIaRQj
-	 M/iypv5eDHIJ7FC59UtjGv9SchiwW47DUVo+Yq+tApx8QVeKbXtXRZ8UZJJ/HLctbkS5m
-	 N0Tw3SFSEynfPxGYR/ayQA3uSqfWUb0gVswGy/zFTIv1jy27z9Vw1RHWE17UmRDNbkg==
+	t=1795138648;
+	b=xKnXwGyAs/PKQLh8Ho71XlAGqwDJQmeBb3j8H2y/Tpja6lVkjPbwQz7ZTN2lZsfgbheC
+	 FTW7o5aYBOlTm/mMKfSuCQNYbckF7s4147X+AgKMaz71MY+H+TVw8RVASCLkCQAHBOIkE
+	 GBY8IHpLnijILbHMQ6BOeVKcpyOhjhc7T1TVXBLhOU9z6sTqcSFdZzFWsygO9BcnMOhFf
+	 iI1GhD9JNhLXaXTNz+TUaNNnwrunVJEMw4T3Bbs+4oefxfpFxts1seAv9lwxbBJVLscdd
+	 I3BSw2Q3ATzz2SLWlO8J7U+5tx94sMcMZV5i41tpzpUHSCqdrpss68jIblsiCG7wHew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795137461;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795138648;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Date:
 	 MIME-Version:User-Agent:Cc:Subject:To:References:Content-Language:
 	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=JWqZphWtsTTHGvtPX+nDXnK7WB6OveEljmDurlpZ0No=;
-	b=qQR6niDOkf9Gy6POC53j5RXjRDZv/FhmNggkTTT+9QmFF+kTtn1YUNH0Ceh0XF1RZ9Bz
-	 ddNdKyZ5LMSHcsSwkt4c9T0WRGchRcrt40uKG+7MTr6MSnEbg0ED/jhOQW1k5DEOwB0kC
-	 TtR3FW+aBQTF9PIWD+nok3XQa12+xBM2K+YNeMxpWZ2JehvpODF8JKhSEyN6lej4qeBoI
-	 oMPxoT963UJEgLItC9L+VHcM5XVxF7vspxbpBaH4n27OWNR6i6Qs8AS9AF1SUffVzTKdY
-	 UBBhHLadcBbNBzCqnY5cqqnbnwmavUGMSXgpSjipryzeGWylEiPiiEbKPbGLhQaFwLw==
+	bh=aRheB04iyX7dVXieUD6PMSF3gXPAOjSc37jCJuLzCOA=;
+	b=ORdwvkKbq2DeWCdE7ahPOhFfdlcd46RP4mfMDnn2siDehVmsuZuTqxGFk0bnMAvh5WzV
+	 yM/id0AAngKkBNgZNT2qdBuSiqc+CQxW0ejojEffCzhwVe1W0DsHat27z6SqkX2Qx8pWA
+	 RDRiA0HcRGJjiTIPoNIOHk7yPtCSkAquh8xUsNBRHpBDm+BOw6mfbzyx14E2Ql9FF6/tB
+	 b4gYiZVYXpxi+rgeYVZ2XpT3OryGonaRLkMxQ7SbYqKVB7aifsh0/6ixqn0tZbGMguty3
+	 6KOAua0pcNiwb3DSCf4ctEPnEvfyPXoWonRzu06fgnlicJQSXHspQADTRmPD0DGYJsQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.intel.com;
 	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=aPghIyo8;
-	arc=none smtp.remote-ip=192.198.163.8
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=F17RyKvR;
+	arc=none smtp.remote-ip=198.175.65.11
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C82606A325;
-	Fri, 20 Nov 2026 01:17:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 31C82606A325
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1147606A326;
+	Fri, 20 Nov 2026 01:37:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B1147606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=aPghIyo8
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=F17RyKvR
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795137461; x=1826673461;
+  t=1795138647; x=1826674647;
   h=message-id:date:mime-version:cc:subject:to:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=tSIkeLpI67gd3O+5LLJj1iLHNmboO3o26BMKDZZIKS4=;
-  b=aPghIyo8Z1W1kb/cxIa0wLjw6A4YTOtfIdXrqpHYns3irNqFTHetajdl
-   Q02ZSeW0gIMQkmldP1A6abda4RmyAWICoDQrr6Ir30/aYonZ5OrwSOt1o
-   mKL2psiG51rsaBWssbXryauQPKcyp5Y+s/aMTV5tuR7NV2UNe/VypjQSV
-   T8ZP+USZXWvyvitmtDYRPDSzkLq0+ZscmgIuzLqJibTnxJ6/HK+CxQZmF
-   MaKRmqSvAi56ep1y3flg+DkdDDDguZ59XkO4V43zya+Wqqf4bcLMHIE+d
-   VyCZJsX5LtR3oAXpcUkFlF4pKNlALZJR+2E+3qbkjCgnyMBvBWd0wNC4G
-   w==;
-X-CSE-ConnectionGUID: zdMHTuVJRyWqFm/d66qo6Q==
-X-CSE-MsgGUID: XL79DZygTaOQ9IYeUE2yIg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11971"; a="3908754"
+  bh=PqF9kZKHLawccCDUzoTo95Nflk56OouMnex8knpthCg=;
+  b=F17RyKvRdJJx6cVj0bmnguuXem6fkAbSnMYGEprxP5saW6kLBPkOvK60
+   cSGDOxRWLUHOO2o734Aq9rCDcy57/aqc1FbNIXKQjZOqU/pMXaZKmwuCy
+   yhKcykitMpShRccmGB4ziEHpV0X/6IziA5DRrob6FhGF/cpeQy+1mHZIF
+   v7WpWJJjXg1bGhlMQ/oAmShP4pxku9TwYyHG3xQ1Hd0HeEv7eqaa0QgTe
+   TocXQzjnSg6KUoSpSNVHdQN2tXZ4sV4WSlO9iyZL1vj1DIkx4pAee8tUg
+   D/1JVk2dJ66jugO6+mDhwNJW6ACmAuDch5bfdo7BbTQOmXycUPXce81fs
+   Q==;
+X-CSE-ConnectionGUID: vLEIaxkGT56/sHZWBUgU8Q==
+X-CSE-MsgGUID: BA/udjwGSF+LcKxjb+a6iA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11971"; a="3908711"
 X-IronPort-AV: E=Sophos;i="6.27,222,1787036400"; 
-   d="scan'208";a="3908754"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 17:17:40 -0800
-X-CSE-ConnectionGUID: 6v5FeCvQRiSoxhgN7PCPHA==
-X-CSE-MsgGUID: l3gJMTkWTfSiu/FcIwximA==
+   d="scan'208";a="3908711"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 17:37:26 -0800
+X-CSE-ConnectionGUID: QD2IAhdmTcWXu4GVw/OoQw==
+X-CSE-MsgGUID: S+cVzm7cTCGeTTtfiaIvcA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,222,1787036400"; 
-   d="scan'208";a="10478625"
+   d="scan'208";a="10867899"
 Received: from unknown (HELO [10.238.1.144]) ([10.238.1.144])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 17:17:32 -0800
-Message-ID: <3201ab57-cba6-4484-8dbd-7cfb79d731cf@linux.intel.com>
-Date: Fri, 20 Nov 2026 09:17:30 +0800
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2026 17:37:20 -0800
+Message-ID: <e97e2e79-02e8-42c5-861b-a78636bcba0d@linux.intel.com>
+Date: Fri, 20 Nov 2026 09:37:17 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -93,47 +93,35 @@ Cc: baolu.lu@linux.intel.com, Alex Williamson <alex@shazbot.org>,
  Jonathan Cameron <jonathan.cameron@huawei.com>,
  Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
  linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-tegra@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v9 06/13] iommufd: Add a vDEVICE operation ioctl framework
+ linux-tegra@vger.kernel.org, patches@lists.linux.dev,
+ Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH v9 07/13] PCI/TSM: Remove the legacy guest request
+ interface
 To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
  linux-coco@lists.linux.dev
 References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
- <20261116081935.85372-7-aneesh.kumar@kernel.org>
+ <20261116081935.85372-8-aneesh.kumar@kernel.org>
 Content-Language: en-US
 From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <20261116081935.85372-7-aneesh.kumar@kernel.org>
+In-Reply-To: <20261116081935.85372-8-aneesh.kumar@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 11/16/2026 4:19 PM, Aneesh Kumar K.V (Arm) wrote:
-> Add IOMMU_VDEVICE_OP to execute operations on a vDEVICE using separate
-> request and response buffers. Each operation defines its request and
-> response formats, with response capacity checked before changing device
-> state.
+> Guest TSM requests can now be dispatched through the IOMMUFD
+> IOMMU_VDEVICE_OP ioctl. Remove the PCI-device-based guest request entry
+> point, its scope enum and the corresponding PCI/TSM driver callback.
 > 
-> Look up the vDEVICE and check its supported_ops mask before dispatching
-> an operation. Reject out-of-range operation numbers before testing the
-> corresponding bit. Backends set the mask during vdevice_init().
 > 
-> This patch defines no operations. The default dispatch returns
-> -EOPNOTSUPP; later patches can add operations independently.
-> 
-> Cc: Jason Gunthorpe<jgg@ziepe.ca>
-> Cc: Kevin Tian<kevin.tian@intel.com>
-> Cc: Joerg Roedel<joro@8bytes.org>
-> Cc: Will Deacon<will@kernel.org>
-> Cc: Robin Murphy<robin.murphy@arm.com>
+> Cc: Bjorn Helgaas<bhelgaas@google.com>
+> Cc:linux-pci@vger.kernel.org
 > Cc: Alexey Kardashevskiy<aik@amd.com>
 > Cc: Lukas Wunner<lukas@wunner.de>
-> Cc:iommu@lists.linux.dev
+> Reviewed-by: Jason Gunthorpe<jgg@nvidia.com>
 > Signed-off-by: Aneesh Kumar K.V (Arm)<aneesh.kumar@kernel.org>
 > ---
->   drivers/iommu/iommufd/iommufd_private.h |  1 +
->   drivers/iommu/iommufd/main.c            |  3 +++
->   drivers/iommu/iommufd/viommu.c          | 36 +++++++++++++++++++++++++
->   include/linux/iommufd.h                 |  3 +++
->   include/linux/tsm.h                     |  1 +
->   include/uapi/linux/iommufd.h            | 33 +++++++++++++++++++++++
->   6 files changed, 77 insertions(+)
+>   drivers/pci/tsm/core.c  | 60 ----------------------------------------
+>   include/linux/pci-tsm.h | 61 +----------------------------------------
+>   2 files changed, 1 insertion(+), 120 deletions(-)
 
 Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
