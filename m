@@ -1,162 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.53.34
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795260368;
-	b=5KcwbQCawGKb3u3sCHIqI50Tu6lffPUIXXyb+9HfE7sgz8Y0xkkOU0TvN6yXuKBE31Wl
-	 S9pWrqOAUZ7XZrPsz2qsqPoXqbC4BC9+ZdMBsB4xYH2w05itWKhYt4LzJqFcdy5Ssly+O
-	 DzsWNlX1nCJ2T5REONdBE7M4dONqSbxOL9skcVpRyHPWAt+vty68h2mEmofY3PbN/TaBv
-	 jPyT1aMXNTapZejvcpn2WIoA1/8MZmQElR5ssOPosSus2pmSPbWhnbyLK0Z18uRew8Ppa
-	 Rvwqd+1j1RpvAZVroCcDQcLJ/irpheMvEl0qBtpnoyquJz/rDiy5v03lX0tEZtdlQvg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795260368;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
-	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
-	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
-	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
-	 x-ms-office365-filtering-correlation-id:x-microsoft-antispam:
-	 x-microsoft-antispam-message-info:
-	 x-ms-exchange-antispam-messagedata-chunkcount:
-	 x-ms-exchange-antispam-messagedata-0:Content-Type:Content-ID:
-	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
-	 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-originalarrivaltime:
-	 X-MS-Exchange-CrossTenant-fromentityheader:
-	 X-MS-Exchange-CrossTenant-id:
-	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=qRSrf0oi/i+17wMow74Gb6wuiZjtiEVyLDOPBKExg0I=;
-	b=QoUAsjEKc6iNPYoUZhdELV58jtLK91il5zdYS8fBssWkRofARp8M8shUcgr1ldv3DnXY
-	 TSgVXLvunVdTY8ANqldoShByM3abzuGafp+pP1NmyB5/5La+RMftHLkiEmagPDDzQa2zb
-	 lGdTEwIl5rZhZBrmRYn74Wvc9ZXyJvfsl7oiSlqDQZZBndBeLXK9L3cc/9Fs0/Kl1L2g7
-	 t9l0nenbN8QWd97gYcr9nmPiXNUbWuovHezOvrXA+hBqxhjQNUA85PaEFxC/byp19t4UF
-	 fYheO0ekUDKkOiempno2lxkXCSzOfu53PrpE7brnzI0TXwrJiiwdaSWu/6w845GUy4w==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=hotmail.com;
-	spf=pass smtp.mailfrom=hotmail.com;
-	dkim=pass header.d=hotmail.com header.i=@hotmail.com header.a=rsa-sha256 header.s=selector1 header.b=eiNztnC4;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.53.34
-Received: from WA1P291CU003.outbound.protection.outlook.com (mail-polandcentralazolkn19011034.outbound.protection.outlook.com [52.103.53.34])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.51
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795261049;
+	b=uCe/26GxBBTLP9Z/yV0Z3AhnU7v/cYUje2Db5Aus0Fevdr44T2c/iX888/DqEFfpjyjZ
+	 C+xeO1Hcd1D42j43+vuzlDU4laS7K0FRU8noOKF1ypGzWonmp2mOLnLIn7JtgsVflCkxe
+	 11WrbhXWynr5qo0o8KuXr4psS0YK5WVN0oZERo2Largu1SIBb976pETX3GeDfPa1btR3F
+	 qyqGqpFKFoUhIsIjePhgSki5g2XWmdRQ3JtGy/2CnT7iaOB5J8GVz0nJveIrVnY7akyMk
+	 LBkj2zSIsktHtYKGOGLV750f/O3cj7tqvwB79as+G1S3Q0jeHMy2V23fGIVh66NfXww==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795261049;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:User-Agent;
+	bh=Z6Fq2OUnRPwkDMt3uy74FQqaHnnZFERerJEl0pXhFq4=;
+	b=zI3YfIsPSx4KQFurp/2ZHeGpN3/V3tym1A7uExwA8mzMY+Kb+BZMzKkI3t+HGLtLzJ0T
+	 euIP9roXudAUZ2n6RUxtfFlH4THNyj7JHXydrpaBB93eFfZTI9W4AONoQAfA3LP20wAjr
+	 p6nUfoNDjSxsWGkZRTlNSHIzXG098B9NUDf+/kq34sHEg3JhR4gg4ctYTnPzLTn/0zml7
+	 j8+bpjU/YDaglZCqFbJ8JpL90OD7pQ3Qj//CUJTuRp4kwdylRuKHHX5/pP4iL3YI71F34
+	 QxOxRRNwnp706SYWHuF6wHejSTnkUT29o+s0RUurpXZRaewB4SnMlC6ONhZ5CO8OJlQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=iOFfY2C0;
+	arc=none smtp.remote-ip=74.125.82.51
+Received: from mail-dl1-f51.google.com (mail-dl1-f51.google.com [74.125.82.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EFA0606A32A;
-	Sat, 21 Nov 2026 11:26:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3EFA0606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA158606A32A
+	for <linux-pci@vger.kernel.org>; Sat, 21 Nov 2026 11:37:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA158606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=hotmail.com header.i=@hotmail.com header.a=rsa-sha256 header.s=selector1 header.b=eiNztnC4
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pqtSD+yjxMMPFQrJl2F+dmBQ7VVx5VafabTTjyjushtJgNgN7jORuftfAd3/G6Hn7gGzMPN2+txKf398Bc5mXgwkvrRysuqnSuHVw3aDBCkgRw9JyCmagwh58vGcSmO0WXEx6HE6T2YK9u7e1BbF9aNW3k3/I+60nLjHLNwBZQZAWts1iRjmzuj/byZaKqLJ3BXzhcbIVoGTWHi7UNMM2PJaxAH4EhMWa9JeSJYBF7BO6RzLoj8CZrRJ65ph4YR7M9W3RTGCVCLcJimHjq+8hBeZFNpr4oIvt6eN3Sld1Cp5l+9c+Ev7Ce23iVq2/PVHBg1mX3lqdYgTNJcOvlwjUg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qRSrf0oi/i+17wMow74Gb6wuiZjtiEVyLDOPBKExg0I=;
- b=EZQqO5Qa0W6sfRdPPN5hRvg7tTOb4jlOgKgobwG6x0aRaJS4Rzvgexq4sja4K3REssui7lBoB28Jd05rVSTzaoRV0QRDarHIlw+W7pfau0J/ridL3wW6U5TEtiwpakf1GlsnGR2DeeUPXso+b40GzmAfTZ92AvbHN7WUYFwDX3UHYU9ZJh8Ducb55EJP9cdtwfaVYw5nYK/Sul1p6hC+uY3EvG8cQX99HMltHS1dvf54DSrZXk0QrldnDmHAaTFVcT6o1v/TnNiBioD34fBOSJ0+aqNhxLuqc715AYz35yVCfF9OhNGRaQKyyiJHoi6c4zSqAntkic+NgPUDQk5tJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qRSrf0oi/i+17wMow74Gb6wuiZjtiEVyLDOPBKExg0I=;
- b=eiNztnC44khbLZCc6+WdFg5jLEkMu/7Dia+fTpQroKOpPgmvefRoiW2o74fOAU7W57iNO0POVc2pV98g5O5gDZDSeUqA4GBzvfZCRyl4tGiZv+cPWZGwfg9/ex6DmcyWgYG5xB3OoT++6E24zXHwew06WyvLMH26bWPqEu3fXaiHBrQBxHLb3vRb/jsHPsdiWHIx1o993I3p6iYmAKSrbsI7hqszVsxoF5dMNxcj56S6JgWBfNiHdCGtN05418CtMfIjpiy8KIc0wOdG52/uz5MWpNQ8ludHLwb/W1U41VA6kNIdlup6GpYy8eGo0C67a5cOqY+DwWSAWmAojGT1RA==
-Received: from WA2P291MB0187.POLP291.PROD.OUTLOOK.COM (2603:10a6:1d0:26::11)
- by WA2P291MB0115.POLP291.PROD.OUTLOOK.COM (2603:10a6:1d0:26::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.13; Sat, 21 Nov
- 2026 11:26:05 +0000
-Received: from WA2P291MB0187.POLP291.PROD.OUTLOOK.COM
- ([fe80::996b:1617:ce96:404]) by WA2P291MB0187.POLP291.PROD.OUTLOOK.COM
- ([fe80::996b:1617:ce96:404%6]) with mapi id 15.21.0639.011; Sat, 21 Nov 2026
- 11:26:05 +0000
-From: =?utf-8?B?SGFiaWwgRXJlbiBUw7xya2Vy?= <habilerenturker@hotmail.com>
-To: "andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>, "bp@alien8.de"
-	<bp@alien8.de>, "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	=?utf-8?B?SGFiaWwgRXJlbiBUw7xya2Vy?= <habilerenturker@hotmail.com>,
-	"hpa@zytor.com" <hpa@zytor.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "mingo@redhat.com" <mingo@redhat.com>,
-	"tglx@kernel.org" <tglx@kernel.org>, "x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH v2 3/4] PCI: Convert quirks.c to pci_power_t helpers
-Thread-Topic: [PATCH v2 3/4] PCI: Convert quirks.c to pci_power_t helpers
-Thread-Index: AQHdeDNFCSkt0YnohU+kbfy3sJ7a1bc1oYCAgALEPoA=
-Date: Sat, 21 Nov 2026 11:26:05 +0000
-Message-ID: <20261121112604.42689-1-habilerenturker@hotmail.com>
-References: <av8tpQO7KYGUXQmN@ashevche-desk.local>
-In-Reply-To: <av8tpQO7KYGUXQmN@ashevche-desk.local>
-Accept-Language: tr-TR, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: WA2P291MB0187:EE_|WA2P291MB0115:EE_
-x-ms-office365-filtering-correlation-id: 1dc9c525-b1c1-45c5-505f-08df47c23b4f
-x-microsoft-antispam:
- BCL:0;ARA:14566002|19110799012|8062599012|8060799015|25010399006|15080799012|51005399006|38102599003|31061999003|55001999006|24021099003|40105399003|102099032|440099028|3412199025|1710799026;
-x-microsoft-antispam-message-info:
- =?utf-8?B?Qld2dkZhaWhYYm9LZWR3ajF2S2wySTZBU25XK3AzVVhWWXBqMEFEanFyQlZX?=
- =?utf-8?B?VWtHbCtsdmxWK3NlZGxIUUt1QmhlU2NqWGNydnJnVW1OQWxrQTFzTUhWeERi?=
- =?utf-8?B?N2Q4MVNzV0J3akxlQ1UzTTh2RjVNZ3NkZWw5NE1uWEVsVlBQSjhOb1hGUmoy?=
- =?utf-8?B?enFnV2Y5UnRxTDl4RGJsNVdsaFFXclBPeGtJODVHRXUrREErMUt6RkxiMis0?=
- =?utf-8?B?Z2N2cVNpZWFnNEpKT21EcUx4MzVGUVh0SVRRMktDc2dsUFRKV2w1YzI5NTJr?=
- =?utf-8?B?N1hMMEVWRXREWm8vRkJacEtMeDN4V1VQbEV5SWFJTmx0SWhBTDEwYWMvT0s5?=
- =?utf-8?B?UWpFRDg5UjkyZHNjZDRKSUFLVUlZQlJKbFY5OTNKU1EyQlViV1k2TkV1ZUdx?=
- =?utf-8?B?UTZRUjVxcVZXMGFnQ0hrZklEa0s5cS9BRXdEZUhoMGFONWRIMkJ3bmhtYTc3?=
- =?utf-8?B?aFN2cElZTkxtUjZCWlc1Sk1EdFQyRkpqeFZYbXU2TVlqSkJlTzlOekZuTzI5?=
- =?utf-8?B?L1pERmRpSnNJTUlLdWppWmFVcEJQSW4zbzh5N1RpSXh0d1VjWnIzL1RDdGxw?=
- =?utf-8?B?eGZUdkJLN0hScnp6L1Q3VGp0ditJWWNjdWU0QU1uNGg1S1I4c2V0OENIaEcx?=
- =?utf-8?B?VU1pSXByVlV3b1RxYjJkVFdFSERDUUtES2Exa1drWmRTWk5TSVRycVhiOXpN?=
- =?utf-8?B?ekNoUzRkdEIrWjhDWlRoLzVNN0dYVE9lNGs0R0RiUW4vRlVOTDFqVGNBaGQ3?=
- =?utf-8?B?OVVTMFpDTDA4WmRlQ3MydmQzb3JLcGhWbUwrRmNrcFJHK2QzaDBSMW9QbHNG?=
- =?utf-8?B?RlZrSzNqd0MyOFFUQytyeTFqNUpwd0tMeExYSnhyYVM3MWlUQlNFanRhb0c1?=
- =?utf-8?B?MUxiZ2Q2U0R3VUxJdTdxNkduM3EvSnhGbVVKZUZiNkoxNG5zN0xOUmhHM2My?=
- =?utf-8?B?ZER3TGoxSFlNODJQMWYwa243Tm9peGlFZ0FLMmlYQkNudk15S1R5bVh4SXg5?=
- =?utf-8?B?RTlwZCsyTEFKbWUzZmE0bEo1eWFKbk1BbmRoVFRwYXB0b2FQSDVGRnhHZ1Z1?=
- =?utf-8?B?eXR2OW01YVJuWkQ5RkJ2UXA4K1NWTnVONWJaL0RVSDBYem9MMGFKOTRCU05q?=
- =?utf-8?B?cFFPLzVCKzlkZWNsS05weElMS3ZkSC96Y2ZCTW01dUZ6MFV4Q3VQdjdzV2lJ?=
- =?utf-8?B?eTJSNUJHdjJ2Ym5jUTkvd2FoSnVqaDVHdkMyd2k0cm9aSVgxWlhOZUxiaHRI?=
- =?utf-8?B?OEZLUE9UQUVHdkgzdW55dzllRTMrSmJsSXJKNFJVYUhHaUlQZ0lEUmpRQVIw?=
- =?utf-8?B?REFneExPSVAyR2ZWdFhrR29PTkxOR0xxRGQxRXpmWlRtY2hnaUhtazhiSmZt?=
- =?utf-8?B?ZlQ1WEM4d2dIYnc9PQ==?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?WUJEcUlkTXY1NmF1MEozNU9XRVdJOUFWNk9KSmIzd0lFc3JEcGlGeXo1YUkx?=
- =?utf-8?B?WFdlU3BPWGUvQVM0d3dlK2E1S2dYcDIzcHNodnZtNlZMUU1IUE11MVl3SHlp?=
- =?utf-8?B?SVp5SUNUS2gwb1B4Rk5MQUlicENGdkkrZWg2YUtNQzQzSjh2S0RBazhzK0xj?=
- =?utf-8?B?TEZqZkIrY2ZuakNIY3Y4MkVaYitHNU5xQ2V0N0duZmMrTDNkeTUxL3NBZVFZ?=
- =?utf-8?B?RmlPbkFjSnNpSG0xbWFidUc5WGVWbnNKblljc1MvMTI4ZnJDeXR3ZHZwTk1X?=
- =?utf-8?B?c01vS0VKU1k0VTJiZUduNlV5WGkxRVZqU0lZeWp2R2pnb05uc2JiK04rdjlk?=
- =?utf-8?B?NHlnZVYwT2U4NzRwR3haemFCY1dRQnJRd3FXMnd2ZUpaYU5KUERrcEhQRkRp?=
- =?utf-8?B?aFRlamkxcS9RU0dYYnN0VytwRWw2SXRQQVJuQURIcmRGMzEwUTAyUVk4WE40?=
- =?utf-8?B?YklNQStnMk5nUFZEK0VsYlg3cmk1eHZFYmJrK3JDRTdyYVl2V1FuSSs3blBV?=
- =?utf-8?B?b2VlN2RqN2RSbmRJNklXa21HckpOTHRubElzTGxua3lJRDd3aWkzSGFOSW1T?=
- =?utf-8?B?aFRjWlRETjU0ZWl2MURCMU9IVWMyU1d3N1BjK2ZDb05ScTh3QjlNSmtzSTBm?=
- =?utf-8?B?UzlRQjh6RzVVcUF3OEFuZUY4czc4SXo4bUJUTHM1K1NqMjV1QnpmcXp3WmRt?=
- =?utf-8?B?ZGpnOG9MSWtXTlo3ekhmSWhid0FrWDlaaVhIOUk0bjl6RTRib3dZeEtqRzZn?=
- =?utf-8?B?VlFwdmNyc3VvaFFLcnpOVVIrYnEvM29kaGY3UTFRV3h5ZUQreDdNa1RnMTFC?=
- =?utf-8?B?elFKSUYxdDRWWWUxSUVIRUxnSGVzbXhnbkY3UlpnZ3lBYlRBOTBsd0FZZ0NE?=
- =?utf-8?B?Ty9DOXFFS09lYWRNVUpzVENHcnRrRE1Hbk5LMU1ESXJQdGh2Z1FlZ3ZmTFJF?=
- =?utf-8?B?Mk1nYno4WW5QNkhxekJEVVJxQkJSYmU4OVpuUWRkeVFjTnlLS3R4ZWVaYXl4?=
- =?utf-8?B?Z3R6WTY0eXF5Uzg5RE9BRUNoakFwbHFsSlo2dHcxNVU1c29VTVY2QzJsRzkx?=
- =?utf-8?B?VWswc1M3bFVlYWdkbE5YM0RQNW5IbWVBNFZKbXFHTE96RTQ5ZU1YK2l0OGdI?=
- =?utf-8?B?TEV3bXNzaTVUaStkcUhXMWVKQUE1cUZ6aVpVbFRBamw3YnVaQk4weHZkM3Y1?=
- =?utf-8?B?VkxFME53YS9pam5Cd0JaQS9CWlRjcVdGTmJvemNxcU9BckgwL0l1QkxhbTJR?=
- =?utf-8?B?WVRyTEFWYlJwYi92K2wxY1BDR1YxZDh6ZzRjdEM5clVlUmowemI1UHJReHlY?=
- =?utf-8?B?eWhFL0RHQno2YU1USU5NYTVVNFlocjVod1NGa2dPT2hMWlExNWdHeDNwZHJS?=
- =?utf-8?B?eEsyUVhBQWhsZzZuNldpVkJUK2ZCN09ROWV6K0RpS1VBVktQMnU5MW9oalJZ?=
- =?utf-8?B?ZjNXZFRnNGMzWU9odTNTcnhVdEM2emRlald1aUsrNlZ5cnRiZUppQlJwMjFP?=
- =?utf-8?B?L3VQRk1wNDVZWUxGeWExakhRUHc5VW55aVg1MUpYNTR1cmxTVldJSC9SaVVO?=
- =?utf-8?B?RGoxSDlwWlJ2OHlNUGxDdWhyenFrQXUzNHlXWmg3N1pzbWtzUkpPM0luSjBa?=
- =?utf-8?B?VmRUbzhLYlVxdHBPaVlZMThHY1Jqd20wakJrVGdKb2U3dlBETVhKZFYzYTVQ?=
- =?utf-8?B?aTRyVjZLbzhpdm1rZzZJcWF2NXRhcTgvUEdVOVprUGlaanFNZHhnY2lpblFK?=
- =?utf-8?B?NFFzaTVnTFBiVlB0NlJiZTVYcjJOcHpYV3hDYVhmVDFFcEZQS0lVWm9ORTFn?=
- =?utf-8?B?R3RHbW01dnJzSjZ2MjZVdzExRXBiOWtFUHFOcjkwbFAwd1Y1bkc5R2s4Yy9B?=
- =?utf-8?Q?fpalfFc1t1sTk?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <D86D6E9F384FE24B84B5FF10FEA0A5EF@POLP291.PROD.OUTLOOK.COM>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=iOFfY2C0
+Received: by mail-dl1-f51.google.com with SMTP id a92af1059eb24-15ea896ddc8so2889910c88.0
+        for <linux-pci@vger.kernel.org>; Sat, 21 Nov 2026 03:37:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795261048; x=1795865848; darn=vger.kernel.org;
+        h=user-agent:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Z6Fq2OUnRPwkDMt3uy74FQqaHnnZFERerJEl0pXhFq4=;
+        b=iOFfY2C0LlUvyKFJTvFPJcN4Xr9YeXIbalzQaPzIkZr72m+pI2qhhzoCdSvkI9Vk5N
+         MrfXgnYBgdaM5hgm2WpobxmQXFxsK4eeEhM6WPlFxjSl3FT9bqNkd8tWAUmPV2HTf13t
+         fdp3HGnjyL80p3TxPLCUooXon5JGMd3b5G58uoniv6Ux54AlcvhCmNX9iBjXPj1RJI3f
+         ueq9LTqFbRPZbyMo4vl9/KuHRGK/Z7EvfG0+eUPpc5EI3rgIUohgClWWkTb/jk56aeuh
+         /rUlnnsyyJ18RZOtySzvTAkOqYQc3zDZFW3igjvfG8VxE6tErT1oymKvJEWKXkwNneRc
+         dKmw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795261048; x=1795865848;
+        h=user-agent:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Z6Fq2OUnRPwkDMt3uy74FQqaHnnZFERerJEl0pXhFq4=;
+        b=P46EL4uyL6MLx68fX+a9U/cmcEXkdmGL0kDSQxc6SgPB0utFGDFY/QaKDi35ame9nn
+         cVCywquR4GyVe94UiufwmRz8WC0CNo3Tl1PcpqBzUQI0uk0VBnDXPna8peF57DP81CpI
+         YHeyEvlbtjM5OWLncjO9dr9XCsrKzqoCqK7GGszdXqmldjZPIMniLdO5W7Zg6VHVPIjb
+         WPpMLA0tH2FsNrlaWUXokeST3sTeBEUjE+BDk1DzDvX9lUS7TbiAuHLos23GGZzyApmE
+         ymvHqy77sMRagEgAdJbn6li4GpjMpQ+O6XUSiTEL0DCB5Ot0FAlM8OOkBep+9z80kMF1
+         lAug==
+X-Gm-Message-State: APuU4Z8DH8vHLHMIp6JbkrpDHyRgErm/jh59SigdmeDgsHG/b1H/KYSR
+	NITJqyYmkFkq/hjvt5jbaSi82At43hkqu2QSWBkzTdByfvLttXQT6xiT
+X-Gm-Gg: AZFdTZdxHU0d0Z8jPn1A95bRBzAn0h/XwnrUgNbcHp1awg+Oys6mbok3v1XHkMNYTdQ
+	uc/hqLwyhoH/dzZpHYyehfu5+n3J8ZXMgLjm2qyEq9V0lFZLLeOfQZbMUc36AqRPQ/MWnhp3Oqk
+	6pln8Bncyc21VlbSml7ChEh09z0xsyclvmYTVAyP2T1urbiQPYFeiQs7LEYaL7PUdTw2ahq1yPU
+	C3EUcFb6qUWn4VSIOdNYoU/gxLEKoYFZ549LNRFFM8UQtJ0qIRtE2sOV4V+GQvQLLAIRiPOXtaE
+	H8ZVNKtTyuAtyhs4XgTVSckwzGfEQ0gTyTHE3eMETQwxnbiOfltPLwijtf0+8yFq0eyhHRi9vM6
+	q5hRoIuFcLfoRwgXrOk/706OPojMVNF6hj4Ze450P2/bdN7Ofn1cE3P3Fzq12Fkk/BJAuPe6odM
+	/RINOfJzj1GOUikgZ4ohOn6EJdIPMd2btRmwKfiremSLnDdTzcj2USHikopVjQc2hnY2EQVCwO/
+	vhbmWFMOlL0b0TzxfBpqsz22RQ3BCZGgUth3NphtNU2E4ay2Rb7HDfp2t46Cvzv/kylTW1275KB
+	M//IcpkAdB6RQOBlj2zDUYoiNGh6Htq3/kfHeXPRuzpJpTB+8InzhKQuAW+r/J9g+FrkFbfA8hm
+	eJd51wml2bwkEb3c=
+X-Received: by 2002:a05:7301:1501:b0:385:1e1c:9ab5 with SMTP id 5a478bee46e88-385701527f3mr5469764eec.20.1795261047398;
+        Sat, 21 Nov 2026 03:37:27 -0800 (PST)
+Received: from asus-ux3405ca ([140.213.140.56])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-385666e7f59sm17980517eec.6.2026.11.21.03.37.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 21 Nov 2026 03:37:27 -0800 (PST)
+Date: Sat, 21 Nov 2026 18:37:21 +0700
+From: Muhammad Huda Nugroho <mhudan21@gmail.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof Wilczynski <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: qcom: Do not power off a PHY whose power-on
+ failed
+Message-ID: <20261121113721.7OL6u%mhudan21@gmail.com>
+User-Agent: mail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -165,19 +96,103 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-2112e.templateTenant
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: WA2P291MB0187.POLP291.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1dc9c525-b1c1-45c5-505f-08df47c23b4f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2026 11:26:05.3941
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: WA2P291MB0115
 
-SGkgQW5keSwKCkkgYWRkZWQgYSBvbmUtbGluZSBleGFtcGxlIG9mIHRoZSByZXNvbHZlZCBTcGFy
-c2Ugd2FybmluZyB0byB0aGUKY29tbWl0IG1lc3NhZ2UgaW4gdjMuCgpUaGFua3MgZm9yIHRoZSBz
-dWdnZXN0aW9uLgoKUmVnYXJkcywKVMO8cmtlcgo=
+qcom_pcie_phy_power_on() unwinds a failed phy_power_on() by calling
+qcom_pcie_phy_power_off(), which walks the whole port list - including
+the port that just failed, and every port the loop has not reached yet.
+The phy_set_mode_ext() failure path returns without unwinding at all,
+leaking the ports already powered on.
+
+The first of those is not a leak but a refcount underflow.
+phy_power_off() decrements phy->power_count unconditionally and invokes
+the provider's ->power_off only at a count of 1, while phy_power_on()
+invokes ->power_on only at a count of 0. Releasing a reference that was
+never acquired therefore drives the count to -1, and the next
+phy_power_on() returns success having silently skipped powering the PHY
+up: no error, no message, just a PHY that is never initialised again.
+
+The damage outlives the failed attempt, which is what makes it worth
+fixing. On a single-port controller the very first failure is enough to
+reach -1. It is normally invisible because a failed host init at probe
+time is fatal anyway, but it becomes reachable as soon as anything
+retries host init at runtime, as system resume does - at which point the
+controller comes back with a PHY the core believes is already on.
+
+Unwind with list_for_each_entry_continue_reverse() so that only the
+ports successfully powered on are powered off, and route the
+phy_set_mode_ext() failure through the same unwind. The PHY core already
+releases the failed acquisition itself, so the failing port must not be
+released here.
+
+Signed-off-by: Muhammad Huda Nugroho <mhudan21@gmail.com>
+---
+Notes for reviewers, not for the commit message:
+
+A structurally similar unwind fix for the tegra host bridge was declined in
+August 2026 ("PCI: tegra: Unwind partial PHY ...", Pengpeng Hou) on the
+grounds that a phy_power_on() failure means a broken system that an unwind
+will not save. That reasoning answers a leak argument, and it is fair
+against one - a PHY left powered after a fatal probe failure changes
+nothing. It is not the argument here. The problem in this driver is the
+opposite direction: a reference released that was never taken, leaving
+power_count below zero, so the next phy_power_on() succeeds without
+powering the PHY. That survives the failed attempt and breaks the next
+legitimate one.
+
+The same underflow was described by Vladimir Oltean in March 2026 while
+reviewing "scsi: ufs: qcom: Drop the PHY power_count check" - "If 0, the
+power_count would become negative after phy_power_off(), and a subsequent
+phy_power_on() would merely bump it back to 0" - and the ufs patch was
+withdrawn in favour of per-driver state tracking. This patch takes the
+other available route for a consumer that must not inspect power_count:
+only release what it acquired.
+
+Against mainline master as of 2026-11-21.
+
+Found by reading the error path, not by observing it fire. The underflow
+mechanism is from the PHY core's own accounting in phy_power_on() and
+phy_power_off(); no hardware reproduction of the resume case is claimed.
+I would rather say so than imply a bug report I do not have.
+
+ drivers/pci/controller/dwc/pcie-qcom.c | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
+
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1445,16 +1445,29 @@
+ 	list_for_each_entry(port, &pcie->ports, list) {
+ 		ret = phy_set_mode_ext(port->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_RC);
+ 		if (ret)
+-			return ret;
++			goto err_power_off;
+ 
+ 		ret = phy_power_on(port->phy);
+-		if (ret) {
+-			qcom_pcie_phy_power_off(pcie);
+-			return ret;
+-		}
++		if (ret)
++			goto err_power_off;
+ 	}
+ 
+ 	return 0;
++
++err_power_off:
++	/*
++	 * Only release what was actually acquired. phy_power_off() decrements
++	 * phy->power_count unconditionally and invokes the provider's callback
++	 * only at 1, while phy_power_on() invokes it only at 0, so releasing a
++	 * port whose phy_power_on() failed (or was never reached) drives the
++	 * count negative - after which the next phy_power_on() silently skips
++	 * powering the PHY up at all. The PHY core already unwinds the failed
++	 * acquisition itself.
++	 */
++	list_for_each_entry_continue_reverse(port, &pcie->ports, list)
++		phy_power_off(port->phy);
++
++	return ret;
+ }
+ 
+ static void qcom_pcie_configure_ports(struct qcom_pcie *pcie)
+-- 
+2.51.0
