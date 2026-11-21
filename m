@@ -1,87 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.191
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795283850;
-	b=e9WtsYVxUQ8JC2xHaXK66QXnupQidh8TYD6MKAIb8wCQnRzmpC1y0mywyJjLiSbiVJW0
-	 RFvaFBa5C+o5efaQU0ulxZEQkpar78cYnzxJY14n+I6ELYzbKdtdFDb8c04PlkjN/dkSW
-	 Kx90btwiaxkKQxq052+Bp9XkXD/NNQvp+jW2puJQ7nlu5p4I/dsP6v5YRzz9e5dbWfDUK
-	 2XzPGxJhgvmMfNK1vrBQ6f2DH7/xfPKB0rcznoTesUW0LgWXXFIC3DZkUIWUBZisN9EHb
-	 MTLjn0JixjM//oYja0DiZqLYiizYYuYnRk9ZuV4lsK1sfWPMbPYhxX5ySkCvDBUojhg==
+	t=1795291139;
+	b=G/1skbRlAQ44DiryNMluEXlvjisOKa1Qn/3Q9nBCoTWBe6/LlxOcrn3ZAMCkqzkCbLjI
+	 gumXudvXR/JI82prEJOSbbYG74DE5wu5hHeHaSaFzTQoRyPcNODp2q3uzGcRWFVnx3H6c
+	 OolVqXuYGpYlr5Se8JmjB68MoHIuLIlZo/L9jq527fp8qcwdY3+x7uU12B/M09Il8YWZD
+	 LfwaJbgcKw4xK7JVaPnhDkvLNy8M5OtN9IIkAA+73NlmVKhUkBVs9KXd5w9WOqH70ZRcp
+	 p6V/Lrydr4aw5S0PXbIEqWauM+NPY96HzwX6kX2zYFuZX5otiVjB/QhJm743pOu+CuA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795283850;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=xbFVZQIEMkfn+DHU4bD6nq+/GyfOhkBuMR4xGVWfzAM=;
-	b=fEg1MGfC+8SZ/Bf6PRdSsCokrLGd552bMuQErGHwn38hoPVEI6yzqwR3QVPsw+eJzxMV
-	 pB8T91mJek9C46VpFQ0mDPfEqbWV6ohHOPsafWhMHL4JlHhW4n7JxT17upK8iv/B6QImz
-	 1o9VtpPHt5SmE5ZzRlDbt9YRL9sBrWP2k8jqxWBVCB7A8XjzuzY6SEh4CQeh8zB9IUaTy
-	 ca2dKSUoQyUCS1OcQrWptAiYzJO0u/zPOwjYudeibY5Wm9qaFgqmaTmCLQ2xufsKcioOM
-	 Ytm+E+fUGQSUysnoCNKyT9ADZiS1qF+FxMlqjpIs/ZlT20heSTTlbXCMwoPgBHC9dUg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795291139;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Date:Message-Id:In-Reply-To:
+	 References;
+	bh=AMEe9uy+oW3f3SwsgSW+M/nxThzS0Dp2S/VJ3lcqVCQ=;
+	b=1E8prIxy11bGv8FAOsZHRyJcNBQ7YXGXVZ2fVcUDX33u+jdZYHBXFYLRiMv9UA5XfAt0
+	 JNpBSP4ANRmHmzOIhwEW/5eikRN3cXaWxE8RcdmiQrwHxvtPesBEU6xX2tGGCuUmXk+Ej
+	 rclVx+/9Sko3xaXLwpdq2bYBE8XUuvmAn+S3bIIGa6co0H9Tx0EdtWraAAP+Y9wVnvmsa
+	 DNPV1Cdym8Pt610TvxhFnpgCsl94sdpD2Mz0Bl85C/UdgQErto/nWU0ttKeOWITYhl93x
+	 lZ0rWnqWDpM0O2GEdeSBBKogLLiwu/QMQyWKY6ne+wDIjdtmbO1KBNPDl2gjWO1RPDw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Eq75YtR8;
-	arc=none smtp.remote-ip=192.198.163.8
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=cressey.dev;
+	spf=pass smtp.mailfrom=cressey.dev;
+	dkim=pass header.d=cressey.dev header.i=@cressey.dev header.a=rsa-sha256 header.s=key1 header.b=kJhAd9K4;
+	arc=none smtp.remote-ip=95.215.58.191
+Received: from mta1.migadu.com (out-191.mta1.migadu.com [95.215.58.191])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11433606A32A;
-	Sat, 21 Nov 2026 17:57:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11433606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5A9606A32A
+	for <linux-pci@vger.kernel.org>; Sat, 21 Nov 2026 19:58:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3A5A9606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cressey.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cressey.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Eq75YtR8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795283849; x=1826819849;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=xbUHg34GuIgDdkp+pcQBfO7fh1frELeeNajnf0i1cLk=;
-  b=Eq75YtR8KU0jDJKWdpXFeKozdQdwPu5RS6Capg7Cc0/l+PsuQ/FuoKkL
-   YbiRJHqLFvjP6Y0svIly+bPlmT3o4aLEFadupTUPx1vWJuPAYNHomWECO
-   HHpeI+iyTYJmIe4urkf+kaOWMdrWwPE9x253fBiEmeyuzYhnd+24HXnwu
-   Nm6lX4sjKMr5pAwRwbAulrRIP2Fv/m4aa8jrF7UDHewHi/gIvbS+NNcZK
-   GVfGXPLNzq7Z6XCXLcf7diL+e1QGr7Mdvbp2O6EXtez/k9g/0HefsMorC
-   hWdHvaX4ZCRw/EJbZZcvBpK734EIloQUgAlM5ieVzyr8h4Z6pG9KL7njH
-   Q==;
-X-CSE-ConnectionGUID: zq9Fv+4jSq21dmCkmG8Oug==
-X-CSE-MsgGUID: awa3e6UaQyiAOJ7/aXrztw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11973"; a="4038894"
-X-IronPort-AV: E=Sophos;i="6.27,225,1787036400"; 
-   d="scan'208";a="4038894"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2026 09:57:28 -0800
-X-CSE-ConnectionGUID: /IJb+ANwRJmrssPyKMkcwQ==
-X-CSE-MsgGUID: wZ6TWN78Q0qCOWBzjJOFMQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,225,1787036400"; 
-   d="scan'208";a="11153815"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 21 Nov 2026 09:57:25 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xUpL0-00000001KOt-0yWP;
-	Sat, 21 Nov 2026 17:57:22 +0000
-Date: Sun, 22 Nov 2026 01:56:32 +0800
-From: kernel test robot <lkp@intel.com>
-To: Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"x86@kernel.org" <x86@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	"H . Peter Anvin" <hpa@zytor.com>,
-	"andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>
-Subject: Re: [PATCH] PCI: Convert pci.c to pci_power_t helpers
-Message-ID: <202611220152.DcrSGe3C-lkp@intel.com>
-References: <20261121125811.50315-3-habilerenturker@hotmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=cressey.dev header.i=@cressey.dev header.a=rsa-sha256 header.s=key1 header.b=kJhAd9K4
+X-Envelope-To: linux-pci@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=AMEe9uy+oW3f3SwsgSW+M/nxThzS0Dp2S/VJ3lcqVCQ=;
+ c=simple/simple; d=cressey.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795291136; v=1; x=1795895936;
+ b=kJhAd9K4ndTKd5xgwqITCwW2p0FEvQy7CDm3hX+FKOvASBD9sfGYZDNmb0LQZad+P0ZxQyzr
+ 62PUFq8Zf2Uli5rQj+1KJqdUVqItG8zhPJXNekBSU3qw3Bu8Rcd+Dy8MaHD29QJ7zTGDMPCoDFs
+ HtOLxml3QUYT1a6UI1YsQpqeDjoe9bE/r5WbjM7+qZt7K4xjNGjt0UbmOWWRxx8j4q2eXH2Wgvs
+ 7dqs/FrjhiyO43ZURYhSGGRkrMrok6eZ1skkJNRICajA9F+o8r1bAUCs66KQbqinscdzXU94Gg5
+ uNq+4UNfcxFCoz0xmoVvKQcSTdib8N2wg0WDb9MdgcHgw==
+X-Envelope-To: linux-pci@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id cba09444c80e291f;
+	Sat, 21 Nov 2026 19:58:56 +0000
+X-Mizu-Trace-ID: cba09444c80e291f
+X-Migadu-Flow: FLOW_OUT
+From: Ben Cressey <ben@cressey.dev>
+To: Wei Wang <wei.w.wang@hotmail.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>, "Anthony Vardaro (Anthropic)" <me@anthonyvardaro.com>
+Subject: Re: [PATCH v2] PCI: Add ID@path device format for pci= parameters
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -91,328 +62,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261121125811.50315-3-habilerenturker@hotmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Date: Sat, 21 Nov 2026 11:58:42 -0800
+Message-Id: <20261121-re-913694b40323@cressey.dev>
+In-Reply-To: <JH0PR01MB57796AD53E6089D3254A76D6DC7C2@JH0PR01MB5779.apcprd01.prod.exchangelabs.com>
+References: <20261111-pci-idpath-selector-v2-1-83ea668e38f0@cressey.dev>
+ <JH0PR01MB57796AD53E6089D3254A76D6DC7C2@JH0PR01MB5779.apcprd01.prod.exchangelabs.com>
 
-Hi Habil,
+On Mon, Nov 16, 2026 at 09:21:00PM +0800, Wei Wang wrote:
+> Nit: I think this is more readable with a single '@' check:
+> [...]
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus linus/master v7.4-rc3 next-20261119]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Habil-Eren-T-rker/PCI-Convert-pci-c-to-pci_power_t-helpers/20261121-125915
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20261121125811.50315-3-habilerenturker%40hotmail.com
-patch subject: [PATCH] PCI: Convert pci.c to pci_power_t helpers
-config: loongarch-allnoconfig (https://download.01.org/0day-ci/archive/20261122/202611220152.DcrSGe3C-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261122/202611220152.DcrSGe3C-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611220152.DcrSGe3C-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> drivers/pci/pci.c:1174:24: error: call to undeclared function 'pci_power_t_get'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1174 |                 dev->current_state = pci_power_t_get(pmcsr);
-         |                                      ^
-   drivers/pci/pci.c:1174:24: note: did you mean 'pci_power_name'?
-   include/linux/pci.h:198:27: note: 'pci_power_name' declared here
-     198 | static inline const char *pci_power_name(pci_power_t state)
-         |                           ^
->> drivers/pci/pci.c:1372:5: error: call to undeclared function 'pci_power_t_eq'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1372 |                         (pci_power_t_eq(pci_power_t_get(pmcsr), PCI_D3hot) ||
-         |                          ^
-   drivers/pci/pci.c:1372:20: error: call to undeclared function 'pci_power_t_get'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1372 |                         (pci_power_t_eq(pci_power_t_get(pmcsr), PCI_D3hot) ||
-         |                                         ^
-   drivers/pci/pci.c:1434:23: error: call to undeclared function 'pci_power_t_get'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1434 |         dev->current_state = pci_power_t_get(pmcsr);
-         |                              ^
->> drivers/pci/pci.c:1548:2: error: call to undeclared function 'pci_power_t_set'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1548 |         pci_power_t_set(&pmcsr, state);
-         |         ^
-   drivers/pci/pci.c:1548:2: note: did you mean 'pci_power_name'?
-   include/linux/pci.h:198:27: note: 'pci_power_name' declared here
-     198 | static inline const char *pci_power_name(pci_power_t state)
-         |                           ^
-   drivers/pci/pci.c:1560:23: error: call to undeclared function 'pci_power_t_get'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1560 |         dev->current_state = pci_power_t_get(pmcsr);
-         |                              ^
-   drivers/pci/pci.c:4595:2: error: call to undeclared function 'pci_power_t_set'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    4595 |         pci_power_t_set(&csr, PCI_D3hot);
-         |         ^
-   7 errors generated.
-
-
-vim +/pci_power_t_get +1174 drivers/pci/pci.c
-
-  1149	
-  1150	/**
-  1151	 * pci_update_current_state - Read power state of given device and cache it
-  1152	 * @dev: PCI device to handle.
-  1153	 * @state: State to cache in case the device doesn't have the PM capability
-  1154	 *
-  1155	 * The power state is read from the PMCSR register, which however is
-  1156	 * inaccessible in D3cold.  The platform firmware is therefore queried first
-  1157	 * to detect accessibility of the register.  In case the platform firmware
-  1158	 * reports an incorrect state or the device isn't power manageable by the
-  1159	 * platform at all, we try to detect D3cold by testing accessibility of the
-  1160	 * vendor ID in config space.
-  1161	 */
-  1162	void pci_update_current_state(struct pci_dev *dev, pci_power_t state)
-  1163	{
-  1164		if (platform_pci_get_power_state(dev) == PCI_D3cold) {
-  1165			dev->current_state = PCI_D3cold;
-  1166		} else if (dev->pm_cap) {
-  1167			u16 pmcsr;
-  1168	
-  1169			pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-  1170			if (PCI_POSSIBLE_ERROR(pmcsr)) {
-  1171				dev->current_state = PCI_D3cold;
-  1172				return;
-  1173			}
-> 1174			dev->current_state = pci_power_t_get(pmcsr);
-  1175		} else {
-  1176			dev->current_state = state;
-  1177		}
-  1178	}
-  1179	
-  1180	/**
-  1181	 * pci_refresh_power_state - Refresh the given device's power state data
-  1182	 * @dev: Target PCI device.
-  1183	 *
-  1184	 * Ask the platform to refresh the devices power state information and invoke
-  1185	 * pci_update_current_state() to update its current PCI power state.
-  1186	 */
-  1187	void pci_refresh_power_state(struct pci_dev *dev)
-  1188	{
-  1189		platform_pci_refresh_power_state(dev);
-  1190		pci_update_current_state(dev, dev->current_state);
-  1191	}
-  1192	
-  1193	/**
-  1194	 * pci_platform_power_transition - Use platform to change device power state
-  1195	 * @dev: PCI device to handle.
-  1196	 * @state: State to put the device into.
-  1197	 */
-  1198	int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state)
-  1199	{
-  1200		int error;
-  1201	
-  1202		error = platform_pci_set_power_state(dev, state);
-  1203		if (!error)
-  1204			pci_update_current_state(dev, state);
-  1205		else if (!dev->pm_cap) /* Fall back to PCI_D0 */
-  1206			dev->current_state = PCI_D0;
-  1207	
-  1208		return error;
-  1209	}
-  1210	EXPORT_SYMBOL_GPL(pci_platform_power_transition);
-  1211	
-  1212	static int pci_resume_one(struct pci_dev *pci_dev, void *ign)
-  1213	{
-  1214		pm_request_resume(&pci_dev->dev);
-  1215		return 0;
-  1216	}
-  1217	
-  1218	/**
-  1219	 * pci_resume_bus - Walk given bus and runtime resume devices on it
-  1220	 * @bus: Top bus of the subtree to walk.
-  1221	 */
-  1222	void pci_resume_bus(struct pci_bus *bus)
-  1223	{
-  1224		if (bus)
-  1225			pci_walk_bus(bus, pci_resume_one, NULL);
-  1226	}
-  1227	
-  1228	static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
-  1229	{
-  1230		int delay = 1;
-  1231		bool retrain = false;
-  1232		struct pci_dev *root, *bridge;
-  1233	
-  1234		root = pcie_find_root_port(dev);
-  1235	
-  1236		if (pci_is_pcie(dev)) {
-  1237			bridge = pci_upstream_bridge(dev);
-  1238			if (bridge)
-  1239				retrain = true;
-  1240		}
-  1241	
-  1242		/*
-  1243		 * The caller has already waited long enough after a reset that the
-  1244		 * device should respond to config requests, but it may respond
-  1245		 * with Request Retry Status (RRS) if it needs more time to
-  1246		 * initialize.
-  1247		 *
-  1248		 * If the device is below a Root Port with Configuration RRS
-  1249		 * Software Visibility enabled, reading the Vendor ID may return a
-  1250		 * special data value if the device responded with RRS.  Read the
-  1251		 * Vendor ID until we get non-RRS status and something other than
-  1252		 * ~0.  The Vendor ID of VFs reads ~0, so check their Command
-  1253		 * register instead.
-  1254		 *
-  1255		 * If there's no Root Port or Configuration RRS Software Visibility
-  1256		 * is not enabled, the device may still respond with RRS, but
-  1257		 * hardware may retry the config request.  If no retries receive
-  1258		 * Successful Completion, hardware generally synthesizes ~0
-  1259		 * (PCI_ERROR_RESPONSE) data to complete the read.  Reading Vendor
-  1260		 * ID for VFs and non-existent devices also returns ~0, so read the
-  1261		 * Command register until it returns something other than ~0.
-  1262		 */
-  1263		for (;;) {
-  1264			u32 id;
-  1265	
-  1266			if (pci_dev_is_disconnected(dev)) {
-  1267				pci_dbg(dev, "disconnected; not waiting\n");
-  1268				return -ENOTTY;
-  1269			}
-  1270	
-  1271			if (root && root->config_rrs_sv) {
-  1272				pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-  1273				if (!pci_bus_rrs_vendor_id(id)) {
-  1274					if (PCI_POSSIBLE_ERROR(id) && dev->is_virtfn)
-  1275						pci_read_config_dword(dev, PCI_COMMAND,
-  1276								      &id);
-  1277					if (!PCI_POSSIBLE_ERROR(id))
-  1278						break;
-  1279				}
-  1280			} else {
-  1281				pci_read_config_dword(dev, PCI_COMMAND, &id);
-  1282				if (!PCI_POSSIBLE_ERROR(id))
-  1283					break;
-  1284			}
-  1285	
-  1286			if (delay > timeout) {
-  1287				pci_err(dev, "not ready %dms after %s; giving up\n",
-  1288					delay - 1, reset_type);
-  1289				return -ENOTTY;
-  1290			}
-  1291	
-  1292			if (delay > PCI_RESET_WAIT) {
-  1293				if (retrain) {
-  1294					retrain = false;
-  1295					if (pcie_failed_link_retrain(bridge) == 0) {
-  1296						delay = 1;
-  1297						continue;
-  1298					}
-  1299				}
-  1300				pci_info(dev, "not ready %dms after %s; waiting\n",
-  1301					 delay - 1, reset_type);
-  1302			}
-  1303	
-  1304			msleep(delay);
-  1305			delay *= 2;
-  1306		}
-  1307	
-  1308		if (delay > PCI_RESET_WAIT)
-  1309			pci_info(dev, "ready %dms after %s\n", delay - 1,
-  1310				 reset_type);
-  1311		else
-  1312			pci_dbg(dev, "ready %dms after %s\n", delay - 1,
-  1313				reset_type);
-  1314	
-  1315		return 0;
-  1316	}
-  1317	
-  1318	/**
-  1319	 * pci_power_up - Put the given device into D0
-  1320	 * @dev: PCI device to power up
-  1321	 *
-  1322	 * On success, return 0 or 1, depending on whether or not it is necessary to
-  1323	 * restore the device's BARs subsequently (1 is returned in that case).
-  1324	 *
-  1325	 * On failure, return a negative error code.  Always return failure if @dev
-  1326	 * lacks a Power Management Capability, even if the platform was able to
-  1327	 * put the device in D0 via non-PCI means.
-  1328	 */
-  1329	int pci_power_up(struct pci_dev *dev)
-  1330	{
-  1331		bool need_restore;
-  1332		pci_power_t state;
-  1333		u16 pmcsr;
-  1334		int ret;
-  1335	
-  1336		/*
-  1337		 * When setting power state to D0, platform_pci_set_power_state()
-  1338		 * ensures main power is on.  If it puts the device in D0, it also
-  1339		 * completes any required delays after the transition; if it leaves
-  1340		 * the device in D1, D2, or D3hot, we use the PM Capability to
-  1341		 * transition to D0.
-  1342		 *
-  1343		 * In all cases, the device is either Configuration-Ready or
-  1344		 * inaccessible upon return.
-  1345		 */
-  1346		platform_pci_set_power_state(dev, PCI_D0);
-  1347	
-  1348		if (!dev->pm_cap) {
-  1349			state = platform_pci_get_power_state(dev);
-  1350			if (state == PCI_UNKNOWN)
-  1351				dev->current_state = PCI_D0;
-  1352			else
-  1353				dev->current_state = state;
-  1354	
-  1355			return -EIO;
-  1356		}
-  1357	
-  1358		if (pci_dev_is_disconnected(dev)) {
-  1359			dev->current_state = PCI_D3cold;
-  1360			return -EIO;
-  1361		}
-  1362	
-  1363		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-  1364		if (PCI_POSSIBLE_ERROR(pmcsr)) {
-  1365			pci_err(dev, "Unable to change power state from %s to D0, device inaccessible\n",
-  1366				pci_power_name(dev->current_state));
-  1367			dev->current_state = PCI_D3cold;
-  1368			return -EIO;
-  1369		}
-  1370	
-  1371		need_restore = !(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET) &&
-> 1372				(pci_power_t_eq(pci_power_t_get(pmcsr), PCI_D3hot) ||
-  1373				dev->current_state >= PCI_D3hot);
-  1374	
-  1375		if (pci_power_t_eq(pci_power_t_get(pmcsr), PCI_D0))
-  1376			goto end;
-  1377	
-  1378		/*
-  1379		 * Force the entire word to 0. This doesn't affect PME_Status, disables
-  1380		 * PME_En, and sets PowerState to 0.
-  1381		 */
-  1382		pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
-  1383	
-  1384		/* Mandatory transition delays; see PCI PM 1.2. */
-  1385		if (pci_power_t_eq(pci_power_t_get(pmcsr), PCI_D3hot)) {
-  1386			pci_dev_d3_sleep(dev);
-  1387			if (!(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET)) {
-  1388				ret = pci_dev_wait(dev, "power up D3hot->D0uninitialized",
-  1389						   PCIE_RESET_READY_POLL_MS);
-  1390				if (ret) {
-  1391					dev->current_state = PCI_D3cold;
-  1392					return -EIO;
-  1393				}
-  1394			}
-  1395		} else if (pci_power_t_eq(pci_power_t_get(pmcsr), PCI_D2)) {
-  1396			udelay(PCI_PM_D2_DELAY);
-  1397		}
-  1398	
-  1399	end:
-  1400		dev->current_state = PCI_D0;
-  1401		if (need_restore)
-  1402			return 1;
-  1403	
-  1404		return 0;
-  1405	}
-  1406	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Thanks for the review and the suggestion. I will revisit that block if
+a v3 is needed.
