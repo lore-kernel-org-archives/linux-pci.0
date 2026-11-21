@@ -1,53 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795219923;
-	b=glB2z3SkTCAxLwd9bPYjuAli48OFnxabIAUjs+UVYRWgoZifLZ2na7boOUOzH+F30bYz
-	 +fv98vOQXe0F/NppTneLbQstBOsKkg4b4k5NXrjhe/NlFkwZ4EXB44JctWuSG5lUBAKCh
-	 OGPWegDHAUBu7eaiud0KlDIfcB/vHTlux3B5/9ah5KBDsIrmKoycoepaqvkhdzt3VYK0L
-	 72rstg56MomWPsxLeZsNmwqHIbOXAAPcpRkzPlvR8hrno7BiETv2WFamQG63RrZyASwnr
-	 OzCbrLukAXlw823BJfwTaPlm76KgEYPoJ3sJxjxjjgqngOem/LP4i1ERwGFxuLRGuYQ==
+	t=1795223229;
+	b=eB+slqj8ctYucpgBGd2eIBzkg0XW5pG780WQzzMjmAfwRetA+KeF2viNHIjQ0wESeKJu
+	 At28tcQFXRGklkIG0Oqpogh3d9ncUSjpMYeEu5UzASIc6onQQfhtt6AMCIrqcK9sUDBb7
+	 xTKulyrV6VoKa9RIYQkoz/rrB1lY+iGE3n3HMPk0sDwMdbq9xX2RBJYc79yl20X73h6Zq
+	 5BCGE+K/r6lNhk9ZVkm+RpQd0wjTvWV69h51+gRr4n0pr6bM/2H1IeAxCD0Y+z9Z9/fuQ
+	 NuElZeWLdOzp59dNmW4zTTpnPvdeYVWMmSPZ9HR9R7ktIoPJ+nlkQLMMg4wnAbYcwGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795219923;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795223229;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=NzwLQl4ULlQo4LJCHP83ov7E+NUDnhifx6wD3YdHpmY=;
-	b=2e/hflWMuZY1ls573myd/7JvQhSM4CkZnda7265vl6GdX8/YopryyT7+eqENEDIokE7S
-	 hung6dM8itwqv2b7jQi9N7pkSfyX62HnaakUd01Kfde/hXUiduiUZzUjZDMgOxtbpMEor
-	 LxqYPCXFdLqVtEmBI6OfX2++qQFj++RZ9M7Ji9w5sONXy0pRNpKDQbkaqjez+vLrovU5r
-	 kW0I5zO8kv7wx4mdamgrqYRMawFs1Q8WjtYQLIIGHdzHmrT6IJ4yy36yu7B97AqmrvdYE
-	 azHgMzZLEJWU7MyKJ7thIdfJUL4ANsmmzs8QESgw2A2bQgLXtVnmr38NTwXqwJjHx5w==
+	bh=uRbvTYGHLE/dSalAhrR1hJSynJ2eHI0LzzHZL/10yZo=;
+	b=UwMPmbsfYE5D/15kCQxbOODsZtw3Io6hHPi1Amr/TSeY+YdGIqfws60c39KWv8d9k5o4
+	 V7ZTtfTizfQCdImKIPUCRq92KbiaitJgHolsbLtpSSYop1RAHP7uGO4h+34VO9PQLRUlh
+	 h6Dk0lB5Uh/C7a84hstPtSjbGC5/GWEOpc2RVMvwfiRNylrUhB5GHc4f9LdXFTerqHj2V
+	 5Z7zfRsj+BN6AdCt11uaR3jV0lP9T6zDro60vvy8HajS7VxXjxTQLU39xLfjsyzQdk4py
+	 L3ljQjcO6RUVzjz/eR4f7pskCC5dSMXOvY/0YgeIKruM8OiZGRA3x0aVaXEL7u+HZQQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TBDAa+cq;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LN+7Xyts;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0948606A6B6;
-	Sat, 21 Nov 2026 00:12:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C94606A6BB;
+	Sat, 21 Nov 2026 01:07:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TBDAa+cq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 587EE1F000EC;
-	Sat, 21 Nov 2026 00:12:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LN+7Xyts
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22B6F1F000C6;
+	Sat, 21 Nov 2026 01:07:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795219923;
-	bh=NzwLQl4ULlQo4LJCHP83ov7E+NUDnhifx6wD3YdHpmY=;
+	s=k20260515; t=1795223229;
+	bh=uRbvTYGHLE/dSalAhrR1hJSynJ2eHI0LzzHZL/10yZo=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=TBDAa+cq5rJnWSsfMrKZr9M86BTePT6LZ8kFHo31pwcoTPusxSlIS1N5G+lbG+Qzp
-	 A9vvBvRvc5wslN23SukG8HAm2Uq96nmFH14F9LP9PVGa59ad/3YjO59w+cu2jlu7N0
-	 3xGnnOaUSJwiLr97qDS2KAfVhJ4+1FkXqzJjCDIA7ZM0vYNE/GWcTCozHNPiFyh1t2
-	 JYrb9ps/7eL44BRuOWnFQUYT7kpcumqQW11RKM6LC+Ubg81h4N2wubEyNMtwYIuXeX
-	 LG+x3V3sjeWicL6xVuqPF5Ws1XfeLmJXpqJPm/AnGDuRJnfE9j+otUL4JK4czEZ0Jw
-	 cofH6pDniqiLg==
-Date: Fri, 20 Nov 2026 18:12:02 -0600
+	b=LN+7XytsqPs5YF9E9mIPKktv5Gsp1VQ/w4jEbFo5vT2u5BKEyqjRyUqoRT5Nwolq4
+	 22by5rzHW0eHEBArf/qXzbjMAzXm9+SMOpY3BX8vpfcJ+8afSf2FEG4/f+nbp+/ZRO
+	 68K1I1fQenkijo8Fswmmi/4ZjGCNGJke2gScCoR7QBbZTNTgvHjhLTc3rKj0c1FfqX
+	 UTRlaA6BjtCIifzWkxXNuMyjVLjrF/nUkDgiT6MTRCoiiGQAQBb/PHJ1aP+qIuoyW3
+	 7qFrHDkVDpVFY3egBfLOSHiksLdfXHaG/THUnKOaXkCK3JKG0LoWz71q4DCSXQkpiW
+	 1cVy6Rw3zd+NQ==
+Date: Fri, 20 Nov 2026 19:07:08 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yazen Ghannam <yazen.ghannam@amd.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, Lukas Wunner <lukas@wunner.de>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Jon Pan-Doh <pandoh@google.com>
-Subject: Re: [PATCH 2/4] PCI/AER: Clamp negative ratelimit burst to zero
-Message-ID: <20261121001202.GA917755@bhelgaas>
+To: Pavel Popov <pavel.e.popov@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Arnd Bergmann <arnd@arndb.de>, Leon Romanovsky <leon@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	Jim Chow <jim.chow@broadcom.com>,
+	Radu Rugina <radu.rugina@broadcom.com>,
+	Alexey Makhalov <alexey.makhalov@broadcom.com>,
+	Wei Liu <wei.liu@kernel.org>, Michael Kelley <mhklinux@outlook.com>,
+	Nathan Ciobanu <nathan.d.ciobanu@linux.intel.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	virtualization@lists.linux.dev, linux-hyperv@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 0/3] PCI/P2PDMA: Allow P2PDMA on Intel Xeon server CPUs
+Message-ID: <20261121010708.GA929035@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,131 +70,82 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261120211307.GA1524494@yaz-khff2.amd.com>
+In-Reply-To: <20261111234439.4098-1-pavel.e.popov@intel.com>
 
-On Fri, Nov 20, 2026 at 04:13:07PM -0500, Yazen Ghannam wrote:
-> On Fri, Nov 20, 2026 at 12:10:43PM -0600, Bjorn Helgaas wrote:
-> > On Tue, Nov 10, 2026 at 03:56:12PM -0600, Yazen Ghannam wrote:
-> > > The correctable and nonfatal "_ratelimit_burst" attributes store
-> > > whatever kstrtoint() parses, so a negative value lands directly in
-> > > ratelimit_state.burst.
-> > > 
-> > > ___ratelimit() reads a negative burst as an uninitialized
-> > > ratelimit_state and gives a WARNing.
-> > > 
-> > > Clamp negative values to zero and document the clamping behavior.
-> > > ...
-> > 
-> > > Fixes: b4fe7398def6 ("PCI/AER: Add sysfs attributes for log ratelimits")
-> > > Reported-by: Sashiko <sashiko-bot@kernel.org>
-> > > Closes: https://lore.kernel.org/linux-pci/20260714191826.BA81E1F000E9@smtp.kernel.org/
-> > > Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
-> > > ---
-> > >  .../ABI/testing/sysfs-bus-pci-devices-aer     | 21 ++++++++++++-------
-> > >  drivers/pci/pcie/aer.c                        |  3 +++
-> > >  2 files changed, 17 insertions(+), 7 deletions(-)
-> > > 
-> > > diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-> > > index 5ed284523956..215cf8bd4c30 100644
-> > > --- a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-> > > +++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-> > > @@ -130,9 +130,10 @@ What:		/sys/bus/pci/devices/<dev>/aer/correctable_ratelimit_interval_ms
-> > >  Date:		May 2025
-> > >  KernelVersion:	6.16.0
-> > >  Contact:	linux-pci@vger.kernel.org
-> > > -Description:	Writing 0 disables AER correctable error log ratelimiting.
-> > > -		Writing a positive value sets the ratelimit interval in ms.
-> > > -		Default is DEFAULT_RATELIMIT_INTERVAL (5000 ms).
-> > > +Description:	Writing 0, or any negative value, disables AER correctable
-> > > +		error log ratelimiting. Writing a positive value sets the
-> > > +		ratelimit interval in ms. Default is
-> > > +		DEFAULT_RATELIMIT_INTERVAL (5000 ms).
-> > >  
-> > >  What:		/sys/bus/pci/devices/<dev>/aer/correctable_ratelimit_burst
-> > >  Date:		May 2025
-> > > @@ -143,14 +144,17 @@ Description:	Ratelimit burst for correctable error logs. Writing a value
-> > >  		before ratelimiting. Reading gets the current ratelimit
-> > >  		burst. Default is DEFAULT_RATELIMIT_BURST (10).
-> > >  
-> > > +		Writing 0, or any negative value, suppresses all logs
-> > > +		unless the interval attribute is also 0.
-> > > +
-> > >  What:		/sys/bus/pci/devices/<dev>/aer/nonfatal_ratelimit_interval_ms
-> > >  Date:		May 2025
-> > >  KernelVersion:	6.16.0
-> > >  Contact:	linux-pci@vger.kernel.org
-> > > -Description:	Writing 0 disables AER non-fatal uncorrectable error log
-> > > -		ratelimiting. Writing a positive value sets the ratelimit
-> > > -		interval in ms. Default is DEFAULT_RATELIMIT_INTERVAL
-> > > -		(5000 ms).
-> > > +Description:	Writing 0, or any negative value, disables AER non-fatal
-> > > +		uncorrectable error log ratelimiting. Writing a positive
-> > > +		value sets the ratelimit interval in ms. Default is
-> > > +		DEFAULT_RATELIMIT_INTERVAL (5000 ms).
-> > >  
-> > >  What:		/sys/bus/pci/devices/<dev>/aer/nonfatal_ratelimit_burst
-> > >  Date:		May 2025
-> > > @@ -161,3 +165,6 @@ Description:	Ratelimit burst for non-fatal uncorrectable error logs.
-> > >  		allowed per interval before ratelimiting. Reading gets the
-> > >  		current ratelimit burst. Default is DEFAULT_RATELIMIT_BURST
-> > >  		(10).
-> > > +
-> > > +		Writing 0, or any negative value, suppresses all logs
-> > > +		unless the interval attribute is also 0.
-> > > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > > index 6f2460231422..401cd3a1b3d0 100644
-> > > --- a/drivers/pci/pcie/aer.c
-> > > +++ b/drivers/pci/pcie/aer.c
-> > > @@ -752,6 +752,9 @@ const struct attribute_group aer_stats_attr_group = {
-> > >  		if (kstrtoint(buf, 0, &burst) < 0)			\
-> > >  			return -EINVAL;					\
-> > >  									\
-> > > +		if (burst < 0)						\
-> > > +			burst = 0;					\
-> > 
-> > Why don't we just return -EINVAL if the user writes a negative value
-> > to either *_ratelimit_interval_ms or *_ratelimit_burst?
-> > 
-> > I don't think there's any reasonable interpretation of negative
-> > values in either case.
+On Wed, Nov 11, 2026 at 04:44:36PM -0700, Pavel Popov wrote:
+> VMware and Hyper-V expose passthrough devices to guest VMs without an
+> explicit host bridge device. Consequently, host_bridge_whitelist()
+> cannot automatically identify the underlying host bridge structure,
+> causing Peer-to-Peer DMA (P2PDMA) requests to be rejected unless the
+> device IDs are explicitly listed in pci_p2pdma_whitelist[]. To enable
+> P2PDMA on Intel hosts, this series extends cpu_supports_p2pdma(), which
+> so far covers AMD Zen and newer, with an explicit list of Intel Xeon
+> server generations.
 > 
-> Right, that's fair. I think the reason to clamp was to be consistent
-> with the current code.
+> Patch 1 adds a generic <asm/cpu_device_id.h>, so that generic code can
+> include it without #ifdef CONFIG_X86.
+> Patch 2 moves the CONFIG_X86 #ifdef out of cpu_supports_p2pdma(); this
+> is the v4 1/2 patch, unchanged.
+> Patch 3 is the v4 2/2 patch with Logan's Reviewed-by carried over; the
+> only change is in the includes.
 > 
-> Would you like a follow up patch?
+> Arnd, if 1/3 looks OK to you, could it go through the PCI tree
+> together with 2/3 and 3/3?
 > 
-> > Any non-negative value for the interval makes sense (0 disables).
-> > 
-> > Any positive value makes sense for burst; I don't know what a 0 burst
-> > value could mean, so maybe that should be an error too?
+> The other users of <asm/cpu_device_id.h> and <asm/intel-family.h>
+> under #ifdef CONFIG_X86 (ACPI, cpufreq, i915, amdgpu, tpm, ccp,
+> platform/x86) are converted in a follow-up series on top of this one.
 > 
-> "burst == 0" came from here:
-> 084a990ded63 ("ratelimit: Allow zero ->burst to disable ratelimiting")
+> Based on mainline (7.4-rc2+). Built with x86_64 and arm64
+> allmodconfig, each patch separately.
 > 
-> IIUC, the goal is to **always** hide/disable the messages. IOW, keep
-> logging the errors internally based on the interval, but don't print any
-> kernel messages for them. The user can still get the error logs from the
-> trace event and leave the kernel buffer alone.
+> Changes in v5:
+> - Add 1/3, a generic <asm/cpu_device_id.h>, so the include no longer
+>   needs #ifdef CONFIG_X86 (Leon Romanovsky)
+> - Drop the <asm/intel-family.h> include, <asm/cpu_device_id.h>
+>   includes it on x86
+> 
+> Changes in v4:
+> - Add 1/2, moving the CONFIG_X86 #ifdef out of cpu_supports_p2pdma()
+>   (Logan Gunthorpe, Leon Romanovsky)
+> - Keep the #ifdef around the asm/ includes, as these headers exist
+>   only on x86 (Bjorn Helgaas)
+> 
+> Changes in v3:
+> - Drop the hypervisor check and move the Xeon list into
+>   cpu_supports_p2pdma(), next to the AMD check, as suggested by Logan
+>   Gunthorpe and Leon Romanovsky [1]
+> - Fold the VMware and Hyper-V patches into one, as the check no longer
+>   depends on the hypervisor
+> 
+> Changes in v2:
+> - Replace the Skylake-and-newer threshold with an explicit list of Intel
+>   Xeon server generations, from Skylake-SP to Diamond Rapids (Logan
+>   Gunthorpe)
+> - Move the CONFIG_X86 #ifdef out of hypervisor_supports_p2pdma()
+>   (Logan Gunthorpe)
+> - Rebased on current mainline
+> 
+> [1] https://lore.kernel.org/r/20261016153147.GC219304@unreal
+> 
+> v4: https://lore.kernel.org/r/20261020173736.81755-1-pavel.e.popov@intel.com
+> v3: https://lore.kernel.org/r/20261020151305.65218-1-pavel.e.popov@intel.com
+> v2: https://lore.kernel.org/r/20261016223402.19991-1-pavel.e.popov@intel.com
+> v1: https://lore.kernel.org/r/20261009154034.82321-1-pavel.e.popov@intel.com
+> 
+> Pavel Popov (3):
+>   asm-generic: Add <asm-generic/cpu_device_id.h>
+>   PCI/P2PDMA: Move CONFIG_X86 #ifdef out of cpu_supports_p2pdma()
+>   PCI/P2PDMA: Allow P2PDMA on Intel Xeon server CPUs
+> 
+>  drivers/pci/p2pdma.c                | 30 +++++++++++++++++++++++++++--
+>  include/asm-generic/Kbuild          |  1 +
+>  include/asm-generic/cpu_device_id.h |  5 +++++
+>  3 files changed, 34 insertions(+), 2 deletions(-)
+>  create mode 100644 include/asm-generic/cpu_device_id.h
 
-OK, so burst==0 should have the "usual" semantics (disable
-ratelimiting IIUC).
+Applied to pci/p2pdma for v7.5, thanks for the reminder.
 
-Can we make a replacement for this patch?
-
-  - Return -EINVAL for negative values written to either
-    *_ratelimit_interval_ms or *_ratelimit_burst 
-
-  - I think the existing *_ratelimit_interval_ms documentation would
-    be fine, no change required
-
-  - *_ratelimit_burst documentation needs something, but I don't know
-    what.  084a990ded63 ("ratelimit: Allow zero ->burst to disable
-    ratelimiting") suggests that burst==0 disables ratelimiting, but 
-    you wrote "suppresses all logs", which sounds like the opposite of
-    disabling ratelimiting.
-
-    Also, I don't know what "unless the interval attribute is also 0"
-    means.  What *does* happen when interval==0 and burst==0?
-
-The pci/aer branch is mutable, so we can just replace the existing
-patch.
+There were minor conflicts with Leon's series, but I applied yours
+directly on v7.4-rc1 and resolved the conflicts when adding Leon's on
+top.
