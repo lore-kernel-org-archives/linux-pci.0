@@ -1,45 +1,52 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795223831;
-	b=srBavq3Q6cHLoLnQpTlp9uPfNIQFvqjKYtu/dqcVIbDvgCwwGym5WrpeEr298mfvav6D
-	 i/SgL6aKEo9YoGNTHt7iL7i/GsXOAhuw1CdJyVXddC7PBbiMwGfJ7LHbezbFs/+sqnnht
-	 EprhjgsRhzVlxkAMcsP9cyV6NYRGbnVvyttSLeOX1BdIvl4jGAOUeD5ig9NoeKuhBa5el
-	 iik0uveIGL3YIrEMewzKPhdUzLvJs+7cLjTN4Dkz2hmIoMSURxiF40xACUQEjp13UMWXN
-	 ucrWcfpUmK/F9TQEYt9p6n8rjCy88OCr0BKuEoQivxAhDa7vlxyLf2ihth58rCnqM8g==
+	t=1795224688;
+	b=wLwNctiQwZ1thkABnZ7ZpnmHs9k8sUE4c1MkVVEYyAWntqJiN84htw1tH2F3h8fR9Sz3
+	 hxUl3cXEivqRjwVQdl4KrMLp/VXQSDoM1rqDIiBAYmJ6T4akP9LB4f3Hecc8nmuMMntgy
+	 z3Fv14cgFOtLLMkvWy7BjfEAhM3ZZ3H+Rr9kUe7hfExwr/XdXml0k/q2eEf/TQzRgTIpX
+	 DvXznYUknyogAxTAB2OvLutguRV9Hg574vgkRtbn0lNQqO5Vw7Mr+VMqfYzi2n3TjVG+Z
+	 USrr3pUfmr2wvHpGXygHWAgsOMwNUU0RlJqq1NrZX4W82WU0DIQUY2ijtLmmp58vHeQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795223831;
-	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
-	 Content-Type:Date:Message-Id:Cc:To:From:Subject:References:
-	 In-Reply-To;
-	bh=QklyuLab+Ko9mnpTo5UeclQww95mzIqhLo3F7I/BQkg=;
-	b=wFVV4gYWrx01cnFSnadL5PevvX3j04xWSPddAXakIWD+eXJLlH0ZIsjFZradl0gada+n
-	 JWzLydX9rKP6CIQV2qLNrY/ZqZ5EMrmfpRIwH1B540gc1VhzEDXMsJteCDMgoC34CYI1f
-	 CzYDVn2+X4WE+Sa04XwHimGmnBk4XJmNdxBfyBVxB5adOkHWqJFerm/lZ8GEw46B00xjo
-	 DPlVj6KH+VTyxJ9o2qucMHz6wvor4wnvxkz44NEur9Prs+VGLzqW5ZhTQk+dn4sTFo413
-	 3DnR9KY3K1+EMFmWNRgAAyR35ktqZd2fCn1lWZoHm43YAe/vDLZosZZjqhdCOBLDO+A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795224688;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=kv8zyz3oTsWMY3au1ylZk+ZOVcWAEBo6ppr6ek9IPUA=;
+	b=tQtt6vNGN6xajDzzx+OIh/0idPGZ7zxZuMNA0POghpbEUe41Unst8KFt1iJPtMfa1VQf
+	 EJfmFQNn3VHu9ZsD6FgcTaRGLCPv3d3lKqCg+WzRy8xX518ss6mn0/gTvqzN0Iqm3byEg
+	 IFeQHQczEpkvJBTHVIw104LAMOtzZKIzQb/XuQfbFzFBoVetJPW1nUjr7HCSUccOKov8X
+	 sgZWt6KjSuw3h5gwrSyQEYbRkgo8OO9yxuYPfZSbn1aQrU6vgwUhfZig8QQYVijHaxrvl
+	 89JR+Qf936QIOpAAc3nt9+XBmksQYNRXsm2RvMYvhOp/8pFOscdy7qMDuTZWNYttIBA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gm8eJtOH;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EIdPcVoa;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C352606A684;
-	Sat, 21 Nov 2026 01:17:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06CC9606A6A6;
+	Sat, 21 Nov 2026 01:31:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gm8eJtOH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE01B1F000CA;
-	Sat, 21 Nov 2026 01:16:57 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EIdPcVoa
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEAF51F000C0;
+	Sat, 21 Nov 2026 01:31:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795223829;
-	bh=QklyuLab+Ko9mnpTo5UeclQww95mzIqhLo3F7I/BQkg=;
-	h=Date:Cc:To:From:Subject:References:In-Reply-To;
-	b=gm8eJtOHhBnaOZe7LwDMFJ8mofPVVmX1YGRFpGCBO2m5hz8UlzXX+WvNJUsq934h9
-	 Gtdb+AerXFQPif6SLfOq2/dWtEgcQTz7bh3I6KV8pXYeGgzuMqRHyjcJnn/Sn8iwhx
-	 YAqVTjTNfeSW2VdEJcGvIBkg4/J19L82jz9PAn9h9IkH5umIAy3FYAYFk2uVRLQd+T
-	 s94/ADqCteDEcqO9mcewjaHUBrR90XdQUJorq/NHZbaKSRZNalAGYYTXYCWvSW+hsc
-	 zi51JiNKnL+ynxLP/WhWXj9KNLrvetlXTYZdQhOtRoJb5Hc2rzkXDPGGzjDTCgK7xr
-	 LOe4azsm+AuJg==
+	s=k20260515; t=1795224687;
+	bh=kv8zyz3oTsWMY3au1ylZk+ZOVcWAEBo6ppr6ek9IPUA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=EIdPcVoaF1MvnxP6Bg/QbJ9i2bdJIhz9b/GEBIGVn3KVpGaRj8cBmyUXYyOG0z/+q
+	 ZEAUxv6mOgns9g3MjFZD4w/tQ3cJjtm8TQu57myIiMTiHkMv70XEwElmzq5drF+J0E
+	 r2kcZL3ZzgplGppixs+4X+Hs6VcV7Acln0VNn421115Hf96gmFAi8XSMLcOjK4G98m
+	 65uJ2omNKl53SMjKEZjTIf85ROqRCb/0N+s5BKvKwSsKDaPnhfqAufThNF09YJ8Huz
+	 5J/2PRV3TMnozph7qQ1AffVGiF+cgkIJwEsXhy4tkiM0KMut2DJkL9Zozm5mChtJ7Z
+	 opMbaPrPH1+KQ==
+Date: Fri, 20 Nov 2026 19:31:25 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yazen Ghannam <yazen.ghannam@amd.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH 4/4] PCI/AER: Hide the "aer" sysfs directory on devices
+ without AER
+Message-ID: <20261121013125.GA934416@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -48,77 +55,78 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 21 Nov 2026 02:16:56 +0100
-Message-Id: <DN0HQBTG5VUY.1F40HSFIRRGNQ@kernel.org>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Johan Hovold"
- <johan@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>, "Nipun Gupta"
- <nipun.gupta@amd.com>, "Nikhil Agarwal" <nikhil.agarwal@amd.com>, "Ioana
- Ciornei" <ioana.ciornei@nxp.com>, "Longfang Liu" <liulongfang@huawei.com>,
- "Julian Ruess" <julianr@linux.ibm.com>, "Ankit Agrawal"
- <ankita@nvidia.com>, "Brett Creeley" <brett.creeley@amd.com>, "Giovanni
- Cabiddu" <giovanni.cabiddu@intel.com>, =?utf-8?q?Micha=C5=82_Winiarski?=
- <michal.winiarski@intel.com>, "Eric Auger" <eric.auger@redhat.com>, "Eric
- Farman" <farman@linux.ibm.com>, "Matthew Rosato" <mjrosato@linux.ibm.com>,
- "Tony Krowiak" <akrowiak@linux.ibm.com>, "Jason Herne"
- <jjherne@linux.ibm.com>, "Harald Freudenberger" <freude@linux.ibm.com>,
- "Holger Dengler" <dengler@linux.ibm.com>, "Haiyang Zhang"
- <haiyangz@microsoft.com>, "Wei Liu" <wei.liu@kernel.org>, "Dexuan Cui"
- <decui@microsoft.com>, "Michael S. Tsirkin" <mst@redhat.com>, "Mark Brown"
- <broonie@kernel.org>, "Abel Vesa" <abelvesa@kernel.org>, "Stephen Boyd"
- <sboyd@kernel.org>, "Brian Masney" <bmasney+clk@redhat.com>, "Jerome
- Brunet" <jbrunet+clk@baylibre.com>, "Bjorn Andersson"
- <andersson@kernel.org>, "Mathieu Poirier" <mathieu.poirier@linaro.org>,
- "Srinivas Kandagatla" <srini@kernel.org>, "Sylwester Nawrocki"
- <s.nawrocki@samsung.com>, "Liam Girdwood" <lgirdwood@gmail.com>, "Jaroslav
- Kysela" <perex@perex.cz>, "Jonathan Corbet" <corbet@lwn.net>, "Rafael J.
- Wysocki" <rafael@kernel.org>, "Steven Rostedt" <rostedt@goodmis.org>,
- "Bradley Morgan" <bradley.morgan@linux.dev>, "Armin Wolf" <W_Armin@gmx.de>,
- "Masami Hiramatsu" <mhiramat@kernel.org>, <linux-doc@vger.kernel.org>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <linux-trace-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, "Alex
- Williamson" <alex@shazbot.org>, "Mostafa Saleh" <smostafa@google.com>,
- <kvm@vger.kernel.org>, <qat-linux@intel.com>,
- <virtualization@lists.linux.dev>, <intel-xe@lists.freedesktop.org>,
- "Vineeth Vijayan" <vneethv@linux.ibm.com>, "Peter Oberparleiter"
- <oberpar@linux.ibm.com>, "Heiko Carstens" <hca@linux.ibm.com>, "Vasily
- Gorbik" <gor@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>,
- <linux-s390@vger.kernel.org>, <linux-hyperv@vger.kernel.org>,
- <linux-spi@vger.kernel.org>, "Frank Li" <Frank.Li@nxp.com>, "Sascha Hauer"
- <s.hauer@pengutronix.de>, <linux-clk@vger.kernel.org>,
- <imx@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
- <linux-remoteproc@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
- <linux-sound@vger.kernel.org>, "Takashi Iwai" <tiwai@suse.com>
-To: =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v2 00/10] driver core: Disable driver overriding by
- default
-References: <cover.1795171088.git.u.kleine-koenig@baylibre.com>
-In-Reply-To: <cover.1795171088.git.u.kleine-koenig@baylibre.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261110215614.3931232-5-yazen.ghannam@amd.com>
 
-On Fri Nov 20, 2026 at 12:11 PM CET, Uwe Kleine-K=C3=B6nig wrote:
-> It is sensible to merge the driver core change (patch #1) together with
-> the individual driver patches setting .support_driver_override because
-> with the driver core change the driver override doesn't work any more
-> for the unmodified drivers (unless the new kernel parameter is provided
-> and a taint is accepted). So I suggest (once there is agreement that the
-> patches are fine) to merge them all in one go and provide a stable
-> branch in case a driver was missed to be adapted. I can create such a
-> branch and ask Greg or Linus to pull it, or Greg can do that.
+[+cc Lukas]
 
-I think it should be good enough to just take them all through driver-core.=
- If
-it turns out in linux-next that we missed a driver we can always add anothe=
-r
-patch to the driver-core tree.
+On Tue, Nov 10, 2026 at 03:56:14PM -0600, Yazen Ghannam wrote:
+> aer_attr_group is a named group, so sysfs creates an "aer" directory for
+> every PCI device. aer_attrs_are_visible() hides the attributes when the
+> device has no aer_info.
+> 
+> But this doesn't apply to the entire "aer" group. So devices without AER
+> end up having an empty "aer" directory.
 
-Those patches only set support_driver_override =3D true, so there shouldn't=
- be
-interactions with other trees.
+This applies specifically to the ratelimit-related things in the "aer"
+directory, right?  If so I might amend this commit log to mention
+that, since Lukas's subsequent "PCI/AER: Enable baseline capability
+error reporting" enables aer_dev_correctable, aer_dev_fatal, etc even
+for non-AER PCIe devices.
 
-So, let's keep it simple. I can pick this up once we have all the ACKs.
+"aer_attrs" and "aer_attr_group" are kind of unfortunate names since
+they're specific to ratelimiting.  But that's material for future
+work.
 
-Thanks,
-Danilo
+At least they're internal so they're easier to change than
+"aer_dev_correctable" etc, which are even more unfortunate now.  
+
+> Switch to DEFINE_SIMPLE_SYSFS_GROUP_VISIBLE() which can use a single
+> check for all the AER attributes.
+> 
+> Fixes: b4fe7398def6 ("PCI/AER: Add sysfs attributes for log ratelimits")
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Closes: https://lore.kernel.org/linux-pci/20260714191826.BA81E1F000E9@smtp.kernel.org/
+> Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
+> ---
+>  drivers/pci/pcie/aer.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index 32a4c9101946..5ea81a506a06 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -778,22 +778,19 @@ static struct attribute *aer_attrs[] = {
+>  	NULL
+>  };
+>  
+> -static umode_t aer_attrs_are_visible(struct kobject *kobj,
+> -				     struct attribute *a, int n)
+> +static bool aer_group_visible(struct kobject *kobj)
+>  {
+> -	struct device *dev = kobj_to_dev(kobj);
+> -	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+>  
+> -	if (!pdev->aer_info)
+> -		return 0;
+> -
+> -	return a->mode;
+> +	return !!pdev->aer_info;
+>  }
+>  
+> +DEFINE_SIMPLE_SYSFS_GROUP_VISIBLE(aer);
+> +
+>  const struct attribute_group aer_attr_group = {
+>  	.name = "aer",
+>  	.attrs = aer_attrs,
+> -	.is_visible = aer_attrs_are_visible,
+> +	.is_visible = SYSFS_GROUP_VISIBLE(aer),
+>  };
+>  
+>  static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
+> -- 
+> 2.55.0
+> 
