@@ -1,112 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795442190;
-	b=BmlRnJsPGf3stZc2ODL5+2Wc1oIM94JEO2XeIK2D3tcZJEgquoOIPobIGtGfMd4OTtZc
-	 zO12G5sY+wAZCSS6FeTCkPdz7GYNlzNbZu9yVkKF9fZzhl9L/amiXAPPGCAQ8FviDAiKv
-	 r4E+cTi/k+Jlysj3+DQ/ApUQMNZK9f9YctsYPDCC4qINK37D8umvUUdfzx0L6joI23Xwx
-	 xmqxltMPYvv0IcIU/ryyXV3vj8PlFuTnjmhPFrRajTkuIU0uVyLWbK4qtBspONU4vPDcS
-	 zMzUwCMa40Paie4bnHGRJzJeRclLm9y4Mly10LWaC4sX3Il/wWUrAK74ue8zDmTqy8g==
+	t=1795442204;
+	b=nHsgZCibnH14OPTB7YZH+mcyMdlVvBrqoFrZxDNFjlckaQ1z9mPkSusbS6otmgKTdadR
+	 IuMVjnyoIwkBLW0p/DwQ5EzGX4t79gdRfyuOR3XKdcaiwMTwwbBOcF1IBEMcFtxw6cY5V
+	 7MFFi/C2wfB1fchiTLnHV8G5fZdICLVEdXj26onYHzua0si93CghA5yaDwoM8ABOUEs/3
+	 n3yzGkQZUnFRDndApWpJlVUM9uiIHeRzPW6UEAfxRlOto+g/XKrun0G68M3N1C3xiinFb
+	 cCy+palGSGCTIcXN69MCu2aQeb+QhWn7c8jxrqYJmOypICn5Y/ekBkhZSQVJTBTFagA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795442190;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Gm-Message-State:X-Gm-Gg:
-	 X-Received:X-Received:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Info:X-Authority-Analysis:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=6muZlLM33J+DBa+9pVOmRUzmFBVv5+7rsnUWPmNF+7o=;
-	b=pmOCDI/TuzEh9VJOIz6XiPUpYnIjr+C0JGK0HY4mscRws4uubVi9wmxlYRFaWkUzkVQh
-	 bUzNY8XTLE4+Odam44MyER9UaeFerQmh8fH8aG1G25sKx+mR3NQq7l6LnHeAOTmOn4OFv
-	 3c770d9EbUQYm5vNy+OoE+7CjN27Fx4Vzu+jx+2UdhNIb9jL9CsrHfEkLRio/wRVdw/kU
-	 IGFbMb92CJFA6K9MxoM1h4Z4stg6DkPLFQzMm8PSod1KV/ejsMmYU93JDyLqF4ia1L3fZ
-	 dE0o25+ls5brFkE5bqPY/vss/wLHzx3GXgVCXUtCfFsVPDR0xmW3fI10K/f+kzNrapg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795442204;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=YvJuJhFp5l2kJagzPQ2SnYyg6xkop1iejbQq4U7qdYc=;
+	b=bH2vbH7Wof1GriRGy4hhtXQjx0avuEg/agOcK84LezT3fyCI3YQWL0pgBQS0kmbPHKf4
+	 f2MSW69hG9tf2dR6Cm6n6THKpn+iRSP2eUmlwzC55oElIZ8MUMeeZUIJCVsYb13lXA4DA
+	 XmsD/kaoIxXB9LNLQcFJCoFcs7n2VRNApnoV+Nx1kQvukpo4aeR0KIdXqKR+6febl3J/h
+	 SMt8C3NdN4Ka/Nwee/HiH5fDvQ+yIPUvapt6MP/GsDUwEfd2DYMuOTM8g3gnd0QNZW0Qn
+	 J6V/pCRm0K/Gu5uQfgscbU7bz8OzzKuWQikLkwwg7nFggTFBTAe6YOGg/uMPx4OzyxA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=XU6bWoIR;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=PduUGB8g;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eUBIT6ZK;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 128F660A5BCF
-	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 13:56:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 128F660A5BCF
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1036C606A31F;
+	Mon, 23 Nov 2026 13:56:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=XU6bWoIR;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=PduUGB8g
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6ANDLTYt446428
-	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 13:56:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	6muZlLM33J+DBa+9pVOmRUzmFBVv5+7rsnUWPmNF+7o=; b=XU6bWoIRNoP/hn/X
-	/1yyiYzYxgc+ZrU4eTUh67MIg+w7+VEbkPRbtAqBZi4gb2bkXZAMej6aDoqHoMNg
-	wNJmfgkORkyQghNOTxO1Bz7clI450BguHS6qRBPLhaZuPH133rUs6BTJl7CHPO3j
-	kD4HoxQKBSnPDUSQ5uw+TzkSlq6aCL70qLl9hSZhpkXUNKYagYNpaF9k6D0aXTYH
-	RkrniMdgILlRqrYxFMvqII9sRcblCjFR6ov+kHuZiJFpsq28FfEbVUb8KTq9jLJP
-	oDH88enNzRWcA60+zXhVFikQHrQ5OwlJuhNz3mhBVVSzdw4zQSrQCMRYhzQ8aPz2
-	y7pgHw==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j4g741n9r-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 13:56:28 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-94960131b4eso620700885a.3
-        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 05:56:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1795442187; x=1796046987; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6muZlLM33J+DBa+9pVOmRUzmFBVv5+7rsnUWPmNF+7o=;
-        b=PduUGB8gi9U4YVrDNo4fys1U68+xUVSE9UgLVYPmSQD6FnMggjiyfOttyMb4toYkbT
-         WnVtV/yNsuGcUG6Rm4mxt/RGStPCsxFHOS4FcmTusmE7cZsTt3QuST/vpra6x0KxHeSR
-         lqpY1lSwNCg7mGyfHW7cxBHU2fXgx1RP0drFXKxQ5wNd6LNzLEWsBILp9FIiiKOSnd+D
-         mEPAoaLSPw7XqOzVnbCtIhsBbe2Mv1iYyeBsGe3JvRelldQJtQl4imYBU99YoFbu4zWk
-         HQHZuZVX0PaDmpI4ao91w9WRZXO7gzblnKMsUX7fyd6g9Ys6K6yE71IBAZxerzAXCyPc
-         nEUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795442187; x=1796046987;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6muZlLM33J+DBa+9pVOmRUzmFBVv5+7rsnUWPmNF+7o=;
-        b=zTucaHzm0eeTGlSjpMidl93GkAulHjXH4n+MHrmofBYVsq1VqZJnAklwA7lU/YfI/Y
-         dg88IrfvOl8Uq9GSREi5mTzq2N6JdVu50njBPvQ3Tv0VxA7vrDDFLPNKmJ1eL6b2LLMC
-         WnjYsB8vMNiUFkBUcDxXi6qLWQeHkrj88t5jCSQ8ZM6CLX2vfHoLRrWn9P6ct229Y4pb
-         N5skZZNyd+UI7ZtFNrxwyZci5qRKtWAj4LvjjovKV6hHCfRZrUZepdb8ELkn7aQLomyR
-         +AHzVxME7PiUWGJ68aqU4KMNCx9rd8s3Wfj2pnb8q/SvoH6euWoRtkF3MFcoHFU2UcHk
-         tP/A==
-X-Gm-Message-State: APuU4Z+9EXKb+VV/VT+1zHw75lsFDrQOOpjVOpqIpSOrq6Q9O4fCUV0a
-	n1BaS0bnZKoMI2BnivfNelaE7dCRsSOh3nI6HOSwqSuBfy8fQwJy8U8JCk048oWWaxXEGsdSSlW
-	Uo5il9F2UlCEpJIdLVoWV026X5rpkA026OH21+dZ/9l275sMYh/SBnD3xTme7hP0=
-X-Gm-Gg: AZFdTZdT/cX9lqwiPFflRlBe40HF2LKBVT2LYaiP8MLtDxsrNFso2una0E09GCHNI2w
-	jxWmorn88/wsB83OI22WomCvDrTe7Pd7ugVwI/VM6uF2lGSYnETLWvkhnZDRWk4H5VNxAmZGdob
-	gdbs3LU5hL7YJxHEjSSqFmltZ1ARUqnBXqU1eOh7pjXMBi6Xf/iVTGOoznRcKtidg6FxrEfbwn/
-	yRHi3jIt707Xt2TOdv9IeMEGWBfjkGg5/eagcNEHIZl6Ual3YG7WRQ0PIL7aogGllIuSkuT8TE7
-	p180o7Ch7zpnNGgzcbKkQu7FbLeJHHQL8uqA3FcyYpwn2NMBvv4dNFar5FdTG1PbgJ3JOFlH6Y8
-	ifkNfX7Or+jo6cnf0FKmMPO4aM5viw/XIfI3XAnQHs/s/urTTDkJ/dr6Ews2qEdm5BtxaIrL0/x
-	wHrWJ0Ue7BeZE1MYAxJ35Q36e8BKWUEXSoZbhkmK52bPPXK1arxbL/TJgZJL+xaLBn/8SmVI56i
-	BXOzZfbVp+BgStqXHPS+WIECar7
-X-Received: by 2002:a05:620a:2995:b0:93c:7040:bf7b with SMTP id af79cd13be357-949ba827c54mr1899041485a.9.1795442187426;
-        Mon, 23 Nov 2026 05:56:27 -0800 (PST)
-X-Received: by 2002:a05:620a:2995:b0:93c:7040:bf7b with SMTP id af79cd13be357-949ba827c54mr1899036685a.9.1795442186934;
-        Mon, 23 Nov 2026 05:56:26 -0800 (PST)
-Received: from QCOM-eG0v1AUPpu.na.qualcomm.com ([2a01:e0a:830:450:6c6b:1e5a:79dd:a527])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab6c4353d6sm21724625f8f.56.2026.11.23.05.56.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2026 05:56:26 -0800 (PST)
-From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Mon, 23 Nov 2026 14:56:15 +0100
-Subject: [PATCH v9 8/8] arm64: dts: qcom: monaco-arduino-monza: Add QCA2066
- M.2 WiFi/BT support
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eUBIT6ZK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 993FB1F000D0;
+	Mon, 23 Nov 2026 13:56:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795442203;
+	bh=YvJuJhFp5l2kJagzPQ2SnYyg6xkop1iejbQq4U7qdYc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=eUBIT6ZKbzq+Bc9lN79cX0NuNYT/6SfEdlBwvpzcUIY7OSqN21qmPUdmVBJX5KGP4
+	 HasU6uQJJYARzZeImuxEd3H3OPBFWct3ME1vzMKYLmJj+j/7GOk91V0UiieaHPVujm
+	 Z4J0GGf54gKjlkpyrfejJ2pYvy9U5yPljBqj1zm5opqk3IfbOD4SfaTCRp8VFCgbuV
+	 Apmt1QapavcCY4qK/VBVFICq4PVNYuu7wgh+IPPL2ELiFGGfM05AoAYyWPQCB5JrGY
+	 JV1cYVFnBTdPAYQGSOKQ0bzo9KDJ+hppLFp7MvYDRk7oGieN/9KBLWPZFDSJ960sHg
+	 5rU5hQMu2VrQw==
+Date: Mon, 23 Nov 2026 15:56:38 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
+Message-ID: <20261123135638.GO14811@unreal>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <2026112325-emit-squeezing-5d96@gregkh>
+ <20261123090623.GK14811@unreal>
+ <yq5a7bi3riha.fsf@kernel.org>
+ <20261123115803.GN14811@unreal>
+ <yq5awlq3pto0.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -116,177 +74,107 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261123-monza-wireless-v9-8-450d7d764aea@oss.qualcomm.com>
-References: <20261123-monza-wireless-v9-0-450d7d764aea@oss.qualcomm.com>
-In-Reply-To: <20261123-monza-wireless-v9-0-450d7d764aea@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        Loic Poulain <loic.poulain@oss.qualcomm.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-X-Mailer: b4 0.14.2
-X-Proofpoint-GUID: hO6I1NI-PNs3frw2VEcoaUTRRCqGQcRn
-X-Proofpoint-ORIG-GUID: hO6I1NI-PNs3frw2VEcoaUTRRCqGQcRn
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTIzMDA1NSBTYWx0ZWRfX+bOCXs420qXp
- yOV7QnUrzZQjIkxuee1LfLBQLbj3FaAOucAKpEZcnMuydYm9aQkyfbQhgPkYv8qet2xm20xLCNr
- OG/kmtVB52CBqJdzpMehqwJjGKq7kWY=
-X-Authority-Analysis: v=2.4 cv=T/cZ3PKQ c=1 sm=1 tr=0 ts=6b04460c cx=c_pps
- a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=EUspDBNiAAAA:8
- a=VwQbUJbxAAAA:8 a=EzCDy3pf2FPqfMyO2-oA:9 a=QEXdDO2ut3YA:10
- a=bTQJ7kPSJx9SKPbeHEYW:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTIzMDA1NSBTYWx0ZWRfXwJ4BS2QRPKuf
- hVtILqzlT5LBZojsROE4wsR5Us7p69123KMY83NzxUbPpxztqiLfjJkG5qH+s8hbRNKZJnMeTQY
- hb5EKwoURQCi3N6SqPYOByP0aezhWrj50POKFCZVMrEIyVB5e6p2zP25Q9JGsxWWMG7JZmCubCj
- Xq1sBPjJyLIywdFStJyfh9YrPJs059l+8jtZptMPUCnbhtOXzt+v6XVZNJAQFMAEzU686Kib/J/
- OezEoovv1dm4ybV5wfm+benJ2Y25UwzAAWwM3DHMr0vVAO1Yg4go9la6PxatLU4ihpXIgs9KrOH
- FUrZnJ5gX5dPZjk6s4dy0amv9sTT2HVYvlg+ul5x4D80LZv8wCLyUDj+K4Ik651JOfxSnus/p7/
- K6v5wKbULXpK8q2KwhHlbfhKZY97VGw6AJTqq8tKJuccV9bem3tpbk7O01e9rvb5zy3CHCkwA17
- /B+ZtpLFz2F40N/+W7g==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-23_03,2026-11-23_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 clxscore=1015 bulkscore=0 suspectscore=0 lowpriorityscore=0
- impostorscore=0 priorityscore=1501 adultscore=0 phishscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611230055
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <yq5awlq3pto0.fsf@kernel.org>
 
-Add support for the QCA2066 (QCNFA765) WiFi/Bluetooth module on the
-Arduino VENTUNO Q board. The module is interfaced via LGA and is
-compatible with the M.2 Key E.
+On Mon, Nov 23, 2026 at 06:54:31PM +0530, Aneesh Kumar K.V wrote:
+> Leon Romanovsky <leon@kernel.org> writes:
+> 
+> > On Mon, Nov 23, 2026 at 03:13:13PM +0530, Aneesh Kumar K.V wrote:
+> >> Leon Romanovsky <leon@kernel.org> writes:
+> >> 
+> >> > On Mon, Nov 23, 2026 at 09:40:55AM +0100, Greg Kroah-Hartman wrote:
+> >> >> On Mon, Nov 23, 2026 at 02:03:27PM +0530, Aneesh Kumar K.V (Arm) wrote:
+> >> >> > This series adds the PCI/TSM support needed by a TEE Security Manager
+> >> >> > (TSM) driver in a confidential guest. It adds device lock/unlock,
+> >> >> > helpers for recording device acceptance and parsing MMIO reports, and
+> >> >> > DMA callbacks used during PCI driver attachment. The guest TSM driver and
+> >> >> > attestation commands using these interfaces are in follow-up series.
+> >> >> > 
+> >> >> > This series is based on Dan Williams' "[PATCH v2 00/19] PCI/TSM: TEE I/O
+> >> >> > infrastructure" posting [1], particularly the guest LOCK/UNLOCK, ACCEPT
+> >> >> > and MMIO report work [2-4]. It retains device_cc_accepted() and the
+> >> >> > confidential-device acceptance model from that posting, with changes
+> >> >> > adapted to the current PCI/TSM structures and reference APIs. Dan's
+> >> >> > device-core acceptance helper and per-host-bridge IDE stream reporting
+> >> >> > patch are also included.
+> >> >> > 
+> >> >> > This series does not adopt the Device Trust changes from Dan's "Device
+> >> >> > Evidence and Trust for PCI Security Protocol (TDISP)" [5]. That work is
+> >> >> > being developed separately in Leon Romanovsky's "driver core: Authorize
+> >> >> > device trust before driver binding" series, [6]. Confidential-device
+> >> >> > acceptance is kept separate from that driver-binding trust policy.
+> >> >> 
+> >> >> But it should not, as you are making driver core changes that will
+> >> >> mirror the same thing that that patchset is attempting to do.  Please
+> >> >> work together on this.
+> >> >
+> >> > +10000000,
+> >> >
+> >> > Greg,
+> >> >
+> >> > This series came as a surprise to me given the fact that device trust
+> >> > series is exactly for that - allow confidential computing.
+> >> >
+> >> > Adversarial is equal to the "cc_accepted".
+> >> 
+> >> I think the confusion stems from this thread:
+> >> 
+> >> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
+> >> 
+> >> Based on that discussion, I understood TRUST and eligibility for private
+> >> DMA to be complementary attributes. Device acceptance determines whether
+> >> a device may access private memory, while trust determines whether the
+> >> core must enforce additional restrictions. I understood that supporting
+> >> an accepted but adversarial device would require either a private IOTLB
+> >> to restrict its access or an IOMMU.
+> >
+> > I reached a completely different conclusion from that discussion.
+> >
+> > Device trust does little beyond preventing driver binding and recording the
+> > trust decision in "struct device". The missing piece, which I would expect
+> > you to address, is ensuring that the IOMMU and private DMA are configured
+> > only after the trust level has been decided or as part of that decision,
+> > rather than beforehand, as they are today.
+> >
+> 
+> 
+> I agree that the trust decision must precede DMA configuration and
+> driver probe. My integration tree shared in the cover letter already
+> includes your trust framework, with PCI/TSM DMA setup following that
+> decision.
+> 
+> What I am still trying to understand is how you view the DMA allocation
+> and mapping paths determining whether a device can access private
+> memory. Paths such as force_dma_unencrypted() and SWIOTLB receive a
+> struct device pointer and need to decide whether to use private memory
+> or shared buffers.
 
-Add wireless-lga-connector node using pcie-m2-e-connector binding,
-connecting PCIe port 0 to the WiFi interface and UART10 port 3 to
-the Bluetooth interface.
+After the IOMMU cleanup, I expect we’ll be able to create a cyclic
+trust-level state machine that lets us reset the trust level when a
+driver is unbound. We can then add internal states to the trust-level
+FSM, which DMA/SWIOTLB can check.
 
-Add pcie@1,0 downstream port node with pciclass,0604 compatible so
-the pci-pwrctrl driver can acquire the power sequencer and enable
-the M.2 slot before PCIe enumeration.
+In theory, we could make this final improvement before the IOMMU cleanup.
+However, the risk of creating a mess is higher than if we follow a
+straightforward, sequential engineering approach.
 
-Add nfa725b_default_state pinctrl for the W_DISABLE1/2 GPIOs
-(gpio56/gpio55) used by the power sequencer.
+Thanks
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
----
- arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts | 64 +++++++++++++++++++++--
- 1 file changed, 60 insertions(+), 4 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts b/arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts
-index 940a03732eefc49280b4182101cf3fb9ee951053..f24a87bd7cbf63bda803161f3659b0538a5ee35a 100644
---- a/arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts
-+++ b/arch/arm64/boot/dts/qcom/monaco-arduino-monza.dts
-@@ -178,6 +178,40 @@ vreg_nvme: regulator-3p3-m2 {
- 		enable-active-high;
- 		startup-delay-us = <20000>;
- 	};
-+
-+	wireless-lga-connector {
-+		compatible = "qcom,pcie-m2-1418-lga-connector",
-+			     "pcie-m2-e-connector";
-+		vpcie3v3-supply = <&vdc_3v3>;
-+		vpcie1v8-supply = <&vdc_1v8>;
-+		w-disable1-gpios = <&tlmm 56 GPIO_ACTIVE_LOW>;
-+		w-disable2-gpios = <&tlmm 55 GPIO_ACTIVE_LOW>;
-+		pinctrl-0 = <&nfa725b_default_state>;
-+		pinctrl-names = "default";
-+
-+		ports {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			/* WiFi/PCIe */
-+			port@0 {
-+				reg = <0>;
-+
-+				lga_pcie_ep: endpoint {
-+					remote-endpoint = <&pcie_ep>;
-+				};
-+			};
-+
-+			/* Bluetooth/UART */
-+			port@3 {
-+				reg = <3>;
-+
-+				lga_uart_ep: endpoint {
-+					remote-endpoint = <&uart10_ep>;
-+				};
-+			};
-+		};
-+	};
- };
- 
- &cci1 {
-@@ -541,6 +575,22 @@ pcie@0,0 {
- 		ranges;
- 		reg = <0x010000 0x00 0x00 0x00 0x00>;
- 
-+		pcie@1,0 {
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			compatible = "pciclass,0604";
-+			bus-range = <0x00 0xff>;
-+			ranges;
-+			reg = <0x020800 0x00 0x00 0x00 0x00>;
-+
-+			port {
-+				pcie_ep: endpoint {
-+					remote-endpoint = <&lga_pcie_ep>;
-+				};
-+			};
-+		};
-+
- 		pcie@2,0 {
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-@@ -694,6 +744,12 @@ max98091_default: max98091-default-state {
- 		bias-pull-up;
- 	};
- 
-+	nfa725b_default_state: nfa725b-default-state {
-+		pins = "gpio55", "gpio56";
-+		function = "gpio";
-+		bias-disable;
-+	};
-+
- 	pcie1_default_state: pcie1-default-state {
- 		wake-pins {
- 			pins = "gpio21";
-@@ -745,10 +801,10 @@ &uart7 {
- &uart10 {
- 	status = "okay";
- 
--	bluetooth: bluetooth {
--		compatible = "qcom,qca2066-bt";
--		enable-gpios = <&tlmm 55 GPIO_ACTIVE_HIGH>;
--		clocks = <&sleep_clk>;
-+	port {
-+		uart10_ep: endpoint {
-+			remote-endpoint = <&lga_uart_ep>;
-+		};
- 	};
- };
- 
-
--- 
-2.34.1
-
+> 
+> We could move cc_accepted into struct pci_tsm_devsec, outside driver
+> core. How would you expect the generic DMA code to obtain that
+> information? Adding another flag to struct device would effectively
+> recreate the state we are trying to remove.
+> 
+> This goes back to my question here:
+> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org/
+> 
+> If we remove device_cc_accepted(), what should those callers use
+> instead? How do you see your trust framework supporting that decision?
+> 
+> -aneesh
+> 
+> 
