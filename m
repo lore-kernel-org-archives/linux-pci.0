@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.4
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.83.48
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795452664;
-	b=lKTG/uBTkayT4l8HbJNtSTDE9wLZ2jQNeVI9ElmSYvLMOA9tSDQWWIGwqcr5AdJZLm+K
-	 9fPMwT2d3t5oSUESXHhxj2V1XXy+4E91uTiKcNNXdxJT7p5VjaAXHKAIsq02A3GvzJnYx
-	 1e7aw2PJz4DVmK+XgnBBezJt64cetOeu3LXosETgWSk6JCF1WLwoGLmI8yIQPOL3uf4Hc
-	 WLh+Y8ku4D/zUPq1AayV2UBuhxJK726ffi31dfaovxQe5MQWWt3OR9UsRc6lTgwGcEKRG
-	 qwXfjUAgLjQMFUlDeIhmw+p/CFEdYQWIdwPbMI9Pn8mOG6An2ngdV87g+5xnoQB625Q==
+	t=1795452981;
+	b=tTEwRbA2EZqqKLMUESqfid4UoWUpdTWw3fc0vlTPRHY/b/UQ70FAne6yMaqsGPP2ISeT
+	 gekTFMCLnT+nbxQAWAnTKpVNMNDb5f2tsv/ZNsW4uwxkyPoUz/BSzg5guO5+EzzHApt4F
+	 OoK9U6YbRaZMBfYyDzEgpfQw2kJ66cmteV5ubBcLkbbNxh70Bm3Xcd3IPeJwvpEOH2gUR
+	 G4PaaP0MgQi3hGC4lfNgGrAdE/53gMDT31BaXVLPHur5+DV9tXsawuqBjIhnyFmu4LWzg
+	 ZwnE8AGvmkYtVN6xnvq1CB/AuOc81Uez9vJILW0v51G7tOsE6dh6mmDn7AtCtOM90jg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795452664;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795452981;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:Content-Type:Content-Disposition:
 	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -24,70 +24,84 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=sqG2/gkA7mF/6TiwFahNOdc9QcX8sTghQn1ydA4FHZA=;
-	b=0jh1wCnASKvf+v0w8XsDwXISeYH1g+8tcW8NHdiYbZ/IcF6iTRWeeLHKTSZ6p6yS41U6
-	 8A/7KBVEaGILcLW56pXI7sPRqw70zIr2sJVrv+CQwfYJRUnkWA2E7AxNlBpjVQ159Mb3l
-	 7RqVweFDCweP8aFYLIO9B97xTL+a7aLvqn/OJ0OXz1HcpAN9R7C+4KItrKX1BZBhhmoDA
-	 rD+7M5plVoWcZL77pBTCjK21qVsk8IHyfafDzGG55gS7/Jja9h8h+iJv9nigzsN4C6jYD
-	 hczBviksH3eVZ+mPcrVI4QPlYHr8duA3IU0rjf6o6yTkZ7HlWSrQlx6B5UrsHMgHUFg==
+	bh=FV4g8wxHUrsaxZ8fea1wrl/W1FjlSngRQABDNLf4fFI=;
+	b=hw1mogEcIlDWAvtpIU3gPW0G+NQPBtryasnl+b/NaO3pZ/7j8Ghp/oFHGuhfYLJRD1YH
+	 RUl7qNE9bGea39wTq0QiBF/V8RQKWYz7Esf7xU9wI0wY7mYFg0nkR9vPenHxCpBMGuDWS
+	 JqlMMh2+6jajyxHuU2Z3T9OmDHQ6jUJq4iMfpLsCb37v1crx05UIP81vGlvClo3rAZXXf
+	 Ezo+A3ZpGdr2JfeitHQnQ/lae0rOCCrIhvGPPfKaliW9kh5hlBZJK0bWKDuIfuR1lqDt0
+	 HfAqkr7WNRFDvZe3UD7pshA8WGfhqBTr5zW1EoPdypm9naJbIMpE07qlAQfAvUvzdUg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=0fzHMYtA;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.4
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013004.outbound.protection.outlook.com [40.93.196.4])
+	dmarc=pass header.from=oss.nxp.com;
+	spf=pass smtp.mailfrom=oss.nxp.com;
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=vBFSsHlD;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.83.48
+Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013048.outbound.protection.outlook.com [52.101.83.48])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A127606A692;
-	Mon, 23 Nov 2026 16:51:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1A127606A692
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDB77606A321;
+	Mon, 23 Nov 2026 16:56:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BDB77606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=0fzHMYtA
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=vBFSsHlD
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=F6Ds8yg5FTRWnGE4h0aNLEZpj9cJXspVVZVZMN98m82oTPgWm5Xn8Ate+PfdnXoNOom5ZrmITnv+ZE/gfKzWiC4NDMFXT5rZdJ/W9kcLqo73JcE1xJSulbMjtIWwfQd+2Vi/WOPPmjuJMGTkee7h0i5rPtdueuwOZzt+HxxjtI0d7SDIPw9tUkH3ZA+NXvewohOO3CbkyM+eOtaoX3VVmmy2niTEL1o5nt3oJnk+j1vdgeAuDcqFkk9Bfo8uMcT6KCmDcYJkmym6rr0oe4QV5p8nOcM6zznSTZe060aM/SIDY1Cp9xclIQv+izwdfF56y63TprTCo+UY3/a/BWPVNQ==
+ b=x7NGxfT6RYlBPMdGH8M/pBzhNa4PGzBe6IG3WqMGwxO5hZrSyJBofevWmskuusG47LRzpaiMGNBV0Qri4MI13y53x/cpgPhv7u9RdnlVgFxLmwsOIeXikbqwSuz/RudcIL1heh+xLcPBwyTf6vP8HG91fu7tjMo9VkOQBdybMhnXBcezwbUl0Mlt5YOGX4hxuXqD5xtK90nEIDxniBzLMttLZyrJJg0qHvQhIaDTuv93IboeusuWXJkX3Rc52F4Q+DfaqNrDo1bB/7xixsqfZjAVNOWPXijKSmBOHjJQgXRKjDicorqGs2z8F7Wtj4Csfwm/0fyrdMc5iMZxkiqn/g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=sqG2/gkA7mF/6TiwFahNOdc9QcX8sTghQn1ydA4FHZA=;
- b=pLuXJLg5L20IdRidz/BpJp+qwmivRQRDuV6PGA9Jbwhlzc7/n/9NZUkuc+0rhpJyQckcweh6z7WrFYk36hBlX75GLekHrEIGgrkpHEPXZqSWaDIohOgRcfLwtlzoQQiViusA0CB1RefFWtRwPHXpr5dXqsaTsIaguVKSOvafaVWBK9RvAT6E9Yz1uT2TFRBw8WwP2oFlUQs7pyukD6A1wqV/v+tgXjJkRTYKUAkZvwE28n9LjQ/DI87Shsf5b2wPZ8ndKgE8u/NyGJKBgsNIX6VMrY1EHUUFv09DzEtjbhtxJRonFPC1At0k478cdRHW3aHA8Vz38mxK0kNXGAUPqQ==
+ bh=FV4g8wxHUrsaxZ8fea1wrl/W1FjlSngRQABDNLf4fFI=;
+ b=hKGw89F/x+QTcQrQivkkJMovcCX50NQ+XNegkf10kIZj+va/MQ/ODgV/tSzB13P/h6DkGAIm0l6BXvnvxG7gaG9mP+0DLQ5FBMbr8W8sW5P4jTUdzQ4a1neUwREs0PKwYv5ZdsrEct7e4DA7//tMTbHG3bf91ZCbDlEBuAeEjZDjhnYQJtCOSw0v9wRmb+Bee+jTxaUWngzPjX06/aQRh2jOoMSL4gdQrny8WnkhHghwEy5HW6L6d5b62ecutnsrn5g6hNbkjzOmXnGHCCeJwdUE/b7sQL/arKoEzJ+LTiaNqWMrEnHu1si31GQByWSCHKEuiSdbf9cq7HhksvrPuw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sqG2/gkA7mF/6TiwFahNOdc9QcX8sTghQn1ydA4FHZA=;
- b=0fzHMYtAV/BAylmGNG631XmHyhgyXFuj83aHO2I4aQrbXXDGvhDRfQecR3liXqmVncq3gYL5/SDa+WpfTifUpu2X6TDL1hDtHEYa4rIb6c/RP/4Frij7kRG7F+oGt0Jjw3tzghwrgnTkKwNr73Az9gDR+u+4F19LVTHkCfZpZMg=
+ bh=FV4g8wxHUrsaxZ8fea1wrl/W1FjlSngRQABDNLf4fFI=;
+ b=vBFSsHlDXXRJPBvJ9JBXvaCPok6gjT0veAeUxHqDL4w6gPgNXXZ8QvCqaHCZCxVXu+epighlnoe7UiXL34bLdMTEDMJHK2RaIdtqfv7O4nW7aRN7gzxAx3xii0eQWbdoMPz/SZ1I1nugYMyRNiKdheNuV9ceLl9lKjKyPI1FAhN3tHmiVCAq9OWgeEMUrlfqKjNRoH7uodzg86NH+JwBHECfj7T37aYeDm3Q2+VAR79Ww1tZl+NEOdZp3gRkMqFIef9YaMKqd83V4T2DRAHr5toVYd1MQ5cTHyDaAOYn+tCtyVsG4sX/RwnATRjLD5ix1gpu2CX28GRV8cngsu0ynw==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from EAYPR12MB923140.namprd12.prod.outlook.com
- (2603:10b6:303:2fd::15) by BL4PR12MB9481.namprd12.prod.outlook.com
- (2603:10b6:208:591::6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Mon, 23 Nov
- 2026 16:50:59 +0000
-Received: from EAYPR12MB923140.namprd12.prod.outlook.com
- ([fe80::b986:8b81:beda:c167]) by EAYPR12MB923140.namprd12.prod.outlook.com
- ([fe80::b986:8b81:beda:c167%4]) with mapi id 15.21.0639.012; Mon, 23 Nov 2026
- 16:50:59 +0000
-Date: Mon, 23 Nov 2026 11:50:50 -0500
-From: Yazen Ghannam <yazen.ghannam@amd.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, Lukas Wunner <lukas@wunner.de>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Jon Pan-Doh <pandoh@google.com>
-Subject: Re: [PATCH 2/4] PCI/AER: Clamp negative ratelimit burst to zero
-Message-ID: <20261123165050.GA1741477@yaz-khff2.amd.com>
-References: <20261120211307.GA1524494@yaz-khff2.amd.com>
- <20261121001202.GA917755@bhelgaas>
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
+ by AM0PR04MB12001.eurprd04.prod.outlook.com (2603:10a6:20b:73f::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.14; Mon, 23 Nov
+ 2026 16:56:18 +0000
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b%4]) with mapi id 15.21.0639.012; Mon, 23 Nov 2026
+ 16:56:17 +0000
+Date: Mon, 23 Nov 2026 10:56:06 -0600
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>, Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>, mhi@lists.linux.dev,
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-phy@lists.infradead.org
+Subject: Re: [PATCH 05/11] phy: qcom: qmp-pcie: Add PCIe endpoint mode support
+Message-ID: <awRwJi0Wflbuox6i@SMW015318>
+References: <20261122-nord_ep-v1-0-6d8839ffa9aa@oss.qualcomm.com>
+ <20261122-nord_ep-v1-5-6d8839ffa9aa@oss.qualcomm.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261121001202.GA917755@bhelgaas>
-X-ClientProxiedBy: BL1P223CA0017.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:208:2c4::22) To EAYPR12MB923140.namprd12.prod.outlook.com
- (2603:10b6:303:2fd::15)
+In-Reply-To: <20261122-nord_ep-v1-5-6d8839ffa9aa@oss.qualcomm.com>
+X-ClientProxiedBy: PH8P221CA0028.NAMP221.PROD.OUTLOOK.COM
+ (2603:10b6:510:2d8::28) To MI3PR04MB12438.eurprd04.prod.outlook.com
+ (2603:10a6:290:76::14)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -98,330 +112,159 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: EAYPR12MB923140:EE_|BL4PR12MB9481:EE_
-X-MS-Office365-Filtering-Correlation-Id: 089fe895-9ef0-4f0c-030f-08df4981f357
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|AM0PR04MB12001:EE_
+X-MS-Office365-Filtering-Correlation-Id: f7a70988-4684-4215-57ef-08df4982b12c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|22082099003|18002099003|261009223027099003|13003099007|5023799004|4143699003|260925022911599003|11063799006|261102123227099003|260925021911599003|56012099006|261026121527099003|260925021311599003|261028144727099003|261026140227099003|261021121427099003|10067099003|261022105027099003|261021123027099003;
+	BCL:0;ARA:13230040|19092799006|23010399003|1800799024|366016|376014|7416014|261102123227099003|261028144727099003|261021121427099003|261021123027099003|261022105027099003|261022075727099003|261026121527099003|11063799006|261026140227099003|4143699003|56012099006|10067099003|22082099003|18002099003|6133799003|261009223027099003;
 X-Microsoft-Antispam-Message-Info:
-	8EvY4Z9rdNHMuVo/J7zpKn6K/JOFkq7H4/rMcrIm53J6l+ySW0ABC1dlIABg8nacrzNP9bCzSw9sYhjEXuhLbw/L8MMCiRdF+149AyDcZ0syqURpcQJWf/vGw/pF1Nt/lFsw/Vqorf1Ydis956NhhmLtg8gKxdQCa+E8M95gX7OXeh57gcnB9+xo/TmH9/3VmWnqDZKtDVu1VFSr3MvKEJgXR3eaFrNbrfAIbbkshtI5Ipp7YIVyIAy/SwMbF5sXeFuPZ0IUxYpCw3cLexHRTDuPb7KXnNXREypoDvZl5wip8WWkK5S4yQfvDH4gzZ+TE2z23SY9d5J2FqDEptjOgz0O6/uqlfgxFZA2MVhI7ouoZn+9nMGwqYPPdOn3nqr8maJx8eRNxdCahnizacfKa1XMdnb40kDnQFBdpiPj/5mZIB1ll8I6+q96Z962wuzarqrCB0249DJbZQpxMUG9iEA8xJ/9eq6BmZtRggWXfht4eWfOaFDk3P7D2B+2RIk9lt+z4z0AknX+xjFoUhdFn+B2+zGR+8bGzNhUKfpHFCzDoiOIxw6VWVXB7fPs0Xzw4He951feGOGz0+RpqSiLZixNLrO1nBbgMSKc/4IUQhN3/dJ37XS5VIW/p8FntA+/
+	/9LYR1PgXWUk+hRt2X+R/qjyzeEeVwQGN/wO70VInPIn7YNl6HHIbksdBlSVCVDgXMPNEA1Mshr0hT9MUBNeEB/3uvE5uyEW5WiSotO4W53AeLkHlAlfbDXSobQNmn6KKpsrnmdsViAxKqWGmDun8DpPvakJ3XJ1n9mDqyp2GjJ3HOAx8ypZC5t02w8QfK3JYtEZ6IcHEWp7oiK5mil5aa6O2Vt5rfaoyEI+ji0WElPg1mPRh4qbuoTNPY8XJzDTpE1THImN81Y9MqOJ2I4S/fI2oUoRCKbemNUdUMhDI6Pqrmm+o7jzRziUCa1MqNN6elv6gz1LPywNY3XMeO12KrQ8eIlxzF9o8N2ZewCgev6VR81uIP3KEZJvVt6Su5CjKoJJDqj3FdEFTTlnJXOb2jRcazP2pcyADQvo2I9+qQwuflF68OOeqBBUz0vS7YcROoTtinv0TIcXjqXk8D/Hise9+lBn4e9z+GeNsx/mZVenls9ci46rKZJoFoP0uoNa1bsJiRS9hhH7GbDfFUrlMoJs7Ic/eqp7/cWo1Kvx6Y/qDuaG/IKhAypkbZViENExSHrfB7KSFvbKs9WQ5hhwyow6fMO/Ay+QlpTrqJGeuaGRtMWIlsnQakJd1QkuxJtnUr8+UKgIWPH4Az9ZC7STroFm+RImWMHLBKZU9SRiCNE=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:EAYPR12MB923140.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(22082099003)(18002099003)(261009223027099003)(13003099007)(5023799004)(4143699003)(260925022911599003)(11063799006)(261102123227099003)(260925021911599003)(56012099006)(261026121527099003)(260925021311599003)(261028144727099003)(261026140227099003)(261021121427099003)(10067099003)(261022105027099003)(261021123027099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(23010399003)(1800799024)(366016)(376014)(7416014)(261102123227099003)(261028144727099003)(261021121427099003)(261021123027099003)(261022105027099003)(261022075727099003)(261026121527099003)(11063799006)(261026140227099003)(4143699003)(56012099006)(10067099003)(22082099003)(18002099003)(6133799003)(261009223027099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?qqgG9KRYnFICSyRkrMcl62kFrVTaR9Frni75obj31EyV5EHRRLMukVANv9I+?=
- =?us-ascii?Q?OrNnBYZvGBmpVKZJ5IgTSrHn8wcJA9hwaBYn25LZNJeDwHwqntJpau06xeJA?=
- =?us-ascii?Q?5C+gOZ5mfDcaVq74aRcwe60FyLRi+Gr9gMwKZmPG36ZsHbau9QzimaJsK9E3?=
- =?us-ascii?Q?YS+NahhNEZbxAiCTZRasu3wJAbqSh6AC0yd3m89+YscdWLmrP10c7SjQS0br?=
- =?us-ascii?Q?NNgKOtL9PEpQHgMteKcDJLPngN3bPSX8NR5U0gSwEt0MkdrKOuLKF6GcOG6q?=
- =?us-ascii?Q?rbngn+1Tp0PjNSoj1hAIUKR297EJAwmMtCGNgIoimXINyH+JJ8IxcHQT3AJi?=
- =?us-ascii?Q?AveiJJMBzH2oxWAiaBjGps1DIFaGTdbA7ypz9e4p7iWnHHZ6pFHDLiLpZ1Yy?=
- =?us-ascii?Q?AztLxopmmh30lE5XoEdjNZP6fezpIb1PQUwazANrcojCjSPVmmtzKDe7r2oN?=
- =?us-ascii?Q?WmqUwcoW0exrwddwQOHv00azZ0YzIHYWLe2t+R6ZnHgQ5MKpfvg5lIx1QD5i?=
- =?us-ascii?Q?vGGhtE3T0KZqBzJircIGbVh2SPUrETrxpJzgzGyT+PVXS8vgyrn6KacteoQ2?=
- =?us-ascii?Q?58i98IOpdpg9i9/hvmwCwHCU1MV69GqiTvpoR4rUDBUm82Q6en2tB22xPF2t?=
- =?us-ascii?Q?Tj8Bp+hamGFoGvQcJF49LcQEYyxDImzzD82oIbWX1uPJGC52/o+bDO/p2Klf?=
- =?us-ascii?Q?2O7Rq71YFTlUC6HQo+Vo5EItOjXXY3IQx/dTfpHSbkZyfC1eWTAGqfcc8q1g?=
- =?us-ascii?Q?5wZLjaa0QWwyCNta48xc8SIpW/ERIKpFGMfxEzKvTYRocuL4ptUh+8qkz9Mp?=
- =?us-ascii?Q?caDe326TP5xanonjDPbuAXGtqMu20O6e4DSAvJoLl8/FqELxrQlf433eyfIT?=
- =?us-ascii?Q?lpNTdfO0/KAs8LwimbKUIsUvtrLVN7tqktNNRhFGLuDWygNLf/vEhIsvZdSK?=
- =?us-ascii?Q?kXKQiV7K6X0O7xhFLCoi73UDwxysaQnqzGfxVy6ZCD5cNgX3g7kdHXp9xLZa?=
- =?us-ascii?Q?/2TNYm6nB0184nOy7t07usbQGuwWMojFT5+yYrYRR9CKhxkm/hoG2bVCSh9V?=
- =?us-ascii?Q?iRPVtu+h4VkTycLANe28QDI3tuym2sR2tDKfcxHQao4xvGFFA86JP1JADV4t?=
- =?us-ascii?Q?rdhzU/AdEhjEOFgH/EzcRNOebMF8FNnfOuUnx+vQTR8DCayzDqHsjRI6f9qc?=
- =?us-ascii?Q?G6kdfs6prQ92oMW8L4aMhpBYWH7puAM9J/n15NcJUR1kKWIJfs/lxTUaZBlb?=
- =?us-ascii?Q?cG1KEBENx/3vLh/hJ78Qdw8rF20FQxpyGYl6aosbrJom+ZfB0EtvMT4WsO3Q?=
- =?us-ascii?Q?qWZbgSwY3ys2J5hV2RHUH6UPuI1YZUO2m7FyjR3dZkYWkWjSU5ib3qzTCsIs?=
- =?us-ascii?Q?4dCxCXuzCV6kX1JTgMRCoejk38KgxteLsan0schmW1mi2AHPADuIGS6A5CEQ?=
- =?us-ascii?Q?mMsrkEW1Vb3jm402HRfIG+lM1feCmEs3rW3wND5cysnoqO4PFHeEdT3+lVqQ?=
- =?us-ascii?Q?2y7fl3bAv7L8JL7vArtHWMAiWaP/q7z8mC+SFFXuFuEW30ZNes3OrrzZNZn0?=
- =?us-ascii?Q?MBlLd+rmhUo6G7Ay1tgURUoOwmFXzNNUvkOyvY+9/tt6nnog7EfMDfgu9Pk6?=
- =?us-ascii?Q?l1lZjcl4Apzts+SIN+wVD16kva2Gjsk2D21y1+n7RkUeFOXehOuEYBdwW4WQ?=
- =?us-ascii?Q?oLeD+YBa917HMH4PxbV74qH0Agi+ufddXGOGMFjClAfkoAvC?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 089fe895-9ef0-4f0c-030f-08df4981f357
-X-MS-Exchange-CrossTenant-AuthSource: EAYPR12MB923140.namprd12.prod.outlook.com
+	=?us-ascii?Q?1qFkDgoq93nUS4US3WiYna0QFp7V5r0A56k/hFKwZjyVQm/Hf2qms1R3umbr?=
+ =?us-ascii?Q?JZk+eP3fIKBOQrBg4i9vw7Y97S2CNOiCuRJBE7HTdiH+PMf5wboNSBXl0pT/?=
+ =?us-ascii?Q?8I8xwzYOE5ytBivFobaSJWKEm4NRsohqg9bIxUfNS6kf3bMUPnf/xAdcFwvW?=
+ =?us-ascii?Q?qnKeCw641gdueZiB0RIFKrBL9Tr8LMgWVvD8NVg1yHb+H9ZV+omx/qdUsymN?=
+ =?us-ascii?Q?0kEiDlY7HqL/fdqAgel0ZztU90hwE4vAUQyLfxZ7fnfUBDXRhr7LbYssykni?=
+ =?us-ascii?Q?qerwLAoh5Txr0ehOfzM3+C0B054u87PolgQVjqMPr3HD1kXC8nb0f6qSeJpe?=
+ =?us-ascii?Q?EsOZcv8mml4B701lmTzxQ+Sdcwkun1ChvhU7R90R7Tkfoy3DQxbhI8l5ChIU?=
+ =?us-ascii?Q?GCB/MSegcFq9jtaaMxRsbkyRcNBviSXkMRgCy3FzonqJPhm0cnp+NdcTFsx2?=
+ =?us-ascii?Q?5YRphxcgHtE6eU/7CBB7RCV1dnVe23e584H3wy/UvsimvsHGC3RgWMyXudTD?=
+ =?us-ascii?Q?ogtYAZCUL/YXaONtjS5pxaFHlJeFqnj9mywPufP4gk/2y2L7s6zXt48eO0lX?=
+ =?us-ascii?Q?CX8ebsJOxBxV8/fWtsd+4EtSiR9hC1XaXEsuxDv+w0KF4ajCJqzPV1zk43Ql?=
+ =?us-ascii?Q?az0ghXkZ3216/QV82OmuSXNUFroKkQmXydbE7osuQZ5SkjgBfE5ODuoy2QrS?=
+ =?us-ascii?Q?Zq231ihvVF4raOO+P2uc2wzfJ6K/Q2xlSOD/nbaW0C7D8BZHHpgU3SlCM1lZ?=
+ =?us-ascii?Q?V+LJYbcT7W7PxZseyIinrJYRPXBkXOajdY4LpewVPo/Iv89OlCLlRztnvroM?=
+ =?us-ascii?Q?7KzlDdHwxG3i8nRr+bFauCziFUD/3OnA2ojCjiWtk2iottO9ZshxSB74iYDm?=
+ =?us-ascii?Q?NVYITR7EauHLjwK8NXTyK8dYgPg+ZR9gto3tEM/pegViwpQWqVZp5WQS5ZpD?=
+ =?us-ascii?Q?ieNoK6w1ysJOGdg+D9eMlUdp51GA28rOKiFEMAuSTTz5D5x4H/HbmQzmPw+L?=
+ =?us-ascii?Q?D/nWjj6Q85z/p/RWKNpypZQ55Wa1/CYiJ4h0Fl0w3nAvPKJJXigYdXLD2kz3?=
+ =?us-ascii?Q?h6axW8PbJB5+lfMAfjA0MOKltjJXtiyj+IRfRKgt0sDzanlVscGwrKWMGUQ/?=
+ =?us-ascii?Q?/n0tVTSzUshZ4TH5PSGSqTof9GbaHSmCuLA+uK93RV+wIuj56VB1QQaduvW4?=
+ =?us-ascii?Q?3/zp+q3+S7TFhQ0v1T9ouxeOpv1ZVQvWmap11j/EVkJyXuLAtIDmNzXhgkr8?=
+ =?us-ascii?Q?CysvP+RxOdh8MZKgxhtKNVrafUHPF97ue4g6VavB+C0Zwc9lLF2WwQBxgRiY?=
+ =?us-ascii?Q?7nr4CWamYJr0x16ge7yaHTdM/8i+d1Y3mc9yp6P9mV1kNwV30+DoZ2XY81Ry?=
+ =?us-ascii?Q?i9bBPJIcuK8bKXUSiGuw9OaUTgTtfhbpMx3jfpSMc566eA8ihiuh0qkKEsYs?=
+ =?us-ascii?Q?JJOy1RwbSJ+QXzwRanKHwLC/4fksyD4x+xDv2yzyPYa84KbmXYK08p3qKkWL?=
+ =?us-ascii?Q?O8Nn4yg/mAbZAXlaDYTflqvEnr9N00GhbCnaTDXZ4S/sp9+OUIH3YzRMJZWj?=
+ =?us-ascii?Q?qaVh9pz9cxBUN/HjM7QVVW5D7jQrPe6VV8P9vlGfWkJiXt6LbifEw3ED00JE?=
+ =?us-ascii?Q?/tCQBLAoC70X1993bCBfV8+jBxhu9QIm05Kw6v3EIxJZHdkdOiZRzyVQ1UcJ?=
+ =?us-ascii?Q?hDavVCOQJhrb1J60x8Y6mMgT6uc/LxH1P3rvZoNwodqHxkvOLfGdFQdxGWaE?=
+ =?us-ascii?Q?aqtZ5xrSf4Mt0ll/JJAR4d17JwN8L9ov5OJqm6rEuMWNN4kypIWO?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f7a70988-4684-4215-57ef-08df4982b12c
+X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 16:50:59.3630
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 16:56:17.9078
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Ex5i45+kaYlAwsMfgU4dSdZY6/3B8e1zRlZaMGEduf/la9CEU5ZgkicCRg+O/UETHmMUpMPvwYYNrg2W7awCPQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR12MB9481
+X-MS-Exchange-CrossTenant-UserPrincipalName: vnf0VF3nxXwlD/weRncj+JzNO0O1xMmKWTU9j0ehxqYKf0DDTOyzP4NCrTOZ77CP5xghqYyAKDxczsB2kf39/f/F5whonK6hom+3Hbphsg8ix/bEXAma4Ccg+AwYK1cY
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB12001
 
-On Fri, Nov 20, 2026 at 06:12:02PM -0600, Bjorn Helgaas wrote:
-> On Fri, Nov 20, 2026 at 04:13:07PM -0500, Yazen Ghannam wrote:
-> > On Fri, Nov 20, 2026 at 12:10:43PM -0600, Bjorn Helgaas wrote:
-> > > On Tue, Nov 10, 2026 at 03:56:12PM -0600, Yazen Ghannam wrote:
-> > > > The correctable and nonfatal "_ratelimit_burst" attributes store
-> > > > whatever kstrtoint() parses, so a negative value lands directly in
-> > > > ratelimit_state.burst.
-> > > > 
-> > > > ___ratelimit() reads a negative burst as an uninitialized
-> > > > ratelimit_state and gives a WARNing.
-> > > > 
-> > > > Clamp negative values to zero and document the clamping behavior.
-> > > > ...
-> > > 
-> > > > Fixes: b4fe7398def6 ("PCI/AER: Add sysfs attributes for log ratelimits")
-> > > > Reported-by: Sashiko <sashiko-bot@kernel.org>
-> > > > Closes: https://lore.kernel.org/linux-pci/20260714191826.BA81E1F000E9@smtp.kernel.org/
-> > > > Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
-> > > > ---
-> > > >  .../ABI/testing/sysfs-bus-pci-devices-aer     | 21 ++++++++++++-------
-> > > >  drivers/pci/pcie/aer.c                        |  3 +++
-> > > >  2 files changed, 17 insertions(+), 7 deletions(-)
-> > > > 
-> > > > diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-> > > > index 5ed284523956..215cf8bd4c30 100644
-> > > > --- a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-> > > > +++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-> > > > @@ -130,9 +130,10 @@ What:		/sys/bus/pci/devices/<dev>/aer/correctable_ratelimit_interval_ms
-> > > >  Date:		May 2025
-> > > >  KernelVersion:	6.16.0
-> > > >  Contact:	linux-pci@vger.kernel.org
-> > > > -Description:	Writing 0 disables AER correctable error log ratelimiting.
-> > > > -		Writing a positive value sets the ratelimit interval in ms.
-> > > > -		Default is DEFAULT_RATELIMIT_INTERVAL (5000 ms).
-> > > > +Description:	Writing 0, or any negative value, disables AER correctable
-> > > > +		error log ratelimiting. Writing a positive value sets the
-> > > > +		ratelimit interval in ms. Default is
-> > > > +		DEFAULT_RATELIMIT_INTERVAL (5000 ms).
-> > > >  
-> > > >  What:		/sys/bus/pci/devices/<dev>/aer/correctable_ratelimit_burst
-> > > >  Date:		May 2025
-> > > > @@ -143,14 +144,17 @@ Description:	Ratelimit burst for correctable error logs. Writing a value
-> > > >  		before ratelimiting. Reading gets the current ratelimit
-> > > >  		burst. Default is DEFAULT_RATELIMIT_BURST (10).
-> > > >  
-> > > > +		Writing 0, or any negative value, suppresses all logs
-> > > > +		unless the interval attribute is also 0.
-> > > > +
-> > > >  What:		/sys/bus/pci/devices/<dev>/aer/nonfatal_ratelimit_interval_ms
-> > > >  Date:		May 2025
-> > > >  KernelVersion:	6.16.0
-> > > >  Contact:	linux-pci@vger.kernel.org
-> > > > -Description:	Writing 0 disables AER non-fatal uncorrectable error log
-> > > > -		ratelimiting. Writing a positive value sets the ratelimit
-> > > > -		interval in ms. Default is DEFAULT_RATELIMIT_INTERVAL
-> > > > -		(5000 ms).
-> > > > +Description:	Writing 0, or any negative value, disables AER non-fatal
-> > > > +		uncorrectable error log ratelimiting. Writing a positive
-> > > > +		value sets the ratelimit interval in ms. Default is
-> > > > +		DEFAULT_RATELIMIT_INTERVAL (5000 ms).
-> > > >  
-> > > >  What:		/sys/bus/pci/devices/<dev>/aer/nonfatal_ratelimit_burst
-> > > >  Date:		May 2025
-> > > > @@ -161,3 +165,6 @@ Description:	Ratelimit burst for non-fatal uncorrectable error logs.
-> > > >  		allowed per interval before ratelimiting. Reading gets the
-> > > >  		current ratelimit burst. Default is DEFAULT_RATELIMIT_BURST
-> > > >  		(10).
-> > > > +
-> > > > +		Writing 0, or any negative value, suppresses all logs
-> > > > +		unless the interval attribute is also 0.
-> > > > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > > > index 6f2460231422..401cd3a1b3d0 100644
-> > > > --- a/drivers/pci/pcie/aer.c
-> > > > +++ b/drivers/pci/pcie/aer.c
-> > > > @@ -752,6 +752,9 @@ const struct attribute_group aer_stats_attr_group = {
-> > > >  		if (kstrtoint(buf, 0, &burst) < 0)			\
-> > > >  			return -EINVAL;					\
-> > > >  									\
-> > > > +		if (burst < 0)						\
-> > > > +			burst = 0;					\
-> > > 
-> > > Why don't we just return -EINVAL if the user writes a negative value
-> > > to either *_ratelimit_interval_ms or *_ratelimit_burst?
-> > > 
-> > > I don't think there's any reasonable interpretation of negative
-> > > values in either case.
-> > 
-> > Right, that's fair. I think the reason to clamp was to be consistent
-> > with the current code.
-> > 
-> > Would you like a follow up patch?
-> > 
-> > > Any non-negative value for the interval makes sense (0 disables).
-> > > 
-> > > Any positive value makes sense for burst; I don't know what a 0 burst
-> > > value could mean, so maybe that should be an error too?
-> > 
-> > "burst == 0" came from here:
-> > 084a990ded63 ("ratelimit: Allow zero ->burst to disable ratelimiting")
-> > 
-> > IIUC, the goal is to **always** hide/disable the messages. IOW, keep
-> > logging the errors internally based on the interval, but don't print any
-> > kernel messages for them. The user can still get the error logs from the
-> > trace event and leave the kernel buffer alone.
-> 
-> OK, so burst==0 should have the "usual" semantics (disable
-> ratelimiting IIUC).
-> 
-> Can we make a replacement for this patch?
-> 
->   - Return -EINVAL for negative values written to either
->     *_ratelimit_interval_ms or *_ratelimit_burst 
-> 
->   - I think the existing *_ratelimit_interval_ms documentation would
->     be fine, no change required
-> 
->   - *_ratelimit_burst documentation needs something, but I don't know
->     what.  084a990ded63 ("ratelimit: Allow zero ->burst to disable
->     ratelimiting") suggests that burst==0 disables ratelimiting, but 
->     you wrote "suppresses all logs", which sounds like the opposite of
->     disabling ratelimiting.
-> 
->     Also, I don't know what "unless the interval attribute is also 0"
->     means.  What *does* happen when interval==0 and burst==0?
-> 
-> The pci/aer branch is mutable, so we can just replace the existing
-> patch.
+On Sun, Nov 22, 2026 at 08:26:18AM +0530, Krishna Chaitanya Chundru wrote:
+>
+> The register initialization sequence differs slightly between root
+> complex and endpoint mode. Add a .set_mode() op that records the
+> requested PCIe submode, and an optional per-config tbls_ep delta that is
+> applied as a second qmp_configure() pass over the pll_common/txrxz/pcs
+> blocks when the PHY was put into endpoint mode before power-on.
+>
+> Configs that do not provide tbls_ep are unaffected and continue to
+> program only the root-complex tables.
+>
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/phy/qualcomm/phy-qcom-qmp-pcie-multiphy.c | 26 +++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
+>
+> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie-multiphy.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie-multiphy.c
+> index ccdb7748a9e1..21cf6adf7d60 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie-multiphy.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie-multiphy.c
+> @@ -13,6 +13,7 @@
+>  #include <linux/mfd/syscon.h>
+>  #include <linux/module.h>
+>  #include <linux/of.h>
+> +#include <linux/phy/pcie.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_domain.h>
+> @@ -89,6 +90,7 @@ struct qmp_phy_cfg_tbls {
+>  struct qmp_phy_cfg {
+>         const struct qmp_pcie_offsets *offsets;
+>         const struct qmp_phy_cfg_tbls tbls;
+> +       const struct qmp_phy_cfg_tbls *tbls_ep;
+>         const struct qmp_phy_init_tbl * const *pll_tbls;
+>         const int *pll_nums;
+>         bool port_split;
+> @@ -121,6 +123,7 @@ struct qmp_pcie {
+>         struct reset_control_bulk_data *nocsr_resets;
+>         struct regulator_bulk_data *vregs;
+>         struct device **pd_devs;
+> +       bool is_ep;
+>  };
+>
+>  struct qmp_pcie_multiphy {
+> @@ -930,6 +933,7 @@ static void qmp_pcie_init_port_registers(struct qmp_pcie *qmp)
+>         const struct qmp_phy_cfg *cfg = qmp->cfg;
+>         const struct qmp_pcie_offsets *offs = cfg->offsets;
+>         const struct qmp_phy_cfg_tbls *tbls = &cfg->tbls;
+> +       const struct qmp_phy_cfg_tbls *ep_tbls = qmp->is_ep ? cfg->tbls_ep : NULL;
+>         int i;
+>
+>         for (i = 0; i < cfg->num_regs; i++) {
+> @@ -957,6 +961,15 @@ static void qmp_pcie_init_port_registers(struct qmp_pcie *qmp)
+>                 qmp_configure(qmp->dev, port + offs->pcs_lanez,
+>                               tbls->pcs_lanez, tbls->pcs_lanez_num);
+>
+> +               if (ep_tbls) {
+> +                       qmp_configure(qmp->dev, port + offs->pll,
+> +                                     ep_tbls->pll_common, ep_tbls->pll_common_num);
+> +                       qmp_configure(qmp->dev, port + offs->txrxz,
+> +                                     ep_tbls->txrxz, ep_tbls->txrxz_num);
+> +                       qmp_configure(qmp->dev, port + offs->pcs,
+> +                                     ep_tbls->pcs, ep_tbls->pcs_num);
+> +               }
+> +
+>                 if (cfg->port_split)
+>                         qmp_configure(qmp->dev, port + offs->txrxz,
+>                                       tbls->port_split_post_cfg, tbls->port_split_post_cfg_num);
+> @@ -1179,9 +1192,22 @@ static int qmp_pcie_disable(struct phy *phy)
+>         return qmp_pcie_exit(phy);
+>  }
+>
+> +static int qmp_pcie_set_mode(struct phy *phy, enum phy_mode mode, int submode)
+> +{
+> +       struct qmp_pcie *qmp = phy_get_drvdata(phy);
+> +
+> +       if (mode != PHY_MODE_PCIE)
+> +               return -EINVAL;
+> +
+> +       qmp->is_ep = (submode == PHY_MODE_PCIE_EP);
 
-No, burst==0 is the extreme opposite of disable ratelimiting. It's
-basically a mute button.
+feel direct save cfg->tbls_ep to qmp is simpler
 
-"Interval" takes precedences, so interval==0 means burst is "don't
-care".
+	  qmp->tbls_ep = submode == PHY_MODE_PCIE_EP ? cfg->tbls_ep : NULL;;
 
-The three scenarios:
-No ratelimiting (interval==0, burst==X) => show every message.
-Ratelimiting (interval>0, burst>0) => show messages based on settings.
-"Total" limiting (interval>0, burst==0) => *never* show messages.
+Frank
 
-I guess a user could tune the settings to get to certain level of
-"quiet". But there isn't a way to 100% filter/hide the messages. The
-burst==0 setting gives that option.
-
-What do you think?
-
-Also, updated patch is below.
-
-Thanks,
-Yazen
-
-================================
-
-From 88cfa8ba46d3f212cb94679c3a8211ff15bdf678 Mon Sep 17 00:00:00 2001
-In-Reply-To: <20261121001202.GA917755@bhelgaas>
-References: <20261121001202.GA917755@bhelgaas>
-From: Yazen Ghannam <yazen.ghannam@amd.com>
-Date: Mon, 23 Nov 2026 08:59:07 -0600
-Subject: [PATCH v2 2/4] PCI/AER: Reject negative ratelimit interval and burst
- values
-
-The AER "*_ratelimit_interval_ms" and "*_ratelimit_burst" sysfs
-attributes accept negative values. A negative interval is treated as
-0, which disables ratelimiting. A negative burst is stored as is, and
-___ratelimit() then warns about an uninitialized ratelimit_state.
-
-However, a negative value has no meaningful interpretation for either
-attribute.
-
-Return -EINVAL for negative input.
-
-Also, document 'burst=0' behavior.
-
-Fixes: b4fe7398def6 ("PCI/AER: Add sysfs attributes for log ratelimits")
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://lore.kernel.org/linux-pci/20260714191826.BA81E1F000E9@smtp.kernel.org/
-Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
----
-Replaces "PCI/AER: Clamp negative ratelimit burst to zero" on pci/aer.
-
-v1->v2:
-- Return -EINVAL for negative interval and burst values instead of
-  clamping. (Bjorn)
-- Keep the original interval descriptions.
-- Describe what a burst of 0 does.
-
-The rest of pci/aer applies on top. The only conflict is in "PCI/AER:
-Enable baseline capability error reporting", in the two interval
-descriptions. The resolution keeps Lukas's capitalization without
-"or any negative value":
-
-  Writing 0 disables Correctable Error log ratelimiting.
-  Writing 0 disables Non-Fatal Uncorrectable Error log ratelimiting.
-
-Tested in a QEMU guest with injected correctable and non-fatal errors,
-for every combination of interval {-1, 0, positive} and burst {-1, 0,
-positive}. Negative writes fail with -EINVAL. Every error is counted
-and traced. Interval 0 logs every error, whatever the burst. A positive
-interval with burst 0 logs none.
-
-An LLM coding assistant helped check the ___ratelimit() semantics,
-draft the change, resolve the conflict and write the QEMU test.
-
-v1: https://lore.kernel.org/r/20261110215614.3931232-3-yazen.ghannam@amd.com
-
- .../ABI/testing/sysfs-bus-pci-devices-aer          |  9 +++++++++
- drivers/pci/pcie/aer.c                             | 14 +++++++++-----
- 2 files changed, 18 insertions(+), 5 deletions(-)
-
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-index 5ed284523956..e4c39839cc6a 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-+++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
-@@ -143,6 +143,10 @@ Description:	Ratelimit burst for correctable error logs. Writing a value
- 		before ratelimiting. Reading gets the current ratelimit
- 		burst. Default is DEFAULT_RATELIMIT_BURST (10).
- 
-+		Writing 0 suppresses all correctable error log messages.
-+
-+		Burst value is only used when interval is greater than zero.
-+
- What:		/sys/bus/pci/devices/<dev>/aer/nonfatal_ratelimit_interval_ms
- Date:		May 2025
- KernelVersion:	6.16.0
-@@ -161,3 +165,8 @@ Description:	Ratelimit burst for non-fatal uncorrectable error logs.
- 		allowed per interval before ratelimiting. Reading gets the
- 		current ratelimit burst. Default is DEFAULT_RATELIMIT_BURST
- 		(10).
-+
-+		Writing 0 suppresses all non-fatal uncorrectable error log
-+		messages.
-+
-+		Burst value is only used when interval is greater than zero.
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 6f2460231422..2c42d6e8bd9a 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -690,7 +690,8 @@ const struct attribute_group aer_stats_attr_group = {
- 
- /*
-  * Ratelimit interval
-- * <=0: disabled with ratelimit.interval = 0
-+ * <0: rejected
-+ * 0: disabled with ratelimit.interval = 0
-  * >0: enabled with ratelimit.interval in ms
-  */
- #define aer_ratelimit_interval_attr(name, ratelimit)			\
-@@ -717,10 +718,10 @@ const struct attribute_group aer_stats_attr_group = {
- 		if (kstrtoint(buf, 0, &interval) < 0)			\
- 			return -EINVAL;					\
- 									\
--		if (interval <= 0)					\
--			interval = 0;					\
--		else							\
--			interval = msecs_to_jiffies(interval); 		\
-+		if (interval < 0)					\
-+			return -EINVAL;					\
-+									\
-+		interval = msecs_to_jiffies(interval);			\
- 									\
- 		pdev->aer_info->ratelimit.interval = interval;		\
- 									\
-@@ -752,6 +753,9 @@ const struct attribute_group aer_stats_attr_group = {
- 		if (kstrtoint(buf, 0, &burst) < 0)			\
- 			return -EINVAL;					\
- 									\
-+		if (burst < 0)						\
-+			return -EINVAL;					\
-+									\
- 		pdev->aer_info->ratelimit.burst = burst;		\
- 									\
- 		return count;						\
--- 
-2.55.0
-
+> +
+> +       return 0;
+> +}
+> +
+>  static const struct phy_ops qmp_pcie_phy_ops = {
+>         .power_on       = qmp_pcie_enable,
+>         .power_off      = qmp_pcie_disable,
+> +       .set_mode       = qmp_pcie_set_mode,
+>         .owner          = THIS_MODULE,
+>  };
+>
+>
+> --
+> 2.34.1
+>
