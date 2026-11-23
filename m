@@ -1,69 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795445804;
-	b=uynXIVkH2LrMM99yrd1JBJO4q7IMthuv162HaC1cW+2pX74krIm2MtNDiXkFcsBPf5jG
-	 lYc9BLE9UcP+RugAyAYZ9hnU3TZooQUhNFiPcTuVf6p1NTXCOrKsDencuJfKPqRY4xyuS
-	 wpQHpAiNbkOn8fWjuPvjt66dNCPmBVxgUByWN/PVvo+AktjuHlgdNQSqnGjKKAyt6gXht
-	 WJ3pWqLgzr/bI3/Zn15PP2RSoa+f//p4KGnhaXkAbQn0b+ISbfrrRC80PRhJ46eY0neZD
-	 g4u4K8Kgin1k5G09yllmhrLDocr8W4kcavbeIrzB+F9iS8hKCHkgT0BGrioP4gh3i4g==
+	t=1795446702;
+	b=2Tai4jv/EsZT9QHEPanw+TIYetQAZXpD8qXSOfXPL8exCgS4zyOJ7vKK3W3ukEuLkGAk
+	 wrJWeTZNdFUmj3E89aAHbp94skBX393wyj8exK7meTazZxID1M6a81KPRpM4zqHzaPbWW
+	 xagHxWHWJFG1KhXZcfMuuqQpe+AbIFJAhiRz01Gb1vT5D6Me5M9AOLnFPlE4e5djmZ6PQ
+	 dTj+Bih34sB2O1EgpcbICQzxZBuaW2SMGQhP78mN8E7jbuyCwlxpZEjHlwIKLRDNp+Nyx
+	 k+5msawMJ0/ZKs1RQw8s6xomfyn/d1uoDedRISCToP+JRDBEIq/00j61et2cR7Q4U6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795445804;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:In-Reply-To:References:
-	 Date:Message-ID:User-Agent:MIME-Version:Content-Type;
-	bh=JOZamLNrX3zI1FIx1Zgz/K1EJ0SMnsfMEV0ESniCNAw=;
-	b=JTcgIoVrTvCqme3RZd4Wo8s5t/TLMKNC7fL9WTYbmjfbNcepPbt0hxLdodSzAP3/8vnF
-	 KytdIXTxfPVnJfzdnrIf7MmQf+xbr6ctGnhL6VrCYhkS+0G35ehpHBnt1LA8izkA06L05
-	 P7SNQg9nNEl4jZKrBXLC8udc8PJuucwnsHGyBmlgCKQ8+L6VB+ZwQfSZuTF2lyvdA0pEV
-	 ho5WjKzUA1dZgy4u6LQF/LX82pIISFhqZC8rni0FpYUU+cfZPhdVPtoCDx6zMynkFBNAl
-	 nqCBqhKQRCYFil1Hw+9TnRShGtuNTv5mWheW6vshdzc/+v6TUWeguP5QYehRXC3hbiA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795446702;
+	h=Received:DKIM-Signature:Date:Content-Type:Content-Transfer-Encoding:
+	 MIME-Version:From:Cc:To:In-Reply-To:References:Message-Id:Subject;
+	bh=QCzRfh4M2xi2pXwv4ABbYym7LuD9ue+4jUDWszr2SaE=;
+	b=qo8NPELnp008dC4vigMdMp0CibCkTwD6qe9vYj/THfVUTtO2k8YEVWF2FgTbzTiwXlOC
+	 coL63HU4JcmZnGhcmCQXVBMjGeoyOEoRkibSPIQJ/5f6+Q7rcc5TPbq2vMLowECafBIRf
+	 PpeEc87IpX0GcUbl2T5Utq8LuAop6VZEHT6AjRY38KmfdibbjPqSzXNQ+vLFU3lVAt1/h
+	 dg1BXJ0NW4ZA0C9idsjp2lWVaoIvmH+U6qQJWYp1DlKqLVubp/zACDva8R/sGzZlOUQQO
+	 dk499i4m3G0EIE2KkiFR76n9o7szTTLLPFmYlm+9F5lx6R58EYFbFMF3CDwG1rKc20A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YqWv2qyj;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KJjmS6LV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC17606A338;
-	Mon, 23 Nov 2026 14:56:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8B8F606A31A;
+	Mon, 23 Nov 2026 15:11:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YqWv2qyj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD6091F000EF;
-	Mon, 23 Nov 2026 14:56:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KJjmS6LV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 754A31F0156B;
+	Mon, 23 Nov 2026 15:11:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795445804;
-	bh=JOZamLNrX3zI1FIx1Zgz/K1EJ0SMnsfMEV0ESniCNAw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=YqWv2qyjcmNEHZr5ibzz7SsD3Sv0fNqsfzxZTHwNk4UHOxkfmYvkT6oOT0BiMl7wm
-	 /QbzGWI73gNRm2cAqHQpSotGxxCtw2NN85IosI9IXgAw7CnM4SiMCTJxlOfOHqBd0P
-	 FEVIPm6SNuG4PHCNJdCGS4Lo+fIqw6FXLYityRX4nJq+Edu0X2+p0co49qeNLhMcX4
-	 4OSNEgIfA8AqfmtMS3MDIjbFejZ5juflZnGcXMH2BSqpTZgLqpO3I3jOvmof6eNqwo
-	 ntivX1iXJkxlIdDiq+2av3GWxI+Ez9VQvgXdD7vO5JJlmMftHUsStroK2tk4HW/kkV
-	 mIcWQfwg6fLNg==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: Tarun Sahu <tarunsahu@google.com>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>,  Mike Rapoport
- <rppt@kernel.org>,  robin.murphy@arm.com,  maz@kernel.org,
-  will@kernel.org,  David Matlack <dmatlack@google.com>,  Alexander Graf
- <graf@amazon.com>,  seanjc@google.com,  jgg@nvidia.com,
-  loganodell@google.com,  arnd@arndb.de,  dwmw2@infradead.org,
-  baolu.lu@linux.intel.com,  Bjorn Helgaas <bhelgaas@google.com>,
-  oupton@kernel.org,  alex@shazbot.org,  gle.com@google.com,
-  pbonzini@redhat.com,  Andrew Morton <akpm@linux-foundation.org>,
-  kevin.tian@intel.com,  joro@8bytes.org,  kvmarm@lists.linux.dev,
-  linux-pci@vger.kernel.org,  Pratyush Yadav <pratyush@kernel.org>,
-  kexec@lists.infradead.org,  kvm@vger.kernel.org,  iommu@lists.linux.dev,
-  linux-arm-kernel@lists.infradead.org,  skhawaja@google.com,
-  sagis@google.com,  linux-arch@vger.kernel.org,  linux-mm@kvack.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
- compatibility
-In-Reply-To: <20261110050202.529473-6-tarunsahu@google.com> (Tarun Sahu's
-	message of "Tue, 10 Nov 2026 05:01:48 +0000")
-References: <20261110050202.529473-1-tarunsahu@google.com>
-	<20261110050202.529473-6-tarunsahu@google.com>
-Date: Mon, 23 Nov 2026 14:56:36 +0000
-Message-ID: <2vxzse0rzjdn.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	s=k20260515; t=1795446701;
+	bh=QCzRfh4M2xi2pXwv4ABbYym7LuD9ue+4jUDWszr2SaE=;
+	h=Date:From:Cc:To:In-Reply-To:References:Subject;
+	b=KJjmS6LVz7sMP6X9D8FAmNG6oJ1mhVTWDzknPUP72QyBgmIEc0EcJDFblFYjrR3wf
+	 NE3BDqpT7hog6Vz8q9/xjrofdnAsDl1xpM86/ML9wsRPlTYTUsngTfj0uiYbHdoGRR
+	 ON9zOr7chqR3l32Lr06L4iX5DZEyoM+abt/nshg5wfp73xC7oelNmiO2n+ir1i1M0M
+	 4vZN5Zgkdr9PedqJIHzuOsfjt6ehR/3od1ktVFPPBsHuw+L0JByopp9cqrPXLo1aKU
+	 eFd9T+szQ85SDxoweyH+L5U+Slu7Sb1xo/c38Gqm2mJ4TU8k3V8yl8vrGEVoT93IK1
+	 Rpo6H2Fcs572g==
+Date: Mon, 23 Nov 2026 09:11:39 -0600
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -73,121 +51,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, Abel Vesa <abelvesa@kernel.org>, 
+ linux-pci@vger.kernel.org, Bartosz Golaszewski <brgl@kernel.org>, 
+ linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, 
+ devicetree@vger.kernel.org, Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, alchark@flipper.net, 
+ Conor Dooley <conor+dt@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <20261122-pcie6_fix-v2-1-2e0fe615d90b@oss.qualcomm.com>
+References: <20261122-pcie6_fix-v2-0-2e0fe615d90b@oss.qualcomm.com>
+ <20261122-pcie6_fix-v2-1-2e0fe615d90b@oss.qualcomm.com>
+Message-Id: <179544616248.2477523.14949102413448950913.robh@kernel.org>
+Subject: Re: [PATCH v2 1/4] dt-bindings: connector: Add PCIe M.2 Mechanical
+ Key B connector
 
-On Tue, Nov 10 2026, Tarun Sahu wrote:
 
-> Serialized structures in KHO and Live Update Orchestrator currently rely
-> on whole-structure compatibility strings or monolithic version fields to
-> validate handed-over state across kexec. Any change to a serialized
-> structure, even an optional additive field, requires bumping the
-> compatibility string or version number and breaks live update between
-> adjacent kernels.
->
-> Introduce a generic feature header (struct kho_ser_hdr) for serialized
-> binary structures in include/linux/kho/abi/feature.h. Each subsystem
-> groups the fields of its serialized structure under feature indices,
-> starting with index 0 for base fields. When a subsystem adds a new
-> capability, it appends new fields to the end of its payload structure
-> under a new feature index. Retired fields are kept in place so existing
-> field offsets never shift; if the type or format of a field needs to
-> change, the existing field and feature are kept intact until retired and
-> a new feature index with an appended field of the new type is added.
-> Only when a change requires a complete break in the serialized layout or
-> semantics that feature flags cannot handle, a new handler or format can
-> be introduced with an incremented version number.
->
-> Each feature belongs to either a required feature space or an optional
-> feature space. Both spaces are numbered independently starting from 0.
-> In the serialized header, required features occupy the first nr_required
-> bits, followed immediately by nr_optional bits for optional features:
->
->   struct kho_ser_hdr {
->           __u32 size;
->           __u16 nr_required;
->           __u16 nr_optional;
->           __aligned_u64 flags[];
->   };
->
-> A set bit indicates that the feature is present in the payload. The
-> truth table for deserialization:
->
->   Source bit       Target            Action
->   Not set          -                 Accept: feature absent
->   Optional set     unknown or known  Accept: ignore or use the data
->   Required set     known             Accept: use the feature data
->   Required set     unknown           Reject: -EOPNOTSUPP
->
-> During deserialization, the target kernel only validates required
-> features: if the source set any required feature bit at or beyond the
-> known required feature count of the target kernel, validation fails with
-> -EOPNOTSUPP. Optional features are never rejected; the target kernel
-> simply checks whether known optional features are present before reading
-> their data.
+On Sun, 22 Nov 2026 12:15:51 +0530, Krishna Chaitanya Chundru wrote:
+> Add the devicetree binding for PCIe M.2 Mechanical Key B connector
+> defined in the PCI Express M.2 Specification, r4.2, sec 3.2.19.1. This
+> connector is used to attach WWAN Adapters to the host machine over
+> interfaces such as PCIe, USB3.1 Gen1, SSIC, or USB 2.0. The slot also
+> accepts SATA and PCIe SSD Adapters, which use the same pins.
+> 
+> Interfaces that share connector pins are described as one graph port
+> per pin group, with the endpoint number selecting between the mutually
+> exclusive interfaces.
+> 
+> The connector provides a primary power supply of 3.3V/VBAT, along with
+> optional GPIO signals: FULL_CARD_POWER_OFF#, RESET#, W_DISABLE1# and DPR
+> for WWAN Adapters, and DEVSLP, PLN# and SMBus ALERT# for SSD Adapters,
+> plus an I2C parent for the SSD SMBus.
+> 
+> The function of the GPIO_0..GPIO_11 pins depends on the Port
+> Configuration, so they are described by gpioN-gpios properties with the
+> function of each pin per configuration documented in the binding. The
+> Adapter configuration is either sensed through config-gpios
+> (CONFIG_0..3) or fixed with config-state, which defaults to WWAN PCIe.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  .../bindings/connector/pcie-m2-b-connector.yaml    | 332 +++++++++++++++++++++
+>  MAINTAINERS                                        |   1 +
+>  2 files changed, 333 insertions(+)
+> 
 
-I've been thinking more about this recently, and I don't think we need
-to differentiate between optional and required flags. I think all we
-need is "feature flags".
+My bot found errors running 'make dt_binding_check' on your patch:
 
-Let me explain this by taking my KHO map patches [0] as the example, since
-they got me thinking about this in the first place.
+yamllint warnings/errors:
 
-I sent out RFC v1 with no multi-entry support and static depth. During
-the review, we figured out that we should support multi-index entries
-and dynamic depth. Both of them need breaking ABI changes. If you use
-these features, a kernel that doesn't understand them will break.
+dtschema/dtc warnings/errors:
+Documentation/devicetree/bindings/connector/pcie-m2-b-connector.example.dtb: connector (pcie-m2-b-connector): config-gpios: [[4294967295,124,0],[4294967295,125,0,0],[4294967295,127,0]] has less than 4 items
+	from schema $id: http://devicetree.org/schemas/connector/pcie-m2-b-connector.yaml
 
-Now let's say for argument's sake that we merged my RFC v1 as-is, and
-later down the line realized that we needed multi-index and dynamic
-depth. They are backwards incompatible ABI changes, and so need required
-flags called say KHO_MAP_F_MULTI_INDEX and KHO_MAP_F_DYN_DEPTH.
+doc reference errors (make refcheckdocs):
 
-If memfd_luo does not know what features the incoming kernel supports,
-it can't really ever use these flags. Because it can not guarantee at
-all that the live update would succeed. So without information of what
-the incoming kernel supports, you can only ever add optional flags.
+See https://patchwork.kernel.org/project/devicetree/patch/20261122-pcie6_fix-v2-1-2e0fe615d90b@oss.qualcomm.com
 
-From the conversations we've had at LPC and in the bi-weeklies (and also
-[1]), we want to supply a specification for all the features the
-incoming kernel understands via a uAPI.
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
 
-Once memfd_luo knows whether the incoming kernel supports
-KHO_MAP_F_MULTI_INDEX or KHO_MAP_F_DYN_DEPTH, it can choose to use them,
-or go with the less efficient single-slot entries. It makes that
-decision when writing out the serialization structures at runtime based
-on the spec provided. Backwards compatibility is kept by looking at what
-the incoming kernel supports, and only using what it can understand.
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
 
-When we have all this available, I don't see the point in
-differentiating between optional and required features at the ABI level.
-At the ABI level, all that matters is what the incoming kernel
-understands. If the incoming kernel does not understand a specific
-field, the outgoing kernel should just not use it. There's no point.
-Best case, it gets ignored.
+pip3 install dtschema --upgrade
 
-The semantics of required or optional then become "can I describe this
-object with the capabilities I can use?". If the answer is yes,
-serialization succeeds, if the answer is no, serialization fails. So
-with this, KHO_MAP_F_MULTI_INDEX or KHO_MAP_F_DYN_DEPTH are indeed
-optional. All memfds can be described without these, they just will be
-less efficient.
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
-The only thing that the optional flag buys us is to add backwards ABI
-compatible changes _until_ we add the ability to export the
-specification of the incoming kernel. Since that should be coming in the
-near future, I don't think the churn of optional flags is worth it.
-
-So in short, here's my proposal: we only do "feature flags". The
-serializer should know what the incoming side understands, and it should
-only use the features that are understood. It should simply not use
-anything else. If it can't describe an object with the flags available
-to use, serialization fails.
-
-[0] https://lore.kernel.org/kexec/20261116134013.1636689-1-pratyush@kernel.org/
-[1] https://lore.kernel.org/kexec/CA+CK2bCnS8wcVDbOymBGeJB6pDUkknOpF22EynbwSV=D5=J4ow@mail.gmail.com/
-
-[...]
-
--- 
-Regards,
-Pratyush Yadav
