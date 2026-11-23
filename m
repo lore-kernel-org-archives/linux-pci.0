@@ -1,72 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795450876;
-	b=b3clZJ6Eq1msB7AFl3lXeiTsTPobYG+MGguVYhEzfJYIKFIqHAAhaIgwyMy7/GoEroxR
-	 RbO4fu8JAYZVDF8s5jjENhz71hPWI/J4bwZUJyo/IvZZj51Hs+IHYUI0Mhpl315172JPw
-	 30/MyCX1QCdEbG34NVLymh77MoRT4Wzu8ubfe5kMVBLKn011ECkCxU8cXV1ereknl2VQV
-	 9Wyz2zExobHP7j5Isa6P8fXCPiqUO8P9MtwBd3cyja8yz0RONZkE7nLfI33cJuAnVECeh
-	 kXD4npFyirl0ZNgcKYzhH6awXVb+3W8wHn57ZPDWXbITQyJkDA8aMgX2UBfJL3dYoKA==
+	t=1795451212;
+	b=VEcrRLGB8SzfFSofhtPWUmpUz/2BreK6IIXzhDJDMiYdbhKjkx7Aa35arEXut/HAod7P
+	 2Rig15N7TX69vdusOzJ4Jc4QzAU8xkCBCOPzuh/6zI7vHPL0v3OyYAmqTtaNZvdMRi+17
+	 GGFo6xboW6CXRIyHaglQKeLMza2j5msEg8WmZWt+tOsfVAaS57BUF7MZPdAXN2LBsuD63
+	 gw9DlLNvOzWpIEmiZnjGxsVTlQOvt9ejaztqBTF0+q2y0uijm4eQtCv92fLFKjAe83e/O
+	 PNgFk6t3ayoxKpLM9zUkRsyOZqZcMyj9RiepIRcyj3XObrGhoNfdZsdGIWkjMtXfy3g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795450876;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=INOa4kV3oG92y+8V9TagV8Pu1IayJqy+GVQ0Gn3qaGU=;
-	b=IyWuWCZd4KH6cbEjBvfMZUAxqI5vo6cYuyBKtoQEeI/GYrcUZL0SjGxoTXGVkvzAi70j
-	 DcJMW/B8feZCKO0/iIC8Wx0oX/rgYFSu2LtDTVb62BV7zx65ZMLI/LEEKX7WsqifZw1bu
-	 C5qiKWvUdgR9dzsojxMlYsEBAe8SzRPXS0mwDPsx73WQrrwLGNfFtH0ErWsKNolvLmsh2
-	 5tlDbOQUjyYWOW1etoKtwG/WHGctLf2DSva/3P1Aj76hmxnhSKYT0T6NbeXXq7yqKVYED
-	 mTH9xWSt9qeYMb7sGZBGO4Y3k7yRIU7ngsEez2v5YLbjmITFyoSlI0FRlTRMESjt5qg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795451212;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=lWSldW+3Jdfj+lh9y98r4LOXzqN/C+SFqhMgD6E25Sg=;
+	b=tmJbmUt5rDXBSfqk1gf18kTusNYI3/5jBOaMrJA1S4GLfzkIfgKzsxgdTnD+VYY+DQ5j
+	 o23Bx0OwmjTT9TgIrznXzvcvRZSuYnKTPhGY5kyfoRijpaCRaKXGX9z04iPik56DLakH1
+	 OVyDud2FPfIEnBBmr8aX8nJhLYZ+MDaVZTn6W3bMDMVLr7+eAiBvvtVn9SYxScMbaWBMy
+	 S1KtH4N2OH84TOOdnRKKZ5zENqa+Y0TDN3IgpzFrYCqBsUTM03rSO6TxhDX6gMnuVuUig
+	 rCs4pWiiyZYcuu1i70DniZYB+Tg+v4m1ibddpg/Mnw8TnSoUXGsYxURCsJxpzjRTWvQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HBJ9VHSW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NAbc0JTe;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E9C6606A334;
-	Mon, 23 Nov 2026 16:21:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B73C606A31A
+	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 16:26:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HBJ9VHSW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C8CB1F000CA;
-	Mon, 23 Nov 2026 16:21:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NAbc0JTe
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 918821F000C6;
+	Mon, 23 Nov 2026 16:26:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795450875;
-	bh=INOa4kV3oG92y+8V9TagV8Pu1IayJqy+GVQ0Gn3qaGU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=HBJ9VHSWa5FJ88g6/jfPijZU6l1xJoOy4ReuonJZNMf10mQKZaZAyxKhmD0Z5KzVD
-	 OlaE6/ZqU5PUJBYufl1CrrFrxmoLVvF2tKxkE6KjNtCzsawwejBQSKui20ma2cbQfx
-	 /Rr5ZOIfCpjGmDTJIC8ymePf2JPORNDV3ptobGw4mAKVwU/0zgfEPVhdap6GQbzCQe
-	 EycC30XaetDia+bbLaXR/VBmxRh4RV1sDIPTXsgDzy9eczijCH9pOT0u6X2ZuuR/uP
-	 /CCuHiU3uOVN5Z8xKCz1MsiPK7oINS5hEOjMD3IyA+rijpWRRLZaMOUYF+bTa6F63Z
-	 8HdBH64Mg7Naw==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Nicolin Chen <nicolinc@nvidia.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
-In-Reply-To: <20261123152533.GE179082@ziepe.ca>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <2026112325-emit-squeezing-5d96@gregkh> <20261123090623.GK14811@unreal>
- <yq5a7bi3riha.fsf@kernel.org> <20261123115803.GN14811@unreal>
- <yq5awlq3pto0.fsf@kernel.org> <20261123135638.GO14811@unreal>
- <20261123152533.GE179082@ziepe.ca>
-Date: Mon, 23 Nov 2026 21:51:04 +0530
-Message-ID: <yq5aik1n4iz3.fsf@kernel.org>
+	s=k20260515; t=1795451211;
+	bh=lWSldW+3Jdfj+lh9y98r4LOXzqN/C+SFqhMgD6E25Sg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=NAbc0JTebh4CdDOyRyeDt7e4TOvaUAnEhzCzUdmPucNLMwxiZyYYcRzcaWG2sc7St
+	 nz7k7m+PzAPpC6JLrWMd26j9sE5U4dnvzEaTvnd/IZsQgQPslLqwWXlC3vO7p2TXcJ
+	 At2dqJHa5Qlk4NlSYa1n//e1ElfZm7wmYQl5/uVfXnTnt7mpB3FhkTdUJ3Tx3D0oC8
+	 BtOn5J8lq/iHCQ+LLKxwSUqcAsR//EoOW6sRFC7SDSkU/LYO/Fs6OanZYot694+C4C
+	 rObwXcVNwG9h6W1Qq9G+Om2juChcsl/Z5p+ZgYk5c4W1E9/u03GLznHE7OXk2QReHB
+	 DOH7xeWIdMInw==
+Message-ID: <sashiko-outbox-229656@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: Skip the CXL state update for a VF
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Joshua Machauer" <machaujo@amazon.de>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261123162035.79133-1-machaujo@amazon.de>
+References: <20261123162035.79133-1-machaujo@amazon.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 23 Nov 2026 16:26:51 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,115 +58,28 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Jason Gunthorpe <jgg@ziepe.ca> writes:
+> set_pcie_cxl() runs for every added device. It first refreshes the CXL
+> state of the upstream bridge, which walks that bridge's extended
+> capabilities and recurses up to the Root Port, and then searches the
+> device's own extended capabilities for the Flex Bus Port DVSEC.
+>=20
+> For a VF neither step changes anything. A CXL device exposes its Flex
+> Bus Port DVSEC through Function 0 (CXL r4.0, sec 8.1.8), so the search
+> in a VF finds nothing and the VF's is_cxl stays false. The bridges
+> above a VF are the ones above its PF, which were already refreshed when
+> the PF was added. Because enabling SR-IOV adds the VFs one after
+> another, each add repeats both walks without effect.
+>=20
+> Return early for a VF. Every device keeps the is_cxl value it has
+> today, and the bridges above the PF are no longer refreshed during a
+> VF add.
+>=20
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> Signed-off-by: Joshua Machauer <machaujo@amazon.de>
 
-> On Mon, Nov 23, 2026 at 03:56:38PM +0200, Leon Romanovsky wrote:
->> > >> >> But it should not, as you are making driver core changes that will
->> > >> >> mirror the same thing that that patchset is attempting to do.  Please
->> > >> >> work together on this.
->> > >> >
->> > >> > +10000000,
->> > >> >
->> > >> > Greg,
->> > >> >
->> > >> > This series came as a surprise to me given the fact that device trust
->> > >> > series is exactly for that - allow confidential computing.
->
-> Device trust's primary role in enabling confidential computing is to
-> give space for the userspace to do all the TSM and attestation stuff
-> to get the device into T=1 private DMA mode.
->
-> It is the userspace that does all this and the userspace bridges from
-> "I got the device into T=1 mode" to "Now it meets my userspace policy
-> to be trust level Full" and then finally "Now I can bind and start a
-> driver"
->
-> The two concepts work together, but they are not linked inside the
-> kernel.
->
->> > >> > Adversarial is equal to the "cc_accepted".
->
-> I expect most policies would make "cc_accepted" as a full trust level,
-> but we do want to allow adversarial as an option too.
->
->> > >> I think the confusion stems from this thread:
->> > >> 
->> > >> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
->> > >> 
->> > >> Based on that discussion, I understood TRUST and eligibility for private
->> > >> DMA to be complementary attributes. Device acceptance determines whether
->> > >> a device may access private memory, while trust determines whether the
->> > >> core must enforce additional restrictions. 
->
-> Yes.
->
->> > > Device trust does little beyond preventing driver binding and recording the
->> > > trust decision in "struct device". The missing piece, which I would expect
->> > > you to address, is ensuring that the IOMMU and private DMA are configured
->> > > only after the trust level has been decided or as part of that decision,
->> > > rather than beforehand, as they are today.
->
-> They are orthogonal and unrelated.
->
-> All the TDISP and T=1 DMA flow is about how the DMA API works and has
-> no direct impact on trust level. You can choose any trust level for a
-> device using T=1 DMA.
->
-> Getting the device into T=1 should influence how the userspace decides
-> to set the trust level, but it doesn't interact inside the kernel.
->
-> Aneesh has it right that these are orthogonal and unrelated
-> activities. There may be some confusion as Dan attempted to couple
-> them, but after discussion we have moved away from that since it
-> doesn't meet all the use cases.
->
->> > What I am still trying to understand is how you view the DMA allocation
->> > and mapping paths determining whether a device can access private
->> > memory. Paths such as force_dma_unencrypted() and SWIOTLB receive a
->> > struct device pointer and need to decide whether to use private memory
->> > or shared buffers.
->
-> It is Nicolin's work here that needs to go before the TSM drivers:
->
-> https://lore.kernel.org/all/cover.1794343501.git.nicolinc@nvidia.com/
->
+Sashiko has reviewed this patch and found no issues.
 
-
-This adds
-
-index 429e39f647cf9..01d7877d0b571 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -604,6 +604,8 @@ struct device_physical_location {
-  *		ancestor device.
-  * @DEV_FLAG_OFFLINE_DISABLED: If set, the device is permanently online.
-  * @DEV_FLAG_OFFLINE: Set after successful invocation of bus type's .offline().
-+ * @DEV_FLAG_DMA_CC_PRIVATE: The device is able to access private (encrypted)
-+ *		memory, no shared memory bouncing is required from the DMA API.
-  * @DEV_FLAG_COUNT: Number of defined struct_device_flags.
-  */
- enum struct_device_flags {
-@@ -617,6 +619,7 @@ enum struct_device_flags {
- 	DEV_FLAG_OF_NODE_REUSED = 7,
- 	DEV_FLAG_OFFLINE_DISABLED = 8,
- 	DEV_FLAG_OFFLINE = 9,
-+	DEV_FLAG_DMA_CC_PRIVATE = 10,
- 
- 	DEV_FLAG_COUNT
- };
-
-...
-
-+void dma_set_cc_private(struct device *dev, bool private)
-+{
-+	dev_assign_dma_cc_private(dev, private);
-+}
-
-This could easily replace device_cc_accept()/device_cc_accepted() used
-in this series. I can switch to it if that's the direction we want to
-take.
-
--aneesh
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261123162035.7913=
+3-1-machaujo@amazon.de?part=3D1
