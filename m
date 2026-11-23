@@ -1,55 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795462552;
-	b=nyCotNUG4i9L/ou9oFGeUi/6SlgSX62+W03SYrFFjm4zW93Zi6eYPsiqLLG2QqnQv2Hw
-	 PflYfppqsqbA639nufGHmzcqEJTZa1FqSnAp9tARvQzdFffF99pJX5PC7IqaiM0UkxMXC
-	 8GJpPLpu3RT4K3zCGay6qkDSq2HeXpCYz4nlpJmXurNAqqQjqLvHTyZ++KhI4v8DvpW8L
-	 d+pZJF1DsxkrDkI7u+C1TmSfMuRWsX+pjy2v5OEDddRYPNjO536j7pZEDkmn+QW5Jcxcy
-	 cZ+lHnbVOO5nXt/4ofK1pvm6uDjvl3Ma5vq+ue2tvne84EHo8slNVKX/yu9oMihrwVg==
+	t=1795462809;
+	b=psbMnx21AXxgEf9ZE31qDdLV9shtCuqtI31yHKCuTrldTHOABQvYfTTS3pw7XplYRoVV
+	 Q9qpf/OMN8UuqNBnAzZVaYEKXZ1TXgJKr4X/gZ0yv1DZekMtiU8X+BsgrUoLeENQJlJ1w
+	 qjC1Wvj2RfOnf8SBgbvnz3FMp68SMwKrelVDtYHKttEf9qX7RnvXHF8gQNflKxWgxNzmP
+	 n7c5FIrbSP/91kNMmRydRtoR368nFaUv62VyTGHcJ0ilPTU8NeQYcwP/FbF5+Sl0KtCNG
+	 dAwVTungyo4ctNatISdSXkKN5R1M/H7afVBO1GsOxHHkNP0B4cvBDoDRzZzjQMWpf9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795462552;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=aL+kO8PGkbOt6t9BTRNJvSNTeTll1NlfbQp+E6c90qI=;
-	b=AImPUL0hx76V+3eH9maScSS2+jmmESmOuCOlaMRLmCesOmDUy5Lp6Fn/c3uLCCcfvzOK
-	 a83bsqoA67QXlW31jynp4YqNaeHN+i9yR0SDIeWtfyEQ4vSv2nee27Bv5gV7CZs1RmvUb
-	 1GSVdiWN/RsrGiwI8nGyB6BwaGwGCSRsjZgb0xEtb+9MosMroOLZuJHm5fcdoKUni4J5Y
-	 rJC3Ipj7jLiU9EAYDJQSh2c0awtrfl2pdn4p0q+HDCv7H0BOxYUZGyYW2A5391X3vpwfK
-	 j8THmEYIkbjtNkrmJlK+vQq0b7jJBOVbBes3SoyYlkgDBRnRHSjC9emHmNClglNsEuA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795462809;
+	h=Received:DKIM-Signature:Received:Content-Type:MIME-Version:
+	 Content-Transfer-Encoding:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc;
+	bh=GENkBhjt9jCQL9ztMCG1lg3AsyAfCt88HgVI5C9B0qU=;
+	b=j7DrObTorOtLvpJ3pBNbz1K6gkDgwtI8n93WAeH10QYzxc98lBLMPI2VP+GropmAgkZM
+	 wpWrS3nkDIMbzHEge04MEVey8qxodK/HYXQ1oaXOZazhFaWBvfOsfrOGyCgx/mJq2erLN
+	 Cg7eUdTCqwr16qfTblIZrTYWVd5hhDnXGnmeWp9+HqpnF6ZH76w6GpwNU038ntqXnSBRa
+	 jXzSSrX/mGjrIYalue1mh/VKzWhNTv0/ECP99tuhuGVh8q6pmyBW/TMfNr43XkWTIeyLV
+	 iVXHxPEsMuixI4POX0ljoFLYl6CKdMI6V2a9UDgxLw5iFcmN4J0HbuKTZA6UChFRfeQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="U/PExJUl";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H0cBGp6Z;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A22606A682
-	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 19:35:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8785C606A31A;
+	Mon, 23 Nov 2026 19:40:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U/PExJUl
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C6F01F000EB;
-	Mon, 23 Nov 2026 19:35:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H0cBGp6Z
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD7A71F000CF;
+	Mon, 23 Nov 2026 19:40:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795462552;
-	bh=aL+kO8PGkbOt6t9BTRNJvSNTeTll1NlfbQp+E6c90qI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=U/PExJUlth82QeIazdXQYVk+uo15Bq43aOsL52qFIk4sPg10j9aA/ct3ppA69mN4A
-	 R680DJ8oqAuDg9GjMw2ahfvjpdPrJ1+1d27/lZtd4G+VudHNUtRLiiBY9r4TceJvUY
-	 j83iXvrc03M+jd3JZquqSkwe1fRaTl++rF1Vo1htVz61dz5N9EIHoMXtaMn1FcNq0c
-	 8FErcZhe0jLiDNTpWLp99izJMSgzbhjnlsqkf4rDAt7xDotZmY/VCeSXR/Vz5JbM4/
-	 aLsIU1gZMinmkA8nPIcRi/9lSmiRF11VYBS/HvGC9ufAF5eEbVvpeDyVFx5KCFAd3c
-	 Wel9DxgTKW4lg==
-Message-ID: <sashiko-outbox-229946@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: dwc: Split iATU windows at region limit boundaries
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Han Gao" <gaohan@iscas.ac.cn>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261124-dwc-iatu-boundary-v1-1-03c8e58514e1@iscas.ac.cn>
-References: <20261124-dwc-iatu-boundary-v1-1-03c8e58514e1@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 23 Nov 2026 19:35:52 +0000
+	s=k20260515; t=1795462808;
+	bh=GENkBhjt9jCQL9ztMCG1lg3AsyAfCt88HgVI5C9B0qU=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc;
+	b=H0cBGp6ZHsm7VRxM/OEEGivd1KW31o2+Vg/7savaCiwopM0qP+GuWSzMMifgK5Cid
+	 y5nrkGqUxQ+KVkzgVcHa+8S9crSPrDrhH0/TPYBkepn/AKJ94abJAETKoB5n7jm8mk
+	 Cma42wRrtnBqPkUL9jKKx5hI4yTHiauLBerwgZL44EzKy4adx1ysdnMmMQg0F23Vvc
+	 xvfffr8j4ix3JkQeQwsWGN+lXCtTYEr8wMDkveQrvk6lCPEOae/Hkxc5imRArXqaud
+	 IxuaXXcZYOWVfy1ZkMSxUDu9HXdERUTDVr8sTE2cAgl29EO8a0uRTva9pQ3kaV5PMq
+	 ZuCQnH6NN3RlA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B4447392EE3B;
+	Mon, 23 Nov 2026 19:40:08 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,23 +52,65 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v9 0/8] arm64: dts: monaco-arduino-monza: Add support for
+ LGA WiFi/BT module
+From: patchwork-bot+bluetooth@kernel.org
+Message-Id: 
+ <179546280752.3078240.14805483957076909592.git-patchwork-notify@kernel.org>
+Date: Mon, 23 Nov 2026 19:40:07 +0000
+References: <20261123-monza-wireless-v9-0-450d7d764aea@oss.qualcomm.com>
+In-Reply-To: <20261123-monza-wireless-v9-0-450d7d764aea@oss.qualcomm.com>
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: mani@kernel.org, brgl@kernel.org, marcel@holtmann.org,
+ luiz.dentz@gmail.com, andersson@kernel.org, konradybcio@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, devicetree@vger.kernel.org,
+ manivannan.sadhasivam@oss.qualcomm.com, bartosz.golaszewski@oss.qualcomm.com,
+ dmitry.baryshkov@oss.qualcomm.com, wei.deng@oss.qualcomm.com,
+ jesse.casco@gmail.com, krzysztof.kozlowski@oss.qualcomm.com,
+ konrad.dybcio@oss.qualcomm.com
 
-> From: Han Gao <gaohan@iscas.ac.cn>
->=20
-> dw_pcie_iatu_setup() splits a large window into region_limit + 1 sized
-> chunks starting at the window base. If the window doesn't start on a
-> region_limit boundary, the first chunk crosses one, the iATU programming
-> helpers reject it and the host fails to probe.
->=20
-> Stop each chunk at the next boundary instead. Inbound windows have the
-> same problem.
->=20
-> Fixes: e9a5415adb20 ("PCI: dwc: Use multiple iATU windows for mapping lar=
-ge bridge windows and DMA ranges")
-> Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+Hello:
 
-Sashiko has reviewed this patch and found no issues.
+This series was applied to bluetooth/bluetooth-next.git (master)
+by Luiz Augusto von Dentz <luiz.von.dentz@intel.com>:
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124-dwc-iatu-b=
-oundary-v1-1-03c8e58514e1@iscas.ac.cn?part=3D1
+On Mon, 23 Nov 2026 14:56:07 +0100 you wrote:
+> This series describes support for the onboard WiFi/Bluetooth module
+> present on the Arduino VENTUNO Q (monaco) platform.
+> 
+> The board provides LGA pads for a wireless module. On the VENTUNO Q
+> these pads are populated with an NFA725B module featuring the
+> QCA2066 WiFi/BT combo chip. While implemented as an LGA footprint,
+> the design is functionally compatible with the M.2 Key E.
+> 
+> [...]
+
+Here is the summary with links:
+  - [v9,1/8] Bluetooth: hci_qca: Add M.2 Bluetooth device support using pwrseq
+    https://git.kernel.org/bluetooth/bluetooth-next/c/7fea07497112
+  - [v9,2/8] Bluetooth: hci_qca: Rename 'power_ctrl_enabled' to 'bt_en_available'
+    https://git.kernel.org/bluetooth/bluetooth-next/c/139c8e574116
+  - [v9,3/8] Bluetooth: hci_qca: Set 'bt_en_available' from pwrseq controllability
+    https://git.kernel.org/bluetooth/bluetooth-next/c/a9783ebd40da
+  - [v9,4/8] Bluetooth: hci_qca: Embed bt_power in struct qca_serdev
+    https://git.kernel.org/bluetooth/bluetooth-next/c/a482935cee71
+  - [v9,5/8] Bluetooth: hci_qca: Support QCA2066 on M.2 connector via pwrseq
+    https://git.kernel.org/bluetooth/bluetooth-next/c/f6fdb04bfc1e
+  - [v9,6/8] Bluetooth: hci_qca: Flatten struct qca_power into struct qca_serdev
+    https://git.kernel.org/bluetooth/bluetooth-next/c/ca2e671a82f0
+  - [v9,7/8] dt-bindings: connector: pcie-m2-e: Add vendor LGA connector compatible
+    https://git.kernel.org/bluetooth/bluetooth-next/c/d10bd5678905
+  - [v9,8/8] arm64: dts: qcom: monaco-arduino-monza: Add QCA2066 M.2 WiFi/BT support
+    https://git.kernel.org/bluetooth/bluetooth-next/c/ac2cf809626d
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
