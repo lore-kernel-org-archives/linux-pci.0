@@ -1,112 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.236.52.251
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795448110;
-	b=o+vFrIYEgsxq3NDD14VBsxJyLfyk5nFKcE2kjrJPmlnfLuLVPfrt/sVLFlkjqsV7btqJ
-	 /R78dmggcSev6Or8ie8QNXPrSp0/oZIynQWqdzGJ/zHxbDQuSougr1A54BM6mWVHuF9Vz
-	 UQNaKeFSLdfiW4mYjbCdmxtI4MpQok1lW0t1KlF8kyKhFkkGXwPucnT4p/o6mCcKVWvX6
-	 1TbF3fuZme7D1VklG4PyW56UlQnL8paqC8EWqWV+0kpCOdjmacpCvFl6PFgiFUTFGwsH9
-	 wetA+tSMzFEh3Z77pekyjr2a2XO7XLP8Hb9BwslPOsDcCYSSmVc0fNdKODHeNbQn7hw==
+	t=1795448546;
+	b=MqfyZY9P/jtWwV/ookd0Lt2XTxDXH8VREMc9TFvG6lw00yJkyUN2sdnzmXW9nYaHdLUP
+	 /mXQL4a2cD713zV1olEHhbVkZgaCSXvZU2/3xsojv57s59nvnJ5VHc3uxd7MhXkeThz9a
+	 1lVQH/IQSrRKH8tTt0DMo3sfPETh5qjD4YyGVoWQ9glGdDA9M+adQrLtEFSpiViRg8SZL
+	 1BBPcarMCAfrN9SyP4qHeTzkCJKxYh+5ytYItkkxSNCDyl1KVDpbRWV/MHlAXF9+jTy9N
+	 F8qCNkiMSt9RZPVI7UESj8rbvJReDJRBUXUMfnTxT15F+/4Wbfl8rRvvdytvaNEM90w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795448110;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=jVozDBZgp+27gMR99l+UaMITrh6vU8pxKuFZh102SrU=;
-	b=E/5KcUrLAYeiwhD3XxzjuyWrGTY7BOsd05fw+sqEaFAupEjX5x6m8frNz+otbGd6cTVq
-	 Wyh0r0ONYK/auJkc+aiSYtyQlD8IYSET/lKjiRhuXE8cpjxcw7Xzo/3GcDAYfPaAX+fco
-	 OK2MXkoSCjLoTTFbyv4AZSroTntjMO4H3YxA2Fp/pMPh+fNtYIlV46eRcStHmd25A0ccj
-	 9dOXqdVbpelNdpDkcaOjB65SEpP/AathWEEJHEM8jufxwvRFHAQwm5TRc74sIF+/FY9tZ
-	 4TVdOC24O3HZdITF888zKt1r+djhpB+BIVd7SKgb1WyCLD3Kb+shCJxgZxNkgyDq6Sg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795448546;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:Cc:
+	 Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=UHmDH4xQTawnQx2c62U2+yzNLbTZSXgZeWsOYcq/ojk=;
+	b=XE7w+H0c2TEwxNYaa+GGkcP0kK2bc+spfy2S3XuJlCCfqD08T5IFndAchXVQoMdQdWhx
+	 C5zuS9ga9yd/tD57qX/bFW/um3KHf6l3gJf9/IQIM/K3EXgwCvYmoD73+HLlYK34SbmfQ
+	 ktG59VsmAsMdb1nFeANMAGRk7nT6oA6m4LT+GMOKmI6+CNd7xA7vSgV+ZTTp0qmBtk1NP
+	 wOg97CA1IaluaPG1aJP2uFQUjhK4CwEZH4crJ9V8iRytehWy+CP0FkAEsxBOoCoF0MMpX
+	 QeQsNs5sVoURWIHrtCrPssvbQ5XG+fcEzWnYMFUR7izNynJEiJCi975Hid5+EZSd/ig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=E7fzHGXy;
-	arc=none smtp.remote-ip=209.85.217.42
-Received: from mail-vs1-f42.google.com (mail-vs1-f42.google.com [209.85.217.42])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=RQNfh+VH;
+	arc=none smtp.remote-ip=160.236.52.251
+Received: from mail-m16023652251.xmail.ntesmail.com (mail-m16023652251.xmail.ntesmail.com [160.236.52.251])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC86606A332
-	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 15:35:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7EC86606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3C7606A31A;
+	Mon, 23 Nov 2026 15:42:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6F3C7606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=E7fzHGXy
-Received: by mail-vs1-f42.google.com with SMTP id ada2fe7eead31-7d2db1b9bf2so1135180137.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 07:35:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1795448109; x=1796052909; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jVozDBZgp+27gMR99l+UaMITrh6vU8pxKuFZh102SrU=;
-        b=E7fzHGXyqQHyaWH5h7Xdq7Fk7oF+GetICIiSFtZybwSIU8tOsJ7Nm9s209ex5I3yka
-         eJPASN/N8bgwyXhR7UtesH8MDUTuVQjtajdXRJbOopshCSKsCcEMtaWdmFeY4c4uw8E7
-         LN7OGePjrbqQxAnrITu0+L44cy+/QRsKNwlu2B8atxNpyv4+klJs9H/NgkeA60MnXd9f
-         m5009TltosQB1uZx/ZqKs8tYNaa4yH4hdc06E7R3V/kiVxsvZMlxfQZDvvTz3yvuiuTN
-         0PiaWcMU9ofUMII6MRxjTaFTfpFeeTJLbuFfoRMFUlAISoaimk/wB+D3Pr/Ry8TsPter
-         ozaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795448109; x=1796052909;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jVozDBZgp+27gMR99l+UaMITrh6vU8pxKuFZh102SrU=;
-        b=yvf+zE14MBy9DVQ79Uf2/H3Ua0SKJs0tj8TEwWsu7zPLjO4Og7ufyTAJEe6+B8xXgG
-         HdzPSvPrnaoqD3qyXm44rbRp7ZUgsP9+23t7fycrz/kB5DZd65BbVYm5O9C/fOHqqLIX
-         4XsaOc4nXU5EuRjeARIqK5Jch4ABF4XPSLyqHJX7TZLUrqEUZ25RA4DXpwvW7Zf412DX
-         azikZmNzMsUq4Byx9Mb7vroj/aGWxlijcLyx/LXskgBuXBP/XOj4jvIAfW42eiIM4QYA
-         p+mZDFFYrHwtVmfm+vIHKCmlg4Dk7q7hfQiilLX63D2dO8fOtvRBFBRkD6R+UpAoIWF8
-         pfdg==
-X-Forwarded-Encrypted: i=1; AL+hErFBbeSAgJi98JUrXwSMAumyMULcH9ZR3G8+foUv+FxdXIRNXeA5MfAERuhYvVWQio4Lfzj5j0RlwXk=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+Cdz6HsyAAnMZhmvYFkxCP5znlm7erFPZxRXFHLSV5FWaiMkiu
-	6BuAX1xX4EAidr616qM3Fhqj0pEOdNdtgiHBqYKM/Jhhrua6e8PdY6HWCnTr2Uc/3YI=
-X-Gm-Gg: AZFdTZeVnxgT7+lHELAbOwO9lMZ3DKKzgNx6DxOKkwNpmIE6KSCJH5iHTH7eCi1SwgO
-	Hfah7pNu8nU1f3rqbhw3CggbEMDGkJ2C5UAVhopgXzHfK3p3PR19UPaPduToij7BZmySTjednCo
-	HAAAZNsgYPrnLcEhpnZGlfLgvS1dGtNvbB4CnOsAjc60hhS552T5ir29veP85/A8lioZuBucxwp
-	p3bYVBMK5wNBu1fXwfN3jm8roMD7XEEHk3DVe0SxyZpkKAHSSKtn+/gBuW8FXFiPQcdXB7uR6ji
-	XtH8OQ+bvbcUl1HqBrCBCwIMBiyy4QTTuLBAh7HXEX2JI0kounuLpkRaU2hUShkM0iw0In5aXEk
-	0FO7KTqSOk1nedyppGpaL4BTsCC+mffr5AhWlKbil3pzFCIX8RLjVP3RmvpALESIFX6NWdDoFWR
-	uOitfhlOQoFfjyWfjzyt3avv3uXks2axket1EOxPJj7fP9NTdZrgGSH2CBEu4OZBFeHqCUGja6M
-	oeOjMv9zQvt7N2czozp+8ksqNWcupgv6eLnDv5yMP1++Jq6+BsX7SXjv2Pn8rqaA8tEScpgzHpY
-	aTfYmXSyyw97Q2S0eZlnLQhSUFLgUVdkEEutEoj74n3j02+ziBLSXvrW8WHGfB9zxm6uCReiFhS
-	fWMk=
-X-Received: by 2002:a05:6102:5811:b0:7d2:76af:fcce with SMTP id ada2fe7eead31-7d7393c88e2mr5087905137.9.1795448108741;
-        Mon, 23 Nov 2026 07:35:08 -0800 (PST)
-Received: from ziepe.ca (stjhnbsu6iw-159-2-142-59.dhcp-dynamic.fibreop.nb.bellaliant.net. [159.2.142.59])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-949bb0315f4sm823500485a.3.2026.11.23.07.35.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2026 07:35:08 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xVW4R-00000000swq-2uP1;
-	Mon, 23 Nov 2026 11:35:07 -0400
-Date: Mon, 23 Nov 2026 11:35:07 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
-Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
-	Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 05/10] PCI/TSM: Add association locking helpers for
- evidence acceptance
-Message-ID: <20261123153507.GH179082@ziepe.ca>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-6-aneesh.kumar@kernel.org>
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=RQNfh+VH
+Received: from [172.16.12.48] (unknown [61.154.14.86])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 55b0ebc65;
+	Mon, 23 Nov 2026 23:42:11 +0800 (GMT+08:00)
+Message-ID: <fd14d6c1-d9a4-41f9-b1c0-96c3006d40a1@rock-chips.com>
+Date: Mon, 23 Nov 2026 23:42:08 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -116,41 +48,132 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261123083337.2731019-6-aneesh.kumar@kernel.org>
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com,
+ Sebastian Reichel <sebastian.reichel@collabora.com>,
+ James Le Cuirot <chewi@gentoo.org>, stable@vger.kernel.org,
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH] PCI: dw-rockchip: Clear stale link down interrupt before
+ unmasking it
+To: Niklas Cassel <cassel@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
+ Wilfred Mallawa <wilfred.mallawa@wdc.com>
+References: <20261123121217.1107902-2-cassel@kernel.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20261123121217.1107902-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa2091269ec03a4kunm304402a287d7ac
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDQxpDVhpJSh9OGEweSE5NH1YVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ01ZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=RQNfh+VHuuBsHD9f3Wr2F5htjBdHrAM2nyTGba3J3eDhvG54DTy+OlB1qfSRz3OiQ+6hvlroa6vZ5XIjWDbRd2Ixpk22eDa06ICTxenhMVyX4rrMVge3H1kZdmaM3wcr/+2iv4PlWEaUH/ncRZ+qoaBMgGuhcPsAx701rm256kk=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=UHmDH4xQTawnQx2c62U2+yzNLbTZSXgZeWsOYcq/ojk=;
+	h=date:mime-version:subject:message-id:from;
 
-On Mon, Nov 23, 2026 at 02:03:32PM +0530, Aneesh Kumar K.V (Arm) wrote:
-> Later attestation patches let userspace finish device setup through
-> evidence-accept after host sysfs connect or guest sysfs lock returns.
-> Those commands use a saved struct pci_tsm and must prevent disconnect or
-> guest unlock from changing pci_dev::tsm or freeing the saved structure
-> while setup is in progress.
+在 2026/11/23 星期一 20:12, Niklas Cassel 写道:
+> PCIE_LINK_REQ_RST_NOT_INT is set by smlh_req_rst_not, which according to
+> the RK3568 TRM "is asserted after power-on reset until first link up".
+> The bit is thus already pending when the driver unmasks the interrupt
+> after resetting the controller, both in probe and in .reset_root_port(),
+> so the interrupt fires as soon as it is unmasked, even though the link
+> is up. Since each recovery resets the controller again, this results in
+> an endless loop, as seen on a Quartz64 Model B (RK3566):
 > 
-> Add pci_tsm_trylock_association() to acquire pci_tsm_rwsem for write and
-> check that pci_dev::tsm still points to the saved structure. For a TSM
-> implementing devsec_ops, first take device::mutex to prevent driver
-> attachment during MMIO validation and device acceptance. This matches
-> the device-mutex-before-rwsem order used by PCI DMA preparation.
+>    pcieport 0000:00:00.0: Recovering Root Port due to Link Down
+>    pcieport 0000:00:00.0: Root Port has been reset
+>    pcieport 0000:00:00.0: AER: device recovery successful
+>    pcieport 0000:00:00.0: Recovering Root Port due to Link Down
+> 
+> Clear the bit before unmasking the interrupt, and in .reset_root_port()
+> only unmask it once the link is back up, like in probe. Also keep the
+> interrupt masked while .reset_root_port() resets the controller, so the
+> link down caused by the reset itself is not reported.
+> 
 
-This doesn't seem the API I'd expect here.
+This looks right to me ,
 
-When we trigger SPDM session start AKA lock through the CTLV it needs
-to capture some kind of 'session cookie' for this locked that ties
-back to whatever the TSM is using to prevent a hostile host from
-locking/unlocking while we are working.
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-That cookie should be held in the attestation driver and when we get
-to acceptance it should be presented to confirm that nothing has been
-tampered with.
+> Fixes: b376b3ff9cb0 ("PCI: dw-rockchip: Implement .reset_root_port() and use for link down")
+> Reported-by: James Le Cuirot <chewi@gentoo.org>
+> Closes: https://lore.kernel.org/linux-pci/08cc96c5171fc969b074371692e6d95d46eba60b.camel@gentoo.org/
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 24 +++++++++++++------
+>   1 file changed, 17 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index ab2e26699409..2ef7ae97eb10 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -686,6 +686,18 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
+>   	return IRQ_HANDLED;
+>   }
+>   
+> +static void rockchip_pcie_rc_unmask_link_down(struct rockchip_pcie *rockchip)
+> +{
+> +	u32 val;
+> +
+> +	rockchip_pcie_writel_apb(rockchip, PCIE_LINK_REQ_RST_NOT_INT,
+> +				 PCIE_CLIENT_INTR_STATUS_MISC);
+> +
+> +	/* unmask hot reset/link-down reset */
+> +	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+> +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+> +}
+> +
+>   static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+>   				      struct rockchip_pcie *rockchip)
+>   {
+> @@ -739,9 +751,7 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+>   		return ret;
+>   	}
+>   
+> -	/* unmask hot reset/link-down reset */
+> -	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+> -	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+> +	rockchip_pcie_rc_unmask_link_down(rockchip);
+>   
+>   	return ret;
+>   }
+> @@ -898,6 +908,9 @@ static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
+>   	u32 val;
+>   	int ret;
+>   
+> +	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 1);
+> +	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+> +
+>   	dw_pcie_stop_link(pci);
+>   	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+>   	rockchip_pcie_phy_deinit(rockchip);
+> @@ -938,16 +951,13 @@ static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
+>   		goto deinit_clk;
+>   	}
+>   
+> -	/* unmask hot reset/link-down reset */
+> -	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+> -	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+> -
+>   	ret = dw_pcie_start_link(pci);
+>   	if (ret)
+>   		goto deinit_clk;
+>   
+>   	/* Ignore errors, the link may come up later */
+>   	dw_pcie_wait_for_link(pci);
+> +	rockchip_pcie_rc_unmask_link_down(rockchip);
+>   	dev_dbg(dev, "Root Port reset completed\n");
+>   	return ret;
+>   
+> 
+> base-commit: b6a9fa34ce4187cb69d3c588a4bbffc31ce5db8f
 
-It is a further reason why we can't have lock under sysfs control.
-
-It should be attestation that provides a general purpose lock that
-serializes all attestation operations including lock/unlock so we
-don't need a TSM lock like this.
-
-The driver should rely on that lock and use its internal mechanism to
-process the cookie.
-
-Jason
