@@ -1,56 +1,65 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795474208;
-	b=OWdfXJiX1W5kdnRSgogKcEC5wT1E5qBhv5lyRq3AesshGfjiaUucpfzliLQrF/w9awgZ
-	 Q+blHckcVpwm/6LtaX9/oOXxBUfQV+B7GieKu38Gk0Vs4TEvYCA9G9Xwp+4rjqGBmTUnN
-	 4f+6Tf1l4BzTUxV1PFRDc5IggouupAmqc7Md+lKBq/eiS95cpaA05CNPyTWxHCpUOrHT4
-	 kjb7Fxv4e667B547x28h2nmKPZ2qiFNynasekpvpq8+fauT5KFl6haCuMzcLaTHeQQz9V
-	 jHQoup2o/Ttqp5db1lRSqJZrkSb80i5fVpafjl3cku72GSta8ccZprMBE9yJLRayk4A==
+	t=1795474489;
+	b=qnO+flF+uI+JqsiwVCFL5cEOE1g+w1Hgg32uILSylPA2nnGUCC/k7K+bUOD16fyMXRUr
+	 0t1zpcjQUlrgbI4haUN6eDS7HmiwV8/9nsXDw7dXPSRRw9H72Zs6CfiZRGqCaflra8JZP
+	 SW4/r+0r5qYdJ2ebXlS3gSv80Vzi/JjENYtZpbPzsi78bJd0+/DLITAnWtdHAQtuIfKUK
+	 TZlfJlc8h56EhPymymUPEOgiPnEwcUkoS25AflxAD1n0wxfmLGY5tPNvVtaG94NdGug0n
+	 Ia03mQ4JoS9boUrohzRUCOMlHp/EXC7S3zII3gonVeIu1y8I49uJWZ5iCkcw12sP1LA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795474208;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795474489;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=jrLGMV1iypmmgBwUgSTs/Q9UeBLgd52WAHRIrLOsZ3s=;
-	b=xoaqalVJ7RaPmLG2OetAkv3mhaYxe2obLS2EsF23leVF1VbvTI9IIlfJU0Ha6Dm8umyF
-	 q0en3XwmDilEBkUCb8lPGgbKj6eyzrcGvdrRF0+VujbQ9Sm6ytay9ZQfsFJDkDyMsSZGe
-	 DED/k/lf6n6eGL9bsr2aTlR8dpNndGCwUqq22TgVyulILKm5+1hUzAp0hv8caO1QBtmml
-	 J81BlkCe0T+jKw8slrszClmateVgpFKy6X8C9SR0rghz0HI0F1asnNiumXOvG+1zSuNTS
-	 nSfYL6rlkLjKxtRQdlJBMjtjpWns5DKy7Qj6XOdM6744RIPxS+BndefoomS7dWsWutw==
+	bh=QZY3QEbTazJVBNLfkYhq96DccGik9lwrQlsFGiS8+BM=;
+	b=JIOm4HXLyBJkE/3YWA+KQ50DEw7CMciPt3EpuLy35gISGqN1XI8Q6Py7TaGe10NNrlOX
+	 5/r+BMxdB+Uy8HT1byAAxXNcNOFZGR2jYoEEDi8jx79O0tLh7JpMXdGrtIk9yv0nqwSMk
+	 VfnrjV9CvHukjmMvcZls9FMC12xpJ5aEiFi5uNMrgWuajDNAXO1CDcMok/rcWPotJR6Q6
+	 mzIXWPknZSMRdir/twYfwAXQHzGAVL/6o7zfBMXB+eivy1D9jqxA6Ea+XAw59GBSMqit8
+	 e4jZSgBQOQTfGxHJhz6OfXm4NSVZH7K9oYexxtxQJehgd/spuY1JrsMoIxaocEjKIIA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R1Hv7jeC;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Kud4b5sK;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F1A7606A322;
-	Mon, 23 Nov 2026 22:50:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58D19606A31E;
+	Mon, 23 Nov 2026 22:54:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R1Hv7jeC
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48B061F000E0;
-	Mon, 23 Nov 2026 22:50:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Kud4b5sK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A9EA1F000E0;
+	Mon, 23 Nov 2026 22:54:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795474207;
-	bh=jrLGMV1iypmmgBwUgSTs/Q9UeBLgd52WAHRIrLOsZ3s=;
+	s=k20260515; t=1795474488;
+	bh=QZY3QEbTazJVBNLfkYhq96DccGik9lwrQlsFGiS8+BM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=R1Hv7jeCjg5uOZPsAyhEp4qR31IEr9kWF1mjYKnUXnLuRptH6X6UYFdjzXJdM2nUZ
-	 zrLeT5Tn0Wc94fw4nd6v6a4SBF3YTlDMEdosOydRZG6s5Qi9rYoDwT9/zvXyi4xCTA
-	 Hdnr7dQMmlGVeOaJHG0ZB6/iF/MqKWb4IoeDcgG0PgU+WFm/HUwJ+z3nOJRf3Uqmoi
-	 yyyDw11q/L1uXtMMoaUmXH0G6+e0++nGO3mcROcxUlPiodck7pFAG5zgd8HNMQzIjP
-	 QrAvy9Sw7aLnrFGPE+VR2Q0bYhh7zpT9xBxC+DVGqGBXLBemi47Fr90DvB4zEgBxV8
-	 lCWgPAgXPEIEQ==
-Date: Mon, 23 Nov 2026 16:50:06 -0600
+	b=Kud4b5sK91u5SBmL8lPGIPTN3CP4ATH85EG1moMmnUj+tCyZ0v8511LIpcjMDEoyz
+	 hXY8ps3kX6luSVimz1DL6w/4v5XS3DVwUhuQbkGmU/X2il+gRYmCZtVqR23bFanmSl
+	 Dl8czKObWKjkuDOOoojGPffwA/hzs17niUNQsMcAce/LLJwD1vtNNMvahJFR3lKBo7
+	 91mQ5CLCB3pQclrn2mhzQrNaTb16nOaPOKJcN8Q6chuOiFNmkbvmBcewM9/mdGNKea
+	 bh4CHAmXA8WiB8Y2kO9AEWts847SxOKF65TwM1vfTLxrLZ0khTRsDy48k1r9GPMfkS
+	 kKKZ03sSSQ6nQ==
+Date: Mon, 23 Nov 2026 16:54:47 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, lukas@wunner.de, mjrosato@linux.ibm.com,
-	gbayer@linux.ibm.com, schnelle@linux.ibm.com,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Nitesh Shetty <nj.shetty@samsung.com>,
-	Judy Brock <judy.brock@samsung.com>
-Subject: Re: [PATCH v1] PCI: Ignore Immediate Readiness for Samsung a826
- device
-Message-ID: <20261123225006.GA1117350@bhelgaas>
+To: Fil Dunsky <filipp.dunsky@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Stephen Boyd <sboyd@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof Wilczynski <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Brian Masney <bmasney+clk@redhat.com>,
+	Jerome Brunet <jbrunet+clk@baylibre.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
+	linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/8] soc: cortina: Add CS7542 PCIe control, SerDes and
+ host support
+Message-ID: <20261123225447.GA1119216@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,99 +71,28 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261123215308.1285-1-alifm@linux.ibm.com>
+In-Reply-To: <20261123-b4-cs7542-pcie-v2-0-f589a9cd0bef@gmail.com>
 
-[+cc Kanchan, Nitesh, Judy (scraped from lore Samsung NVMe traffic)]
+On Mon, Nov 23, 2026 at 11:32:14PM +0300, Fil Dunsky wrote:
+> Add CS7542 PCIe support with global gate/reset controls, a Snow Bush
+> SerDes PHY and DesignWare host glue. The global syscon already provides
+> the APB/CPU/AXI clocks; extend that same provider with three PCIe gates
+> and controller resets. No resource-less pcie-control child is created.
+> The existing clock indices remain unchanged; PCIe gets named specifiers.
+> ...
 
-On Mon, Nov 23, 2026 at 01:53:08PM -0800, Farhan Ali wrote:
-> The Samsung NVMe SSD Controller PM174x [144d:a826] advertises Immediate
-> Readiness, so pcie_flr() doesn't wait after FLR, but the device isn't ready
-> yet and config reads return ~0 after the reset. This happens with
-> firmware version SNA6SNA6 or older.
-> 
-> This was seen on s390x with the nvme driver bound, by resetting the device
-> via the sysfs reset attribute:
-> 
->   # echo 1 > /sys/bus/pci/devices/200c:00:00.0/reset
-> 
->   nvme 200c:00:00.0: Unable to change power state from D3cold to D0, device inaccessible
->   nvme nvme0: Disabling device after reset failure: -19
-> 
-> Ignore Immediate Readiness on this device too, so pcie_flr() waits.
-> 
-> Fixes: 10baa9b4df40 ("PCI: Drop unnecessary retries when restoring BARs")
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> ---
->  drivers/pci/quirks.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 4a02fc80755d..11c3b45afe78 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5790,6 +5790,7 @@ static void quirk_no_imm_ready(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SAMSUNG, 0xa80c, quirk_no_imm_ready);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SAMSUNG, 0xa80d, quirk_no_imm_ready);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SAMSUNG, 0xa80e, quirk_no_imm_ready);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SAMSUNG, 0xa826, quirk_no_imm_ready);
+> Changes in v2:
+> - Expose PCIe gates/resets on the existing global syscon provider.
+> - Remove the virtual child binding and separate gate/reset driver.
+> - Preserve early strap clocks and unwind partial registration failures.
+> - Put clocks before interrupts in the host binding and example.
+> - Enable root-port MSI after enumeration; dispose INTx mappings on teardown.
+> - Return 0 for lost-link DBI reads to fail iATU polling; serialize quiesce,
+>   config/DBI access and IRQ draining before reset.
+> - Link to v1: https://patch.msgid.link/20261123-b4-cs7542-pcie-v1-0-4cde5201d404@gmail.com
 
-We already have:
+v1: Date: Mon, 23 Nov 2026 21:43:28 +0300
+v2: Date: Mon, 23 Nov 2026 23:32:14 +0300
 
-  996a59519af2 ("PCI: Ignore Immediate Readiness on Samsung PM9D3a NVMe")
-  0f8b5d90d179 ("PCI: Ignore Immediate Readiness on Samsung 990 PRO and 990 EVO Plus NVMe")
-
-I wonder if something like the below might be safer and avoid an
-ongoing series of quirks.
-
-The spec (PCIe r7.0, sec 7.5.1.1.4) says that when Immediate Readiness
-is set, "the Function is guaranteed to be ready to successfully
-complete valid Configuration Requests at any time" and "software is
-exempt from all requirements to *delay configuration accesses*
-following any type of reset."
-
-I thought that meant Completions for config requests would always have
-Successful Completion status, but I guess one could read it as "device
-must respond with a Completion to an access immediately after reset,
-even if the Completion is RRS."
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7c6f2aba8144..c9f95852e83d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4457,15 +4457,13 @@ int pcie_flr(struct pci_dev *dev)
- 
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
- 
--	if (dev->imm_ready)
--		goto done;
--
- 	/*
- 	 * Per PCIe r4.0, sec 6.6.2, a device must complete an FLR within
- 	 * 100ms, but may silently discard requests while the FLR is in
- 	 * progress.  Wait 100ms before trying to access the device.
- 	 */
--	msleep(100);
-+	if (!dev->imm_ready)
-+		msleep(100);
- 
- 	ret = pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
- done:
-@@ -4534,16 +4532,14 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
- 
- 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
- 
--	if (dev->imm_ready)
--		goto done;
--
- 	/*
- 	 * Per Advanced Capabilities for Conventional PCI ECN, 13 April 2006,
- 	 * updated 27 July 2006; a device must complete an FLR within
- 	 * 100ms, but may silently discard requests while the FLR is in
- 	 * progress.  Wait 100ms before trying to access the device.
- 	 */
--	msleep(100);
-+	if (!dev->imm_ready)
-+		msleep(100);
- 
- 	ret = pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
- done:
+That's way too fast and wastes reviewers' time.  Please wait at least
+a few days between versions.
