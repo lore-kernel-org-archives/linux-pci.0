@@ -1,46 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795432166;
-	b=llGkyp3XqM7g1iV7vggaF6yglqWgvbliJi7A0RiH8GOzJ12QAVjg61b1oFUCLOIMHNRY
-	 JP1PDSe0aqut8ohoAAlB+lSWKKvO1laj/h8EdJpAZZKQIgAq1E5sVkgb3AmL52UBQmKjZ
-	 oBHhtaqaih6W1QCX7P5VVI451MujhnrFLRBJYyWRfyKZNNRr28WM7pfvyNs2ljbOgxi68
-	 IGSzfomTu06Plz++BHDqxBhSLTXL7vTZh/z3/P2yJeNZpMKyjbQGBtfZ1H8e5tTbxTm5f
-	 pXooG19fewSJ0U6Rgz//uAD3jm6e2CO146jzSwMMe1ctOz4y6rfOfUIlO+0DEAXUv+A==
+	t=1795435088;
+	b=FlQwOHRh6GAI5G2pdDD9D7QocSVaafHkH/XsJkDn1PtElyMkZfAz1bLs+iA+eoKWAd6N
+	 2XcHe9hgp2xiRzTtl8fK9sbSnz3xsjGWHieThwRh4GeCocEZBnKwXqFcoBHv5NUu07CIB
+	 XTnlLbC5wOYgZBPvL00i/Z1yF0TEb8fx9YmxZwKFSF/GTocSQahcCSDw1liFmOeZ1VqjP
+	 eQu9TG4ghCyl6pwbbdoRz4tD7W4qjUHkgXAw5LYWXmb7CgwaNBBE0bqrqkpU6kZU21FFS
+	 fhLNARTWsi0e6jSMLAnVq3WJwBCe4uCgleV4eNfQIB8vYnsDHLP7iC3IOr0XWRAecVg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795432166;
-	h=DMARC-Filter:DKIM-Signature:Received:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:References:
-	 Date:Message-Id:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=+kDopycZnDAP9HA19BBrkkNf4GaSRLyZaHpHCwaxUpc=;
-	b=oVSGEvWGDnTuY2Swcyi6IoPysHnFKd0C8fvwG/tlDpYNA46wtHKVpKMG1CBzUf1XGtwA
-	 nyn4zf/GVwuBw3y7sA5ZtfgPPngewHq3elO9ML0zLtRxBAlZfcJPnDua5OxS+lOfAqAU8
-	 l1anCQzZMi1ek6OjMlKOATmpd9Pi3o4xbrErrEepekd6csHgDPCBMxNRGo0yw0uGXadTf
-	 0ok3H4iLwFmciQfYU0N8sBUz2YQQ+qsf71OpBZxKbup3A1/FGIhmwc+QEY4taYkBcFLFe
-	 CgMWccQkLRXW3F6riimblQC3iR8sA84EL6yJ/o6xMf+xz7y/DqIAN8nTB70Gbc7Wy5w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795435088;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=0TmBe1tXlcWpfCVrfd1KqqoznT5l5Jx1iU5TZr+SAgw=;
+	b=hTZKecc1gtevVLiSXQoVsKHWKeZnSB+WS1vor/ZQ36UPTcGhm+XQGFeZaeKzQD6TTvqw
+	 GFiHWUhaScbiRSiJ1ByGDL61nhnERH+V6glyCaFM9mQKzukqVxF2JrmqG0hXlN/G8e7Or
+	 rsfd1ZChixV7MlQWboZGzxynuCj/9eekfEe4Qq3W4PitAEj9eDXY+8oD5CG3rbUU4NEXH
+	 zjbeud6kxUV+f1Q4ErdUn7DpvwXKuHy1FPiZ+ggQOr18w4BGOs1b0NSiq/hKOHsahLjYX
+	 7QCn1AlO/8DbJZLeLWmyZryDPzTpFVlPrjJ/ZinAfi0gaZcCwkjgYPJs9LKFRsM6Jaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=ultrarisc.com;
-	spf=pass smtp.mailfrom=ultrarisc.com;
-	dkim=pass header.d=ultrarisc.com header.i=@ultrarisc.com header.a=rsa-sha256 header.s=dkim header.b=R6k8B3wW;
-	arc=none smtp.remote-ip=218.76.62.146
-Received: from ultrarisc.com (unknown [218.76.62.146])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A7129606A31E;
-	Mon, 23 Nov 2026 11:09:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7129606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Du1Kyd/P";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EB5606A31E;
+	Mon, 23 Nov 2026 11:58:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=ultrarisc.com header.i=@ultrarisc.com header.a=rsa-sha256 header.s=dkim header.b=R6k8B3wW
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
-	References:Date:Message-Id; bh=+kDopycZnDAP9HA19BBrkkNf4GaSRLyZa
-	HpHCwaxUpc=; b=R6k8B3wWpsiObveZeoFHed2EGTGDnFK/0MmJcI8iybAPk3FF0
-	pJQ0EDMJ5VaLgj7thKOpbCuh8pWZSJlpeyZDf6gQuLeL7oUj8L1WPtMvc/97H09n
-	lzYtebxKcWeCSegQDhjBnScZFBSLUxWY4UZRU2J+koaIlXN0oF6ZJY+T3U=
-Received: from [127.0.0.1] (unknown [192.168.100.1])
-	by localhost.localdomain (Coremail) with SMTP id AQAAfwDHQAexHgRrhEgEAA--.2091S2;
-	Mon, 23 Nov 2026 19:08:33 +0800 (CST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Du1Kyd/P
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98C5A1F000C4;
+	Mon, 23 Nov 2026 11:58:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795435088;
+	bh=0TmBe1tXlcWpfCVrfd1KqqoznT5l5Jx1iU5TZr+SAgw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Du1Kyd/P8Lt8CAlnCV7czApRJxSEjYBL842wCUV0K57v809kCt9syFf0KB08w77MM
+	 JujsWwgrqh7lztdFxkWRgR4X3WQmsCsj5/8FFfoeif8cO/de/Whfz74lZZCwQ8R6UW
+	 8NJHIwr/RI+Fmc/6yn5zCmCebhKDshF6qsqaP0jfF1oRjGYll/8c3EvfDv3dzSVYj+
+	 dDpJrLtmJkj5SnWHMzQ5EhjhM2UNnM2mtqOPQnVlG/BrW0+x94gc9vI5q2USFGxw5R
+	 cl/r6ieFsaF4x+9d24X2yRBTgGfDQsxUumN0rmfCjpqZvFzIZ07Y9Xr11v4JuwFvi2
+	 MBF1PVHTKOhjA==
+Date: Mon, 23 Nov 2026 13:58:03 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
+Message-ID: <20261123115803.GN14811@unreal>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <2026112325-emit-squeezing-5d96@gregkh>
+ <20261123090623.GK14811@unreal>
+ <yq5a7bi3riha.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -50,81 +71,92 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] MAINTAINERS: Update UltraRISC driver maintainers
-From: Xincheng Ji <jixincheng@ultrarisc.com>
-To: Conor Dooley <conor@kernel.org>
-Cc: Jerome Brunet <jbrunet@baylibre.com>, 
- Xincheng Ji <jixincheng@ultrarisc.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Stephen Boyd <sboyd@kernel.org>, 
- Brian Masney <bmasney+clk@redhat.com>, 
- Jerome Brunet <jbrunet+clk@baylibre.com>, 
- Maxime Chevallier <maxime.chevallier@bootlin.com>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@kernel.org>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Linus Walleij <linusw@kernel.org>, Paul Walmsley <pjw@kernel.org>, 
- Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
- Alexandre Ghiti <alex@ghiti.fr>, Rob Herring <robh@kernel.org>, 
- linux-pci@vger.kernel.org, linux-clk@vger.kernel.org, 
- netdev@vger.kernel.org, linux-gpio@vger.kernel.org, 
- Fei Chen <chenfei@ultrarisc.com>, linux-riscv@lists.infradead.org, 
- linux-kernel@vger.kernel.org
-In-Reply-To: <20261118-unimpeded-swapping-6b1b3e5bebba@spud>
-References: <20261116-ultrarisc-maintainer-v1-1-f58706ae438c@ultrarisc.com>
- <179501112283.639563.5233054429317576626.b4-review@b4>
- <20261118-unimpeded-swapping-6b1b3e5bebba@spud>
-Date: Mon, 23 Nov 2026 19:08:40 +0800
-Message-Id: <179543212034.1604484.9462414929447940252.b4-reply@b4>
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795432120; l=658;
- i=jixincheng@ultrarisc.com; s=20260922; h=from:subject:message-id;
- bh=2XLgEq6VwPYO3u9Cdwe+eXzTlcnJKcd6VYZ8ir9zoX4=;
- b=aKUFY1rPQkOEW8tfiUw+ybT22Zp6yoFu8w2dZgnGnPlt9ibfbxWWEE9JKWkooBYH/PP4AKZCr
- UTCWh0XY9DvBDMZKPe01jKMlplaefeGjNl2vREUNTEe+gDv5shPr6X+
-X-Developer-Key: i=jixincheng@ultrarisc.com; a=ed25519;
- pk=n848dcS5D6g0vLad/rjp4Gf/1eedTe1a3pYUrkt2260=
-X-CM-TRANSID:AQAAfwDHQAexHgRrhEgEAA--.2091S2
-X-Coremail-Antispam: 1UD129KBjvdXoW5Kr1fJw13ArWfCr1xWF48Zwb_yoWxXwb_uw
-	nayFyxA3WUCF1xAanF9F45urnF9rW0gw1UZ34Fyr1xCrWvvw4kWws0kr90vr1Sva97tF9I
-	krn5Zr13Kry2vjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbT8FF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr1j6F
-	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
-	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
-	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
-	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
-	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
-	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRCCJPDUUUU
-X-CM-SenderInfo: pml0x0xfkh0wg6xo325dul2uoofrz/1tbiAQAADmsD4rIADQABs7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq5a7bi3riha.fsf@kernel.org>
 
-Hi Jerome, Conor,
+On Mon, Nov 23, 2026 at 03:13:13PM +0530, Aneesh Kumar K.V wrote:
+> Leon Romanovsky <leon@kernel.org> writes:
+> 
+> > On Mon, Nov 23, 2026 at 09:40:55AM +0100, Greg Kroah-Hartman wrote:
+> >> On Mon, Nov 23, 2026 at 02:03:27PM +0530, Aneesh Kumar K.V (Arm) wrote:
+> >> > This series adds the PCI/TSM support needed by a TEE Security Manager
+> >> > (TSM) driver in a confidential guest. It adds device lock/unlock,
+> >> > helpers for recording device acceptance and parsing MMIO reports, and
+> >> > DMA callbacks used during PCI driver attachment. The guest TSM driver and
+> >> > attestation commands using these interfaces are in follow-up series.
+> >> > 
+> >> > This series is based on Dan Williams' "[PATCH v2 00/19] PCI/TSM: TEE I/O
+> >> > infrastructure" posting [1], particularly the guest LOCK/UNLOCK, ACCEPT
+> >> > and MMIO report work [2-4]. It retains device_cc_accepted() and the
+> >> > confidential-device acceptance model from that posting, with changes
+> >> > adapted to the current PCI/TSM structures and reference APIs. Dan's
+> >> > device-core acceptance helper and per-host-bridge IDE stream reporting
+> >> > patch are also included.
+> >> > 
+> >> > This series does not adopt the Device Trust changes from Dan's "Device
+> >> > Evidence and Trust for PCI Security Protocol (TDISP)" [5]. That work is
+> >> > being developed separately in Leon Romanovsky's "driver core: Authorize
+> >> > device trust before driver binding" series, [6]. Confidential-device
+> >> > acceptance is kept separate from that driver-binding trust policy.
+> >> 
+> >> But it should not, as you are making driver core changes that will
+> >> mirror the same thing that that patchset is attempting to do.  Please
+> >> work together on this.
+> >
+> > +10000000,
+> >
+> > Greg,
+> >
+> > This series came as a surprise to me given the fact that device trust
+> > series is exactly for that - allow confidential computing.
+> >
+> > Adversarial is equal to the "cc_accepted".
+> 
+> I think the confusion stems from this thread:
+> 
+> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
+> 
+> Based on that discussion, I understood TRUST and eligibility for private
+> DMA to be complementary attributes. Device acceptance determines whether
+> a device may access private memory, while trust determines whether the
+> core must enforce additional restrictions. I understood that supporting
+> an accepted but adversarial device would require either a private IOTLB
+> to restrict its access or an IOMMU.
 
-Thanks for the feedback and the clock Ack.
+I reached a completely different conclusion from that discussion.
 
-I agree that leaving the company does not necessarily mean stepping
-down as a maintainer. Unfortunately, I am no longer able to contact
-Jia Wang or Xincheng Zhang to ask for their confirmation.
+Device trust does little beyond preventing driver binding and recording the
+trust decision in "struct device". The missing piece, which I would expect
+you to address, is ensuring that the IOMMU and private DMA are configured
+only after the trust level has been decided or as part of that decision,
+rather than beforehand, as they are today.
 
-Following your suggestion, I will send v2 adding Fei Chen and myself
-as maintainers while retaining the existing entries. We can revisit
-their removal after allowing a reasonable time for them to respond.
+Thanks
 
-Conor, thanks for offering to take this through the RISC-V tree if
-the subsystem maintainers do not pick it up.
+> 
+> Therefore, with this series, a request to enable private memory DMA is
+> handled as follows:
+> 
+> 	if (!device_cc_accepted(&pdev->dev)) {
+> 		ret = -EACCES;
+> 		goto out;
+> 	}
+> 
+> 	/* Adversarial devices are unsupported for confidential DMA. */
+> 	if (device_is_adversarial(&pdev->dev)) {
+> 		ret = -EOPNOTSUPP;
+> 		goto out;
+> 	}
 
-Thanks,
-Xincheng
+The snippet above clearly shows why it is a good idea to wait until support
+for device trust levels is accepted. An adversarial device is untrusted
+from the PCI perspective and must have private DMA and a separate IOMMU
+group.
 
--- 
-Xincheng Ji <jixincheng@ultrarisc.com>
+Thanks
 
+> 
+> 
+> -aneesh
+> 
