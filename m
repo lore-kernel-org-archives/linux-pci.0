@@ -1,67 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795435088;
-	b=FlQwOHRh6GAI5G2pdDD9D7QocSVaafHkH/XsJkDn1PtElyMkZfAz1bLs+iA+eoKWAd6N
-	 2XcHe9hgp2xiRzTtl8fK9sbSnz3xsjGWHieThwRh4GeCocEZBnKwXqFcoBHv5NUu07CIB
-	 XTnlLbC5wOYgZBPvL00i/Z1yF0TEb8fx9YmxZwKFSF/GTocSQahcCSDw1liFmOeZ1VqjP
-	 eQu9TG4ghCyl6pwbbdoRz4tD7W4qjUHkgXAw5LYWXmb7CgwaNBBE0bqrqkpU6kZU21FFS
-	 fhLNARTWsi0e6jSMLAnVq3WJwBCe4uCgleV4eNfQIB8vYnsDHLP7iC3IOr0XWRAecVg==
+	t=1795436005;
+	b=qSuKhcZqNR46xBSKQXmA1Y3k0kYC1xM/atrZeoc5fbtuK/DtWZUTtB7nEFJEBdH4hADr
+	 gPkfwtF3LsBGdtMGEfMabvk+2XHW677JVmldpsZ6EAiXAcCjxSZscXSC3HfFo7YvYs/lb
+	 /uOAQ6rz21dBI++KyNtEesZCGrpTDeh+GfHMuXzSL4CRmLCXdp2lttdTeQMkVE7Hi0Z2b
+	 w6G8LXQEOh0IR78JIe+bBUOlWR8GbT9UADMkri05CETvVE6Rw/YwCnOQlLAIsSmx1NC1k
+	 tqzBNAeo1LYaWiQrvz9rOof1WPBGoXjXY0L/SckjlCUOIBxpyWGb883qbszykED3HBw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795435088;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=0TmBe1tXlcWpfCVrfd1KqqoznT5l5Jx1iU5TZr+SAgw=;
-	b=hTZKecc1gtevVLiSXQoVsKHWKeZnSB+WS1vor/ZQ36UPTcGhm+XQGFeZaeKzQD6TTvqw
-	 GFiHWUhaScbiRSiJ1ByGDL61nhnERH+V6glyCaFM9mQKzukqVxF2JrmqG0hXlN/G8e7Or
-	 rsfd1ZChixV7MlQWboZGzxynuCj/9eekfEe4Qq3W4PitAEj9eDXY+8oD5CG3rbUU4NEXH
-	 zjbeud6kxUV+f1Q4ErdUn7DpvwXKuHy1FPiZ+ggQOr18w4BGOs1b0NSiq/hKOHsahLjYX
-	 7QCn1AlO/8DbJZLeLWmyZryDPzTpFVlPrjJ/ZinAfi0gaZcCwkjgYPJs9LKFRsM6Jaw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795436005;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=o7sIBFFFGupPpSXGGScHHW+hehWJv0kYPtO1ufaH37I=;
+	b=SwmSQiXJNPxlFkHcs5WnUsGGuFInr9SQ0Oat3ddxv4X33NTcARYq+0D5cdClpRDiqDZc
+	 Kl5GIDt3h78E2zXLxblKN0k6NOeyf2g/QVcbQTYD9pkI1RpHrIPw6+a4B0xf0O0LUKzvN
+	 Cf2/RjDKusQS69Rl+cRnzLtAvpeMuPXGlB1BwJLXvwVijpCxwyUdQmtJnYJqfwQ2hsJLB
+	 yWKYcdblI4cuezG7lgTAn87ChdJAzEWaPCIh/ZfEqghAR+ozH03kwozngKYdAS/CQqJ/f
+	 CJDCznQJVlexguyNNzxGebPDsWfWE9NliGNqc6SK+iwwStiBsHzxP94yu6THoIS3qqg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Du1Kyd/P";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CeBXs2oL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EB5606A31E;
-	Mon, 23 Nov 2026 11:58:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4B63606A31A;
+	Mon, 23 Nov 2026 12:13:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Du1Kyd/P
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98C5A1F000C4;
-	Mon, 23 Nov 2026 11:58:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CeBXs2oL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10BF51F000D0;
+	Mon, 23 Nov 2026 12:13:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795435088;
-	bh=0TmBe1tXlcWpfCVrfd1KqqoznT5l5Jx1iU5TZr+SAgw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Du1Kyd/P8Lt8CAlnCV7czApRJxSEjYBL842wCUV0K57v809kCt9syFf0KB08w77MM
-	 JujsWwgrqh7lztdFxkWRgR4X3WQmsCsj5/8FFfoeif8cO/de/Whfz74lZZCwQ8R6UW
-	 8NJHIwr/RI+Fmc/6yn5zCmCebhKDshF6qsqaP0jfF1oRjGYll/8c3EvfDv3dzSVYj+
-	 dDpJrLtmJkj5SnWHMzQ5EhjhM2UNnM2mtqOPQnVlG/BrW0+x94gc9vI5q2USFGxw5R
-	 cl/r6ieFsaF4x+9d24X2yRBTgGfDQsxUumN0rmfCjpqZvFzIZ07Y9Xr11v4JuwFvi2
-	 MBF1PVHTKOhjA==
-Date: Mon, 23 Nov 2026 13:58:03 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
-Message-ID: <20261123115803.GN14811@unreal>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <2026112325-emit-squeezing-5d96@gregkh>
- <20261123090623.GK14811@unreal>
- <yq5a7bi3riha.fsf@kernel.org>
+	s=k20260515; t=1795436005;
+	bh=o7sIBFFFGupPpSXGGScHHW+hehWJv0kYPtO1ufaH37I=;
+	h=From:To:Cc:Subject:Date;
+	b=CeBXs2oLp6A32oLgZuKi8TFJBh8uOfS5BUwobI8S42NbNsdRfXkrzWL+9Q2zYh4Yx
+	 0XcdBqK7RUhEVf7O1nCTJk30bvhV/WUaFlRnfrsrLdIFZj5104+Jy1vCQSb7Yeugtt
+	 DJvCd81Rl+pOGrONR7Fnk56GQcHLInJrkCHeHUbSlW7OOJ8lZnML2Rkqqp4Xmlz/pA
+	 TgjUcBkhnkbvEu6GmdK2VRsCbUixs+ZCRG4b6KqJTwh6ytFW8DZhZEf7fE1xJFqtzG
+	 dSxsVARt/EZDM4D3qxAVkt22KVTPa/WJpp3jaj0PoSwvLvt06S5lmCmrPT+psIH071
+	 QFLLM/ouWeczw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Niklas Cassel <cassel@kernel.org>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Cc: Sebastian Reichel <sebastian.reichel@collabora.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	James Le Cuirot <chewi@gentoo.org>,
+	stable@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org
+Subject: [PATCH] PCI: dw-rockchip: Clear stale link down interrupt before unmasking it
+Date: Mon, 23 Nov 2026 13:12:17 +0100
+Message-ID: <20261123121217.1107902-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.56.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -71,92 +70,101 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5a7bi3riha.fsf@kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3718; i=cassel@kernel.org; h=from:subject; bh=Htlfg5iHMsP43OFyuabLrE8FquJUbNL/9t80OIK+2Hs=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJZdBeminx25P9yxP4HU5alfPZCs80bUju/+tRyeL9hX RUtsnh2RykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACYyTZ6R4cMJB6GL2xblnW1e Ls7WYFK8nyl798PAyo+vfN5clRM8OYPhf4hJ9vLwT+2xzb/uz1l+VO6v+G2H70mfl0c/P+HK0tH HwgUA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 23, 2026 at 03:13:13PM +0530, Aneesh Kumar K.V wrote:
-> Leon Romanovsky <leon@kernel.org> writes:
-> 
-> > On Mon, Nov 23, 2026 at 09:40:55AM +0100, Greg Kroah-Hartman wrote:
-> >> On Mon, Nov 23, 2026 at 02:03:27PM +0530, Aneesh Kumar K.V (Arm) wrote:
-> >> > This series adds the PCI/TSM support needed by a TEE Security Manager
-> >> > (TSM) driver in a confidential guest. It adds device lock/unlock,
-> >> > helpers for recording device acceptance and parsing MMIO reports, and
-> >> > DMA callbacks used during PCI driver attachment. The guest TSM driver and
-> >> > attestation commands using these interfaces are in follow-up series.
-> >> > 
-> >> > This series is based on Dan Williams' "[PATCH v2 00/19] PCI/TSM: TEE I/O
-> >> > infrastructure" posting [1], particularly the guest LOCK/UNLOCK, ACCEPT
-> >> > and MMIO report work [2-4]. It retains device_cc_accepted() and the
-> >> > confidential-device acceptance model from that posting, with changes
-> >> > adapted to the current PCI/TSM structures and reference APIs. Dan's
-> >> > device-core acceptance helper and per-host-bridge IDE stream reporting
-> >> > patch are also included.
-> >> > 
-> >> > This series does not adopt the Device Trust changes from Dan's "Device
-> >> > Evidence and Trust for PCI Security Protocol (TDISP)" [5]. That work is
-> >> > being developed separately in Leon Romanovsky's "driver core: Authorize
-> >> > device trust before driver binding" series, [6]. Confidential-device
-> >> > acceptance is kept separate from that driver-binding trust policy.
-> >> 
-> >> But it should not, as you are making driver core changes that will
-> >> mirror the same thing that that patchset is attempting to do.  Please
-> >> work together on this.
-> >
-> > +10000000,
-> >
-> > Greg,
-> >
-> > This series came as a surprise to me given the fact that device trust
-> > series is exactly for that - allow confidential computing.
-> >
-> > Adversarial is equal to the "cc_accepted".
-> 
-> I think the confusion stems from this thread:
-> 
-> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
-> 
-> Based on that discussion, I understood TRUST and eligibility for private
-> DMA to be complementary attributes. Device acceptance determines whether
-> a device may access private memory, while trust determines whether the
-> core must enforce additional restrictions. I understood that supporting
-> an accepted but adversarial device would require either a private IOTLB
-> to restrict its access or an IOMMU.
+PCIE_LINK_REQ_RST_NOT_INT is set by smlh_req_rst_not, which according to
+the RK3568 TRM "is asserted after power-on reset until first link up".
+The bit is thus already pending when the driver unmasks the interrupt
+after resetting the controller, both in probe and in .reset_root_port(),
+so the interrupt fires as soon as it is unmasked, even though the link
+is up. Since each recovery resets the controller again, this results in
+an endless loop, as seen on a Quartz64 Model B (RK3566):
 
-I reached a completely different conclusion from that discussion.
+  pcieport 0000:00:00.0: Recovering Root Port due to Link Down
+  pcieport 0000:00:00.0: Root Port has been reset
+  pcieport 0000:00:00.0: AER: device recovery successful
+  pcieport 0000:00:00.0: Recovering Root Port due to Link Down
 
-Device trust does little beyond preventing driver binding and recording the
-trust decision in "struct device". The missing piece, which I would expect
-you to address, is ensuring that the IOMMU and private DMA are configured
-only after the trust level has been decided or as part of that decision,
-rather than beforehand, as they are today.
+Clear the bit before unmasking the interrupt, and in .reset_root_port()
+only unmask it once the link is back up, like in probe. Also keep the
+interrupt masked while .reset_root_port() resets the controller, so the
+link down caused by the reset itself is not reported.
 
-Thanks
+Fixes: b376b3ff9cb0 ("PCI: dw-rockchip: Implement .reset_root_port() and use for link down")
+Reported-by: James Le Cuirot <chewi@gentoo.org>
+Closes: https://lore.kernel.org/linux-pci/08cc96c5171fc969b074371692e6d95d46eba60b.camel@gentoo.org/
+Cc: stable@vger.kernel.org
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 24 +++++++++++++------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
 
-> 
-> Therefore, with this series, a request to enable private memory DMA is
-> handled as follows:
-> 
-> 	if (!device_cc_accepted(&pdev->dev)) {
-> 		ret = -EACCES;
-> 		goto out;
-> 	}
-> 
-> 	/* Adversarial devices are unsupported for confidential DMA. */
-> 	if (device_is_adversarial(&pdev->dev)) {
-> 		ret = -EOPNOTSUPP;
-> 		goto out;
-> 	}
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index ab2e26699409..2ef7ae97eb10 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -686,6 +686,18 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void rockchip_pcie_rc_unmask_link_down(struct rockchip_pcie *rockchip)
++{
++	u32 val;
++
++	rockchip_pcie_writel_apb(rockchip, PCIE_LINK_REQ_RST_NOT_INT,
++				 PCIE_CLIENT_INTR_STATUS_MISC);
++
++	/* unmask hot reset/link-down reset */
++	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
++	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++}
++
+ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+ 				      struct rockchip_pcie *rockchip)
+ {
+@@ -739,9 +751,7 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+ 		return ret;
+ 	}
+ 
+-	/* unmask hot reset/link-down reset */
+-	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+-	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++	rockchip_pcie_rc_unmask_link_down(rockchip);
+ 
+ 	return ret;
+ }
+@@ -898,6 +908,9 @@ static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
+ 	u32 val;
+ 	int ret;
+ 
++	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 1);
++	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
++
+ 	dw_pcie_stop_link(pci);
+ 	clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+ 	rockchip_pcie_phy_deinit(rockchip);
+@@ -938,16 +951,13 @@ static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
+ 		goto deinit_clk;
+ 	}
+ 
+-	/* unmask hot reset/link-down reset */
+-	val = FIELD_PREP_WM16(PCIE_LINK_REQ_RST_NOT_INT, 0);
+-	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_MISC);
+-
+ 	ret = dw_pcie_start_link(pci);
+ 	if (ret)
+ 		goto deinit_clk;
+ 
+ 	/* Ignore errors, the link may come up later */
+ 	dw_pcie_wait_for_link(pci);
++	rockchip_pcie_rc_unmask_link_down(rockchip);
+ 	dev_dbg(dev, "Root Port reset completed\n");
+ 	return ret;
+ 
 
-The snippet above clearly shows why it is a good idea to wait until support
-for device trust levels is accepted. An adversarial device is untrusted
-from the PCI perspective and must have private DMA and a separate IOMMU
-group.
+base-commit: b6a9fa34ce4187cb69d3c588a4bbffc31ce5db8f
+-- 
+2.56.1
 
-Thanks
-
-> 
-> 
-> -aneesh
-> 
