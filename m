@@ -1,57 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.220
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795402208;
-	b=3HMHlOSoStEW6kDX303LdfutEP+fCecBEc63xYK+W0ZxTnmNnPxm9C9bs578MpM+id4i
-	 I4IOISmGgUf3gouezl2+z5nkE+gksiL/E6AG/CZS6KFY3Fn9aAYJffWlLvFLHlTngwQod
-	 9q7b1gfc6IeV8y2w3JRRBTTRx2CM5Agvj1FF2hXeYOyNI8larw18WV3AR3+sV1IfANGXX
-	 0V31LYg1QuI1wcuhykHuqnvAHPmFM+8/Rf1eKKcjHEQzyjTnteADNYSYGendWEAJBHTMy
-	 HgkTa0k4nIHeQjCYl/NcghZtWwCywBLi2DTeJEDZVK8VxKTgKMenyB/17+yATWdwTnw==
+	t=1795402386;
+	b=j1qpmxNlmCuxXjpwQ1fAbMV51HJqzFjG8OKqdYjPI4aH2BfjJg+rtXxesUorvw54orWu
+	 /WCH9XZGGlfW5Faomi3YengCKfb57zPI0E3RqhQ5E3AcpLuIe75ChpaY+m0xvXpMUOY3t
+	 msx4dg3TxV8JZX8AEgcoQElo5KHQxqtMTR5WXAyyhlBagEE6AuhBIsgoYdtTZau2modmf
+	 vZIpF/BIlw4HaLchLNiKLsH1H8XoMq5y0TbeK++s8Ek7hrKLEt0SCaaRH9wC/ZKkiDZDK
+	 NekC4cc4l6Om4f5zoYqpH7khLtwTzLgkJ2QkLHVwHsZwBGQFxHwoXVoTHmgNGFh5sFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795402208;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=icE3NOHsUjbw2djv6ZZGYtMKSPfBdWlX128XMt2eUtI=;
-	b=o7ohpbyYhZnA/QERCwH5zXICCe+49KP6bcrl8R28Hkec0mtuZZFXoRyQUIfRMmk19yFC
-	 i1uqmQIOu/IFSCfSu2GbE2fpJXZIXHEWoGcOXQK8moG4ZK2LV77a1KrQFRJICPy3cMOag
-	 yWAOzJXTbiPQ908KZMMCLG9oYW0Y6F0tYqYsvf0/Og9feO01WU/B/AXAiHkjV9Smr3wOu
-	 E0L4NyLxMUCPfkTahC2wUdezQASkICG/j4bnPqXZVPhNR/00LfP44V1N+tGBFY+zrbHH0
-	 W4CUm6A886FdqDM7T/w+NEZ7zjVSIOVgOyan7PcYRbqBD1gfVQedLlpPF6KyTffkYsg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795402386;
+	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:From:To:CC:References:
+	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-Originating-IP:X-ClientProxiedBy;
+	bh=vS0ydgtD01WkbuUv3vOiaHR3xPeQ5VodxiH+uaWLG/Q=;
+	b=JbcYeDdvN40tSPc5g7jnOu7oDBePOD5EoO5EYzep/WY5+chKoTFy5ahIch9yBpCbDAJY
+	 6s3fWEsZ8nRJMlS4hbAXCMQuhi9ZzwES532CiD0yQPUOzbLfeM1jr0qXBMjfNQY1rd/A6
+	 Dw75u+2rqRhI1iupW89lwxAT5WXRVme7nlZqyObUsYXDpZjOOCjPfnKyEPfuNJbdNrL6P
+	 jGqXBmEnAtxdPwYVi7fKps/VJ2Yf167lTsb+YBOwKzKWGIv6gyWvxyKK5Fu/TYj1P1MSQ
+	 2L35aCg+WhwEM1CbuRfBLim3I5bEhBSxlD0RwiAhaaPIoCWAvzYGhFHd7CZKEUmC3nA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=laSBag70;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=huawei.com;
+	spf=pass smtp.mailfrom=huawei.com;
+	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=cnRPMa9x;
+	arc=none smtp.remote-ip=113.46.200.220
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 462A3606A31A;
-	Mon, 23 Nov 2026 02:50:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E941606A31A;
+	Mon, 23 Nov 2026 02:53:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0E941606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=laSBag70
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA7201F000CF;
-	Mon, 23 Nov 2026 02:50:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795402207;
-	bh=icE3NOHsUjbw2djv6ZZGYtMKSPfBdWlX128XMt2eUtI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=laSBag705q0HG1PMukI7WD8HDf0Db5erKRuKXTcnG/xjerVFX9uiP4CL08Go9XgMX
-	 PFPGkjH/a05C73GtMm8yoPPMiH8mLiC2ere3963GviUx8DzihIS2hqqyZPFCJO4GKP
-	 lbFLEJ9t9IyoGC8s67at3d9116Cy6R5Cut/hcd/2ruylNWUUJFR1QZ4qHRGFQ3tBom
-	 yTMQ9pfx/tF76gO7skaAuAlCxND83MSUkYeeul+NIzL8gDd46S9fOA9/43OgZ9tUxW
-	 zSNcwRpFZm6tSTDAJjyxQq+8vkQIzEq5dv/m4nmPT39QsxAz/Pz8kr517G2v5bzWuI
-	 xVeDddjfOJpVA==
-Message-ID: <sashiko-outbox-228565@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v22 12/13] vfio/pci: Add DS-ST TPH policy and
- TPH_RESOLVE capability
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261123023628.7728-13-fengchengwen@huawei.com>
-References: <20261123023628.7728-1-fengchengwen@huawei.com>
- <20261123023628.7728-13-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 23 Nov 2026 02:50:07 +0000
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=cnRPMa9x
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=vS0ydgtD01WkbuUv3vOiaHR3xPeQ5VodxiH+uaWLG/Q=;
+	b=cnRPMa9xbi0i6DxtQy/7do8F068uH5fOnIpBnOUovf1VuUjgJTC+Bi+3gbb3u0jXYegXjP/WV
+	BXg/2TKimT3WV/6BLCDXBBZ1iSpTpvXTJVEIW35J/0q04GHuXC4TE5YF4b28S1Au5jSXjFLu9sZ
+	/G7B4EeMGKBERk7lsOm+l7o=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4jXr7m0jfJz12LHS;
+	Mon, 23 Nov 2026 10:52:04 +0800 (CST)
+Received: from kwepemo500009.china.huawei.com (unknown [7.202.194.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 93B194056E;
+	Mon, 23 Nov 2026 10:52:53 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemo500009.china.huawei.com (7.202.194.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Mon, 23 Nov 2026 10:52:52 +0800
+Message-ID: <62dc52aa-eccb-4604-a0e1-5748a47c29c7@huawei.com>
+Date: Mon, 23 Nov 2026 10:52:52 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,145 +61,191 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v22 00/13] vfio/pci: Add PCIe TPH support
+From: fengchengwen <fengchengwen@huawei.com>
+To: <alex@shazbot.org>
+CC: <wathsala.vithanage@arm.com>, <wei.huang2@amd.com>, <zhipingz@meta.com>,
+	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<jgg@ziepe.ca>, <helgaas@kernel.org>
+References: <20261123023628.7728-1-fengchengwen@huawei.com>
+Content-Language: en-US
+In-Reply-To: <20261123023628.7728-1-fengchengwen@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemo500009.china.huawei.com (7.202.194.199)
 
-Thank you for your contribution! Sashiko AI review found 2 potential
-issues to consider:
-- [High] vfio/pci: out-of-bounds read in cpu_online() via unchecked CPU
-  ID
-- [Medium] vfio/pci: vfio_tph_config_write() loses ST mode when TPH is
-  disabled
---
+Hi Alex,
 
-commit d6106eda03cc2bd8d1bcbc6a878dc5163e37fa33
-Author: Chengwen Feng <fengchengwen@huawei.com>
+This v22 adapts the VFIO feature enum numbers to match the latest linux-next
+and addresses Sashiko review comments on v21.
 
-vfio/pci: Add DS-ST TPH policy and TPH_RESOLVE capability
+I previously invited Wathsala (ARM) and Wei Huang (AMD) to review the series,
+particularly the TPH uAPI ownership and CPU offline lifecycle model. They are
+copied here for this v22 update.
 
-This commit adds the VFIO_PCI_TPH_POLICY_DS_ST policy level to allow
-PCI_TPH_ST_DS_MODE selection and introduces the
-VFIO_DEVICE_FEATURE_TPH_RESOLVE ioctl feature to resolve steering tags from
-CPU sources.
+I'd appreciate your review when you have bandwidth.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
-ci_config.c
-> index 2bae386a8469f..3b507a96edfc0 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -1228,7 +1228,7 @@ static int vfio_tph_config_write(struct vfio_pci_co=
-re_device *vdev, int pos,
->  	cap =3D vdev->tph_vcap;
->  	mode =3D FIELD_GET(PCI_TPH_CTRL_MODE_SEL_MASK, new_ctrl);
->  	req =3D FIELD_GET(PCI_TPH_CTRL_REQ_EN_MASK, new_ctrl);
-> -	if (mode > PCI_TPH_ST_IV_MODE || !(cap & (1u << mode)) ||
-> +	if (mode > PCI_TPH_ST_DS_MODE || !(cap & (1u << mode)) ||
->  		req =3D=3D 0x2 /* reserved */ ||
->  		(req =3D=3D PCI_TPH_REQ_EXT_TPH && !(cap & PCI_TPH_CAP_EXT_TPH)))
->  		goto out; /* Drop invalid or unsupported write value. */
+Thanks,
+Chengwen
 
-[Severity: Medium]
-Can vfio_tph_config_write() lose the ST Mode Select field when TPH
-Requester Enable is PCI_TPH_REQ_DISABLE?
+On 11/23/2026 10:36 AM, Chengwen Feng wrote:
+> This patchset enables userspace-configurable PCIe TPH support for VFIO in
+> the **device-to-host (D2H)** scenario, bringing performance benefits for
+> userspace workloads such as DPDK and SPDK.
+> 
+> The patchset is split into two logical parts:
+> 1. The first eight patches fix and refactor core PCI/TPH kernel code to
+>    export the required helper interfaces.
+> 2. The second five patches implement the corresponding VFIO TPH
+>    virtualization and uAPI step by step.
+> 
+> 
+> Since TLP TPH ST values are not validated by the IOMMU like TLP address
+> fields, there exists risk of cross-tenant cache interference if untrusted
+> VM can program arbitrary ST tags. We introduce two-level security
+> gating:
+> 
+> The first is the VFIO-PCI module parameter tph_policy, defined as:
+>    Global TPH policy level (0 = default No-ST):
+>    0 = No-ST mode: ST programming unavailable
+>    1 = Add IV-ST mode: ST programming supports NONE / CPU sources
+>    2 = Add DS-ST mode: RESOLVE returns ST for CPU sources;
+>                        ST programming supports NONE / CPU sources
+>        Note: In this 'Add DS-ST mode', device-specific ST tables are not
+>              preserved across PCI resets, userspace must re-establish ST
+>              state after reset. The kernel cannot validate these ST
+>              entries, so this mode is not recommended for general
+>              virtualization usecases.
+> 
+> Note: IV-ST mode is considered safe for VM use because the ST table is
+> programmed exclusively via the kernel VFIO uAPI. VM cannot directly
+> write the architected ST table in MSI-X or config space. The hypervisor
+> (e.g. QEMU) will verify ST, and also when a target CPU transitions from
+> online to offline, the kernel automatically (add in this patchset) clears
+> all ST table entries mapped to that CPU, setting those ST values to zero.
+> 
+> The second gate is per-device opt-in. TPH programming is only permitted
+> after userspace successfully opt-in via the VFIO TPH feature.
+> 
+> 
+> Three VFIO device features are introduced in this series:
+> 1. VFIO_DEVICE_FEATURE_TPH: control and query VFIO TPH feature
+>    capabilities.
+> 2. VFIO_DEVICE_FEATURE_TPH_PROGRAM: batch program architected steering tag
+>    table entries.
+> 3. VFIO_DEVICE_FEATURE_TPH_RESOLVE: resolve TPH attributes for a given CPU
+>    source.
+> 
+> The intended userspace programming model is:
+> 1. Read the virtualized PCI TPH capability via VFIO config space access to
+>    discover underlying hardware TPH support.
+> 2. Invoke VFIO_DEVICE_FEATURE_TPH SET to opt-in and obtain TPH permission.
+> 3. Invoke VFIO_DEVICE_FEATURE_TPH GET to retrieve available TPH
+>    capabilities; GET returns an error if opt-in has not been performed.
+> 4. Write the TPH control register through VFIO config space to activate
+>    hardware TPH.
+> 5. Program architected ST table entries via
+>    VFIO_DEVICE_FEATURE_TPH_PROGRAM if the device exposes architected ST
+>    table.
+> 6. Query the ST value for a given CPU ID via
+>    VFIO_DEVICE_FEATURE_TPH_RESOLVE for DS-ST capable devices, userspace
+>    may then configure the ST through device MMIO or firmware interfaces.
+> 
+> 
+> Key implementation details for capability virtualization:
+> 1. The TPH capability register is virtualized according to the active
+>    tph_policy:
+>    a. No-ST policy: IV/DS mode bits, ST location and ST size fields are
+>       masked. Only NO-ST capability is visible to userspace.
+>    b. IV-ST policy: DS mode bits are masked. Userspace sees NO-ST and
+>       IV-ST capabilities (if hardware supports IV-ST).
+>    c. DS-ST policy: capability register is passed through unmodified.
+> 2. Capability bits returned by VFIO_DEVICE_FEATURE_TPH GET follow these
+>    rules:
+>    a. If virtualized TPH exposes architected ST table:
+>       VFIO_DEVICE_TPH_CAP_PROG_ST_NONE and VFIO_DEVICE_TPH_CAP_PROG_ST_CPU
+>       are reported. These indicate userspace may use TPH_PROGRAM to update
+>       ST.
+>    b. If virtualized TPH supports DS mode:
+>       VFIO_DEVICE_TPH_CAP_RESOLVE_CPU_ST is reported. This indicates
+>       userspace can resolve CPU-ID associated ST values via TPH_RESOLVE.
+> 
+> 
+> Future P2P / DMABUF extension:
+> The uAPI is designed to easy extend to support device-to-device (P2P) and
+> DMABUF-backed scenarios on top of Zhiping's P2P TPH patchset:
+> 1. Return VFIO_DEVICE_TPH_CAP_RESOLVE_DMABUF_PH in all tph_policy in
+>    VFIO_DEVICE_FEATURE_TPH GET, so that userspace could resolve DMABUF's
+>    TPH PH info
+> 2. Return VFIO_DEVICE_TPH_CAP_PROG_ST_DMABUF if virtualized TPH has the
+>    architect ST, so that userspace could program ST entries which
+>    associated to DMABUFs' fd
+> 3. Return VFIO_DEVICE_TPH_CAP_RESOLVE_DMABUF_ST if virtualized TPH
+>    supports DS mode, so that userspace could retrieve ST value which
+>    associated to DMABUF's fd
+>    
+> ---
+> v22:
+> - Rebase latest linux-next to resolve uAPI conflict
+> - Reorder patch sequence: move core tph disable fixes ahead of vfio patches
+> - Fix Sashiko comments:
+>   - Fix TPH config write path: disable existing TPH before re-enable to
+>     keep state coherent
+>   - Fix cpuhp race/UAF: reorder TPH teardown before cpuhp removal
+>   - Add cpu_online() check in ST resolve routine
+>   - Gate IV/DS capability exposure on TPH _DSM presence; hide IV/DS when
+>     DSM unavailable
+>   - Fix kernel-doc and redundant check in pcie_tph_dsm_supported() helper
+> v21:
+> - Focus only device-to-host (D2H) scenario
+> - Implement steering-tag to cpuid map to tracking cpu offline
+> - Refactor the implementation
+> v20:
+> - Address almost all comments from Alex about v19, not within Alex's
+>   scope:
+>   - Drop LITERAL policy support
+>   - uAPI changes: cap have been split into fine-grained
+>   - TPH config access: still based on perm mechanism, but restrict the
+>     readable and writable length
+>   - Debugfs add more fields
+> v19:
+> - Address all comments from Alex
+>   - Drop CPU-to-ST translation of PCI/TPH
+>   - Re-implement vfio part, please refer:
+>     https://lore.kernel.org/linux-pci/20260626092232.53ed3a7c@shazbot.org/
+> - Add expose tph_policy via debugfs
+> 
+> Chengwen Feng (13):
+>   PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+>   PCI/TPH: Fix tph_enabled concurrent update race by bitfield packing
+>   PCI/TPH: Cache negotiated max requester type at probe time
+>   PCI/TPH: Refactor pcie_enable_tph and add requester variant
+>   PCI/TPH: Refactor pcie_tph_get_cpu_st & add requester variant
+>   PCI/TPH: Add helpers to check standard and extended TPH support
+>   PCI/TPH: Add pcie_tph_set_st_entries() batch ST entry programming
+>     helper
+>   PCI/TPH: Add pcie_tph_dsm_supported() helper to detect device TPH ST
+>     _DSM
+>   vfio/pci: Reset PCIe TPH state on device open and close
+>   vfio/pci: Add basic NO-ST TPH VFIO device feature support
+>   vfio/pci: Add IV-ST TPH policy and TPH_PROGRAM batch programming
+>     support
+>   vfio/pci: Add DS-ST TPH policy and TPH_RESOLVE capability
+>   vfio/pci: Expose per-device TPH state via debugfs
+> 
+>  drivers/pci/tph.c                  | 240 ++++++++++++-----
+>  drivers/vfio/pci/vfio_pci.c        |  24 ++
+>  drivers/vfio/pci/vfio_pci_config.c | 188 +++++++++++--
+>  drivers/vfio/pci/vfio_pci_core.c   | 412 ++++++++++++++++++++++++++++-
+>  drivers/vfio/pci/vfio_pci_priv.h   |   6 +
+>  include/linux/pci-tph.h            |  55 +++-
+>  include/linux/pci.h                |   6 +-
+>  include/linux/vfio_pci_core.h      |   7 +
+>  include/uapi/linux/vfio.h          | 129 +++++++++
+>  9 files changed, 967 insertions(+), 100 deletions(-)
+> 
 
-When req =3D=3D PCI_TPH_REQ_DISABLE, vfio_tph_config_write() calls
-pcie_disable_tph(), which either returns without writing to hardware when
-!pdev->tph_enabled or writes 0 to the entire 32-bit hardware PCI_TPH_CTRL
-register when pdev->tph_enabled is set.  Because vfio_tph_config_read()
-reads PCI_TPH_CTRL directly from hardware and vfio_tph_config_write()
-overwrites vdev->vconfig[start + PCI_TPH_CTRL] with the hardware register
-on entry:
-
-drivers/vfio/pci/vfio_pci_config.c:vfio_tph_config_write() {
-	...
-	vfio_user_config_read(pdev, start + PCI_TPH_CTRL, &ctrl_val, 4);
-	vfio_default_config_write(vdev, start + PCI_TPH_CTRL, 4, perm,
-				  PCI_TPH_CTRL, ctrl_val);
-	...
-	if (req =3D=3D PCI_TPH_REQ_TPH_ONLY || req =3D=3D PCI_TPH_REQ_EXT_TPH) {
-		pcie_disable_tph(pdev);
-		pcie_enable_tph_ext(pdev, mode, req);
-	} else if (req =3D=3D PCI_TPH_REQ_DISABLE) {
-		pcie_disable_tph(pdev);
-	}
-	...
-}
-
-any ST mode written while the requester is disabled (or preserved when
-disabling the requester to update ST entries) is lost on the next config
-read or write, reverting the device to PCI_TPH_ST_NS_MODE when the
-requester is later enabled.
-
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 83b81d1a61227..318b4f4332565 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-[ ... ]
-> @@ -1915,6 +1921,50 @@ static int vfio_pci_core_feature_tph_program(struc=
-t vfio_pci_core_device *vdev,
->  	return ret;
->  }
-> =20
-> +static int vfio_pci_core_feature_tph_resolve(struct vfio_pci_core_device=
- *vdev,
-> +			u32 flags,
-> +			struct vfio_device_feature_tph_resolve __user *arg,
-> +			size_t argsz)
-> +{
-> +	struct vfio_device_feature_tph_resolve resolve;
-> +	u32 user_flags, src_mask;
-> +	bool extended;
-> +	u16 tag =3D 0;
-> +	int ret;
-> +
-> +	if (!vdev->tph_opt_in || !(vdev->tph_vcap & PCI_TPH_CAP_ST_DS))
-> +		return -EOPNOTSUPP;
-> +
-> +	ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
-> +				 sizeof(resolve));
-> +	if (ret !=3D 1)
-> +		return ret;
-> +
-> +	if (copy_from_user(&resolve, arg, sizeof(resolve)))
-> +		return -EFAULT;
-> +
-> +	user_flags =3D resolve.flags;
-> +	extended =3D !!(user_flags & VFIO_DEVICE_TPH_EXTENDED);
-> +	if (extended && !pcie_ext_tph_supported(vdev->pdev))
-> +		return -EOPNOTSUPP;
-> +	user_flags &=3D ~VFIO_DEVICE_TPH_EXTENDED;
-> +
-> +	src_mask =3D vfio_pci_tph_get_src_mask(vdev) & ~VFIO_DEVICE_TPH_SRC_NON=
-E;
-> +	if (user_flags & ~src_mask || !is_power_of_2(user_flags))
-> +		return -EINVAL;
-> +
-> +	ret =3D vfio_pci_tph_resolve_st_tag(vdev->pdev, user_flags, resolve.src,
-> +					  extended, &tag);
-
-[Severity: High]
-Can a user-supplied resolve.src >=3D nr_cpu_ids cause an out-of-bounds read
-in cpu_online()?
-
-vfio_pci_core_feature_tph_resolve() passes the unvalidated 32-bit
-resolve.src value from userspace to vfio_pci_tph_resolve_st_tag(), which
-calls cpu_online(src_handle) without first checking src_handle < nr_cpu_ids:
-
-drivers/vfio/pci/vfio_pci_core.c:vfio_pci_tph_resolve_st_tag() {
-	...
-	if ((src_bits & cpu_srcs) && !cpu_online(src_handle)) {
-		*st =3D 0;
-		return -EINVAL;
-	}
-	...
-}
-
-Because cpumask_test_cpu() does not clamp out-of-range CPU numbers,
-passing a large resolve.src indexes past __cpu_online_mask in test_bit()
-and can trigger an out-of-bounds read or kernel page fault.  Checking
-src_handle >=3D nr_cpu_ids before cpu_online(src_handle) in
-vfio_pci_tph_resolve_st_tag() would also protect
-vfio_pci_core_feature_tph_program().
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261123023628.7728=
--1-fengchengwen@huawei.com?part=3D12
