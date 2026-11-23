@@ -1,80 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795459421;
-	b=D+2bPAuQhctLTzlhIQPLEzw1H2HEEBoecJzymyuDeeYMG0DFU98Y+vLbDLHgobEchgq4
-	 Be4nUxf4AXoBr8QWEMWxX+y1bIT3uSqO5mcNsxkYYYRDd2sGxa3pt5JPq7L+FSoY0q1ed
-	 yp8f0UNulHCkU6bzvYmvsaFYYdxUP57hiMtMeOKtYUjqdC9n7UWnDyqxykc6ct+05DNrK
-	 qXvHqAjhlZORIDCEQfxSii6QHfwZdiYuRl2CfRvDkvV2ESNVmTHfIULmXv4hjeVJyQicx
-	 bDu9HY8gh8yb4pg3TWrSSfM2QMRgUi5fOhBeg+Gs1i4c/8P3cF3YFLukef44dG4+vjQ==
+	t=1795459426;
+	b=EEtQLwpK0H7tpcp+BMLPNw1o8tYftJVfeAi9VhnavoGvPiIvPGS4saiNPG8gAyjor9cV
+	 R8/67A98rJcNRmw8F+/TQ9fY6HhosWjT6r5iR4ajQbfs3JsQMsFdTDEZpaKzuIflBDdh+
+	 76Hw1GSFDoLoZxZeT1y+acFnSMD/Jry9D+CvyT62ZwqFdS5zg1vtFd2/FqiBQtkLxC2fF
+	 MPVDNYntjmoUwatZh84TAkSwEZP6NZOodvvU6uGMYfIHQ7oBCUqHlc+FfCO8DZSD911/p
+	 B0xIQKw+fywGXzxHwn58f5MiUoaBcJPWKbD0Qmk8DUKRI+TqG08B++PJl437cVFU9Aw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795459421;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=TVCeBNpBSCniXUkRYAXV9X2oz+xk0sndZ19iJGTFvsE=;
-	b=iwywyRfU8L0YUUjZBfCqqA5gOzwUrENKFW8NdXYdpiq3rSvPtBtQiHnr0Psej6IP0ddx
-	 qG6nEIV0oJ4dj+a6XPALuthbFTtkCs5MQsdC6eREnLbeeS8rHR5MRMhDXu2vFZznHoXRl
-	 iTFVQGFP9j652GU81mtC5DFqhbStBf9Vqp32HHhCZKtjonJS7ew2NAD1CozzbtQZ2u/aS
-	 86/lrOIcmnJhi13BMUbo0o5+mc+xlv1wnqeMcYsOKNotgo8F6Jo8cVNNp7KEFIhEBv5Zu
-	 ELWCP7otK+uY1hKyuEY3SsMKbLeizQ/sZD08JnBsuYq/XSgIFm6r5luDsEwU597xPoA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795459426;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=9tyMkUr9+zYWv3mAdl+/oTYNIcjMUy1JAChBbK6vIio=;
+	b=y2aDUMRSuu0Gp0yg+5qE7lvgTcuZ09rO0r02hKN7Z9LnoXgF/oMS7h696vZa0mkb8uj0
+	 XiJFGYZw7r1HNPetikcMM2x4awt/SHrGwsMRlGUWzVRZaoVpeSK8L/fQFtna90/QEXnMi
+	 6fITldozHh46KPrtliEWQN25jzDFCcnr0Va67bziSCQuon31Q+NoqzEzjq+aRBilMrY+B
+	 xaSl/X6MAp9EYv/CkA3uXY98oODBwIsxRk2Rm4B55hMUuoDT8eGHvmIvhbmZoPBcQhBeH
+	 yN8MZafYxHdhaTh6zHvY3pfLnxOTKx1lZ5K6C1a6IQoAjBTDXr+T2dxJEr2A8rkpK/Q==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mBkFI3Ar;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZaICRG+P;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 135B3606A31A;
-	Mon, 23 Nov 2026 18:43:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A93D606A334;
+	Mon, 23 Nov 2026 18:43:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mBkFI3Ar
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZaICRG+P
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795459420;
-	b=ShVFPkPly2AOp7KFklPhEGRbGT/z804rfWj3mNqwUB6Q/8BIg9EaF6oaunEFAwWiSglf
-	 5IHAESeHiJvf+Xhopikt2qlOZ8yOgYK50/2teFJ0lLWONzhy+lTMwEf4OY8mvIxJFbMc6
-	 3iuhRLe0QXSyUl2njo28+hBSunXctG0WCWT1xgdTILb8TyV86pFY3Yj+OtRmw3nhrBWH3
-	 aGbj/Y2Z6vba1uTrQjy8BJwgwoEcPNAFN0Bn33QzI8KvEO46405qo0rCAaLiiWGMav2jA
-	 yJ1J1xpWFLbEI2jYM9bgttRfx8WqXq1xyn8gp+DpQHNacunc7rycDW2WKJV2yLnyzwQ==
+	t=1795459425;
+	b=rS8/BpRu8JViWn+uNqzMThet9tLlOrGwVslpiPi3R7aqJmTiCv8nnIRmz+z80SVxEOSK
+	 usET9LKy8Ap9o4w6C5KoIvjRCU1ztJBKfBKF5NIO7We4tQ6dSh3ZzU9qwA1mkLL9cdSx5
+	 L9sJV/nwKXi2FijXyZyFZlTAdjhihUyYug4NBtN7+psz3dTo+U6E8cWNAandl00eb/K91
+	 81KH1yim8xOedZDzsrAZYb5RLcjM0vS/ZOjR85lYgJRQASffLXBHvFb0pgRS+idC8EE7X
+	 kbrMvUmfUZfXlellOf5aJlLMdUw7NkE9Q+eV//aLqa2QGmZyPuw61OY0DnB6g5wDMoA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795459420;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=TVCeBNpBSCniXUkRYAXV9X2oz+xk0sndZ19iJGTFvsE=;
-	b=GVFAxZhMwmdx7RRXh8oDctBMC9tYDJmM1EEluBb2MQHqI/x76YGBKcap1ryN6zYt/3Dz
-	 ggI++MQRP1/6GHeWT4uk3ncS20vw0dzCAOnRsohASTPwkuwBzh4PoO48fkjLmr97v/sta
-	 /ks332v+8jCRAWyBhWm9KPxddoGWCRjo7U5fc4/0EyVgZS1jWnb2Mn/es7nDtu3WEv1mT
-	 1uCwM+nLBiLIIUtAeuqDSlZEow1KBEvyQJ3DlNdDkTKKNRCktgEMqKicfKQko0fN3eS+R
-	 z9yhyB0UQedjFxNyyu+4U4SBaazYbAp1gym/QCJB7irSxlA/REoqUV4nn61lMWc2dew==
+	c=relaxed/relaxed; t=1795459425;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=9tyMkUr9+zYWv3mAdl+/oTYNIcjMUy1JAChBbK6vIio=;
+	b=oi8DjRiejntaobIbm6ARr0zB0EKoDT22uDDLVvonQP/+ov/UUSHAz6/fsqevH47P6KlN
+	 Ail1aiNPQdjKLbTIhsi8gkefow5oElpW+kwI2kUPRXNCD+05wTQ2DcRnZtk3OS0egMr9Y
+	 bn5Bm2y+tstKrlY+q16EBC3m9rbXnheHLnK+Ude0axrrYTdTIowXW3krAIaJmXWzcSpMl
+	 4kdSuS6bhMKsYm/Hsk+75iNhFUUz+Xnv6IRf1IlFP0E1NFC4VNg3vRKJamwaXKGFIO1Xa
+	 pHxj6hZ12thBx3nEeSdRiLA+S0vE2sKbiYTq9ci4NwSk5XCfP/EH0AbPEFm9vynnm0w==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 3A66D1F000C6;
+	by smtp.kernel.org (Postfix) with ESMTPS id 5A1261F000CA;
 	Mon, 23 Nov 2026 18:43:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795459420;
-	bh=TVCeBNpBSCniXUkRYAXV9X2oz+xk0sndZ19iJGTFvsE=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=mBkFI3ArcPPi2c8rjkV/YEWP+kifTWOW24IXi9jYFPKES/YkNHkZdAN9dbUdAei1I
-	 SMn4cWbjK6kvLF6eKTNZ0cnDz+cMmRbmKiZoO/a/0gRpfVVDWuQOXvoikXaInc8vbX
-	 PAA/k3i5bmTk1zNrzcF55O/Zc6OxOgvdUa9FQsEjuZLAgwNOchB1CgG5uBQif0DRCT
-	 4mE6vfvzLesn3R4WcWZOIs6OwYj11lk5aOE/5xDjpD4rl9lt1ceN6gDUlXfCvsmr1t
-	 EXtveBXvlX2snbecIUN7HTfggnwB4HThj130GSV+i+OJBVwTGC6ajFKA07cqqg1okA
-	 SHRxFZfQxOkBg==
+	s=k20260515; t=1795459425;
+	bh=9tyMkUr9+zYWv3mAdl+/oTYNIcjMUy1JAChBbK6vIio=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=ZaICRG+PuCQK60fTxvNdKR9GV0MoPdOeTGvRCALhWL6hhkHfcAthrT5/PgBL6SwCX
+	 7Z5/5dnwVajLkhJsKFqNTRSrxA4GzpryMYUjGYXqW1GWJWD3ITaBeWTRnOoEJ+7dYr
+	 LjirD/7nTQ3vmkkJFJVIHmkrg5fQ2yN8eve6K7vH1hoQAe0AitGOWeF8vXfSaMqG9M
+	 77qO0D3TtCnIP+Qpb23IR8i4t91nnlMsfjTe4rSVi636CA3vPgkOM54v2P3UftkdHj
+	 YdZ9LRTM18Q4Yb+iArm3YXIAhySYqZ8aUP8qer17f+grXkSVvUhe5xYYJ7Y3os1RC8
+	 TmSZKddzNNtVA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id BEFAD4C5BB;
+	by lkml.kernel.org (Postfix) with ESMTP id DF6F94C5D5;
 	Mon, 23 Nov 2026 18:43:33 +0000 (UTC)
 From: Fil Dunsky via B4 Relay <devnull+filipp.dunsky.gmail.com@kernel.org>
-Subject: [PATCH 0/8] soc: cortina: Add CS7542 PCIe control, SerDes and host
- support
-Date: Mon, 23 Nov 2026 21:43:28 +0300
-Message-Id: <20261123-b4-cs7542-pcie-v1-0-4cde5201d404@gmail.com>
+Date: Mon, 23 Nov 2026 21:43:29 +0300
+Subject: [PATCH 1/8] PCI: dwc: Export the multiplexed MSI interrupt handler
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -85,13 +83,9 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/z2OzW7DIBCEX8Xi3K0CLAR86ntUOcB6SalqO/U6U
- aMo7x7yox5HmvnmuyjhpbKovruohU9V6jy1oN86RV9p2jPUoWVlNsZrbSxkBJKtQwMHqgzGIFs
- XKfgYVBsdFi717wH83D2zHPM303qnvBoL/x7b0/qsqZyEgeZxrGvfZZ9iSRaJUYctZR8HSy6Eh
- DmXQlYTuyGHckeNLJIein33L/iyk7PQPMFJwwYwBhfYW40YP/Zjqj/v7U7trtcbOhs3wAABAAA
- =
-X-Change-ID: 20261123-b4-cs7542-pcie-224e359c8698
+Message-Id: <20261123-b4-cs7542-pcie-v1-1-4cde5201d404@gmail.com>
+References: <20261123-b4-cs7542-pcie-v1-0-4cde5201d404@gmail.com>
+In-Reply-To: <20261123-b4-cs7542-pcie-v1-0-4cde5201d404@gmail.com>
 To: Manivannan Sadhasivam <mani@kernel.org>, 
  Stephen Boyd <sboyd@kernel.org>, Vinod Koul <vkoul@kernel.org>
 Cc: Jingoo Han <jingoohan1@gmail.com>, 
@@ -107,90 +101,43 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
  linux-clk@vger.kernel.org, linux-phy@lists.infradead.org, 
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795459409; l=4046;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795459409; l=872;
  i=filipp.dunsky@gmail.com; s=20260930; h=from:subject:message-id;
- bh=+KcFkt6zaT2tLskeXzg7MF3C8vczJ1q0kPo5HltV7rw=;
- b=GnuNQHWYPkVabRpyNN2+KF3Y7yNbrHsQgfpZyeLrU2LLjENAKS96MYUxuLBhOL3HcUAM6syEF
- QCNXfcsW9N9A/On1z70S1EvDNdDZGqy9+hp92KdS8TkikNtK6iuzPht
+ bh=Mna9V2FvctfGCov2fj28CrWMP+FmQdEcH5a5uq4pt5U=;
+ b=qNvzbOacLh6x0fSN7zTi0mn1WbwON1SuHXMEhUFL6l3FtIOVmrgsRFMGLDeZuslgdgYoJHppc
+ LWit8E7cf8GCfJgcPzOkf0z529lNCweFuB2AAzTM/guTvcrVyYhMeW7
 X-Developer-Key: i=filipp.dunsky@gmail.com; a=ed25519;
  pk=JAYP8e2rJ54DHOmhNtXud8rl1igAaAXoOHxtJmVXI1g=
 X-Endpoint-Received: by B4 Relay for filipp.dunsky@gmail.com/20260930 with
  auth_id=1085
 X-Original-From: Fil Dunsky <filipp.dunsky@gmail.com>
 Reply-To: filipp.dunsky@gmail.com
+Content-Transfer-Encoding: 7bit
 
-Add PCIe support for the Cortina Systems CS7542, with the shared global
-controls, Snow Bush SerDes and DesignWare host glue in separate drivers.
-Each controller consumes a clock gate, reset line and generic PHY rather
-than modifying the global registers directly.
+From: Fil Dunsky <filipp.dunsky@gmail.com>
 
-This series depends on the CS7542 global clock/pinctrl v1 series:
-https://lore.kernel.org/all/20261123-cs7542-syscon-v1-0-49858e631449@gmail.com/
-Both series are based on Linux v7.4-rc4. Board DTS enablement is kept in
-the integration test branch and is not part of these eight driver patches.
+Allow modular host glue with a combined application interrupt to dispatch
+the internal MSI receiver without installing a second chained handler.
 
-The host protects the hardware's 512-byte root configuration limit for
-both PCI config operations and direct DBI callbacks, while preserving
-access to the private DesignWare register bank and separate iATU base.
-It reads live link/LTSSM state from the application wrapper and owns the
-combined INTx/MSI interrupt lifecycle.
-Clock rates for the controller gates are not inferred; only the SerDes
-reference is required to be 24 MHz. SATA mode, hotplug and suspend/resume
-are outside the support described by this first version.
-
-Validation:
-- Full ARM GCC 14.2 vmlinux+modules for all three new drivers built-in and
-  as modules, COMPILE_TEST=n, without the Cortina platform series.
-- DT schema/examples, strict source checkpatch, and 49298 UBSan cases
-  executing actual config/DBI/link callbacks, including fatal-link guards.
-- Almond+ RAM Linux 7.4-rc4: 73 checks / 0 failures; all three endpoints enumerate; xHCI No-op
-  commands complete through real MSI-X and INTx interrupts. Module removal,
-  injected CMU timeout on every lane, cleanup and subsequent recovery pass.
-- With unused SATA gates disabled, the shared PHY status still works.
-  Link loss blocks DBI/config until controller reprobe, which restores it;
-  a held-reset endpoint safely leaves a root-only bus.
-- Shared global register bits are preserved. The RAM program has no MTD
-  support and performs no flash I/O. The installed firmware remains intact.
-
+Signed-off-by: Fil Dunsky <filipp.dunsky@gmail.com>
 ---
-Fil Dunsky (8):
-      PCI: dwc: Export the multiplexed MSI interrupt handler
-      dt-bindings: clock: Describe CS7542 PCIe gates and resets
-      clk: Add CS7542 PCIe gates and resets
-      dt-bindings: phy: Describe CS7542 PCIe SerDes
-      phy: Add CS7542 PCIe SerDes support
-      dt-bindings: PCI: Describe the CS7542 host controller
-      PCI: cs7542: Add CS7542 PCIe host support
-      MAINTAINERS: Add CS7542 PCIe support
+ drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- .../clock/cortina,cs7542-pcie-control.yaml         |  47 ++
- .../bindings/pci/cortina,cs7542-pcie.yaml          | 127 ++++++
- .../bindings/phy/cortina,cs7542-pcie-phy.yaml      |  67 +++
- .../soc/cortina/cortina,cs7542-syscon.yaml         |   4 +
- MAINTAINERS                                        |   8 +-
- drivers/clk/Kconfig                                |  11 +
- drivers/clk/Makefile                               |   2 +
- drivers/clk/clk-cs7542-pcie.c                      | 168 +++++++
- drivers/pci/controller/dwc/Kconfig                 |  12 +
- drivers/pci/controller/dwc/Makefile                |   2 +
- drivers/pci/controller/dwc/pcie-cs7542.c           | 508 +++++++++++++++++++++
- drivers/pci/controller/dwc/pcie-designware-host.c  |   1 +
- drivers/phy/Kconfig                                |  11 +
- drivers/phy/Makefile                               |   2 +
- drivers/phy/phy-cs7542-pcie.c                      | 232 ++++++++++
- 15 files changed, 1201 insertions(+), 1 deletion(-)
----
-base-commit: b6a9fa34ce4187cb69d3c588a4bbffc31ce5db8f
-change-id: 20261123-b4-cs7542-pcie-224e359c8698
-prerequisite-message-id: 20261123-cs7542-syscon-v1-0-49858e631449@gmail.com
-prerequisite-patch-id: 4b568d742095f1a61312c911d2b6e81c8e754312
-prerequisite-patch-id: a4bba26a3aac57e4e4229a727fdf94677373493a
-prerequisite-patch-id: f8a2ba71717f71ca2bedda986f8b861995cdc586
-prerequisite-patch-id: 7a2275c69dcde437fc8badf2bba06d451943a66f
-prerequisite-patch-id: 25220835f5d2506a01ba652d86f9b9ac3ad5121a
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index bbb02458a..1d076bb62 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -85,6 +85,7 @@ void dw_handle_msi_irq(struct dw_pcie_rp *pp)
+ 			generic_handle_demux_domain_irq(pp->msi_irq_domain, irq_off + pos);
+ 	}
+ }
++EXPORT_SYMBOL_GPL(dw_handle_msi_irq);
+ 
+ /* Chained MSI interrupt service routine */
+ static void dw_chained_msi_isr(struct irq_desc *desc)
 
-Best regards,
---  
-Fil Dunsky <filipp.dunsky@gmail.com>
+-- 
+2.53.0
 
 
