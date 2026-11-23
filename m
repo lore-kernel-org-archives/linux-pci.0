@@ -1,80 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=52.34.181.151
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795450845;
-	b=NUOZ3B2hlc86sn58MJAnejbIshDqhQDm0Dil6rQT9Hyp+KMFVPJCj/o8Z9johzOWV+fz
-	 KhoXAhJ778UoiRVmt588agXhr2WewvEKE997v9uuDx1/FVP4ejKn6Xz6bTvbW6W6xNipU
-	 ZJZSnwgZRV7tfy5pzeWtvAtWjlmwbH11ozEZeky9PdbMAvOrT0pGbNbCm3JC/Ho78G3lg
-	 zRXQN2vWGz4B5qfk/W+8s/F5QxFdj2lsofqUZ24Gin83lIwDJXhBxZ1jU/hvvbZClqzAd
-	 8V2e70WRG2zI5jqbsqLz6kfmCNX9ssxHQi3ana61kKV6TCU69eOFS1Oxbgl7/A91KkA==
+	t=1795450876;
+	b=b3clZJ6Eq1msB7AFl3lXeiTsTPobYG+MGguVYhEzfJYIKFIqHAAhaIgwyMy7/GoEroxR
+	 RbO4fu8JAYZVDF8s5jjENhz71hPWI/J4bwZUJyo/IvZZj51Hs+IHYUI0Mhpl315172JPw
+	 30/MyCX1QCdEbG34NVLymh77MoRT4Wzu8ubfe5kMVBLKn011ECkCxU8cXV1ereknl2VQV
+	 9Wyz2zExobHP7j5Isa6P8fXCPiqUO8P9MtwBd3cyja8yz0RONZkE7nLfI33cJuAnVECeh
+	 kXD4npFyirl0ZNgcKYzhH6awXVb+3W8wHn57ZPDWXbITQyJkDA8aMgX2UBfJL3dYoKA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795450845;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
-	 From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
-	 X-ClientProxiedBy;
-	bh=jiorvTbex8xNRbSFcyEOA9X1zMLKOWcfRbigdWAcml8=;
-	b=OKD4CxG1ZNDNHyF+zKkPjDbwxNQI0t0rGwMe0BNZwKFm9Bee9RTXpvJLP49s3iyOURE5
-	 H3I4KpsdciZH6Qw/1kKxsJofu5toneHFAEh+DBwZG3lv4xh/Ylcg12wFD9yChod5kAtKT
-	 vQIp/0OLKQ+FOc4SVOGV3QNXutsVXk9B/N2IBlcodG94goLWoOhhryeU39GDaondeZ9e+
-	 BhgKXtkLmplJeQXvjQ1Or6S6jXYTKvWoShATVw2xYmmTEcs9AduP5Agq8vcoPkv/8IIdy
-	 cL7YllMTO5dQg9U/VLQO/GBiMQGr4F/6oVM4SS8HzUwQL3c+6HlkNREDC5qhvM1+m1g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795450876;
+	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=INOa4kV3oG92y+8V9TagV8Pu1IayJqy+GVQ0Gn3qaGU=;
+	b=IyWuWCZd4KH6cbEjBvfMZUAxqI5vo6cYuyBKtoQEeI/GYrcUZL0SjGxoTXGVkvzAi70j
+	 DcJMW/B8feZCKO0/iIC8Wx0oX/rgYFSu2LtDTVb62BV7zx65ZMLI/LEEKX7WsqifZw1bu
+	 C5qiKWvUdgR9dzsojxMlYsEBAe8SzRPXS0mwDPsx73WQrrwLGNfFtH0ErWsKNolvLmsh2
+	 5tlDbOQUjyYWOW1etoKtwG/WHGctLf2DSva/3P1Aj76hmxnhSKYT0T6NbeXXq7yqKVYED
+	 mTH9xWSt9qeYMb7sGZBGO4Y3k7yRIU7ngsEez2v5YLbjmITFyoSlI0FRlTRMESjt5qg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amazon.de;
-	spf=pass smtp.mailfrom=amazon.de;
-	dkim=pass header.d=amazon.de header.i=@amazon.de header.a=rsa-sha256 header.s=amazoncorp2 header.b="Cw/mhI+q";
-	arc=none smtp.remote-ip=52.34.181.151
-Received: from pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.34.181.151])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HBJ9VHSW;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 134EF606A31A;
-	Mon, 23 Nov 2026 16:20:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 134EF606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E9C6606A334;
+	Mon, 23 Nov 2026 16:21:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=amazon.de header.i=@amazon.de header.a=rsa-sha256 header.s=amazoncorp2 header.b=Cw/mhI+q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
-  t=1795450845; x=1826986845;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=jiorvTbex8xNRbSFcyEOA9X1zMLKOWcfRbigdWAcml8=;
-  b=Cw/mhI+qydV0Gr6fvUZkeGdNgp535PvKqc5EYMC+thD49Giv+nqQIc7H
-   QjSy5TTi0Y42YHtEjd7VmR/nKqICqKe5zDZY/ye3tAFAZlY8Skrb3zKMS
-   e4xSOjvQ0MYSmWmpcueTeLfG/9n99iM1Z76MowXl5xD7mkqDs/ykYaMog
-   +q7NTKt9IgkWwR0zeLekZY6B8Ep8laDu5BUN7lZ9eZlmvDj/hOIhkTJjc
-   +SVrIlWdoELhRMB1/z8Crx0smnYIhc4pDEJhlNrUF1iSeU+wrKBIS1jy9
-   izS3cGxD1XB2hkCTH3+/cvCZiNgIMo7zjZ+3S5fds83cCuY+ZuABbtSOt
-   w==;
-X-CSE-ConnectionGUID: r3z+BnVhQbCxqPU18iWaCw==
-X-CSE-MsgGUID: LURIAL1kTsepXAyWHka9Tw==
-X-IronPort-AV: E=Sophos;i="6.27,229,1787011200"; 
-   d="scan'208";a="34899596"
-Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
-  by internal-pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2026 16:20:42 +0000
-Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.48:9902]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.8.86:2525] with esmtp (Farcaster)
- id e03af4a5-e137-45d7-8311-8c7b2037f87c; Mon, 23 Nov 2026 16:20:42 +0000 (UTC)
-X-Farcaster-Flow-ID: e03af4a5-e137-45d7-8311-8c7b2037f87c
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.57;
- Mon, 23 Nov 2026 16:20:42 +0000
-Received: from dev-dsk-machaujo-1c-d6b511e2.eu-west-1.amazon.com
- (10.253.100.8) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.57; Mon, 23 Nov 2026
- 16:20:40 +0000
-From: Joshua Machauer <machaujo@amazon.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Dave Jiang <dave.jiang@intel.com>, Richard Cheng <icheng@nvidia.com>,
-	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <nh-open-source@amazon.com>
-Subject: [PATCH v2] PCI: Skip the CXL state update for a VF
-Date: Mon, 23 Nov 2026 16:20:35 +0000
-Message-ID: <20261123162035.79133-1-machaujo@amazon.de>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HBJ9VHSW
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C8CB1F000CA;
+	Mon, 23 Nov 2026 16:21:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795450875;
+	bh=INOa4kV3oG92y+8V9TagV8Pu1IayJqy+GVQ0Gn3qaGU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=HBJ9VHSWa5FJ88g6/jfPijZU6l1xJoOy4ReuonJZNMf10mQKZaZAyxKhmD0Z5KzVD
+	 OlaE6/ZqU5PUJBYufl1CrrFrxmoLVvF2tKxkE6KjNtCzsawwejBQSKui20ma2cbQfx
+	 /Rr5ZOIfCpjGmDTJIC8ymePf2JPORNDV3ptobGw4mAKVwU/0zgfEPVhdap6GQbzCQe
+	 EycC30XaetDia+bbLaXR/VBmxRh4RV1sDIPTXsgDzy9eczijCH9pOT0u6X2ZuuR/uP
+	 /CCuHiU3uOVN5Z8xKCz1MsiPK7oINS5hEOjMD3IyA+rijpWRRLZaMOUYF+bTa6F63Z
+	 8HdBH64Mg7Naw==
+X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Nicolin Chen <nicolinc@nvidia.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
+In-Reply-To: <20261123152533.GE179082@ziepe.ca>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <2026112325-emit-squeezing-5d96@gregkh> <20261123090623.GK14811@unreal>
+ <yq5a7bi3riha.fsf@kernel.org> <20261123115803.GN14811@unreal>
+ <yq5awlq3pto0.fsf@kernel.org> <20261123135638.GO14811@unreal>
+ <20261123152533.GE179082@ziepe.ca>
+Date: Mon, 23 Nov 2026 21:51:04 +0530
+Message-ID: <yq5aik1n4iz3.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,60 +76,114 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: EX19D031UWC004.ant.amazon.com (10.13.139.246) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-set_pcie_cxl() runs for every added device. It first refreshes the CXL
-state of the upstream bridge, which walks that bridge's extended
-capabilities and recurses up to the Root Port, and then searches the
-device's own extended capabilities for the Flex Bus Port DVSEC.
+Jason Gunthorpe <jgg@ziepe.ca> writes:
 
-For a VF neither step changes anything. A CXL device exposes its Flex
-Bus Port DVSEC through Function 0 (CXL r4.0, sec 8.1.8), so the search
-in a VF finds nothing and the VF's is_cxl stays false. The bridges
-above a VF are the ones above its PF, which were already refreshed when
-the PF was added. Because enabling SR-IOV adds the VFs one after
-another, each add repeats both walks without effect.
+> On Mon, Nov 23, 2026 at 03:56:38PM +0200, Leon Romanovsky wrote:
+>> > >> >> But it should not, as you are making driver core changes that will
+>> > >> >> mirror the same thing that that patchset is attempting to do.  Please
+>> > >> >> work together on this.
+>> > >> >
+>> > >> > +10000000,
+>> > >> >
+>> > >> > Greg,
+>> > >> >
+>> > >> > This series came as a surprise to me given the fact that device trust
+>> > >> > series is exactly for that - allow confidential computing.
+>
+> Device trust's primary role in enabling confidential computing is to
+> give space for the userspace to do all the TSM and attestation stuff
+> to get the device into T=1 private DMA mode.
+>
+> It is the userspace that does all this and the userspace bridges from
+> "I got the device into T=1 mode" to "Now it meets my userspace policy
+> to be trust level Full" and then finally "Now I can bind and start a
+> driver"
+>
+> The two concepts work together, but they are not linked inside the
+> kernel.
+>
+>> > >> > Adversarial is equal to the "cc_accepted".
+>
+> I expect most policies would make "cc_accepted" as a full trust level,
+> but we do want to allow adversarial as an option too.
+>
+>> > >> I think the confusion stems from this thread:
+>> > >> 
+>> > >> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
+>> > >> 
+>> > >> Based on that discussion, I understood TRUST and eligibility for private
+>> > >> DMA to be complementary attributes. Device acceptance determines whether
+>> > >> a device may access private memory, while trust determines whether the
+>> > >> core must enforce additional restrictions. 
+>
+> Yes.
+>
+>> > > Device trust does little beyond preventing driver binding and recording the
+>> > > trust decision in "struct device". The missing piece, which I would expect
+>> > > you to address, is ensuring that the IOMMU and private DMA are configured
+>> > > only after the trust level has been decided or as part of that decision,
+>> > > rather than beforehand, as they are today.
+>
+> They are orthogonal and unrelated.
+>
+> All the TDISP and T=1 DMA flow is about how the DMA API works and has
+> no direct impact on trust level. You can choose any trust level for a
+> device using T=1 DMA.
+>
+> Getting the device into T=1 should influence how the userspace decides
+> to set the trust level, but it doesn't interact inside the kernel.
+>
+> Aneesh has it right that these are orthogonal and unrelated
+> activities. There may be some confusion as Dan attempted to couple
+> them, but after discussion we have moved away from that since it
+> doesn't meet all the use cases.
+>
+>> > What I am still trying to understand is how you view the DMA allocation
+>> > and mapping paths determining whether a device can access private
+>> > memory. Paths such as force_dma_unencrypted() and SWIOTLB receive a
+>> > struct device pointer and need to decide whether to use private memory
+>> > or shared buffers.
+>
+> It is Nicolin's work here that needs to go before the TSM drivers:
+>
+> https://lore.kernel.org/all/cover.1794343501.git.nicolinc@nvidia.com/
+>
 
-Return early for a VF. Every device keeps the is_cxl value it has
-today, and the bridges above the PF are no longer refreshed during a
-VF add.
 
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Joshua Machauer <machaujo@amazon.de>
----
-v2:
-- Shorten the commit log (Dave)
-- State that VF adds no longer refresh the bridges above the PF, and
-  cite the spec section in the comment (Richard)
+This adds
 
-v1: https://lore.kernel.org/all/20261119164219.51540-1-machaujo@amazon.de/
-
- drivers/pci/probe.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9a178e0e5f7f..e302f9dabddd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1717,6 +1717,15 @@ static void set_pcie_cxl(struct pci_dev *dev)
- 	if (!pci_is_pcie(dev))
- 		return;
+index 429e39f647cf9..01d7877d0b571 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -604,6 +604,8 @@ struct device_physical_location {
+  *		ancestor device.
+  * @DEV_FLAG_OFFLINE_DISABLED: If set, the device is permanently online.
+  * @DEV_FLAG_OFFLINE: Set after successful invocation of bus type's .offline().
++ * @DEV_FLAG_DMA_CC_PRIVATE: The device is able to access private (encrypted)
++ *		memory, no shared memory bouncing is required from the DMA API.
+  * @DEV_FLAG_COUNT: Number of defined struct_device_flags.
+  */
+ enum struct_device_flags {
+@@ -617,6 +619,7 @@ enum struct_device_flags {
+ 	DEV_FLAG_OF_NODE_REUSED = 7,
+ 	DEV_FLAG_OFFLINE_DISABLED = 8,
+ 	DEV_FLAG_OFFLINE = 9,
++	DEV_FLAG_DMA_CC_PRIVATE = 10,
  
-+	/*
-+	 * A CXL device exposes its Flex Bus Port DVSEC through Function 0
-+	 * (CXL r4.0, sec 8.1.8 "PCIe DVSEC for Flex Bus Port"), so a VF has
-+	 * none. Its upstream bridges are the PF's, which were updated when
-+	 * the PF was added.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
- 	/*
- 	 * Update parent's CXL state because alternate protocol training
- 	 * may have changed
--- 
-2.47.3
+ 	DEV_FLAG_COUNT
+ };
 
+...
+
++void dma_set_cc_private(struct device *dev, bool private)
++{
++	dev_assign_dma_cc_private(dev, private);
++}
+
+This could easily replace device_cc_accept()/device_cc_accepted() used
+in this series. I can switch to it if that's the direction we want to
+take.
+
+-aneesh
