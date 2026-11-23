@@ -1,90 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795447660;
-	b=j9BHKv+xh6sLij9qJZ3StHzbsEzJOgqR6ziAtMtVjtqwsBPZMPgcSZGu6X2KqqSUYjJY
-	 xypKvQcbVf3osSVHtf6NqczkIzXyv6yaz0TmiGMvYy2DwZ9+2behpbOVdRjM0+nIxekFt
-	 1CQSmHei7h5/6dutDjTJOy2UA5Tpgp4TTAGAIG7nw7PL925ciGc+t4m71B2xkybRHATak
-	 GllPM8QEitoapKHiMU/lVv7ab8u72ukBNVLnogxXthlwQRQmtcNzeyZRv5SGi4LjJyZoM
-	 Qdv59+2u21McDfw2cCO7jDOzqY2wdrraZhQTizjyn6UV1OqOo8QRMlcJEqDj38uY44Q==
+	t=1795447746;
+	b=z+CV63ZMu8y2XS/TRsZERVgPs7M5juzzz0lvG4lMQVUh/A7H714IxxW8MbKhwHnzFr/J
+	 vtbqWZNOrfw/LBrP2pypB17uPjTWLkz+pW4guBrAyzFEDjEBWLCezLcK1qyldhF9DTHL8
+	 4VFaeJc/jcxFMD8MdDkt+2viLP8AQVRn3u4h1efGRHZinPbgICW5dx9er4oLvblyrElyE
+	 s7QyZY7RsOsXKyzg0Y9pdu8G3AgDGlWGWP4zSADC6FtkSsI9zjmqoWhVtmjVk1kQhWNQz
+	 9SKW3Jeo3dpSY83x2gHKEk92icrmyjZow551y4Rx+GsGQHxeH/9YlvSGO1u4WUuk+aQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795447660;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795447746;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
 	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=rWLsIhN+kxPGKJoMsbdqyApLe79fwWP1AaQIjJntY6g=;
-	b=C+5OU5EDt2fuB8y0GVjGgHZL41la1x7CQ8QWMxT2mmDba6aPnDj5p10bSzkRXrufhykZ
-	 nw1W6F0/CvzzNKJz9LgkpLlsuAhR2MMD37OoFtugdWNfvWmPCkWL5TxPvvjX05ydUUz/3
-	 tN/EP+2I1Z5Q2+nFRYb8WvAUoMJQh+1XJ0WHt4W2Fhdp/U3bflPaMbx1DtJZw3smd0r6W
-	 UtxLGeyO0BKFTsbP269FoN2laH+otwhIaA5jR15EiEdIju3ESU5ofRxVeOnosouyl+Zl2
-	 R6gEBoutvBsB7BSql26IUUJptCPfBwuXlt/J+FWflJw1Zo+PevkRUR55K+OVt/a+J8Q==
+	bh=kjgFR4G5OQ9juZKj9Y5T78qgRaR4MXSjWG7XFR0Z19k=;
+	b=LFfMXykBGxzALlpOXcwq74kdR4UmHRwv1KMhFCS4oBtR4NzhhM9gAXDz3RuRIHy8V9LD
+	 6pTtD/9ojQhlfsF22wtpg+WIko5w6IPE1fSOW5lLLeO5Mv/qV+taXgiOCMnwZEkIITpwa
+	 W5qWmqnRXrQf2zvdptY+QWuaIRNEU8iryqukN+/1oPBxYqzh0Ch50OUL4GrXfn6CPhCTM
+	 51HBfQO6O60HhkNc4F40DnPx64YcTjvgxJzIusE4dQhVcTtq7SCC5fulZigcyqfoOB4Yo
+	 k1PxlEB7m1pNnZfPZXmpIwjQXs3jsA+2y9zaSfcPA5iKXn6LmPEN0MMe7lviq0oIfqQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=ziepe.ca;
 	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b="CUkDJ6/i";
-	arc=none smtp.remote-ip=209.85.160.180
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b="L+3W6G/j";
+	arc=none smtp.remote-ip=209.85.160.182
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E5E3606A31E
-	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 15:27:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E5E3606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2868606A31F
+	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 15:29:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2868606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=CUkDJ6/i
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-55d360ca878so31377601cf.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 07:27:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=L+3W6G/j
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-536c8f958d7so25598991cf.1
+        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 07:29:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1795447659; x=1796052459; darn=vger.kernel.org;
+        d=ziepe.ca; s=google; t=1795447745; x=1796052545; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=rWLsIhN+kxPGKJoMsbdqyApLe79fwWP1AaQIjJntY6g=;
-        b=CUkDJ6/iRI6Hw8aeXlh4lVJYEL8gjW9PUvkBPFPhkslWz5B9RS7X5yYMZPPyQ314vq
-         +BIj3vtReJ0tZqB/w1ktkfuYIEF8QDXVuoA7XEEqYyBvchOOjc86mvy++NI+cBffNZjQ
-         ejJCctA8xiX8JdgZi1RxnIVZmDbwMwzeVExs180iupqpAKi6NJWjQX2Zf8cqSnDS3sqf
-         iu9mV5wmW0ysAAjeyMVLsoypnOKVKt1qEBizciKzVnSk8sOuJUTdc2psgpnS/8VLijtc
-         qi1R573dFP4Rtq1ACj1X+7Z/J1ucsIwiPPTsDSwTdyopgIHZBHhcoyjLnoKpxAFsmx3M
-         6q9g==
+        bh=kjgFR4G5OQ9juZKj9Y5T78qgRaR4MXSjWG7XFR0Z19k=;
+        b=L+3W6G/jOieQwzovuItfiAb5E7wRlUzxvnY+TwLXW1TGcYLkGAT3dH349mSfYhTsXk
+         zbsoYNQ9g5VSeDG0hJaG8NSDcl0v7cwqD/7gSneWRdiEe3Q7Uv/R62oODEeZAEZh5fH4
+         M8q5GGvjxr53CkrzQ9u8lqCPq5CdUrrN/9YhV7JAFVqI1GZTWqm7oCRU9rRW1+MzaoJ0
+         7ucaBJIe7+9jSb7SNOACX7FaWWgS7cA66st2sIa9Kn0p89KtjQVkXQ+jmQEzIwUgruls
+         heM9s7fROApxP1jhLYMDO2bIH1TyWS94PkAGXKtuJ7DFJ2FRS5sctF9J54yzhWX//5GF
+         4tmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795447659; x=1796052459;
+        d=1e100.net; s=20260707; t=1795447745; x=1796052545;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=rWLsIhN+kxPGKJoMsbdqyApLe79fwWP1AaQIjJntY6g=;
-        b=KaDjNNok+GDofgJqCOGoebDVKyLRolwusrpS5DwD4QZ7qlTYu+nZMO/gYHWP8cYb/G
-         5hV2hkulnXSxH6VrtGUSkxwbJMyp6f6G1qS0+3pmfcts1YMtUl1d6aWm/RDT+0ke5p+V
-         tW6PZDcSoyQE3dkXH/T/pSapoL7zfXbm9twXysLAL3nhumOeVUuTI7yrUiRJDe08ezAA
-         siJttuSHJmjwbrFG7egOPN2ByaOWIDcVvmmONnuomQRt9gX4PZDVtswA6AQkoh9Jqkrx
-         k9hi+RmqZvQsHQsjaEEjBuvFVViUYBFPoy22epaPEhYQlwIc5wZ8V8tSb4RvBJoAtqtD
-         Lr5Q==
-X-Forwarded-Encrypted: i=1; AL+hErGBQMnqn3yu9IvxBi8fV6nMaP/Q3cNc8pgb/FfwQ9IIp4+5NyjSw0/asr/lggoqZlAfrAdKnoyzPxU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+nYCpplpvozKcn0LnWulIvHtLJcbXNFyCpkh0YxVhqjbd6XNNo
-	y7111deLyUUULZiiYze3acvaCXl9in/4Pt+OlY2ultqbQpfYAkPWMdMHuRTbxM5U6/s=
-X-Gm-Gg: AZFdTZdtX+QNM9wIC9JK8RnQHBEsyvSOsxdlXtBdZo0WVou8kLVwtd1SpVvyPDzS2Ar
-	bBMg//WOhwa0oXP/3fBwqkBYuIum3xZbxvWHjgARP9wr7rHAPECTh6Tf7corLIjFVxfDR406M1y
-	8hjBTrsxWydVn5wMzdlrVXsaMHnZQ0fjVTEXbNaHXRidor3ySszuB1kX529yzABSaZEs1zCiOu5
-	KcPewqsG48imKf8Q64gnZyh+pgAMxXtC9B93uVaYe5WCVKqt1k++j57FbX5J0lJN9hTme3RWHkl
-	Hbwx33mRrumXqUOkGEYx3zJjNmLot6Ancjqxcbv9hEvrxYSSVBuVClLkP97uh9hkQCa6sYvWkX5
-	hmfCHsHjCie116cm2MJSgJVgCEvVW5DKLOBc6VaN/SNvJ+UKc5sJdLv59MXLu2WYwDPLo1GYrsH
-	75EQfkp66nMA/0TWeWbtj3zAIyR1wkB2+1yv2liwleFJ/MqGct6WMo5ql6QO2IAADdH4F1Z7gfk
-	TMhSvz7jiljzXBsNtTZo1WuZRSaPafqh0DQC9uCaSRy/+YtfX86WvlMY+ha040A8TqYrUE8zhGu
-	9BsS8uENvA26RwJpCdDthawEZ/oJnj1Z3343r1kQkbw4bCskQDVG5GXD1GYvnLeixVinVBxSWfr
-	ZUhs=
-X-Received: by 2002:a05:622a:1a8e:b0:535:2794:851c with SMTP id d75a77b69052e-55d76ac54famr221466701cf.39.1795447659366;
-        Mon, 23 Nov 2026 07:27:39 -0800 (PST)
+        bh=kjgFR4G5OQ9juZKj9Y5T78qgRaR4MXSjWG7XFR0Z19k=;
+        b=wJMZFbv8ooAJXnekTiqs6/RQGJA7jx9L/uZunMX3gcOLlU5+5B4qYeYoui9+XbJ10h
+         deLjKAvhEFhNdUeLFiUFYljqPSmBXrEou7ecPmv4+y9wVjs/CYKuMZP+YqLOLqnk6/mj
+         1Ec1ij2pZ8kEUYofYHqSEvDvgB1x3jA1GVrfTeYicEOyoGww5oav1c4yqqHrWsnSWDfM
+         JdYtRG3/deqONlsbqGkQdneLsCJ11dPscTgFCPIRnefeJ20NwwlAdverEG/Xk/ITe1ht
+         3USRKZeCEU047cpuGMVnqfqfi5BLdKpaltt7EUhx2kgM4BzUDfEixlq/iWOf4tUGbDxn
+         cV5w==
+X-Forwarded-Encrypted: i=1; AL+hErGSYw3bfddSXon5tQsZGtGCjhvJelBpDs5KU2BgRrXoGYQStuk/7Elpg51tQq0Od0X/ge0zEnoXfm8=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/nkG6ElSlrU6qg1+KQorrcDCuTBLfhi0E1EmzBIy9xwetoVZ2N
+	R6FmXPto+dkr7Nassf3b9k3GWKP//ZyZAqZYgZcxN+nZQKfY+hoUOEnKCHsGOydfBGg=
+X-Gm-Gg: AZFdTZfd/5eKjY6ET55qKghTeLMuyX3SYtNhwKSCzAvXuD2OFKVUK/Ju/CY14hphQVP
+	pmjEIQ+VyiozJAXGPXXUapz/zTKYceJOcg2eJ3H7azj3TpRB7VrwGxPpaGdnHA44/zAMZ99tvL+
+	I9rtUK4HaL1+NC7TPfWwQkrVyQdlI5uW6T5bawPTGyD41RDwJxz1OUskWbWdQ5FMcBz1ASXi0nh
+	rnk346itrQZYYY5ncfvX85JoUjVdP3PQVmLKwNDkJ5oB2K70+0veJyUaqI2f5NUXPnOUs8lO4tC
+	mSi9CceYGLWw7n+yI2hkCdqfjmUjqEfku8cHQ5bzV5Y7xU9FUQhk/42veCRuDPxlwHyyB9k+zsf
+	hFy8h8PbyFZn/3Q+lvnCy3hdCG4pLENvDNpHNhOjQd0QC9R2ynH912nFCZwarcT/IqBVMgn12YF
+	oZY6m5sXR99E/Qc+53DuehojAQJvjBw3pRc6j6lY46O/Ec6L9GGIpWWJ4Zi9+Yrtju++AFKZhiB
+	muRRY0jIMJCsGDtuWElwJTT9rmEnkIqReLPJE8NbDj84yvruIgJOnAITRdyO8l2I5wR0AhquO/W
+	S8Lnhca1Tok2zcvHLcS07kHMNRMKCePvK92Pt92mPpEYRpD0VyjMUY4bR2+E+5KsQOnKRZGRgoS
+	mp3g=
+X-Received: by 2002:a05:622a:248c:b0:55d:3350:d270 with SMTP id d75a77b69052e-55d769f5705mr226617451cf.35.1795447744614;
+        Mon, 23 Nov 2026 07:29:04 -0800 (PST)
 Received: from ziepe.ca (stjhnbsu6iw-159-2-142-59.dhcp-dynamic.fibreop.nb.bellaliant.net. [159.2.142.59])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-55d7882bf70sm102842001cf.11.2026.11.23.07.27.38
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-55d784517casm101253631cf.3.2026.11.23.07.29.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2026 07:27:38 -0800 (PST)
+        Mon, 23 Nov 2026 07:29:04 -0800 (PST)
 Received: from jgg by wakko with local (Exim 4.97)
 	(envelope-from <jgg@ziepe.ca>)
-	id 1xVVxC-00000000sQR-1ESr;
-	Mon, 23 Nov 2026 11:27:38 -0400
-Date: Mon, 23 Nov 2026 11:27:38 -0400
+	id 1xVVyZ-00000000sUM-05ni;
+	Mon, 23 Nov 2026 11:29:03 -0400
+Date: Mon, 23 Nov 2026 11:29:03 -0400
 From: Jason Gunthorpe <jgg@ziepe.ca>
 To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
 Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
@@ -102,11 +102,11 @@ Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
 	Herbert Xu <herbert@gondor.apana.org.au>,
 	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
 	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 08/10] PCI/TSM: Add sysfs lock and unlock for
- guest-assigned devices
-Message-ID: <20261123152738.GF179082@ziepe.ca>
+Subject: Re: [PATCH v1 02/10] coco: tsm: Register the TSM class before device
+ drivers
+Message-ID: <20261123152903.GG179082@ziepe.ca>
 References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-9-aneesh.kumar@kernel.org>
+ <20261123083337.2731019-3-aneesh.kumar@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -118,24 +118,14 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261123083337.2731019-9-aneesh.kumar@kernel.org>
+In-Reply-To: <20261123083337.2731019-3-aneesh.kumar@kernel.org>
 
-On Mon, Nov 23, 2026 at 02:03:35PM +0530, Aneesh Kumar K.V (Arm) wrote:
-> A confidential guest needs to lock a PCI device before collecting and
-> verifying evidence about it. Userspace also needs a way to unlock the
-> device after use or when verification fails.
-> 
-> Add tsm/lock and tsm/unlock sysfs attributes for TSM drivers
-> implementing devsec_ops. Writing a TSM device name to tsm/lock calls its
-> lock callback. Unlock calls the matching driver's unlock callback
+On Mon, Nov 23, 2026 at 02:03:29PM +0530, Aneesh Kumar K.V (Arm) wrote:
+> Register the built-in TSM class with subsys_initcall() so it exists
+> before a platform TSM driver probes, independently of object link order.
+> CONFIG_TSM is boolean; remove the unused module exit path.
 
-I thought we agreed not to do this in sysfs as we worked through the
-SPDM stuff?
-
-LOCKED should be the 'start SPDM' action in the guest
-RUN should be the 'accept SPDM' action in the guest
-
-And though we didn't talk about it there is likely some 'destroy SPDM'
-action that is UNLOCK and UNRUN.
+Why isn't it modular? This is going to force alot of stuff to be
+non-modular.
 
 Jason
