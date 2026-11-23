@@ -1,56 +1,65 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795423711;
-	b=K2ShcKP8q8smgBM3l19VZ2S6rHNb60/LLQalXlwqjBO0HgiqA/uSDYIQsoXACLON6D9I
-	 nbPbk13/l/K68dwRt+P2uZByp1xLaXZ6YcysSmakdcmdXtmCaTxS9Cd9Le/qnJz+/20aE
-	 1AiHZMp6JfzTgRJQBPKxcrfwSicV9rz9AM6Mtg7/rf4LlrEV+UzMUyeRVG4jQ0RzRR3uP
-	 lDe4FMS/nizMvx5EKjAjmMyRKSNcv2niF+8ARyCqeKfyL1UrvZCNa45yGQFO72IsK6ip6
-	 wW7Bt9KQK+rZL8IKQVG68Or5felf4s8mFv76U+CVajIWRITI36voNTlvmXObBH9g3UQ==
+	t=1795424788;
+	b=ooB4V1QuDEnh0Gvwdz9h5+z0kBA0IB0KRxnWw4afsv8f7O3aNGcsgYoZrQWihDAVpR4E
+	 4AlwjVQP/stJgcxSb1BHNXQUWLBXJKyiERJuNdT9fXmo/QyNPmJJUslYTNuwz4Mdfez28
+	 NrsuSrpEAXY0KXBhP0zS8V/1BjxVJnLq0QvM0sBQyVTo8DzRitGuRb5wYclwk6RpYnQ6K
+	 +9DVuGrLQ4+n9Ie1QkGpZDDXWpzYbanS1f3c43yDqNxduOCh8/1qIeD3KpvRwbBjfNkaT
+	 WGa7RKinCv9273mfZLc9cVTNVQcBVoNxAqUjLlhZyfBzhrpqHN/WBD9YEkDH9fT/JBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795423711;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795424788;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=nwKJl00tpwdLLtoEZ27UPU0xq2dCJMGiy6FAFfkNDtk=;
-	b=HSK0AOq3pSTvrRchOmhfYhTICWCHry2XCcgg+F1YU5YTgEKpc8nwRTNQ1DGmWSgTUoPQ
-	 nnQ80vpmHFzqGU+ydBB7D9A2N+TuGtVwKYYRIrLS8nN9ionZHXqCFB37QqwaPc/dbKPa0
-	 V2iystWCo5xQWDIgGdUHwkXfNfvhjqbGCJNuLIJ5SPU4zE0bIQfKcij0EE8vU5hkvrST9
-	 OgpOilLgkiAcQr1BVwjfzvsXBrNVTEldxjQtNBzI4NgdtA6rBvxrec71VzZGVOtNltkCR
-	 Bnn1PLcRWIvhHgd8Tt7Pm64hFsMHbPXtsKgbMzs7QMJDutdAeLy54DhljVtuJ5R/paQ==
+	bh=z3DrjhrQrO2BYHo1W8YewL8VZiJu1abw+mdAXkVRo10=;
+	b=j56fXpiCDQI4XBf4ao1VifKFBwtLkv9+laVRuz+1Ub6fCi5s8UfrDKf+ZcAmk/1ODXvw
+	 1dBUZQbpoD9oRjbHph/drW//pAKYU4ujgUIzB8X3+iEuQWKWvWGlFZCI1lq5lm1ULvxAy
+	 70QaLEqs+iqMPkgpuGXySi6ajUcBXfSezaXQtU0Pa4MAkGqI9oQCv7pYyB/e4udU80zr2
+	 lt/MdMKt8A2ZSgaSHBrLIqy/QBglSCLQIqRqqRuW1u4bZuEduNqzW9t4aRUm9nYcyqumM
+	 hAWilUxg8uOMCNIuI2ajzitSTWCpTfBYEjHzd1zIJnC3F2315Ier8SBHkUkkLaDhWmQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Z/hgRgEi";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Ev/KbF3O";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3575606A31E;
-	Mon, 23 Nov 2026 08:48:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C426E606A31A;
+	Mon, 23 Nov 2026 09:06:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z/hgRgEi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B2851F000D0;
-	Mon, 23 Nov 2026 08:48:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ev/KbF3O
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 866181F000C6;
+	Mon, 23 Nov 2026 09:06:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795423711;
-	bh=nwKJl00tpwdLLtoEZ27UPU0xq2dCJMGiy6FAFfkNDtk=;
+	s=k20260515; t=1795424788;
+	bh=z3DrjhrQrO2BYHo1W8YewL8VZiJu1abw+mdAXkVRo10=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Z/hgRgEiZXH+GOjsznrUlAcd6Pq3ZE9bvNHbRTtnKCtfArV9H03FPjlty2mJMcajD
-	 lZ+Kh/YIrpgPzhxkovGb5ALDef929PqUA0FN9yYlFoQfsfx6MpH2vb3Hra94LSuKDv
-	 Oc7d0+Bnj+FAKnSpmr+qeMZdWy/kcR7iG0Amyecekdaz8Z9EaVwaZzUrT1BZprNH0N
-	 JsxCafbmVxsZHsoqGJgpF4SnBvEWVd8bg+GKEBXl8NkH0vXo+ty6xBn3Z8/m30TTnh
-	 vC1NTr9+Q7HLpP63seG2GKsN0DbomgBATQ6/MmmhVSOBDlyD+BaB9/pGvJhZOvQRLj
-	 5/x8iK+NXxdlQ==
-Date: Mon, 23 Nov 2026 10:48:26 +0200
+	b=Ev/KbF3OKJT1NrTyypHir43Ji3PypA3Ny9jOe/nVKGfsjHzqeP+Cwa+SPtqolXMGN
+	 lydZKWAOvT/HA8KHudaFIV+wagOvjUDyePIcmfTVqITJ9limgPbzSAN+FO1kMxrZMt
+	 6owFBS5no6R0UIhs/But10CR9q+ciC9TrvGjKNnlzVBK7ou00dslYtGotEAIEKIDT3
+	 0fQXhs/xSoF3Lkv6qqOkx8RJcVmJsK03JZkNV5cG30uqETnh/WIYOwF+okO9AdHcI6
+	 ezuJfAtXmsEFZDFKStxv7Jq4HAQo4w+gOXH/S2IQWa4/peGaVy9ZxxB2+J8JKKON0p
+	 CzCFWyHfddqZA==
+Date: Mon, 23 Nov 2026 11:06:23 +0200
 From: Leon Romanovsky <leon@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-input@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
-	dmitry.torokhov@gmail.com
-Subject: Re: [PATCH v3 09/31] USB: Pin modules for unregistered interface
- claims
-Message-ID: <20261123084826.GJ14811@unreal>
-References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
- <20261118-device-trust-core-v3-9-d655875c4bfb@nvidia.com>
- <sashiko-outbox-223895@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
+Message-ID: <20261123090623.GK14811@unreal>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <2026112325-emit-squeezing-5d96@gregkh>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,83 +71,46 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-223895@kernel.org>
+In-Reply-To: <2026112325-emit-squeezing-5d96@gregkh>
 
-On Thu, Nov 19, 2026 at 07:29:27PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential
-> issue to consider:
-> - [Medium] usb: core: premature claim_owner release in
->   usb_set_configuration()
-> --
+On Mon, Nov 23, 2026 at 09:40:55AM +0100, Greg Kroah-Hartman wrote:
+> On Mon, Nov 23, 2026 at 02:03:27PM +0530, Aneesh Kumar K.V (Arm) wrote:
+> > This series adds the PCI/TSM support needed by a TEE Security Manager
+> > (TSM) driver in a confidential guest. It adds device lock/unlock,
+> > helpers for recording device acceptance and parsing MMIO reports, and
+> > DMA callbacks used during PCI driver attachment. The guest TSM driver and
+> > attestation commands using these interfaces are in follow-up series.
+> > 
+> > This series is based on Dan Williams' "[PATCH v2 00/19] PCI/TSM: TEE I/O
+> > infrastructure" posting [1], particularly the guest LOCK/UNLOCK, ACCEPT
+> > and MMIO report work [2-4]. It retains device_cc_accepted() and the
+> > confidential-device acceptance model from that posting, with changes
+> > adapted to the current PCI/TSM structures and reference APIs. Dan's
+> > device-core acceptance helper and per-host-bridge IDE stream reporting
+> > patch are also included.
+> > 
+> > This series does not adopt the Device Trust changes from Dan's "Device
+> > Evidence and Trust for PCI Security Protocol (TDISP)" [5]. That work is
+> > being developed separately in Leon Romanovsky's "driver core: Authorize
+> > device trust before driver binding" series, [6]. Confidential-device
+> > acceptance is kept separate from that driver-binding trust policy.
 > 
-> commit afd725f56c3717b2e1f97538c7c8fdee117c4deb
-> Author: Leon Romanovsky <leon@kernel.org>
-> 
-> USB: Pin modules for unregistered interface claims
-> 
-> This commit pins the owning driver module in struct usb_interface.claim_owner
-> when an interface is claimed before registration, and releases that reference
-> upon interface registration or claim teardown.
-> 
-> > diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
-> > index 0a6fdf2e88f4e..b7bd9226d2627 100644
-> > --- a/drivers/usb/core/driver.c
-> > +++ b/drivers/usb/core/driver.c
-> [ ... ]
-> > @@ -619,6 +634,7 @@ static void usb_unbind_claim(struct usb_interface *iface)
-> >  	usb_unbind_interface(dev);
-> >  	dev_set_drvdata(dev, NULL);
-> >  	dev->driver = NULL;
-> > +	usb_put_claim_owner(iface);
-> >  }
-> >  
-> >  /**
-> > @@ -653,6 +669,7 @@ void usb_driver_release_interface(struct usb_driver *driver,
-> >  	if (device_is_bound(dev)) {
-> >  		device_unlock(dev);
-> >  		device_release_driver(dev);
-> > +		usb_put_claim_owner(iface);
-> >  		return;
-> >  	}
-> >  
-> > diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-> > index e56079398d26e..306978caaf1ef 100644
-> > --- a/drivers/usb/core/message.c
-> > +++ b/drivers/usb/core/message.c
-> [ ... ]
-> > @@ -2269,6 +2270,7 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
-> >  	 */
-> >  	for (i = 0; i < nintf; ++i) {
-> >  		struct usb_interface *intf = cp->interface[i];
-> > +		struct module *claim_owner;
-> >  
-> >  		if (intf->dev.of_node &&
-> >  		    !of_device_is_available(intf->dev.of_node)) {
-> > @@ -2282,12 +2284,16 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
-> >  			dev_name(&intf->dev), configuration,
-> >  			intf->cur_altsetting->desc.bInterfaceNumber);
-> >  		device_enable_async_suspend(&intf->dev);
-> > +		device_lock(&intf->dev);
-> > +		claim_owner = xchg(&intf->claim_owner, NULL);
-> > +		device_unlock(&intf->dev);
-> >  		ret = device_add(&intf->dev);
-> >  		if (ret) {
-> >  			device_lock(&intf->dev);
-> >  			intf->unregistering = 1;
-> >  			device_unlock(&intf->dev);
-> >  		}
-> > +		module_put(claim_owner);
-> >  		if (ret != 0) {
-> >  			dev_err(&dev->dev, "device_add(%s) --> %d\n",
-> >  				dev_name(&intf->dev), ret);
-> 
-> [Severity: Medium]
-> Does clearing intf->claim_owner before device_add() and calling
-> module_put(claim_owner) unconditionally drop the module reference too early
-> when device_add() leaves a pre-claimed interface unbound in the driver core
-> (!device_is_bound(&intf->dev))?
+> But it should not, as you are making driver core changes that will
+> mirror the same thing that that patchset is attempting to do.  Please
+> work together on this.
 
-Yes, the complaint is valid. Triggering this race requires root
-privileges, but that's fine. Let's fix it.
++10000000,
+
+Greg,
+
+This series came as a surprise to me given the fact that device trust
+series is exactly for that - allow confidential computing.
+
+Adversarial is equal to the "cc_accepted".
 
 Thanks
+
+> 
+> thanks,
+> 
+> greg k-h
