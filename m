@@ -1,82 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=50.112.246.219
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795445083;
-	b=FnyYbh/nzKD2m2n12FxUdZoPfUxKTWbICuVrpHmRILP1MtD+6uxWF2bhDM9kRwAv050S
-	 2x9xEoiQgvwIsYWvzreq6TWPqGLTU0KpO7PSE9cVjyel3R7KDDFjQ043aLDyKlrmkl7o+
-	 sWdZqz2/3qj/DVVq+EsAmNushQwUuPAnphI5qSFr8MEWxzCWIlBeRvqP6i+oqiC2zM5Wo
-	 dUzryJpKEIaXpxHygaTMQF7Cd7VPH9wPYxqsfPH+gklp7uthIJI0DGivIPQfr7hOtJJkg
-	 BAU+IbS4PUxuEgfrCrkIODIgWZpSv3zdlIeV3utlyq5VAZ/U2x4WH3d3wg2ETngssOw==
+	t=1795445804;
+	b=uynXIVkH2LrMM99yrd1JBJO4q7IMthuv162HaC1cW+2pX74krIm2MtNDiXkFcsBPf5jG
+	 lYc9BLE9UcP+RugAyAYZ9hnU3TZooQUhNFiPcTuVf6p1NTXCOrKsDencuJfKPqRY4xyuS
+	 wpQHpAiNbkOn8fWjuPvjt66dNCPmBVxgUByWN/PVvo+AktjuHlgdNQSqnGjKKAyt6gXht
+	 WJ3pWqLgzr/bI3/Zn15PP2RSoa+f//p4KGnhaXkAbQn0b+ISbfrrRC80PRhJ46eY0neZD
+	 g4u4K8Kgin1k5G09yllmhrLDocr8W4kcavbeIrzB+F9iS8hKCHkgT0BGrioP4gh3i4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795445083;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
-	 From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
-	 X-ClientProxiedBy;
-	bh=9kpiQrp5Xf4cNJSbIcuRML7We1PAF0l0XmCp3ST/zdk=;
-	b=W20iWGuRV+mhZsBrqnKj1rTcYaLL+ngAArxLVLoXIW32m8qy3+E1wS1K+D1jOZ0IaWF1
-	 UjLXhdhY/V4Tz+LLr+rP4J216SnHsIjoWUY3NGd05s/eSTpTiC2Xt0aepjNLCuhstnkDL
-	 kBJGZ+SbMwDlED1X4OgLAZTX0gF42+McqM6jEbK0fUcpX+a8bMIttFJ2fJvKSSy7wik8T
-	 SWGHAjJDxAl5E/NN8jvlg9U3dPuLEBoRCI5K1zLlhGqoW0r+T6O5QSpGAwVtrw8uqa6NT
-	 9rm4hL5f5EeOTALOyLsR+/p9BaG9AUhO7Ldf95uSqbcZRj8eh/pTfFWCGdw2w4hoD0w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795445804;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:In-Reply-To:References:
+	 Date:Message-ID:User-Agent:MIME-Version:Content-Type;
+	bh=JOZamLNrX3zI1FIx1Zgz/K1EJ0SMnsfMEV0ESniCNAw=;
+	b=JTcgIoVrTvCqme3RZd4Wo8s5t/TLMKNC7fL9WTYbmjfbNcepPbt0hxLdodSzAP3/8vnF
+	 KytdIXTxfPVnJfzdnrIf7MmQf+xbr6ctGnhL6VrCYhkS+0G35ehpHBnt1LA8izkA06L05
+	 P7SNQg9nNEl4jZKrBXLC8udc8PJuucwnsHGyBmlgCKQ8+L6VB+ZwQfSZuTF2lyvdA0pEV
+	 ho5WjKzUA1dZgy4u6LQF/LX82pIISFhqZC8rni0FpYUU+cfZPhdVPtoCDx6zMynkFBNAl
+	 nqCBqhKQRCYFil1Hw+9TnRShGtuNTv5mWheW6vshdzc/+v6TUWeguP5QYehRXC3hbiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amazon.de;
-	spf=pass smtp.mailfrom=amazon.de;
-	dkim=pass header.d=amazon.de header.i=@amazon.de header.a=rsa-sha256 header.s=amazoncorp2 header.b=QuPPozBV;
-	arc=none smtp.remote-ip=50.112.246.219
-Received: from pdx-out-015.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-015.esa.us-west-2.outbound.mail-perimeter.amazon.com [50.112.246.219])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YqWv2qyj;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F193606A31A;
-	Mon, 23 Nov 2026 14:44:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1F193606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC17606A338;
+	Mon, 23 Nov 2026 14:56:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=amazon.de header.i=@amazon.de header.a=rsa-sha256 header.s=amazoncorp2 header.b=QuPPozBV
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
-  t=1795445083; x=1826981083;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=9kpiQrp5Xf4cNJSbIcuRML7We1PAF0l0XmCp3ST/zdk=;
-  b=QuPPozBVuo6m/GuAR2nnBunE0e1mt/NNHJu8azcRjk5hj01fFYP3NQeR
-   O+guPm9wp29TZX0D/SCoGDwPextBQZ8Su3MSF0OmB1Lx7T9hlJfWc7Y0h
-   ENG7+O/d+FgVnd2Srru2P1Ihx30AjTXnsWCpT+NBX+HVIoCiv9+bNHT5+
-   PxSi1xNLnUpO+uZf9V9+dtplhVirsmqE5oo9rak2hWUdIRj6DirpA4n6O
-   4SRrabl6mmmYaEUjPQgfmyHwzrrkzqUCJE1lr5e4/geRXz6NzNMy581sq
-   ikuG7Eqw9mj7jZhZ104qta4BIoZ11D9qF2ll7Cvl2/YhQMwXRK2dhL1B1
-   A==;
-X-CSE-ConnectionGUID: w0chaxydSze1TEgfpTZfkw==
-X-CSE-MsgGUID: U+8redVxR3qBocccH19lIg==
-X-IronPort-AV: E=Sophos;i="6.27,229,1787011200"; 
-   d="scan'208";a="34716044"
-Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
-  by internal-pdx-out-015.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2026 14:44:40 +0000
-Received: from EX19MTAUWA002.ant.amazon.com [205.251.233.178:31150]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.36.222:2525] with esmtp (Farcaster)
- id 3af46666-5a8b-477f-8b37-df9961a87778; Mon, 23 Nov 2026 14:44:40 +0000 (UTC)
-X-Farcaster-Flow-ID: 3af46666-5a8b-477f-8b37-df9961a87778
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWA002.ant.amazon.com (10.250.64.202) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.57;
- Mon, 23 Nov 2026 14:44:40 +0000
-Received: from dev-dsk-doebel-1a-7b355d76.us-east-1.amazon.com (10.169.119.5)
- by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.57;
- Mon, 23 Nov 2026 14:44:39 +0000
-From: Bjoern Doebel <doebel@amazon.de>
-To: Bjorn Helgaas <helgaas@kernel.org>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@oss.qualcomm.com>
-CC: Lukas Wunner <lukas@wunner.de>, Konrad Dybcio <konradybcio@gmail.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Neil Armstrong
-	<neil.armstrong@linaro.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [REGRESSION] PCI: d4c79b63d82d4 "Allow D3 for native Hotplug capable Root Ports on non-x86" silently breaks surprise hotplug on empty slots
-Date: Mon, 23 Nov 2026 14:44:21 +0000
-Message-ID: <20261123144424.4164268-1-doebel@amazon.de>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YqWv2qyj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD6091F000EF;
+	Mon, 23 Nov 2026 14:56:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795445804;
+	bh=JOZamLNrX3zI1FIx1Zgz/K1EJ0SMnsfMEV0ESniCNAw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=YqWv2qyjcmNEHZr5ibzz7SsD3Sv0fNqsfzxZTHwNk4UHOxkfmYvkT6oOT0BiMl7wm
+	 /QbzGWI73gNRm2cAqHQpSotGxxCtw2NN85IosI9IXgAw7CnM4SiMCTJxlOfOHqBd0P
+	 FEVIPm6SNuG4PHCNJdCGS4Lo+fIqw6FXLYityRX4nJq+Edu0X2+p0co49qeNLhMcX4
+	 4OSNEgIfA8AqfmtMS3MDIjbFejZ5juflZnGcXMH2BSqpTZgLqpO3I3jOvmof6eNqwo
+	 ntivX1iXJkxlIdDiq+2av3GWxI+Ez9VQvgXdD7vO5JJlmMftHUsStroK2tk4HW/kkV
+	 mIcWQfwg6fLNg==
+From: Pratyush Yadav <pratyush@kernel.org>
+To: Tarun Sahu <tarunsahu@google.com>
+Cc: Pasha Tatashin <pasha.tatashin@soleen.com>,  Mike Rapoport
+ <rppt@kernel.org>,  robin.murphy@arm.com,  maz@kernel.org,
+  will@kernel.org,  David Matlack <dmatlack@google.com>,  Alexander Graf
+ <graf@amazon.com>,  seanjc@google.com,  jgg@nvidia.com,
+  loganodell@google.com,  arnd@arndb.de,  dwmw2@infradead.org,
+  baolu.lu@linux.intel.com,  Bjorn Helgaas <bhelgaas@google.com>,
+  oupton@kernel.org,  alex@shazbot.org,  gle.com@google.com,
+  pbonzini@redhat.com,  Andrew Morton <akpm@linux-foundation.org>,
+  kevin.tian@intel.com,  joro@8bytes.org,  kvmarm@lists.linux.dev,
+  linux-pci@vger.kernel.org,  Pratyush Yadav <pratyush@kernel.org>,
+  kexec@lists.infradead.org,  kvm@vger.kernel.org,  iommu@lists.linux.dev,
+  linux-arm-kernel@lists.infradead.org,  skhawaja@google.com,
+  sagis@google.com,  linux-arch@vger.kernel.org,  linux-mm@kvack.org,
+  linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
+ compatibility
+In-Reply-To: <20261110050202.529473-6-tarunsahu@google.com> (Tarun Sahu's
+	message of "Tue, 10 Nov 2026 05:01:48 +0000")
+References: <20261110050202.529473-1-tarunsahu@google.com>
+	<20261110050202.529473-6-tarunsahu@google.com>
+Date: Mon, 23 Nov 2026 14:56:36 +0000
+Message-ID: <2vxzse0rzjdn.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,60 +73,121 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: EX19D031UWA002.ant.amazon.com (10.13.139.96) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-Hi Bjorn, Manivannan,
+On Tue, Nov 10 2026, Tarun Sahu wrote:
 
-Commit d4c79b63d82d4 ("PCI: Allow D3 for native Hotplug capable Root
-Ports on non-x86 platforms") breaks surprise hotplug on empty slots on
-AWS Graviton bare metal. I didn't find this failure mode covered in
-the existing discussion, but am leaving links to related reports
-at the end.
+> Serialized structures in KHO and Live Update Orchestrator currently rely
+> on whole-structure compatibility strings or monolithic version fields to
+> validate handed-over state across kexec. Any change to a serialized
+> structure, even an optional additive field, requires bumping the
+> compatibility string or version number and breaks live update between
+> adjacent kernels.
+>
+> Introduce a generic feature header (struct kho_ser_hdr) for serialized
+> binary structures in include/linux/kho/abi/feature.h. Each subsystem
+> groups the fields of its serialized structure under feature indices,
+> starting with index 0 for base fields. When a subsystem adds a new
+> capability, it appends new fields to the end of its payload structure
+> under a new feature index. Retired fields are kept in place so existing
+> field offsets never shift; if the type or format of a field needs to
+> change, the existing field and feature are kept intact until retired and
+> a new feature index with an appended field of the new type is added.
+> Only when a change requires a complete break in the serialized layout or
+> semantics that feature flags cannot handle, a new handler or format can
+> be introduced with an incremented version number.
+>
+> Each feature belongs to either a required feature space or an optional
+> feature space. Both spaces are numbered independently starting from 0.
+> In the serialized header, required features occupy the first nr_required
+> bits, followed immediately by nr_optional bits for optional features:
+>
+>   struct kho_ser_hdr {
+>           __u32 size;
+>           __u16 nr_required;
+>           __u16 nr_optional;
+>           __aligned_u64 flags[];
+>   };
+>
+> A set bit indicates that the feature is present in the payload. The
+> truth table for deserialization:
+>
+>   Source bit       Target            Action
+>   Not set          -                 Accept: feature absent
+>   Optional set     unknown or known  Accept: ignore or use the data
+>   Required set     known             Accept: use the feature data
+>   Required set     unknown           Reject: -EOPNOTSUPP
+>
+> During deserialization, the target kernel only validates required
+> features: if the source set any required feature bit at or beyond the
+> known required feature count of the target kernel, validation fails with
+> -EOPNOTSUPP. Optional features are never rejected; the target kernel
+> simply checks whether known optional features are present before reading
+> their data.
 
-Observation (m7g.metal, aarch64, native PCIe hotplug via _OSC): ENI
-(Elastic Network Interface) attachment hot-adds an ENA NIC behind one
-of the hotplug-capable Switch Downstream Ports, which are all empty at
-boot. Since d4c79b63d82d4, those ports runtime-suspend to D3hot shortly
-after boot (all 45 empty ports report "suspended" in
-power/runtime_status), and a subsequent ENI attach produces no event
-at all: no "Card present" from pciehp, no ACPI/GPE activity, no new
-device, no error anywhere. Ports with live children stay awake, so
-only devices attached after boot are affected.
+I've been thinking more about this recently, and I don't think we need
+to differentiate between optional and required flags. I think all we
+need is "feature flags".
 
-The device itself is fully present behind the suspended port: with the
-ENI attached and the event lost, a manual
+Let me explain this by taking my KHO map patches [0] as the example, since
+they got me thinking about this in the first place.
 
-  echo 1 > /sys/bus/pci/rescan
+I sent out RFC v1 with no multi-entry support and static depth. During
+the review, we figured out that we should support multi-index entries
+and dynamic depth. Both of them need breaking ABI changes. If you use
+these features, a kernel that doesn't understand them will break.
 
-enumerates and probes it normally. So the hot-add completes in hardware,
-but we lose the event delivery. From code reading, the port suspends
-with the hotplug interrupt disabled (pciehp_runtime_suspend() ->
-pciehp_disable_interrupt()) and nothing wakes a port with an empty slot.
+Now let's say for argument's sake that we merged my RFC v1 as-is, and
+later down the line realized that we needed multi-index and dynamic
+depth. They are backwards incompatible ABI changes, and so need required
+flags called say KHO_MAP_F_MULTI_INDEX and KHO_MAP_F_DYN_DEPTH.
 
-Functionality works on 7.2. It also works if I manually disable D3
-via pcie_port_pm=off and if I revert d4c79b63d82d4.
+If memfd_luo does not know what features the incoming kernel supports,
+it can't really ever use these flags. Because it can not guarantee at
+all that the live update would succeed. So without information of what
+the incoming kernel supports, you can only ever add optional flags.
 
-  kernel                                     empty ports    result
-  ------------------------------------------ ------------- ----------
-  7.2-based (before this commit)             active        PASS
-  7.3-based (contains this commit)           suspended     FAIL
-  7.3-based + pcie_port_pm=off               active        PASS
-  7.3-based, only this commit reverted       active        PASS
+From the conversations we've had at LPC and in the bi-weeklies (and also
+[1]), we want to supply a specification for all the features the
+incoming kernel understands via a uAPI.
 
-This failure reproduces deterministically in our CI.
+Once memfd_luo knows whether the incoming kernel supports
+KHO_MAP_F_MULTI_INDEX or KHO_MAP_F_DYN_DEPTH, it can choose to use them,
+or go with the less efficient single-slot entries. It makes that
+decision when writing out the serialization structures at runtime based
+on the spec provided. Backwards compatibility is kept by looking at what
+the incoming kernel supports, and only using what it can understand.
 
-Related reports referencing this commit:
+When we have all this available, I don't see the point in
+differentiating between optional and required features at the ABI level.
+At the ABI level, all that matters is what the incoming kernel
+understands. If the incoming kernel does not understand a specific
+field, the outgoing kernel should just not use it. There's no point.
+Best case, it gets ignored.
 
-  - system suspend crash on Qualcomm SC8280XP CRD:
-      https://lore.kernel.org/all/3eeb3465-a1e6-4fdc-8019-3907d9c55691@gmail.com/
+The semantics of required or optional then become "can I describe this
+object with the capabilities I can use?". If the answer is yes,
+serialization succeeds, if the answer is no, serialization fails. So
+with this, KHO_MAP_F_MULTI_INDEX or KHO_MAP_F_DYN_DEPTH are indeed
+optional. All memfds can be described without these, they just will be
+less efficient.
 
-  - commit recommended as a D3cold fix in the qcom hotplug thread:
-      https://lore.kernel.org/linux-pci/1ae8d4f0-1c32-4dbd-a18e-7a2ce2627efc@oss.qualcomm.com/
+The only thing that the optional flag buys us is to add backwards ABI
+compatible changes _until_ we add the ability to export the
+specification of the incoming kernel. Since that should be coming in the
+near future, I don't think the churn of optional flags is worth it.
 
-Happy to try out any suggestions on how to proceed fixing this.
+So in short, here's my proposal: we only do "feature flags". The
+serializer should know what the incoming side understands, and it should
+only use the features that are understood. It should simply not use
+anything else. If it can't describe an object with the flags available
+to use, serialization fails.
 
-Best,
-Bjoern
+[0] https://lore.kernel.org/kexec/20261116134013.1636689-1-pratyush@kernel.org/
+[1] https://lore.kernel.org/kexec/CA+CK2bCnS8wcVDbOymBGeJB6pDUkknOpF22EynbwSV=D5=J4ow@mail.gmail.com/
+
+[...]
+
+-- 
+Regards,
+Pratyush Yadav
