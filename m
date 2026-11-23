@@ -1,57 +1,69 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795425756;
-	b=mV0zUD+IW1odUyDHqx4KNeJayr5h0sHCX9BW1c9VRCyE2eHKbn4WCbd4bLiT3DGOb972
-	 0xqbatX2VB5+sKoL9w4xSnJ/AeEqY62A8nQth0QLNBOJZu44EkKueuJ5xOIzEmw2OQaZZ
-	 yKbaTZ7kA1UYJMyMnRWDKdUEOxpVo+37u+UEKCco0GSGrCf/RQw8Um8KHRfpPEfioCqZf
-	 LvaiA/t+wp2ztMVsK/xuXCMdCeBn8nLG4QWV83YS+vcvxLTbsGjS2KARN7Hcj5M853CCW
-	 SuAALhohXBZuFoCxzzjzZ9yR/WtnCyWQphOwOKP2IbMqAkPhAOg1NnfIenWCxfsTBvA==
+	t=1795427002;
+	b=kme8u+pXqDfXKsR/+0ndLb8bet+v1MgQtAvIamL748LoU0VETaPln45INkkxqbK2CjYL
+	 ktptDwv8XOwzcjRTcAgh1Pdqu9mZqhzu2NaUc3pdAgtM9tMjXxWVbKEOQW7iAaqPecirc
+	 6Oyk5BSHP8TjU5oFYt3/zsSMRBHsgh6UUtG0dSUch2ks7pEwMBIulXkm3iMYpQHRb3oNt
+	 mCadP7LSp5TtwmkYQj85NGqZkKfMhr9z1zf2peaz7P0bwKQNcZrivssxPSzN+ijFAZpTs
+	 FwBIsFynUEU4k4L1XsZUxkd9IVlINf8fPWnTaz5mNsDREKkWQab9JjWfx26y+BBdUiw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795425756;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=+YqP0VPIZaqejn7zGmUTDDm9+wSwQPjiEk9xfXfIWnE=;
-	b=HVuYhuJCwfCVK0Mg5STYlYDKHOa3UZzhxMnHa3XU+89Qot5fvDMaw+EB7WwLZ2MIJuqn
-	 s5evdo6qFql6eA/Mp2gzkhujvOYzcM0ayDgfBrcaa35RxZja8PqNsFxVLy4qEe1Ygrfrp
-	 ddkupb2YLMmm8wEzNOxxXKdYGwHyTAax1tHvTwuFtdtsoOLnrtbX3hBWqlCg+hPUOMNbj
-	 GoIZ5R6u0qwuT3wTTtZXsAQ5jP10Qzx0z3pN3GXvpKWL87hjy/H1b1F9jVdaaFsLU9/ND
-	 w5SM07KIZKLkARUa/YZszVf4C+6izODFDafF9TP4IU5pZlKZMyT8/EvSYWkRGy6h6OA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795427002;
+	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=ovTZpuEFEoWoBniAauFNolmkozpPhbGaZO8n0GhWEtw=;
+	b=l1zpcriE/T38qTfvruvXA8v8FqBONOxtRa7Vl5m8pbfZrVvCqLptgmaZB94+YW8mpp/g
+	 D4PfluwYYz581Jzd7EvS6ZdW5ZXoIDIeZ8ZQ+hhnBgRnwFjffecqeLtl8ton5wi7XvK8E
+	 dm4L9oVGg2C0of27vMHcrr4vohOE8QR47EVBJPHrCgxX9Sag14/gg3k4YSn3FJ2k/+KmC
+	 3SLnxsUFPfXt1YkaGvH7gqSBD5YZVzb6MA617u4AdCpwQFZh80hRvuBZyfW9f1poin85a
+	 WFWC8F/OjkdLwBnBMbnuaGOB1Aww2tUFj3VKJlY+gJYeMHSk1+V3Fo5XJW1PB6p/Cnw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="N8/2hWLQ";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=orv0xpNT;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83015606A31F;
-	Mon, 23 Nov 2026 09:22:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58B2606A31A;
+	Mon, 23 Nov 2026 09:43:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N8/2hWLQ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 139A21F000C0;
-	Mon, 23 Nov 2026 09:22:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=orv0xpNT
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FFB21F000D0;
+	Mon, 23 Nov 2026 09:43:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795425755;
-	bh=+YqP0VPIZaqejn7zGmUTDDm9+wSwQPjiEk9xfXfIWnE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=N8/2hWLQXF3Tz0DxjD59Gbri4SwGVHJ216vpug58t4irfv8+mrjF5xzBNq+C35x+P
-	 bODMqKM7CBfY9UJOKzGBGmAhn1s5xCmQ5Eh/JIAfExZ9H2K6PHWKSi+ZqodV1LQHzY
-	 3Uuj2D5YhvXpIKwr7penjZBqZ0d/cwmauzmVO1uk11l9A1yrwJ7+/WeNOCKUgkailw
-	 oNzhbBUQ46R9F+okFKligmxxuA9VJxKDAIJlV87PgplVO1G2gzg2/SxD+AQHTrR5SS
-	 /KkKsLiaRB3l5QgW2b60BRw1cQNavX2io3nFPrd+eULRwrxTzEwCKYNkZ88pkd2JJQ
-	 mTBV+JgiNTRfw==
-Date: Mon, 23 Nov 2026 11:22:31 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-input@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
-	dmitry.torokhov@gmail.com
-Subject: Re: [PATCH v3 11/31] USB: Unwind interface claims after registration
- or binding failure
-Message-ID: <20261123092231.GL14811@unreal>
-References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
- <20261118-device-trust-core-v3-11-d655875c4bfb@nvidia.com>
- <sashiko-outbox-223897@kernel.org>
+	s=k20260515; t=1795427002;
+	bh=ovTZpuEFEoWoBniAauFNolmkozpPhbGaZO8n0GhWEtw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=orv0xpNTXOq+Hp2bUGf2xot20ap+p8J9/WaqyVRXto96awU4Yf/gQHFGtkG2rKN/l
+	 QXNxbcpqxfpeV70kidCicmpZ4CwNXlXbGAzxj8dUMM8Mk1BRBmeqIqjCHlC8kuVaWh
+	 wuLb3ZSEH0gv69+b2Ae/+lnpWTpqk53dHAiYAkAIeJvqsNsQjZRwdRXjHIQBAlcxJf
+	 5+tKU0Wxwe4Uh7Y0jbOJdbvx7WssEGSiGZxxutLlpq5q0o2K//pKtKz/M80jRHEccF
+	 +ycfRBr08AO3EYKHdeAJgggQ+sgnf4g9NaFcWMaCwglHb8nA2Y50liAZ+djH7DRR4O
+	 dl1cyWBw42D0g==
+X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Leon Romanovsky <leon@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
+In-Reply-To: <20261123090623.GK14811@unreal>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <2026112325-emit-squeezing-5d96@gregkh> <20261123090623.GK14811@unreal>
+Date: Mon, 23 Nov 2026 15:13:13 +0530
+Message-ID: <yq5a7bi3riha.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,127 +73,69 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <sashiko-outbox-223897@kernel.org>
+Content-Type: text/plain
 
-On Thu, Nov 19, 2026 at 07:29:29PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential
-> issues to consider:
-> - [Medium] USB: unbound claim missed in usb_set_configuration() when
->   autoprobe is off
-> - [Medium] usb: core: failed interface claim unwind skips altsetting 0
->   reset
-> --
-> 
-> commit 5e9d278c3fe83635c408aabb0f7fdb4a22c1316b
-> Author: Leon Romanovsky <leon@kernel.org>
-> 
-> USB: Unwind interface claims after registration or binding failure
-> 
-> This commit unwinds pre-claimed USB interfaces when device_add() fails or
-> driver binding does not complete during usb_set_configuration(), and releases
-> remaining unregistered interface claims in usb_disable_device().
-> 
-> > diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-> > index 306978caaf1ef..b2e5ed35a4a59 100644
-> > --- a/drivers/usb/core/message.c
-> > +++ b/drivers/usb/core/message.c
-> 
-> [ ... ]
-> 
-> > @@ -2270,6 +2292,7 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
-> >  	 */
-> >  	for (i = 0; i < nintf; ++i) {
-> >  		struct usb_interface *intf = cp->interface[i];
-> > +		struct device_driver *claimant;
-> >  		struct module *claim_owner;
-> >  
-> >  		if (intf->dev.of_node &&
-> > @@ -2285,6 +2308,7 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
-> >  			intf->cur_altsetting->desc.bInterfaceNumber);
-> >  		device_enable_async_suspend(&intf->dev);
-> >  		device_lock(&intf->dev);
-> > +		claimant = intf->dev.driver;
-> >  		claim_owner = xchg(&intf->claim_owner, NULL);
-> >  		device_unlock(&intf->dev);
-> >  		ret = device_add(&intf->dev);
-> > @@ -2293,7 +2317,22 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
-> >  			intf->unregistering = 1;
-> >  			device_unlock(&intf->dev);
-> >  		}
-> 
-> [Severity: Medium]
-> Does setting intf->unregistering = 1 before calling
-> usb_driver_release_refused_claim() prevent usb_unbind_interface() from
-> resetting the interface back to altsetting 0?
-> 
-> When a driver such as cdc_ncm claims a sibling data interface and switches it
-> to a non-zero alternate setting during probe(), a later device_add() failure
-> on that sibling sets intf->unregistering = 1 before
-> usb_driver_release_refused_claim() runs usb_unbind_interface().  Inside
-> usb_unbind_interface(), driver->disconnect() releases the control interface
-> and usb_set_interface() is called to restore altsetting 0, but
-> usb_set_interface() rejects the request with -ENODEV because
-> iface->unregistering is already set.  Since disconnect() released the sibling
-> claim, usb_has_claimant() returns false and the device stays configured with
-> the failed interface and its HCD bandwidth stuck on the non-zero altsetting.
+Leon Romanovsky <leon@kernel.org> writes:
 
-This is worth fixing, but the race is difficult to trigger, it requires
-device_add() for a sibling device to fail at just the right time.
+> On Mon, Nov 23, 2026 at 09:40:55AM +0100, Greg Kroah-Hartman wrote:
+>> On Mon, Nov 23, 2026 at 02:03:27PM +0530, Aneesh Kumar K.V (Arm) wrote:
+>> > This series adds the PCI/TSM support needed by a TEE Security Manager
+>> > (TSM) driver in a confidential guest. It adds device lock/unlock,
+>> > helpers for recording device acceptance and parsing MMIO reports, and
+>> > DMA callbacks used during PCI driver attachment. The guest TSM driver and
+>> > attestation commands using these interfaces are in follow-up series.
+>> > 
+>> > This series is based on Dan Williams' "[PATCH v2 00/19] PCI/TSM: TEE I/O
+>> > infrastructure" posting [1], particularly the guest LOCK/UNLOCK, ACCEPT
+>> > and MMIO report work [2-4]. It retains device_cc_accepted() and the
+>> > confidential-device acceptance model from that posting, with changes
+>> > adapted to the current PCI/TSM structures and reference APIs. Dan's
+>> > device-core acceptance helper and per-host-bridge IDE stream reporting
+>> > patch are also included.
+>> > 
+>> > This series does not adopt the Device Trust changes from Dan's "Device
+>> > Evidence and Trust for PCI Security Protocol (TDISP)" [5]. That work is
+>> > being developed separately in Leon Romanovsky's "driver core: Authorize
+>> > device trust before driver binding" series, [6]. Confidential-device
+>> > acceptance is kept separate from that driver-binding trust policy.
+>> 
+>> But it should not, as you are making driver core changes that will
+>> mirror the same thing that that patchset is attempting to do.  Please
+>> work together on this.
+>
+> +10000000,
+>
+> Greg,
+>
+> This series came as a surprise to me given the fact that device trust
+> series is exactly for that - allow confidential computing.
+>
+> Adversarial is equal to the "cc_accepted".
 
-> 
-> > -		module_put(claim_owner);
-> > +		if (claimant && (ret || !intf->dev.driver) &&
-> > +		    usb_driver_release_refused_claim(intf, claimant)) {
-> > +			bool unconfigure = usb_has_claimant(dev, claimant);
-> > +
-> > +			get_device(&intf->dev);
-> > +			if (unconfigure)
-> > +				usb_set_configuration(dev, -1);
-> > +			module_put(claim_owner);
-> > +			put_device(&intf->dev);
-> > +			if (unconfigure) {
-> > +				usb_autosuspend_device(dev);
-> > +				return ret ? ret : -ENODEV;
-> > +			}
-> > +		} else {
-> > +			module_put(claim_owner);
-> > +		}
-> 
-> [Severity: Medium]
-> Can checking (ret || !intf->dev.driver) without device_lock(&intf->dev) miss
-> an unbound claim when drivers_autoprobe is disabled?
+I think the confusion stems from this thread:
 
-This is same pre-existing issue as in patch 6.
+https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
 
-> 
-> If an unregistered sibling interface was claimed during an earlier probe() and
-> bus autoprobing is disabled before device_add() runs device_initial_probe(),
-> __device_attach() is skipped:
-> 
-> drivers/base/dd.c:device_initial_probe() {
-> 	if (sp->drivers_autoprobe) {
-> 		ret = __device_attach(dev, true);
-> 		if (ret == 2)
-> 			__device_attach(dev, false);
-> 	}
-> }
-> 
-> device_add() then returns 0 with intf->dev.driver still pointing to claimant
-> while device_is_bound(&intf->dev) is false.  Because (ret ||
-> !intf->dev.driver) is false, usb_set_configuration() skips
-> usb_driver_release_refused_claim() and drops claim_owner in the else branch.
-> When usb_disable_device() later runs, device_is_registered(&interface->dev) is
-> true, so device_del() is called before usb_release_unregistered_interface()
-> and __device_release_driver() calls klist_remove(&dev->p->knode_driver) on an
-> unattached klist_node, causing a NULL pointer dereference in klist_put().
-> 
-> Checking !device_is_bound(&intf->dev) under device_lock(&intf->dev) inside
-> usb_driver_release_refused_claim() instead of the unlocked !intf->dev.driver
-> check would catch this case.
-> 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com?part=11
-> 
+Based on that discussion, I understood TRUST and eligibility for private
+DMA to be complementary attributes. Device acceptance determines whether
+a device may access private memory, while trust determines whether the
+core must enforce additional restrictions. I understood that supporting
+an accepted but adversarial device would require either a private IOTLB
+to restrict its access or an IOMMU.
+
+Therefore, with this series, a request to enable private memory DMA is
+handled as follows:
+
+	if (!device_cc_accepted(&pdev->dev)) {
+		ret = -EACCES;
+		goto out;
+	}
+
+	/* Adversarial devices are unsupported for confidential DMA. */
+	if (device_is_adversarial(&pdev->dev)) {
+		ret = -EOPNOTSUPP;
+		goto out;
+	}
+
+
+-aneesh
