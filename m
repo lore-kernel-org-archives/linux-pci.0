@@ -1,56 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.20
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795419671;
-	b=JqRWTznEHqQ4eN1mHF8BWJXi+KXBCIyOrjV79Q540VUC59R5sxs3uTPr6HgOESnOZlgF
-	 cQLfwAKVcllqCqJJEnL/KPnn/jsG7+VfaICLVh4/jvUsa1sYc+gTLvalvOJ3SuHZFJ0lI
-	 GrdR9FvZuAiyAWd3Qn7HjkM4kV+LuZ9n2dP2JWygEnUv7ZYHEyGt3SgEeL5e4+QiE9B4E
-	 XUaRT/TPo5kqZkwFtw7CPT+n05SnRT1pJgW9W5SYi6aIYuc/2LgX4aZMsk+YFDLZYbIn/
-	 1f9SstPC/zGK3sEsCcRFTpiuAvjxphvzWeQ1DGdpcQH7c3mPSSii3LZNurr2k0jkVDA==
+	t=1795421527;
+	b=JsaPoNhz3V+Luwqkt7xB4qTNqI1Hjc1C4D0JnumPZw6nVgR+EqNMO4rKl+oGGTJ+n7pE
+	 1AKK/A7J3p6rmOPVZOcFNM8Bgkk9KqK7SM8bEosA+m3Y/1ZGNikDnO62667gx3sApUIUq
+	 OIhJndF+n1AX9jDER4ateXxRjriudwtqw+tf0wW+kx4faQeEE3xVD3h7IVeiZrBFFiepJ
+	 7HeBo9PM32d9K4nhhG7C8curaEa/CliMyB/O/mBOcAXrPNBwv8LojXxF+QOJBgKgl04n1
+	 tpqyCg04AfM/6o0FaOC5uGJvALdbLOharc50oAklsczaOabSVptBRv+bQU4gC3ycIsg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795419671;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=l/Pc2DCUBFyAS6tazwdq2rsCOqbWYdzdUOXxolyW3Sg=;
-	b=0mzVz6vGU3Srj/Sn1qvQsYOckCdHLQiHpEsx/QCB7db3KuL3B1ySgQR4LfFVrTB2vqoe
-	 g/QIXQxcjObJA8l4DfNHR4o5ussOWrFw/1UI8y2rllc4TLI391/S35zSJa5qYk4IsbTfG
-	 We9wXEpJ60qnUjDJEQG8WIXZ40ASDoWN9RUF3XskAaRVFTIvtT+wKZ5lxYw/zm5Pi64BY
-	 p+FbGH6l9Jh8o6/DOc6m/bY/GykBqMQZmH+2FaBBnblWQhUOEsHpeKUOnE8EthMJsExwY
-	 C363Rf8aLWtDgZX70Z/EUGvm4HqzIKyYw+rQn1H9vBLOBte6W1ojPDaaqoNf69Eodzw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795421527;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To:
+	 Organization;
+	bh=XLAuBIKfob1J9x8C36vMT2lkZXWcEt7KCOMBh++G9ao=;
+	b=YYZ9Zctb1IURgiktgCgwfZtZpoiFe85g+vim96KOiUI55QGDdXxo3bd51YBq8JjRY/43
+	 jfa+5hp0+jREvYhtGRudJygDrb67ZgqYaLgoIEUCpSUWcVw1wp46JfyUkuOSGAO8XQsNS
+	 87bGRhi746LI4zIyhwBVsWuPMG5WZLJDarELa7Av2DSg3sPNfh56RAKf2WAJCayeiaNeX
+	 UIYTGhhSaOQoK2oQSTGIPeiEX/tsLyUiHeE3CTzOI2JYexOesa6R8svSrky5y5TElIrmF
+	 63Vx8cHkg+qaWevmvNzNO7E8baX2UnzpOjwckzon3zLM3+GK7kRSwXvHWsQBAj0yCaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z8vX8WCH;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=lj+HJn7x;
+	arc=none smtp.remote-ip=198.175.65.20
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA04D606A31A;
-	Mon, 23 Nov 2026 07:41:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7D68606A31E;
+	Mon, 23 Nov 2026 08:12:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D7D68606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z8vX8WCH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35B241F000C0;
-	Mon, 23 Nov 2026 07:41:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795419671;
-	bh=l/Pc2DCUBFyAS6tazwdq2rsCOqbWYdzdUOXxolyW3Sg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Z8vX8WCHlaqlsh+8ELEhbThFKWLc9wm9zz52RUYCQ9QEMaBW7ZSNNmBpKXZFR8gUm
-	 j2VWKcsvpEqnj6Fwj+yz/LLmfCevthUS8E06zcb1dHm2iPqQqS4Zvn/+cIjPG4zU3v
-	 S9ucD4a6TM5TVQKFQ4fKC8Y2O2AEOUgGnwlGKGoHJ7vpD1QOU8A+D/hdMqBJoHB/m+
-	 V6qf38AYpbcn04RKcXEcOXW9w4D8fnTNbjvX+dQ26Yhu8UWFspm2Hru6/QYy2Mg2Vs
-	 H0of26p9CrxAH7qzsAlnanMpiTKaPDjQyE9JKpwi01gXZlVXvhY/xK20HFZaj5ULo9
-	 XO1eCi7V1XN8g==
-Date: Mon, 23 Nov 2026 09:41:05 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-input@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
-	dmitry.torokhov@gmail.com
-Subject: Re: [PATCH v3 06/31] USB: Release interface claims according to
- binding state
-Message-ID: <20261123074105.GI14811@unreal>
-References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
- <20261118-device-trust-core-v3-6-d655875c4bfb@nvidia.com>
- <sashiko-outbox-223892@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=lj+HJn7x
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795421527; x=1826957527;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=LGu03Ma0njqi8IqJpARzmb5dwjfkGt3tjqz+4ZsTuTY=;
+  b=lj+HJn7xK42Z0wJxxAACrD677uxSnjrireFdx1lzl1GOKpvLSq3YwBRw
+   qTVV8N8RMSQZMj906Xk1cNwK1kun/+CzlwEF2YN7xmfGK/7zrkml+blWG
+   dpQ9YsbsChNOroL6irrYooKuMtVqYc+BuNciKGfqnJNtpI2Gka3GBL3Jr
+   q4kBHEyFjYASOCq93U+Bp+A713Afka5r2otHqrMvQohACz9iEbsYe69cP
+   3i8wo0lH1IOqJ6aBk8SXYgrxWzjwa3f8qKx2CyZh0oTStgHIP6xUPhBWR
+   +fmpzcVd95svtHHexYHqdkX8VZgDJpEU2ogEWvoaeI5S2NrCTzBkH1X3E
+   g==;
+X-CSE-ConnectionGUID: J2HIPAxcTeyV8+gIf+IQ8Q==
+X-CSE-MsgGUID: OljOch8RTQ2HYghyuTYmGw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11974"; a="4269490"
+X-IronPort-AV: E=Sophos;i="6.27,227,1787036400"; 
+   d="scan'208";a="4269490"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2026 00:12:06 -0800
+X-CSE-ConnectionGUID: w+m0IF5cTVObRiwBOKziKQ==
+X-CSE-MsgGUID: c2HtbD4/TJmYgKEZbA0l2A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,227,1787036400"; 
+   d="scan'208";a="11652541"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.244.204])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2026 00:12:04 -0800
+Date: Mon, 23 Nov 2026 10:12:01 +0200
+From: "andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>
+To: Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"bp@alien8.de" <bp@alien8.de>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"hpa@zytor.com" <hpa@zytor.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"mingo@redhat.com" <mingo@redhat.com>,
+	"tglx@kernel.org" <tglx@kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH v2 4/4] x86/quirks: Use pci_power_eq() in
+ apple_airport_reset()
+Message-ID: <awP1Uc-zyiawX3Dw@ashevche-desk.local>
+References: <av8uhCdgJ9hX4eLT@ashevche-desk.local>
+ <20261121113835.43201-1-habilerenturker@hotmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,120 +88,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-223892@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261121113835.43201-1-habilerenturker@hotmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu, Nov 19, 2026 at 07:29:25PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential
-> issues to consider:
-> - [Medium] usb: core: pre-claimed interface with autoprobe off crashes
->   on core unbind
-> - [Medium] usb: core: NULL dereference in usb_driver_release_interface()
->   when driver is NULL
-> --
+On Sat, Nov 21, 2026 at 11:38:35AM +0000, Habil Eren Türker wrote:
+> Hi Andy,
 > 
-> commit 03347cb54cf6030265378e68aba157a23982255b
-> Author: Leon Romanovsky <leon@kernel.org>
+> Thanks for the suggestion.
 > 
-> USB: Release interface claims according to binding state
-> 
-> This commit updates usb_driver_release_interface() to check
-> device_is_bound() instead of device_is_registered() before releasing an
-> interface through the driver core, and holds the device lock while
-> checking and unbinding unclaimed interfaces.
-> 
-> > diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
-> > index 735ae3310b45d..926f63cd2c834 100644
-> > --- a/drivers/usb/core/driver.c
-> > +++ b/drivers/usb/core/driver.c
-> > @@ -612,6 +612,15 @@ int usb_driver_claim_interface(struct usb_driver *driver,
-> >  }
-> >  EXPORT_SYMBOL_GPL(usb_driver_claim_interface);
-> >  
-> > +static void usb_unbind_claim(struct usb_interface *iface)
-> > +{
-> > +	struct device *dev = &iface->dev;
-> > +
-> > +	usb_unbind_interface(dev);
-> > +	dev_set_drvdata(dev, NULL);
-> > +	dev->driver = NULL;
-> > +}
-> > +
-> >  /**
-> >   * usb_driver_release_interface - unbind a driver from an interface
-> >   * @driver: the driver to be unbound
-> > @@ -631,27 +640,25 @@ void usb_driver_release_interface(struct usb_driver *driver,
-> >  {
-> >  	struct device *dev = &iface->dev;
-> >  
-> > -	/* this should never happen, don't release something that's not ours */
-> > -	if (!dev->driver || dev->driver != &driver->driver)
-> > -		return;
-> > -
-> > -	/* don't release from within disconnect() */
-> > +	/* Avoid recursive locking from disconnect(). */
-> >  	if (iface->condition != USB_INTERFACE_BOUND)
-> >  		return;
-> > +
-> > +	device_lock(dev);
-> > +	if (dev->driver != &driver->driver ||
-> > +	    iface->condition != USB_INTERFACE_BOUND)
-> > +		goto unlock;
-> 
-> [Severity: Medium]
-> Can dropping the !dev->driver check cause a NULL pointer dereference in
-> usb_unbind_interface()?
-> 
-> When intf->dev.driver is NULL, usb_forced_unbind_intf() passes driver =
-> to_usb_driver(NULL), whose &driver->driver member address evaluates back
-> to NULL, making dev->driver != &driver->driver false.  If an interface is
-> claimed before registration and registered while drivers_autoprobe is
-> disabled, device_add() succeeds with iface->condition ==
-> USB_INTERFACE_BOUND and device_is_bound(dev) == false (so the unwind in a
-> later commit "USB: Unwind interface claims after registration or binding
-> failure" does not run); if a subsequent __device_attach() fails in
-> device_bind_driver(), it clears dev->driver to NULL while leaving
-> iface->condition as USB_INTERFACE_BOUND.  Calling
-> usb_deauthorize_interface() -> usb_forced_unbind_intf() on that interface
-> then passes the guard and dereferences to_usb_driver(NULL) in
-> usb_unbind_claim() -> usb_unbind_interface().
+> I have considered using `pci_power_t_update()` helper in the code.
+> However, there aren't many places in the code where this function could
+> be used (there is only one place that is suitable).
 
-This path is already unreachable in the current code, and patch 11 removes that
-state entirely.
+It's one place in _your_ code, but have you checked if there are other
+potential users elsewhere in the kernel?
 
-> 
-> >  	iface->condition = USB_INTERFACE_UNBINDING;
-> >  
-> > -	/* Release via the driver core only if the interface
-> > -	 * has already been registered
-> > -	 */
-> > -	if (device_is_registered(dev)) {
-> > -		device_release_driver(dev);
-> > -	} else {
-> > -		device_lock(dev);
-> > -		usb_unbind_interface(dev);
-> > -		dev_set_drvdata(dev, NULL);
-> > -		dev->driver = NULL;
-> > +	if (device_is_bound(dev)) {
-> >  		device_unlock(dev);
-> > +		device_release_driver(dev);
-> > +		return;
-> >  	}
-> > +
-> > +	usb_unbind_claim(iface);
-> > +unlock:
-> > +	device_unlock(dev);
-> >  }
-> >  EXPORT_SYMBOL_GPL(usb_driver_release_interface);
-> 
-> [Severity: Medium]
-> What happens if a pre-claimed sibling interface registered with
-> drivers_autoprobe disabled is detached through the driver core rather
-> than usb_driver_release_interface()?
+> Therefore, I believe it's better not to include it.
 
-This is a pre-existing issue, I didn't modify btusb_disconnect(). It
-appears that the "if (intf == data->intf) ..." checks can never be true
-for ISO in any leaf.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-Thanks
+
