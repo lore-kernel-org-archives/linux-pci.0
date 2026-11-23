@@ -1,105 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.162.4
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795456197;
-	b=zhsM4SqyM5A5M1fk1MvzJuD9vwPVjEGTlq8ZI8dIOaS4UkT//HbtoUeYXHUthkikwo17
-	 W8ExwFJbB2RdAtP0UQWIgxdz7NUMTGWQScY/KmemKvubTK356X+YgPR9kSvFH7CKgJu/z
-	 vtob4eP3f//v7Jchjyjy5Z5vsdx+v8DDmKF01YDNRWP5/khcfRKYY7WUOyZffQNXwE+bg
-	 l6MkEHc2Opw2fdk6p/vFeUMSNGjJoXA5i8S0BSD2KIfyRwTSQjdkHdSJvjRlr9+dSHlBf
-	 YhO82/xcTW255cy01Lj6w0G0MbiYtUnfx6dY+MSiO4OK/Pa9rHQCyEI0d9G+f/qmguw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795456197;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=40i5SDqo1l0RUMHSXdN58m5r2ATQYilSFO+xlHsRTEc=;
-	b=FyH0yuqf11U738zvILNkM8HeHX1gGs00KLPOcvdI/EgEhYqqSyQnN4CK+CSX33kpnbHo
-	 2v6azks0LNX/oZFd1FfXeRXzwbqzXTqqsA17r7PUx37g2RwifUQggrrPXTKWgmGxbNEoQ
-	 XtgCMGey4az7bw5M7VkQDtDEl+rMPybk2vIHojezPu8n/QBaJY5ZANsD0JNwu/KzP4cfR
-	 NzD01107El807zfWgcIIs7C+D+Xs9YkxmLKl9v8Uupo4Ztt3kzhDhqECsvZXfQX5Umnqs
-	 rqtUttSqVFGChUwnqyX4aah9bGYpLvhzAjP8Ymhv6UKsjLp5vMVijRbWxc/yjReCyLw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=EWJ7e6Xq;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.162.4
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013004.outbound.protection.outlook.com [40.107.162.4])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795456448;
+	b=H8vtdiC4bDoucobGg0Uth6nZ/B0guYNOfXciSE/5RO1Rzvn+hf01+cMxOCbIeE3RglRg
+	 Tl+4U5kulDPAKRTrjtTGi24wVaklNOn3+LRpnagLD9sMlSfxcSA5GnprkHqMiRvy3dyEf
+	 Iym5AcChGhOgtpSFnVtt61pCJDJoQ3u4cOqBNJ2OHcqEBOa9iERcp3R54ZVWxpkhfvBtZ
+	 t871+8RwnDMy/qKi1MQKj1nYKD3rAMxKFZeNz0cPsvrEsyTHx+z7hECj2vqbHWBmx/d4m
+	 /qtFjIjxfufA/w7hSpkNDH7LF7kPh+XD0V7hIWMxh3aNRN4wgtG20THjUuiDhqi9qhg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795456448;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=QguODtbBfbYIOaHST7nmcCeE5a3zLdp+DRs/3g3p/90=;
+	b=cQmTfgr7M055+w8KNAgZ+b5qPwaeSz6XI3wNkxVRK4b6D69ksXh4f3Z3cxABnz72UMNx
+	 ebCfzUOzwAAxzYoclWs3jwplRABZgWxTxbXvmL0JQWiWNOMVaA+5z6DEbNC0fqUpJnYFG
+	 1YHieJhtmckK1umxewhlBvKIze6IQy9xhDLszETf6NQluRWIfZy+D9gBXb3K6s12gH4HQ
+	 65ck3s7om2dHzSUm9uJLztI5uY3DM8cZAy0ucrI74mIUjUsV9NEfmV74abhrPcbcd7d+W
+	 oFWzp0AE2fGXMB8eYVH8swZPmEaB3EsLiYplOWs45iVKLrXd/gQ2mX58+/XqX7I9BgA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jFC2A8og;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 130EC606A31E;
-	Mon, 23 Nov 2026 17:49:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 130EC606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 359FB606A32C;
+	Mon, 23 Nov 2026 17:54:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=EWJ7e6Xq
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=X3q7PAMnmM/Qlun4GEkupPhLszy+kO4xiwxb/Oxu1uaZYhNNhC5ugJnKAkWqvPKRLRiNVJt0g3sVSo2BjBPRmXS/HzKvqNfxvzkavNnqmgzSpnYiVYNH2Jb+3NFM5sxjDy6oNAdRwHZm/6LQUhUrlVB4U69VsRh3j58QsYjWnuJhOzT18tb+a9fBfs4q2SjSlTePRLuS11dT/ntvvxmAAdA5QvBGM7EYcWk/m+4VGC+zlU4D2JLghyLagLvneuDsa4+rOaj8vTDnt2Ih8cROVU4sVz4OowzLaL5las3LH1JzswH/SCOo2sIA6WN1R1dBu7JRYaYx85k+4CX5km+GyA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=40i5SDqo1l0RUMHSXdN58m5r2ATQYilSFO+xlHsRTEc=;
- b=bnVoa5Cc2ELUv2CoKsXSGVm8nHVYVUuSgUeErga+tkIGkORmPexBHf3lBX/8J6hEnSHgzgkSoAu9R0DrmgZRVL632+RNvXd6T4OJmykPN556eR/CZkZ1EireZVpDfs1bpx6R4Reil/kzSbC+xyG3Y6kt+bamcHnNnuGCqc50M33imLMsRIAByo3VZV/+kSPkbkJ0XHM3tp/NXYT/E97d9qicIineYlAvXCwyflrGrjkRW9sX4IGRtniPtJ8KdgvB9VWw561P9Z5BP2N5CPpoXK8XJbgrBlUBvOfoCgdi1S1rsNkkcZojOjZUz9DtE71F0ZYCpnR+AEozssiojEilmA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=40i5SDqo1l0RUMHSXdN58m5r2ATQYilSFO+xlHsRTEc=;
- b=EWJ7e6XqLMy8/3POejy7liHhobW2/lCvy1dhEXEX1OPUl4uEh6fKS7K6O+58v5mvZV1qnf49w4eeh3fiKHaenRYWZVVLj6xHWjfftrJnfNxEZMcs1Yx4UNAG9KY433l9xJHCiyhgvdrEnqXZ6QDLrFxA0a1HOg3Bc65l/O56pazQnas7WlnnZqXJwnWusZ9EhtJBhJDqUQVw9n2GMGLfmSIDTTLZndf55ua9Vk8E4Kt86kynqPWJjZJZ2b+Dys4uE6zHHHnT+Oo/RpaOoU4VQIW7nfPBm4bibu+wepJdExvMQmADEAKs/XPMPQnQztEnG2Rx01hBwRSjudGeiqVZwQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
- by PAXPR04MB9231.eurprd04.prod.outlook.com (2603:10a6:102:2bb::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.14; Mon, 23 Nov
- 2026 17:49:51 +0000
-Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
- ([fe80::c715:c32:8bb1:b70b%4]) with mapi id 15.21.0639.012; Mon, 23 Nov 2026
- 17:49:44 +0000
-Date: Mon, 23 Nov 2026 11:49:33 -0600
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Markus Elfring <Markus.Elfring@web.de>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hyun Kwon <hyun.kwon@xilinx.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Michal Simek <michal.simek@amd.com>, Rob Herring <robh@kernel.org>,
-	Sean Anderson <sean.anderson@linux.dev>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Christophe Jaillet <christophe.jaillet@wanadoo.fr>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Frank Li <Frank.Li@kernel.org>
-Subject: Re: [PATCH] PCI: xilinx-nwl: Use devm_clk_get_enabled() in
- nwl_pcie_probe()
-Message-ID: <awR8rehnxAE3SNFh@SMW015318>
-References: <f691bbaa-ddb5-45bf-8f85-fcf354a6af03@web.de>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f691bbaa-ddb5-45bf-8f85-fcf354a6af03@web.de>
-X-ClientProxiedBy: PH8P220CA0053.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:510:2d9::26) To MI3PR04MB12438.eurprd04.prod.outlook.com
- (2603:10a6:290:76::14)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jFC2A8og
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84FCF1F000D4;
+	Mon, 23 Nov 2026 17:54:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795456448;
+	bh=QguODtbBfbYIOaHST7nmcCeE5a3zLdp+DRs/3g3p/90=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jFC2A8ogexFHV7NgJFfFecbR3hYuSJTwaIOihvq5yvDdPkodr9/lJSlbnC34+K8zD
+	 CPZpXHay9z3Ri0w2J9T4b4fij+IVNOzmQUtQameLGSYsTq8GOox+p+bGoK3vVZ2GGS
+	 23Q+1/9Wz4UYP/XLIwlXOaOJcfSZnL2M0Xqy18FE3/4keXj4p5UtYZIw17BGolIZaK
+	 d/qHQx3xGlBjPgFf0IyGCuHHtlNv+Hf5tLgh1MfzAUlyvuRruZwqtxTTqaP5KoMzOA
+	 Ow+mETWBBH+GoMBp66RDvQP+C5Fu7NRI4njfUQzvvaHqf49rpYqPoH8DWC/NDzjMfc
+	 iLhTQMdGt6/8g==
+Date: Mon, 23 Nov 2026 11:54:06 -0600
+From: Rob Herring <robh@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>, alchark@flipper.net,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] dt-bindings: connector: Add PCIe M.2 Mechanical
+ Key B connector
+Message-ID: <20261123175406.GB55094-robh@kernel.org>
+References: <20261122-pcie6_fix-v2-0-2e0fe615d90b@oss.qualcomm.com>
+ <20261122-pcie6_fix-v2-1-2e0fe615d90b@oss.qualcomm.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -109,139 +66,283 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|PAXPR04MB9231:EE_
-X-MS-Office365-Filtering-Correlation-Id: 78c46c95-a3a0-4c79-53a0-08df498a2853
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|7416014|23010399003|1800799024|19092799006|10067099003|11063799006|56012099006|261021123027099003|261009223027099003|261022075727099003|261021121427099003|261102123227099003|18002099003|22082099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	OojVOeeLdDABSrmBnMj5OcGZNSZD9JLzh8hlVOMox3ZaozExsSbyzpYSixhjJBS7VN5hvZEFD4G3ocH+Q8JU6ytHVF0DempWaSRZhAMHOJMseD19JBaV3JZPD+FuBWIDHbl4gyMl3g5aNUb3yBdNWlzBbbsNizUL6kwHHv7EzdC+lrVUBKWEJakAmFrXl9qSf7EzdeeU2NIMGEalPEc9xtYqZchmAGiyenZQJ4qy2zC+1OBKBo2V0I8nj+7w4QSO021JM0ZsmTkDphtNPjnximKNDWzwRB2HcGQnpgkuahSGRF6rCOv9vJeunm2w6wz5AI1sFAV9FQyP9xYXmAI5M3NrwvN1wiVFcKgC07th7wpkQFa9PlBdbU1B8oST5gdhnD9/nDE8RO4FYULGvl1kMlNIiUjCDIWpHvym9SwmYBMnE9uTdICX7hiJYbflZEu+NzofYCG70WlM/8CvYLyOGBj1DhL5QT0fDGGOPfiv/ygtwjTZSxrJZ6Qi8LE3mTH9FvHn4nYFGsfBs4UaIhTDD/JfYDgnj0N6YzZgK4mT3hv7PRNfA6+qlhEdyUV+o0+DOeMiBJyIWrpwGJQbGaL4LXH0anJRn7wxSxKPHSX3QJBRDPFprxcuVFEDyjmODiU4orpaGEZdb6nHAhg+2/ryZbg8MHoryyxG+7U0mlMr6vk=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(23010399003)(1800799024)(19092799006)(10067099003)(11063799006)(56012099006)(261021123027099003)(261009223027099003)(261022075727099003)(261021121427099003)(261102123227099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VjFtS3ppTlZiWm5wUHh0QzBETnRqOXRYS2pLSDZnUExQSGVVc3lMbFJOdkR2?=
- =?utf-8?B?MkNDSTkzNksvd1UrMFg1N3cwL2pHa2hhcExwNkovM3FlOG0ySVZlSmxYSEh3?=
- =?utf-8?B?UWVWeGNVNTg4SnRaOVhycmFCaThUWTJRZ083WHVMY3lvYy9wNTJZYVNMdDNL?=
- =?utf-8?B?b0FWalIwZXZkSHFKK01FYTFHQ0pKUE5ja3VvcEdKRy80M2V2YTA4Rmd0Snl1?=
- =?utf-8?B?QTNqVVFRcWRDYnRlbzFlQyt2MkNNSkIvL1YzYk9nSi9TZmpWM3RmTGhNakg5?=
- =?utf-8?B?Vm5Pa2lUOVdDSUhXMDFIM0Nlb3dHME1BTnQ0L2ZqMDZucWRuRE1mY0JSbkZY?=
- =?utf-8?B?Q2tNUUVEcUQ1QnA4MlEzeUNMUzBvQnhUWTNXYTFUbWxOQXBPZUpMYit1dXZh?=
- =?utf-8?B?WDlqdTJoYzBaalptYW0wL0dqdk9EckkxRTQ4YmV4T3F5bGF1ZGNYTVB1WEtN?=
- =?utf-8?B?WVkraGRBb1JKY0h6am9GTGF6aW04T2NkR3JvcVBrNDJSWERreW5VOXAwU3Z0?=
- =?utf-8?B?Q0VZdnA1RkpJWitqek84Ni9TNXhpejZ1OWpYMVJWeWJaRGhtMHJqNHhrN0l1?=
- =?utf-8?B?SFdTUmxqaElIeUhIS3ZvS2p1MW1tcUJKQW41eHFlVzkyN1AwV3J2dEdxWmln?=
- =?utf-8?B?b050VjI3ZVo3c0FSbldUeWJvTmhJOG1IUEtucXZPcHVmQjBiUWJQdjB2Tkky?=
- =?utf-8?B?Z09maVlldG9ra1BtVkVybmNiellpSGxMZXRlRmNvenMzWml1aGwxNURZSFdW?=
- =?utf-8?B?OGhVbHprK1h2Vk4rZ1ZDNWtVQWoyK2wzclRpSzV5dFRtekRGczI5bXRnR3Bi?=
- =?utf-8?B?VDJtZ1FNbzVxZzBZTDlLSDZBUG1sTWtlNWF1ODgvSVFCU3FOL1NUOVF6Ly9M?=
- =?utf-8?B?Vld5UHBkWFRQelYxc0NpS01oN2Q4Sm9XL3drckZpdCt5aGdsemxVbFBWMFEr?=
- =?utf-8?B?dFh6bkQxVTFaWmx0T1B0RE80WnJLS0dERVNyc1FtQlJNbkxWbm1QdUo5b2x1?=
- =?utf-8?B?dkt2SjhmZUZoZm4wREZ3U3lpc1VpcE05SmpLYkZXZDZkQnpweW1zQ1RhMmVS?=
- =?utf-8?B?eklkVGd1bFdDeXp4R0o2dy8yTk85RUF0QTd5dXAwelA1TWRIV0VBdlIwNVNG?=
- =?utf-8?B?YzFlMWFUclpOblZXZ2pBQW0zeklrT2c0NGRhQU43bVBjVjMzRVlYZFZURTZ2?=
- =?utf-8?B?TEVWeitwNHBPdFI0c1MwZFZydlkxYmR1Wm80TE4xS0ZrbTRsaUJEVmVyRDdz?=
- =?utf-8?B?ejcwS2FrOERvSzQ2ZDVaUVlNWHM2a3FiT0VyeUtCQ1VDNnZmWENPWHk3RXZ1?=
- =?utf-8?B?MEJnQ0NMMmxCUE8xKzNWQ3k4aExFUVVyenNidm5GVTFLeU41eXJ3endEMjB1?=
- =?utf-8?B?T3BFS0JYQk5vckZscnk5Z0Q0NnBMY1UxVTZyUG92TkF5amFyRVM1dmRWVUJH?=
- =?utf-8?B?SWdmdk1jdVp0UUpESjNVL3NsM3ptS2FDbFZGamY0SlR4UktTT3p1dG1ySVpU?=
- =?utf-8?B?Q2xkY1J4MDV0YzRZMmVFZUU5K3JxYVpJUjIraWFPSVNYTE1tSGp0N1B0MW0z?=
- =?utf-8?B?YXArNDRPbzNqY3hPVVpJRmxMTnlWaTNXSFBaaU9jenF6TUExK2VscHFteDVG?=
- =?utf-8?B?VlFIWWJkbElQODcwTUw0YTV3UHlzMFMyeFduV0w2c1E0Wm9DNlJ4ZWgxNmtC?=
- =?utf-8?B?SkNQemdJa05aMDd0bGF1NzZta1QzdFRtL2NHSGlLTWNGMFVwL0NmVkxEOVhY?=
- =?utf-8?B?ZGE4VDF6eDBsYlZmdmkwM3lDb1BFK0tHaGxXQi8yZm52ZjhYZWtDQ2Rqcm9B?=
- =?utf-8?B?T240WlRBZ3lJWXliWDRwZlVJS2xGQTlJWFpkTnROOFdJSDN4MFJ2QjBXRTNj?=
- =?utf-8?B?ZTR0MURINDRPczhiOTRSVzU3Q0xkZ1JQR0h0VWNPbHE4eGp3VEdnclZqZ0Ni?=
- =?utf-8?B?T0NERExYbDQ0aytwL20yckphMHB4VGh4SUwvY1lDSnM1ZXQwWHJhcEVBVjA1?=
- =?utf-8?B?Rm4xaEMvNG5ETXcwMUJjZWY5NnFER0U0M0czZUtsbmNFM0lIZ1FCM0NEcE9M?=
- =?utf-8?B?RDQ5Z1diTFJhb25mT21xV1A1ZDNTaGdXbExEeWl2dXA1U1NUTFRpaG83bXo0?=
- =?utf-8?B?YmwwdDBwRjVpOVRWOXoyVklNVmtzWnRMRVFUTnFRTVZOQnBxUGw3aThHdlhY?=
- =?utf-8?B?QlJURmw0Q3VSa0dUT2RiYndzSCt4S09LcXNyaW5Xb1JkVGJKcE5jMVNYdkFL?=
- =?utf-8?B?MzlxUUc0Lzd1NTFQSlJoWFNzQkp0WHdJbFZEYnpXU25kV2FRVjgyTWRZSGh6?=
- =?utf-8?B?OTFLUS80RXFSdGp5SE05aFVvWm1Yd1pXRjZacTVhUjRyUTVmaUN6Z3BLenAy?=
- =?utf-8?Q?lQGk4ynx0vno/BzE/CinJA4MIw3qUarvY0AwS?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78c46c95-a3a0-4c79-53a0-08df498a2853
-X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 17:49:44.2903
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sSkNqttMBpQTStZj5WmBcQjmscLdyptz7q8Fxx78RxK+/EJeGDR3s1DpTr3UsjGjRuK2wgIRVTiNi+CdnDP4FGN3o1s7Ijp20xdfCR0d4lzI/vAC4YtbZYyDacOZygf6
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB9231
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261122-pcie6_fix-v2-1-2e0fe615d90b@oss.qualcomm.com>
 
-On Sun, Nov 22, 2026 at 08:52:11PM +0100, Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sun, 22 Nov 2026 20:35:35 +0100
->
-> * Reuse existing functionality from devm_clk_get_enabled() instead of
->   keeping duplicate source code.
->
-> * Omit a clk_disable_unprepare() call on an error handling path
->   and in the implementation of the function “nwl_pcie_remove”.
->
-> * Delete the label “err_clk”.
-
-Needn't * in this case. Not title ahead of a list at body.
-
-Frank
-
->
-> This issue was detected by using the Coccinelle software.
->
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+On Sun, Nov 22, 2026 at 12:15:51PM +0530, Krishna Chaitanya Chundru wrote:
+> Add the devicetree binding for PCIe M.2 Mechanical Key B connector
+> defined in the PCI Express M.2 Specification, r4.2, sec 3.2.19.1. This
+> connector is used to attach WWAN Adapters to the host machine over
+> interfaces such as PCIe, USB3.1 Gen1, SSIC, or USB 2.0. The slot also
+> accepts SATA and PCIe SSD Adapters, which use the same pins.
+> 
+> Interfaces that share connector pins are described as one graph port
+> per pin group, with the endpoint number selecting between the mutually
+> exclusive interfaces.
+> 
+> The connector provides a primary power supply of 3.3V/VBAT, along with
+> optional GPIO signals: FULL_CARD_POWER_OFF#, RESET#, W_DISABLE1# and DPR
+> for WWAN Adapters, and DEVSLP, PLN# and SMBus ALERT# for SSD Adapters,
+> plus an I2C parent for the SSD SMBus.
+> 
+> The function of the GPIO_0..GPIO_11 pins depends on the Port
+> Configuration, so they are described by gpioN-gpios properties with the
+> function of each pin per configuration documented in the binding. The
+> Adapter configuration is either sensed through config-gpios
+> (CONFIG_0..3) or fixed with config-state, which defaults to WWAN PCIe.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 > ---
->  drivers/pci/controller/pcie-xilinx-nwl.c | 13 ++-----------
->  1 file changed, 2 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-> index 0dee19fa24ca..fd134317e9c4 100644
-> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-> @@ -844,20 +844,14 @@ static int nwl_pcie_probe(struct platform_device *pdev)
->  		return err;
->  	}
->
-> -	pcie->clk = devm_clk_get(dev, NULL);
-> +	pcie->clk = devm_clk_get_enabled(dev, NULL);
->  	if (IS_ERR(pcie->clk))
->  		return PTR_ERR(pcie->clk);
->
-> -	err = clk_prepare_enable(pcie->clk);
-> -	if (err) {
-> -		dev_err(dev, "can't enable PCIe ref clock\n");
-> -		return err;
-> -	}
-> -
->  	err = nwl_pcie_phy_enable(pcie);
->  	if (err) {
->  		dev_err(dev, "could not enable PHYs\n");
-> -		goto err_clk;
-> +		return err;
->  	}
->
->  	err = nwl_pcie_bridge_init(pcie);
-> @@ -889,8 +883,6 @@ static int nwl_pcie_probe(struct platform_device *pdev)
->
->  err_phy:
->  	nwl_pcie_phy_disable(pcie);
-> -err_clk:
-> -	clk_disable_unprepare(pcie->clk);
->  	return err;
->  }
->
-> @@ -899,7 +891,6 @@ static void nwl_pcie_remove(struct platform_device *pdev)
->  	struct nwl_pcie *pcie = platform_get_drvdata(pdev);
->
->  	nwl_pcie_phy_disable(pcie);
-> -	clk_disable_unprepare(pcie->clk);
->  }
->
->  static struct platform_driver nwl_pcie_driver = {
-> --
-> 2.56.1
->
+>  .../bindings/connector/pcie-m2-b-connector.yaml    | 332 +++++++++++++++++++++
+>  MAINTAINERS                                        |   1 +
+>  2 files changed, 333 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.yaml
+> new file mode 100644
+> index 000000000000..4760863ff4f7
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.yaml
+> @@ -0,0 +1,332 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/connector/pcie-m2-b-connector.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: PCIe M.2 Mechanical Key B Connector
+> +
+> +maintainers:
+> +  - Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> +
+> +description:
+> +  A PCIe M.2 B connector node represents a physical PCIe M.2 Mechanical Key B
+> +  connector. Mechanical Key B connectors are used to connect WWAN devices to
+> +  the host machine over interfaces like PCIe, USB3.1 Gen1, SSIC, or USB 2.0,
+> +  selected by the Adapter's configuration pins. The slot also accepts SATA and
+> +  PCIe SSD Adapters, which use the same pins as the WWAN interfaces.
+> +
+> +properties:
+> +  compatible:
+> +    const: pcie-m2-b-connector
+> +
+> +  vpcie3v3-supply:
+> +    description: A phandle to the regulator for the 3.3v/VBAT supply.
+> +
+> +  full-card-power-off-gpios:
+> +    description: GPIO output to FULL_CARD_POWER_OFF# signal. This signal is
+> +      used by the host system to turn off the entire Adapter. Refer, PCI
+> +      Express M.2 Specification r4.0, sec 3.2.13.1 for more details.
+> +    maxItems: 1
+> +
+> +  reset-gpios:
+> +    description: GPIO output to RESET# signal. This signal is used by the
+> +      host system to place the WWAN Adapter into a power-on reset condition.
+> +      Refer, PCI Express M.2 Specification r4.0, sec 3.2.13.2 for more
+> +      details.
+> +    maxItems: 1
+> +
+> +  w-disable1-gpios:
+> +    description: GPIO output to W_DISABLE1# signal. This signal is used by
+> +      the host system to disable the WWAN radio on the Adapter. Refer, PCI
+> +      Express M.2 Specification r4.0, sec 3.1.12.3 for more details.
+> +    maxItems: 1
+> +
+> +  dpr-gpios:
+> +    description: GPIO output to the Dynamic Power Reduction (DPR) signal.
+> +      This signal is provided by a host system proximity sensor to the
+> +      Adapter to trigger a reduction in the radio transmit output power to
+> +      meet regulatory SAR requirements. Refer, PCI Express M.2 Specification
+> +      r4.0, sec 3.2.13.4 for more details.
+> +    maxItems: 1
+> +
+> +  alert-gpios:
+> +    description: GPIO input to the SMBus ALERT# signal (pin 44, shared with
+> +      GPIO_2). SSD Adapters assert this signal to indicate to the host that
+> +      the SMBus device requires attention. It is not present on WWAN
+> +      Adapters. Refer, PCI Express M.2 Specification r4.2, sec 3.2.14.2.1
+> +      for more details.
+> +    maxItems: 1
+> +
+> +  i2c-parent:
+> +    $ref: /schemas/types.yaml#/definitions/phandle
+> +    description: Phandle to the host I2C controller connected to the SMBus
+> +      pins SMB_CLK and SMB_DATA (pins 40 and 42, shared with GPIO_0 and
+> +      GPIO_1). The SMBus is only present on SSD Adapters. Refer, PCI Express
+> +      M.2 Specification r4.2, sec 3.2.14.2 for more details.
+> +
+> +  devslp-gpios:
+> +    description: GPIO output to the DEVSLP signal (pin 38). The host asserts
+> +      this signal to tell a SATA SSD to enter the Device Sleep power state.
+> +      It is only present on SATA SSD Adapters. Refer, PCI Express M.2
+> +      Specification r4.2, sec 3.2.10.1 for more details.
+> +    maxItems: 1
+> +
+> +  pln-gpios:
+> +    description: GPIO output to the Power Loss Notification (PLN#) signal
+> +      (pin 8, shared with W_DISABLE1#). The host asserts this signal to
+> +      notify a PCIe SSD that a power loss event is about to occur. WWAN
+> +      boards use w-disable1-gpios for this pin instead. Refer, PCI Express
+> +      M.2 Specification r4.2, sec 3.2.18.1 for more details.
+> +    maxItems: 1
+> +
+> +  config-gpios:
+> +    description: |
+> +      GPIO inputs sensing the four CONFIG_0..3 pins (pins 21, 69, 75 and 1
+> +      respectively, listed in that order in this property). The Adapter
+> +      grounds or leaves unconnected (NC) each of these pins to tell the host
+> +      the Adapter type, the host interface in use and, for WWAN Adapters, the
+> +      active GPIO_0..11 Port Configuration. Boards that only ever use one
+> +      Adapter type should use config-state instead. If both properties are
+> +      present, config-gpios takes precedence. Refer, PCI Express M.2
+> +      Specification r4.2, sec 3.2.15 and Table 3-18 for more details.
+> +
+> +      Table 3-18. Socket 2 Add-in Card Configuration:
+> +
+> +        CONFIG_0 CONFIG_1 CONFIG_2 CONFIG_3  Adapter Type / Host Interface   Port Config
+> +        GND      GND      GND      GND       SSD - SATA                       N/A
+> +        GND      NC       GND      GND       SSD - PCIe                       N/A
+> +        GND      GND      NC       GND       WWAN - PCIe                      0
+> +        GND      NC       NC       GND       WWAN - PCIe                      1
+> +        GND      GND      GND      NC        WWAN - PCIe, USB3.1 Gen1         0
+> +        GND      NC       GND      NC        WWAN - PCIe, USB3.1 Gen1         1
+> +        GND      GND      NC       NC        WWAN - PCIe, USB3.1 Gen1         2
+> +        GND      NC       NC       NC        WWAN - PCIe, USB3.1 Gen1         3
+> +        NC       GND      GND      GND       WWAN - SSIC                      0
+> +        NC       NC       GND      GND       WWAN - SSIC                      1
+> +        NC       GND      NC       GND       WWAN - SSIC                      2
+> +        NC       NC       NC       GND       WWAN - SSIC                      3
+> +        NC       GND      GND      NC        WWAN - PCIe                      2
+> +        NC       NC       GND      NC        WWAN - PCIe                      3
+> +        NC       GND      NC       NC        WWAN - PCIe, USB3.1 Gen1         vendor-defined
+> +        NC       NC       NC       NC        No Add-in Card present           N/A
+> +    minItems: 4
+> +    maxItems: 4
+> +
+> +  config-state:
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +    description:
+> +      Fixed Adapter configuration for boards that do not sense the CONFIG_0..3
+> +      pins, given as the state number (0-14) of Table 3-18 of the PCI Express
+> +      M.2 Specification r4.2. It selects the Adapter type, the host interface
+> +      and, for WWAN Adapters, the Port Configuration used to interpret the
+> +      gpioN-gpios properties. Ignored if config-gpios is present. If neither
+> +      property is present, state 2 (WWAN - PCIe, Port Config_0) is assumed.
+> +    minimum: 0
+> +    maximum: 14
+> +    default: 2
+> +
+> +  clocks:
+> +    description: 32.768 KHz Suspend Clock (SUSCLK) input from the host system to
+> +      the M.2 card. Refer, PCI Express M.2 Specification r4.0, sec 3.1.12.1 for
+> +      more details.
+> +    maxItems: 1
+> +
+> +  ports:
+> +    $ref: /schemas/graph.yaml#/properties/ports
+> +    description: OF graph bindings modeling the interfaces exposed on the
+> +      connector. Several interfaces share the same connector pins and are
+> +      selected by the CONFIG_0..3 pins, so each port describes one group of
+> +      pins and its endpoints describe the mutually exclusive interfaces that
+> +      can be present on that group.
+> +
+> +    properties:
+> +      port@0:
+> +        $ref: /schemas/graph.yaml#/properties/port
+> +        description: |
+> +          Pins 41, 43, 47 and 49. The endpoint number selects the interface:
+> +            0 - PCIe lane 0
+> +            1 - SATA
+> +        patternProperties:
+> +          '^endpoint(@[0-9a-f]+)?$':
+> +            type: object
+> +            properties:
+> +              reg:
+> +                enum: [0, 1]
+> +
+> +      port@1:
+> +        $ref: /schemas/graph.yaml#/properties/port
+> +        description: |
+> +          Pins 29, 31, 35 and 37. The endpoint number selects the interface:
+> +            0 - USB3.1 Gen1
+> +            1 - SSIC
+> +            2 - PCIe lane 1
+> +        patternProperties:
+> +          '^endpoint(@[0-9a-f]+)?$':
+> +            type: object
+> +            properties:
+> +              reg:
+> +                enum: [0, 1, 2]
+> +
+> +      port@2:
+> +        $ref: /schemas/graph.yaml#/properties/port
+> +        description: USB 2.0 interface (pins 7 and 9)
+> +
+> +    anyOf:
+> +      - required:
+> +          - port@0
+> +      - required:
+> +          - port@1
+> +
+> +patternProperties:
+> +  '^gpio([0-9]|1[01])-gpios$':
+> +    description: |
+> +      GPIO connected to the GPIO_<N> pin of the connector, where N is the
+> +      number in the property name. The function of these pins depends on the
+> +      Port Configuration selected by config-gpios or config-state (Table 3-15
+> +      of the PCI Express M.2 Specification r4.2, sec 3.2.13.3):
+> +
+> +        GPIO  Pin  Config_0     Config_1     Config_2     Config_3
+> +        0     40   GNSS_SCL     GNSS_SCL     SIM_DETECT2  IPC_0
+> +        1     42   GNSS_SDA     GNSS_SDA     UIM_DATA2    IPC_1
+> +        2     44   GNSS_IRQ     GNSS_IRQ     UIM_CLK2     IPC_2
+> +        3     46   SYSCLK       GNSS_0       UIM_RESET2   IPC_3
+> +        4     48   TX_BLANKING  GNSS_1       UIM_PWR2     IPC_4
+> +        5     20   AUDIO_0      AUDIO_0      RFU          AUDIO_0
+> +        6     22   AUDIO_1      AUDIO_1      RFU          AUDIO_1
+> +        7     24   AUDIO_2      AUDIO_2      RFU          IPC_5/AUDIO_2
+> +        8     28   AUDIO_3      AUDIO_3      PLA_S2#      IPC_6/AUDIO_3
+> +        9     10   LED_1#       LED_1#       LED_1#       DAS/DSS/IPC_7
+> +        10    26   W_DISABLE2#  W_DISABLE2#  W_DISABLE2#  HSIC_STROBE
+> +        11    23   WoWWAN#      WoWWAN#      WoWWAN#      HSIC_DATA
+> +
+> +      The IPC_0..7 functions of Port Config_3 are vendor defined, as are all
+> +      functions in CONFIG state 14.
+> +
+> +      On SSD Adapters (CONFIG states 0 and 1) the same pins are SMB_CLK
+> +      (GPIO_0), SMB_DATA (GPIO_1), ALERT# (GPIO_2), PLA_S2# (GPIO_8), and
+> +      LED_1# or, on SATA, DAS/DSS (GPIO_9).
+> +
+> +      Only list the pins that are wired to a host GPIO. Pins used as a bus
+> +      signal in the selected Port Configuration (I2C, I2S/SLIMbus, HSIC) are
+> +      not GPIOs and are not described by these properties.
+> +    maxItems: 1
+> +
+> +required:
+> +  - compatible
+> +  - vpcie3v3-supply
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  # PCI M.2 Key B connector for WWAN with PCIe interface
+> +  - |
+> +    #include <dt-bindings/gpio/gpio.h>
+> +
+> +    connector {
+> +        compatible = "pcie-m2-b-connector";
+> +        vpcie3v3-supply = <&vreg_wwan>;
+> +        full-card-power-off-gpios = <&tlmm 121 GPIO_ACTIVE_LOW>;
+> +        w-disable1-gpios = <&tlmm 122 GPIO_ACTIVE_LOW>;
+> +        gpio10-gpios = <&tlmm 123 GPIO_ACTIVE_LOW>;
+> +        gpio11-gpios = <&tlmm 128 GPIO_ACTIVE_LOW>;
+> +        /* A zero phandle marks a CONFIG pin that is not wired to a host GPIO */
+
+How would that work exactly?
+
+In any case, that is not supported in examples as the report gave.
+
+> +        config-gpios = <&tlmm 124 GPIO_ACTIVE_HIGH>,
+> +                       <&tlmm 125 GPIO_ACTIVE_HIGH>,
+> +                       <0>,
+> +                       <&tlmm 127 GPIO_ACTIVE_HIGH>;
