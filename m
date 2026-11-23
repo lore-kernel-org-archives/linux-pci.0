@@ -1,112 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.5
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795416066;
-	b=tI20KF3i0xMN5TEP/1LsWpJIHgneTsmMk0lx6D+AUrpiqDgFO5ZXGzgmNFwMEGZg/Au7
-	 wIRhhrQSW96YrrbueQuR6T4loSyXjdVGTZ5bf8cyH0VIBAp2q7lx73Mgaal5jvnpi0Ryc
-	 8tIZYZl9KbykX0osa+S+3V/PdMSPZrIP6hTBQAlCQzncT6TYJ2XVGBMdO9rUhSV+IFyHF
-	 C9dXDsy2JEtdRWSzJgEOi00brw5ikuCsZDngOO1eFl+swJ8jGskPWYoTo1uUboWnr3XhS
-	 2gIEN69CVW4Yan5Ot1l1xMndM0jNmJuELIJQJr0Y2KmRZlXo133NSIXXl00kpS7rD6Q==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795416066;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=pHh3X6JJdHxq2/niH+3LtBoYiZJY8jH8742cfNju9Y8=;
-	b=PN1cmJ5xfXpMhrXSqaNOjk7Atszx7hwFTEvw8UL+1sW+GFREAPX2N4xoMCDtWVlhqJ7e
-	 o34068bv3jp6KaLmh7+neMQY+i27++dCKfKvu34vYS4hoqVQOASP92GxiixFCIfoGYuLv
-	 T/LQAKW9OP1njyRZeZaq4D4e1yJTawEBtbD9xi6aNzWJyv1gpFXWscw7qVhyJ1Qh2eICV
-	 7JM2z+t9p78FD/Z3Xu0+eW6kyi4uzbU4x0RAxxkrBNdw7mf7ipuuN/Gv/hJlt626URcRZ
-	 EPHoH4DQqC+MNpnOmPC4kdHUz4GPrTXaTXuZx9BbgJ7UJkdBer1T3sEXiVlM4IyEzkg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=FcHquteg;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.5
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010005.outbound.protection.outlook.com [52.101.193.5])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795419671;
+	b=JqRWTznEHqQ4eN1mHF8BWJXi+KXBCIyOrjV79Q540VUC59R5sxs3uTPr6HgOESnOZlgF
+	 cQLfwAKVcllqCqJJEnL/KPnn/jsG7+VfaICLVh4/jvUsa1sYc+gTLvalvOJ3SuHZFJ0lI
+	 GrdR9FvZuAiyAWd3Qn7HjkM4kV+LuZ9n2dP2JWygEnUv7ZYHEyGt3SgEeL5e4+QiE9B4E
+	 XUaRT/TPo5kqZkwFtw7CPT+n05SnRT1pJgW9W5SYi6aIYuc/2LgX4aZMsk+YFDLZYbIn/
+	 1f9SstPC/zGK3sEsCcRFTpiuAvjxphvzWeQ1DGdpcQH7c3mPSSii3LZNurr2k0jkVDA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795419671;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=l/Pc2DCUBFyAS6tazwdq2rsCOqbWYdzdUOXxolyW3Sg=;
+	b=0mzVz6vGU3Srj/Sn1qvQsYOckCdHLQiHpEsx/QCB7db3KuL3B1ySgQR4LfFVrTB2vqoe
+	 g/QIXQxcjObJA8l4DfNHR4o5ussOWrFw/1UI8y2rllc4TLI391/S35zSJa5qYk4IsbTfG
+	 We9wXEpJ60qnUjDJEQG8WIXZ40ASDoWN9RUF3XskAaRVFTIvtT+wKZ5lxYw/zm5Pi64BY
+	 p+FbGH6l9Jh8o6/DOc6m/bY/GykBqMQZmH+2FaBBnblWQhUOEsHpeKUOnE8EthMJsExwY
+	 C363Rf8aLWtDgZX70Z/EUGvm4HqzIKyYw+rQn1H9vBLOBte6W1ojPDaaqoNf69Eodzw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z8vX8WCH;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AA3E606A31A;
-	Mon, 23 Nov 2026 06:41:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AA3E606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA04D606A31A;
+	Mon, 23 Nov 2026 07:41:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=FcHquteg
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fgmJnXjBwwNHMDnBGp9m+62XzUtXTfiubqMLdqaZtxN3j8tPHVajyWzAanLZ+EM/LH2tNaacjNDlaqRVEqbRatAPNVelkQDFeqRjUfWAZo/lWYpkUAUAxGTqZLKi7hu1a8NyLejNxq5M4ZfQiq50hWBaXa8LiEQ5JAGWu+ZoUEUmNVwnDv/Gyy08zYlibvU9wnx7QIHICue4JUInJK6TgnPlEwkPaW3RuhlFFTXTWEiyE5DyjbCYb+Gsxrwx1UOaF5j6HruhZWN3/Yjz0PSzQz/TcXAE7KNHlU9JaKBzSDIOhQAqSUR3DCdQLycvKWaQppuRS+5C/Ao8PWlGfkunxQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pHh3X6JJdHxq2/niH+3LtBoYiZJY8jH8742cfNju9Y8=;
- b=h3tIi2kjqy0n0MJZHzeEa3IU2IkgXxztrIMoCy3AdQ6ZTrAvJObalCLVEzC06/zFuh31yJYM+ymyITZTzBqTraK2IMWAhPr7bUzGPJJF1xV+133MTk7B2Z8J2pk3ft6nikFoHHXaiMCmKALzKlx7lkDMGgms4bLgmzQH0U5d80KBbdg7uWAgQB0Q7VL17DxUzYHqfzUNs1eiqoA1YmDgrAw+LYNEFtPpx43WVuNgp/fjyhv9tLzzDZ3GwptoXsjdQ0cf8U2PA+lQOwDuNszOciH/B91NeJP/zMv8BasrQpLLD/AqeS2GwA2xJFhHELxQsSG+sWvf65QC/rtsOWiA8A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pHh3X6JJdHxq2/niH+3LtBoYiZJY8jH8742cfNju9Y8=;
- b=FcHqutegGO8tme1DGpYUcyZ+6Ko6mgZBHK25yXu3epws7I8771OtAcolgfwTFcBtljmqHRFhTnWwOODiM08urnfx5QrsrJ1mPNoXLtGEhtob/+o5b3A9v2FWm4GiJtoXEeh3Nvnf6w0GxG7M0URJwSBl8ormQjdPIADzKB7yeTc=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10) by IA1PR12MB6409.namprd12.prod.outlook.com
- (2603:10b6:208:38b::7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.13; Mon, 23 Nov
- 2026 06:41:01 +0000
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3%6]) with mapi id 15.21.0639.012; Mon, 23 Nov 2026
- 06:41:01 +0000
-Message-ID: <3573001a-24b8-49f3-97c8-7a414c88deb4@amd.com>
-Date: Mon, 23 Nov 2026 17:40:48 +1100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 00/13] iommufd: TSM-backed virtual IOMMUs for
- confidential guests
-To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
- linux-coco@lists.linux.dev
-Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Joerg Roedel <joro@8bytes.org>, Jonathan Cameron <jic23@kernel.org>,
- Jonathan Hunter <jonathanh@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
- Krishna Reddy <vdumpa@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
- Nicolin Chen <nicolinc@nvidia.com>, Robin Murphy <robin.murphy@arm.com>,
- Samuel Ortiz <sameo@rivosinc.com>,
- Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
- Steven Price <steven.price@arm.com>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Suzuki K Poulose <suzuki.poulose@arm.com>,
- Thierry Reding <thierry.reding@kernel.org>,
- Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
- Xu Yilun <yilun.xu@linux.intel.com>, Ashish Kalra <ashish.kalra@amd.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, iommu@lists.linux.dev,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-tegra@vger.kernel.org, patches@lists.linux.dev
-References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
-From: Alexey Kardashevskiy <aik@amd.com>
-Content-Language: en-US
-In-Reply-To: <20261116081935.85372-1-aneesh.kumar@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY6PR01CA0026.ausprd01.prod.outlook.com
- (2603:10c6:10:eb::13) To SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z8vX8WCH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35B241F000C0;
+	Mon, 23 Nov 2026 07:41:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795419671;
+	bh=l/Pc2DCUBFyAS6tazwdq2rsCOqbWYdzdUOXxolyW3Sg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Z8vX8WCHlaqlsh+8ELEhbThFKWLc9wm9zz52RUYCQ9QEMaBW7ZSNNmBpKXZFR8gUm
+	 j2VWKcsvpEqnj6Fwj+yz/LLmfCevthUS8E06zcb1dHm2iPqQqS4Zvn/+cIjPG4zU3v
+	 S9ucD4a6TM5TVQKFQ4fKC8Y2O2AEOUgGnwlGKGoHJ7vpD1QOU8A+D/hdMqBJoHB/m+
+	 V6qf38AYpbcn04RKcXEcOXW9w4D8fnTNbjvX+dQ26Yhu8UWFspm2Hru6/QYy2Mg2Vs
+	 H0of26p9CrxAH7qzsAlnanMpiTKaPDjQyE9JKpwi01gXZlVXvhY/xK20HFZaj5ULo9
+	 XO1eCi7V1XN8g==
+Date: Mon, 23 Nov 2026 09:41:05 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-input@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+	dmitry.torokhov@gmail.com
+Subject: Re: [PATCH v3 06/31] USB: Release interface claims according to
+ binding state
+Message-ID: <20261123074105.GI14811@unreal>
+References: <20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com>
+ <20261118-device-trust-core-v3-6-d655875c4bfb@nvidia.com>
+ <sashiko-outbox-223892@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -116,259 +60,120 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|IA1PR12MB6409:EE_
-X-MS-Office365-Filtering-Correlation-Id: 62dab75d-3ff5-4728-73cd-08df492cbd15
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|7416014|376014|23010399003|6133799003|22082099003|18002099003|3023799007|11063799006|56012099006|261026121527099003|261026140227099003|261028144727099003|261102123227099003|261021123027099003|261022105027099003|261021135927099003|261009223027099003|261021121427099003|261022075727099003|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	1WrV9HONL6/KVp1tNng6eEZaXVtm8YdpybbLARDp/YaoiRwfeO1mVA6+nUC3rT4fNWURDdM56+S+LnmaTUOVP8fprJ5HGGyNFB+lLTuUWmXjLJG8KNRLqLaeyEHMWHRPVrCEzDxPUbxYwmHRG6YtiQo2+UYy6aM1iZvZ7DvcmhdrQQZy7V5cO4aQdXOnp5HqBTM7a3yJ/+ybFdE5RwZhaTU9Mq3zozbW9GsNVzk1uZT088gTHuxa1LEYomMTTUoJ9d/77Ix/80xGxjjwxSjycf/bdGF9ZcdFhQVCD76Mp+n+BmMtEpLfmie3YG/uG9IEvvBsik2oQKJHrW157rsEGZZBvmEOZf3B7AfkGCAWimyTiJuKHSJp1YuibZLc1wd7QsM3MYUrN8YSKRcwJb7scFsGW9YZWwRF4Q9R1TLGMVoGnhhmpn54sT5eI1URVFTVFPxA3lCa/fAqpxqHpFK/umUy1kA2p4AfkunJTkZWwToODM7IrxPdUrNvBvEU4PhQgT2Az35MEw8wsnu/2jU/TPlDRYwM9W8FN+T7a8HRUJ3IOK+8OkmbD83HLYscsMgh/QY/nQoGDj7l6aCGzFgaL/Ql/BcPSaMugznI7TDrH+UDTHJuu4CR5guGcTSKwbwp
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(23010399003)(6133799003)(22082099003)(18002099003)(3023799007)(11063799006)(56012099006)(261026121527099003)(261026140227099003)(261028144727099003)(261102123227099003)(261021123027099003)(261022105027099003)(261021135927099003)(261009223027099003)(261021121427099003)(261022075727099003)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?eDg4Vkp0VjYrK1hmbzI4b1JycmFLS2JPL01ObEZscEZ4UlUwNlJ4RUxxMzA0?=
- =?utf-8?B?SXYwdzJKa0Q3ZmgvbjJGQTBYTGduUjJZd0w3bHE2ZEN2Z2lybG5ybnJFVWlR?=
- =?utf-8?B?cTZXenNPVHZoSnFqNnIyVkdvbzNjOTFZUFhsOXBLNzhzZWdLaUdNVVgrZVpo?=
- =?utf-8?B?cUhqY29ETkRzbjlVL3Rxdy85Tm5hT1JuYTJBK2RCTmgrT25pR3hjenpiVXdy?=
- =?utf-8?B?cDRlRG1LRVRtSy9mU2NNekIySEhRSjBrZjRDakVnQm1tTUlXTThRNmdqSlNY?=
- =?utf-8?B?WW1JaHBRTW1oUU1tQmhNMlZlUnpVMWN5a1JRTHJ2bU51SVVZckN0ZXV1bGhH?=
- =?utf-8?B?OUdMbWR1VDVDMk9lcXRJZWs3eUVNQm4xT1RpWitJL0t5aGJ2WjhZMmk2NUhL?=
- =?utf-8?B?cFlOSUY3OW9TazlnaXhjN0FYN2psOGxUc1NpLzc0eHhGRzJDTU9zbjd4SXU2?=
- =?utf-8?B?VGd0am8xa21jVzlOWEkrUGZjTHBldFFwOThlREFwS2F1S3paQm5VQXdZdEpV?=
- =?utf-8?B?RVNOTHhzMDd2OG5MN2txUTdTcXNjYzdFRmRDbEw5eWFJZy8reWhtS0syZVky?=
- =?utf-8?B?SmlhVTk4NFZOOE5tNXJTU1hKTzNBU1lYTUs1WGJhOFpiVCtuMkR6NWYxdEJR?=
- =?utf-8?B?REwrYW1GSXdwcWpsMEc2eGJmSUR0UnQ5VW9rMnlYMktkTzZmZC94SFo1aWcz?=
- =?utf-8?B?aDk1cDdMZTZockgzWWZUT3BKaE9IR29sWWxQK2dEbU9VWEJEcWNCelVsV3Bq?=
- =?utf-8?B?Zzg3WDQ3emRrN0MyY3lNeThrOEVTQzlKVUZUMEFacDhvckV1ZjVzUGhlK1Ir?=
- =?utf-8?B?YXN0ajBYUXV2ckVteWFWV0J0OThna0tjRUtNd2xReDlwNEV4ZHVQVTZSVGxM?=
- =?utf-8?B?L1llY0VyOTI3TjVuVFNmT1BsNnZWZmNDaHZXNHJqZktDNHhBaFFOZ0xWRGZH?=
- =?utf-8?B?M2duNi9NRGtPSklWaXpKYjBkSkpKSUppemEzWTBXTy81WkJaMmI3cTFXdWVl?=
- =?utf-8?B?Y0E5SHI5Sk9QSEQyOUhKbzRKdE1ldFFwalB1SnJlalVNcWEyaTdSMUhRNVFt?=
- =?utf-8?B?MW9xL3l5SjVhK1h1bkM1cnpIamk2bGV2dkJyVDRUbXRHSlhzNVdmckxUalM0?=
- =?utf-8?B?Y0h6Uy9vcmN2ZHZmM3JuS2gwekhrbkgydC9GTUVtWlV1T1BjeWdjc0JieHl1?=
- =?utf-8?B?RFZIZ2p5V0FYVHpKbzRnTGpncUY5WVlGMHIxcDhheVNrdmlLVjNzZGFUWTJy?=
- =?utf-8?B?MzNPaHYycjlNR0hjdTdSaDhpUTNZVEtPTVhZTXdXOERsdEFWc0pRNjRVMFF1?=
- =?utf-8?B?M01GVmM5dS9iOWRTVGRzWGhrUUhYblFvb2IwYlFXTjY4WHV2KzdpM0RDbHJi?=
- =?utf-8?B?YXJEb2o4TmM1dHl3Nk10S0l4aW9OdC9PZmI5NDdUR1ZtckI5THRjQXo3NS9D?=
- =?utf-8?B?OGV2bDNFM0JKMjd5YjlMS3ZGY25Lekc2cFVvZnFVY1QrQWNVRC9QdjBoNEJq?=
- =?utf-8?B?cmVxd20wMG9mL2NsNnhIQ083RStJSGhyc1B6VERlUEcxKzc4emg1Z3pDS2J3?=
- =?utf-8?B?U2pmWXhZREliajhjYXorOEdzUzM3d096Rm4yNmlnVTVXRjBHVzU0TDhLOVF5?=
- =?utf-8?B?MXZJaHRWVEZKM0ZmZEJDUGJGTzRXdFlwSWxMN2RTaTBpNUZRQm1VRGhvL2hP?=
- =?utf-8?B?c1pyTFR3bUYwVmhkdHdVa1lwSjRhN05yVklYNXNWZ0JUVVRYS3hkclA5VHcv?=
- =?utf-8?B?YUpWSER6dkw1akVSQzV6MENvc0JSY09MNHJLemQzdldtdFRkNHBZZnJWK05B?=
- =?utf-8?B?MytPR1U0SEIvanBsbEJhTEdpaU0xRnA1ZHd2akc4Tk4yaTRTaERXVlJ6WVdF?=
- =?utf-8?B?Y0Rpa2xCNURDN1BUSnhYUnFYcGZFV1Zta1l1a0FaN3NJZWowUlJCLzFURHU5?=
- =?utf-8?B?S0QybzQyZ0t2bWhZVjZlYU5tRkVoU3AvODBJckg3ZVBJVFBGV2JROEg2dmFu?=
- =?utf-8?B?UjFyZjhYa0lUQk1yT09ycGdMNVp3Nll5emtZdFZJMk0wRXR5Vm1SbzNUNHBw?=
- =?utf-8?B?VGsrbjkxeEVDSENDd0M2ak42elFaRzYzMDJHdk5yK2hDYm5vZWhQS3MxcVhZ?=
- =?utf-8?B?KzVOTFpmYXdFNHVGZEE4TVJ5R1RVUjY2V2g1cXpzYTYvYmdVc1d4dE9lbXNL?=
- =?utf-8?B?ZEtMNTVEWE41KzJRTEFlNVNnYzBzbjhKU3ZuZTlJaU43WnlSdWJTRnJjY0x6?=
- =?utf-8?B?YlNiTWQ3QVNlelU3RlUwWnNHd1FtWnVCTWF2N3ZQV2k0R0Fac3htd2dFWTVt?=
- =?utf-8?Q?JWU4RJoiu2j9fHxgaE?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 62dab75d-3ff5-4728-73cd-08df492cbd15
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 06:41:01.0584
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4VH20lg8cUnmIBPd3OkOBF6aUnncGiBRw0lvbI/f/VsJ4DgI7IaJdeWkYj/X9dTcC/kwPpT4zN1NvL6Dv1KZrA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6409
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <sashiko-outbox-223892@kernel.org>
 
-On 16/11/26 19:19, Aneesh Kumar K.V (Arm) wrote:
-> This series adds IOMMUFD and PCI/TSM infrastructure for assigning PCI
-> devices to confidential guests. A TEE Security Manager (TSM) can provide a
-> virtual IOMMU (vIOMMU), and an IOMMUFD vDEVICE object represents a physical
-> device within that virtual IOMMU.
+On Thu, Nov 19, 2026 at 07:29:25PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential
+> issues to consider:
+> - [Medium] usb: core: pre-claimed interface with autoprobe off crashes
+>   on core unbind
+> - [Medium] usb: core: NULL dereference in usb_driver_release_interface()
+>   when driver is NULL
+> --
 > 
-> The series adds a common framework for operations on vDEVICE objects and
-> updates lifetime management to keep the VM and device-security resources
-> available while those objects are in use.
+> commit 03347cb54cf6030265378e68aba157a23982255b
+> Author: Leon Romanovsky <leon@kernel.org>
 > 
-> The Arm CCA backend is provided in a separate series, together with
-> operations for TEE Device Interface Security Protocol (TDISP) state changes
-> and access to cached device-attestation objects.
+> USB: Release interface claims according to binding state
 > 
-> The full series, including the Arm CCA backend, is available at:
+> This commit updates usb_driver_release_interface() to check
+> device_is_bound() instead of device_is_registered() before releasing an
+> interface through the driver core, and holds the device lock while
+> checking and unbinding unclaimed interfaces.
+> 
+> > diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
+> > index 735ae3310b45d..926f63cd2c834 100644
+> > --- a/drivers/usb/core/driver.c
+> > +++ b/drivers/usb/core/driver.c
+> > @@ -612,6 +612,15 @@ int usb_driver_claim_interface(struct usb_driver *driver,
+> >  }
+> >  EXPORT_SYMBOL_GPL(usb_driver_claim_interface);
+> >  
+> > +static void usb_unbind_claim(struct usb_interface *iface)
+> > +{
+> > +	struct device *dev = &iface->dev;
+> > +
+> > +	usb_unbind_interface(dev);
+> > +	dev_set_drvdata(dev, NULL);
+> > +	dev->driver = NULL;
+> > +}
+> > +
+> >  /**
+> >   * usb_driver_release_interface - unbind a driver from an interface
+> >   * @driver: the driver to be unbound
+> > @@ -631,27 +640,25 @@ void usb_driver_release_interface(struct usb_driver *driver,
+> >  {
+> >  	struct device *dev = &iface->dev;
+> >  
+> > -	/* this should never happen, don't release something that's not ours */
+> > -	if (!dev->driver || dev->driver != &driver->driver)
+> > -		return;
+> > -
+> > -	/* don't release from within disconnect() */
+> > +	/* Avoid recursive locking from disconnect(). */
+> >  	if (iface->condition != USB_INTERFACE_BOUND)
+> >  		return;
+> > +
+> > +	device_lock(dev);
+> > +	if (dev->driver != &driver->driver ||
+> > +	    iface->condition != USB_INTERFACE_BOUND)
+> > +		goto unlock;
+> 
+> [Severity: Medium]
+> Can dropping the !dev->driver check cause a NULL pointer dereference in
+> usb_unbind_interface()?
+> 
+> When intf->dev.driver is NULL, usb_forced_unbind_intf() passes driver =
+> to_usb_driver(NULL), whose &driver->driver member address evaluates back
+> to NULL, making dev->driver != &driver->driver false.  If an interface is
+> claimed before registration and registered while drivers_autoprobe is
+> disabled, device_add() succeeds with iface->condition ==
+> USB_INTERFACE_BOUND and device_is_bound(dev) == false (so the unwind in a
+> later commit "USB: Unwind interface claims after registration or binding
+> failure" does not run); if a subsequent __device_attach() fails in
+> device_bind_driver(), it clears dev->driver to NULL while leaving
+> iface->condition as USB_INTERFACE_BOUND.  Calling
+> usb_deauthorize_interface() -> usb_forced_unbind_intf() on that interface
+> then passes the guard and dereferences to_usb_driver(NULL) in
+> usb_unbind_claim() -> usb_unbind_interface().
 
-nah, it is not :(
+This path is already unreachable in the current code, and patch 11 removes that
+state entirely.
 
 > 
->    https://git.gitlab.arm.com/linux-arm/linux-cca.git cca/topics/7.4/tdisp-host-rc3
+> >  	iface->condition = USB_INTERFACE_UNBINDING;
+> >  
+> > -	/* Release via the driver core only if the interface
+> > -	 * has already been registered
+> > -	 */
+> > -	if (device_is_registered(dev)) {
+> > -		device_release_driver(dev);
+> > -	} else {
+> > -		device_lock(dev);
+> > -		usb_unbind_interface(dev);
+> > -		dev_set_drvdata(dev, NULL);
+> > -		dev->driver = NULL;
+> > +	if (device_is_bound(dev)) {
+> >  		device_unlock(dev);
+> > +		device_release_driver(dev);
+> > +		return;
+> >  	}
+> > +
+> > +	usb_unbind_claim(iface);
+> > +unlock:
+> > +	device_unlock(dev);
+> >  }
+> >  EXPORT_SYMBOL_GPL(usb_driver_release_interface);
 > 
-> Notes:
-> * Codex was used to assist with commit message formatting and code
->    rearrangement.
-> 
-> Changes from v8:
-> https://lore.kernel.org/all/20261104161632.3547423-1-aneesh.kumar@kernel.org
-> * Drop the patch taking an additional KVM file reference for the
->    iommufd_device lifetime.
-> * Rename the IOMMU_VDEVICE_OP reserved field to __reserved and return
->    -EOPNOTSUPP when it is nonzero. Keep the ioctl table entries ordered.
-> * Collect Reviewed-by tags.
-> * Address review feedback.
-> 
-> Changes from v7:
-> https://lore.kernel.org/all/20261008055955.4014342-1-aneesh.kumar@kernel.org
-> * Replace IOMMU_VDEVICE_TSM_REQ with the common IOMMU_VDEVICE_OP ioctl
->    framework. Keep operation definitions and callbacks in the Arm CCA
->    backend series.
-> * Replace architecture-specific request dispatch, TSM result codes and
->    buffer-residue returns with operation-specific request/response formats,
->    a zero-success return convention and resp_len for response lengths.
-> * Hold a KVM file reference for the full iommufd_device lifetime and
->    require matching device/vIOMMU KVM associations for vDEVICE allocation.
-> * Hold TSM device and user references as well as the backend module
->    reference for the vIOMMU lifetime. Make unregister reject new users
->    and wait for existing users before tearing down PCI connections.
-> * Coordinate DSM removal with TSM unregister so the completion used to
->    wait for users remains valid throughout teardown.
-> * Complete PCI registration before publishing the TSM device and roll
->    back PCI registration if publication fails. Require PCI operations
->    when registering a TSM.
-> * Move PCI/TSM core code into drivers/pci/tsm/core.c.
-> * Temporarily disable AMD vIOMMU allocation while its interfaces are updated.
-> 
-> Changes from v6:
-> https://lore.kernel.org/all/20260917140159.1163281-1-aneesh.kumar@kernel.org
-> * Replace the IOMMUFD provider registry with per-device TSM operation lookup.
-> * Move vIOMMU allocation size and initialization into the selected vIOMMU ops.
-> * Select parent HWPT policy from the vIOMMU ops flags.
-> * Pin a vIOMMU's TSM backend module through vIOMMU destruction.
-> 
-> Changes from v5:
-> https://lore.kernel.org/all/20260525154816.1029642-1-aneesh.kumar@kernel.org
-> * Replace the TSM bind/unbind interface with reference-counted contexts.
-> * Add the IOMMUFD vIOMMU provider abstraction.
-> * Route TSM guest requests through vIOMMU ops.
-> 
-> Changes from v4:
-> https://lore.kernel.org/all/20260427061005.901854-1-aneesh.kumar@kernel.org
-> * Switch VFIO/iommufd to use struct file *kvm_file instead of relying on
->    kvm->users_count references.
-> * Define TSM request scope values globally in iommufd.
-> * Rename the ioctl to IOMMU_VDEVICE_TSM_REQ.
-> * Address other review feedback.
-> 
-> Changes from v2:
-> https://lore.kernel.org/all/20260309111704.2330479-1-aneesh.kumar@kernel.org
-> * Bump the series revision to v4 to keep it in sync with the dependent CCA DA
->    patchsets. There was no v3 posting.
-> * Drop [PATCH v2 1/3] iommufd/viommu: Allow associating a KVM VM fd with a
->    vIOMMU
-> * Add two new patches to associate a struct kvm * with iommufd objects:
->    iommufd/device: Associate a kvm pointer to iommufd_device
->    iommufd/viommu: Associate a kvm pointer to iommufd_viommu
-> * Address review feedback
-> 
-> Changes from v1:
-> https://lore.kernel.org/all/20250728135216.48084-8-aneesh.kumar@kernel.org
-> * Rebase onto the latest kernel
-> * Address review feedback
-> * Drop the TSM map ioctl; the KVM prefault patch will be used instead to
->    ensure that private memory is preallocated
-> 
-> 
-> Cc: Alex Williamson <alex@shazbot.org>
-> Cc: Alexey Kardashevskiy <aik@amd.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Jacob Pan <jacob.pan@linux.microsoft.com>
-> Cc: Jason Gunthorpe <jgg@ziepe.ca>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Jonathan Cameron <jic23@kernel.org>
-> Cc: Jonathan Hunter <jonathanh@nvidia.com>
-> Cc: Kevin Tian <kevin.tian@intel.com>
-> Cc: Krishna Reddy <vdumpa@nvidia.com>
-> Cc: Lukas Wunner <lukas@wunner.de>
-> Cc: Nicolin Chen <nicolinc@nvidia.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Samuel Ortiz <sameo@rivosinc.com>
-> Cc: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
-> Cc: Steven Price <steven.price@arm.com>
-> Cc: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-> Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
-> Cc: Thierry Reding <thierry.reding@kernel.org>
-> Cc: Vasant Hegde <vasant.hegde@amd.com>
-> Cc: Will Deacon <will@kernel.org>
-> Cc: Xu Yilun <yilun.xu@linux.intel.com>
-> Cc: Ashish Kalra <ashish.kalra@amd.com>
-> Cc: Herbert Xu <herbert@gondor.apana.org.au>
-> Cc: iommu@lists.linux.dev
-> Cc: Jonathan Cameron <jonathan.cameron@huawei.com>
-> Cc: Tom Lendacky <thomas.lendacky@amd.com>
-> Cc: kvm@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-coco@lists.linux.dev
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-tegra@vger.kernel.org
-> Cc: patches@lists.linux.dev
-> 
-> Aneesh Kumar K.V (Arm) (11):
->    virt: coco: tsm: Require PCI operations when registering a TSM
->    virt: coco: tsm: Remove the device from lookup before PCI teardown
->    virt: coco: tsm: Complete PCI registration before publishing the
->      device
->    iommufd: Add a vDEVICE operation ioctl framework
->    PCI/TSM: Remove the legacy guest request interface
->    PCI/TSM: Keep connections active while device contexts exist
->    iommufd/viommu: Select vIOMMU operations before allocation
->    iommufd/viommu: Allow PCI TSM backends to provide vIOMMU operations
->    iommufd/viommu: Allow vIOMMUs without a parent HWPT
->    PCI/TSM: Wait for device contexts before removing a DSM
->    PCI/TSM: Wait for users during unregister
-> 
-> Nicolin Chen (1):
->    iommufd/viommu: Keep a reference to the KVM file
-> 
-> Shameer Kolothum (1):
->    iommufd/device: Associate KVM file pointer with iommufd_device
-> 
->   Documentation/ABI/testing/sysfs-bus-pci       |  15 +-
->   Documentation/userspace-api/iommufd.rst       |  44 +-
->   drivers/crypto/ccp/sev-dev-tsm.c              |   4 +-
->   drivers/iommu/amd/iommu.c                     |   3 +-
->   drivers/iommu/amd/iommufd.c                   |  18 +-
->   drivers/iommu/amd/iommufd.h                   |  11 +-
->   drivers/iommu/amd/nested.c                    |   4 +-
->   .../arm/arm-smmu-v3/arm-smmu-v3-iommufd.c     |  37 +-
->   drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c   |   7 +-
->   drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h   |  16 +-
->   .../iommu/arm/arm-smmu-v3/tegra241-cmdqv.c    |  24 +-
->   drivers/iommu/iommufd/device.c                |   7 +-
->   drivers/iommu/iommufd/hw_pagetable.c          |  14 +-
->   drivers/iommu/iommufd/iommufd_private.h       |   3 +
->   drivers/iommu/iommufd/main.c                  |   3 +
->   drivers/iommu/iommufd/selftest.c              |  33 +-
->   drivers/iommu/iommufd/viommu.c                | 155 ++++--
->   drivers/pci/tsm/core.c                        | 448 ++++++++++--------
->   drivers/vfio/iommufd.c                        |   3 +-
->   drivers/virt/coco/tsm-core.c                  | 213 +++++++--
->   include/linux/iommu.h                         |  20 +-
->   include/linux/iommufd.h                       |  29 +-
->   include/linux/pci-tsm.h                       | 154 +++---
->   include/linux/tsm.h                           |  41 +-
->   include/uapi/linux/iommufd.h                  |  36 +-
->   25 files changed, 880 insertions(+), 462 deletions(-)
-> 
-> 
-> base-commit: aebb7274476403040d582c61478df8f4a7bf9cd3
+> [Severity: Medium]
+> What happens if a pre-claimed sibling interface registered with
+> drivers_autoprobe disabled is detached through the driver core rather
+> than usb_driver_release_interface()?
 
-This is v7.4-rc3.
+This is a pre-existing issue, I didn't modify btusb_disconnect(). It
+appears that the "if (intf == data->intf) ..." checks can never be true
+for ISO in any leaf.
 
-> prerequisite-patch-id: 121492d71cc22b2adbfdedd668868c5a449ad764
-> prerequisite-patch-id: ed31fd728f0adba3d60dcd6f3bae8da1a2193bcc
-
-What are these two? Cannot find them any tree... I really want try this all but also trying to eliminate guessing...
-
-Thanks,
-
--- 
-Alexey
-
+Thanks
