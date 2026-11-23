@@ -1,84 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795421527;
-	b=JsaPoNhz3V+Luwqkt7xB4qTNqI1Hjc1C4D0JnumPZw6nVgR+EqNMO4rKl+oGGTJ+n7pE
-	 1AKK/A7J3p6rmOPVZOcFNM8Bgkk9KqK7SM8bEosA+m3Y/1ZGNikDnO62667gx3sApUIUq
-	 OIhJndF+n1AX9jDER4ateXxRjriudwtqw+tf0wW+kx4faQeEE3xVD3h7IVeiZrBFFiepJ
-	 7HeBo9PM32d9K4nhhG7C8curaEa/CliMyB/O/mBOcAXrPNBwv8LojXxF+QOJBgKgl04n1
-	 tpqyCg04AfM/6o0FaOC5uGJvALdbLOharc50oAklsczaOabSVptBRv+bQU4gC3ycIsg==
+	t=1795422828;
+	b=q1TRZKNbRWuZ9Fb1x9gyCYIZ0CibJHrJVWTceJr3IIOJhYQyoe3XhxcxpBO5sooce5n3
+	 4E7vm0L21dn+t1et8Hc2yis7C19UxKpaONakaHV+/BOeCtjwEYu6Kp7OmVtB3w8pcG57L
+	 xFpc/HAyglZKJAfToWhvmXI8XM3GUVyZBoDekNVEySLEaDJbcsWITl1uwtdSgYYMUoz+g
+	 +CtKS4G8Nq7kVK6utTkGvCGGRCbygq/I4HE3t39lrCYDYm5DXKL3p4fxvIAuZj2fpeXuD
+	 D/jOHVjETG/RU/K7CwTN4F294CTlaDawsQYx+L5ErS3Tm98GMF1UbYsj0oyOn6MX8/w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795421527;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To:
-	 Organization;
-	bh=XLAuBIKfob1J9x8C36vMT2lkZXWcEt7KCOMBh++G9ao=;
-	b=YYZ9Zctb1IURgiktgCgwfZtZpoiFe85g+vim96KOiUI55QGDdXxo3bd51YBq8JjRY/43
-	 jfa+5hp0+jREvYhtGRudJygDrb67ZgqYaLgoIEUCpSUWcVw1wp46JfyUkuOSGAO8XQsNS
-	 87bGRhi746LI4zIyhwBVsWuPMG5WZLJDarELa7Av2DSg3sPNfh56RAKf2WAJCayeiaNeX
-	 UIYTGhhSaOQoK2oQSTGIPeiEX/tsLyUiHeE3CTzOI2JYexOesa6R8svSrky5y5TElIrmF
-	 63Vx8cHkg+qaWevmvNzNO7E8baX2UnzpOjwckzon3zLM3+GK7kRSwXvHWsQBAj0yCaw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795422828;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=+1fZ+krt+vzNzwK8rFQAhFc+bk+b5FPV1LAd7hc8WOA=;
+	b=nTPa5j2HZ/AX9pSIWEld6qlxOLjc9kuKrv17M9AryfkE3K3cUbjKDdSfH06UURfpvtTV
+	 Px3GE+uDXpMPPfZ5BxX7yWtHJ+odgmfO5nVKt/S6UPjW3pkL/1yGFXiIYiQrJ/zQl6sJ6
+	 8/NBeS57DqCyGrV+NBfN8LvWlqP5fr5YUW4ErstZysn+XVeTgO/VqruQzkukb9a+yNbqg
+	 +0QMdQOhaOwd51L3IG1uaqY0MymH8dNA5SIMFJRr/LnFaKXaLJFvGHiYqPPzeDfeFKT9A
+	 rVarI251PzRbqupK7iB4CzVxTrwNuCG6Gylpnc4q0fidFhi9ktcJHXr5159pSUspG7A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=lj+HJn7x;
-	arc=none smtp.remote-ip=198.175.65.20
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=liy8onB1;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7D68606A31E;
-	Mon, 23 Nov 2026 08:12:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D7D68606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05E5E606A31A;
+	Mon, 23 Nov 2026 08:33:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=lj+HJn7x
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795421527; x=1826957527;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=LGu03Ma0njqi8IqJpARzmb5dwjfkGt3tjqz+4ZsTuTY=;
-  b=lj+HJn7xK42Z0wJxxAACrD677uxSnjrireFdx1lzl1GOKpvLSq3YwBRw
-   qTVV8N8RMSQZMj906Xk1cNwK1kun/+CzlwEF2YN7xmfGK/7zrkml+blWG
-   dpQ9YsbsChNOroL6irrYooKuMtVqYc+BuNciKGfqnJNtpI2Gka3GBL3Jr
-   q4kBHEyFjYASOCq93U+Bp+A713Afka5r2otHqrMvQohACz9iEbsYe69cP
-   3i8wo0lH1IOqJ6aBk8SXYgrxWzjwa3f8qKx2CyZh0oTStgHIP6xUPhBWR
-   +fmpzcVd95svtHHexYHqdkX8VZgDJpEU2ogEWvoaeI5S2NrCTzBkH1X3E
-   g==;
-X-CSE-ConnectionGUID: J2HIPAxcTeyV8+gIf+IQ8Q==
-X-CSE-MsgGUID: OljOch8RTQ2HYghyuTYmGw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11974"; a="4269490"
-X-IronPort-AV: E=Sophos;i="6.27,227,1787036400"; 
-   d="scan'208";a="4269490"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2026 00:12:06 -0800
-X-CSE-ConnectionGUID: w+m0IF5cTVObRiwBOKziKQ==
-X-CSE-MsgGUID: c2HtbD4/TJmYgKEZbA0l2A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,227,1787036400"; 
-   d="scan'208";a="11652541"
-Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.244.204])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Nov 2026 00:12:04 -0800
-Date: Mon, 23 Nov 2026 10:12:01 +0200
-From: "andriy.shevchenko@intel.com" <andriy.shevchenko@intel.com>
-To: Habil Eren =?iso-8859-1?Q?T=FCrker?= <habilerenturker@hotmail.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"bp@alien8.de" <bp@alien8.de>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"hpa@zytor.com" <hpa@zytor.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"mingo@redhat.com" <mingo@redhat.com>,
-	"tglx@kernel.org" <tglx@kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH v2 4/4] x86/quirks: Use pci_power_eq() in
- apple_airport_reset()
-Message-ID: <awP1Uc-zyiawX3Dw@ashevche-desk.local>
-References: <av8uhCdgJ9hX4eLT@ashevche-desk.local>
- <20261121113835.43201-1-habilerenturker@hotmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=liy8onB1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28CC01F000C4;
+	Mon, 23 Nov 2026 08:33:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795422827;
+	bh=+1fZ+krt+vzNzwK8rFQAhFc+bk+b5FPV1LAd7hc8WOA=;
+	h=From:To:Cc:Subject:Date;
+	b=liy8onB1uUxbEhYfGGD4DjWd1yVqyirivYPRPnm3vzEiPIT1y6VX2p8ykP/osZhAQ
+	 cmKsabaXtGVw3sHAWHHBVAUh9Dnz1m0KBNGO6C24F9ryY0OZ0zOtOUmDITGAoz5suE
+	 +zmSEcXwl6oV3Wyue6SIfQg2LvLcJIKbVGENnXdnrpbiusVk+/JCX6PDmNq5zQQMrk
+	 NBAdoH4PIE2DgVA60mgi4cswkeTVgh1aD+6S7z5DP+4TxMxN1XfuUBzjbua+NY3a++
+	 FYKsNWXBu3rrlWUlbuMSFw5U7rM50sLczieE9QiCD17lkRunB+ks+vyzEVBQK1OnZY
+	 rI1GW9bkdtwsw==
+From: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
+To: linux-coco@lists.linux.dev
+Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	Dan Williams <djbw@kernel.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org,
+	patches@lists.linux.dev
+Subject: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
+Date: Mon, 23 Nov 2026 14:03:27 +0530
+Message-ID: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -88,29 +74,145 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261121113835.43201-1-habilerenturker@hotmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Sat, Nov 21, 2026 at 11:38:35AM +0000, Habil Eren Türker wrote:
-> Hi Andy,
-> 
-> Thanks for the suggestion.
-> 
-> I have considered using `pci_power_t_update()` helper in the code.
-> However, there aren't many places in the code where this function could
-> be used (there is only one place that is suitable).
+This series adds the PCI/TSM support needed by a TEE Security Manager
+(TSM) driver in a confidential guest. It adds device lock/unlock,
+helpers for recording device acceptance and parsing MMIO reports, and
+DMA callbacks used during PCI driver attachment. The guest TSM driver and
+attestation commands using these interfaces are in follow-up series.
 
-It's one place in _your_ code, but have you checked if there are other
-potential users elsewhere in the kernel?
+This series is based on Dan Williams' "[PATCH v2 00/19] PCI/TSM: TEE I/O
+infrastructure" posting [1], particularly the guest LOCK/UNLOCK, ACCEPT
+and MMIO report work [2-4]. It retains device_cc_accepted() and the
+confidential-device acceptance model from that posting, with changes
+adapted to the current PCI/TSM structures and reference APIs. Dan's
+device-core acceptance helper and per-host-bridge IDE stream reporting
+patch are also included.
 
-> Therefore, I believe it's better not to include it.
+This series does not adopt the Device Trust changes from Dan's "Device
+Evidence and Trust for PCI Security Protocol (TDISP)" [5]. That work is
+being developed separately in Leon Romanovsky's "driver core: Authorize
+device trust before driver binding" series, [6]. Confidential-device
+acceptance is kept separate from that driver-binding trust policy.
 
+The guest flow separates three operations:
+
+* Lock the device through tsm/lock. This requests the TEE Device Interface
+  Security Protocol (TDISP) LOCKED state, so userspace can verify evidence
+  about the locked configuration. Unlock releases the device configuration
+  and the TSM driver's per-device state. Neither operation is permitted
+  while a PCI driver is attached.
+* Request device use through the attestation evidence-accept operation.
+  A follow-up guest TSM driver validates the reported MMIO mappings,
+  requests TDISP RUN and marks the device accepted. This series supplies
+  the device acceptance state, MMIO report helpers and PCI/TSM locking
+  helpers needed for that work.
+* Enable DMA during PCI driver attachment, after platform DMA configuration
+  and IOMMU setup, before the PCI driver's probe function. Disable DMA
+  during driver detach and setup cleanup. Hold TSM user, device and module
+  references until DMA cleanup finishes calling the TSM driver.
+
+Compared with the earlier posting, evidence retrieval and acceptance use
+attestation rather than PCI/TSM evidence storage and the sysfs accept
+attribute.
+
+This series is based on the IOMMUFD/TSM vIOMMU and vDEVICE work [7]. It
+uses that series' TSM references, unregister waits and struct pci_tsm_context
+references. The architecture-specific CCA host and guest drivers and their
+SPDM attestation operations are in separate follow-up series.
+
+The full patchset, including attestation, Device Trust, IOMMUFD,
+guest_memfd and the Arm CCA host and guest changes, is available at:
+
+  https://git.gitlab.arm.com/linux-arm/linux-cca.git
+  branch: cca/topics/7.4/cca-da-integration-v1
+
+Notes:
+* Codex assisted with implementation, review and series organization.
+
+[1] https://lore.kernel.org/all/20260303000207.1836586-1-dan.j.williams@intel.com/
+[2] https://lore.kernel.org/all/20260303000207.1836586-7-dan.j.williams@intel.com/
+[3] https://lore.kernel.org/all/20260303000207.1836586-8-dan.j.williams@intel.com/
+[4] https://lore.kernel.org/all/20260303000207.1836586-10-dan.j.williams@intel.com/
+[5] https://lore.kernel.org/all/20260705220819.2472765-1-djbw@kernel.org/
+[6] https://lore.kernel.org/all/20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com/
+[7] https://lore.kernel.org/all/20261116081935.85372-1-aneesh.kumar@kernel.org/
+
+Cc: Dan Williams <djbw@kernel.org>
+Cc: Leon Romanovsky <leon@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: Xu Yilun <yilun.xu@linux.intel.com>
+Cc: Alexey Kardashevskiy <aik@amd.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Rafael J. Wysocki <rafael@kernel.org>
+Cc: Steven Price <steven.price@arm.com>
+Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
+Cc: Lukas Wunner <lukas@wunner.de>
+Cc: Ashish Kalra <ashish.kalra@amd.com>
+Cc: Tom Lendacky <thomas.lendacky@amd.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: driver-core@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Cc: kvm@vger.kernel.org
+Cc: patches@lists.linux.dev
+
+Aneesh Kumar K.V (Arm) (9):
+  coco: tsm: Register the TSM class before device drivers
+  PCI/TSM: Let TSM drivers discover the CMA DOE mailbox
+  PCI/TSM: Defer TSM vDEVICE allocation until device setup completes
+  PCI/TSM: Add association locking helpers for evidence acceptance
+  PCI/TSM: Notify TSM drivers before waiting for TSM user references
+  device core: Add helpers to record confidential device acceptance
+  PCI/TSM: Add sysfs lock and unlock for guest-assigned devices
+  PCI/TSM: Build encrypted MMIO descriptors from a supplied report
+  PCI/TSM: Configure accepted device DMA during driver attachment
+
+Dan Williams (1):
+  PCI/TSM: Report active IDE streams per host bridge
+
+ Documentation/ABI/testing/sysfs-bus-pci   |  35 +-
+ Documentation/ABI/testing/sysfs-class-tsm |  32 +
+ Documentation/driver-api/pci/tsm.rst      |  47 ++
+ MAINTAINERS                               |   1 +
+ drivers/base/Kconfig                      |   4 +
+ drivers/base/Makefile                     |   1 +
+ drivers/base/base.h                       |   9 +
+ drivers/base/coco.c                       |  68 ++
+ drivers/crypto/ccp/sev-dev-tsm.c          |   7 +
+ drivers/pci/Kconfig                       |   2 +
+ drivers/pci/ide.c                         |   4 +
+ drivers/pci/pci-driver.c                  |  31 +-
+ drivers/pci/tsm.c                         | 749 ++++++++++++++++++++--
+ drivers/virt/coco/tsm-core.c              | 150 ++++-
+ include/linux/device.h                    |  22 +
+ include/linux/ioport.h                    |   1 +
+ include/linux/pci-ide.h                   |   2 +
+ include/linux/pci-tsm.h                   | 130 +++-
+ include/linux/pci.h                       |   1 +
+ include/linux/tsm.h                       |   4 +
+ 20 files changed, 1248 insertions(+), 52 deletions(-)
+ create mode 100644 drivers/base/coco.c
+
+
+base-commit: 65e4fd942f72a9dba0e4e257290c4fa1aa756854
+prerequisite-patch-id: 121492d71cc22b2adbfdedd668868c5a449ad764
+prerequisite-patch-id: 266d2641e47ccf8f57f8ca77d90d193f9cfabbbd
+prerequisite-patch-id: 5502ecfa0b2659885b221f103d44d473c72fec03
+prerequisite-patch-id: 6ec85de28f71ce761596e493a68a56242327c0b1
+prerequisite-patch-id: f6e97602a5b06ffddd2cd3c2815bed27411d51e3
+prerequisite-patch-id: 03d76de408efeb5a2205079bb61face09255ca60
+prerequisite-patch-id: 51872ad4fcd244f3425b81f5a0f05acd4ffa5c39
+prerequisite-patch-id: b56e823a40dc6d1e70e74a00cf3e1da2d0ecc9d7
+prerequisite-patch-id: 53dcbe1d39b6848f778eba736a2779b0e587cfcb
+prerequisite-patch-id: 66c884ec28e3d15a174dfb288858b174fb21480d
+prerequisite-patch-id: 18a7425cf79e0a14ac934cb2a194b27a62d50c9d
+prerequisite-patch-id: e47eb53d14d6f6180eb0606d721bfd55d74c96b3
+prerequisite-patch-id: ce898fc01b883c3318a6bdb883578b8b4e4299a2
+prerequisite-patch-id: 416778d72f4ade8c0f13b9fe3e619ec9d5e9634b
+prerequisite-patch-id: d30d30bbe67196c41b592e79fd0c15a78bec0ae7
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.43.0
 
