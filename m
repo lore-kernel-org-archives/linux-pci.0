@@ -1,84 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795455141;
-	b=oK2Quhsqti5PTEJe3tGlZsSwgEJhZkSEiaTTHpeqm6Nn7BoMJq5jceYI+d6EeT8wZ30h
-	 SyZn6yezv2Sl/n6OuBknvcUOP0nOLq0P/+34B0HJ6oeb2NPUF7ICV4cX/aTQ3/VeMpW1o
-	 uVnv8n+/04oFhdr88SNXjccjwdEEWM80VUoTyR6EuZCXvpnx+42Vi2wUdvFM02lFl747r
-	 Eg5ogMkuP1O6r9KohHVhaPTCc6bsMmgI1Sy74nSAmoA4hPxDk/B2WJCPRn7wcaJ83eM2K
-	 gq3leEw69dWqHIaNDq/+XT4CyHyqNZYpMpUiWLEbZ49/TDRPl8G0gjiWBfxpzS9Dr8g==
+	t=1795456141;
+	b=jn+EaT8tbVjtCdtzUNNl41G+7FlbzgG4A9av3bw2lmYDheZaiqfMm82fUEmrmElkmPrH
+	 BlzebrnFGsGO1lDLYtAb9Okf0zkyorbafvY+WAKlJ8rowL5ON0sCvLyWv40yHbKoXpbbq
+	 AaTMNe9ZkUWow4myERdHiPNEdun5KWvGeeDDq8WSm2h5fQZ3bVUa8f8sEGr0JINa4Mpt4
+	 UGQugghlVXQvCgniF35rZKQB7ItJMgSBw2dSNByNwgDwI6qFEZ06hczbBau9bsIUvJK8d
+	 g4ULYii8j6wW2yM7vdZ35L1ieyNv/cg23L+ob89V+HZtDHE3ktUFETtu2caLPhmJr7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795455141;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 From:To:Cc:Subject:X-Mailer:References:In-Reply-To;
-	bh=P+l/VRR07HqPbgm9tEPK7SVr6Tlf5vY5XKwCiYVXpnE=;
-	b=eal7EtvGUseDy4JejKbCo/gf7riR8lNtSVK3dOxMw9N0M8OlDzIqZH0cTLwLhP7d1cE9
-	 3txU63HqfEBeLL1wjkZ0DrSZOgaKRRlsvOjDf4EswzREngFypVMhjIIzZYc11KamL8Z/T
-	 axlRxSJh7KPRJ1OjNJmpYp6zbQCuRX2pVDpIBkjdv/N74lOFBvfxfYSQ92QB3cTbXFdto
-	 sfAhIUSn/tDmN3WJJfqGaBbSm4ppMQcPN8ICxPnHgYQhL3Rd2bhVCC9yskJpUlx2rcgsF
-	 4BQSSTbmgNRLmbgBYFmzXsFP1WJz9a0da7En+10l1fZqXJRSLJ4NKjE8h0zR7H5RNkA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795456141;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=vEVjlzEn3WQFHK2xKs1NM+I3I5U4uHmFSrkbLsNjbyc=;
+	b=Xx514VMDE8IM5g7d4ptssjMP7nwuY+tQkR1ewR6aJHFOtimtR2Crk4+RsTkkfQi/2ipN
+	 KXT1tiI+rl59HcjAlKycpE0O9nTG2Yx/EbqnzJX0zkE0VbeXM18xtrWgITnuyrw+DIlNd
+	 YHJUTqIgIpdxKgbmGaGsoTgT2uJUJlXCcQC/FDum8fEmdiPxcxlil0aaKC2iOKMMeXtzh
+	 m6e6QuKVI48SOvp69Q7INaQrzW0TnamCWDMN0qs3hlk9LAlY2qu5qbXoUdq9Oaxtm0Ngr
+	 MdCMm6RYJiaNNy7YkrhLpXvVALZljy8p09c9arc1r31RH4ByRi1IpvhVHFX2jV9dl2A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GUqMwfdW;
-	arc=none smtp.remote-ip=209.85.214.169
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ONGPw028;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B33B606A31A
-	for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 17:32:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B33B606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C346606A31A;
+	Mon, 23 Nov 2026 17:49:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GUqMwfdW
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2f03920c477so30915635ad.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 09:32:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795455140; x=1796059940; darn=vger.kernel.org;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=P+l/VRR07HqPbgm9tEPK7SVr6Tlf5vY5XKwCiYVXpnE=;
-        b=GUqMwfdWySOE88STspofkPaLQaaZjEwFfhZBDcvXCKXUdwt0IqoJuHyz6c4xJs/dnO
-         RLel3qR6lTtHRWvCqUUH6V5nO10hZZlnSxyrXXoEH6W8FwXVOVGLxiAv30EQ6HvrMt1x
-         4gFCm0+JmjZI5aW6RAsyZvO6EbM46xOijpgUC6/Gi8xQTSRJxGbSJwxabd7/tnVmiQXO
-         v4nAVDKIubL2xTU2aRRz7NEg9/ux/TdNw2zEhqyeTsdVJAu9Sgw1uALVn6Q6ZcCySPur
-         zNiBzRfxUKrP/aEvbxj+n/QxJwBzo3JvMo7sIRnvm9/J8aQiFzLnERdkb664faMxpA5G
-         xcwQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795455140; x=1796059940;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=P+l/VRR07HqPbgm9tEPK7SVr6Tlf5vY5XKwCiYVXpnE=;
-        b=jQ2+JvcN+Qnk4uTiXPVJ4wNF7ezI+Uq3iSkO3S0nmHec3yQwQWv5PmWQclt1qo+vDz
-         2gsU1f9GLmZc5jhzduRnlJdYPp3krf/lVrUkBwpF4+TqWL6TqSnJGedx7x8chWbKjlsF
-         HJxnjYRH8MPWAJEa7GZZe9nN7cM/6FZ3pd9jlAsNTrRekJiCIoKe6obSv6xApGBx2Ey/
-         uaEt4EVgHqgfW/zrj+B9kTjZryxLOP1+6TgFDzIj1UNNRlLmt7UTOq7LRMYf92e7PqTO
-         suHk3Le7piddO2j98fXDqlfPqbh+tOFeOEFoNUtdCHf1wVGIlxZs0jzhkHc6+RUIGD5o
-         LkHw==
-X-Forwarded-Encrypted: i=1; AL+hErGlLPiqJXHmps1j2K78VQgdzrWUw7Kwa4aVrskrHpLqDJUKfYN4xMrcwPLpMHtc/dNfw/61rVmRUYY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+TnWzsEkWgKXYZyNGiU1OQU6Hsn7NkyXR/i13OzHlqeB8lRV8J
-	OTaouQ9JPnaAkpGllV+f7BMYYWMOQoigGXCkihZX4SvMrdklNFf9a/ghzSuWVKtmWQ==
-X-Gm-Gg: AZFdTZf+0Fe1FWtPLUYMQXziH0XbL10UsTXDgeVoWJPkMiL1qyXAB9C+pk3v0qui7q5
-	rEQPzadZShMouwdxiQss6eZkxMh+ztDqo/ivrLrnPFGjAghIysqZP7i5ByPyJiossrgX+cfHvD3
-	Qqsg+QoTrDelvHsJfsWWR8psIPUk7fvF4MI1M+XEIUwigR3GjjYjgEC/B1+KIilEalPCqrwBMh4
-	q1gf20Wr9EDRL+Nq4zGe5waWTfqyWbzJgE4SLWGSsA36D4bwcWkuNxT+b/WZoQ6WX8IpRmUcuWg
-	LHSCFyRud/kLQmsWpfJFDV6t45HLM11gqHLPS6oCY4deqQgL+MAiuxazojgQjKzgn1+r724Pzo/
-	S1Yd4qoEjcc+hKq1rnFU06jwyyBauEDdzHSo5zny92uE0LBsR51u4pa3hoCczCiRDGJpQb/j2pR
-	SWdZqthF/2meJIHklZTmHjmLkbfm3KOs0qLYsyTmuMDopNZe+ihPTz4fNJnJh0NGtfZbb5mt72k
-	k1QuJfaoxIZfQ8PGemQ+8svLYtAINQKJR/JdDSYW7stglH0m0Hq7tjnIhvnWPp8Ou+7grdEpXoZ
-	gtR0SLpVnrtEv2Ow+BfE2oRHkQ4LYtND7CGTd+iwUs0NUWhZM0GhMSJiZVBXO2wE
-X-Received: by 2002:a17:902:e807:b0:2ee:1fab:158f with SMTP id d9443c01a7336-2f03f167d4emr115089865ad.43.1795455139780;
-        Mon, 23 Nov 2026 09:32:19 -0800 (PST)
-Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f051a566f7sm45650825ad.41.2026.11.23.09.32.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Nov 2026 09:32:18 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ONGPw028
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EFFD1F000C6;
+	Mon, 23 Nov 2026 17:49:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795456140;
+	bh=vEVjlzEn3WQFHK2xKs1NM+I3I5U4uHmFSrkbLsNjbyc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ONGPw02805aZXiAZ9uoMdJTODGLJ6aif30OMG33tebxMo3leiamcx5r2qzpet8alD
+	 hVECUG6XNRaY0A3zQ55zLA6Su+mEgIu4M82I9lysgqxUOAdAtwBRYdtjU0x69rcRoC
+	 yrnaY5aN8BNetyVVyimIo7V5FRUuk/oQHk9XpnlRQifYkUcUoL8cqi83pD3VqTK6Zh
+	 Kogg7JMAJiBHhk1GgPmeaKlE32jM73SkdzBQqKQg2LKVjKXFlZloZwcOSnXDUh6DvU
+	 TVNv1Ybi+YJgiYSQm4ktSRZ/vXhTLAHltSVY8fzZMSpZsx6lGD5Fqxc3h9tNgIkcEF
+	 rvYlvC2w3yJhg==
+Date: Mon, 23 Nov 2026 11:48:57 -0600
+From: Rob Herring <robh@kernel.org>
+To: Alexey Charkov <alchark@flipper.net>
+Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] dt-bindings: connector: Add PCIe M.2 Mechanical
+ Key B connector
+Message-ID: <20261123174857.GA55094-robh@kernel.org>
+References: <20261122-pcie6_fix-v2-0-2e0fe615d90b@oss.qualcomm.com>
+ <20261122-pcie6_fix-v2-1-2e0fe615d90b@oss.qualcomm.com>
+ <CAKTNdwEFSDn4K_15pVK7=ZEWwanHQ284R4=spWWLCB0UspEMow@mail.gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -87,89 +67,82 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 23 Nov 2026 09:32:17 -0800
-Message-Id: <DN2RQ7LGX224.3W3PSQ2PBHTJZ@google.com>
-From: "David Matlack" <dmatlack@google.com>
-To: "Pratyush Yadav" <pratyush@kernel.org>, "Tarun Sahu"
- <tarunsahu@google.com>
-Cc: "Pasha Tatashin" <pasha.tatashin@soleen.com>, "Mike Rapoport"
- <rppt@kernel.org>, <robin.murphy@arm.com>, <maz@kernel.org>,
- <will@kernel.org>, "David Matlack" <dmatlack@google.com>, "Alexander Graf"
- <graf@amazon.com>, <seanjc@google.com>, <jgg@nvidia.com>,
- <loganodell@google.com>, <arnd@arndb.de>, <dwmw2@infradead.org>,
- <baolu.lu@linux.intel.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- <oupton@kernel.org>, <alex@shazbot.org>, <gle.com@google.com>,
- <pbonzini@redhat.com>, "Andrew Morton" <akpm@linux-foundation.org>,
- <kevin.tian@intel.com>, <joro@8bytes.org>, <kvmarm@lists.linux.dev>,
- <linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
- <kvm@vger.kernel.org>, <iommu@lists.linux.dev>,
- <linux-arm-kernel@lists.infradead.org>, <skhawaja@google.com>,
- <sagis@google.com>, <linux-arch@vger.kernel.org>, <linux-mm@kvack.org>,
- <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
- compatibility
-X-Mailer: aerc 0.21.0
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-6-tarunsahu@google.com>
- <2vxzse0rzjdn.fsf@kernel.org>
-In-Reply-To: <2vxzse0rzjdn.fsf@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAKTNdwEFSDn4K_15pVK7=ZEWwanHQ284R4=spWWLCB0UspEMow@mail.gmail.com>
 
-On Mon Nov 23, 2026 at 6:56 AM PST, Pratyush Yadav wrote:
-[...]
+On Mon, Nov 23, 2026 at 02:04:29PM +0400, Alexey Charkov wrote:
+> Hi Krishna,
+> 
+> On Sun, Nov 22, 2026 at 10:46 AM Krishna Chaitanya Chundru
+> <krishna.chundru@oss.qualcomm.com> wrote:
+> >
+> > Add the devicetree binding for PCIe M.2 Mechanical Key B connector
+> > defined in the PCI Express M.2 Specification, r4.2, sec 3.2.19.1. This
+> > connector is used to attach WWAN Adapters to the host machine over
+> > interfaces such as PCIe, USB3.1 Gen1, SSIC, or USB 2.0. The slot also
+> > accepts SATA and PCIe SSD Adapters, which use the same pins.
+> >
+> > Interfaces that share connector pins are described as one graph port
+> > per pin group, with the endpoint number selecting between the mutually
+> > exclusive interfaces.
+> >
+> > The connector provides a primary power supply of 3.3V/VBAT, along with
+> > optional GPIO signals: FULL_CARD_POWER_OFF#, RESET#, W_DISABLE1# and DPR
+> > for WWAN Adapters, and DEVSLP, PLN# and SMBus ALERT# for SSD Adapters,
+> > plus an I2C parent for the SSD SMBus.
+> >
+> > The function of the GPIO_0..GPIO_11 pins depends on the Port
+> > Configuration, so they are described by gpioN-gpios properties with the
+> > function of each pin per configuration documented in the binding. The
+> > Adapter configuration is either sensed through config-gpios
+> > (CONFIG_0..3) or fixed with config-state, which defaults to WWAN PCIe.
+> >
+> > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > ---
+> >  .../bindings/connector/pcie-m2-b-connector.yaml    | 332 +++++++++++++++++++++
+> >  MAINTAINERS                                        |   1 +
+> >  2 files changed, 333 insertions(+)
+> >
+> > diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.yaml
+> > new file mode 100644
+> > index 000000000000..4760863ff4f7
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/connector/pcie-m2-b-connector.yaml
+> > @@ -0,0 +1,332 @@
+> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > +%YAML 1.2
+> > +---
+> > +$id: http://devicetree.org/schemas/connector/pcie-m2-b-connector.yaml#
+> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > +
+> > +title: PCIe M.2 Mechanical Key B Connector
+> > +
+> > +maintainers:
+> > +  - Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > +
+> > +description:
+> > +  A PCIe M.2 B connector node represents a physical PCIe M.2 Mechanical Key B
+> > +  connector. Mechanical Key B connectors are used to connect WWAN devices to
+> > +  the host machine over interfaces like PCIe, USB3.1 Gen1, SSIC, or USB 2.0,
+> > +  selected by the Adapter's configuration pins. The slot also accepts SATA and
+> > +  PCIe SSD Adapters, which use the same pins as the WWAN interfaces.
+> > +
+> > +properties:
+> > +  compatible:
+> > +    const: pcie-m2-b-connector
+> > +
+> > +  vpcie3v3-supply:
+> > +    description: A phandle to the regulator for the 3.3v/VBAT supply.
+> 
+> The node name doesn't match what the spec calls it ("pcie" seems
+> redundant). Also, can a module have separate supplies for its 3.3v and
+> VBAT?
 
-> When we have all this available, I don't see the point in
-> differentiating between optional and required features at the ABI level.
-> At the ABI level, all that matters is what the incoming kernel
-> understands. If the incoming kernel does not understand a specific
-> field, the outgoing kernel should just not use it. There's no point.
-> Best case, it gets ignored.
+Yes, but 'vpcie3v3' is already the name we use elsewhere for PCI.
 
-I pretty strongly disagree.
+Don't know about VBAT comment...
 
-An optional feature is one that the next kernel does not need to
-understand to correctly restore the object. A required feature is one
-that the next kernel must understand to correctly restore the object.
-Optional features can be enabled without any compatibility concerns.
-Required features must be enabled carefully (IMO via uAPI) to avoid
-breaking Live Update.
-
-I agree it's a good idea for the outgoing kernel to check that the next
-kernel supports all of the required features it is using, so the Live
-Update can be stopped before the kexec. But that doesn't remove the
-need for the distinction. The next kernel still has to decide what to
-do when it sees a feature bit it doesn't understand, e.g. because no
-spec was provided, the spec was wrong, or we kexec'd into a different
-kernel than planned. Without the distinction it can only:
-
- A. Treat all features as optional, which risks misinterpreting state
-    and corrupting memory if the previous kernel did not properly
-    validate the next kernel's capabilities.
-
- B. Treat all features as required, which means no new feature can be
-    enabled until every kernel it might Live Update to (including
-    rollback targets) understands it, even when those kernels could
-    safely ignore it.
-
-Neither of those is a good outcome.
-
-> The semantics of required or optional then become "can I describe this
-> object with the capabilities I can use?". If the answer is yes,
-> serialization succeeds, if the answer is no, serialization fails. So
-> with this, KHO_MAP_F_MULTI_INDEX or KHO_MAP_F_DYN_DEPTH are indeed
-> optional. All memfds can be described without these, they just will be
-> less efficient.
-
-I think this is a different meaning of "optional". Whether the outgoing
-kernel can choose not to use a feature is a decision for the serializer.
-Whether the next kernel can safely ignore a feature's data is a property
-of the ABI. KHO_MAP_F_MULTI_INDEX is optional in the first sense, but
-required in the second: a kernel that doesn't understand it will
-misinterpret the map. The header needs to convey the second.
-
-So I see the spec and required bits as complementary: the spec lets the
-outgoing kernel avoid features the next kernel doesn't support and fail
-before kexec, and required bits let the next kernel fail safely if that
-check was skipped or wrong.
+Rob
