@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.52
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.0
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795452115;
-	b=HYOdXO53FUOMA8eVn67plu0CbiTiIOeVmb2vJ2imoGGikrwa0E4doMSLg7Xjb7GWpyBH
-	 kJnJ88+oD7mDsGdPRn9Xt0e/uleRCwkgzXRfe+8erYTuqVrYb33qzCa8XVkrX38FwmQof
-	 1u4FvLnH9FmqEZyFP/P1nNahJ3i2/Nb/vVyAsXPjhviCA2cFUp9dHOajFop/G80kXq+t2
-	 REdzGc1DYHashsU2k9+APl/SaAbXYHpnjhx95kV3uWBuDcllW4XqSL5/9/8jru9NEvkd0
-	 TCy31gnRwyg/8F6wDZ8+vSWQLXGan79PFfvzysgjvep1cHU0Oebqp/rVgGUuHjlETgg==
+	t=1795452506;
+	b=LYLJx+NC9SVp1yDeqp0cbrrnCL3HL0bvwHM2fp3lSEkCBJtuNKtPfo63LdjkI0Im651h
+	 Xly+ejpgkzZFCvFqkvqmdJdq180zXcM/1Be9crR7lcgOo71D2P5ICyQWFI7Nszz7atnOt
+	 qPzN0BE3e5V5M8G54s6fuHmWlSopGIo9ITIUYCtkqEXurKsN6k2YlYIPmiHXG8ZNBoKq3
+	 8L7782DKLo/YVhI21pIqx1yCTEZAUpEsVOJhyCx/BMwiR0NtspuFWKmX/LV5Tvqw1it5w
+	 /z5gcqH1xU0NZSR0HzMchMSt0Q2NC+DzeLD20rrGgnB65bnuwD3szdHd2YQ5DO+dk/w==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795452115;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795452506;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:Content-Type:Content-Disposition:
 	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -24,55 +24,55 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=puuyONZqQyvaNTFislAf7tN6e6fdu71bEhr6njjkIp4=;
-	b=aldJ69xa8EEhqxO2mkzKNw2oDKQJwTdOXB3AbbKl9nULaYxojOFYRz6+3Q/WKAH4Dnaa
-	 a5ZDixZPh1AEE0fYc4AwjVcPwUgYcUv5U8TlbRUeuUTZ9zaABQS3rwdjjSeneHWs573kl
-	 GQlK3EgpvVobtpKzBT9l3PkF4jrzo+VijsqWlvRJzXEz6Z22c8XN8tjAgBuZO5x/ao/d/
-	 i/qHJFSeJHqrry5bDq8+vcRwosqUQxqv0gwgYPjFIdyhhcoQFdU8T4PrF1ZHLIdSJxl3a
-	 YWPVRpltrcolDLSYRgU+MsZVR4hwvJQEnUnHExMZutEl51L09vOG5VnuvDwmpTtRmjg==
+	bh=5mWGiv3bqD17bdr8Xlz9oVxri6TC7UgERSewOueDRuc=;
+	b=mWYl8ordyyNfJ9HZgE6ig0YBO14B1HIZxWIW3xKHnpDsHR4mBQswMb0mwniw2BG1TsB+
+	 k5+P+bMYx0RLwlbRT3zqcX3tb/RLmMurGfFXFtvFKBFhC5mo/AvMHU8HAxK3h8aCDDT6w
+	 gyrT7mwrY5t21AnMoetQDRSQMxY1EC8hcfEbNRpBPRCs6Jwz34efXS8Z/QCNxaJDGy1WP
+	 S2sHtZ/n3ntndG1EeE+5c146+Flz/EhKzy3A1CC2CjS4Yq7yBk7hDZEwqoqeDpWQdVxj7
+	 jkepmuuY4uASLUAS7PwfQ0JpbaMQZ6pcK5XLIeBI19E3ZE9sUVUVg9xjGMlJ94pPd8w==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.nxp.com;
 	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=yINGSTd+;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.52
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012052.outbound.protection.outlook.com [52.101.66.52])
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=nxrXtT99;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.66.0
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012000.outbound.protection.outlook.com [52.101.66.0])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D2C606A31E;
-	Mon, 23 Nov 2026 16:41:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E7D2C606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 543EF606A696;
+	Mon, 23 Nov 2026 16:48:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 543EF606A696
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=yINGSTd+
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=nxrXtT99
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mb5HIadZZvGyXgV41uG956oqOF6t89PHFJ2tHjPmM/KRqbe6v1eoqHmOAlz2iEn0SwlQLYF3fFFDuwyiOv/Esw9MzQtbQMRPxcpnZGNLXZagYP8oQwGjz22J3nbD+7JqFigYfFXDiaoiMiHBHQldAPjkAB+uMjqg1aFl6fsKWz6Rx2PnWtBefIEXxDXyQIdUbvIoXQV7grXDZV0qvB9/njUKFsU/30dt6gc3xtV/FuUqlJeVDdwgvQrJUwtwxMg/0h5lHnQlO5/L7WUgkOyIzzaH0pnyeYZ/JweyL4/1w4KRa5PzPOQ2OuhQh1pJoWFQe9L6ol6GpR/7vvZA/MT2Ig==
+ b=I5MajPqIeIcfYOrzRZh4/8t2Z9V2pSAqABKnxcioKMFneEtWocCmJhpACzvCvw3YGNoOaXek7Bo0uFk+tzqs9nZh8I73C/DsnsjHi1GtlEjV4UyYRLp5ehZAmzNDN3aNQWZbcW0fko0zzV0JhikMquwcGaMcpcO620owLr70UkQSgbJq4576fgwqCJeRe0USyJ4faiIHrZi+uymMZ9MRlen99hzvGxHtfnKslAIIo5ffQ9Cdx3QVm8D+22a4XWo9AUvj4KiePMD9aUOyjfK0bPC7VN5FUNg2QlxAoyMN3NDO9+FE6JyemduT1aSupxrp653EjqDI1pNvWMAaTrbOyQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=puuyONZqQyvaNTFislAf7tN6e6fdu71bEhr6njjkIp4=;
- b=WfjcT5/bPaarPkfA2JFpcHqcVQOt8zVMiTC7iEKLGQZc0GpiE5yd3BqXxm9oK8tigyMx7P9t0CE/SGg4rDHIe/oFDFSTWThpsEivhK/rH9MJRYEPQIZhzu77U53tXlobSJkc/o8g4LAkDnXmvAFJYo0L6U+N0ibJHBVYiUBP4+uR16TahGrz4C6L3q/QSkJhYLvvr13fcq7Kfpp4KeywLrvj537H9QeMzNn0lxP6nk9rbxRNfFJtOnOqDezjbG89t/LNe4RE73FFjhcyfNjgcsOjX6zG7z/26VMQBKIua60MZzykk4hBhjS1NHqSKkYexCV6hj+E4Mi10WfiCfEKZg==
+ bh=5mWGiv3bqD17bdr8Xlz9oVxri6TC7UgERSewOueDRuc=;
+ b=FX99ek5EGuhhJTD5vUDcQBixVVhMHHTPQD01esOR5Phr5f6IJ7KxauiFP3sVqwyeWAVQFGidR+vSobjUmWulFdO38YLom34H2rtZU/DX2XFc7rQ1ngTmC8M9VQxXDoEOYF6dgQ1TEhu8H3SKH1whrqTJH4wgQTXwCAlo4suGgNuB4Yy/3DqE4KMPbMnfem4rTdhXki3PhAHhoifUjoSgoIESuUlZgu9BEuTKu6A9EFyikMV7yu6oi7c8shPh+Tvf1Oxu6F2dtU/4l9PfkXk7y4rq108zSZT/dkNF8zWGcuPfJR9COjN3/JxiAo0DrBhHQ9rJVpxbgP2uq9ecDCHFcw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=puuyONZqQyvaNTFislAf7tN6e6fdu71bEhr6njjkIp4=;
- b=yINGSTd+uRFDyMrZFGx3/MI6ZkIvWvdZ2xUPEsFkbtoGxqtmoh+ypPUBMVm4a6U+xyS6p+xxGkZ+9U/ZSpfnaYLp7rl4KmrixaY5VKv6aLkkdf7acDoNSB1w/AHh1hbP3DAcXwBSJtBghy11pQs5mDWj7PxXJjbL80pEbxoIW3cTjy+PviN5A++T0YAuc/v7asccYGk0ClzvoyAvHQRHIRxIvJRnIEuCNQsDfYMBCXIkMmXgh4eaS4PV+tV3WQzgKZ2gUP6ReG6UJE/sTZCx0y5laDcdOR+uWMrlo0sYvcdSYqk6ghE+nEAhhQirYX3ZWw45YL3BKCuCvsgzzB8Zag==
+ bh=5mWGiv3bqD17bdr8Xlz9oVxri6TC7UgERSewOueDRuc=;
+ b=nxrXtT99A8Ysw3ub+VnbG3kGE+ovd0WW5CaW086fG1/EwrKsRqXbbEuSCRUcm9QQr2wcZ/02Ko1viZrdcZ6zbVMr3NVGhBTDmqhpktBhvXYrCFAHB8UGxtBQJ7AxnyxLpNd8x7MR+YNDauPfN0WB6sh7o4i5PNVXj+fvLkcKT1eC+gYkjfwQFXByH6SDGvGYBv20H4cknVSYDILQgbcGPKDFU8d4tDL+2Q3XZvYNDEGC1ooQC0wasU2vZ4x7Myav1rV11BG18v8ChzYAiG9KgUrKRazO4f5R5yYnivyoAa7XpDXOVoJ4UYGh6CkEjLejb6IS6iHB+Vgi8FFc8sA4fg==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
- by GV2PR04MB11884.eurprd04.prod.outlook.com (2603:10a6:150:2f0::10) with
+ by DUZPR04MB9796.eurprd04.prod.outlook.com (2603:10a6:10:4e1::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.14; Mon, 23 Nov
- 2026 16:41:47 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.9; Mon, 23 Nov
+ 2026 16:48:18 +0000
 Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
  ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
  ([fe80::c715:c32:8bb1:b70b%4]) with mapi id 15.21.0639.012; Mon, 23 Nov 2026
- 16:41:47 +0000
-Date: Mon, 23 Nov 2026 10:41:35 -0600
+ 16:48:18 +0000
+Date: Mon, 23 Nov 2026 10:48:07 -0600
 From: Frank Li <Frank.li@oss.nxp.com>
 To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
@@ -93,15 +93,15 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org, linux-phy@lists.infradead.org,
 	Anvita T <anvita.t@oss.qualcomm.com>
-Subject: Re: [PATCH 02/11] PCI: qcom-ep: Add MSI-X support
-Message-ID: <awRsv7j4BptoBdD7@SMW015318>
+Subject: Re: [PATCH 03/11] PCI: epf-mhi: Add MSI-X support
+Message-ID: <awRuR7FXqXMeAVxQ@SMW015318>
 References: <20261122-nord_ep-v1-0-6d8839ffa9aa@oss.qualcomm.com>
- <20261122-nord_ep-v1-2-6d8839ffa9aa@oss.qualcomm.com>
+ <20261122-nord_ep-v1-3-6d8839ffa9aa@oss.qualcomm.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261122-nord_ep-v1-2-6d8839ffa9aa@oss.qualcomm.com>
-X-ClientProxiedBy: PH8P221CA0037.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:510:346::8) To MI3PR04MB12438.eurprd04.prod.outlook.com
+In-Reply-To: <20261122-nord_ep-v1-3-6d8839ffa9aa@oss.qualcomm.com>
+X-ClientProxiedBy: PH0PR07CA0068.namprd07.prod.outlook.com
+ (2603:10b6:510:f::13) To MI3PR04MB12438.eurprd04.prod.outlook.com
  (2603:10a6:290:76::14)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -113,139 +113,202 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|GV2PR04MB11884:EE_
-X-MS-Office365-Filtering-Correlation-Id: 19392fd9-5db2-4019-14ac-08df4980aa28
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|DUZPR04MB9796:EE_
+X-MS-Office365-Filtering-Correlation-Id: 654c8f70-a3f5-409c-1d3d-08df49819337
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|1800799024|376014|23010399003|19092799006|10067099003|4143699003|11063799006|5023799004|56012099006|261021121427099003|261022075727099003|261009223027099003|261022105027099003|261102123227099003|261026121527099003|261026140227099003|261028144727099003|18002099003|22082099003|3023799007;
+	BCL:0;ARA:13230040|1800799024|366016|19092799006|376014|7416014|23010399003|6133799003|18002099003|22082099003|10067099003|11063799006|56012099006|4143699003|261021121427099003|261009223027099003|261026140227099003|261028144727099003|261022075727099003|261021123027099003|261022105027099003|261102123227099003|5023799004;
 X-Microsoft-Antispam-Message-Info:
-	0I6Fnp69hxm/HCV9R8wuMqKphwGZMjBBtf+czcjGG0F8XMErOqZ6sKUdRWSOKvScNzCa2xQr/rOH4vvieZ6mGHAj9pEyQ/rRw6v9S0m2NfdtvQxROIPFXqvydOhUqXUuuXTwBpHXHfWDVbIeW1Wy7j50KTZhb+3fz/sTDrDIdjBTQnvI7IjBJgmXkPCbSIsa6EwcgRIs/bWsrAQnW6hVA9UgzhobGBvAlbjcgoRPo+K9quKjuh0Z3uBkmlM7HfWbHMN/ojdgf9ApjfWSIXgSlgG8J8AeP/OJOvbAhUmQoXmVK0TANPSHGde9owQ2Scnh6FJ2hRH++0Q+d72p/2n2WGTbrlIeO89pn3voBtA3G1EQqyAsADgkQf9wWmsH2CIoPjpc9CbzzXnWrx+LjqNecEZkgfIGlTA00otkJGs6FslEL1IuJSCzPeLFF4fn81bhcPKgBl/0ROtPYrqzfOYRgxi4As8sEa+WWX2SeLeC3Yjr/ISHV1r4e3sb+v/s39IabebOCILAEER9W3RQcFzAzQqu1ZKL9qU1kGCHTMHLz1BXxaV8d/PYuUGoR8McMvHIleDFd1apfLAM4H1Fwmp4RcyJJcYBrXofIB84u46NVWJT6eR8bsQ88/p8lE98oDwBm0ogjg1AMpo0W7LNw/Nqly+zOGp+RP3iMYBmbXqHid0=
+	D6WjBjgndfCXD04Fs9FMVaVlijFvfzFBUKxoE3Nuw40xOUCKnL4QZFlMwdmTm7LSuZrYJMK1WV4uuE1nDbH88A5Iwq3H/p1xbB7Jz3U7B6cUmKhYsTy1JaizC6KuyGLrmKzOPdmaxDYeNjVAacr3kHUMfCLZtYP+9I/ydu9FtX+pP9ox1oDJQn6cNAw2epLjypGpZfaO/2P+0CuAccEH4xbH5ebwk4U0Q2GKOkfRzmAxma+IYEcT6PGIAZtx6JNikmRaJbH8pdICNnK+IBElQOevnptE662MoiaUgvetB4p/iTlJTsnGaFa4ltjjIXR6mtC9kiMPqoKtdjMxppds6+CVmV0k5SGRtte+Uw3f3wcDLiAIeKcd6+bONE7THL18SHUSbxJLC1T3i/1cIM8TyFWw4coIXiCRZzXaI5QoDqakSz6+AfNPz2B8xB2R7qW9haqUMHNKSq4so5/uki/tWBLSzExxb9eWJH+1FjXG+Pz2Id5t9EWGM/36mldIH/YgaZWWKFn/TWaUPs8/TIuqgNeKThe8zI4oWY5l8Prz8MwhKkv4uGcVaSEY5L0uUrVhVhLB8E199dUOYE+mLquCMb17iJPJETY9/q3gqN8wpPHG5RamNn4cL413yP03vnmoDe60jkwW5FSL9HLWu5TXLZZdCxSzvpogqg0dUBGqb10=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(1800799024)(376014)(23010399003)(19092799006)(10067099003)(4143699003)(11063799006)(5023799004)(56012099006)(261021121427099003)(261022075727099003)(261009223027099003)(261022105027099003)(261102123227099003)(261026121527099003)(261026140227099003)(261028144727099003)(18002099003)(22082099003)(3023799007);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(376014)(7416014)(23010399003)(6133799003)(18002099003)(22082099003)(10067099003)(11063799006)(56012099006)(4143699003)(261021121427099003)(261009223027099003)(261026140227099003)(261028144727099003)(261022075727099003)(261021123027099003)(261022105027099003)(261102123227099003)(5023799004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?/aVQOvCnpQrLrRZia+4E80Dqkd9ftHGSZObCT5/uE4S/YBacxoXcQx6CvuUD?=
- =?us-ascii?Q?NAHasWeMkGDEqQNEu2w/BbzW+pKMcMIjcPz2RaBWsjV8Ljuw3OGdbxtZdr7/?=
- =?us-ascii?Q?HUZB2mX9RTgbWzSV/ZT5v5g1K3/znyFzUqTMlddhdarq3FIL9wN3caiZ2o0u?=
- =?us-ascii?Q?b+2qL4m9rtLHBbkXiAwYknbHuuXpEsNrKlJ9oxerWAQNdk/+l2s4Jw5d2ahb?=
- =?us-ascii?Q?bzS9L/Y949YGhKq5ATeLUbE3LUIYRlzk+oEVvbbAKT9/b5fAUpUIBgP9zZhE?=
- =?us-ascii?Q?FPVE5vhLGhuDkcawzmHdIE3EHxjA4eIvdM58VuZjQmIpllrstOA/f1qWVhhD?=
- =?us-ascii?Q?RorZfoLOPukQgUID3rvKpmOtXC6E954WS63KMB4Cj9x4Z9xemkft93JrO5sE?=
- =?us-ascii?Q?RASQqmYc/obnuH3jv1r3WjxArPK5R0Y0vTd/yALWrpD4knfK0bYzsISj6wfp?=
- =?us-ascii?Q?omIuGr9riH12ZyiPTxXeqPWX4foCnnpsiIQ+oNrvLWUefgd5olvlmSNyONvs?=
- =?us-ascii?Q?LCKwzqSUU/yw/LA1vILSnS3NmZRrYMZ2noEHW4jVWgehHPDM66ird/vbnoGY?=
- =?us-ascii?Q?+uHDhOfjF0z+JGIWvstBKCiZA6iYQB+bY6hks+JO87IrW+w/2PoXMPXnMXU/?=
- =?us-ascii?Q?/F1C/sYL8Ar3HgTc8B8I5L+hpgj2uHzwXnHMA8oIiXuKUC9NAbLNoYQLMRo8?=
- =?us-ascii?Q?Zt29zyd/1C/TpOAUDFn96Q/A0VkAlBOuFwymFBoou4+5kO4rDtR0JNNXXFRp?=
- =?us-ascii?Q?++JRafg6mZnvu+8zRgY4luEa7lKVx/ALl6nYvdC4iWJJ6ULpgGxCO+X3vUhc?=
- =?us-ascii?Q?IAIj4JloPiA/Qnb7EFvfADgqu4XaA6oA6WbcqFWbW4DRPhfuXYwc8Hg9RooJ?=
- =?us-ascii?Q?KaV94uKTjFMij6xTDzney/64WoJBOx4DfOcKsmtbokuYQmhigrkzYVlMcUVS?=
- =?us-ascii?Q?/Uw8MovN+qLSxhHeSCAW7VQd+IIpXq/r8wiQXphUwEDePod8O50RU6NWRcB/?=
- =?us-ascii?Q?D1UzyWF9rbU+yUwhF8rBhNa4eYa6uybWmgwBOOaYWgqUFcUfdqXMQC7xZ8bN?=
- =?us-ascii?Q?FSpV8ryJ7Z39HCctI8SC7iBjf7v5OYxsRGxk5BDqWBLi5Y2udb1Efy1qk5ic?=
- =?us-ascii?Q?4m3Hgn/4dDxjT/fnFA8dauphmfBuGwxmBE6tY1HTxoYXePBp4zXfiim//D7p?=
- =?us-ascii?Q?R6hQAocSAaC4l4gl5ZNByolHSYITofCs6qUCD0MV9xiWs/D/VSsa//fDWV3R?=
- =?us-ascii?Q?8u2Sc/j104ClfHXbaTk2rDvmNL4GFLJ0NSI+yPHwE8VytF4/E+YUKifSKktt?=
- =?us-ascii?Q?bTCXTyTswm2bnIR1WKyCIAnrQ9ODZrH3LqJIvZeuUpwTwexZH8ia7/8DoJSe?=
- =?us-ascii?Q?3eVK6rn870p0RecJ9xQ0gWcdQsuohXi1tHn9WCN4i4F+0eRGAsitM6aV/TcA?=
- =?us-ascii?Q?m0GssqqmxRGGaHHz6K2tgKStrQETIbmrWu9Qup/fP/fcYnCXxjYC7TCDFCWc?=
- =?us-ascii?Q?nG178XAdJt54DKZypGe2MlNf2cXMrmzICoujTI36hITZyxZ8Xtw8WXn3MCyS?=
- =?us-ascii?Q?WmlSaU/W1L72McSX6ovpumYrmPh9MSTU3WIljdtNZ6QoD8NtFQCjGTekhzK3?=
- =?us-ascii?Q?y5KptC0Q6MbZPlI3GYCK9QUYfzskEbYp1FmWNqL0r9aZCp4vT/QHPrDHycQh?=
- =?us-ascii?Q?dAzbtfVpen5Aavzv3soIUsKpKRG47Qn1ZGpJngpJaML5QM9J/OP6cygQpxlI?=
- =?us-ascii?Q?ZWKpEbVCcW9pqLTjgbxARuz8mPkMF98UiUliqmsE71HGl4GB1gJc?=
+	=?us-ascii?Q?n7eBYZhLxsOBPF/bupgypxpGYHmJB9nEDrcFBrRTqRuN1zn9aS2Av/3Bt3bW?=
+ =?us-ascii?Q?vlr+pLRr+FcrFB6Chb/+9PrNiBDZedBtVSE8GkjFpt44qY6WlFBzWY4zXXCQ?=
+ =?us-ascii?Q?IqmP48nUFLLogAtH2xfRgI4GZgYliwPVYFrR9C96YXMazxxDT9K/EecngMQG?=
+ =?us-ascii?Q?tH9r2HtHFCpCt0fC0nFQFmf+rgC/XrcALVaO7cMhwtCcNNxWfk5X6vwGk8Qf?=
+ =?us-ascii?Q?P2qdsae7RvpRVHCzJ++dgzVpu10mOgSWMV1KsdBjv91Ahfgmkh41iHfvsRCn?=
+ =?us-ascii?Q?xM/gk1pOLC4BOQ4CmN28N64u3VJgOWdC2xpFMGAMu7t6bDokrgmw+ovCCkJT?=
+ =?us-ascii?Q?oxpmU2GXFy1/QwbqzPypvrwwVMUlf6sC0spcqK/zVR0GEgzI8+Y4WLMyv6vT?=
+ =?us-ascii?Q?eWAIyF9l/8+CzGcqpOQotxEA9AO/RLq6h+ELImv82npmDfdbcMWyU2QQxSYD?=
+ =?us-ascii?Q?lHB+XzEkCvks8JHh6Iyl/caGXulz1EbtjhCaTCk0oYvxt8MtXBF0xBfCPEQS?=
+ =?us-ascii?Q?wlttMRZldYolvxxE452w3+WabGKohJXDag+MwCn0Z6te2czz5xydiEV2NhrE?=
+ =?us-ascii?Q?kCvgVRAmSLiQ6MsILaRHVwGvr1Px2Bcy7eSwAKnvOEkRjdBPqukGgxvQTgzV?=
+ =?us-ascii?Q?3UeYOyFq20fGVKVgtfz1EraZej6ehgbvpnRDSxtBtDJVsqYSN9u+Qv2iK/as?=
+ =?us-ascii?Q?c2FoyS1gjuGm4RJLTSwVBevOzblV9mbk3chH6bnIdW2+/jFFhT2DLI0FtbuB?=
+ =?us-ascii?Q?cjfmYc1sMGlMNjD5pnxrpyJrpbIHaL5bqOphxpb0/tD8J3eZKcdYJdrZvefD?=
+ =?us-ascii?Q?/NNOS68EfunP6OzfVoN4tL3sbfT6FFOyeD4AkzwCDWd4b0ivEBz8J23GtiYm?=
+ =?us-ascii?Q?oP5v8+WhhT6Piys7rS5dwQ+5SUxNA+CTNf2dtQD1weVu2lA2XPRa9yTwT2RU?=
+ =?us-ascii?Q?cmmarKToBPP9QUArdIeoHbwJPaKKvYl/zCxkdpl9HuVSsEaQU4b+sXd7ba+O?=
+ =?us-ascii?Q?dm4PpU+99tISo9MsemzwDyRfjCseIsuI2sNN6Jc6/Fen+zS5aYNt6pPb/kyQ?=
+ =?us-ascii?Q?yTVBkEnG0xws1mTp3yX7mCHHB5IdSUcMz/H/5sFwrUpe6twt9Bc8WG5PhQZo?=
+ =?us-ascii?Q?y381a34iHIKKiztEFfn1Dqsd5zRzQGAvhottRQhqolWM/vyY+E0oiddBdLFj?=
+ =?us-ascii?Q?6vQkEUyTbWApNkSnWA2MWysNJCkA38wPUWi1OLwb5C0U2TIvINIssktCot2+?=
+ =?us-ascii?Q?ewSYokatgA8x3q0S93WrKH+PFyy3bbU7e0apyuIOcVWa7gflj24XAg0XqAwN?=
+ =?us-ascii?Q?Btmz0jkJRahItg0GARYsKy9VRJkhTyj1jdvSd/eL8Y3AQX/Lyg1ggFfExpLG?=
+ =?us-ascii?Q?0XFlc/qhxfZU02VtXDhuO/D0b01orZE0woaaHWkb5EB4uqBW+y25OaP9TlmI?=
+ =?us-ascii?Q?QaoqhgjIF1CJ9ni7lLf0Q/6DNjquXYM1ZGXGtev4nA7rb2789O4z2oi5qaEU?=
+ =?us-ascii?Q?dZt1GEVbuiqpQ7bU76QbJr4J24/NdBD9XoYyEpWLD+ffJqpIEkKcbqFklB1f?=
+ =?us-ascii?Q?kerBRhIE7brECAy+e4rHExRrJfwWnbNYxjvKUR6m58IAAIuNA3PLnxHXl/fc?=
+ =?us-ascii?Q?2D65jcwIb0PichViItt35Mb+L163ZR+5Bj6t0U9aEnEuaTg4iY/96T7/kCGR?=
+ =?us-ascii?Q?gs1B8nJUgIlq1CicmM7N4gqR1x1xbSqzt8cldBQgbF43VLz6zLQPMXG8PvIm?=
+ =?us-ascii?Q?7mzbx+NfXS2c21aye3UZZSGgCxRc4JYewfl+mc0zYCUQTNcY/sUT?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 19392fd9-5db2-4019-14ac-08df4980aa28
+X-MS-Exchange-CrossTenant-Network-Message-Id: 654c8f70-a3f5-409c-1d3d-08df49819337
 X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 16:41:46.9992
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 16:48:18.0523
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BA25ev++uW/4I9Ae8lynCWAwfiCyH2hAb0XYTjhvuyWDB5iA5iaxdtMZqAFz29v/2dXjt9SIBENsXoV/xUn/oNvsvG8SEYNLaMpLbPyqVFs8SOEgWmjziRxzDriLfnXR
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11884
+X-MS-Exchange-CrossTenant-UserPrincipalName: bPI17ZznFBnxLLm/MduZl4rvfLfUYz5VcypuO/qUp+FqS3kqaElSZ09Q2iGhXriGvLB+U2Uu0pmB4YJ+KyGfRTIlZhG9mOpF6EH7Rx41cupns7xt6xvfgQmwzakhNmlM
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DUZPR04MB9796
 
-On Sun, Nov 22, 2026 at 08:26:15AM +0530, Krishna Chaitanya Chundru wrote:
-> [You don't often get email from krishna.chundru@oss.qualcomm.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+On Sun, Nov 22, 2026 at 08:26:16AM +0530, Krishna Chaitanya Chundru wrote:
 >
-> From: Anvita T <anvita.t@oss.qualcomm.com>
+> Allow the MHI endpoint function to signal interrupts using MSI-X when the
+> endpoint controller supports it. On controllers whose epc_features
+> advertise msix_capable, set up a dedicated MSI-X BAR (BAR_0) from a
+> "msix" memory region supplied by the platform and program the MSI-X
+> configuration.
 >
-> The controller can signal interrupts using MSI-X in addition to MSI.
-> Add an epc_features variant that advertises msix_capable and select it
-> from ->get_features() for SoC configs that set the new msix_capable
-> flag. Route PCI_IRQ_MSIX requests in ->raise_irq() to
-> dw_pcie_ep_raise_msix_irq_doorbell().
+> The "msix" resource is optional and only looked up during bind; it is
+> required only when the controller reports MSI-X capability. At interrupt
+> time, select PCI_IRQ_MSIX over PCI_IRQ_MSI based on whether MSI-X has
+> been enabled by the host.
 >
-> No functional change for existing SoCs, which leave msix_capable unset.
+> Fetch epc_features earlier in epc_init() so the MSI-X capability can be
+> checked before setting up the BARs.
 >
 > Signed-off-by: Anvita T <anvita.t@oss.qualcomm.com>
 > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 > ---
->  drivers/pci/controller/dwc/pcie-qcom-ep.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
+>  drivers/pci/endpoint/functions/pci-epf-mhi.c | 54 +++++++++++++++++++++++++---
+>  1 file changed, 49 insertions(+), 5 deletions(-)
 >
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> index 2d7ddf8d173f..c794a2207df2 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> @@ -170,12 +170,14 @@ enum qcom_pcie_ep_link_status {
->   * @override_no_snoop: Override NO_SNOOP attribute in TLP to enable cache snooping
->   * @disable_mhi_ram_parity_check: Disable MHI RAM data parity error check
->   * @firmware_managed: Set if the controller is firmware managed
-> + * @msix_capable: Set if the controller supports MSI-X
->   */
->  struct qcom_pcie_ep_cfg {
->         bool hdma_support;
->         bool override_no_snoop;
->         bool disable_mhi_ram_parity_check;
->         bool firmware_managed;
-> +       bool msix_capable;
-
-why not direct put pci_epc_features pointer here.
-
-Frank
-
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/endpoint/functions/pci-epf-mhi.c
+> index 52cfffcfd5ca..a8765beffe06 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
+> @@ -148,6 +148,7 @@ struct pci_epf_mhi {
+>         struct mutex lock;
+>         void __iomem *mmio;
+>         resource_size_t mmio_phys;
+> +       resource_size_t msix_phys;
+>         struct dma_chan *dma_chan_tx;
+>         struct dma_chan *dma_chan_rx;
+>         struct workqueue_struct *dma_wq;
+> @@ -155,6 +156,7 @@ struct pci_epf_mhi {
+>         struct list_head dma_list;
+>         spinlock_t list_lock;
+>         u32 mmio_size;
+> +       u32 msix_size;
+>         int irq;
 >  };
 >
->  /**
-> @@ -806,6 +808,8 @@ static int qcom_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->                 return dw_pcie_ep_raise_intx_irq(ep, func_no);
->         case PCI_IRQ_MSI:
->                 return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-> +       case PCI_IRQ_MSIX:
-> +               return dw_pcie_ep_raise_msix_irq_doorbell(ep, func_no, interrupt_num);
->         default:
->                 dev_err(pci->dev, "Unknown IRQ type\n");
->                 return -EINVAL;
-> @@ -852,9 +856,25 @@ static const struct pci_epc_features qcom_pcie_epc_features = {
->         .bar[BAR_2] = { .only_64bit = true, },
->  };
+> @@ -230,12 +232,16 @@ static void pci_epf_mhi_raise_irq(struct mhi_ep_cntrl *mhi_cntrl, u32 vector)
+>         struct pci_epf_mhi *epf_mhi = to_epf_mhi(mhi_cntrl);
+>         struct pci_epf *epf = epf_mhi->epf;
+>         struct pci_epc *epc = epf->epc;
+> +       unsigned int type = PCI_IRQ_MSI;
+> +
+> +       if (pci_epc_get_msix(epc, epf->func_no, epf->vfunc_no) > 0)
+> +               type = PCI_IRQ_MSIX;
 >
-> +static const struct pci_epc_features qcom_pcie_epc_features_msix = {
-> +       DWC_EPC_COMMON_FEATURES,
-> +       .linkup_notifier = true,
-> +       .msi_capable = true,
-> +       .msix_capable = true,
-> +       .align = SZ_4K,
-> +       .bar[BAR_0] = { .only_64bit = true, },
-> +       .bar[BAR_2] = { .only_64bit = true, },
-> +};
-> +
->  static const struct pci_epc_features *
->  qcom_pcie_epc_get_features(struct dw_pcie_ep *pci_ep)
->  {
-> +       struct dw_pcie *pci = to_dw_pcie_from_ep(pci_ep);
-> +       struct qcom_pcie_ep *pcie_ep = to_pcie_ep(pci);
-> +
-> +       if (pcie_ep->cfg && pcie_ep->cfg->msix_capable)
-> +               return &qcom_pcie_epc_features_msix;
-> +
->         return &qcom_pcie_epc_features;
+>         /*
+>          * MHI supplies 0 based MSI vectors but the API expects the vector
+>          * number to start from 1, so we need to increment the vector by 1.
+>          */
+> -       pci_epc_raise_irq(epc, epf->func_no, epf->vfunc_no, PCI_IRQ_MSI,
+> +       pci_epc_raise_irq(epc, epf->func_no, epf->vfunc_no, type,
+>                           vector + 1);
 >  }
 >
+> @@ -714,11 +720,40 @@ static int pci_epf_mhi_epc_init(struct pci_epf *epf)
+>  {
+>         struct pci_epf_mhi *epf_mhi = epf_get_drvdata(epf);
+>         const struct pci_epf_mhi_ep_info *info = epf_mhi->info;
+> +       struct pci_epf_bar *msix_bar = &epf->bar[BAR_0];
+>         struct pci_epf_bar *epf_bar = &epf->bar[info->bar_num];
+>         struct pci_epc *epc = epf->epc;
+>         struct device *dev = &epf->dev;
+>         int ret;
 >
-> --
-> 2.34.1
+> +       epf_mhi->epc_features = pci_epc_get_features(epc, epf->func_no, epf->vfunc_no);
+> +       if (!epf_mhi->epc_features)
+> +               return -ENODATA;
+> +
+> +       if (epf_mhi->epc_features->msix_capable) {
+> +               if (!epf_mhi->msix_phys) {
+> +                       dev_err(dev, "MSI-X BAR address not configured in DT\n");
+> +                       return -EINVAL;
+> +               }
+> +
+> +               msix_bar->phys_addr = epf_mhi->msix_phys;
+> +               msix_bar->size = epf_mhi->msix_size;
+> +               msix_bar->barno = BAR_0;
+> +               msix_bar->flags = info->epf_flags;
+> +               ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no, msix_bar);
+> +               if (ret) {
+> +                       dev_err(dev, "Failed to set MSI-X BAR: %d\n", ret);
+> +                       return ret;
+> +               }
+> +
+> +               ret = pci_epc_set_msix(epc, epf->func_no, epf->vfunc_no,
+> +                                      info->msi_count, BAR_0, 0);
+> +               if (ret) {
+> +                       dev_err(dev, "Failed to set MSI-X configuration: %d\n", ret);
+> +                       return ret;
+> +               }
+> +       }
+> +
+>         epf_bar->phys_addr = epf_mhi->mmio_phys;
+>         epf_bar->size = epf_mhi->mmio_size;
+>         epf_bar->barno = info->bar_num;
+> @@ -743,10 +778,6 @@ static int pci_epf_mhi_epc_init(struct pci_epf *epf)
+>                 return ret;
+>         }
 >
+> -       epf_mhi->epc_features = pci_epc_get_features(epc, epf->func_no, epf->vfunc_no);
+> -       if (!epf_mhi->epc_features)
+> -               return -ENODATA;
+> -
+>         if (info->flags & MHI_EPF_USE_DMA) {
+>                 ret = pci_epf_mhi_dma_init(epf_mhi);
+>                 if (ret) {
+> @@ -763,6 +794,7 @@ static void pci_epf_mhi_epc_deinit(struct pci_epf *epf)
+>         struct pci_epf_mhi *epf_mhi = epf_get_drvdata(epf);
+>         const struct pci_epf_mhi_ep_info *info = epf_mhi->info;
+>         struct pci_epf_bar *epf_bar = &epf->bar[info->bar_num];
+> +       struct pci_epf_bar *msix_bar = &epf->bar[BAR_0];
+>         struct mhi_ep_cntrl *mhi_cntrl = &epf_mhi->mhi_cntrl;
+>         struct pci_epc *epc = epf->epc;
+>
+> @@ -773,6 +805,8 @@ static void pci_epf_mhi_epc_deinit(struct pci_epf *epf)
+>                 mhi_ep_unregister_controller(mhi_cntrl);
+>         }
+>
+> +       if (epf_mhi->epc_features && epf_mhi->epc_features->msix_capable)
+> +               pci_epc_clear_bar(epc, epf->func_no, epf->vfunc_no, msix_bar);
+>         pci_epc_clear_bar(epc, epf->func_no, epf->vfunc_no, epf_bar);
+>  }
+>
+> @@ -880,6 +914,13 @@ static int pci_epf_mhi_bind(struct pci_epf *epf)
+>         if (!epf_mhi->mmio)
+>                 return -ENOMEM;
+>
+> +       /* MSI-X BAR address is optional; only present on EPCs that support MSI-X */
+> +       res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "msix");
+> +       if (res) {
+> +               epf_mhi->msix_phys = res->start;
+> +               epf_mhi->msix_size = resource_size(res);
+> +       }
+> +
+
+You'd better use pci_epc_aux_resource() to get such data, instead of direct
+access epc's parent device.
+
+Frank
