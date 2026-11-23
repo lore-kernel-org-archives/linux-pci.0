@@ -1,79 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795465970;
-	b=3Bg/n6ACV7coiYZlOtVe+XoQ+PMlF89gGGw6ZnAEZIQNzkFNMFYG3U0pnHzooSzAxNPx
-	 s0Qz5RIh8Eujp8YEzXnT+UWO2ahTOhqxEd+AI/NGTR+fFX7dC+V5313AHADGS3yaFZbT7
-	 i3VfI7PiHQnw10eQrJSI4cfiNY5o/yX4gnNM7OlKFyVR0cqOFMxBuB/I8D+WtpEZok1QV
-	 2nyqpIC+R4HUk2a3zwJHepStNAvnA7F40d1xCSr/LEEuvVRVlOqm7UTvZezXJE4BME/dN
-	 nzd9Kgdm6uywfPtZcFbOI8wMu6DTuOVRRlVxJyaeevGz7IiCRpD23u9ffNtr3pAeAPQ==
+	t=1795465968;
+	b=ZD03VkBTLDYnue1S6lh+igrhvlgZDePreD8SIdccl1ml/qwKIxU3pGwJBMD33VB8R9p7
+	 thJL30cxT9vFZnIEOMwstY0GpgFK7ovFIaHzYAC8XEO3BMBwfFWfLakzXso0X1zpWw/od
+	 eyKqdkr0q9wIObatEkQPAraV7KSD/LAp4TqUuhQAzp7LoM+TrK/nM0+f3x+n2r94n0TQe
+	 L9qK8ageEk0lVGqFh2OJ5bzgj7GXEfeiOkM7oEgNIDvWwBr/vsrr3bWXOx+tst+4aKy9z
+	 D2tDm7wvLXYSMLSJzTl7YP/Jy/dz4jAaEHOOZ+pwAF7HSKifVaCTJq0A5P6HV0GJVRQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795465970;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795465968;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=zOUM8yzNNyOUEeQgBWPO0qM5NW4wCU809J1juOxgETg=;
-	b=EI8jMEPvt+RaNpcr0jlha4BzvBvduk/T6VKMcCDwcrM0wZPkNlxe8spfZAC2VLfdFXs/
-	 j7yGbKGvdSeBfDRQeeNwkWyHU+m8XW/CauoIebfGjDQMPMbz3TEExOz0a0Xt3Bleqgvsb
-	 CAX+T7blXOKpGZ2m/aEvYKMXzPPCBSJsUX0HiWKHXtn47E1EYl4QOWI/we/80XpFtbBhA
-	 pXJlIE22ZY8wUDbEusps5F/q+6LpwgkBfAMHeSHJOU+0yDgh62sWbVD2clFcqknAf3oMN
-	 tNvudqW20ZJ+q8jkgoqr4/pujL7aSHVca+zyscmw9joFY0ygmywmPAZFHo8/aXxOz0w==
+	bh=Zz6L92ZDSFMnlI2YQdsV7kK/kM96g1+mYDq69MPiFmU=;
+	b=Xlhd9A646ph+BfFKVhd4beQdqyTnl4J52SOtBoW3/0M259AoLopcyS2NmMf2zo5HgfvC
+	 KQ0sttlox8T9b5bAtBJi12jdTB9N5d8oictI3aeCreTFRitzKcYGiVPP2nsjVgD6FcoP5
+	 KjMSmSXQKvP4KNc5thmNeny9sHoS79bLyyGGIl34cdIuwsddGccu8kdsjLEnGvU1rzcL4
+	 1lEjQfqpJLtcDR5d9rq66CiieExy4t3qKkaT2W5iYC1SgiK2LaIYdAV2LzCPG/j8VbmJh
+	 MTGnhbAnf0j3+XnSU7ES47f+kFlJ+nK3PdrhvG6EDKrkZ+F5KAB8YC+sjixIHkui5CA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ctTObiM2;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HaRtxg2+;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A7F360A2623;
-	Mon, 23 Nov 2026 20:32:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E90D60A260A;
+	Mon, 23 Nov 2026 20:32:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ctTObiM2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HaRtxg2+
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795465969;
-	b=Yu4PZaw3R0HGC6/ovGOWTiAlEVoNkikdh2Br/a+ktj9jPfieJ7sQu81YM7MrOgQeoj51
-	 n9J38l2oI/KQ9ttza+fJzx+e8kgjUWz5bcg9zJu5uhDrCBJGKcpXTiePDpePak98mwxtR
-	 KM3IQTW7jMgsAlf0khujRR1GjH+F+ZvUcFdaoTOXik3tbtiJdDdOMeQoIMc/aojePHvTZ
-	 a/IuB7aMiDZKA8zyPz5JmCoSG6Gj2Xq1+IFBtjECOzM7ARiSJVjq51PB+uYOjEj81p1Xj
-	 bJJLuZ7BCLhMqKsiLVpOlh2HbzuYSbyHVHxkO7zccFfES0fiK4LawQzvx0Pk24ZERXQ==
+	t=1795465968;
+	b=qyxoT7WR06Xmz5AwJq/7M6WjYxdFo3zcWDfGw4uvVwLQFrrobBa0+CBUF8KVTr0Asfkf
+	 /YafirODe1oI5NCZ4rXcww35ofdrV8V8b+fazdblhmCmS0rl3+T/puPuM/za+4e1+9ph5
+	 SxGv0k2UaqqDVivrseyaLwjot12CeKV5vEfcvWcivp/UinsztE3W0wix1u3ftJJgF3vmj
+	 Ihkq/6vKUCOUN/pS3h8g4j8zRwc3PtNPqjSphTJQsze+ZO/wzUvut2bzSXFwU+W0Ww24d
+	 ndUBzF2iyK5NGVjPMkj7y8d1ICmkDTr6frFkgoQGfEYI/ksLb77GjWu36uEOMjHpBFw==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795465969;
+	c=relaxed/relaxed; t=1795465968;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=zOUM8yzNNyOUEeQgBWPO0qM5NW4wCU809J1juOxgETg=;
-	b=GKTpKKNYeKHDlAytc/O3mt5KSwKyjp2D4RYmCMGanFGrCuqoiMjreRbJRh0Jni7tP/oG
-	 PFMKagnyIgaNygA77GRQU4LGPijtvHwYZ2PcaTJ+H4V7rwfmLr7QB7HZDBfTDU0VCqDV/
-	 0cqTv/rcTNkiJtfZMxW/UpKhjBGm8qAZFRrIEfaPEZAqWoPCLmGaijSLWe0Xwci+EHwnz
-	 YPdRJtYdMt6niROzjxEYZQkgALRLWkdMYqSnRAmuq81HOMc084Yx4PYmwxFhq0Ube+dtR
-	 P7ZSmpii2JJSAAyDRVXBCM8GfhTX5JW4yhHOPmvDrCVBUOFHp/wvM4XedHN/By78cVg==
+	bh=Zz6L92ZDSFMnlI2YQdsV7kK/kM96g1+mYDq69MPiFmU=;
+	b=D+dd9jcU19J+0tAynY+QpY05Y8VC6Xg2O0HhxpQgVYyWELA+/TmyewDpmt2Byzvv+CNR
+	 esw9F9F5UrDrOG1bM1SvrAG+dHqsWfAYa394sKr89C0t2PkKuBiH80khxJasR0GNuYmnN
+	 WArKMRoVLlZ6s6T8tDf30eNnE0ELOv/1VCTjAa31cECk4CsWV9JMXsjeSrrhibPHXp3wX
+	 gz5nGZj+MtROZZWEu6QzDg7aIDUGn5LToMz+0RyUAbBAmdgcVpv109PWlyNRq/CGceqMr
+	 tk1j8+FUngerLuKR6mc5zLMhs8T6G/Bawa+U3RXyGz9XGKdtlW0bBhx0zqdHQiSU1SQ==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 153071F000EE;
+	by smtp.kernel.org (Postfix) with ESMTPS id 1299F1F000ED;
 	Mon, 23 Nov 2026 20:32:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795465969;
-	bh=zOUM8yzNNyOUEeQgBWPO0qM5NW4wCU809J1juOxgETg=;
+	s=k20260515; t=1795465968;
+	bh=Zz6L92ZDSFMnlI2YQdsV7kK/kM96g1+mYDq69MPiFmU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=ctTObiM26CLGx9z4GIs+EsIU/8zjOZw2kQ2yQrCWg8C2PJTTwXCN4loK7th3+hAsw
-	 Zj8Zv75FMqXZnQAnsgivOQ+0cXWSjexy6jOsPwGHIYSeh0mne7DNx9UgqOVA7nZY55
-	 YqQdsg3b6MA7HKcqcAU9yUQ8skEoJ8bzO8GzlDlaKDMncQ8HyV92liQOfCv7UCfUNE
-	 uiK7SAKVltCqQcx5A/9FilZYGC+QB5Z80IT6CyAAy2XU8trCo3Hlly324c2nmiH1qh
-	 pBjUWtLLR8gb0vnUHCTohOC+0KoYU+m0vTs6FtmGJOXf+PbcBirRS+EWD1Dz2QApuU
-	 Q2KlTBIf1975g==
+	b=HaRtxg2+P/EL8rMR+2MUOMlzr/pT4NIlSF9DGaxGScIICK8lKQ6OBo7WF4DlSer8z
+	 5DYbefu1jHy8MRS68EIoPFDctgawFu+Y2wRNRIkjukdy6bXPbbrVMbEuARf4Yxotqe
+	 gIk8HlHklYeh9Pshn6vaBHSPi740WlDDqzUkeY2hn4M4jvJjFBs1pMh4eZawCKuEad
+	 Q+UnKtSVmitJBPRbY7A+kDCg4shig6g56M3KGdVJLgW7ruGthk7A/r8MDE1sPPgG80
+	 zAKSifi3lmWAe06pGXc0BMu6vZNPsKLQl1M5Lxs+lyOcDJEq5PudlAfEq1/6BVe2iA
+	 ojCCrZum2+Gqw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id E8A8A4C712;
+	by lkml.kernel.org (Postfix) with ESMTP id CC3D64C70E;
 	Mon, 23 Nov 2026 20:32:17 +0000 (UTC)
 From: Fil Dunsky via B4 Relay <devnull+filipp.dunsky.gmail.com@kernel.org>
-Date: Mon, 23 Nov 2026 23:32:20 +0300
-Subject: [PATCH v2 6/8] dt-bindings: PCI: Describe the CS7542 host
- controller
+Date: Mon, 23 Nov 2026 23:32:19 +0300
+Subject: [PATCH v2 5/8] phy: Add CS7542 PCIe SerDes support
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,7 +83,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261123-b4-cs7542-pcie-v2-6-f589a9cd0bef@gmail.com>
+Message-Id: <20261123-b4-cs7542-pcie-v2-5-f589a9cd0bef@gmail.com>
 References: <20261123-b4-cs7542-pcie-v2-0-f589a9cd0bef@gmail.com>
 In-Reply-To: <20261123-b4-cs7542-pcie-v2-0-f589a9cd0bef@gmail.com>
 To: Manivannan Sadhasivam <mani@kernel.org>, 
@@ -102,11 +101,11 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
  linux-clk@vger.kernel.org, linux-phy@lists.infradead.org, 
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795465935; l=3988;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795465935; l=9297;
  i=filipp.dunsky@gmail.com; s=20260930; h=from:subject:message-id;
- bh=Vmod6N4o3vqaSh1IK8EbHrW7VX/NgdSVfaTIztFcUoM=;
- b=Xivi4LcanyE1E17n8Vs4I3xi+sg0eaz6nTCzeXOlirKlXuA52hN7XWQrVsbCl3vq/6z28ZXkD
- ZYtHAFzN4mWCk2smkJYmOrUSKWJ8qKLTVsCQO9YD6ePkNrMDAf7CBTf
+ bh=xbqhgVGjORFnQ5gPtfVS3sFJz4weZ5kVBK/LGnXuSak=;
+ b=MUSxUum1MJLt+e2T6Y8GAHpAgGq1H1etG6XJ04YCQDH64a5vh8Z7F1aUXhahMXMbnu7Vb4MxP
+ YFPFk3WpKAlBAWKsJ68EfQfhi8FhtDeIoZHrggR2GGSh3fpLwGV7kgE
 X-Developer-Key: i=filipp.dunsky@gmail.com; a=ed25519;
  pk=JAYP8e2rJ54DHOmhNtXud8rl1igAaAXoOHxtJmVXI1g=
 X-Endpoint-Received: by B4 Relay for filipp.dunsky@gmail.com/20260930 with
@@ -117,149 +116,286 @@ Content-Transfer-Encoding: 7bit
 
 From: Fil Dunsky <filipp.dunsky@gmail.com>
 
-Describe the DesignWare host wrapper, clock/reset/PHY consumers, combined
-interrupt and INTx domain. Document the root configuration access limit.
+Provide per-lane generic PHYs using the vendor 24 MHz programming table
+and revision-dependent value. Sequence power and reset through the shared
+global regmap and fail on CMU lock timeout with balanced power cleanup.
+Use the shared PHY status bank without overlapping PCIe wrapper resources.
 
 Signed-off-by: Fil Dunsky <filipp.dunsky@gmail.com>
 ---
- .../bindings/pci/cortina,cs7542-pcie.yaml          | 129 +++++++++++++++++++++
- 1 file changed, 129 insertions(+)
+ drivers/phy/Kconfig           |  11 ++
+ drivers/phy/Makefile          |   2 +
+ drivers/phy/phy-cs7542-pcie.c | 232 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 245 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/cortina,cs7542-pcie.yaml b/Documentation/devicetree/bindings/pci/cortina,cs7542-pcie.yaml
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index 105fbe408..77cff94fe 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -204,4 +204,15 @@ source "drivers/phy/tegra/Kconfig"
+ source "drivers/phy/ti/Kconfig"
+ source "drivers/phy/xilinx/Kconfig"
+ 
++config PHY_CS7542_PCIE
++	tristate "Cortina Systems CS7542 PCIe SerDes"
++	depends on OF && HAS_IOMEM && COMMON_CLK
++	select GENERIC_PHY
++	select MFD_SYSCON
++	help
++	  Support the three CS7542 Snow Bush SerDes lanes in PCIe mode
++	  with a 24 MHz reference clock. Lane resets share the global syscon.
++	  SATA mode and other reference frequencies are not supported.
++	  The module is called phy-cs7542-pcie.
++
+ endmenu
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index c6dd02003..54df29e74 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -55,3 +55,5 @@ obj-$(CONFIG_GENERIC_PHY)		+= allwinner/	\
+ 					   tegra/	\
+ 					   ti/		\
+ 					   xilinx/
++
++obj-$(CONFIG_PHY_CS7542_PCIE) += phy-cs7542-pcie.o
+diff --git a/drivers/phy/phy-cs7542-pcie.c b/drivers/phy/phy-cs7542-pcie.c
 new file mode 100644
-index 000000000..c8ef5176d
+index 000000000..d027baa93
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cortina,cs7542-pcie.yaml
-@@ -0,0 +1,129 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/cortina,cs7542-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
++++ b/drivers/phy/phy-cs7542-pcie.c
+@@ -0,0 +1,232 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* CS7542 Snow Bush SerDes, PCIe mode with a 24 MHz reference clock. */
++#include <linux/bitfield.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/iopoll.h>
++#include <linux/mfd/syscon.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
 +
-+title: Cortina Systems CS7542 PCIe host controller
++#define GLOBAL_JTAG_ID	0x00
++#define GLOBAL_PHY_CONTROL 0x14
++#define PHY_REFCLK_MASK(p) (3U << ((p) * 2))
++#define PHY_REFCLK_24MHZ(p) (2U << ((p) * 2))
++#define PHY_PD(p)	BIT(8 + (p))
++#define PHY_CMU_RESETN(p) BIT(16 + (p) * 4)
++#define PHY_LN0_RESETN(p) BIT(17 + (p) * 4)
++#define PHY_POR_N(p)	BIT(19 + (p) * 4)
++#define PHY_CMU_OK	BIT(18)
++#define PHY_STATUS_STRIDE 0x80
++#define SNOW_COM_REG0	0x00
++#define SNOW_REG0_CFG	0x00090006
++#define SNOW_REG0_AHB_RESETN BIT(0)
++#define SNOW_REV_REG	96
++#define SNOW_REV_REG_A0	0x5e082e00
++#define SNOW_REV_REG_A1	0x5e080600
++#define SNOW_COM_LANE_REG0 0xc8
++#define SNOW_LANE_REG0_CFG 0x400290c0
++#define SNOW_LANE_REG0_MASTER_RESETN BIT(1)
++#define CS7542_PORTS	3
 +
-+maintainers:
-+  - Fil Dunsky <filipp.dunsky@gmail.com>
++struct cs7542_serdes;
++struct cs7542_lane {
++	struct cs7542_serdes *serdes;
++	void __iomem *base;
++	struct phy *phy;
++	unsigned int id;
++};
 +
-+description: |
-+  DesignWare host with a Cortina application wrapper. A single interrupt
-+  multiplexes four INTx lines, the internal MSI receiver and link errors.
-+  Root-port configuration is accessible only below offset 0x200; the
-+  DesignWare private register bank starts at offset 0x700.
++struct cs7542_serdes {
++	struct device *dev;
++	struct regmap *global;
++	void __iomem *status;
++	struct clk *ref;
++	struct cs7542_lane lanes[CS7542_PORTS];
++	u32 revision_value;
++};
 +
-+allOf:
-+  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++struct snow_reg {
++	u16 off;
++	u32 val;
++};
 +
-+properties:
-+  compatible:
-+    const: cortina,cs7542-pcie
++static const struct snow_reg snow_phy_24mhz[] = {
++	{ 0,   SNOW_REG0_CFG }, { 4,   0x000e0960 }, { 32,  0x68a00000 },
++	{ 44,  0x50040000 }, { 48,  0x40250270 }, { 52,  0x00004001 },
++	{ 100, 0xf0914200 }, { 104, 0x4c0c9048 }, { 108, 0x00000373 },
++	{ 124, 0x04841000 }, { 128, 0x000000e0 }, { 132, 0x04000023 },
++	{ 136, 0x68001038 }, { 140, 0x0d181ea2 }, { 144, 0x0000000c },
++	{ 196, 0x0f600000 }, { 200, SNOW_LANE_REG0_CFG }, { 204, 0x0000003c },
++	{ 208, 0xc68b8300 }, { 212, 0x98280301 }, { 216, 0xe1782819 },
++	{ 220, 0x00f410f0 }, { 232, 0xa0a0a000 }, { 236, 0xa0a0a0a0 },
++	{ 240, 0x9fc00068 }, { 244, 0x00000001 }, { 248, 0x00000000 },
++	{ 252, 0xd07e4130 }, { 256, 0x935285cc }, { 260, 0xb0dd49e0 },
++	{ 264, 0x0000020b }, { 300, 0xd8000000 }, { 304, 0x0001ff1a },
++	{ 308, 0xf0000000 }, { 312, 0xffffffff }, { 316, 0x3fc3c21c },
++	{ 320, 0x0000000a }, { 324, 0x00f80000 },
++};
 +
-+  reg:
-+    items:
-+      - description: DBI registers including the viewport iATU
-+      - description: Downstream configuration window
-+      - description: Application wrapper registers
++static int cs7542_phy_power_off(struct phy *phy)
++{
++	struct cs7542_lane *lane = phy_get_drvdata(phy);
++	unsigned int p = lane->id;
++	u32 mask = PHY_PD(p) | PHY_CMU_RESETN(p) | PHY_LN0_RESETN(p) | PHY_POR_N(p);
++	int ret;
 +
-+  reg-names:
-+    items:
-+      - const: dbi
-+      - const: config
-+      - const: app
++	ret = regmap_update_bits(lane->serdes->global, GLOBAL_PHY_CONTROL, mask, PHY_PD(p));
++	clk_disable_unprepare(lane->serdes->ref);
++	return ret;
++}
 +
-+  clocks:
-+    maxItems: 1
++static int cs7542_phy_power_on(struct phy *phy)
++{
++	struct cs7542_lane *lane = phy_get_drvdata(phy);
++	struct cs7542_serdes *sd = lane->serdes;
++	unsigned int p = lane->id;
++	u32 mask, value;
++	int ret, i;
 +
-+  interrupts:
-+    maxItems: 1
++	ret = clk_prepare_enable(sd->ref);
++	if (ret)
++		return ret;
++	mask = PHY_PD(p) | PHY_CMU_RESETN(p) | PHY_LN0_RESETN(p) | PHY_POR_N(p) |
++	       PHY_REFCLK_MASK(p);
++	ret = regmap_update_bits(sd->global, GLOBAL_PHY_CONTROL, mask,
++				 PHY_PD(p) | PHY_REFCLK_24MHZ(p));
++	if (ret)
++		goto power_off;
++	msleep(100);
++	ret = regmap_update_bits(sd->global, GLOBAL_PHY_CONTROL, PHY_PD(p) | PHY_POR_N(p),
++				 PHY_POR_N(p));
++	if (ret)
++		goto power_off;
++	usleep_range(10, 20);
++	for (i = 0; i < ARRAY_SIZE(snow_phy_24mhz); i++) {
++		if (snow_phy_24mhz[i].off == SNOW_REV_REG + 4)
++			writel(sd->revision_value, lane->base + SNOW_REV_REG);
++		writel(snow_phy_24mhz[i].val, lane->base + snow_phy_24mhz[i].off);
++	}
++	writel(SNOW_REG0_CFG | SNOW_REG0_AHB_RESETN, lane->base + SNOW_COM_REG0);
++	ret = regmap_update_bits(sd->global, GLOBAL_PHY_CONTROL, PHY_CMU_RESETN(p),
++				 PHY_CMU_RESETN(p));
++	if (ret)
++		goto power_off;
++	ret = readl_poll_timeout(sd->status + p * PHY_STATUS_STRIDE, value,
++				 value & PHY_CMU_OK, 100, 100000);
++	if (ret) {
++		dev_err(sd->dev, "lane %u CMU did not lock\n", p);
++		goto power_off;
++	}
++	writel(SNOW_LANE_REG0_CFG | SNOW_LANE_REG0_MASTER_RESETN,
++	       lane->base + SNOW_COM_LANE_REG0);
++	ret = regmap_update_bits(sd->global, GLOBAL_PHY_CONTROL, PHY_LN0_RESETN(p),
++				 PHY_LN0_RESETN(p));
++	if (ret)
++		goto power_off;
++	msleep(100);
++	return 0;
 +
-+  interrupt-names:
-+    const: msi
++power_off:
++	cs7542_phy_power_off(phy);
++	return ret;
++}
 +
-+  resets:
-+    maxItems: 1
++static int cs7542_phy_set_mode(struct phy *phy, enum phy_mode mode, int submode)
++{
++	return mode == PHY_MODE_PCIE && !submode ? 0 : -EINVAL;
++}
 +
-+  phys:
-+    maxItems: 1
++static const struct phy_ops cs7542_phy_ops = {
++	.power_on = cs7542_phy_power_on,
++	.power_off = cs7542_phy_power_off,
++	.set_mode = cs7542_phy_set_mode,
++	.owner = THIS_MODULE,
++};
 +
-+  phy-names:
-+    const: pcie
++static struct phy *cs7542_phy_xlate(struct device *dev, const struct of_phandle_args *args)
++{
++	struct cs7542_serdes *sd = dev_get_drvdata(dev);
 +
-+  num-lanes:
-+    const: 1
++	if (args->args_count != 1 || args->args[0] >= CS7542_PORTS)
++		return ERR_PTR(-EINVAL);
++	return sd->lanes[args->args[0]].phy;
++}
 +
-+  reset-gpios:
-+    maxItems: 1
-+    description: Optional active-low endpoint PERST#
++static int cs7542_phy_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct phy_provider *provider;
++	struct cs7542_serdes *sd;
++	unsigned int id;
++	int ret, i;
 +
-+  interrupt-controller:
-+    type: object
-+    additionalProperties: false
-+    properties:
-+      "#address-cells":
-+        const: 0
-+      "#interrupt-cells":
-+        const: 1
-+      interrupt-controller: true
-+    required:
-+      - "#address-cells"
-+      - "#interrupt-cells"
-+      - interrupt-controller
++	sd = devm_kzalloc(dev, sizeof(*sd), GFP_KERNEL);
++	if (!sd)
++		return -ENOMEM;
++	sd->dev = dev;
++	sd->global = syscon_regmap_lookup_by_phandle(dev->of_node, "cortina,global-syscon");
++	if (IS_ERR(sd->global))
++		return dev_err_probe(dev, PTR_ERR(sd->global), "global register map\n");
++	sd->ref = devm_clk_get(dev, NULL);
++	if (IS_ERR(sd->ref))
++		return dev_err_probe(dev, PTR_ERR(sd->ref), "reference clock\n");
++	if (clk_get_rate(sd->ref) != 24000000)
++		return dev_err_probe(dev, -EINVAL, "only 24 MHz reference supported\n");
++	ret = regmap_read(sd->global, GLOBAL_JTAG_ID, &id);
++	if (ret)
++		return ret;
++	switch (FIELD_GET(GENMASK(15, 12), id)) {
++	case 0:
++	case 1:
++		sd->revision_value = SNOW_REV_REG_A0;
++		break;
++	case 8:
++	case 9:
++		sd->revision_value = SNOW_REV_REG_A1;
++		break;
++	default:
++		return dev_err_probe(dev, -ENODEV, "unsupported silicon revision %#x\n", id);
++	}
++	sd->status = devm_platform_ioremap_resource(pdev, CS7542_PORTS);
++	if (IS_ERR(sd->status))
++		return PTR_ERR(sd->status);
++	for (i = 0; i < CS7542_PORTS; i++) {
++		struct cs7542_lane *lane = &sd->lanes[i];
 +
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - clocks
-+  - interrupts
-+  - interrupt-names
-+  - resets
-+  - phys
-+  - phy-names
-+  - num-lanes
-+  - interrupt-controller
-+  - interrupt-map
-+  - interrupt-map-mask
++		lane->id = i;
++		lane->serdes = sd;
++		lane->base = devm_platform_ioremap_resource(pdev, i);
++		if (IS_ERR(lane->base))
++			return PTR_ERR(lane->base);
++		lane->phy = devm_phy_create(dev, NULL, &cs7542_phy_ops);
++		if (IS_ERR(lane->phy))
++			return PTR_ERR(lane->phy);
++		phy_set_drvdata(lane->phy, lane);
++	}
++	platform_set_drvdata(pdev, sd);
++	provider = devm_of_phy_provider_register(dev, cs7542_phy_xlate);
++	return PTR_ERR_OR_ZERO(provider);
++}
 +
-+unevaluatedProperties: false
++static const struct of_device_id cs7542_phy_match[] = {
++	{ .compatible = "cortina,cs7542-pcie-phy" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, cs7542_phy_match);
 +
-+examples:
-+  - |
-+    #include <dt-bindings/clock/cortina,cs7542-clock.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/reset/cortina,cs7542-reset.h>
++static struct platform_driver cs7542_phy_driver = {
++	.probe = cs7542_phy_probe,
++	.driver = {
++		.name = "cs7542-pcie-phy",
++		.of_match_table = cs7542_phy_match,
++	},
++};
++module_platform_driver(cs7542_phy_driver);
 +
-+    pcie@80000000 {
-+        compatible = "cortina,cs7542-pcie";
-+        reg = <0x80000000 0x1000>, <0x80001000 0x1000>,
-+              <0xf00a0000 0x100>;
-+        reg-names = "dbi", "config", "app";
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        device_type = "pci";
-+        bus-range = <0 0xff>;
-+        num-lanes = <1>;
-+        ranges = <0x82000000 0 0x80200000 0x80200000 0 0x1fe00000>;
-+        clocks = <&global CS7542_CLK_PCIE0>;
-+        interrupt-parent = <&gic>;
-+        interrupts = <GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
-+        interrupt-names = "msi";
-+        resets = <&global CS7542_RESET_PCIE0>;
-+        phys = <&serdes 0>;
-+        phy-names = "pcie";
-+        #interrupt-cells = <1>;
-+        interrupt-map-mask = <0 0 0 7>;
-+        interrupt-map = <0 0 0 1 &pcie_intc 1>,
-+                        <0 0 0 2 &pcie_intc 2>,
-+                        <0 0 0 3 &pcie_intc 3>,
-+                        <0 0 0 4 &pcie_intc 4>;
-+
-+        pcie_intc: interrupt-controller {
-+            #address-cells = <0>;
-+            #interrupt-cells = <1>;
-+            interrupt-controller;
-+        };
-+    };
++MODULE_DESCRIPTION("Cortina Systems CS7542 PCIe SerDes");
++MODULE_LICENSE("GPL");
 
 -- 
 2.53.0
