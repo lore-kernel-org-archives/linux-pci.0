@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.32
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.25
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795529177;
-	b=jBbnZqDcKhbvDcdilPt/69nc1u/wB+MwqNm5TselEoUqcRS9EbhFvKXwUvYkmVZWeOeI
-	 9l+evEXLqfpl/CfwcB0Kw+P2tLsvM+YmLt6ERQw2uDBa0vA3kFqqm3gUafMB/aUbDY57Y
-	 vgwfLCYsTAfJt/EdJKjdIku7ul2KldgCjjzhxLaxuqzsJRFG53c9GQX/j932Lm8HjxBpg
-	 gK5KT7dhMG9L9/w+2KeWg9GOBT8fIY1hDB+lIqt4Xmgq2zPhYLYd1G4kuwbBaX1UFmj4j
-	 uNH3QUdsujZVKQIOhLYR5AdXASqwBsp+unbDcZODjFozv/ssBmMFBPlughNNTLwe+Tg==
+	t=1795529173;
+	b=w/5smOJk9/wbfpZYIsIHMVHSfnofLWaj8dtOa8yBRvVNURQKgsOFAspEH2zd3b5NJhXg
+	 nZTw91u9AyrWk6fxchKG93fFP2utcDTAUkGUes/oTYx6NTXS0lUe50yeYFX5jqqoY+Vly
+	 1YpnkwHGjKm06A5ZXKYfbtG2vLsk/xo8oblcDG+KOTNTNxOaR4Dq5Ro50c7mOu3MiOzdS
+	 439wgRdgR+7biICGckA/6FKTrSkllK89ZMjoDjAppTD6gDmSlUt1tCLuJCQoadHNhHr+o
+	 toBMQjS9XdeMaqATns/3fDKonjzWYTALE+al8uRObVaADnis5H+aTXbO/1KFcV9WeEg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795529177;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795529173;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
@@ -26,35 +26,35 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=4vcdHZaR8ikLqznehXNQCTCp7bZwJpJoYdTFFz9GCvg=;
-	b=thxE3XEZvjqwlcsbbXrP70N21bRVWIHc3hUBod+aAQ0m/jniIg+GvREO71ck7PFB+1gg
-	 BalRWx6FJb4uTFYu3VSGPqWqVcd4PPsrlgIFywo5h9OVyOrKHEV/1Dbom7T8+RJpoTpOC
-	 9v9sY/DHtL6z/yhDEh3RYysmnRfyuXVyjcUdSfFACAC9jyV7Q8NtvLQQTClK5FkGCxzoB
-	 SpuWKIyrXDKnFxdXFf/X9OvpWdpNxro1FynStOsocYJwckefUn96CmMaJka7yGe4FmZpR
-	 lGfB2NCcoaRqste87mGCgODlvV7/TWXwxVBXNk/i3nzKpFfA5KM1j5zBuzUWxIPJASQ==
+	bh=G8zYb7Ir5CP+KrkrV82pMI51Vs2BuNfp2NJJRV5cWT4=;
+	b=sSLJRElt1JCKNUmMKjvviuf+4xuiBd3HcVH4skTfyoaHELrAVED5Q/GVuq5T6o6+hTns
+	 Vz+foWzUPI8jelLJ7eEyTqYsZq9bbuZD/ujYc/zyenBJK578KkSJpzGrYUkmp4Sm76i5P
+	 KduuZ/KbDtnDSTtwsCmmO8AB0im6Msl+7xTPaHvmEL5AwPtE16IHfXXL/+8/rYARmYvhH
+	 ZtbdpiRm2aqDBtxBBN3PL+qzXzXbwwgB5T2gyzzHg32gnSapPY3MA4jm9Z3sTUG8kddlR
+	 /hsnEvNEeaSeL32/MBVJK8mMPCmZwtnBdUsegyON+yFr5C1ayJznkZ9nIcQeA4FgQ+w==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="GrG2Ztr/";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.201.32
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013032.outbound.protection.outlook.com [40.107.201.32])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="W5pl0t/s";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.25
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010025.outbound.protection.outlook.com [52.101.193.25])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A095606A332;
-	Tue, 24 Nov 2026 14:06:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6A095606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68876606B01E;
+	Tue, 24 Nov 2026 14:06:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 68876606B01E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=GrG2Ztr/
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=W5pl0t/s
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=AUrd4/AeVOkjoi6n7o0ntJOTil9SHur6Dq6P0vDPWJW3ZHBDObyvJzgYPToY+pErS7zvcZY4Bt1Is0s+pnvkNNghQi0i/hK6Xm/3S1wPqRYNimgCjW0992iSeccf+PHquyocFNsHGtYzRND5E1IjM3Nw0xZKmWhxcsIElLGNrHixF3e+sYHCxHelQI8mdML2EFF9qDRN/HUabyJLziE2yG6dIQuxulGcKIX2yl2Dg4zYC5SWCB9P0sI3/ut62opM8dlf/Fc0iAt+KjmUMqSAlFyBtPHgxAfH3Fy6F7nWg4ry4KFF3lGxrPWC1SQ49iI/1lmqvHun4UrdxE1kvzKqYQ==
+ b=pYpMTK5EF74jtFLfAit2Kc6vJOVoS4vP0hA7dBQDSMIqnKmqX/brCMvG+A3d5L96wv4dr195Hd72jknOzZs7iE9ivQrmxoSEXLPhj5aWkdcFqW2UXv9aij2bH9IsPhUIsdxqo8PlAGa7x1Rb+hOXFk9FH/jRY/ySWsBBa1g49g+b9lGktFtTbSD8B6+YUBgfV8ZBVLFHM/mmQAANQGV+rjdVHywO2UISTLxQOu30P25dFw1n3gP2GLLSjx/tDKP3hHMstcWucuU4t01vRNcMWBmfIEx9hLRLXXGzCV3Lg2of2uZhacM8e7cR6tCZF90Uuer477vC4rQsWwiaLmSAXw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4vcdHZaR8ikLqznehXNQCTCp7bZwJpJoYdTFFz9GCvg=;
- b=s0/LT6ogEVGTUsrOKzt1ZP/nrBg1QCt6cDMep+Pznj/nwTYHwuM62ujC7OWjn0F7yWePzIcEnzD5Njsr09Xby5KQp79hFbVM2zGcukBs7gS+MKzVQaSmDQ/OYG8/NuCczyoNYjnySdkEqqRrLwk8Q+ZWcZTCMbIX75u9S/D7W+hC5qd/Mb/nwZTcrNzeAmAst18FCvF66YmmMemxbLouTZWNkXf6oOicbZLfi/r7+B/K4pXdZXKSNAzZEl/qAVUobxQx0lP9+3JCfGT/Jr8qVZn99eiC4nqZoXZ2euMrE9M4rcBKChcwlXf9fdapIURcIOwFK/YMvi2v+JxlHu2QJA==
+ bh=G8zYb7Ir5CP+KrkrV82pMI51Vs2BuNfp2NJJRV5cWT4=;
+ b=ZmQNloozXruwz0UhvOQowsSsr+S12PT+UvXK+r0tbQPXplu7QJHnmj3cdWP0AtgexrgOlCGZGqnOdGYjGVlk6YCfbjSQBPexZtV+Gy7k66LQ8G9HoRor0hsP+bAcv4S+Ie0gZccOA9jWh/yAT+t6dsP+dsvNH1paIcI4rCgBm3fASK29VbjwE08lljUTnkC1K7a81Bv+eRrURxmtIEXvykjy7rn6otS7QzOG4UKRAl0rjEfJlU8Ta/yo4RnSrOEWpx+UxidJ2qW2MSsf4xkAfC0i3Hl0v1+aAUhfdmbVjtaG4Puw0Kv7fbEqYoaduiHd3BbqMc1VYfpt0ooWzniHIQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -62,18 +62,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4vcdHZaR8ikLqznehXNQCTCp7bZwJpJoYdTFFz9GCvg=;
- b=GrG2Ztr/e/IJsYrRSZo3zz5dFU9MLzBmLsasi4UHEsRfUmtbqUJOWzM3+0DkmmsGH2bLYW44IZSorpSjox9m3AaNrcn5EDBJbWSgdvdeHqf3xPeSCl7VBzHAh2Suta5fkbf3KIPhzKb9TC2jruHBFyTQWi1rh4Pd3s3y3jjuWFgHv2HV/pYHjt0jQnIDcfnGhN0jitOjPbUjVNtx62JhbdtYNObfLyklSFv0JXHkBEjUun6C+amzgLqVmQNotcX1Np8eO2SzTdEAfa/d+qDHeuJpKBGy3O6Q0Fxk7ygV0Qr0FIT6GzKoeDS+UcliYuOunPBJnoeJr7ZkFYVmv++t1A==
-Received: from CY5PR19CA0041.namprd19.prod.outlook.com (2603:10b6:930:1a::8)
- by IA1PR12MB6211.namprd12.prod.outlook.com (2603:10b6:208:3e5::5) with
+ bh=G8zYb7Ir5CP+KrkrV82pMI51Vs2BuNfp2NJJRV5cWT4=;
+ b=W5pl0t/sE4irYaVYyz/K3dOJzDJQgPA7kXsq0F1xCMfrMUPdZIzGAFqRT4fXdttyjPGVUFGADH88reDcEa4k3r8RPIUxrOcZGB0P0G4Sn0N/DUsiUQGukhfpcAlUjyu3frTzXBcCo0qoZOuzh7BJENsXwXrx3m9QrRiTjZUFgqlAjhyDodpSUN3Pe4a5xOhrnxJNOQuJiVM1Nq5olNb+rUcQHpQn4/lcPmXA0wPWlDx9bCSx0CxS4udh+rzCzNmfipzgwC9L8avO2fnXPmR0zu4cF8hdqFTffCS9mkhLU7cHxQ0hDi0e4L4JMESFVCX3WZikRKTmAY2VkFCYrRWaBA==
+Received: from PH8PR21CA0010.namprd21.prod.outlook.com (2603:10b6:510:2ce::10)
+ by EA3PR12MB178636.namprd12.prod.outlook.com (2603:10b6:303:308::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.13; Tue, 24 Nov
- 2026 14:06:09 +0000
-Received: from CY6PEPF0000004C.namprd03.prod.outlook.com
- (2603:10b6:930:1a:cafe::84) by CY5PR19CA0041.outlook.office365.com
- (2603:10b6:930:1a::8) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.6 via Frontend Transport; Tue, 24
- Nov 2026 14:05:08 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Tue, 24 Nov
+ 2026 14:06:04 +0000
+Received: from CY6PEPF0000004B.namprd03.prod.outlook.com
+ (2603:10b6:510:2ce:cafe::5b) by PH8PR21CA0010.outlook.office365.com
+ (2603:10b6:510:2ce::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.688.3 via Frontend Transport; Tue, 24
+ Nov 2026 14:06:04 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -81,17 +81,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- CY6PEPF0000004C.mail.protection.outlook.com (10.167.247.137) with Microsoft
+ CY6PEPF0000004B.mail.protection.outlook.com (10.167.247.136) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.662.3 via Frontend Transport; Tue, 24 Nov 2026 14:05:08 +0000
+ 15.21.662.3 via Frontend Transport; Tue, 24 Nov 2026 14:06:04 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Tue, 24 Nov
- 2026 06:04:44 -0800
+ 2026 06:05:36 -0800
 Received: from kalok-SPC741D16QM3.nvidia.com (10.126.231.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.57; Tue, 24 Nov 2026 06:04:31 -0800
+ 15.2.2562.57; Tue, 24 Nov 2026 06:05:23 -0800
 From: Alok Kumar <alkumar@nvidia.com>
 To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
 	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
@@ -111,9 +111,9 @@ CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
 	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
 	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
 	<peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: [PATCH v5 21/35] gpu: nova-core: vgpu: add VRAM slot pool
-Date: Tue, 24 Nov 2026 19:29:17 +0530
-Message-ID: <20261124135937.18583-22-alkumar@nvidia.com>
+Subject: [PATCH v5 25/35] gpu: nova-core: vgpu: add GSP plugin communication buffer
+Date: Tue, 24 Nov 2026 19:29:21 +0530
+Message-ID: <20261124135937.18583-26-alkumar@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261124135937.18583-1-alkumar@nvidia.com>
 References: <20261124135937.18583-1-alkumar@nvidia.com>
@@ -132,218 +132,330 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY6PEPF0000004C:EE_|IA1PR12MB6211:EE_
-X-MS-Office365-Filtering-Correlation-Id: 097dbfdc-3064-4e18-5147-08df4a33f2d6
+X-MS-TrafficTypeDiagnostic: CY6PEPF0000004B:EE_|EA3PR12MB178636:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4c3551e6-96fd-4cfc-e5b3-08df4a341401
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|23010399003|376014|7416014|1800799024|82310400026|261102123227099003|10067099003|11063799006|56012099006|261009223027099003|261022075727099003|261022113327099003|261026121527099003|261021121427099003|22082099003|18002099003;
+	BCL:0;ARA:13230040|82310400026|7416014|376014|36860700016|23010399003|1800799024|18002099003|22082099003|3023799007|261026140227099003|11063799006|261022113327099003|56012099006|261021123027099003|261021135927099003|261028144727099003|261026121527099003|261021121427099003|261009223027099003|261102123227099003|261022105027099003|10067099003;
 X-Microsoft-Antispam-Message-Info:
-	spdT/aptN+HYEzH6rE6oGA0LCMthw2Txoka3hts/4CywukyTOUApWvLgGYX17N1WEPp7p80dg6cGWBqTzbDQmYcSDeWQkVoEeYAq6DjWFlgl2dgPV8YRGTL0ui5VDjJ4nIMKny4cQjXAD3iclL88aACmU/6wgSXDUE5AMCI9DMjIqlBALN5jCqk9MpDeu8pt4K2dvJJz3hn18wA28Kyio0oqblaIT1gUCTE2uKSsrY94P5CTpfLHDyoDvVU7zwmABlsGB0ZtyW5+2PHsBU7TV6ezNICNugeSa8iImbf0ICUQw4s8HgMD64qn3UY8Gzb5BZdBYraEyzYdfX6EZyeZMbpPzoU4UwGKkwDn4To2rsaHdnfjq/suFK9UOgAVw497xOTiqdYhpsus4VFwA+kSw41p2H1wnf98x+ixIVIDr5tDW3f/J7bakFBg0UsFdBgJ/cYuXnzCYY8Ka2DKzA1oicRFQPVwn/e6NNmhQX46+G6a2Lt30TQ10aMFTHGhVUI9XNm47P26UutX+Wshz0vhdAR7nPZIpNV5WggKWlfI+t7mwzkADHUEy8azM0Gb4cQuS17Pan+oqBXzOPqZ3sPplS3u6iT/lPjZRdsKtlF56BnjEDrcOzNpekLn0MwaoiAqEV3KfYnlNqHnRZr1I1qSJqNAjklEpglfWEwqQTJjElO7VBpMc4mT6dPlt32jNJwziBI79EN60qW1sxKPkRXY/A==
+	7DPIOh15RWryX93OWFPPHArprXKBO4pQwoJRV7PGOX5Ruxh9WsTKLJyjWt4987q5y3jBf8vLJTfkpO0VlxA2QtNy9Wd11MNkvzOGOCqXkk4tgCzRKid3sXdupIO9PD1jXjxyAL9TS7Ue1yyO1VdWyDOxiXHRXgSMNlI8dov81hzVfDLlwJweDXsfqo2wBhckMG5ELZpSlvWk+hQ7kDohcT3qqlqV46TgrpELw0GVagvhzTeTRcUbVoFFfYMP/kyIYqNFMD3qgU9/EOVKnVgK1ROskdQxe17ojQcdjUrlXskHaXJhfA70KKgph0ZO656dw89K3aNXnv2TVk9tS4EQkh6qhf8aRYRe7YrO280KQx2Kp8GsChBz2tbOX9CwG1UrC5MeVfxhLWjM/muK8fx9islE8Icr1MWoRaVLWjkeYKSIj42hySP5kqzxgd/HA3QOAbgfmoytvTaK1wZHAvsCY2i+6AAF1p6t96tIYxYS3FoKg8kmCuwSKsCtPdEMFvljZEQeA3ZMLt4ObnDCh7MW9RhKl6s9r/s5VTrKDVKZUnfzHfN5GWjUjYYqgb/PzAqpRsMCXUF+edDdFg1Cl45HAepN7qnUlKp1jU6bqL8WOMxMs3WEovL9qxgoRMtNrosQQmQi9ktkISB86vsLq0BkHL6tJ52e2yN0Ta75E5BGevIpHTGZ6O6jrhZkuc2q32RuOaAYu1B87wwWsPmrwRVdtA==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(23010399003)(376014)(7416014)(1800799024)(82310400026)(261102123227099003)(10067099003)(11063799006)(56012099006)(261009223027099003)(261022075727099003)(261022113327099003)(261026121527099003)(261021121427099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(376014)(36860700016)(23010399003)(1800799024)(18002099003)(22082099003)(3023799007)(261026140227099003)(11063799006)(261022113327099003)(56012099006)(261021123027099003)(261021135927099003)(261028144727099003)(261026121527099003)(261021121427099003)(261009223027099003)(261102123227099003)(261022105027099003)(10067099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	b6Y+d/JnIm/sz6Wxin2RhoG1BNqUxWOoTasHf73rXYL93r0AM/ZfE0N67545YXBp+uPfWfMr+uSVxj6WEFcuczIJ4zLQ0Mv4sxcZzZcyVvqIAwb8VgjzmGghMg+CMoWWH7iAbv01dmYKvkNjQxPXMwaNFh4WD86pMaqFJqPXdXvUXQVk49s2Gp7dCnNLRMe94yPoSBM3GGMsYoRAnsnVDGR7SJ46pPuL5B2Xsw87WCMuwMdi+i3qHGVo1xr17kC4ByCfBcgrWxcwXTQ74cMmmtB2k9e9vVY/GGoKyZXHDK4KBj8DrT6id4UH70cz7Aagq909MJjCid3HjmaLqvQgqoXQodAGC+QxPIFXlARKtLG4l0CA3pf+RWjP+/HkvtwKTHgVRCZq0Y2kbUZ8ykqtRmPdAEQb9PyV68AQWkSMFXwcK/W8zIYH0I7we8EbpjUs
+	stgEpwOjpNKP0zzqJ6x0BUkgNPn+unbBjzgwFOtxZOh8r9daL3N3pqDdkKXolITW4MJ8wVL7V7xhikC58REPQQv/ic0a4hylLD1a6RhXCtxXv7FIOXQPJ/gMySMkYixOMwebqVQ5M5isYR6YztMD5u6zUq2V/rAfGdjl/sNw7wzEya19wgXCAffAQ6/YnyJfjzm+2f+UgrpNC2FoQwOK9m6xzkU7Ta4eXyeroird8RkT2hxcEyaXm9In4PU8skq85nhkEn924MaJMF9E84eDOaL12emi4/EkgZP8rRCQySIaZ0X0BfV7cqG/iLXbWuspRTCNNJ+DKBFbTqiFIqr0Zfxyx1kX71M+mX+nd4gxaXIGl92r8BtYMkUtJY9WW9EiwB9k0RvJPB9wzYV3qLtH8Zh1W2d8FbD8cqiOA9UZzqse9OFSqnYfvQ/5ttk096qr
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 14:05:08.7134
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 14:06:04.3671
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 097dbfdc-3064-4e18-5147-08df4a33f2d6
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4c3551e6-96fd-4cfc-e5b3-08df4a341401
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CY6PEPF0000004C.namprd03.prod.outlook.com
+	CY6PEPF0000004B.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6211
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: EA3PR12MB178636
 
-A vGPU type specifies the guest VRAM and GSP plugin management-heap
-sizes for each instance. Allocating these regions independently
-fragments VRAM and does not preserve a stable layout for the vGPU type.
+From: Zhi Wang <zhiw@nvidia.com>
 
-Add a standalone slot pool that reserves one exact VRAM range and
-provides the memory ranges corresponding to a given slot.
+Each vGPU instance shares a communication buffer with its GSP plugin,
+located at the start of the instance's management heap. It contains the
+control and response regions used for plugin RPCs, the message and
+migration buffers, and the plugin logs.
 
-Co-developed-by: Zhi Wang <zhiw@nvidia.com>
+Describe its layout with a `CommBuffer` type, and add `CommBufferRegion`
+which maps the buffer through BAR1 and provides the operations needed
+before the first RPC: checking the plugin's boot-ready marker, obtaining
+the VRAM regions of the logs, and initializing the control and response
+regions.
+
+The ready marker is stored in the control region's sequence number
+field, so the regions must only be initialized after the plugin has
+reported itself ready.
+
 Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 Co-developed-by: Alexandre Courbot <acourbot@nvidia.com>
 Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
 Signed-off-by: Alok Kumar <alkumar@nvidia.com>
 ---
- drivers/gpu/nova-core/vgpu.rs      |   1 +
- drivers/gpu/nova-core/vgpu/vram.rs | 153 +++++++++++++++++++++++++++++
- 2 files changed, 154 insertions(+)
- create mode 100644 drivers/gpu/nova-core/vgpu/vram.rs
+ drivers/gpu/nova-core/mm.rs                   |   1 -
+ drivers/gpu/nova-core/mm/vram.rs              |   1 +
+ drivers/gpu/nova-core/vgpu.rs                 |   1 +
+ drivers/gpu/nova-core/vgpu/fw.rs              |  20 ++
+ drivers/gpu/nova-core/vgpu/gsp_plugin_comm.rs | 201 ++++++++++++++++++
+ 5 files changed, 223 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/gpu/nova-core/vgpu/gsp_plugin_comm.rs
 
+diff --git a/drivers/gpu/nova-core/mm.rs b/drivers/gpu/nova-core/mm.rs
+index f1f86931928c..9489502d3362 100644
+--- a/drivers/gpu/nova-core/mm.rs
++++ b/drivers/gpu/nova-core/mm.rs
+@@ -69,7 +69,6 @@ macro_rules! impl_pfn_bounded {
+ mod regs;
+ pub(super) mod tlb;
+ pub(super) mod vmm;
+-#[expect(dead_code)]
+ pub(crate) mod vram;
+ 
+ /// GPU Memory Manager - owns all core MM components.
+diff --git a/drivers/gpu/nova-core/mm/vram.rs b/drivers/gpu/nova-core/mm/vram.rs
+index 6054eed9aeb0..7774b15e4c89 100644
+--- a/drivers/gpu/nova-core/mm/vram.rs
++++ b/drivers/gpu/nova-core/mm/vram.rs
+@@ -74,6 +74,7 @@ pub(crate) struct VramRegion {
+     range: Range<u64>,
+ }
+ 
++#[expect(dead_code)]
+ impl VramRegion {
+     /// Returns the range covered by this region.
+     pub(crate) const fn range(&self) -> &Range<u64> {
 diff --git a/drivers/gpu/nova-core/vgpu.rs b/drivers/gpu/nova-core/vgpu.rs
-index ea4bb5915879..5fd9641db579 100644
+index 65362ca31ba3..eaff5b8b318d 100644
 --- a/drivers/gpu/nova-core/vgpu.rs
 +++ b/drivers/gpu/nova-core/vgpu.rs
-@@ -23,6 +23,7 @@
+@@ -29,6 +29,7 @@
  
+ mod commands;
  mod fw;
++mod gsp_plugin_comm;
  mod hal;
-+mod vram;
+ mod instance;
+ mod vram;
+diff --git a/drivers/gpu/nova-core/vgpu/fw.rs b/drivers/gpu/nova-core/vgpu/fw.rs
+index 2d32e196a771..84a89c32a77b 100644
+--- a/drivers/gpu/nova-core/vgpu/fw.rs
++++ b/drivers/gpu/nova-core/vgpu/fw.rs
+@@ -8,3 +8,23 @@
  
- /// vGPU state detected during GPU construction.
- #[derive(Debug, Clone, Copy)]
-diff --git a/drivers/gpu/nova-core/vgpu/vram.rs b/drivers/gpu/nova-core/vgpu/vram.rs
+ pub(super) mod commands;
+ mod r000_00;
++
++// Alias to avoid repeating the version number with every use.
++use r000_00 as bindings;
++
++pub(super) use bindings::{
++    GSP_PLUGIN_BOOTLOADED,
++    VGPU_CPU_GSP_COMMUNICATION_BUFF_TOTAL_SIZE,
++    VGPU_CPU_GSP_CTRL_BUFF_REGION as RawControlRegion,
++    VGPU_CPU_GSP_CTRL_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_CTRL_BUFF_VERSION,
++    VGPU_CPU_GSP_ERROR_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_GUEST_RPC_TRACE_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_INIT_TASK_LOG_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_KERNEL_TASK_LOG_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_MESSAGE_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_MIGRATION_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_RESPONSE_BUFF_REGION as RawResponseRegion,
++    VGPU_CPU_GSP_RESPONSE_BUFF_REGION_SIZE,
++    VGPU_CPU_GSP_VGPU_TASK_LOG_BUFF_REGION_SIZE, //
++};
+diff --git a/drivers/gpu/nova-core/vgpu/gsp_plugin_comm.rs b/drivers/gpu/nova-core/vgpu/gsp_plugin_comm.rs
 new file mode 100644
-index 000000000000..0c840c03f988
+index 000000000000..983d5002ff5b
 --- /dev/null
-+++ b/drivers/gpu/nova-core/vgpu/vram.rs
-@@ -0,0 +1,153 @@
++++ b/drivers/gpu/nova-core/vgpu/gsp_plugin_comm.rs
+@@ -0,0 +1,201 @@
 +// SPDX-License-Identifier: GPL-2.0
 +// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 +
-+//! VRAM slot allocation for vGPU instances.
++//! GSP plugin communication buffer mappings and access.
++
++use core::mem::offset_of;
 +
 +use kernel::{
-+    prelude::*,
-+    sizes::SizeConstants,
-+    sync::Arc, //
++    io::{
++        io_project,
++        io_read,
++        io_write,
++        Mmio, //
++    },
++    num::casts::FromSafeCast,
++    prelude::*, //
 +};
 +
 +use crate::mm::{
-+    vram::{
-+        VramBlock,
-+        VramRegion, //
++    bar_user::{
++        BarMapping,
++        BarUser, //
 +    },
-+    GpuMm, //
++    vram::VramRegion,
++    SharedGpuMm, //
 +};
 +
-+const VRAM_SLOT_MIN_ALIGN: u64 = u64::SZ_4K;
-+// `VRAM_SLOT_MIN_ALIGN` is used for alignment.
-+static_assert!(VRAM_SLOT_MIN_ALIGN.is_power_of_two());
++use super::fw::{
++    self,
++    RawControlRegion,
++    RawResponseRegion, //
++};
 +
-+/// Describes the VRAM layout used by vGPU instances.
-+#[derive(Clone, Copy, PartialEq)]
-+pub(super) struct VgpuVramLayout {
-+    // Firmware ID of the vGPU type this layout was built for.
-+    type_id: u32,
-+    // Maximum number of slots with this layout.
-+    max_slots: u32,
-+    // Size of the framebuffer for a vGPU instance.
-+    fb_size: u64,
-+    // Size of heap for a vGPU instance.
-+    heap_size: u64,
-+    // Alignment of the framebuffer for vGPU instances.
-+    fb_align: u64,
-+}
-+
-+#[expect(dead_code)]
-+impl VgpuVramLayout {
-+    pub(super) fn new(
-+        type_id: u32,
-+        max_slots: u32,
-+        fb_size: u64,
-+        heap_size: u64,
-+        fb_align: u64,
-+    ) -> Result<Self> {
-+        if max_slots == 0 || fb_size == 0 || heap_size == 0 {
-+            return Err(EINVAL);
-+        }
-+
-+        let fb_align = core::cmp::max(fb_align, VRAM_SLOT_MIN_ALIGN);
-+
-+        if !fb_align.is_power_of_two()
-+            || !fb_size.is_multiple_of(fb_align)
-+            || !heap_size.is_multiple_of(VRAM_SLOT_MIN_ALIGN)
-+        {
-+            return Err(EINVAL);
-+        }
-+
-+        Ok(Self {
-+            type_id,
-+            max_slots,
-+            fb_size,
-+            heap_size,
-+            fb_align,
-+        })
-+    }
-+
-+    pub(super) fn max_slots(&self) -> u32 {
-+        self.max_slots
-+    }
-+}
-+
-+/// A description of a VRAM slot.
++/// Layout of the plugin communication region, located at the start of the management heap.
 +///
-+/// All device accesses and mappings of its regions must end before dropping the slot.
-+#[must_use]
-+#[expect(dead_code)]
-+pub(super) struct VgpuVramSlot {
-+    /// Framebuffer VRAM region.
-+    pub(super) fbmem: VramRegion,
-+    /// Management heap VRAM region.
-+    pub(super) mgmt_heap: VramRegion,
-+    /// Index of this slot.
-+    pub(super) index: u32,
++/// This type is never instantiated; it only describes the layout of the region for I/O
++/// projections.
++///
++/// r000 layout, with byte offsets from the management heap (not to scale):
++///
++/// ```text
++/// 0x000000 +----------------------------------------+
++///          | Control (boot-ready marker)      4 KiB |
++/// 0x001000 +----------------------------------------+
++///          | Response                         4 KiB |
++/// 0x002000 +----------------------------------------+
++///          | Message                          4 KiB |
++/// 0x003000 +----------------------------------------+
++///          | Migration                        2 MiB |
++/// 0x203000 +----------------------------------------+
++///          | Error                            4 KiB |
++/// 0x204000 +----------------------------------------+
++///          | Init task log                  128 KiB |
++/// 0x224000 +----------------------------------------+
++///          | vGPU task log                  256 KiB |
++/// 0x264000 +----------------------------------------+
++///          | Kernel task log                 64 KiB |
++/// 0x274000 +----------------------------------------+
++///          | Guest RPC trace                 64 KiB |
++/// 0x284000 +----------------------------------------+
++/// ```
++#[repr(C)]
++struct CommBuffer {
++    control: RawControlRegion,
++    response: RawResponseRegion,
++    message: [u8; cv!(fw::VGPU_CPU_GSP_MESSAGE_BUFF_REGION_SIZE)],
++    migration: [u8; cv!(fw::VGPU_CPU_GSP_MIGRATION_BUFF_REGION_SIZE)],
++    error: [u8; cv!(fw::VGPU_CPU_GSP_ERROR_BUFF_REGION_SIZE)],
++    init_log: [u8; cv!(fw::VGPU_CPU_GSP_INIT_TASK_LOG_BUFF_REGION_SIZE)],
++    vgpu_log: [u8; cv!(fw::VGPU_CPU_GSP_VGPU_TASK_LOG_BUFF_REGION_SIZE)],
++    kernel_log: [u8; cv!(fw::VGPU_CPU_GSP_KERNEL_TASK_LOG_BUFF_REGION_SIZE)],
++    guest_trace: [u8; cv!(fw::VGPU_CPU_GSP_GUEST_RPC_TRACE_BUFF_REGION_SIZE)],
 +}
 +
-+/// A pool of VRAM slots, split according to a [`VgpuVramLayout`].
-+pub(super) struct VgpuVramSlotPool {
-+    backing: Arc<VramBlock>,
-+    layout: VgpuVramLayout,
-+    fb_region_size: u64,
++static_assert!(size_of::<CommBuffer>() == cv!(fw::VGPU_CPU_GSP_COMMUNICATION_BUFF_TOTAL_SIZE));
++static_assert!(size_of::<RawControlRegion>() == cv!(fw::VGPU_CPU_GSP_CTRL_BUFF_REGION_SIZE));
++static_assert!(size_of::<RawResponseRegion>() == cv!(fw::VGPU_CPU_GSP_RESPONSE_BUFF_REGION_SIZE));
++
++/// Physical VRAM regions containing the vGPU plugin logs.
++#[expect(dead_code)]
++pub(super) struct PluginLogRegions {
++    pub(super) init: VramRegion,
++    pub(super) vgpu: VramRegion,
++    pub(super) kernel: VramRegion,
++}
++
++/// BAR1 mapping of the plugin communication region in its management heap.
++///
++/// See [`CommBuffer`] for the layout of the region.
++pub(super) struct CommBufferRegion<'map, 'gpu> {
++    map: BarMapping<'map, 'gpu>,
 +}
 +
 +#[expect(dead_code)]
-+impl VgpuVramSlotPool {
-+    /// Reserve the VRAM for all possible slots of `layout`, and returns a [`VgpuVramSlotPool`] that
-+    /// can provide these slots.
-+    pub(super) fn new(mm: &GpuMm<'_>, layout: VgpuVramLayout) -> Result<Self> {
-+        let max_slots = u64::from(layout.max_slots);
-+        // Keep guest VRAM slots contiguous so each starts at `fb_align`;
-+        // interleaving page-aligned heaps could misalign later slots.
-+        let fb_region_size = layout.fb_size.checked_mul(max_slots).ok_or(EINVAL)?;
-+        let heap_region_size = layout.heap_size.checked_mul(max_slots).ok_or(EINVAL)?;
-+        let pool_size = fb_region_size.checked_add(heap_region_size).ok_or(EINVAL)?;
-+
-+        let backing = mm.alloc_vram_range(0..pool_size, cv!(VRAM_SLOT_MIN_ALIGN))?;
-+        if !backing.range().start.is_multiple_of(layout.fb_align) {
-+            return Err(EINVAL);
-+        }
++impl<'map, 'gpu> CommBufferRegion<'map, 'gpu> {
++    /// Map the communication portion of a plugin management heap.
++    pub(super) fn new(
++        bar_user: &'map BarUser<'gpu>,
++        mm: &'map SharedGpuMm<'gpu>,
++        management_heap: &VramRegion,
++    ) -> Result<Self> {
++        let region = management_heap.subregion(0..u64::from_safe_cast(size_of::<CommBuffer>()))?;
 +
 +        Ok(Self {
-+            backing,
-+            layout,
-+            fb_region_size,
++            map: BarMapping::new(bar_user, mm, region, true)?,
 +        })
 +    }
 +
-+    /// Returns `true` if `layout` is identical to the layout used by this pool.
-+    pub(super) fn matches_layout(&self, layout: VgpuVramLayout) -> bool {
-+        self.layout == layout
++    /// Returns the MMIO view of the communication region.
++    ///
++    /// Fails if the region has been unmapped.
++    fn view(&self) -> Result<Mmio<'_, CommBuffer>> {
++        self.map.view()
 +    }
 +
-+    /// Returns the VRAM slot corresponding to `index`, or `EINVAL` if `index` is not a valid slot
-+    /// index for the pool's layout.
-+    pub(super) fn slot(&self, index: u32) -> Result<VgpuVramSlot> {
-+        if index >= self.layout.max_slots {
-+            return Err(EINVAL);
-+        }
++    /// Return the physical regions occupied by the three plugin logs.
++    pub(super) fn plugin_logs(&self) -> Result<PluginLogRegions> {
++        let log_region = |offset, size| {
++            let start = u64::from_safe_cast(offset);
 +
-+        let fb_size = self.layout.fb_size;
-+        let fb_offset = fb_size.checked_mul(index.into()).ok_or(EINVAL)?;
-+        let fb_end = fb_offset.checked_add(fb_size).ok_or(EINVAL)?;
++            self.map.region().subregion(start..start + u64::from(size))
++        };
 +
-+        let heap_size = self.layout.heap_size;
-+        let heap_slot_offset = heap_size.checked_mul(index.into()).ok_or(EINVAL)?;
-+        let heap_offset = self
-+            .fb_region_size
-+            .checked_add(heap_slot_offset)
-+            .ok_or(EINVAL)?;
-+        let heap_end = heap_offset.checked_add(heap_size).ok_or(EINVAL)?;
-+
-+        let fbmem = self.backing.region(fb_offset..fb_end)?;
-+        let mgmt_heap = self.backing.region(heap_offset..heap_end)?;
-+
-+        Ok(VgpuVramSlot {
-+            fbmem,
-+            mgmt_heap,
-+            index,
++        Ok(PluginLogRegions {
++            init: log_region(
++                offset_of!(CommBuffer, init_log),
++                fw::VGPU_CPU_GSP_INIT_TASK_LOG_BUFF_REGION_SIZE,
++            )?,
++            vgpu: log_region(
++                offset_of!(CommBuffer, vgpu_log),
++                fw::VGPU_CPU_GSP_VGPU_TASK_LOG_BUFF_REGION_SIZE,
++            )?,
++            kernel: log_region(
++                offset_of!(CommBuffer, kernel_log),
++                fw::VGPU_CPU_GSP_KERNEL_TASK_LOG_BUFF_REGION_SIZE,
++            )?,
 +        })
++    }
++
++    /// Return whether firmware has published the plugin boot marker.
++    pub(super) fn is_plugin_ready(&self) -> Result<bool> {
++        let value = io_read!(self.view()?, .control.__bindgen_anon_1.message_seq_num);
++
++        Ok(value == fw::GSP_PLUGIN_BOOTLOADED)
++    }
++
++    /// Initialize the shared control and response buffers for plugin RPC.
++    #[expect(dead_code)]
++    pub(super) fn initialize(&self) -> Result {
++        let comm = self.view()?;
++        let control = io_project!(comm, .control.__bindgen_anon_1);
++        let response = io_project!(comm, .response.__bindgen_anon_1);
++
++        io_write!(
++            control,
++            .response_buff_offset,
++            u64::from_safe_cast(offset_of!(CommBuffer, response))
++        );
++        io_write!(
++            control,
++            .message_buff_offset,
++            u64::from_safe_cast(offset_of!(CommBuffer, message))
++        );
++        io_write!(
++            control,
++            .migration_buff_offset,
++            u64::from_safe_cast(offset_of!(CommBuffer, migration))
++        );
++        io_write!(
++            control,
++            .error_buff_offset,
++            u64::from_safe_cast(offset_of!(CommBuffer, error))
++        );
++        io_write!(
++            control,
++            .guest_rpc_trace_buff_offset,
++            u64::from_safe_cast(offset_of!(CommBuffer, guest_trace))
++        );
++        io_write!(control, .migration_buf_cpu_access_offset, 0);
++        io_write!(control, .is_migration_in_progress, 0);
++        io_write!(control, .error_buff_cpu_get_idx, 0);
++        io_write!(control, .guest_rpc_trace_buff_cpu_get_idx, 0);
++        io_write!(control, .attached_vgpu_count, 1);
++        io_write!(control, .is_gr_init_done, 0);
++
++        io_write!(control, .message_type, 0);
++        // Replace the boot-ready marker with the initial RPC sequence.
++        io_write!(control, .message_seq_num, 0);
++        io_write!(response, .message_seq_num_processed, 0);
++        io_write!(response, .result_code, 0);
++        io_write!(control, .version, fw::VGPU_CPU_GSP_CTRL_BUFF_VERSION);
++
++        Ok(())
++    }
++
++    /// Invalidate the PTEs and release the communication mapping.
++    #[expect(dead_code)]
++    pub(super) fn unmap(&mut self) -> Result {
++        self.map.unmap()
 +    }
 +}
 -- 
