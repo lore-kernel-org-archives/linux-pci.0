@@ -1,101 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.181
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795559570;
-	b=pD5h6UZNZMrPCaZmAB7HcXuFyzIwpz4N/a1x0Zk98IfvmirrcNMp+bP6FA61f1Kjc/24
-	 z6QUGPXgaQke71udSqe9S59SxJGO+Jt/j5256CXtjlSulcDbDF6ASTKqd7F6WBoI/f0Rw
-	 ME7fTPo8kRR1iSdSojD86UZki8JlTOnb3q/tlJ803o+vtOYkrsvlVZ3NG48dBNF0q3bSp
-	 aF34YTJxdcmn6QQfmzfxUUxn9NImsjR733ouC8qZJ4e2sL/Cj/hTUCEmxmtPTtTLy7tF7
-	 XM4pmKFZhIcPeA95sgcXPP/+Rh9WQa232uO2uYQpkiQbo21ujecB/vZJEWVqiCUezPA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795559570;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=YztxYMampkDgsp5B8qRmLm7qNVSv46tGRVgcB1aXKs8=;
-	b=tFDGPFP2mJ2cJIK1GigoOztoHKgh0/KpIgqHX7wgnf5djWzcAd9NEx3vhTI/u8jjpuLZ
-	 FScUjy4dXvrFo5TE3eswsF+3dwRBEmrl1F93E/H6QWnZb9GFG6Ql1WijB+lBqdjMe1VdJ
-	 0tEq9GTi0m9Q5jwOR0VJJpmHAe40x3D33iRhD7/3A0n30SiTsaUB9LclULYjo/jt42jHL
-	 sW53y4sxRT2z5ZKwKZugKhQV3qsXzsfzzEjFudV80FD2wB2I/ytQrOHy5VDelC1AIgBLM
-	 sv4ZuX2kgzKjuClJmXAbB566wfghCMs0iqt+G1QDqqyt5NItkRTkjWOXDwD93cAOhQQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=W74C66Fa;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.181
-Received: from mail-qt1-f181.google.com (mail-qt1-f181.google.com [209.85.160.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=140.211.166.183
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795562747;
+	b=ZnsP2IkawBkxNFVbnE0Fjvm8Qel/69erkff6fTWlKHVp4K/RueuHgniDyaHU94KYfsew
+	 VysyPH2cILPL5VAkz9jA5AadDATU4Y/X7uG4QMTk3FKkkR1qcI7ZddEjf5YxgIbz00kAO
+	 GxKtee6DXY+/7ABNoaUgQHAqPT0hOyD3qD+D1umiN+WNH0R5gWePWvS5qlRlJAz+bOjKi
+	 QfqvqUjELT6y0BRrHqzf6ApXkd3EOvWhglrhAJecqAeD0x3c8mvoFz4KrrIaeSHGrn9pX
+	 s3Br9rKG2VDc8arRs+DtwfORDoz+jPhBwsMWBPD1oq9NaYDcdQXNXbq0W+TaOuh+hZg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795562747;
+	h=DMARC-Filter:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:User-Agent:MIME-Version;
+	bh=FJ16bXZFcdXtHsxZY9v7xo6tcK8QhcjGNUaSnANHJx0=;
+	b=Mv2UEkHsudSsrUsccqh/I1GXxtqs64znEZuIsc3M9r1zTBv6/BwTqVO64DQREDcYhKAl
+	 vw4Mi40IcKP9a7uraUcvnaez55lcRf+rJLBK7C8L1xPp8FZCjQPHGaYGtzELHsYYimhx/
+	 k/izlwNAEseuCpNCDv6gCCW1Wr+cHm21zWD8nMTBGePKajUNGPXORuvKtfUmR2oP7sJ+I
+	 eYnxdPgreRvH4nd6f9V2iqZPQQtNbB9RNmYYJ0cENY4K2iK3RWClsacM7kJ3g6Zuuj/J3
+	 XcNJijaIt+ttDWflpF1LbvenomC+83BzR5EEQOwPT19lPYvP6xjgdgN3/Sd+sRlgxgQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gentoo.org;
+	spf=pass smtp.mailfrom=gentoo.org;
+	arc=none smtp.remote-ip=140.211.166.183
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5A2F606A323
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 22:32:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E5A2F606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=W74C66Fa
-Received: by mail-qt1-f181.google.com with SMTP id d75a77b69052e-55be673e029so978321cf.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 14:32:49 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795559569; cv=none;
-        d=google.com; s=arc-20260327;
-        b=phdxysxc2ca5KRJ5J8rC5Vrzf2lGJ46EH2WyO1uojkum2WtaRkc71ighXn86m97vUO
-         wEkq3ppzFAHunWDdEkmrvEKB8CHAp9UIvlX0JwxxgWO39cdPNWbaUitYFAVfQaCrGIAG
-         H01vP4rjdrudID2o66xQjuJPdsLED/th2F3PSNucQ56CYjogt8pZdc/ir+KfX/ACLCHm
-         PlEFlhawTUEf2ABE1mEpyU5cM5ok1xqti01BIMTbRJcVgy1HcaAOiFrA1JLgt4wqsaKy
-         3Pmv2gEnpAeUCC8nbX85due5gi11LC/gBk+/0NuRCuaEEIsyoXVRriwBdVrlx7vO6DkJ
-         jkEQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=YztxYMampkDgsp5B8qRmLm7qNVSv46tGRVgcB1aXKs8=;
-        fh=ylyVexEsNc5ga80+ofpBnDlhv9NnrOJ8t1/JnFS0KfA=;
-        b=PFJ9x1K2wfSrExUkY4S4YxHezp7gR19LXqvWaC2Dv6KvaEMTHDRJ+U8JUZfciiYjxZ
-         txIKgSzWiKNfqdKW3BYsG20c05kObKCv68UOOWJaYFDxIeXDHlOq4ZkZDy/Mxfq9KugT
-         N+c9W6+JyF6io7pimlH+efe7RSpKOotDX+wHN3iDkBPFMK9KY7OnU2L0mOTpt41RvYCo
-         gIKNv7VA2ux0wuWahWVvxUtuNhMj1cd67HFDYCcyJnaO4w0w/rVo9GB8oqJetL+fJUne
-         ECUaw/M33s1aiFzhDeQqRJHGlrx1UUksM5BSAVnZvyjfHAXbKfOXGB17r1JYtqbZZEEa
-         Nehg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795559569; x=1796164369; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=YztxYMampkDgsp5B8qRmLm7qNVSv46tGRVgcB1aXKs8=;
-        b=W74C66FawSRrw2Bcns9NHAdWHYdXdeQOb1vpanibp8GQEg/b7PuABno3yHvIneX9ZE
-         +nAapSLMlEZnDsrNJ11JH+RPjkoHlH0N3GZr7Jdga5LjOFFAbygZXpuFqAa0UbGZ36Wf
-         AEWrULFouzHDfmyZdaZcJVIqZGq1DWMckJgwQNe+vURL3WzhpgUPtQqDeAIGqB4h6+0s
-         g/vbusd3iW6o0765uV2FC22n5stJAKZ0gFeYJPg4pG6cwsNvZgQ820BgcQszGVjg30lC
-         g3xKPaobLiiUggWyCVqFqzBpOtpFeAcD5xn9WDbEps0ZX5a8D4yoH77RwosYIgHmHKyW
-         nVmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795559569; x=1796164369;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=YztxYMampkDgsp5B8qRmLm7qNVSv46tGRVgcB1aXKs8=;
-        b=t8CyhBnGv2oEFjM4Yzq82AvXZjsAVrASx9ved3R5smPcQwN6op46aiKzSUhoQsdIVy
-         8w47ydjA6eKnDCEYwPgfwPHDR650UJOi8k3WzwgOI0RmiYdx3Q2ZH6kyRu3czkdZor0A
-         x3N082wBWDkgvc+Y2E9meVhbjP5hc2ZDUZqXLbj1aUhE/v9i0yQWDApFiYXQU7zFsMtz
-         xn2fIpyMyOr9ZE6ouIstFcxpNyXNE1RgLEhRGjDYYtpHzl7YhrwdWW0/NwattNnj/56Z
-         jbhpVIreEFbSW5G0PwmwK0kGlVGr2mJAzZy3cB4R81hnj05v7s8TNqyoxKuY7lprwQib
-         TCqA==
-X-Forwarded-Encrypted: i=1; AL+hErGRWQDTp68Pb4oZqWZRoWAnXF1u7RoyN2ZmHy4XSnLYqhcEAtacOC0p92kTqPl32mD3SEYvAXh84yQ=@vger.kernel.org
-X-Gm-Message-State: APuU4Z8MCKHyqn9IQzg/e64saH9TCkHzkMSdu9cvFYy6oP/2iYXpwHpI
-	Ek+E+NbhgcSaHc98ZPeWZbbJ/1fn+CK90SLwGahCYSbbEtuzwJlL/t5cZe3AcizrvMlxXHhB1yd
-	XmTaHlk+l6dgx2/Nxae1gg5zv8lsRscMJ/TJG5yim/3PsGG6U9dNkCW67X7M=
-X-Gm-Gg: AZFdTZdKkvRQgmZnqcCvCiR3ywkLEn42Rdcwrt91K3b5Y+ShHhzB0Qwh15elOnVhw4p
-	TE7AaYUZAFcYA4hMPk7oPatyQtK2iR1bf6anWztb5EkUIrfMhbxAHsUAjavfXrxnaI871pLozl6
-	CnmG8EaAl7X+uXJ2ccpE0nWkECLOSyBzsnvdfB8APrl4YmB+pLUBi7BPaZeC4YTqXYHKp4EizEi
-	h5cd1A1k41zdyANVFxZdAA4RzNWFMm+zsovZ4nEKw4aUAicS7wtAjJpJM1u6AmJF6SF6cKY3AfY
-	/dJlHqAS2TLmy4kkyxNwS/8Jbe0IZTE2awb4RtifZl5GjFhuOlYkTEUzDvrZlfR+y1L06WaV55w
-	KLm8cUY4OP6dyN0mB8vZ8P9VJAlbhpyEh4a+HUN7qQtrVMv7UY8BKRZ8EBkPp9B1Gn5breAMDFz
-	B+Yis1CnP64zO/oU/KmK3sFWo9Cyrs6++FP0fz7z68p5WdO7WuEMnUCQWyiNzG41I2k3Do1JsGT
-	oeoQ0h3CiH9mlNMaA==
-X-Received: by 2002:a05:622a:114c:b0:536:97c0:dcd0 with SMTP id
- d75a77b69052e-55d88138bddmr71826311cf.4.1795559568208; Tue, 24 Nov 2026
- 14:32:48 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF56D606A690;
+	Tue, 24 Nov 2026 23:25:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BF56D606A690
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
+Received: from 8.2.7.0.b.1.5.7.a.9.4.1.f.a.c.8.c.6.e.0.c.6.2.0.0.b.8.0.1.0.0.2.ip6.arpa (unknown [IPv6:2001:8b0:26c:e6c:8caf:149a:751b:728])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: chewi)
+	by smtp.gentoo.org (Postfix) with ESMTPSA id CA44E34245A;
+	Tue, 24 Nov 2026 23:25:43 +0000 (UTC)
+Message-ID: <3d7bac3c74eec1015e17954e461fc5c4c41e6a72.camel@gentoo.org>
+Subject: Re: [PATCH] PCI: dw-rockchip: Clear stale link down interrupt
+ before unmasking it
+From: James Le Cuirot <chewi@gentoo.org>
+To: Niklas Cassel <cassel@kernel.org>, Lorenzo Pieralisi
+ <lpieralisi@kernel.org>,  Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	
+ <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Rob
+ Herring	 <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko
+ Stuebner	 <heiko@sntech.de>, Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Cc: Sebastian Reichel <sebastian.reichel@collabora.com>, Shawn Lin
+	 <shawn.lin@rock-chips.com>, stable@vger.kernel.org, Manivannan Sadhasivam
+	 <manivannan.sadhasivam@oss.qualcomm.com>, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org
+Date: Tue, 24 Nov 2026 23:25:38 +0000
+In-Reply-To: <20261123121217.1107902-2-cassel@kernel.org>
+References: <20261123121217.1107902-2-cassel@kernel.org>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-qi+2NtxgvrcQ9iOuxkU9"
+User-Agent: Evolution 3.60.2 
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -105,33 +64,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20240910-trust-tbt-fix-v5-1-7a7a42a5f496@chromium.org> <awXXSfrhLHK7TNbp@google.com>
-In-Reply-To: <awXXSfrhLHK7TNbp@google.com>
-From: Esther Shimanovich <eshima@google.com>
-Date: Tue, 24 Nov 2026 17:32:36 -0500
-X-Gm-Features: Aa3M54pF9USwoeiXdEoOFQBIYzN0mq-CawtxtSt4Q5TgH548xzZqipxFMopdNWE
-Message-ID: <CAK5fCsAk8kMCn-VPsLEo=34LvH3=Dar9jG+vXX-0e8mF_Zp5pQ@mail.gmail.com>
-Subject: Re: [PATCH v5] PCI: Detect and trust built-in Thunderbolt chips
-To: Dmytro Maluka <dmaluka@chromium.org>
-Cc: Esther Shimanovich <eshimanovich@chromium.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Rajat Jain <rajatja@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, 
-	Mario Limonciello <mario.limonciello@amd.com>, 
-	=?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	iommu@lists.linux.dev, Lukas Wunner <lukas@wunner.de>, 
-	Mika Westerberg <mika.westerberg@linux.intel.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
+
+
+--=-qi+2NtxgvrcQ9iOuxkU9
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Looks like this caused a regression: on non-x86, dev->untrusted is never
-> set to true for any device (so we *never* enforce DMA protection from
-> externally plugged devices), since set_pcie_untrusted() solely relies on
-> arch_pci_dev_is_removable() which is implemented on x86 only (on other
-> archs it is a stub returning false), without checking
-> parent->external_facing on other archs like it did before this patch.
->
-> (I found this by looking at the code, not by testing.)
+On Mon, 2026-11-23 at 13:12 +0100, Niklas Cassel wrote:
+> PCIE_LINK_REQ_RST_NOT_INT is set by smlh_req_rst_not, which according to
+> the RK3568 TRM "is asserted after power-on reset until first link up".
+> The bit is thus already pending when the driver unmasks the interrupt
+> after resetting the controller, both in probe and in .reset_root_port(),
+> so the interrupt fires as soon as it is unmasked, even though the link
+> is up. Since each recovery resets the controller again, this results in
+> an endless loop, as seen on a Quartz64 Model B (RK3566):
+>=20
+> =C2=A0 pcieport 0000:00:00.0: Recovering Root Port due to Link Down
+> =C2=A0 pcieport 0000:00:00.0: Root Port has been reset
+> =C2=A0 pcieport 0000:00:00.0: AER: device recovery successful
+> =C2=A0 pcieport 0000:00:00.0: Recovering Root Port due to Link Down
+>=20
+> Clear the bit before unmasking the interrupt, and in .reset_root_port()
+> only unmask it once the link is back up, like in probe. Also keep the
+> interrupt masked while .reset_root_port() resets the controller, so the
+> link down caused by the reset itself is not reported.
+>=20
+> Fixes: b376b3ff9cb0 ("PCI: dw-rockchip: Implement .reset_root_port() and =
+use for link down")
+> Reported-by: James Le Cuirot <chewi@gentoo.org>
+> Closes: https://lore.kernel.org/linux-pci/08cc96c5171fc969b074371692e6d95=
+d46eba60b.camel@gentoo.org/
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-I agree, this looks like a bug I introduced during one of the rounds
-of feedback. Happy to implement a fix, but I no longer have access to
-any devices I could validate a fix on, as I have switched teams, and
-am no longer on ChromeOS.
+I can confirm that this fixes the issue I reported. Thank you. :)
+
+Tested-by: James Le Cuirot <chewi@gentoo.org>
+
+--=-qi+2NtxgvrcQ9iOuxkU9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEDBAAWCgCrFiEE6qETVs4yu3Lfuc3XsNCJZ6jP87QFAmsGHPIbFIAAAAAABAAO
+bWFudTIsMi41KzEuMTIsMiwyXxSAAAAAAC4AKGlzc3Vlci1mcHJAbm90YXRpb25z
+Lm9wZW5wZ3AuZmlmdGhob3JzZW1hbi5uZXRFQUExMTM1NkNFMzJCQjcyREZCOUNE
+RDdCMEQwODk2N0E4Q0ZGM0I0ERxjaGV3aUBnZW50b28ub3JnAAoJELDQiWeoz/O0
+yP8BAPdopBp92UiyxdZ+jUx1aLnzOP2TATZVOBOtL27OYcZ1AP9p8sIx9Hk+iRsu
+qeK2k/0h9IIIwLieulOsh/hlJkdDAw==
+=jlB3
+-----END PGP SIGNATURE-----
+
+--=-qi+2NtxgvrcQ9iOuxkU9--
