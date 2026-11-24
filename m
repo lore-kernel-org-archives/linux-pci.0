@@ -1,76 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.19
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795526740;
-	b=3UO/rmhpNDROKyuN5wH+Wt757eFwVAx7dlOQEePYnuyUIvs/lU4GL6kLcSi/46drBLZD
-	 o5ftCk0bSzQiY8AZWp/Wh4+S+lSmDzS4aj7OzOJLdIHp+0VkTkvy37CmJac+Axth7QQEO
-	 BD9Sx1tDGnjiud8WGvaaUcuXjmt/I3MibBKL0AmIkjz6I3X7laHED9ictvjds6GklpWmS
-	 WtPgyZGZnd/bi3tj6UWVjCTZPxhP0sKGcdOZHhZZHhWd/xLWFXXqxQVvkIiM1Y9Wj5eo5
-	 pSHIIOn/7sz9SBGf8RC0P0mlwWYIVikSKXtvhAg0rVDm3C7Q6syEbkcJKw+ruspi2Qg==
+	t=1795526802;
+	b=D4tv77VGuRtNdMT/Zh58rO3EQfJU96gFEz/1E5PxVPf7YpjeTqx31OIkdrDx87JGnOyf
+	 HE623yVmFhlWaRLnISsdd9AyNd3unFCl/S0spivEejh8cafs0JMBiQuS7Ia06eE634GYp
+	 iQTXh39ZLD8iZAdFYaai73QloKTN3wtzabe82QxNmfPs98qwJmGwMT9VynIy2+mTmpAsF
+	 l49pJ5eOqMrbV0aSKCP17CaRPz8HWuynyeSwGBEFVPxZz6A+a+DWkFyzpSISlJ8S8xW0I
+	 zvSzaaNFbzQLeyggUhwjQQPxHu92YmgL3N/Zduy/qr/VgiObOdCuxoiQb/+CVRPcW7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795526740;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=r5dD9s9FuhBNn4Ff1ZcKdILM46rO3ylOWd478evROc8=;
-	b=FeeZlRqMUp8QEIO0W3ov5CAtIW3ak7wcNO71b40mCpVxgZznzoIWjskVLVnmgr5qnTJP
-	 P7u7vrg0DpY+cdkNzLyNagS547s4LiulqHvXZjlNhgTt8iRrqvMnjbnhrzIMQJoi/j4SE
-	 QAyJPk2BXWJvcgjT0k4WlJR3BSdo8TWl+OJuppZqq7MOKEjaBC/rlWjjb/qAQ10+kIIgL
-	 +E1ncLOjiAAjJ+uiE/RdI1tKJl9nLYHAQ57gRzF3ilp1ptmwX7TBbVSlJ1XtyDnVBx4xx
-	 lJEP2BgGY8YsSB3ihAg93kp1IdYbGHjzbAy7rMnGQ0wHx8O2a/3sKk/nFcEJiGiWnEQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795526802;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=51d7Hjkss66lBP5vv+XJb6BNuDcdS0Ogfcckps/05kE=;
+	b=iJkeK0luRtUFRikEdd0ilpIi9wPZ/c3H49H/cKoFHkG3uLn1EbUMiVMPymyEZtpk/Dz1
+	 8Udv5+bTKYqyeR/S8OTkC5WYubt31uusGErt0Y4fU1gfb7mz/6u7sycroUPEZkl7y//NX
+	 7mq0/LdqgY9b/GT3ZJbR/v0ZdbJRcJ0NCTDuoNzd2P94YokY2WR4RzcJ0Uq7I8UeqmQyd
+	 2g+SHHu9V6S1clUooUf54U6Ka0DwGVsPRLFy3DShLPoS0K4hqv/XeZqfWR0dStfZbPxyj
+	 5ep5YxnMvyXqx0kgQPWjxCiR7jwpEslu2g8W1BLGUsJmND+3SORYJth/FJ01GFYSNjA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a7VtzHqC;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=T0cgrtTE;
+	arc=none smtp.remote-ip=198.175.65.19
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80CD4606A321;
-	Tue, 24 Nov 2026 13:25:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 689DF606A322;
+	Tue, 24 Nov 2026 13:26:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 689DF606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a7VtzHqC
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 848491F000C4;
-	Tue, 24 Nov 2026 13:25:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795526740;
-	bh=r5dD9s9FuhBNn4Ff1ZcKdILM46rO3ylOWd478evROc8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=a7VtzHqCy/wmyJE3p2zv8lRvaXv0SqDbCICu/Nbfm1hHEiHj5caoQtBYtk+QN4Q7q
-	 BfYRtkFs0bGN83HkDopScSSmwyWoJlf9GN9Pk5Lny0PbimRGuTS17cvEIfrI8VWTPa
-	 rIxjkkUPee9U8AYMyRMofQUQbe+3e/G+M7W0U4qouGgQuYvHQbydFFZ29DnQT9OsrD
-	 pZ7g4f4TR0HgMtbSmAyGUF54etza95SW0vCIj0ld+R/oxMZ29KjdZARq0Ms1TxQskP
-	 4garfneAL9ClMXY2VpjIg64ipqruAPvAtUjIXrntUsfNqyT047kcQ+MfNfg4K7lOCs
-	 nvKjP3XxzVNMw==
-Date: Tue, 24 Nov 2026 15:25:36 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Nicolin Chen <nicolinc@nvidia.com>,
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
-Message-ID: <20261124132536.GS14811@unreal>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <2026112325-emit-squeezing-5d96@gregkh>
- <20261123090623.GK14811@unreal>
- <yq5a7bi3riha.fsf@kernel.org>
- <20261123115803.GN14811@unreal>
- <yq5awlq3pto0.fsf@kernel.org>
- <20261123135638.GO14811@unreal>
- <20261123152533.GE179082@ziepe.ca>
- <20261123185826.GP14811@unreal>
- <20261124131754.GF9566@ziepe.ca>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=T0cgrtTE
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795526802; x=1827062802;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=z/DWyL0A6zmh4VbCs9zmXC38a5oMz4PJV4CZsHZSATs=;
+  b=T0cgrtTEH3V0k1GZQIXPl9iK4SCA3ybL70KNdStqwM/jwL4rY26avPz/
+   4kGuLFmejmJJTBYtcareiHz6oMWEu09MtYHyDLYkdhvJK2pnixm0IUzSh
+   hBCGN0Cr+WdB5BrMFjHSdwgrOO/yeAhvq99/F8eOwlw+x7F6CsRD1MtTg
+   Doqy1tK37YaIq1ODoZEIJvIBFxwXZCUfAKawutkc5/7ibJyDScjsrg091
+   GvRTJtbLfMiKT1zZP1Bm25BBkggHhhEadbgd17foJGeNfE2A4MiHibzSH
+   g/4/DqfYJqO4G2UakliaeHEhlSyMakVkt+kctJ7mZtJdS+Mi9FPF+8lN+
+   Q==;
+X-CSE-ConnectionGUID: Po3pgy8jRwKUh9DrJWP0HA==
+X-CSE-MsgGUID: 4Duh4iGKQe+2GPksUpejsw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11976"; a="4416269"
+X-IronPort-AV: E=Sophos;i="6.27,230,1787036400"; 
+   d="scan'208";a="4416269"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2026 05:26:41 -0800
+X-CSE-ConnectionGUID: dTBriG0TTxGpiAiOFdzJ1g==
+X-CSE-MsgGUID: IQrsLZwKQxCxggu4xvD31w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,230,1787036400"; 
+   d="scan'208";a="11887873"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa006.fm.intel.com with ESMTP; 24 Nov 2026 05:26:39 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 58E2594; Tue, 24 Nov 2026 14:26:38 +0100 (CET)
+Date: Tue, 24 Nov 2026 14:26:38 +0100
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Gokulkrishna Sekar <gokulkrishnasr@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org,
+	Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>,
+	Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Subject: Re: [PATCH v3] PCI: Correct PCIe port type field encoding
+Message-ID: <20261124132638.GO229695@black.igk.intel.com>
+References: <20261124085038.17299-1-Gokulkrishna.Sekar@harman.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -82,47 +84,31 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261124131754.GF9566@ziepe.ca>
+In-Reply-To: <20261124085038.17299-1-Gokulkrishna.Sekar@harman.com>
 
-On Tue, Nov 24, 2026 at 09:17:54AM -0400, Jason Gunthorpe wrote:
-> On Mon, Nov 23, 2026 at 08:58:26PM +0200, Leon Romanovsky wrote:
-> > On Mon, Nov 23, 2026 at 11:25:33AM -0400, Jason Gunthorpe wrote:
-> > > On Mon, Nov 23, 2026 at 03:56:38PM +0200, Leon Romanovsky wrote:
-> > > > > >> >> But it should not, as you are making driver core changes that will
-> > > > > >> >> mirror the same thing that that patchset is attempting to do.  Please
-> > > > > >> >> work together on this.
-> > > > > >> >
-> > > > > >> > +10000000,
-> > > > > >> >
-> > > > > >> > Greg,
-> > > > > >> >
-> > > > > >> > This series came as a surprise to me given the fact that device trust
-> > > > > >> > series is exactly for that - allow confidential computing.
-> > > 
-> > > Device trust's primary role in enabling confidential computing is to
-> > > give space for the userspace to do all the TSM and attestation stuff
-> > > to get the device into T=1 private DMA mode.
-> > 
-> > <...>
-> > 
-> > > Getting the device into T=1 should influence how the userspace decides
-> > > to set the trust level, but it doesn't interact inside the kernel.
-> > 
-> > The point is that I’m describing the reverse relationship: the trust
-> > level should determine how the device is configured, not the other
-> > way around, as you suggest.
+On Tue, Nov 24, 2026 at 08:50:38AM +0000, Gokulkrishna Sekar wrote:
+> set_pcie_port_type() validates PCIe port topology and corrects
+> invalid upstream/downstream port type information in the cached
+> pcie_flags_reg value.
 > 
-> They are unrelated. Neither influences the other. The user gets to
-> make orthogonal choices if they want T=1 DMA and if they want
-> adverserial. All combinations are useful and valid.
-
-Our proposal is to represent these combinations with an internal trust-level
-enum and manage them in the kernel through that FSM, rather than maintaining
-two parallel sysfs flows that permit every possible combination.
-
-Thanks
-
+> When performing these corrections, the code updates
+> PCI_EXP_FLAGS_TYPE using PCI_EXP_TYPE_UPSTREAM or
+> PCI_EXP_TYPE_DOWNSTREAM directly. The PCI_EXP_TYPE_* values are
+> decoded port type numbers, not values encoded for the
+> PCI_EXP_FLAGS_TYPE bitfield, so the corrected type is stored in the
+> wrong bit position.
 > 
-> Jason
+> As a result, a device whose type has been corrected may subsequently
+> be reported as PCI_EXP_TYPE_ENDPOINT instead of the intended
+> upstream or downstream port type.
 > 
+> Use FIELD_MODIFY() to update PCI_EXP_FLAGS_TYPE so the corrected
+> port type is encoded consistently with the format used in the PCI
+> Express Capabilities Register.
+> 
+> Fixes: ca78410403dd ("PCI: Get rid of dev->has_secondary_link flag")
+> Reported-by: Gowthami Thiagarajan <gthiagarajan@marvell.com>
+> Link: https://lore.kernel.org/all/20241213070241.3334854-1-gthiagarajan@marvell.com/
+> Signed-off-by: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
+
+Reviewed-by: Mika Westerberg (Intel) <westeri@kernel.org>
