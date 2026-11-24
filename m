@@ -1,127 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.62
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795545661;
-	b=Z9uQruF3aX8YsUJFt3ZEbd/PiDCRxbH/SbVlkkat1zcgi7Otjp/wgpv6ZzyoxSn6CUUu
-	 Snt0tJ2km51nw75BYeBTUQpnFhKqBwPrKFh9Sn1Ajmu21Yt10HdEeDdrqC2g0On1AOUUa
-	 Lct6AdT8P77tPO3I7OEfle0h4RMkJm3Z0Vs6dBCB+jfR92RXQPPLl+gyL0SGBk2kDt33G
-	 2P0qlQs4UhqERZH5zopffCeeEg5aH21ALT9OjnsPcWOkrD6jERShgJFBYHksHyMfbEe5i
-	 fPupwS2Yn0lKONSF7BdfAeMEDLWHGFaWPv7IEQu0TLf8y1r+XPOvVCN+mxj+xES/6rQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795545661;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:Received:Date:From:To:CC:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:
-	 X-NV-OnPremToCloud:X-EOPAttributedMessage:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=EsgBIeZ1tJhFAb5uFWxW5vXekj4HHokP7BHIQynCItw=;
-	b=EXdASo5yIb7pbS2RrbhjSD3Goo3zJjYYOHqHyZeCrMfdsJo7Ig82CSUDTQA0HuQBWIIK
-	 YEFb0pLNyjBh4xLT7cluVCtFkBgBBHCEIwl8yfcrm2PRYnVIjwG2z66AJJcz7O9R2AX2/
-	 WLIbeadU+QpOxtP+rxkhXYiXf8VxS0PsFw7vcgEhtQLrZfZg8q+HdikWXb9y4UhR8NahX
-	 CGwUmW3spa9OQ+LrWnngXQVsfMgIMReMb5xt2p9pOSrPLDEFOiVj88zjlhe0/dw5EYviq
-	 apc58nc5dbkiAzfcPJ/hxt7IA4h3g60uvG3hA7YacRqFkXXjJDNVuV9NOgcU/ihoXyA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=DUuNyT9N;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.62.62
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011062.outbound.protection.outlook.com [52.101.62.62])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.53
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795546151;
+	b=x+soflHgjwnVUHBUmKcJ/C+5oLXKsSePeV0JaQ3144OjolCmXDfwW0T0d9ppRxMuGrFl
+	 JhqHI6XO4XilMUDptUNNleZRkCKI4HFnTHOLWakBiMgve4mhTetQ9QmP1flLiDJElzwdt
+	 VgEo+fx1KunTx9jhm6X/amTKW27C64CZm2uOpS5MX5zgV3xZW0xtARdX+uHxOujh72gVN
+	 Im9kJYsBbYoT2TXwKb1ZXw4hVZ7s/vrnFwGU/ALMbkakes8eiVKYZkureuICjSjo2w0U8
+	 tFSZKtSZpQ/YtWy+Tq78IGqOKYJAXY3c0qtXtjhZZAaOhpBUDnkgX7wZyLhpxO/OqTg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795546151;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
+	 In-Reply-To;
+	bh=4yLPI/bzfD8pEXes+IoGrcyl3dKDKR1GnvriWiKOLpo=;
+	b=jLHnpfPk5oWjPJDM1SfF8mapjh39Igi8rTJBNezeVm/Z5xvmpNIfmzaw46K323VvU7a5
+	 rOzrE0qZiwhDzsGHYqAGWr364E0Q6tv/D9nL6pLtMG5vYyR3l7o+Tr/GlwOJlRKOvWW3b
+	 nUC+CgUibFhJOR72TZ+6Agk7wt3lbgv0NrRDsCUPlJTX/V4I16I1IIrPKok5Q+OEMlIuK
+	 xE7729L+D6ttDAdH5Wb+/ep4jxonxNP3PtOrWNEmb8GeomsIr2JVq4k/ey0Pdy5hKRWym
+	 TS7cHENxNYo3ONkkDIT+4KBPH087s5EccUvG2RLZIrOdQ98hNlR1dBfi7QrBE0C2QgQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=chromium.org;
+	spf=pass smtp.mailfrom=chromium.org;
+	dkim=pass header.d=chromium.org header.i=@chromium.org header.a=rsa-sha256 header.s=google header.b=G3hp8gfc;
+	arc=none smtp.remote-ip=209.85.221.53
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C779606A321;
-	Tue, 24 Nov 2026 18:41:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8C779606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C59606A321
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 18:49:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A3C59606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=DUuNyT9N
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ww195feTGU+CstVIqOSXL0Y0kHOZ4OAu0ZJHTm2Df2SefqM4AjqqhGkKQhWMhM9fvOhGFq+thzYRs16V5dmc8KqMeeXDnnrktungbU+oErdlnLbaKJ1elVHRhUUVtgNL+hkoFqU03xPIWcuUBnMOecpqgtlC/sD/b3kfE8q2LHEKE10t5cmuj9brJilDvCMaeHEiJyJoRhYoKKSurzfDro4AJ+7mSYT1D/DyppTYQ70vyyHr7YwB1YKJTk1fUAmC327NCbTdLGmWYOID/pIR3CIac/vFVQvPXSrVYp7ZHluMYJoMdKIB35hrfNPEKnqTNA8/gGCB8YkSzH58Wj+N7g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EsgBIeZ1tJhFAb5uFWxW5vXekj4HHokP7BHIQynCItw=;
- b=RgHCakhqrSgYy7deeV7O0ymjGSjkd7x/cetnsgCqhjuWfC0n1T8x0t4/EaL18Cp5ZKVnyGTe3FlnddhrF4oJq04swGUtTcja3GJ8uURupHRlyB1AzjjJ/yb5YjVHq2PPGn0AjgLXB2q2revzKoOHIzIrvBJZfBTsRbOY/yQ9NQHt6o4hqscxDa4B5GCHScSzds7osaCoQLTGPuz8IMltKWRGI4fgSxUOWQogHjp1dyUqIbkiyuDb3asJsqWFbh1NLbi2YUY6s51G+XVw4v11pUJnXZnxnyan95b6b5pk9cnYhmo9EdyeNkyWW7Hp/84vs3t2PXvuWzUHAIaeEH1P5g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.233) smtp.rcpttodomain=ziepe.ca smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EsgBIeZ1tJhFAb5uFWxW5vXekj4HHokP7BHIQynCItw=;
- b=DUuNyT9NlsQdT2Uz+mL69S02LoTWTkRIxvwXO+Nle6LQTWWWg2Cgu4/5XQDkRuwudksEjT8UOpZziz927YS/oaeKgCR5GVjQeJMo1ZhEt9TqNwnTE0kYTMr8xvaJ4pDUfxraYZhe6OBILnGsDlNQa+zGQvjs3DDpa7Y6TxNjkLXip1hyf2EQ1sdNPOP7bJzcgHsTqI/gUEvlIPYmXZTttuNXN+6tx+mEeofoCnJ/M7MXoXUlIp7FAvWjDi1sd8iworrP8kE1IrODx3MlKw56rfjk4UkSfsa2x7ceRLVeh2V+9bQezgfDTUhsw7S3DcXVLJN8/++LMzLRSg3j/Rq3lQ==
-Received: from BL1PR13CA0282.namprd13.prod.outlook.com (2603:10b6:208:2bc::17)
- by SJ1PR12MB6099.namprd12.prod.outlook.com (2603:10b6:a03:45e::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.14; Tue, 24 Nov
- 2026 18:40:48 +0000
-Received: from MN1PEPF000793FD.namprd05.prod.outlook.com
- (2603:10b6:208:2bc:cafe::4d) by BL1PR13CA0282.outlook.office365.com
- (2603:10b6:208:2bc::17) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.6 via Frontend Transport; Tue, 24
- Nov 2026 18:40:48 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.118.233) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.233) by
- MN1PEPF000793FD.mail.protection.outlook.com (10.167.249.200) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.662.3 via Frontend Transport; Tue, 24 Nov 2026 18:40:48 +0000
-Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
- (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Tue, 24 Nov
- 2026 10:40:19 -0800
-Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.57; Tue, 24 Nov 2026 10:40:18 -0800
-Received: from nvidia.com (10.127.8.14) by mail.nvidia.com (10.126.190.180)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57 via Frontend
- Transport; Tue, 24 Nov 2026 10:40:17 -0800
-Date: Tue, 24 Nov 2026 10:40:14 -0800
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Aneesh Kumar K.V
-	<aneesh.kumar@kernel.org>, Leon Romanovsky <leon@kernel.org>,
-	<linux-coco@lists.linux.dev>, Dan Williams <djbw@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Jonathan Cameron <jonathan.cameron@huawei.com>, "Xu
- Yilun" <yilun.xu@linux.intel.com>, Alexey Kardashevskiy <aik@amd.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>, Steven Price
-	<steven.price@arm.com>, "Suzuki K Poulose" <suzuki.poulose@arm.com>, Lukas
- Wunner <lukas@wunner.de>, "Ashish Kalra" <ashish.kalra@amd.com>, Tom Lendacky
-	<thomas.lendacky@amd.com>, "Herbert Xu" <herbert@gondor.apana.org.au>,
-	<driver-core@lists.linux.dev>, <linux-pci@vger.kernel.org>,
-	<kvm@vger.kernel.org>, <patches@lists.linux.dev>
-Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
-Message-ID: <awXaDrmHAiTW3SA6@nvidia.com>
-References: <2026112325-emit-squeezing-5d96@gregkh>
- <20261123090623.GK14811@unreal>
- <yq5a7bi3riha.fsf@kernel.org>
- <20261123115803.GN14811@unreal>
- <yq5awlq3pto0.fsf@kernel.org>
- <20261123135638.GO14811@unreal>
- <20261123152533.GE179082@ziepe.ca>
- <yq5aik1n4iz3.fsf@kernel.org>
- <2026112429-expansion-wilder-a0c2@gregkh>
- <20261124131641.GE9566@ziepe.ca>
+	dkim=pass (1024-bit key, unprotected) header.d=chromium.org header.i=@chromium.org header.a=rsa-sha256 header.s=google header.b=G3hp8gfc
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-4b52fcb410dso1268050f8f.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 10:49:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1795546149; x=1796150949; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4yLPI/bzfD8pEXes+IoGrcyl3dKDKR1GnvriWiKOLpo=;
+        b=G3hp8gfckd/4YqJylhwOM2V4zLHeR/F33cnRjJlXi8H+zG4x/tkhHg/3TaVxwBBXQQ
+         WOIMMeflCtIyrImXli/BFZZOFCai/pzwvA4oD7Nl4N/RWr1gVyl1Z9gaZeL5cD0UOxRV
+         oBEt9oTJT6iNyn0B01GKgcTOnauv4eS17mdag=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795546149; x=1796150949;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=4yLPI/bzfD8pEXes+IoGrcyl3dKDKR1GnvriWiKOLpo=;
+        b=Hkr0H4TUx4DPVSrpI0pTP5lpqeO9j3WuwgCnpBkNhByMzkdy+r6Edyxo+DYR6Zv6yQ
+         yFodTSNHSRR6SZ4ch5yWcrYVaKKG6FZP6x955MjSkGPtZEqbsV4H4mwnfzADpOVLcL6v
+         7/wPXjMEwHITpVn9z83GnK/qKujQuZO1obNjF499I5u5rLJwa88vd65rT8idQQE1Ps9/
+         i+biMRq9HbjMpVbPkfh5fxzK6anWgSdo6g3vo+L9mPfXOwfY1r1XR4xAnJPLiMyuv/Vn
+         I7oeBgjtAcJ8gT/cuJmSuwT1moyHA8DHAOXqphdQCIVRO7aL9sAKweiDUVJi/DUuabT6
+         0jKg==
+X-Forwarded-Encrypted: i=1; AL+hErFc8e0ak/JstKH3NL4pYzRrMg13sVG16Cjr5g8q4yyAkupLIaqA4xP55wFqC5i1brfVTcI9iAdD66c=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8hBLwQv4oea531X2gnKQWaZB9l8+qGWQRkmni2ZPiM7QwJcVyS
+	bbBfjU503Vx2SywxAd1943bmWQnunZk829BGT2h3fK3nGyVHOWmZUl7GgA0H4e1kpg==
+X-Gm-Gg: AZFdTZdfig5Byy9sT47bOy1XMJyTHkfov+NATnMzvqwvRD/44w1lmibfeciscqEXEoZ
+	I7zcL5nwYW7fX5VM3bsHWaz30RKtLh08HEzyk8U33vZ+BZ9WRFLKv57nhVRd+57ggJEAf9rgQlg
+	qnjgFvztDn/4QgI6aZ3NLJl7jjxwduEo7OFVFvBlxxkhE9G5rETejIg9sIEGtOLaXbLUGIrmZj4
+	5d4Ssu0u/rbmn83RbKoLjc87UZ1GnkwV0v/ZlfRDgHBcQ6LHFwMvoBDhF9LhLIN+c7lLBq+Ta/c
+	KWzVMP7/eKgcvoJ+Ydb5xcIawLpLdC/zKV5zVKdGcBUB7Cld7ryjkcQuzTujPHDbh0GhqeYfP3L
+	l7+jvkkqCX2ttimzccYtF1zHAa7jRqBtF9jy+14kiFNuB6fNr5+SXcItneD0z334q0eHRKgqA4a
+	SI4SuC/RmfgjMWvEuIPGwDIGwhMNgIxzLICBbzUwOv/slXOMDdM58Qzj6DiqzUyM5ND7cDDh6bt
+	nsBF7xDXZR8qD/KraNKLbAv+QGnjHX2/uY4DfcDE3wddtkoWyP5Trz6Ps7bs+QZr/IVSwknk57N
+	8erneHRvu78i9PEifuIpcKyeO7D8Q4wFMYGaG+nwLi265+rNxGvxOz67L9JRPSYE
+X-Received: by 2002:a05:600c:1d09:b0:4bb:66fd:ad68 with SMTP id 5b1f17b1804b1-4bb888160cdmr336029925e9.14.1795546148684;
+        Tue, 24 Nov 2026 10:49:08 -0800 (PST)
+Received: from google.com ([2a00:79e0:285b:8:af0c:c5f1:ee8a:b81f])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb88402ce9sm367300855e9.0.2026.11.24.10.49.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Nov 2026 10:49:08 -0800 (PST)
+Date: Tue, 24 Nov 2026 19:49:04 +0100
+From: Dmytro Maluka <dmaluka@chromium.org>
+To: Esther Shimanovich <eshimanovich@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	iommu@lists.linux.dev, Lukas Wunner <lukas@wunner.de>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5] PCI: Detect and trust built-in Thunderbolt chips
+Message-ID: <awXXSfrhLHK7TNbp@google.com>
+References: <20240910-trust-tbt-fix-v5-1-7a7a42a5f496@chromium.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -131,68 +99,332 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261124131641.GE9566@ziepe.ca>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN1PEPF000793FD:EE_|SJ1PR12MB6099:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5b40664d-71c3-4968-c593-08df4a5a751e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|7416014|376014|36860700016|23010399003|6133799003|22082099003|18002099003|3023799007|56012099006|4143699003|261028144727099003|261022105027099003|261021135927099003|261102123227099003|261021121427099003|261009223027099003|10067099003|261026140227099003|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	bOon2WxLgHVctToGfrDSf1YE0dFr7oTRVrQ+r8LNVjgue1GMHHsTOIBYnQNVRF5PzV9aGq+SUDIUiRYM3NNtG3AjdIXW86m2pA8KhAZBuUrykwVMHOthNF8r3h4ZfLJGD9idOnrzHqvhph90ds58w3qZJvKo8v8rWuZclqZt+cAf9kpXLkjZK37kQqjPtcUN5wNquv2uo1kLWGgtvIeJVfgEH+FjHTQxxuz3yu/XNuDDQanCYv5rBqHuoxsLBtDAlOUzzlmw4NE8sbff0Xa2iGmySMq0U/JBrqFy5x6hcFQlxL9QN104IOHgBmyemvw/PL6KzaNTduc3+LF2heMJe5Tghy049jrEgK1Mp8fu0J0f1LUb7h5/PHMIjuHNQhiK1eEg8ZKhJBLH1TnHcadv6lUf9gd/QODesMTbGhya0CZGnwd+GfYhHQwG2N1ihg+eAJDfMq2uSR+7Hys4oreeqCpgPBVVV0JDFISFaNDGu8ePbgBs/IkIk/2TX+RQZoIe53mt8Imsi0oYxk72sBwTW1MZYauu+MQjEN7QGZKhr4Yy4BX1cEOfn0S35m6iwMKvJT2++H/Jc6aj+IR496C9m3Ni5mgzOmQ2zTswox+pR4/rNHvuiLH+5XUVwvGLWrbGdWFo0Y3Jkh24oxTmUHwC9cCKqCiN7aLFfY2YrkmTiinmgPmUh2Fa163bNd/RDZgL/72mJxP7H5dfbrcKzjqLXg==
-X-Forefront-Antispam-Report:
-	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(7416014)(376014)(36860700016)(23010399003)(6133799003)(22082099003)(18002099003)(3023799007)(56012099006)(4143699003)(261028144727099003)(261022105027099003)(261021135927099003)(261102123227099003)(261021121427099003)(261009223027099003)(10067099003)(261026140227099003)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	bfigPpq38q0KdssH7NkC5K0rSxSV6oSAsuweqmHouvZ3Xf/319ePmqO8FmBaAe/Kn8iEgYFghIvBAkdGSapA7nHYT4p1T2pzjWK5hYa9/+7TGaO2Gdex/El4D790TuUm6mbl0QcH80iUnUF+Ia1yys5UzsayjSmeWV5sSnaKLIIYzJfLOkNWct6gkhsuvT3rGsHOCzyICwaFQ34sWDwzg/FVpE6ok8MwyBqr4lLz8qFFBg8xeU+fa9cndvGwzXyIbNkr2wEd94LDBqDdd/6V8xbSnarBgXLe95EjoCHwOiECPbxGALvWA0UmKAuhFmitMtblROMcC0poSmN3W/t4mPzuMqV+UMNYAsbr3epSRJOS/W0clGu1s+KlLud8pup4LtromvqD0dY0KfaD/YeQ9IB5h1QBmkiRmN8Jem+XjyfP8oPDaKr5JkLtB/kcFNa5
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 18:40:48.0566
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5b40664d-71c3-4968-c593-08df4a5a751e
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	MN1PEPF000793FD.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR12MB6099
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240910-trust-tbt-fix-v5-1-7a7a42a5f496@chromium.org>
 
-On Tue, Nov 24, 2026 at 09:16:41AM -0400, Jason Gunthorpe wrote:
-> On Tue, Nov 24, 2026 at 07:44:03AM +0100, Greg Kroah-Hartman wrote:
-> > > @@ -617,6 +619,7 @@ enum struct_device_flags {
-> > >  	DEV_FLAG_OF_NODE_REUSED = 7,
-> > >  	DEV_FLAG_OFFLINE_DISABLED = 8,
-> > >  	DEV_FLAG_OFFLINE = 9,
-> > > +	DEV_FLAG_DMA_CC_PRIVATE = 10,
-> > 
-> > Again, NO!  No "cc" nonsense for device states please.  That's an insane
-> > policy decision that will be driven by userspace crazyness, NOT
-> > in-kernel stuff.  The kernel will give userspace the tools to enforce
-> > this type of policy if someone so desires.
+On Tue, Sep 10, 2024 at 05:57:45PM +0000, Esther Shimanovich wrote:
+> Some computers with CPUs that lack Thunderbolt features use discrete
+> Thunderbolt chips to add Thunderbolt functionality. These Thunderbolt
+> chips are located within the chassis; between the root port labeled
+> ExternalFacingPort and the USB-C port.
 > 
-> This may be the wrong place to put it, but this is not a *policy*.
+> These Thunderbolt PCIe devices should be labeled as fixed and trusted,
+> as they are built into the computer. Otherwise, security policies that
+> rely on those flags may have unintended results, such as preventing
+> USB-C ports from enumerating.
 > 
-> This is a "DMA property" like dma_mask, coherent_dma_mask,
-> bus_dma_limit, dma_range_map, dma_params and so on.
+> Detect the above scenario through the process of elimination.
 > 
-> The name mirrors the DMA API name for a related idea:
-> DMA_ATTR_CC_SHARED
+> 1) Integrated Thunderbolt host controllers already have Thunderbolt
+>    implemented, so anything outside their external facing root port is
+>    removable and untrusted.
 > 
-> Unlike the other DMA properties this one is changable dynamically
-> depending on how the HW is configured. The TSM is in control of this
-> HW block.
+>    Detect them using the following properties:
 > 
-> The userspace policy input is how to configure the HW, but once
-> changed the DMA API switches to following the new HW parameters.
+>      - Most integrated host controllers have the usb4-host-interface
+>        ACPI property, as described here:
+> Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#mapping-native-protocols-pcie-displayport-tunneled-through-usb4-to-usb4-host-routers
 > 
-> Nicolin, can you put this in its own patch with a good commit message
-> so we can have a discussion where it should live?
+>      - Integrated Thunderbolt PCIe root ports before Alder Lake do not
+>        have the usb4-host-interface ACPI property. Identify those with
+>        their PCI IDs instead.
+> 
+> 2) If a root port does not have integrated Thunderbolt capabilities, but
+>    has the ExternalFacingPort ACPI property, that means the manufacturer
+>    has opted to use a discrete Thunderbolt host controller that is
+>    built into the computer.
+> 
+>    This host controller can be identified by virtue of being located
+>    directly below an external-facing root port that lacks integrated
+>    Thunderbolt. Label it as trusted and fixed.
+> 
+>    Everything downstream from it is untrusted and removable.
+> 
+> The ExternalFacingPort ACPI property is described here:
+> Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-externally-exposed-pcie-root-ports
+> 
+> Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Esther Shimanovich <eshimanovich@chromium.org>
+> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Tested-by: Mario Limonciello <mario.limonciello@amd.com>
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
+> ---
+> While working with devices that have discrete Thunderbolt chips, I
+> noticed that their internal TBT chips are inaccurately labeled as
+> untrusted and removable.
+> 
+> I've observed that this issue impacts all computers with internal,
+> discrete Intel JHL Thunderbolt chips, such as JHL6240, JHL6340, JHL6540,
+> and JHL7540, across multiple device manufacturers such as Lenovo, Dell,
+> and HP.
+> 
+> This affects the execution of any downstream security policy that
+> relies on the "untrusted" or "removable" flags.
+> 
+> I initially submitted a quirk to resolve this, which was too small in
+> scope, and after some discussion, Mika proposed a more thorough fix:
+> https://lore.kernel.org/lkml/20240510052616.GC4162345@black.fi.intel.com
+> I refactored it and am submitting as a new patch.
+> ---
+> Changes in v5:
+> - Applied the following edits suggested by Lukas Wunner:
+>   - Applied ifdefs edits to ensure code is only compiled on x86 systems
+>   with ACPI
+>   - Added returns to avoid unecessary checks
+>   - Renamed pcie_is_tunneled to arch_pci_dev_is_removable
+> - Link to v4: https://lore.kernel.org/r/20240823-trust-tbt-fix-v4-1-c6f1e3bdd9be@chromium.org
+> 
+> Changes in v4:
+> - Applied edits on logic-flow clarity and formatting suggested by Ilpo
+>   Järvinen
+> - Mario Limonciello tested patch and confirmed works as intended.
+> - Link to v3: https://lore.kernel.org/r/20240815-trust-tbt-fix-v3-1-6ba01865d54c@chromium.org
+> 
+> Changes in v3:
+> - Incorporated minor edits suggested by Mika Westerberg.
+> - Mika Westerberg tested patch (more details in v2 link)
+> - Added "reviewed-by" and "tested-by" lines
+> - Link to v2: https://lore.kernel.org/r/20240808-trust-tbt-fix-v2-1-2e34a05a9186@chromium.org
+> 
+> Changes in v2:
+> - I clarified some comments, and made minor fixins
+> - I also added a more detailed description of implementation into the
+>   commit message
+> - Added Cc recipients Mike recommended
+> - Link to v1: https://lore.kernel.org/r/20240806-trust-tbt-fix-v1-1-73ae5f446d5a@chromium.org
+> ---
+>  arch/x86/pci/acpi.c | 119 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c |  30 +++++++++----
+>  include/linux/pci.h |   6 +++
+>  3 files changed, 148 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 55c4b07ec1f6..62271668c3b1 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -250,6 +250,125 @@ void __init pci_acpi_crs_quirks(void)
+>  		pr_info("Please notify linux-pci@vger.kernel.org so future kernels can do this automatically\n");
+>  }
+>  
+> +/*
+> + * Checks if pdev is part of a PCIe switch that is directly below the
+> + * specified bridge.
+> + */
+> +static bool pcie_switch_directly_under(struct pci_dev *bridge,
+> +				       struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *parent = pci_upstream_bridge(pdev);
+> +
+> +	/* If the device doesn't have a parent, it's not under anything. */
+> +	if (!parent)
+> +		return false;
+> +
+> +	/*
+> +	 * If the device has a PCIe type, check if it is below the
+> +	 * corresponding PCIe switch components (if applicable). Then check
+> +	 * if its upstream port is directly beneath the specified bridge.
+> +	 */
+> +	switch (pci_pcie_type(pdev)) {
+> +	case PCI_EXP_TYPE_UPSTREAM:
+> +		return parent == bridge;
+> +
+> +	case PCI_EXP_TYPE_DOWNSTREAM:
+> +		if (pci_pcie_type(parent) != PCI_EXP_TYPE_UPSTREAM)
+> +			return false;
+> +		parent = pci_upstream_bridge(parent);
+> +		return parent == bridge;
+> +
+> +	case PCI_EXP_TYPE_ENDPOINT:
+> +		if (pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM)
+> +			return false;
+> +		parent = pci_upstream_bridge(parent);
+> +		if (!parent || pci_pcie_type(parent) != PCI_EXP_TYPE_UPSTREAM)
+> +			return false;
+> +		parent = pci_upstream_bridge(parent);
+> +		return parent == bridge;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +static bool pcie_has_usb4_host_interface(struct pci_dev *pdev)
+> +{
+> +	struct fwnode_handle *fwnode;
+> +
+> +	/*
+> +	 * For USB4, the tunneled PCIe root or downstream ports are marked
+> +	 * with the "usb4-host-interface" ACPI property, so we look for
+> +	 * that first. This should cover most cases.
+> +	 */
+> +	fwnode = fwnode_find_reference(dev_fwnode(&pdev->dev),
+> +				       "usb4-host-interface", 0);
+> +	if (!IS_ERR(fwnode)) {
+> +		fwnode_handle_put(fwnode);
+> +		return true;
+> +	}
+> +
+> +	/*
+> +	 * Any integrated Thunderbolt 3/4 PCIe root ports from Intel
+> +	 * before Alder Lake do not have the "usb4-host-interface"
+> +	 * property so we use their PCI IDs instead. All these are
+> +	 * tunneled. This list is not expected to grow.
+> +	 */
+> +	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+> +		switch (pdev->device) {
+> +		/* Ice Lake Thunderbolt 3 PCIe Root Ports */
+> +		case 0x8a1d:
+> +		case 0x8a1f:
+> +		case 0x8a21:
+> +		case 0x8a23:
+> +		/* Tiger Lake-LP Thunderbolt 4 PCIe Root Ports */
+> +		case 0x9a23:
+> +		case 0x9a25:
+> +		case 0x9a27:
+> +		case 0x9a29:
+> +		/* Tiger Lake-H Thunderbolt 4 PCIe Root Ports */
+> +		case 0x9a2b:
+> +		case 0x9a2d:
+> +		case 0x9a2f:
+> +		case 0x9a31:
+> +			return true;
+> +		}
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +bool arch_pci_dev_is_removable(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *parent, *root;
+> +
+> +	/* pdev without a parent or Root Port is never tunneled. */
+> +	parent = pci_upstream_bridge(pdev);
+> +	if (!parent)
+> +		return false;
+> +	root = pcie_find_root_port(pdev);
+> +	if (!root)
+> +		return false;
+> +
+> +	/* Internal PCIe devices are not tunneled. */
+> +	if (!root->external_facing)
+> +		return false;
+> +
+> +	/* Anything directly behind a "usb4-host-interface" is tunneled. */
+> +	if (pcie_has_usb4_host_interface(parent))
+> +		return true;
+> +
+> +	/*
+> +	 * Check if this is a discrete Thunderbolt/USB4 controller that is
+> +	 * directly behind the non-USB4 PCIe Root Port marked as
+> +	 * "ExternalFacingPort". Those are not behind a PCIe tunnel.
+> +	 */
+> +	if (pcie_switch_directly_under(root, pdev))
+> +		return false;
+> +
+> +	/* PCIe devices after the discrete chip are tunneled. */
+> +	return true;
+> +}
+> +
+>  #ifdef	CONFIG_PCI_MMCONFIG
+>  static int check_segment(u16 seg, struct device *dev, char *estr)
+>  {
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index b14b9876c030..7e0d6a1e151b 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1631,23 +1631,33 @@ static void set_pcie_thunderbolt(struct pci_dev *dev)
+>  
+>  static void set_pcie_untrusted(struct pci_dev *dev)
+>  {
+> -	struct pci_dev *parent;
+> +	struct pci_dev *parent = pci_upstream_bridge(dev);
+>  
+> +	if (!parent)
+> +		return;
+>  	/*
+> -	 * If the upstream bridge is untrusted we treat this device
+> +	 * If the upstream bridge is untrusted we treat this device as
+>  	 * untrusted as well.
+>  	 */
+> -	parent = pci_upstream_bridge(dev);
+> -	if (parent && (parent->untrusted || parent->external_facing))
+> +	if (parent->untrusted) {
+> +		dev->untrusted = true;
+> +		return;
+> +	}
+> +
+> +	if (arch_pci_dev_is_removable(dev)) {
 
-Ack. I will make that in my v4.
+Looks like this caused a regression: on non-x86, dev->untrusted is never
+set to true for any device (so we *never* enforce DMA protection from
+externally plugged devices), since set_pcie_untrusted() solely relies on
+arch_pci_dev_is_removable() which is implemented on x86 only (on other
+archs it is a stub returning false), without checking
+parent->external_facing on other archs like it did before this patch.
 
-Nicolin
+(I found this by looking at the code, not by testing.)
+
+> +		pci_dbg(dev, "marking as untrusted\n");
+>  		dev->untrusted = true;
+> +	}
+>  }
+>  
+>  static void pci_set_removable(struct pci_dev *dev)
+>  {
+>  	struct pci_dev *parent = pci_upstream_bridge(dev);
+>  
+> +	if (!parent)
+> +		return;
+>  	/*
+> -	 * We (only) consider everything downstream from an external_facing
+> +	 * We (only) consider everything tunneled below an external_facing
+>  	 * device to be removable by the user. We're mainly concerned with
+>  	 * consumer platforms with user accessible thunderbolt ports that are
+>  	 * vulnerable to DMA attacks, and we expect those ports to be marked by
+> @@ -1657,9 +1667,15 @@ static void pci_set_removable(struct pci_dev *dev)
+>  	 * accessible to user / may not be removed by end user, and thus not
+>  	 * exposed as "removable" to userspace.
+>  	 */
+> -	if (parent &&
+> -	    (parent->external_facing || dev_is_removable(&parent->dev)))
+> +	if (dev_is_removable(&parent->dev)) {
+> +		dev_set_removable(&dev->dev, DEVICE_REMOVABLE);
+> +		return;
+> +	}
+> +
+> +	if (arch_pci_dev_is_removable(dev)) {
+> +		pci_dbg(dev, "marking as removable\n");
+>  		dev_set_removable(&dev->dev, DEVICE_REMOVABLE);
+> +	}
+>  }
+>  
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9e36b6c1810e..dca19203bc7c 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2604,6 +2604,12 @@ pci_host_bridge_acpi_msi_domain(struct pci_bus *bus) { return NULL; }
+>  static inline bool pci_pr3_present(struct pci_dev *pdev) { return false; }
+>  #endif
+>  
+> +#if defined(CONFIG_X86) && defined(CONFIG_ACPI)
+> +bool arch_pci_dev_is_removable(struct pci_dev *pdev);
+> +#else
+> +static inline bool arch_pci_dev_is_removable(struct pci_dev *pdev) { return false; }
+> +#endif
+> +
+>  #ifdef CONFIG_EEH
+>  static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+>  {
+> 
+> ---
+> base-commit: 3f386cb8ee9f04ff4be164ca7a1d0ef3f81f7374
+> change-id: 20240806-trust-tbt-fix-5f337fd9ec8a
+> 
+> Best regards,
+> -- 
+> Esther Shimanovich <eshimanovich@chromium.org>
+> 
