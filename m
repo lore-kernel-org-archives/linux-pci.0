@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.40
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.24
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795478837;
-	b=ciKu4YimH8dN0q8mmR2ELB4IpUU7Qmf4iYL2M6tn38AC3ZwYte/5QxmYmp2yYbBhuMRl
-	 WAEz5cyXg+PwuwrE8LX2a1068uxRx2/UivvSLkUq4MuhpdS6+cOgQHdPYL6Pm90x/KiMu
-	 UmX9hbuLQvV3VKYLoI3uYbOd2PajqcicVI8aYFh79EfUHNHKB6TcoIyrtw/ST/RVQJELB
-	 OGD7VMMbDR77C7b0W6YsZ3CnPfiloedIXQw1tmlQ14rNccLlVDVE5qvHxSx/91EIEioLy
-	 YlkeV94OLi/BQtAgAQms4pJNPZfSlj02+yTxlqCq6DRgq1f5mfsSHC1ZS7Ib+sz+N6w==
+	t=1795478865;
+	b=kysvP91qHeZ/eYDiedbEySRh+WFCk41WLBfZMEOPT+MKrfpADFH2u0SeWXMWcCKK7ZBr
+	 t31UccargNQvU6Ag7e+mW3+JKb2yuXMklMISUFelfo7Vq6I4RC/56s8kW3zCahv37L+PY
+	 Ilg14KP5HL/LH5khx3R0JEhFLEg/h2/2CYh6dGx4W79MX0+HO0moyhANpJYeH3VcJekLk
+	 Ia0jTZGjUoMI9CgkkuwbYatKuBpAqG4Sx5rQMCmSx0RDfZxmGyaF1LQfOpKfkfzRRgqhB
+	 aD0jIzgS3My7RZWgCL27KmiyeR1VT9NXZLST20yPjH8fR+R/0p3pZ1dFfsSzVGa8sGg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795478837;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795478865;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
 	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
@@ -24,58 +24,58 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=y7mLVJRpgfKLAIWDIozJRJJei+4fgDXWqvaeefH4hNc=;
-	b=VKpATTj9OJRF5uakqn3Wou5bwpQrYHPyN9fiO1q5lo/dJEUEufE7kBi1M673rZrwYmb/
-	 lAnIkADqE4ais5SEfsFcQO1V0rzG721XhtszfP+zJrxi0CTAzPN5vFUL+OY8cVjs095k9
-	 j5lsByJD0/P43hnMMrnoag7w5/R16aZjQhdIU1m47Q9uAKGK1uKZJySWJP2YChQwkYka5
-	 ewT7xuFhgQBEJPvU8XMF1IhVa7iFNn1xXvwsaQjQqa0508NFVFY/sBTYYlorRsgcfOT7F
-	 QECWNQHYXDUZw/xaf5Bmi5GHuDLj4EyPr3RCHv0m200yHnePT9H/hLHIHOHqoDCCJng==
+	bh=H5W/fCCAsN07I1uuiaX/94nQ4prvOJ8bQHYTcI6FfvM=;
+	b=bfYcFGj+0j24j8ForR6f0uByTcy1d69mFuCTRQ3iOpGaceP8hkLXRRprSgeel4GBuPc6
+	 TJP+K7pu0XOlsY0CimWvfY9TUEBsw6XJiuZWXvi0oXyEyI6q/1s+mMZmOpLuZpEG2NrHO
+	 eapfvBGfZ6yN8+bteXcAzGCXCaSp1eFoZ7KtNllxRA0/esr5XS2GWRSjjf3DNbVTAI7td
+	 F01v+pokvgEDFs6mbWsdQdLtQ/TyysmqUD6cu1HV+DQnDzCcn4OkmycS79MBEFkVHuiBS
+	 QS12fOqXeuDSLw9YzHVm018b2iZXvHSmQEoVkXUuerpoLNvWX1qQllZlJSv+O1/IHFw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=UWonZWSN;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.40
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010040.outbound.protection.outlook.com [40.93.198.40])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=vs4atQlz;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.208.24
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011024.outbound.protection.outlook.com [40.107.208.24])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F95F606A31E;
-	Tue, 24 Nov 2026 00:07:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1F95F606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49341606A31E;
+	Tue, 24 Nov 2026 00:07:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 49341606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=UWonZWSN
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=vs4atQlz
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cZKycszzUqAc4ML0ZOpQzCRLuKkcFAD60KlImhbr4G5Vjeai9EfH6KHzkcPGkS+d7RckaDg8Ci5deAWafMFutedzur/MgVVOb6GKGTCzY6aXYrlmaaAQwlJ6IhE2Scvh/NV09+EOw69AweC/o9Ru3160QzS33ktt9+wLZzKf2A1don+hpe3rnXoJubHv8yq8zQ2XCdr6kD0AJCQ0oi8wuEpXCsBSNwGkrXYkBuySJSI24/IcMXy9HdLWo81woekC5Ondb1iEk+Fn7f/x/zvHARa3kndJm2YxTBMJcN24kzGsJvW0qZxp/iQhBsjD2Atpgn+LSpIvKJN/kpOOzmT8kg==
+ b=ZNlIwz0nJ8WmjvQCeWZU7zrwG5Sx0/JatUqJkXVQP4iqv80eAwkOZrBW42W5pP6stDtjabCNJurji46eUiDNg/sGx9j/4ujU0775TxMCi2jxbqV5Rd474bJUzAbSUeyiG0qPn40YuNYWyruFrJsw0/kshhOMiic33Skx3avA9F8D8XcsAdhvj/0OCbx9w9uivCkcT816zycYUdUieiPAI21pZ3hPTa5zqydgKjnYYbSD1vKzitD/pNHwnCcL/36at4ZUmPJRnwaYbJ+4ryAp7IJII54BMxd8eyGnvJLUamDE9LoX0Jo7V+jCuaBin0gYy7GUTSeAI3l7eGmBmjE4OQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=y7mLVJRpgfKLAIWDIozJRJJei+4fgDXWqvaeefH4hNc=;
- b=wSK0fttQO9z2BI1CoZIYEh6uKMiRMlDwdAdSkySrULnXKn7b07t17QDBy5DJ9SQZF36Wl1LI/OJ5fZJXINqZ1uPDxiI7NTkyAzfq+1pevAhD94GKyuIS9Yu+PrpSUR882V43URncoDRrPOJTo5pRpUdh4FkRq1j0Ykfbkx0RHCScO4vdr9/o3o3ALTzExHqQKA+5hgrM0iQEyH4vG+ahVkMboLkvYQDmpmIshIZ0ngOW3ZqvT5N8wu0mmcFv2cym+2ZrURQxqesBGIXirIXnB7c9iNjkfPx2m9qhb1BCudwz8ByjrZM2oF+Bk+7Xq4gyJR/aOyoojoUSP1Wh9g0khA==
+ bh=H5W/fCCAsN07I1uuiaX/94nQ4prvOJ8bQHYTcI6FfvM=;
+ b=gXPxO626O4/FpMMtVdEMes0gkrpkr4xlQtI6ULnLC7psniVgsZ8hRnNZzZqxiGucWoJNoE87YS9uSQRXBerQqDdoJnV0M1PPOYIMmCnoIZ/m6Llv6rpyjBReK5J9oUetMP9+kEhbElaFC8S047EingQfYUa7NicG/V2zeSbKkaNULwqudpodyfBLG+AhX2uK7VlC91alhhj8N/JC/dQiN99KnExBjeaByA268JS1JwK8FAl/jr7euXdQKfHK4mSYLjZl6OnRhWc86QBRnXxSTEzKQePEQEaH1xh8WwGH/j0MWBgF/bIkf3qBb/l6YG+kqTmtHe72Vzgk5uMXmeGUaQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=y7mLVJRpgfKLAIWDIozJRJJei+4fgDXWqvaeefH4hNc=;
- b=UWonZWSNDh4tqxbz2a9Izd5AsvyIIMF7xM4OmQeyB/wRgPCX7PnCa4nIfC/62j49ZSHVAeOf0aAQvTiGIubwnW3hnmJII4PJQ65OgbBniKN463+BrqixqiY8oq3e99ATXCz1cOFeioMG6B/W7N4rF5atEEZgr0qwsAShFeFIlA4=
+ bh=H5W/fCCAsN07I1uuiaX/94nQ4prvOJ8bQHYTcI6FfvM=;
+ b=vs4atQlz14V/tk7osRT8RqsCUKKrXoWXgyl3Jb6enVReUcz35PyEhPp/GmOPsELqXa8qlB37jtlY8R8JXs39JCZ2SGeHLiJagELB9MVOp8MrqkNjFhZZ3xE5x7Ad5fMU9sLS//dNw/f+KVypEb7dquJi1jfcPvzhQ4gs1dEhtmk=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=amd.com;
 Received: from SA1PR12MB999228.namprd12.prod.outlook.com
  (2603:10b6:806:4db::10) by SA3PR12MB9090.namprd12.prod.outlook.com
  (2603:10b6:806:397::11) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.13; Tue, 24 Nov
- 2026 00:07:14 +0000
+ 2026 00:07:40 +0000
 Received: from SA1PR12MB999228.namprd12.prod.outlook.com
  ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
  ([fe80::4dba:119e:8e7c:37b3%6]) with mapi id 15.21.0639.012; Tue, 24 Nov 2026
- 00:07:14 +0000
-Message-ID: <de8c8547-4656-408d-8b1e-cd8f90690ccb@amd.com>
-Date: Tue, 24 Nov 2026 11:07:07 +1100
+ 00:07:40 +0000
+Message-ID: <7289e52d-eaba-49fc-a6a5-c3e24871dac2@amd.com>
+Date: Tue, 24 Nov 2026 11:07:33 +1100
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 08/10] PCI/TSM: Add sysfs lock and unlock for
- guest-assigned devices
+Subject: Re: [PATCH v1 09/10] PCI/TSM: Build encrypted MMIO descriptors from a
+ supplied report
 To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
  linux-coco@lists.linux.dev
 Cc: Dan Williams <djbw@kernel.org>, Leon Romanovsky <leon@kernel.org>,
@@ -90,14 +90,14 @@ Cc: Dan Williams <djbw@kernel.org>, Leon Romanovsky <leon@kernel.org>,
  Herbert Xu <herbert@gondor.apana.org.au>, driver-core@lists.linux.dev,
  linux-pci@vger.kernel.org, kvm@vger.kernel.org, patches@lists.linux.dev
 References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-9-aneesh.kumar@kernel.org>
+ <20261123083337.2731019-10-aneesh.kumar@kernel.org>
 From: Alexey Kardashevskiy <aik@amd.com>
 Content-Language: en-US
-In-Reply-To: <20261123083337.2731019-9-aneesh.kumar@kernel.org>
+In-Reply-To: <20261123083337.2731019-10-aneesh.kumar@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY8P300CA0028.AUSP300.PROD.OUTLOOK.COM
- (2603:10c6:10:29d::13) To SA1PR12MB999228.namprd12.prod.outlook.com
+X-ClientProxiedBy: SY8P300CA0030.AUSP300.PROD.OUTLOOK.COM
+ (2603:10c6:10:29d::32) To SA1PR12MB999228.namprd12.prod.outlook.com
  (2603:10b6:806:4db::10)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -110,85 +110,443 @@ Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|SA3PR12MB9090:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2fd7411a-53f5-4ba9-3c3b-08df49bee4e9
+X-MS-Office365-Filtering-Correlation-Id: 13b211e4-ec96-4947-b2da-08df49bef459
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|23010399003|366016|22082099003|18002099003|261009221227099003|261009223027099003|4143699003|56012099006|11063799006|10067099003|261026140227099003|261028144727099003|261026121527099003|261022105027099003;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|23010399003|366016|22082099003|18002099003|6133799003|261009221227099003|261009223027099003|3023799007|4143699003|56012099006|5023799004|11063799006|10067099003|261102123227099003|261102130727099003|261026140227099003|261028144727099003|261026121527099003|261022075727099003|261021121427099003|261022105027099003;
 X-Microsoft-Antispam-Message-Info:
-	UtiqFGftqqgpAR722lpvSOYxEqJiVG8b36thJj0E6W2d2+4T7K1BelCuD0ef7qujIsa3HW7qlmxQxc73nMqE2p8qUCkqnoPMSrwDiaWtHuZ0+fgTvhBv1vqVZOJ/65pHJoA4tu42y1Fy2wE/q/YKZHiGQCx2AHubezlwaUU8iwVnewn1Hb55RYKT0mVZesUWTrkLVBPM4oJ+m2egeUZAkZCQaDCnqIIq6/Q9x+YYZ3cOfEK0yLY049ybi/eHmqgdXoXRWZypOyGQ/gTXqiiRayMsX95VklH4RqdCinD+5XY8zxNxWHJJZh68LRZXyah80Hfb8D+CiRBGojXnHd+EAwNUVbD7P2eG8X2oeC0zUfPlZsrCddKv2xfyHfgRuWjWc/cCr+YYyZA59CnRhVUlWLqxJ4cRXpPJ91xpNPbc9WNoV2mm0z2yMmFWMWUnamXT48QF1Q2IhGrsysm0DkOFSszoxdRG4hMt7Kc3elIyabbXObahVgxlIFUnN7rndhnroAcsIfXloUXrzHX9zz/ePE83cufhdp8wOPwMD1u5CAKSkU0MxLbwS15JPLa7zQrKd4alGfntBkJPviTp9przX2T0eCZd3ZU4Jp97G/hgypY+LLT1S56lSairOB6XV8hUELawJodKqozsgD2o30aOW+Bfjdgvt6mABP53PZCeDhs=
+	MzYMbeJ/rS03NHcbs5Sl5FIMJhYEFIT0F0tm9SJ44XQBkbZyw5UOyHRlbHWPVSvaUTgbR03ewVCjINQAfRMX8X+XL7RGbQewCKkFuq47rfrWS4rEx2DuR4RHwnhOj4K9pn0iSk9+OwIMnCnd7Caf25ewJPMSYgBNGyRlQKW6wmtkIUcHO+L7OQGFuIQrc4FDAXiaq6JaoBZhcHYcLaY/tskjlxJ+cOxQraKERXmK5JQwwFiPkbxFuLiJqUyuFusP3Bxn11wQb2EAKep2ozbHV8zMCoJHZyxdngor+VVQaQ7Q/FeTfQS9a854sYXBf7FSH6DWjThh/2OllhWEjEY8l2cubEDBQXe6YPrmOdASASmF21V3uomlqmQVNobRhctzJZtC0zHFQCdU7PbpGX5V8FmDCwFgIfb0v/aBs/kVEleeFVD6ep0qS/yqOrdye3T/0CM9c2+3WIA0N97MTdNHjWpEWQoJ+o7JotZs76O1LlO7Ez7Jjxo1oxxMjJOFIsZ9mkUm+KNdC3ah3E+Zrgu+YDy4Es8KdVbhFXQbzwzt8oWS2B1tQa+GBHQNLMujH/T4kQGl9rMD0rAM01pYNliUqPJV6mRq32AG6BIkokZILmxJlg8IgBSvrJa+itIM4nzn3+yXuK5Az1hVH799XewTzoHyW05/yyVxpAtErrky6hg=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(23010399003)(366016)(22082099003)(18002099003)(261009221227099003)(261009223027099003)(4143699003)(56012099006)(11063799006)(10067099003)(261026140227099003)(261028144727099003)(261026121527099003)(261022105027099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(23010399003)(366016)(22082099003)(18002099003)(6133799003)(261009221227099003)(261009223027099003)(3023799007)(4143699003)(56012099006)(5023799004)(11063799006)(10067099003)(261102123227099003)(261102130727099003)(261026140227099003)(261028144727099003)(261026121527099003)(261022075727099003)(261021121427099003)(261022105027099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?SCtKOXJkMDdvYmJjQkU5KzBNZXV6WlR5aXhSY3lNbTBrdW1aa2NDWjJRb3BO?=
- =?utf-8?B?UXZUZFIvcXBnWC9wUkY3bjlwM0VSMEI5RzB4MW0xcE5Ub1FtY0NjaTJLc29I?=
- =?utf-8?B?Y25Jdm1hTGs1Nlp0UThicFN3RG8zRHJhUXZjZVdxR2lYaWFLQkk1OEhlVktI?=
- =?utf-8?B?MXh6Z0VVeW5YUDNyb0F6c1FCV2dPMTgrNzV3NHJ5OGN5MEw2RkViZFRlQzBx?=
- =?utf-8?B?ZjFzakhRWCtHWGRRMTREYkVrQi8vTWUyMUxGU3VMZUl2RUYvZHBXTWpQRFgy?=
- =?utf-8?B?SFkwbG8wRzRRMUNxSDFIMXpDUXdXVlFtTHYvYVVnQ2ZCdVcyTnFya1NLNWRN?=
- =?utf-8?B?a1pzTXRMbWhLK3hkYzlwTjZ2WmNZNmpkMXBnKy96Q29yQW1sejUyVVJicWVI?=
- =?utf-8?B?MUtaRG5pWnNhV0laL3Q2VTQybXRDY0RkMjBsNElWUzZZR1o4ZGl4eHJQL2xJ?=
- =?utf-8?B?eGRnOFpranBNMGMybjhKS296cUxoUTVGUnF0NUVyMjE3dmh5cXhHSmx2clJz?=
- =?utf-8?B?bXdXbkF2eGpmN3M3VFgrNlNtYUxaeVJSL3JWVDJwWEtIQzNwYVF6VkFaanIz?=
- =?utf-8?B?QVJaT2xMQVJiTTdodWVSaSt1N2FNOUVJVFVqazZlWDI0TkFJVnZUaHA2eUY3?=
- =?utf-8?B?ZjVrS0NaTTNGL1RhQ2QrRGZpVm12Q3c3UEx1TElOelBOdDdWelkwZisxY0Rv?=
- =?utf-8?B?VGhwZGNaRHVhMGFqa2dVdEkrTWVHb0NLUEYvSlcxbTlib3RNTzQwYU1MRGdL?=
- =?utf-8?B?UHdvN1B4Um0yajVJVmhrL2h2ZFpZK2FLYkJnTDBZOE5Jano1L1BLRlc2amZY?=
- =?utf-8?B?VncrVlBLY2ZKSGx4ZFZZbWZvK2FCNUwxVmJZeVA0eVp1R2paUDlQeUk2eWV1?=
- =?utf-8?B?RlZZQVNaKzBlUGZSS2hQRVIxRm4xcUFMWVpGQS9oMjBYMFl4cjhnNk4zMlM5?=
- =?utf-8?B?Y041WG13WjYxOUhHdFd6TVBlbUY0S0U4L0tjR25nTlI3VkZVeVZUUzM1eWtX?=
- =?utf-8?B?QklYUVhQYkl0dkVhRGRiZkpTOUZqVVpqV0kyQ0xTQVB5U1k3T240K0NvR3JL?=
- =?utf-8?B?UEEzbFBxcmMzNTQ3OHI3VG9HK1FLa0ZQRFcxblZQNURGdGxuYmJmSDFCVC9L?=
- =?utf-8?B?QjZyaHZFcjJldnEvSTZVc0FYK3JCenljb3diR09xbzhOcnpQQkNZNUdidFJU?=
- =?utf-8?B?TzVIWEpVRFNqYkJCYXBiejZCUHhTelZWNVN0SUVIbHZ1dXc2dDlXRXlJU0ZY?=
- =?utf-8?B?L2s4bHk2WEtVQWRwc2FJVm5PT0RsemZlbU53cFhEUjR1KzhPS0VkZVNDMDh4?=
- =?utf-8?B?YTFVdVRycmpML2FEcklnTk15enpLcEV3WFRaUVlydkZFUStvQ3ZQNVkrZmRV?=
- =?utf-8?B?UG1oVWl5U2pseWhTRDNVaDg5aDBiSlZhcTZYdW9oSDJmaTRCRGVMNTlaOUp0?=
- =?utf-8?B?VDQybnNuR2RvVHlGVUpKbEMzRm5YSTEwNGpoWmYxRENOaEUrWmNMMFF0NzRm?=
- =?utf-8?B?K2JXN0JZT2VGN2toV2RBdENEdGcvblNIeTY0dzFkUW54UGZoNnRzTjNReUFC?=
- =?utf-8?B?M2tvTkRnK3FtNlI2OS9IUEIxQk9GbjNLeEVvSTVmQ3RhV2tnZysveFB5VFFq?=
- =?utf-8?B?TzFybm5Dd0ZiR05PcXR3VmNzUDE4aE9PL2ZzL0FraFBnU0F2ajh0TTk0VUNJ?=
- =?utf-8?B?VElaMkJmRGphM1JMLzRPUlhQNE9NVUExUGlGelRyNWMyQXBsK29wTHVUNkJL?=
- =?utf-8?B?SFdxZEQ1TE9VbjVZV2Q2TWlQWHdlb2hSeHNwRGdUOTQxTmxXUUVmaGVNT0t0?=
- =?utf-8?B?Zk9WSG9jZFVzZU9xYUdWWnBnaFZteUpWb0w5YXV2dFBSbmdURE9zdWJOdk1V?=
- =?utf-8?B?Z2RJMHJtakI5K0pkaWtOaUIxSGE3WHNlLzZKZ2xyNWdOeEE1WVRyUDdLemh2?=
- =?utf-8?B?TWMwK2xQNDlRUlA3alJyQ0o3QUYyVWZVNFZKcmF1R2RsTUJDdGNRSXphVzdl?=
- =?utf-8?B?TFY0RHovZ0h6VVVGWXpvbmw2WkwvS3p3TFhHeFBWY1dxUjNUK3ZUM2lFRjk5?=
- =?utf-8?B?Y1M1ZlJPNWVwYzgxMko2RFJvL2RxRnkrLytPV2ovYklZQ2ZLRXNGYkdZZmhE?=
- =?utf-8?B?ZnVSVHNDWE9Id1d6R1hta2lSeDdqTm1XSWZOS055QVl4QndiTnpNOVBrSHJZ?=
- =?utf-8?B?ekFnTjhuQ25lbTdjMm9wdjNPM0k2dy9md3A5bXoxVG1sb0w3c25Udm5wWDJi?=
- =?utf-8?B?a3QxenQ4RE1IMHp2aWRRS3ZudXVHYy85YloxN3pFamsxTGF1THhHV21PblZr?=
- =?utf-8?Q?I8kaBtDAbflldbT/p3?=
+	=?utf-8?B?eDI3UjBKWk9FQWNCK0FydDRWeUdSY2tMVklpRFFKVGY3Qkg0bkZkSHZYZFBU?=
+ =?utf-8?B?dm9ic2dEUmNUS2dvdnhiczVhendlSWhYUnRHUzYwd3dqc3daMG5QdkZsUTNm?=
+ =?utf-8?B?dDllejJHb2pBSXRWRWZ4Z05JZGNOZWNDTHZlKzRiTklLUGxzYjI2NnZIak1x?=
+ =?utf-8?B?NTNKMmZZYXZPbXFjREpUMi9UV0VQS3F1SXh5WnBhL3ovRk81dFBNV0Q4clZ3?=
+ =?utf-8?B?VXBRQ3BqbXRHSmFadzZtM094ZW9McjNvT3FrLzlHS05LWEViQkFHZTUzVG1z?=
+ =?utf-8?B?am1TK3AzcEVmY2REUyt6aXFKZ1Y1Yk1IYVlnM0xLVytYMjNScVFuaSt3N3dt?=
+ =?utf-8?B?Rms1OEpvbmVoTnhBWU10ZndRRkgzbzJTTS9nTG9oYzBoTXVoUW9tTDU3dmxD?=
+ =?utf-8?B?cC90VFN0UXNrMGRxcWQzemxMR0JHNWN1QnpoQk9TczVQUzJhRFMrdmVJYkw1?=
+ =?utf-8?B?eWtQd3hocWFBMWdzR3I3RXR2emV2aDRPK2dYUGhpdnV4YThqanR1WTFHK0hh?=
+ =?utf-8?B?R3RtOU1EVVRBaHV4NkdROERjRG4veEFFTTY2WEFEdnRNemxtSHNQR1AzWXNP?=
+ =?utf-8?B?UWpsaG5ZT2Y3bW5qYUVhRnltQVBHZnRjR0Vlc01jbUZlSWJxVFQ3WUlIN2NG?=
+ =?utf-8?B?bHRCa1dPdm56Mmhsd3FoM2R6Uys5WXJuZVNrM3VPR3pCeGxZYkRaR1JUUFZs?=
+ =?utf-8?B?VFhWSEhrOUN5akFBWEhkOG1CMmpUdlY0Z3pFNVJZMDFvRG9lY3UrSmpZUXFp?=
+ =?utf-8?B?RlhqYkF5bDUwQWJGcWZKYUJ4aE5TNDBLMGlzY3k3NWxSZDVsa2JaSDQ0MWJB?=
+ =?utf-8?B?NmF6TGU3M1FOQnVtQWpZcXFGTEtGRnpCR2FlWG1oZjZvNlFUVE1Ka2I1akxw?=
+ =?utf-8?B?SmYrdmxHOExYcjRKUTZHTVBKUjFjQ3FPa29pWlV3K3IzSGNiVk1ONURkS3VJ?=
+ =?utf-8?B?cWY2eXpnTzhxNFhJMnV4bzRmYjVyK25FeFBMQnVBbnVrdFJSa0tIUzhWSGpT?=
+ =?utf-8?B?VlducWxhYjZvNDd2RGtvVy8ycUR5RzBobURzODQ5d0t3Q3RpK2xCaHVScDlj?=
+ =?utf-8?B?WERHajB6UkZYQ05DNTlVWThGL3Bjc0JjczFab2plWTM3VmhRdUxxVTkyR2RN?=
+ =?utf-8?B?NVp1SzZldFFUdVpGR0dOYnV2MWFubW9kS0hiRmtMOG00cFR0enZiMUMyYVBH?=
+ =?utf-8?B?Rk5OaFowNnBGQjRseGlKYVdFZkNReGVxZXBNbUtuOUZ6V09xR3lhOGIxQnc5?=
+ =?utf-8?B?ZnNvMGZJRC9MWEtPNEpiTVZkOE56YnNValAyYnJuVXMxNkZpdzlhdTBiTkRy?=
+ =?utf-8?B?SURmSjFPNTFsUUE4VXZjVlkxVzRHeTFQWm5lRmdGWlo3WjNuc1Y5SE03NXF2?=
+ =?utf-8?B?eHEzNFRTdHRNeVB3a1RlemR2MDZBaWZ3MVJXcXluUDh2Um83TFY0MDRyWGg3?=
+ =?utf-8?B?Q29iVUVPSTBObm92R1E2c0tWRGcwNmpDb2x5VnFvampKNlowUzVwNGlkOWhH?=
+ =?utf-8?B?SDFCSjJheHBNWkNqRUJrVmtFUm1jZ3RVMEdCVm42VXlldDhsZlduTHZ3eGJn?=
+ =?utf-8?B?ZlRkbDdVWlR0MmllZ3puUVpBS3Q4d20vcjluLzgwOWZmV2RKOFdadlNYN1NK?=
+ =?utf-8?B?UDlXKy93b2xXLzc2QmVJZ3VCMkk5QUlsLzkvRjZ5Wm1ZZmt3ZThRMkNUNVpC?=
+ =?utf-8?B?ZVhKeUUxVy9WN3VNUCs5MGx3Zk5mWDJUNWFGUGFEQVNSenlSN2NlTFRpNXZz?=
+ =?utf-8?B?Wi9nam9UMTJ1M2oxSG1NMDJuZ0tkTFdKWnJzNlBScGJPMG4xMCt2azg4T2c5?=
+ =?utf-8?B?Wi9OM0ltMjdublV6OTgrMisxZFRSeURRUlppZTlqa3BjSjR1WUh0MkF2UEVN?=
+ =?utf-8?B?U0ZqSjFWbkcwdFI5TytpN0RIc3F3aGU2ZkJHckIxZG4zenRaTHA1WlBubjNZ?=
+ =?utf-8?B?U054RnJXbDdXSy9lNHgwUHJTMG04bEo2Szdoc0VnR3g0cnkyTUpRRDdxYk1O?=
+ =?utf-8?B?OHpPbGhZQS8xR0JiY3I3TS9YMFVaODdjdkxlQzJaUGszVXBncTJtYmhJWFdQ?=
+ =?utf-8?B?NGg4aGRiQ1RGYnlXZXdHS01Ec1pkdW9PZU9OK08yT2ZhQWVLQ3RJY0NBaDVX?=
+ =?utf-8?B?bzhoeVVvOURkeFcyeGpFSXlXMHFwODd0ZTIrT2dPcDBTcVZHWmFVREl0VmR0?=
+ =?utf-8?B?by8vL21wbUQwd2Fwc1NXQzdSMFpMUEU3RGtFVmxSMkpURXg3SUtpWHozcVRO?=
+ =?utf-8?B?bVIyTU5lais3cWxzblZpYnQya29lSmVpQzNzamhJTXpDWFdrblN6QTNvOCtt?=
+ =?utf-8?Q?klTF5stSwnMC/JabeK?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2fd7411a-53f5-4ba9-3c3b-08df49bee4e9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 13b211e4-ec96-4947-b2da-08df49bef459
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 00:07:14.3723
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 00:07:40.4725
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6J4YO9Qjd5+8IqAO4I+F7H+DthlO9NKQLTggjHAX2AqeUZH+1aut/wGBfuJvl5KwcPI+10swH5YYe/LAT7QezQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: w6cmejyV+D9WUYbTILyywiTcCma6xMP+8Mc9d3fqAkC5mq10nmxLDFuHVvEdqKYK0MPs592ObEFNJhv4Q+7A/Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR12MB9090
 
 On 23/11/26 19:33, Aneesh Kumar K.V (Arm) wrote:
-> A confidential guest needs to lock a PCI device before collecting and
-> verifying evidence about it. Userspace also needs a way to unlock the
-> device after use or when verification fails.
+> The TDISP Device Interface Report describes a device interface's
+> configuration, including its MMIO ranges and their attributes. Each MMIO
+> range identifies its BAR, starting physical address and size.
 > 
-> Add tsm/lock and tsm/unlock sysfs attributes for TSM drivers
-> implementing devsec_ops. Writing a TSM device name to tsm/lock calls its
-> lock callback. Unlock calls the matching driver's unlock callback
+> The device adds the MMIO Reporting Offset (MRO) to the physical
+> addresses included in the report. When the MRO is a multiple of the BAR
+> size, masking the reported address by the BAR size recovers the offset
+> within that BAR. Combining this offset with the guest's PCI resource
+> start gives the corresponding guest physical address.
 > 
+> TSM drivers need to parse these reports and identify the MMIO ranges
+> requiring private mappings. Provide common PCI/TSM helpers so each
+> driver does not have to implement the same parsing and resource setup.
+> 
+> Add pci_tsm_mmio_alloc_report() to parse a caller-supplied report.
+> Record each range's guest physical address and retain its reported
+> address for firmware mapping validation. Skip non-TEE and currently
+> unsupported MSI-X ranges.
+> 
+> Add helpers to register the ranges in iomem with IORES_DESC_ENCRYPTED,
+> Setup requires device::mutex and rejects devices with a PCI driver
+> attached.
+> 
+> A later guest attestation patch uses these helpers during
+> evidence-accept. The caller remains responsible for verifying the report
+> and validating the MMIO mappings before allowing device use.
+> 
+> Based on the original patch from Dan Williams <djbw@kernel.org>
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> ---
+>   drivers/pci/tsm.c       | 227 ++++++++++++++++++++++++++++++++++++++++
+>   include/linux/ioport.h  |   1 +
+>   include/linux/pci-tsm.h |  35 +++++++
+>   3 files changed, 263 insertions(+)
+> 
+> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
+> index 2fbd146db387..c21066e55d3b 100644
+> --- a/drivers/pci/tsm.c
+> +++ b/drivers/pci/tsm.c
+> @@ -21,6 +21,7 @@
+>   #include <linux/slab.h>
+>   #include <linux/sysfs.h>
+>   #include <linux/tsm.h>
+> +#include <linux/unaligned.h>
+>   #include <linux/xarray.h>
+>   #include "pci.h"
+>   
+> @@ -650,6 +651,232 @@ static ssize_t dsm_show(struct device *dev, struct device_attribute *attr,
+>   }
+>   static DEVICE_ATTR_RO(dsm);
+>   
+> +static void mmio_teardown(struct pci_tsm_mmio *mmio, int nr)
+> +{
+> +	while (nr--)
+> +		remove_resource(pci_tsm_mmio_resource(mmio, nr));
+> +}
+> +
+> +/**
+> + * pci_tsm_mmio_setup() - mark device MMIO as encrypted in iomem
+> + * @pdev: device owner of MMIO resources
+> + * @mmio: container of an array of resources to mark encrypted
+> + */
+> +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
+> +{
+> +	int i;
+> +
+> +	device_lock_assert(&pdev->dev);
+> +	if (pdev->dev.driver)
+> +		return -EBUSY;
+> +
+> +	for (i = 0; i < mmio->nr; i++) {
+> +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
+> +		int j;
+> +
+> +		if (resource_size(res) == 0 || !res->end)
+> +			break;
+> +
+> +		/* Only require the caller to set the range, init remainder */
+> +		*res = DEFINE_RES_NAMED_DESC(res->start, resource_size(res),
+> +					     "PCI MMIO Encrypted",
+> +					     IORESOURCE_MEM,
+> +					     IORES_DESC_ENCRYPTED);
+> +
+> +		for (j = 0; j < PCI_NUM_RESOURCES; j++)
+> +			if (resource_contains(pci_resource_n(pdev, j), res))
+> +				break;
+> +
+> +		/* Request is outside of device MMIO */
+> +		if (j >= PCI_NUM_RESOURCES)
+> +			break;
+> +
+> +		if (insert_resource(&iomem_resource, res) != 0)
+> +			break;
+> +	}
+> +
+> +	if (i >= mmio->nr)
+> +		return 0;
+> +
+> +	mmio_teardown(mmio, i);
+> +
+> +	return -EINVAL;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_setup);
+> +
+> +void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio)
+> +{
+> +	mmio_teardown(mmio, mmio->nr);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_teardown);
+> +
+> +/*
+> + * PCIe ECN TEE Device Interface Security Protocol (TDISP)
+> + *
+> + * Device Interface Report data object layout as defined by PCIe r7.0 section
+> + * 11.3.11
+> + */
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE BIT(0)
 
-Are not we doing it now via the new ctlv tool?
-
-We'll still need pci_tsm_devsec_constructor and other helpers but not sysfs.
-
-Thanks,
+TDISP_REPORT_MMIO_ATTR_MSIX_TABLE imho reads better.
 
 
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA BIT(1)
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE BIT(2)
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_UPDATABLE BIT(3)
+> +#define PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID GENMASK(31, 16)
+> +
+> +/* An interface report 'pfn' is 4K in size */
+> +struct pci_tsm_devif_mmio {
+> +	__le64 pfn;
+> +	__le32 nr_pfns;
+> +	__le32 attributes;
+> +};
+> +
+> +struct pci_tsm_devif_report {
+> +	__le16 interface_info;
+> +	__le16 reserved;
+> +	__le16 msi_x_message_control;
+> +	__le16 lnr_control;
+> +	__le32 tph_control;
+> +	__le32 mmio_range_count;
+> +	struct pci_tsm_devif_mmio mmio[];
+> +};
+> +
+> +/**
+> + * pci_tsm_mmio_alloc_report() - allocate encrypted MMIO range descriptor
+> + * @pdev: device owner of MMIO ranges
+> + * @report_data: TDISP Device Interface (DevIf) Report blob
+> + * @report_sz: DevIf Report size
+> + *
+> + * Return: the encrypted MMIO range descriptor on success, NULL on failure
+> + *
+> + * The caller keeps pdev->tsm valid throughout this call.
+> + */
+> +struct pci_tsm_mmio *pci_tsm_mmio_alloc_report(struct pci_dev *pdev,
+> +					    const void *report_data, size_t report_sz)
+> +{
+> +	struct pci_tsm *tsm = pdev->tsm;
+> +	struct tsm_dev *tsm_dev = tsm->tsm_dev;
+> +	u64 last_reporting_end;
+> +	const struct pci_tsm_devif_report *report;
+> +	u32 mmio_range_count;
+> +	int last_bar = -1;
+> +	int i;
+> +
+> +	if (report_sz < sizeof(struct pci_tsm_devif_report))
+> +		return NULL;
+> +
+> +	if (dev_WARN_ONCE(&tsm_dev->dev, !IS_ALIGNED((unsigned long) report_data, 8),
+> +			  "misaligned report data\n"))
+> +		return NULL;
+> +
+> +	report = report_data;
+> +	mmio_range_count = __le32_to_cpu(report->mmio_range_count);
+> +
+> +	/* check that the report object is self-consistent on mmio entries */
+> +	if (report_sz < struct_size(report, mmio, mmio_range_count))
+> +		return NULL;
+> +
+> +	/* create pci_tsm_mmio descriptors from the report data */
+> +	struct pci_tsm_mmio *mmio __free(kfree) =
+> +		kzalloc(struct_size(mmio, mmio, mmio_range_count), GFP_KERNEL);
+> +	if (!mmio)
+> +		return NULL;
+> +
+> +	for (i = 0; i < mmio_range_count; i++) {
+> +		u64 range_off;
+> +		struct range range;
+> +		const struct pci_tsm_devif_mmio *mmio_data = &report->mmio[i];
+> +		struct pci_tsm_mmio_entry *entry;
+> +		/* report values in are in terms of 4K pages */
+> +		u64 tsm_offset = __le64_to_cpu(mmio_data->pfn) * SZ_4K;
+> +		u64 size = (u64)__le32_to_cpu(mmio_data->nr_pfns) * SZ_4K;
+> +		u32 attr = __le32_to_cpu(mmio_data->attributes);
+> +		int bar = FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_RANGE_ID,
+> +				    attr);
+> +
+> +		if (bar >= PCI_STD_NUM_BARS ||
+> +		    !(pci_resource_flags(pdev, bar) & IORESOURCE_MEM)) {
+> +			pci_dbg(pdev, "Invalid reporting bar ID %d\n", bar);
+> +			return NULL;
+> +		}
+> +
+> +		if (last_bar > bar) {
+> +			pci_dbg(pdev, "Reporting bar ID not in ascending order\n");
+> +			return NULL;
+> +		}
+> +
+> +		if (last_bar < bar) {
+> +			/* transition to a new bar */
+> +			last_bar = bar;
+> +		} else if (tsm_offset < last_reporting_end) {
+> +			pci_dbg(pdev, "Reporting ranges within BAR not in ascending order\n");
+> +			return NULL;
+> +		}
+> +
+> +		last_reporting_end = tsm_offset + size;
+> +		if (last_reporting_end < tsm_offset) {
+> +			pci_dbg(pdev, "Reporting range overflow\n");
+> +			return NULL;
+> +		}
+> +
+> +		range_off = tsm_offset & (pci_resource_len(pdev, bar) - 1);
+> +
+> +		if (pci_resource_len(pdev, bar) < range_off + size) {
+> +			pci_dbg(pdev, "Reporting range larger than BAR size\n");
+> +			return NULL;
+> +		}
+> +
+> +		range.start = pci_resource_start(pdev, bar) + range_off;
+> +		range.end = range.start + size - 1;
+> +
+> +		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_IS_NON_TEE,
+> +			      attr)) {
+> +			pci_dbg(pdev, "Skipping non-TEE range, BAR%d %pra\n",
+> +				bar, &range);
+> +			continue;
+> +		}
+> +
+> +		/* Currently not supported */
+> +		if (FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_TABLE,
+> +			      attr) ||
+> +		    FIELD_GET(PCI_TSM_DEVIF_REPORT_MMIO_ATTR_MSIX_PBA, attr)) {
+> +			pci_dbg(pdev, "Skipping MSIX range BAR%d %pra\n", bar,
+> +				&range);
+> +			continue;
+> +		}
+> +
+> +		/* Update __counted_by(nr) before accessing the new entry. */
+> +		mmio->nr++;
+> +		entry = pci_tsm_mmio_entry(mmio, mmio->nr - 1);
+> +		entry->res.start = range.start;
+> +		entry->res.end = range.end;
+> +		entry->tsm_offset = tsm_offset;
+
+store range_id too, TIO will need it later:
+
+entry->range_id = bar;
+
+And I saw resource_contains() failing on empty flags so:
+
+entry->res.flags = IORESOURCE_MEM;
+
+
+> +	}
+> +
+> +	return_ptr(mmio);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_alloc_report);
+> +
+> +/**
+> + * pci_tsm_mmio_free() - free a pci_tsm_mmio instance
+> + * @pdev: device owner of MMIO ranges
+> + * @mmio: instance to free
+> + *
+> + * Returns 0 if @mmio was idle on entry, -EBUSY otherwise
+> + */
+> +int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio)
+> +{
+> +	for (int i = 0; i < mmio->nr; i++) {
+> +		struct resource *res = pci_tsm_mmio_resource(mmio, i);
+> +
+> +		if (dev_WARN_ONCE(&pdev->dev, resource_assigned(res),
+> +				  "MMIO resource still assigned %pr\n", res))
+> +			return -EBUSY;
+> +	}
+> +
+> +	kfree(mmio);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tsm_mmio_free);
+> +
+>   /**
+>    * pci_tsm_unlock() - Transition TDI from LOCKED/RUN to UNLOCKED
+>    * @pdev: TDI device to unlock
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index f7930b3dfd0a..e8a9fd653620 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -144,6 +144,7 @@ enum {
+>   	IORES_DESC_RESERVED			= 7,
+>   	IORES_DESC_SOFT_RESERVED		= 8,
+>   	IORES_DESC_CXL				= 9,
+> +	IORES_DESC_ENCRYPTED			= 10,
+>   };
+>   
+>   /*
+> diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
+> index c43aa3e85bb0..aef6cfb87082 100644
+> --- a/include/linux/pci-tsm.h
+> +++ b/include/linux/pci-tsm.h
+> @@ -139,12 +139,42 @@ struct pci_tsm_pf0 {
+>   	struct pci_doe_mb *doe_mb;
+>   };
+>   
+> +/**
+> + * struct pci_tsm_mmio_entry - an encrypted MMIO range
+> + * @res: MMIO address range (typically Guest Physical Address, GPA)
+> + * @tsm_offset: Host Physical Address, HPA obfuscation offset added by the TSM.
+> + *		Translates report addresses to GPA.
+> + */
+> +struct pci_tsm_mmio_entry {
+> +	struct resource res;
+> +	u64 tsm_offset;
+
+
+unsigned char range_id;
+
+
+otherwise looks good.
+
+thanks,
+
+> +};
+> +
+> +struct pci_tsm_mmio {
+> +	int nr;
+> +	struct pci_tsm_mmio_entry mmio[] __counted_by(nr);
+> +};
+> +
+> +static inline struct pci_tsm_mmio_entry *
+> +pci_tsm_mmio_entry(struct pci_tsm_mmio *mmio, int idx)
+> +{
+> +	return &mmio->mmio[idx];
+> +}
+> +
+> +static inline struct resource *pci_tsm_mmio_resource(struct pci_tsm_mmio *mmio,
+> +						     int idx)
+> +{
+> +	return &mmio->mmio[idx].res;
+> +}
+> +
+>   /**
+>    * struct pci_tsm_devsec - context for tracking private/accepted PCI resources
+>    * @base_tsm: generic core "tsm" context
+> + * @mmio: encrypted MMIO resources for this assigned device
+>    */
+>   struct pci_tsm_devsec {
+>   	struct pci_tsm base_tsm;
+> +	struct pci_tsm_mmio *mmio;
+>   };
+>   
+>   /* physical function0 and capable of 'connect' */
+> @@ -206,6 +236,11 @@ bool pci_tsm_context_match_device(struct pci_tsm_context *context,
+>   				  struct pci_dev *pdev);
+>   struct tsm_dev *pci_tsm_get_device(struct pci_dev *pdev);
+>   struct pci_tsm_devsec *to_pci_tsm_devsec(struct pci_tsm *tsm);
+> +int pci_tsm_mmio_setup(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
+> +void pci_tsm_mmio_teardown(struct pci_tsm_mmio *mmio);
+> +struct pci_tsm_mmio *pci_tsm_mmio_alloc_report(struct pci_dev *pdev,
+> +					    const void *report_data, size_t report_sz);
+> +int pci_tsm_mmio_free(struct pci_dev *pdev, struct pci_tsm_mmio *mmio);
+>   #else
+>   static inline struct pci_tsm *pci_tsm_trylock_association(struct pci_tsm *tsm)
+>   {
 
 -- 
 Alexey
