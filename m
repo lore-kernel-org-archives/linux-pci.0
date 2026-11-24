@@ -1,105 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795516329;
-	b=vBNRHJxqKHivgp+RyyeU0T6HjQrgF2V9HxNgZam4s67P6upXY7JwYqbYWIt6Z9MAAGpG
-	 H6eHSoOHp1KaP5Vu1h7CVlvYou/yh+K+4rLauBdzFI5nKCju8nfrz2milkgp5DvLrcyYR
-	 vBQuS96tmgWFZ382cJ/xZHfGe/2za/x41ePXmINBgbLsyfnOXUurZhuzHCuQ1m+pprIqw
-	 //6PanDHEmpUC/GXYCvaKBryZpU3Pm0NhCxdZ5H9/OazXSYZSiN1xWjYMjRNwUVUBepzB
-	 96Rc6gx98QSqP10YVzzq3NYi1hTzvDJMU5ifLBsGLTapFntrCdVEnpQNwBgRM2yw1hA==
+	t=1795516788;
+	b=lhDZvfm9QSLBtvEY5yPMYgyyhgw4qlg0RG+RFa/P0/tPn9mA5u4zQ4Sre+rZCCdNMdMi
+	 B9e1I8s0WAZ4mOxbAXvmtL/1zq9rLvjKd0ehRagqdQvhq2kZw5iPxeNfoDFyg4oKiAlyR
+	 Pv4lFvQ3aSyZvfl3fpNHIWNRkJWNYfq0hOTEsETFKHGUeHdzYZS2L5RZH3cuEKTGPOlNU
+	 ectzzpU+URumOKV3axJ/J7xVJH+kvjwHfCW7nYEF5BH6i3BWKoQ5lxfGOi1+XqFkwUpvp
+	 zCG/tbFZdR4fwkIyxvWBk03Qmdm07PUMP/orWD+Fr6fmfqvoWh0RSj3QLswwpb2jvjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795516329;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795516788;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 Content-Transfer-Encoding:MIME-Version:Content-Type;
-	bh=L91r7jLCdgBrVDkCLs5wB8S82AZQlItQYcCNZU9WUC0=;
-	b=GJqgTV549/reXwdqvFlXPmUViYysYlQ/NojxrJp8WKj82iBb84crW0u/SSBBl4BtcZrP
-	 WomDmRw4SwXRXTrggTovxVpVSKWF4SMMiuw5nXw3XEYEqmAT+A5wCV4KOS9A4Kbvnx06T
-	 z0efSnVjqOwDJgQ/t2bKhwCtyNXLoZfDEbY/HfIhQfQAgsJjaK1C0G1BJmiIQGuJYRXsZ
-	 6FitmWmg56dXGtNRGdafHTrFOiTBThKCkYxUPKw6SvMGMNEb2lVQo7QzAeJT76Z7qUGN6
-	 iCFL+dny0PV5UFRVQsX/OXcZ2rNkTZDvcesYEMkV2PDhJws1W67VDlyn2IrYuZ879Nw==
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=i67A04/jloiIm4Idm3ymNHqESyF+RQsVbnS4UKmnxA8=;
+	b=5Ut8q2EbeGF3abgjlmNdkXUf2edft+AFxuf6w5L8wD7xycKxmZfrw6JjxraHy4YcBIMM
+	 8zJ0ks1FWLBjToct5qeoaUK4kig5PGhYQ8Si309d73OrOjvtgFdSTqKkFKxzFeMTfpZKh
+	 xcfVT6PepR+qGrlmgl2GLDBzjy3ZqkYgQUwAlDDyDdUt+/gpnLksqmoho70xnB+akJUcj
+	 dS5jvoLXuG40ll3unPdns9fO0dR/FnSZlAhGDNjaeyak3db5ocWyRIEMe7Ju+3wG/nMn0
+	 aVjqn52XzGon/HqHljzvxvraHr0S4uOvh4XjXajNiFVX0kexbV++YzQYoiHnsGvj6SQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=jxYtZjny;
-	arc=none smtp.remote-ip=209.85.167.48
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=KjiX7YWe;
+	arc=none smtp.remote-ip=209.85.128.45
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26505606A326
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 10:32:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 26505606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208D5606A322
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 10:39:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 208D5606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=jxYtZjny
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5c10dc41270so4675695e87.2
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 02:32:08 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=KjiX7YWe
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4bb61185057so28148715e9.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 02:39:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795516327; x=1796121127; darn=vger.kernel.org;
-        h=content-type:mime-version:content-transfer-encoding:message-id:date
-         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=L91r7jLCdgBrVDkCLs5wB8S82AZQlItQYcCNZU9WUC0=;
-        b=jxYtZjnytvxvCfLSD14Mjy8gdnPqOnkGAD8oV/RDjwN3Jq1OKzV470i6aqaho1R4rh
-         4Z5JCBcHy7QYAFrknXmkiKXtnooQS32SNGm3d+o3kZ4CxPckt1AntXrrsZQA8v3zafII
-         dILBm8eyY4rqPoE5DEZJ/d0foS6n5PTS5uZxJMgx561EYe2xox8+Ib+COdeoMEwORsvK
-         MnJJgtI+PTigIutZQkV3pJFaRYKImIsbYr+FfeaASJaIfcYsX45nG8700Yq6VBixF8Ck
-         njHV6e+E5HJLJNBUTM/UUnfa6gEKDmKlNE+rnTeoP64AIsVFQec+R1Zqg/WCrAOrTqeA
-         87wg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795516327; x=1796121127;
-        h=content-type:mime-version:content-transfer-encoding:message-id:date
-         :references:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=suse.com; s=google; t=1795516786; x=1796121586; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=L91r7jLCdgBrVDkCLs5wB8S82AZQlItQYcCNZU9WUC0=;
-        b=es3ykNuRQ8nuopNuMAPnFO6dXXeT82YqRSiy3hFhg6o7A+gj371WyPmzE8MlidMq4a
-         exCpdOx+1xFPDgAS8JNQr+bKlSwM4iUNb0h2SWCLgFYg+k2s5CWZPYp/c7xZLaH59cMO
-         6tsLke2a2KufhXkFfz5sj7/9tuO1gkS9eH4WQfOeoV09F88hNKpD9hSidBwan8Ke/SSf
-         YVQv2ScATLHJKuSKPXMcsoJu+Io1CwszWyjJetpGTHRvT6R7WmvGNYk0BDLPq/DIfuZS
-         DsjVOR8yDpuR/s2C7Tkbo0qSOT7KoeknjQcwPDlv/4J3qkQcT/uaODkKrZPKkWuHagpp
-         oZag==
-X-Forwarded-Encrypted: i=1; AL+hErHTdNTVAdjLQr3Xf1A9VK4OZrMZqDy1ACslPp036aglbMyZkLXblC930pc3mJWJVqul5UMvqMwQMJ4=@vger.kernel.org
-X-Gm-Message-State: APuU4Z82btPPXi9zYD0hEFRMZmo+6QNCKxlHx0BtE7+qDu80ALb76ONT
-	HkhSthCn411hvcormklFEL3BFFD4as8/0G64trRVbqEJlgo27jEEmdai
-X-Gm-Gg: AZFdTZexOWxQX/HY7Qe11rXgDSIoa6U0rV2PNJhlFYYmNCjiW4RnE8Z0WV7Pwso2kEq
-	tc6YWWgJoF7GhwLskkAvbvXQfN/1ryqCjro+CzfAvAN7XJoQQ7ucLv1bAqSxtn330IgGQD4SATv
-	glZH1VdgcK/+6Yo409f6SjWAhYRp0t/CyunyVdK9WLN1a9ggiMwm8WnmAeh3ZxGyMm7XiKe3Eym
-	595KOqzb4dCnMyW/JKlGuChEWzUEqvUjpQDEbzqSnWBhbKzc06HrIdXNLCJmd/nXBsooTji+V2g
-	dU4sa47w5DdkW8WzSBUA9f7WBSJ/WbZSVbol48Qby9hceHz0gufSBgxe9mfvVdrF/kNG6r3N359
-	6RCgJke7M56Rpzn5k3EATdeI/sl+tweqFzSv/StCnnOgWTkLDHaNNDRUHxqDzr8YT+pbS0cEcOE
-	1JCgCyYMNP9Nvz53f7MUAWtn9CM0rj+VWwCGJH4eBmddrw6UACXEf/ac7mrCSJfdDvGv48qlFts
-	+4sCdkt+Ra73g9oRIGn2urPfYdjAjqg+qsoZaFihePyUXvbVPdN7oVNOonDMOaU7+4mEQZJOeYN
-	dQLOvN5H4Dr7ZX8iwRBm2sYgH2tsr8t1Kaa3p9keRrSU38Iv1dFY00Q=
-X-Received: by 2002:a05:6512:3d0f:b0:5c0:4cb:2415 with SMTP id 2adb3069b0e04-5c1bc7c9a8bmr4202658e87.28.1795516327013;
-        Tue, 24 Nov 2026 02:32:07 -0800 (PST)
-Received: from [127.0.1.1] (ip-024-180.users.dtel.ru. [91.210.24.180])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5c1bcf332c9sm3680542e87.7.2026.11.24.02.32.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 02:32:06 -0800 (PST)
-From: Fil Dunsky <filipp.dunsky@gmail.com>
-To: Philipp Zabel <p.zabel@pengutronix.de>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
- Vinod Koul <vkoul@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Krzysztof Wilczynski <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Brian Masney <bmasney+clk@redhat.com>,
- Jerome Brunet <jbrunet+clk@baylibre.com>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-clk@vger.kernel.org, linux-phy@lists.infradead.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 7/8] PCI: cs7542: Add CS7542 PCIe host support
-In-Reply-To: <f5d30781ae9502cd76ee2b6757f96a0e5ffa8b71.camel@pengutronix.de>
-References: <20261123-b4-cs7542-pcie-v2-0-f589a9cd0bef@gmail.com>
- <20261123-b4-cs7542-pcie-v2-7-f589a9cd0bef@gmail.com>
- <f5d30781ae9502cd76ee2b6757f96a0e5ffa8b71.camel@pengutronix.de>
-Date: Tue, 24 Nov 2026 13:31:25 +0300
-Message-ID: <179551628581.3.13614361091709904582@gmail.com>
-Content-Transfer-Encoding: 8bit
+        bh=i67A04/jloiIm4Idm3ymNHqESyF+RQsVbnS4UKmnxA8=;
+        b=KjiX7YWeSkA9Dw0WA5xjWaOqnyEHCedD00sUzMhE3sKEAvQ2TPIHmIyS+enWPn9hqU
+         UHnNtz+vsI9HdnLLJLRNEHpW3n0qDPjDGGb+MMmUEkY4+DtknEToZAEEAwd6ErlDRM4U
+         sl6ks9V8P+KgBQBXge6XtIwqjU1IX32GeqDZpfsQ5053CJLA98ICyRMFUcjrF7GwSx6y
+         mLBhDMnek6X1+TiwUBOkVQB80sS1Z2oue9zDTiR4H+wlMmpVb+6EJ+EZoBBfGsOtxa1G
+         85CHt1w3B0RFKCYDolOV20zywTKINPHyMkeAAvRZwyufXjasNY7vVq1oJTMaEgpAJPJ9
+         588Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795516786; x=1796121586;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=i67A04/jloiIm4Idm3ymNHqESyF+RQsVbnS4UKmnxA8=;
+        b=Oaf4wCvPFdIwXZ1LUqQhz6T6GQvL/5j01No0CVRxqAZaNPApcBxq8EOKSg/sTTnJLi
+         lS7Ouy+7EbReCBIgXi/OPlH7u1AVa8P0/ODjTr12ho8qNQ2dOj5ZTNR571/IjTQecSIe
+         /r7RywwNclaWJEMp01CbFY9QFUwaGdLCZDUSCULl4yvoNoNU+LgSbS/MZ2QDr7ug0dl6
+         VlJv7S4vQ5USsUtLfvKJFvwkwpxWato0eRl1VX8IcbKqRW7skOjpX/lWEsS/kX6kgUWj
+         /UbvU41cPAc7rMA+qj07iM57r6XwJdgSW0u/ufJysjHszUNzNAqAeVWAuIDv2q+fk0Q+
+         I3HA==
+X-Forwarded-Encrypted: i=1; AL+hErGpSla5ZxnbXp0z0gDPt/sFqVYRy3XZNyuj++tyJ1jq0VLTSBWDqSb3dGmB79olmSS1TOK5CaJ0fAQ=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/pTHQRZ3AC7aK8P6OE2IxMX1L+j6Tng/ccms9RD5zWw/XrRbbu
+	17tr14vBE0wFnSSDmk2cr1EC4fJ0VTE5Lh1PExeo05Mi3/3lZsszfirFDSUAObE/hO0=
+X-Gm-Gg: AZFdTZekWnXuSbmkhs6PCyZ23i4K3nh5ffaG1C7jofeFemrQMZpqi/f++S2vUE9vU57
+	qYYzrEWzQP8+ekV/KzUJzfuRpJDy4YM73pTMnwLh8fzB5676pJkkpSok3R/ZTdWz3fi1eLwyZ+D
+	KYza3+RZMC1Yg3p4CxkYWQMOFguY/rijsNtbiE0GEK6eABIqa2qePotmsYWUEizQiI9lffbiSHv
+	6etM6wbyKDih0LpZqVHgEfoSdMn0Kr5aDatLFvbTeX8KvohD708IwhdNBz9MzGDN8YKki4orjrm
+	NeOG/RSyvSfHg5w1hmZO7e324FZyxx7cLaxThy/6t++DUY/C2elS1Grdav6lvgeTgZb6cgn8CT7
+	LlPvgiajUcXLlxLTh8x/gNRTOI4vQlaWtwki60i4cgTWbBCKJ+5xb6oO73G6eh9DsncXAkwxn2o
+	RbT7cBctKJQ+E7LZy+E5AE/n6qVOgWjWwQwPtMnW8tXlDduRVNksUxAVX4U+i8vOSIcu3yCiwQ5
+	qyMlRz+h7PNbIq3f/RDeho4YcIGbp2eql26dYlNL30TpdU+O2x0qpieNTUK1UWC1tfwTOvRzx6a
+	VHISQWmMGF/KIX5pe7oAPrFkvOkIlqj2waaSHS2My1KoTfzBIruB7URuQ1MQB330Thh/
+X-Received: by 2002:a05:600c:64c8:b0:4bb:6848:d433 with SMTP id 5b1f17b1804b1-4bb8881d141mr281064655e9.26.1795516786433;
+        Tue, 24 Nov 2026 02:39:46 -0800 (PST)
+Received: from ?IPV6:2001:a61:132b:a401:6cb8:7c28:11e1:499? ([2001:a61:132b:a401:6cb8:7c28:11e1:499])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb8538b2c5sm425218335e9.5.2026.11.24.02.39.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Nov 2026 02:39:46 -0800 (PST)
+Message-ID: <65749362-927a-492d-8bff-573c277fe456@suse.com>
+Date: Tue, 24 Nov 2026 11:39:40 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -109,24 +92,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format="fixed"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 02/33] Bluetooth: btusb: Fix MediaTek ISO claim locking
+To: Leon Romanovsky <leon@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
+ Heiner Kallweit <hkallweit1@gmail.com>, Russell King
+ <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Johannes Berg <johannes@sipsolutions.net>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
+ <rdunlap@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ Lu Baolu <baolu.lu@linux.intel.com>, Johan Hovold <johan@kernel.org>,
+ Eric Dumazet <edumazet@kernel.org>, Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Nipun Gupta <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
+ Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+ Chris Lu <chris.lu@mediatek.com>, Mans Rullgard <mans@mansr.com>,
+ Alan Stern <stern@rowland.harvard.edu>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, Andrew Morton <akpm@linux-foundation.org>,
+ Cornelia Huck <cornelia.huck@de.ibm.com>, Andrew Morton <akpm@osdl.org>,
+ Jeff Garzik <jeff@garzik.org>, "Rafael J. Wysocki"
+ <rafael.j.wysocki@intel.com>, Bart Van Assche <bvanassche@acm.org>,
+ Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+ Dan Williams <djbw@kernel.org>
+Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+ linux-input@vger.kernel.org, netdev@vger.kernel.org,
+ linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, iommu@lists.linux.dev,
+ linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
+ Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
+ Greg Kroah-Hartman <gregkh@suse.de>, linux-sound@vger.kernel.org,
+ Jason Gunthorpe <jgg@ziepe.ca>
+References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
+ <20261124-device-trust-core-v4-2-037eb0d17b1f@nvidia.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <20261124-device-trust-core-v4-2-037eb0d17b1f@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Philipp,
 
-I'll drop the PCIe host's select of RESET_CONTROLLER. The host only
-uses the consumer API.
 
-I looked at reset_control_pulse(). The CS7542 host asserts its
-exclusive reset before enabling the clock and powering up the PHY.
-The PHY has separate reset bits and leaves the host reset asserted.
-I'll keep it asserted for 10 ms after phy_power_on(), deassert it,
-then wait another 10 ms before accessing the host registers.
+On 24.11.26 10:43, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
+> 
+> MediaTek ISO claims are performed from HCI setup work outside USB probe.
+> Locking only the interface does not protect the claim against teardown
+> of the parent device. Unconditionally waiting for the parent lock can
+> deadlock with disconnect while it drains the setup work.
+Hi,
 
-The helper would cover the assertion and hold time for a standalone
-pulse. Here the line is already asserted across PHY setup and the
-controller also needs the delay after deassertion, so I'll use the
-explicit sequence in the host.
+your patch raises a question. Can usb_claim_interface() ever be
+used safely outside probe() without this kind of locking?
+If the answer to that is negative, should the locking be integrated into
+usbcore?
 
-Thanks,
-Fil
-
+	Regards
+		Oliver
