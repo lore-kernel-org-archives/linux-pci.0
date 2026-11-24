@@ -1,84 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795546936;
-	b=4SfDcWyeEzLUMsuog5MouGJrr0VmROZSS/LNWpkgMK6L7YWJOSDGNI5lB5JGa97djLWw
-	 pSL1TwFH7EhhXoumv6+9RJLwFJJTVFu1Qtf7R0ghHowC4xYsLrZm4Hci2/OEQ0N8MQDDd
-	 RqzwcPIm7uFOJNx1fSCVVT/dMbq9ECeuGny0RqPykzry0K8S75+zClCQNGFEoyQ60r8Ed
-	 tq7Slt3jcw+iRGsWzAix3EvNxA7/IVYSwRZDiUbiHzqYYuP2ZxMiY8bYTSmP3LmvWgUhH
-	 XfsmBE6+eFXoU0m51nFVxRufcpL2lyBwe329TIK6wCT6oNt3zBWclH3gmohCDXaZxOw==
+	t=1795549669;
+	b=ZAVVPX5/Zi18sbfT4yhTjOdI70pCiE1s1HGXMfScIzZniC9hbMfadYeK8s8VjsjbBTaY
+	 RpzrALtKCIm7G1tnLYIyoG5+zdPSarh0MPkASxnhC4Zj3BHXVWCCKXmbVIoTD0afIt8Op
+	 Xf2YUDb0NGeEXEHIZXgNwBMiJrw5cFJOG5t1gYMY4LYHk6yM6aKIdl4YD8cTut87EXYeV
+	 WBlzEkiJ/JVS/aQ9jt5FnbP+QmX7+33thsy0KJFHERiECZnnaGAfMwOlb3cgrqa7AghAp
+	 E/fFKafD0edLdaJQ6vn9kmn/zFRlYJ4FLA8fUKy1lQYBrZvA1FCih+dq+JB+aochRxA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795546936;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795549669;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
-	bh=vmPlBJsxyoTZOO9g2mmGNuUfH7b/frSSah/ZWuzVmhc=;
-	b=m9ME3Xfq5UCIp692P+uYFd44+dSN8cDMEeBrnrt6hTFBorlfoJV1J6VkESrizixuY5zo
-	 C8ChTEjJ/A1+1aKmIbqLcpAtw6Xwj3k1QuMQ8Sk+V45th47UTOLpN1NyhzD6cEkB0/84o
-	 i4XFZT216+1ZEwEhqwTPF6FCK1nwHD98D+a20RVwYtmDth++BRySxhO180d3WaMoDkGfe
-	 S8jo+2tOYNMw75JAx98zzZYBP8lL+3CRBNvrhPUbmd1WapHqLb+qyaEYIUnfudcHUN9vR
-	 TGXBm5WUNjPwlF8FtQp9Wij2z8VCXJeWo9Gu6dbrIucQrwhY8IU3xt2SA3+z6ecBMzQ==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Mime-Version:
+	 Content-Transfer-Encoding:Content-Type:Date:Message-Id:Cc:Subject:
+	 From:To:X-Mailer:References:In-Reply-To;
+	bh=lUpe/tRxEZ5NPFIdAznJnUvDVmlMVX6s3wfMo2I3P5U=;
+	b=U3lC4monLNYNwRBZpr0Uc72N3FAwJ33qTZ4ibtPGYy5hqtixvX6apq/bs0l45mGSXjlU
+	 dbCTuk4zx7GHRzd6e0F5N55V0dtaa/t3bQJzJNdXYYzI2f4v6qN4b3APi1dhchRFe5SWH
+	 tfLLIQuvp8LXLT3TXpxAt/qyeqDS8mkGS/LDQovlXQjliMLhPldoifW65h0eZ57At5E3s
+	 O1mJtwFvmCv7fJzdEtJNoMAhD+rHifWsmKDcIDAmy1rXYcE+9N3h+6j0SysmMC3jxSLvU
+	 BS3X2Bxm8c/UF4RnoIMv000JHMCd6z+F1Nhz0JqHb+7pOEH5qVsF1mBY1dH5bBNk9Hg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=W49HLn5R;
-	arc=none smtp.remote-ip=209.85.210.169
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=hkDQJ8SE;
+	arc=none smtp.remote-ip=209.85.216.45
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB666606A31E
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 19:02:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB666606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 887CC606A323
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 19:47:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 887CC606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=W49HLn5R
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-8b66d1a08ccso3432860b3a.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 11:02:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=hkDQJ8SE
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-3adac5c10e3so2608976a91.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 11:47:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795546935; x=1796151735; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1795549669; x=1796154469; darn=vger.kernel.org;
         h=in-reply-to:references:to:from:subject:cc:message-id:date
          :content-type:content-transfer-encoding:mime-version:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=vmPlBJsxyoTZOO9g2mmGNuUfH7b/frSSah/ZWuzVmhc=;
-        b=W49HLn5RkMaC5OffA1iNYwWj3QcXjho4bBBEYyHJ80sMc/UPULZx0is/eDJpC2N3ib
-         U5411fK9H7EvaHNUiAzyNcMRaRfWUePxiO5nF6dXRnWQcakCLoOcwBez1qwCR6R1oIfe
-         q4c7EtVSFXNeliYrDeUDxIDrBA9ZIJuyG39lD2tcmw1MBgaf0y6E9eqLCYzDMbFPT8aQ
-         T2II96TRsePidFGcPlSyAkLQbRIPL4z8RKR0PPlfzSoiEzHTM2cY+rkptgAAFD2Cwvml
-         DpAfsAN2AKGhtv05DtjXMcA4gmT2Ub8TyWWHMBLSJzr10iAYvLD8v6nEW2UiNe6xEGzX
-         AF6Q==
+        bh=lUpe/tRxEZ5NPFIdAznJnUvDVmlMVX6s3wfMo2I3P5U=;
+        b=hkDQJ8SE9T5NTx+bSFOZ+oAkTZjhjNqbr5FwlOIkYHU2pfuWXC4hay2mNhTxK23qcb
+         E8pT2H1fsqK37LeIiSSxX+PRvqqMIlXOGG1K5wMto2pHYRL7DGTrjN32Kxqb5iHlE1CU
+         u8mGCY7DYmYOnknCKDT8FMwDs5wZDo3rUKOjZCq5TlJv7ns4QVJIwOYleRHqUCDxLmbb
+         7YnPGhg7aqE+4Hv3MnHRPSoR4oNT9YVwd86QcqSi2X5nJU1eg+L+AM7gmkVbGnnDdTIi
+         khfGHwB06pBcZLt4VFZZPlFrOhNv9bh5Db3XcBIMRmkCvI+BTRNN1Py8AOJ39USrGJ+v
+         4xPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795546935; x=1796151735;
+        d=1e100.net; s=20260707; t=1795549669; x=1796154469;
         h=in-reply-to:references:to:from:subject:cc:message-id:date
          :content-type:content-transfer-encoding:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=vmPlBJsxyoTZOO9g2mmGNuUfH7b/frSSah/ZWuzVmhc=;
-        b=gRg47VT7f2krEgqRIuFlmK9VIGa6h+EBTlvm47ZpLcHD4ybbq5grl6uhQZYRPYrn3z
-         Ib6KQJNXASQ5QNvliFzAL7u1BnHxSIUlz6njCT+nkahn8wZ4Hor9GGVx5nodXNghtm+r
-         TbfBysa8VeC0QppRpAG7BWUodfJf1XfsXFnwQ93oS94y4QoEre8R5kJ+U4DbiQddM8HW
-         rXL+f4hX8OkJeCYtqLFNy45ORbDz9BkLjrbwB5AkN+FH+TpT2A7xxtA9Q27XSsk34J5C
-         HFF9axf0VHyncIRyUg12f4cmohLD/6qsVgdlCa9o9rHohv/W6aU2mjavLzqf44ywGJ81
-         gshw==
-X-Forwarded-Encrypted: i=1; AL+hErFksBq37lm6tQk+RqzeCDPGb5kKv0jjmxTQ1xrJ4Q5xkrLcOwwM5oPfDdoJ1OcPipuanSbYeuSryIY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9vUTUHL6jJTI7e2AIl4qK4wP+pmY0MRSzyy1OLX/08DjWujxu+
-	zAkeE2qKCWowmzWvT0s1RH6DrHG1Suk6dG8rdX+U4bbcF7MzTQa72BNV8M8XOELwHg==
-X-Gm-Gg: AZFdTZewiwZtlvD53CryRAc4WN89JnScwbgSQKHCZTnVU2IxFAoyK2UqDUhamArK+kS
-	s0DUtBdz30ZRqTvIxvmHeUUcHiSnd+qdwStc4FUWOMlhRmNTe18KGwbF6mkKaXvZ9GjpUwU1zzY
-	J2a/SpgmvpWcy+eBJYlbC3tBeSE7pXwDsCQ2DCmlHr2B27V3MdKKYS9O6kcbtMeng0GarF8TQZB
-	Kfau+bKo/Jum3LHurO0JcRwYTJwseziubSdGh7lfK6/Nk8ss0lMaDpECX3EytvFA6jErctgJWHu
-	1Y/pqj049xUknallMJv9ZMNRXZb+LMlBBefoGTzutzqh6nz9bZe2j/bkrk3yDdWg9fKPbF3iiRW
-	1+WUhoD7NPzDbsu37ljhkmvLCOAF4munAmLooOGc+IQRUFM69bmK7zBTTGZmc54l4JT2M10Ag6h
-	RzFNWOP/2yBkq7WwgnouzXuGSaTeENyTYos5wrHIC8gP+fNzzvy5avtkSh4cbdZE/RRV4QcYr6R
-	yYiGGpGmWr6DU/vJkPVqIHdwv6675q5afCOdP1TJ7WqMZpwtcJa+dbV6WxG7vFS4WowUmw2TAhB
-	5ZnDRPdyNtct4saDI/sCSGShrac8LCFzKI8vg7DYWMIa1UhlAvhLpdFfBFwvDPgj+A==
-X-Received: by 2002:a05:6a20:a11f:b0:3e9:f2d:d556 with SMTP id adf61e73a8af0-4014ca44d17mr16159174637.55.1795546934090;
-        Tue, 24 Nov 2026 11:02:14 -0800 (PST)
+        bh=lUpe/tRxEZ5NPFIdAznJnUvDVmlMVX6s3wfMo2I3P5U=;
+        b=xGiM4FBIGD31TrlDkL92sK/7J7NPh6H0Bu1zjFFVIDHFuaWxvVqUxCKBGTD8J1CoK8
+         bbFBzMCUh2cdK0U/5S4hIOMHXEuuKxfqbOctNeGLnybMVkI71olAqHIG/1qv5TqarZUr
+         uz/2ZJIDXk6JYMabYB6kme/LsEPZHe7EYuIg7P1ekM2iHLvyNK9dTN+7EseNfNgV7Yt3
+         LV1/Fnehja7IUMM6k2nxnxZDgOQJlc2uEpbUSpf7+9pNxMia0Jag1JEZjxTzgHqYhEkq
+         RegBoGKRhCqK7V+nLbdPsKV9KN5mvuZMQ84U3HJDx7NWfJxSqOuF0u7BwVbwKisR7gwr
+         YdkA==
+X-Gm-Message-State: APuU4Z+SZqThrGbFHjk07dcAaLClAau/hv2qiSqVxgSgqZoxxBhub8Pp
+	QPc0vz3Mo0apqLc2m3IUxD4RU+8KawivyT/G4RBfWJ6aGc2X4ffIRrB3gXhHzK3aEA==
+X-Gm-Gg: AZFdTZel4lhB7OGuNsRxv8sONBmGPksatqbm4hxevq/OtdSBzCAf9ueZDmK2u5M9OU8
+	02kbSBr2S/tHHd0X3hYHtQWTlqEGz0L8Y1PsxFDwYEHXaiQPTaQNxqNhXeTOdTCd/WU6/vIpTYn
+	RrkTlpsVapZEe/pGw4KAzJ6VxsvKPUKFCDpayPB8zcpTuQhQG2cjKRbx93TK7bZFjzXvSi7ofXd
+	4gmBNP3fQDdUdNOyCM+AIYg7Plf78WxFeOy+d7MKuW9KOsQEp99KjfQG9PlOLMyDbRHnRuDA/Ld
+	H+BOlm7Gh4UNt9pvfhkJkNlBlV93ThKZt5lE/zG7u+svri5gFKGTOC2smUzRDMAYtzDdEJfiFIh
+	U7QTLfUVz62BIan4O5RRjqGxiBQdXtsswfJXNmK8UuG+QnrW00oNR/t80h+BhiJB9zaDjz/urr1
+	eSUnyDhlQtG6o7Det+nSsuwDObVzJwy5BIZGn9lcFNYrVpDkmNU38WgPd6erK9AF2MkNLVzDgtp
+	rcooS59Zx54kgM1iLZsVyLr+7Vef3Goy5WDKypnF3OP3d78V7ImKb7ce7FWYjEgMrOZrZ3jPzZw
+	ZxhqZpQabZuCLfCrt3XmESJiUYB4vvqnwJhFvL+i3dRA0ey2NqzM1xnVr4ACfAQp
+X-Received: by 2002:a17:90a:e70c:b0:3b0:d551:ab2 with SMTP id 98e67ed59e1d1-3b41c955b0emr14483470a91.51.1795549668300;
+        Tue, 24 Nov 2026 11:47:48 -0800 (PST)
 Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cde9bb05981sm2247135a12.26.2026.11.24.11.02.12
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b41adcfe23sm23939545a91.15.2026.11.24.11.47.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Nov 2026 11:02:13 -0800 (PST)
+        Tue, 24 Nov 2026 11:47:47 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -90,75 +89,68 @@ Precedence: list
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Tue, 24 Nov 2026 11:02:12 -0800
-Message-Id: <DN3O9LHR4XNH.1EYLA6D1F0J2P@google.com>
-Cc: "Tarun Sahu" <tarunsahu@google.com>, "Pasha Tatashin"
- <pasha.tatashin@soleen.com>, "Mike Rapoport" <rppt@kernel.org>,
- <robin.murphy@arm.com>, <maz@kernel.org>, <will@kernel.org>, "Alexander
- Graf" <graf@amazon.com>, <seanjc@google.com>, <jgg@nvidia.com>,
- <loganodell@google.com>, <arnd@arndb.de>, <dwmw2@infradead.org>,
- <baolu.lu@linux.intel.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
- <oupton@kernel.org>, <alex@shazbot.org>, <gle.com@google.com>,
- <pbonzini@redhat.com>, "Andrew Morton" <akpm@linux-foundation.org>,
- <kevin.tian@intel.com>, <joro@8bytes.org>, <kvmarm@lists.linux.dev>,
- <linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
- <kvm@vger.kernel.org>, <iommu@lists.linux.dev>,
- <linux-arm-kernel@lists.infradead.org>, <skhawaja@google.com>,
- <sagis@google.com>, <linux-arch@vger.kernel.org>, <linux-mm@kvack.org>,
- <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
- compatibility
+Date: Tue, 24 Nov 2026 11:47:47 -0800
+Message-Id: <DN3P8HO01T16.1XHR8MD7J5JSJ@google.com>
+Cc: <linux-pci@vger.kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>, "Rob Herring"
+ <robh@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ "Rafael J. Wysocki (Intel)" <rafael@kernel.org>,
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, "Alex
+ Williamson" <alex@shazbot.org>, "LKML" <linux-kernel@vger.kernel.org>,
+ <stable@vger.kernel.org>
+Subject: Re: [PATCH v2 07/16] PCI: Serialize bridge window sizing and
+ resource assignment
 From: "David Matlack" <dmatlack@google.com>
-To: "Pratyush Yadav" <pratyush@kernel.org>, "David Matlack"
- <dmatlack@google.com>
+To: =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, "David
+ Matlack" <dmatlack@google.com>
 X-Mailer: aerc 0.21.0
-References: <20261110050202.529473-1-tarunsahu@google.com>
- <20261110050202.529473-6-tarunsahu@google.com>
- <2vxzse0rzjdn.fsf@kernel.org> <DN2RQ7LGX224.3W3PSQ2PBHTJZ@google.com>
- <2vxz33sqz1xj.fsf@kernel.org>
-In-Reply-To: <2vxz33sqz1xj.fsf@kernel.org>
+References: <20261120134716.3027-1-ilpo.jarvinen@linux.intel.com>
+ <20261120134716.3027-8-ilpo.jarvinen@linux.intel.com>
+ <DN314UP7ZLCR.39N4XNGLWKR05@google.com>
+ <42d7af61-bf69-b440-8685-5d9cec4863dd@linux.intel.com>
+In-Reply-To: <42d7af61-bf69-b440-8685-5d9cec4863dd@linux.intel.com>
 
-On Tue Nov 24, 2026 at 7:25 AM PST, Pratyush Yadav wrote:
-> I don't think it buys us any functionality. It just hides the problem in
-> some lucky cases.
+On Tue Nov 24, 2026 at 6:10 AM PST, Ilpo J=C3=A4rvinen wrote:
+> I don't immediately see anything preventing from moving it into the host
+> bridge struct, I'll look into this.
 
-Following up on our offline discussion: I think it's worth keeping
-support for optional features, both before and after the spec changes
-land.
+Thanks!
 
-Before the spec lands, optional features are the only way to enable new
-features at all. For example, the PCI follow-up series [1] preserves
-BARs and bridge windows using an optional flag. It's purely additive: a
-kernel that doesn't understand it keeps behaving the way it does today.
-With optional features it can be enabled as soon as it lands, and Live
-Update keeps working in both directions, including rollback. If every
-feature is required, there is no way to enable it until the outgoing
-kernel can learn what its target supports.
+> Not sure if it really helps much currently because pci_bus_sem is also
+> held but that might eventually change (there's the series which
+> attempted to split that into a separate lock in each bus, I don't
+> remember why that work stalled).
 
-After the spec lands, optional features are still useful, and at worst
-harmless:
+A lock per bus seems hard to get right, since a sizing pass or a BAR
+resize can span many buses and you'd have to lock up and down the
+hierarchy. Per host bridge avoids that.
 
- - Kernels that predate the spec mechanism can't provide a spec. As long
-   as one of them is a possible target (e.g. for rollback), optional
-   features are still the only features the outgoing kernel can use.
+> ...I already have another (unsubmitted) series that adds
+> pci_rescan_remove_lock around host bridge setups because they too can rac=
+e
+> with a sysfs /rescan leading to adding devices more than once, etc.
 
- - The outgoing kernel doesn't need to consult the spec for optional
-   features at all (less complexity), since by definition the target can
-   ignore them. It can always produce the same payload, and only
-   required features need to be gated on what the target supports.
+That would have saved me a lot of head scratching. Please Cc me when you
+post it. I'm happy to review it and test it with Live Update.
 
- - Nothing prevents an outgoing kernel that has a spec from choosing not
-   to set optional bits its target doesn't understand, if we ever want
-   that.
+> Now I actually started to wonder why couldn't pci_rescan_remove_lock also
+> be per host bridge?? (+ a separate lock to protect root buses list)
 
-The cost of keeping them is negligible in the current design: the same
-number of bits in the header, and one range check on the incoming side.
+I've been thinking the same thing. Both pci_bus_sem and
+pci_rescan_remove_lock could move into struct pci_host_bridge, with a
+small global lock for the root buses list as you said.
 
-The one rule we need is that optional really means safe to ignore, e.g.
-optional data must not reference preserved memory or carry restrictions
-that the next kernel has to act on. Anything like that must be a
-required feature.
+A big benefit of a per-host-bridge pci_rescan_remove_lock is that it
+makes it obvious which lock to take during boot-time scans: the lock of
+the host bridge being set up, which nothing else can be holding yet. It
+would also solve the re-entrancy problem, at least for VMD.
+vmd_remove() could always take the VMD domain's own lock, which is a
+different lock from the parent domain's, whether or not the caller
+holds the parent's.
 
-[1] https://lore.kernel.org/linux-pci/20261019213054.3157159-5-dmatlack@goo=
-gle.com/
+Eventually, the per-host-bridge pci_bus_sem and res_setup_lock could be
+merged into a single rwsem, with sizing and assignment taking it for
+write.
 
+Thanks,
+David
