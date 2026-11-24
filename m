@@ -1,94 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.52
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795511994;
-	b=pIAodCmV9ekR0dIZlyRTnVa+f3ouoCR6THnEZdf30YNdgGG9jB3xBE2Bgx3bv9VUVr+r
-	 tdAl/3aoaJ9MRAtH8mrWvMUOvCyLTXLNWlDlHs3EbFTG0QUH7RSllpmS9dc9z13WwpxxZ
-	 65peQFVZ+wxgv8qq6Wk27jX61uUwIZR0t5PDjvUW9df+TFvrwusRnLcyw2HzRh72crinA
-	 vsvzrY5rm/cehUEH2efetDivpj5uhl/ar1oo+JnFW+tUaNElVR0yti58w6d8FQ2lXgQNE
-	 7ncsLeQAh+pOjvKZMzmMV4cjsfbnR79nxsMd/Yqua747Nuosrc/EFQq+6AOjBFrZPdg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795511994;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=aZ4pxcaq3MlXEwX9BaxhSYpmr3lby8xLBeOUw+2Qtco=;
-	b=HUrX++TunxaDJ3Ymeeum//uhgc82iy/IwhqqHqgApdKg0sFyQJ7uYWbNJh6IOLTlihHD
-	 ZmZyz1C6Eqkyx0kRJlrbhzCyGYnzoBb44ngX7KunFsLX3NolDKDbdp2Nin8xXrtBG/CXf
-	 PAELqPkPitQ9I7LrpuTHc97ReZjdtPinyb3Ut3pVqwaZFVhJQF34ut/3h/KhJHIa2OZ4I
-	 /usMLJRzZwlnqR4iIW9uChO6JaWPTkdpOpmVGpZ4zY2wHnwrV6+8Mk+H16Y0YxtVLDC4J
-	 2kNXrd+PB1368cVnXiU4wB/y6wPONZcoT60TOTxjAXVOJOl3GGwxPZ3l5Y1xGRZ6Nfw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=rAUAOulv;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.52
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012052.outbound.protection.outlook.com [52.101.48.52])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795513457;
+	b=MXDvT1veisZNEbpckXlUNmubq3qvDs10bLw7xROHnCUgbhgftn8KNBPfaD6QmHu4oqF/
+	 1DW38P5Ub2JVawzH02f9JpN4DgoWzkCKFEZzN5MtQm+ku78drVYvonZRJVAXq1TF86uWO
+	 QERRQmzv8rzQdDhVGAxW/1tgLrTavEo9YIBKy4afElMR0IX81XScHvgmkh4TmlKxaa3AW
+	 pYN+hQFWmNK5oL7ijX39gfFSbaMpcz5dKiA/u0cuDoSwMdChQFK2iaMY4fP8/Muqvfqtn
+	 gEO15uKGd/Pg0eyQsVLg1PzjyhAx5jDNVsh80tYcIvQOhtoqBd/Fn6AFjqgTGESeZCw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795513457;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Type:X-Change-ID:X-Mailer:
+	 Content-Transfer-Encoding;
+	bh=MVyh89LSnjdyTdIzBNZRkbM9Weu4yYexQ4Ew0x0v/rQ=;
+	b=VaZMYQUpuLoFjJNs4yBMst+ZztBG9QMqwE44Xz2pEb2INQNNINa6jcVA/G7MzzH2D6LO
+	 /c7oqyb+HXR0t0G9OYueczLYHKu1slF9xejmWdXLXwWay55bRtE+7V68eknWbg9hK15fQ
+	 2w15KRWzQJE2uS4HqYN/CMkYRF+Gzvb0cPeXJKOL1a/HyoyO7WhYCmx8iH9y/3FeyQHZs
+	 1h7O5eRTeYWL0aZiH5DCHpoS2Bk3CpD/bRUXWfRuamcdf3KyTUoTlXiumPSZSScrHi7rv
+	 E4phhCe35S90wSHoo9h8+dxdLT+7gHIcamuvAHBL7foxnyjO31ORISjryEKA+hWmCSg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dPz5Kqpd;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B59606A335;
-	Tue, 24 Nov 2026 09:19:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30B59606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F11F606A336;
+	Tue, 24 Nov 2026 09:44:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=rAUAOulv
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=AKitACNCPxIF5bAAT5qfKWkQHe0YXbD1EIHFtxOBiqU7MqAqTgqX/3/2MHXzlODqHAPwrJp7DlTb7WvECllOOp1S8EX/QuBDdZ8KiyytwNQxqu2KinHXLkZ+hlTTzHYdvwnoXNtwoiLcqgHsBT3YKWQAyUOu7dPFBhdDQ5SPD/XP0FbFtCY4iDpY0J++JOj44WLueZE7lThqEDhdi6/4mlYewbtmDVwmYtGss59GVKLDQ8+X9tms+mwJFjnhr2BRT1ZULDPuhn9+ywkbccbNZ+40wuJhlXAR8IkYLRp28SDxNZfoFQ3gMHiB4ouHMHjxpDrP2Gloz4e+X0dLhE4nKA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aZ4pxcaq3MlXEwX9BaxhSYpmr3lby8xLBeOUw+2Qtco=;
- b=ApafPbbnsrM5+WD8RFQfoPCNgqI2zu1/n+Mr7wDCLEutGoRSlFlOQpWSsFhBbjgTdWJ5xRLrzwLQ04q5Axb7jx8DFCyj8zXNkV0qA6PsOk6A+kbg9DfDxORC9Nz5gCDHaaSTtN0PbuhRKxIcoGGNRAsY096oUdKSF8dF8sQqSTRPzpi+a2lVrOT/yWTvJlYCHtMunNj9Uw0beaIus+EL32/hGAj0LckNjeaOVrqagCqc0lz48QHoAzoMawHJPeRmA+lcOm+W8udyq2ODjClqoPYoOBECRaZGsoK8LfoL4tz3Zt8zhmrRY3lLZHJJv7EgnYNYPNcmqcQREInmxA/Qiw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aZ4pxcaq3MlXEwX9BaxhSYpmr3lby8xLBeOUw+2Qtco=;
- b=rAUAOulvAfwyvb/gPABKUEKxZjTvjoqSTwDybRhe9RnZgCN58qGKKIe4QOdfLis1cFwljAw0QKANDFjzypfHTdKGHFFX7Esaj1jgTvdu47CQs+dyw/r9QRILV+425AjigMk9RxSSPzKDLC0wCnpGV9p3Wp80lOdka4NywgYbtYa7UFSdnNhpsSnQNjnx2TxBzYOmxekDzcCFG2QzV5c6IGYBNohfTe76s0rd2zyB3VWFWD89mv7c0jjbIqwSyIk+kNN612wYjyh9K/VjjyxheBouFAvhO1KSSaFhsn3UuCDcXFS0bWj1ODsmh8Wy6nCAxaVdUkBkwvYNHolwwdr8kw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV2PR12MB903269.namprd12.prod.outlook.com
- (2603:10b6:408:40f::22) by SA1PR12MB9001.namprd12.prod.outlook.com
- (2603:10b6:806:387::5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Tue, 24 Nov
- 2026 09:19:51 +0000
-Received: from LV2PR12MB903269.namprd12.prod.outlook.com
- ([fe80::29c8:652e:e2b0:4dd1]) by LV2PR12MB903269.namprd12.prod.outlook.com
- ([fe80::29c8:652e:e2b0:4dd1%4]) with mapi id 15.21.0639.012; Tue, 24 Nov 2026
- 09:19:51 +0000
-Date: Tue, 24 Nov 2026 17:19:44 +0800
-From: Richard Cheng <icheng@nvidia.com>
-To: Joshua Machauer <machaujo@amazon.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>, 
-	linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	nh-open-source@amazon.com
-Subject: Re: [PATCH] PCI: Skip the CXL state update for a VF
-Message-ID: <awVWhqBe62XZ4ICF@MWDK4CY14F>
-References: <20261119164219.51540-1-machaujo@amazon.de>
- <awOxn3BcKl8Ru-QS@MWDK4CY14F>
- <20261123161956.72689-1-machaujo@amazon.de>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261123161956.72689-1-machaujo@amazon.de>
-X-ClientProxiedBy: SG2PR04CA0199.apcprd04.prod.outlook.com
- (2603:1096:4:187::13) To LV2PR12MB903269.namprd12.prod.outlook.com
- (2603:10b6:408:40f::22)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dPz5Kqpd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 270941F000C0;
+	Tue, 24 Nov 2026 09:44:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795513457;
+	bh=MVyh89LSnjdyTdIzBNZRkbM9Weu4yYexQ4Ew0x0v/rQ=;
+	h=From:To:Cc:Subject:Date;
+	b=dPz5KqpdK9nRPKUG6HUSe0vOj09Sy3JXT3OmWwG6jKg0jPV//81DZIrqZ9cs4jXkP
+	 e5jysJUgPxSHDEdvRIBPlMnRhve/j0ygvAMePt1RCUH45XYZvtV/aeyfIK/X1Ifn2B
+	 ctYWo+8swz85c0hjAjpMsVLPTHzme8kWcSexD1DD291wZLjXDenM0/ykH4wFjGdmCo
+	 +NEsrDDUg5fjAhyDjb5L5BMmR/S5qSXaJotzaodPFCvmwbSA5grmcSX1/GcsctGDt/
+	 UtKyMHvV7Vr4u82Zoh4tL4cn07Ykj9ze1498N1xgF/MZn7PEu+qOtnZEmsE7mJUa73
+	 hyuQsDuJkX2cw==
+From: Leon Romanovsky <leon@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	Chris Lu <chris.lu@mediatek.com>,
+	Mans Rullgard <mans@mansr.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jaroslav Kysela <perex@perex.cz>,
+	Takashi Iwai <tiwai@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Cornelia Huck <cornelia.huck@de.ibm.com>,
+	Andrew Morton <akpm@osdl.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+	Dan Williams <djbw@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev,
+	linux-input@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-coco@lists.linux.dev,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-sound@vger.kernel.org,
+	Jason Gunthorpe <jgg@ziepe.ca>
+Subject: [PATCH v4 00/33] driver core: Authorize device trust before driver binding
+Date: Tue, 24 Nov 2026 11:43:31 +0200
+Message-ID: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
+X-Mailer: git-send-email 2.56.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -98,95 +113,187 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV2PR12MB903269:EE_|SA1PR12MB9001:EE_
-X-MS-Office365-Filtering-Correlation-Id: ab9fbb13-0315-44b1-c086-08df4a0c17b8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|22082099003|18002099003|56012099006|11063799006|4143699003|261026121527099003|261026140227099003|261022105027099003|10067099003|261028144727099003;
-X-Microsoft-Antispam-Message-Info:
-	KV19BG0P1qSIMBHKny0CogCxf33En3k7dpTX4TI8VV9tJxYeK4ZFufsWc/YDsoBXjOCee+TOZca1cc8P18n7a6BGDxRMYUmLlLsWMhijPCraOM9pf8aarEMtW8Wd6BA+4ejjGD+mV9xuzH/DZwYEHwsOygz8zI/amLdL60riqegKlnMtWj64oJq6kQQcibQ9yizEiV3lijq3IwTSHqZFWp2d3XQa627UgG2raR9pfV+IFCujpbsMzXTrB/wlhWhW1EWziKbyfJsicaDG9iMIIY+unbzxS2FCdVUKw9Yfq5A25U17SWV+RO5hB6dXbbpeaxF4S71z9YH7mPw3p6zm26krhsnQWQwlou3OF/4ULEYjMsamrR4qf24dEMzwJjc7XNRdoUclOO5EhTmfsTWLIPLeJINYNNCN5Vh7PHq0w9WmJDIdvu7zk9+5T/CLnbLycRc4fIZjAE4AFxwlEO09Dalz7h2tL5+fX/gIiUKHE/G7k/X2ldaJ+5foGuwoBFuCke+ln585YCF41c4hE9RtnNT02Nl6V/m0G3YPBODbayDIEwHJLRR27eebH81fLa9wETl6JgzSaVdo27WSH5s3Ect3dMwC9LnsJr6/31s/enlgpJuDYok3VlUR0JO9n1sc6rPQ15dhjP826Vl8ApYjAg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV2PR12MB903269.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(22082099003)(18002099003)(56012099006)(11063799006)(4143699003)(261026121527099003)(261026140227099003)(261022105027099003)(10067099003)(261028144727099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?BB6bw+nE8EfYjP8WJpo64KrboLIhb1djN0WQvr1G54lJYS8uoJIOrI0Ryg69?=
- =?us-ascii?Q?AJag0cIR2rjyUcdyawrd7QxOEXGjfMQVXqd4ELDJQJPPvoEvY2k1qbAViCAw?=
- =?us-ascii?Q?IZHzplGbAh3d6avL8D7tBkU+O7D0lAuC0nQ9WQiuC7FyVh+3KICN8sjTOg6g?=
- =?us-ascii?Q?z++bfjzWBvyoLG/5JgaM1di5gH/9PwtKQh33XW0+v+ieWKBTE6/08A/a8CWA?=
- =?us-ascii?Q?RAh/A3m1p/gVh50nRt/EMzErMTwUKee3bue+V4mJjd36oQVkMBy57NF3NSzq?=
- =?us-ascii?Q?cshrw/8QK6bexMhDhrt3eZGK9jwidhnryh3jI3Wr8HrRSEWgfQhA1pBDbJfk?=
- =?us-ascii?Q?35d6qsoYYfE1deOQ6oIBI3jrb0vzV2DBOz/yWzUh7eNSxhHRCTH0ddW4XbSu?=
- =?us-ascii?Q?1W+tmFVIdgaBYoUadATHBV87JGa7LyOBwMzpZrFCLHRyFy7ZUQ7vfu6wOyv7?=
- =?us-ascii?Q?TxtF5SP47gDor9f9yX/TEO4pqMfIlqCGEqJTJmRbJEzs963hWE2hK8ZQhCt5?=
- =?us-ascii?Q?ZTc0LQT6TnIXSt/uVkKO+pzh+JBLVsbETm+GbFWsv/uGa256N1f6o2OJl7Zs?=
- =?us-ascii?Q?3TgW6+nGyfn5NNLI1eI/51f9cvRXUZkcIJRv3cp5MwDMz7Vmav93mxj61ITD?=
- =?us-ascii?Q?TZ4C0s4iT1u3RiODubrusub7HmkzkVYWhnuMWUsO8rRCRJwKVNk8XxOTkniS?=
- =?us-ascii?Q?ATIpyNfKT+Jll9hV4GGi5BIaqFSlgqpYL3inoQFSvbXFrEEjenV9ZnVBQf4D?=
- =?us-ascii?Q?Mv4Kr8W5mmdP6WDs2o3cLNFdUGAM/bb0HoSlKqd8QMvf/4M8zwVRNYLYIa5/?=
- =?us-ascii?Q?Pts6YxLNSu03ICnqyvs5z/Zi/o/05orafHcAq04FZRdn8t6YAUSOuB7D65pm?=
- =?us-ascii?Q?qWPfvmtPsXSaiKy3h+KN7/QZ/TuN6+SDYLfxwr6tW4qq501P7pNf26XUJgxD?=
- =?us-ascii?Q?yvVH6Pke1eSGRb+3qHiHHo4PPokjixGvJqvStL02vdOI8MvFrX43Qd1fQKbp?=
- =?us-ascii?Q?m+1gA01HOMD2ua1OC3Gb5+pO5EDHaRuS9jZ/3YhJHT3gFfpzW0UqpyoUWRYQ?=
- =?us-ascii?Q?Lihfhu2OFTKTTE5IKtLKjdg8OHnis5nWBJShSbMtws1zIbgnUZR8rVPB0oB7?=
- =?us-ascii?Q?C4Jf08ccVqyefYXxV9lx+ESvhzdRzJneU0dh3Hkp3KTqRD/0iCcsRQgDJfPf?=
- =?us-ascii?Q?xIkS+tl6pSa9VHCSOULBeUunYrB/7Q9Za0+6dxPNGN09HX9+Hp+KUHX/a52N?=
- =?us-ascii?Q?vGT7V12gg71f68pdZzmWtdKU0uOENqrrRViKA9Ql2uFjfmvJ+n2JcdWgDrCt?=
- =?us-ascii?Q?9o+6NjnTT3N0rRX+/menNK+X0gAhff6mYrO2MEwk230xq2HUr0hOXDh+7KUp?=
- =?us-ascii?Q?4OLjI6BTojM61E+QSvKeg3Q5Vsbd57jli78PIL59/o7QU1kWOm1thJI+Cq3Q?=
- =?us-ascii?Q?JJkcBzlpozlHcharsyljxQprF6NIboatLVaLxt7ILkfa9Lw60uhVG5hy9O+s?=
- =?us-ascii?Q?1Kx4FfTIGH15Jm36G55GIfuFyeYzJrG5LR7vRVXK0/au6cuni6N88xny5BuG?=
- =?us-ascii?Q?b0dHGuHkKHTIAdoZ56yQMsNnE+fY/WVPF9hfCbREyvr1bjHDM8zpSwZJ+D3c?=
- =?us-ascii?Q?wQYzMIKQs3zoj4kMIKl7Kv172Qx8Y9eURWYtQoCw3PWAeM4zXxWuwLqalBgb?=
- =?us-ascii?Q?6AkQ8jvuOYOPeiMTyql2ijMfw2jrHCGUk7/CCjBzBtzI4k6TILyUd0hd42dx?=
- =?us-ascii?Q?Jfvy7UsKAQ=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ab9fbb13-0315-44b1-c086-08df4a0c17b8
-X-MS-Exchange-CrossTenant-AuthSource: LV2PR12MB903269.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 09:19:51.0725
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gZaYCsmieJR//7SHVjZezbG4D8WzsFz6yLnsH988MLykIYuR/Ld/k5bwplR5rtnoob3DO42imoydBhZ74tsnOg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB9001
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20260915-device-trust-core-12934e618489
+X-Mailer: b4 0.15-dev-18f8f
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 23, 2026 at 04:19:56PM +0800, Joshua Machauer wrote:
-> On Mon, Nov 23, 2026 at 11:29:10AM +0800, Richard Cheng wrote:
-> > One nit on the sentence above, before this patch, each VF add also re-read
-> > the Flex Bus Port Status of every bridge above the PF.
-> > That refresh is now gone. I don't think anything depends on it, but
-> > it is a behavior change, might be worth to mention it.
-> 
-> [...]
-> 
-> > I would like the spec section to be cited here, CXL r4.0, sec 8.1.8
-> > "PCIe DVSEC for Flex Bus Port"
-> 
-> Thanks. v2 states the dropped refresh and cites the spec section in
-> the comment.
-> 
-> > Is the walk to the RP needed, or would refreshing only the immediate parent
-> > would be enough ?
-> > If it's the former case, we can cut more cost for non-VF devices too.
-> 
-> Refreshing the immediate parent looks enough to me. A device is only
-> visible once the link to its parent's downstream port has trained, and
-> the links further up were already read when the device directly below
-> each of them was added. The link speed in pci_bus is handled that way
-> too: it is read when the bus is added and updated on link events
-> (retrain, bandwidth notification, hotplug), not on every child add.
-> 
-> I don't have a system with a CXL switch to test that change on, so I
-> have kept v2 to the VF case.
-> 
-> Joshua
+Device trust policies need to precede driver setup, including manual
+attachment, so userspace can authorize devices before they operate.
 
-Ok, makes sense, thanks for clarifying this, I guess I'll work on this myself.
-I'll cc you then.
+This series introduces device trust policy, authorization, and lifetime
+commitment. Authorization does not reconfigure ATS capabilities or replace
+IOMMU domains selected during discovery and further ATS and IOMMU integration
+will follow in a separate series.
+
+The table below tries to summarize the possible kernel command line
+options and system behavior after that:
+
+Command line                        Initial behavior
+----------------------------------  ---------------------------------------
+No device_trust options             General: existing driver binding.
+                                    PCI: existing ACPI/topology
+                                      restrictions.
+                                    USB: existing authorized sysfs flow.
+
+device_trust.default=default        General: use each bus's initial policy.
+                                    PCI: keep the platform classification
+                                      and its restrictions; device rules
+                                      can replace it.
+                                    USB: devices and interfaces denied by
+                                      USB defaults wait for authorization
+                                      before binding.
+
+device_trust.default=blocked        General: block driver binding until
+                                      authorization.
+                                    PCI: restrict every device from
+                                      discovery; authorization does not
+                                      revisit domain and ATS decisions.
+                                    USB: leave devices and interfaces
+                                      unbound until authorized.
+
+device_trust.default=adversarial    General: allow adversarial binding.
+                                    PCI: restrict every device as
+                                      adversarial.
+                                    USB: allow adversarial binding,
+                                      overriding USB authorization
+                                      defaults.
+
+device_trust.default=unrestricted   General: allow unrestricted binding;
+                                      freeze trust policy changes.
+                                    PCI: replace the platform
+                                      classification; removable devices
+                                      lose their DMA restrictions.
+                                    USB: authorize devices and interfaces
+                                      regardless of USB defaults.
+
+device_trust=...                    General: matching rules select policy;
+or device_trust.driver=...            unmatched devices stay blocked.
+without an explicit default         PCI: rules replace the platform
+                                      classification; a device rule of
+                                      default resolves to unrestricted.
+                                    USB: matching rules select device or
+                                      interface policy.
+
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+Changes in v4:
+- Documentation, commit messages e.t.c
+- Don't fail BT device initialization if WiFI USB claim fails/
+- Rename "adversary" to "adversarial" as was agreed at the beginning.
+- Added new patch to drain usbfs during disconnect.
+- Added another new patch to reject usbfs connect requests for
+  unregistered interfaces.
+- Link to v3: https://patch.msgid.link/20261118-device-trust-core-v3-0-d655875c4bfb@nvidia.com
+
+Changes in v3:
+- Rewrote all commit messages
+- Split USB patches to smaller chunks
+- Introduced special device attach function which works only in
+  untrusted mode
+- Remove the special PHY -EBUSY IRQ handling.
+- Clarify that further ATS and IOMMU integration follows separately.
+- Link to v2: https://patch.msgid.link/20261109-device-trust-core-v2-0-3b12d9a9f861@nvidia.com
+
+Changes in v2:
+- Replace the serio and PHY attachment conversions with
+  device_driver_attach_unrestricted(), restricted to device_trust.default=unrestricted.
+- Add USB authorization on top of device trust: export
+  device_trust_set_policy() and convert the USB authorized attributes.
+- Documentation and commit messages fixes
+- Small USB patches rewrote and split
+- Link to v1: https://patch.msgid.link/20261105-device-trust-core-v1-0-1e536825b4eb@nvidia.com
+
+---
+Leon Romanovsky (33):
+      wifi: mac80211_hwsim: lock device for manual driver binding
+      Bluetooth: btusb: Fix MediaTek ISO claim locking
+      USB: Lock interfaces during manual driver binding
+      USB: serial: Register USB drivers with their owning module
+      USB: Reject claims of DT-disabled interfaces
+      USB: Reject usbfs connect requests for unregistered interfaces
+      USB: Release interface claims according to binding state
+      USB: Reject claims after interface registration failure
+      ALSA: usb-audio: Release interface claims when probe fails
+      USB: Pin modules for unregistered interface claims
+      USB: Add helpers to release unpublished interface claims
+      USB: Unwind interface claims after registration or binding failure
+      PNP: Attach card devices through the driver core
+      cdx: Propagate DMA configuration errors
+      driver core: Report deferred probes through sysfs drivers_probe
+      driver core: Add a compatibility API for manual driver attachment
+      Input: gameport - use the compatibility driver attachment API
+      Input: serio - use the compatibility driver attachment API
+      net: phy: Use the compatibility driver attachment API
+      USB: Drain usbfs when a device is unregistered
+      driver core: Introduce a generic device trust level
+      driver core: Expose device trust authorization interfaces
+      driver core: Accept device trust policy on the kernel command line
+      driver core: Accept device trust policy by driver name
+      driver core: Expose committed device trust level
+      driver core: Cover trust authorization and binding with KUnit
+      driver core: Document trust admission and initrd authorization
+      PCI: Use device trust for platform restrictions
+      iommu: Use device trust for DMA restrictions
+      driver core: Allow driver attachment with the device lock held
+      USB: Retain the result of configuration requests
+      USB: Authorize interfaces through device trust
+      USB: Authorize devices through device trust
+
+ Documentation/ABI/testing/sysfs-bus-drivers-probe  |   14 +
+ Documentation/ABI/testing/sysfs-bus-usb            |   18 +
+ Documentation/ABI/testing/sysfs-devices-trust      |   37 +
+ Documentation/admin-guide/kernel-parameters.txt    |   37 +
+ .../driver-api/driver-model/device-trust.rst       |  343 +++
+ Documentation/driver-api/driver-model/index.rst    |    1 +
+ Documentation/usb/authorization.rst                |   37 +
+ MAINTAINERS                                        |    2 +
+ drivers/base/Makefile                              |    2 +-
+ drivers/base/base.h                                |   52 +
+ drivers/base/bus.c                                 |    9 +-
+ drivers/base/core.c                                |   52 +-
+ drivers/base/dd.c                                  |  192 +-
+ drivers/base/test/Makefile                         |    1 +
+ drivers/base/test/device-trust-test.c              | 2487 ++++++++++++++++++++
+ drivers/base/trust.c                               |  509 ++++
+ drivers/bluetooth/btusb_main.c                     |   55 +-
+ drivers/cdx/cdx.c                                  |    2 +-
+ drivers/input/gameport/gameport.c                  |   22 +-
+ drivers/input/serio/serio.c                        |   29 +-
+ drivers/iommu/amd/iommu.c                          |    3 +-
+ drivers/iommu/dma-iommu.c                          |   14 +-
+ drivers/iommu/intel/iommu.c                        |   14 +-
+ drivers/iommu/iommu.c                              |    9 +-
+ drivers/net/phy/phy_device.c                       |   28 +-
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c |    2 +
+ drivers/pci/ats.c                                  |    4 +-
+ drivers/pci/pci.c                                  |    5 +-
+ drivers/pci/probe.c                                |   18 +-
+ drivers/pci/quirks.c                               |    7 +-
+ drivers/pnp/card.c                                 |   12 +-
+ drivers/usb/core/devio.c                           |   12 +-
+ drivers/usb/core/driver.c                          |  118 +-
+ drivers/usb/core/generic.c                         |    2 +-
+ drivers/usb/core/hub.c                             |   42 +-
+ drivers/usb/core/message.c                         |  104 +-
+ drivers/usb/core/sysfs.c                           |    9 +-
+ drivers/usb/core/trace.h                           |    2 +-
+ drivers/usb/core/usb.c                             |    6 +
+ drivers/usb/core/usb.h                             |    7 +-
+ drivers/usb/serial/usb-serial.c                    |    4 +-
+ include/linux/device.h                             |   21 +
+ include/linux/device/bus.h                         |   10 +
+ include/linux/device/trust.h                       |   54 +
+ include/linux/pci.h                                |   18 +-
+ include/linux/usb.h                                |   25 +-
+ include/linux/usb/serial.h                         |    4 +-
+ sound/usb/card.c                                   |    7 +
+ 48 files changed, 4246 insertions(+), 216 deletions(-)
+---
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+change-id: 20260915-device-trust-core-12934e618489
 
 Best regards,
-Richard Cheng.
+--  
+Leon Romanovsky <leonro@nvidia.com>
 
