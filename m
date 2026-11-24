@@ -1,105 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.52.49
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795480838;
-	b=TqeK3VVyF7hGqy7Gy72p6uKYB6i0ThY7Q2WZ2kbvK3sA0WItKtBEpeNrg8SkgFYXWquJ
-	 ltgJKGDsmDM9Ij25W1chKWhymNuoyD0DEp/FUAkBnRnsmBKKqbpEEI4eNURKnNUDFXyv7
-	 o5cfPTzVfuyBv5vCzWfIi888kx6YeKxPt8dCHjcX1UaxOl3rXI3HrCcotV49DSO7y63iQ
-	 28exSM8413B0wInGfEfC/JMsWUJ57WP9+KnLSqVTAZi8yYGEVmcx0RtivyOsaThS0Q/AV
-	 G/rVyWwqxz6k3C7UPJvhsesPmI0foTJdQpG4Wgzv86DXYzS3jNB4UtAtpXOfyTRsKJA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795480838;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=3ICQWh5B5bLQ18fouiEV7EH48XJS5Cy6rqnVw2pkUVs=;
-	b=vAiDifmxaWuDBLx2ZlLLDQzLlPfq5GFNYLZliFyZ5czd7YgSulvK37lsfc+ST6lfDZzV
-	 rUBLbWDvetewA34hMI/2yWmnflZqbjSYpO5Nzafy3rtmvk0+wubUJALEx8UaDvZMQKKt3
-	 qrEhFpojBg4xOWmW4PWZNOdmfZr2xACwjY5EhkzT56if3/trt4MwdLshe073fWANg5zoL
-	 y9EkJSlq1Umx6kPOSSAXFbZL5dULkgEv1cPoXHoKgsetmrea7Nkig99oax9dxDnDi/kGq
-	 9JruhNwKQ9IbPgcWuQnRq9qooy4Y6TOBPDou0owxVGRikI3apIf9mX8+aAfcLUmSyig==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amd.com;
-	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=yzdLBwd8;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.52.49
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011049.outbound.protection.outlook.com [52.101.52.49])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.169
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795481678;
+	b=xYwXGl625P+pieZY7YxepIiv5HjnmygXnD8lFdlwhGA7vaz2cRdQtg23Y5oPOU3zEL/V
+	 wdQNX804smjJjCZFYqpUXJ3qwo3YBtLaTgCLIzVUQxuf3V6tFQs/smVuBxdcN79tjfbtp
+	 iYKEbJzECKyfcReegp36cu5vpAGWe46tN5hRTMT5RGAp7cQ06gyjVWVd0SwOOleUtWV2m
+	 b/qLhRO9MGHHthR4KvoWM3b2Sa37tEACis72mEeqTVlnRxa73WzBRAgtvddzwLTs9T/W0
+	 nYnW0RH6a7Gc4fgZtG8KJQTAVauIuP+ymEo+Yel+tNQr7798eDonFWfMSyYE0OmMffQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795481678;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
+	 Cc:Subject:From:To:X-Mailer:References:In-Reply-To;
+	bh=wxrFEQwvZofo98YP2I+hr7iiAcbc0NkcdEgkCb5+KYc=;
+	b=eYsF1/4CezMZ0AN0vMFJeGV6pPay4RUWmkR2oE/ZDaCmzw4+AoOT8ZChvkAciRcLLfI/
+	 +2pnH1LIgs2hj+xgqVIPhOHxb4rys0e0SbjrxUZBIZ/lvmBGtxXXUNGxDjhBLeBJRBKof
+	 h64H15IzQEnZF0cEh+BjmvBBwvaQzlP2+8xp0SoczFpP7idyHYyDZEvPFaOj6Gy0YnH35
+	 2NN1j6HAcOSZN/emYWWtxHI/dR5abX/y05e1BVGEOxpNxd47/qHRa+oOixSgfO4X7PQl2
+	 elaCSE2ZMfdOFJHvtxM/4Nx18sI4X7wy4WfUVVsQEA7wXMFwkIUYDhZ0Iu/qEnconTg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=qAcOTgh2;
+	arc=none smtp.remote-ip=209.85.214.169
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0896606A31E;
-	Tue, 24 Nov 2026 00:40:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0896606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1264A606A322
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 00:54:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1264A606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=yzdLBwd8
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=YI3i5YHzZ7Zav2Lmd1yJur2qRo1Qmcl5YIOI3PXwyvFl1zr/8rzUxdA2ukLS+uYViUELWlxtpG9po9QS6Ccv0qr9kLR2EfmSW9RQDXV+26K9ozXlVm0LKFRawF1zra5YWt2Uj5SpUDOg/mPVNtX4StVXed86ihh+EFgQMlmIxPl6GwFQPzMh8TmRlnacMJhCGxy6RxGr23qSbFvLw6RPb7rFcCw50gsDWCQEjASzig9kRmxSu7IXLjauG5gChljNDdaIxtVNPmABrrdyTOcBTfAzw11OvMO+3XRrm5I8W4whAuZcxYEfcFnfZ2JxPwj6HJZJsQHj6Wi5cjjJmGs7Qg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3ICQWh5B5bLQ18fouiEV7EH48XJS5Cy6rqnVw2pkUVs=;
- b=ZamMxdEbKiVMDZ2FLrKKXhli1iYE3UVwsEXUwyaKqXN33IlPpQdty336nFVj2Ze2LTrtj0RFxmDVJzhHG1Eo50QxiqT/wfFs7l/B0fZylXoTxxyINgU53F6OJV9t1se2KVmb8YZg0ZKVXltdgvh7CTpYHa15H3VKyUxJrgNulIPH2dEF8Ec81kbeFjtwxm69x8Gt6xItLyKS7IFd+nGKK5EC2oxixBSs3MzQk43Q1QOsioTSxVrSCVnluDgv+Rzcj4DhM4EWwBlUIbEzg/UuDV20kxkfr++x19VQdyVxM9BFjwObnYQNH1oq/dcKRzbhJcoxsgCqH0nYGgdhN+BYjg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3ICQWh5B5bLQ18fouiEV7EH48XJS5Cy6rqnVw2pkUVs=;
- b=yzdLBwd8QGOGWzPrl+EPPbf6R1ugaUbRiXpyGJlIeCuMSNg37OQIh67NzDimb0sgfxKiyittqJMiq+VUQOSxHm+9DT770wXCN0eicgMYhvJy+x4o5vJf5cGpyAobT4stvpHtcVCV7RUE0WyY+lL2X6Y7QpdNORW/i/Tpo1tSNXw=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10) by DM4PR12MB9069.namprd12.prod.outlook.com
- (2603:10b6:8:b8::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.13; Tue, 24 Nov
- 2026 00:40:26 +0000
-Received: from SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3]) by SA1PR12MB999228.namprd12.prod.outlook.com
- ([fe80::4dba:119e:8e7c:37b3%6]) with mapi id 15.21.0639.012; Tue, 24 Nov 2026
- 00:40:26 +0000
-Message-ID: <9f92f7ed-5198-45aa-9cef-515ccbf98398@amd.com>
-Date: Tue, 24 Nov 2026 11:40:16 +1100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 02/10] coco: tsm: Register the TSM class before device
- drivers
-To: Jason Gunthorpe <jgg@ziepe.ca>,
- "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
-Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
- Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- Xu Yilun <yilun.xu@linux.intel.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Steven Price
- <steven.price@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>,
- Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
- Tom Lendacky <thomas.lendacky@amd.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, driver-core@lists.linux.dev,
- linux-pci@vger.kernel.org, kvm@vger.kernel.org, patches@lists.linux.dev
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-3-aneesh.kumar@kernel.org>
- <20261123152903.GG179082@ziepe.ca>
-From: Alexey Kardashevskiy <aik@amd.com>
-Content-Language: en-US
-In-Reply-To: <20261123152903.GG179082@ziepe.ca>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SY5P282CA0028.AUSP282.PROD.OUTLOOK.COM
- (2603:10c6:10:202::14) To SA1PR12MB999228.namprd12.prod.outlook.com
- (2603:10b6:806:4db::10)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=qAcOTgh2
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2f041f88577so21350725ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 16:54:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1795481677; x=1796086477; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=wxrFEQwvZofo98YP2I+hr7iiAcbc0NkcdEgkCb5+KYc=;
+        b=qAcOTgh2VKFtxARfCG/NRj9gEnV/2YBjyx3if8vZj9CWMZcf7B1w76NAPf996jOFz1
+         WLKsLHm/CZV2RcJ2qbELKcm3x6eD5BrvPRphgxZyfnNox16h7XHP6lA/roVNbkL93v7t
+         kezG2HXPtXbMRLPS3Ix/DS79BlBb7rYrUkjaIhRkN+9jTzAn4Y2yNriQNBrCzH/36lH7
+         BRY/zWsGEm6bb6BnDptS40PBFQT3UZYhtBdxp6kKmaYEzQj2wZnC7+0xdz4iCrEsdht5
+         2TPV7G2QSaLuko6z7lsSxxAd9qDRt8dZla88vlsvt9Uwpb5adJUauP5ZG2EdMKFW2a5P
+         jukA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795481677; x=1796086477;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-type:content-transfer-encoding:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wxrFEQwvZofo98YP2I+hr7iiAcbc0NkcdEgkCb5+KYc=;
+        b=1eQxRz+evJ8XrLzTXGM5npXzJ2YvqLhmBN292CbUVMhfdVsRsrVzD0fv14bm+tGPUw
+         eE8QiZWtHnZSjhorRLl8D/Bhgx7ETlhJEOEaAHOKje9Rn13kX5yuuvuRr+C4qWl3VswT
+         Ah3QJh+kzNCA0GaH3yjWsl3RWPaCfRImCErNrdjYZ4RIs2UZq5tyWhrxrifOzIXh0k7p
+         /UChp5hbARPvTrfVr7xKf+XYZuhUsq+8ba6AF9+0nBZyHu+Lj1kl+tFlavxiGa1UIsK6
+         EQbX8lMKXN1bx8FWiWmTrf8xfO+Gf6ERVSKkbBCNso9Vy1muT0OJ+yLuVnL7Evhm1M2o
+         DK/A==
+X-Forwarded-Encrypted: i=1; AL+hErF20QD2FIZCAiPUZLBfI+ofqDdesja/lb5T0ZqrsqrYa2v6xw5Z6LbZeNdnSC1jhF9vSKwaWtK0uNs=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+m3XsNeXjB4eVAW8zWX6ciS6zeheRZL/n9l+Ft4WP7jTNjXbvD
+	Y5zk8uzXxYDE6OUYWTcrqJcSksm87fx5xHWwtQ7mdZ3FLRlKtN7c+Be1HKmgGgGnYBo9vAfVRbZ
+	IINW5rRFw
+X-Gm-Gg: AZFdTZdGUlPWkh0WHaMuhi2bp8DDBW5XABud6bpebeozMZKhjvTd4BNVRvSThsIZtx2
+	oLefNXqXdnd/aaQG8jBi0CCrXBXg4L3uI8k6rmg029Xqmf93paPMVbmL3unlV5wggf6iRfCyobv
+	xL8qg6GdWWD1gMURDnkfR4NQfe9wULlgst1lxSdWqW2hm1scPIPhqKkK3Ne02l5lD3x3jXFHPdm
+	UvGmAwAbZyz8BibPYXkAAVho3ldcSSoGmuP54TLjWImd3n4CUO6J6gpHIDCsaxpmmDeeduI7pSc
+	pSNxjnuUPOZJA72XtTSF6fpcwAQYD9nTwAvPlPGDomPULY/t4L3u47vozYu5Vkn153ODASz7n5a
+	Ln+GNcyz1/avToqIGtJL3Z8gBZ8LefaEsrXEVYt9dRbgfTC95B6eG/5SEwJ7xxBngs3no3gi4YN
+	gSbDE/avxcHGFJsS1z+jp33w0CzMes65zvAp7XfZkl/iCVjNlXPNj54qgqgFgWyefZ6oDtSqpUV
+	zybDCiiANi3JsbbtJQMFbQ2zV1tN4emvShbOzkDLCQqnr4k4fBGgV+aVzHHW6ccvzyLaHoX/0Sm
+	nqrnS6mlc4j7WwcpdfWrNZA/RCLZzp3BtpRk62uoyJ74F845s7jgRN/oF5bmGOxo
+X-Received: by 2002:a17:903:2a88:b0:2f0:4fa1:9661 with SMTP id d9443c01a7336-2f04fa19715mr99857965ad.18.1795481676747;
+        Mon, 23 Nov 2026 16:54:36 -0800 (PST)
+Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f0817ab27fsm30599975ad.35.2026.11.23.16.54.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 23 Nov 2026 16:54:35 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -108,91 +88,85 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR12MB999228:EE_|DM4PR12MB9069:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4729cdf4-27d7-4109-463e-08df49c3885b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|7416014|366016|23010399003|18002099003|22082099003|261009223027099003|261022105027099003|261026140227099003|261022075727099003|261026121527099003|261028144727099003|10067099003|4143699003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	shjVWaZGU+SOSVxaZPAya69bIqlqh0yc3gvOEmDYbUKv5zxhpjm1w4THQDxv6qA8jpLWtuWynt2kVp8RklHj3+vYs9YAQixZCRnj5kktarEsgaUY75aeNfgi2gKf/AbahtXk767hLI0OLooLGK5AwVLnMwLJ3eeLTPk6K97jYjnDkaW3ogV97FSu1veDbVfNCzsXi0qHiLD2OmF9dOD/wy3QE6UYvA1zhZKohJlYFMgnXhgrzgwFobj25N+CKE4JXolD7ffPN5nqFO26QzOKeTtlWUW3uPxdfswLX5gUbtJWz7DbmpgGJ4yMSN8ErSl+Wcp6y+RYwkNGc6K2WuIbZ8w6FU082wbePxXnH/7FNyBIVsyZ4vqvvYsqOYuzxd+izOlMFvhhRymO1U+B0C2EdbzgCPScewjO4Z+661qMV1etBDIeFKTsBLHpLthbsiJyvMxRp/8LzuSySqZ7UePwmf5wKk+D41iLrYExcxw+UYUw7558O16jrGcJ6DHVDu32tYuAYk4zhkTTofcCvK5IjEGtZisxi7Oiar9Nm3R4kngO22c0Tj35zcw9Nx0hQfbZkVZ8Ynqu/BQW4ZRKacGWwWw5AShxb06Yr0xwYUn/Hg6IIgqDlPcZ//MhowLqWRvWEyxSfEknwDRLjoS2lGkb9v+6dGPOtCAkX0kgCGIZmvw=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB999228.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(23010399003)(18002099003)(22082099003)(261009223027099003)(261022105027099003)(261026140227099003)(261022075727099003)(261026121527099003)(261028144727099003)(10067099003)(4143699003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?eXEzcHY5RWh4VXF2Tlc0TEFmUWJxMlhBVTRYTWk0UVpHeTVDbXlaa3ZlcklV?=
- =?utf-8?B?U3c3aEZVLytDWDhianprZWc2UU8zRXpJak9OY3VJdWM4Z2ZjcU9ReDBoTlJ4?=
- =?utf-8?B?Z2dUcDNYclFpN2pJRjJYUytvRkQ2ZStrL2ZLOVNpTUk2d003ci9jdm8yRlZH?=
- =?utf-8?B?ZWtKRGU5dDF5cU4rN1VVT1BsRFVvbDd3OWxDUTUwQlhIcVJYM1ZCb0VXeXFh?=
- =?utf-8?B?eHY1TXcvbDVtN3JZalVCSEg0OHF5N1NvWUFHMGI0NFRsdGNhTVZVdS9ZWE8r?=
- =?utf-8?B?L1JwejRSamlSQW5PVC9vdVJRb2RxOWgweFJjb1ZUYkI2a3FNckVBUmI3azV0?=
- =?utf-8?B?Yk5YZm9Xd3BBSXM2RzVYRmJqQy9tdnhiYUFOcmdibEZUOGtBdkNFRTRRRnNX?=
- =?utf-8?B?UlBjSFVYZ0J0VEVndjhzS2hjMU1iQzdXbDBqRjRnTG4yV05ZSkNVUjF3VzBO?=
- =?utf-8?B?RkRwYlNSRFRvVk9ySDFTOUM0RUJ6VGtaYzY2ZTVrNVAxYW9GM0FNQmFqR0Rl?=
- =?utf-8?B?bktPVEFkSVFydTVZbVhnUlBmMGVwdnVheHl0aDJnUEV1bHp3ZGZWV0pRdkJ2?=
- =?utf-8?B?NEVuYURDN01jTlpUdHJNa0ExWkYrcHdHUVNHSEJzVFlJbjJ0RVhmSE1vTXJl?=
- =?utf-8?B?UFh5cm9VdDlZNnpjUk9VYVRhKzlDZE9KY0NyOCs4a0EvcktPY2l0SkdQTU4y?=
- =?utf-8?B?TnJMOE0wU3BQZDdSZmo0Y0IzSE9LRGplQk42WEZteXpSV01qS0Z5RXFKaTBr?=
- =?utf-8?B?SWovRGpPdzc2dlRLU3pPUURJcnRBdEVaWWdhRms2dVJSWSszSVBEMWNTK1BN?=
- =?utf-8?B?dWVLWU9qQ0VCUFdVeGpPMkFCWHZ1RlMxQ0pmWmlBemRrdzl5RS9GcWdDeU1B?=
- =?utf-8?B?R2NzeS90MUhWWHFvU2JuTjUrSHBjMnRTZTB4RzQvMWZ5SmJGVzNkenhVSjB4?=
- =?utf-8?B?K1NtenQyLzdscXd2dGN2YmYzWkVyWlUwdmZSUHUybEczM0llNmtiNXpJdndP?=
- =?utf-8?B?MTNZL2RGYjNrWHRhZmJJaldDTzV4RUJsV1JJeGlhb084Mms3aHZXMjNPTVhN?=
- =?utf-8?B?YXpsejcxTWoxTldUMFlFdnpxallMaXF4YXQzNnlXY0orQjJYVU5OcWZmWXJa?=
- =?utf-8?B?RU0yT3lvRFlCSUpWQ0pQc21zMWRyTXpjMVo3R1N4blZmZFBCcmV0OUxIemdQ?=
- =?utf-8?B?UTVNQUgweC9UVGpoSU5JTlBVOG95czljemRaZ0JVY3J2RGRlSW9HakF6M2Qy?=
- =?utf-8?B?d2EzVGQrTk8zUVMvSEpZeTNEZ2hCSDdhZ0FtdnpCTWppZUx0L1pDWnhQSW9R?=
- =?utf-8?B?ellveXozYWQrQ2JTVDlkL3U0RVhiYXFjbkNGWkFqeWxQMGl6Y3MyVEE4V0dj?=
- =?utf-8?B?ek5jQnl1VjhFNjg4MlFzZnEzRVVjS3RPWEhoT2cyeENJcFc0a2RLK1l3K1lS?=
- =?utf-8?B?czdvUmExemQ3ZFY4ejhJYklsWDdhbFEvdFI4ZVdTUW1yc295UnpOR0J0OTdY?=
- =?utf-8?B?Wk51eDZ1TXR1VVJ2d01xZWhhT3lmaGVaaTZBdlE3dDVpTzVNNjFrMmt6aVBh?=
- =?utf-8?B?QnhLTWVQOEpwYnJLSTNmdTBxNlBSQkFITjl1aHpsa2Q3MjZBVWwzbkthUmph?=
- =?utf-8?B?MVlMb2lqRXFqaWIxVUo1aXRWbGc1bnVqWFRZTlA2bGQzeVJQdmNJYTJlOURk?=
- =?utf-8?B?N1FVcmVQVTVsQnJFNHZocDJ2RE5BTUwyQS81Smk1WThPNnV3c0ZUa1hHemNs?=
- =?utf-8?B?T1VUOXREdHI1ZGxvYmZDUUdWSmVFbEFGM2FaaDVxa3JQMjMyUnI0T1UzS21U?=
- =?utf-8?B?RUpnK3pnd3dUUUthcnF6cUdqb1pHQjN2TlhZMUplQllIMVM3Tzd1YmovYnFP?=
- =?utf-8?B?Uitjd1pVY05QcGY4SFpYcmdpR21YMXZvdXkxdWppb1F4SXBnNFJhNUk0TEVy?=
- =?utf-8?B?a1pSY1Rwb2tTaTYwRE9ZTmM4RWpHcGxiY2M3bWw3a3Y1c2Y3bEg3eGpyU0Jl?=
- =?utf-8?B?OU14V2hGbTd1OHppdXRsbFVDeW1QSlhhbmFEK0VjUFpmZmRRNEFYMk5kazFo?=
- =?utf-8?B?WWhVSEtkaDZrOG9VQUdDbEg4NnBkZnp2MFVyWXVPSXJ4VWxDRFlZSnhDMjRD?=
- =?utf-8?B?RnFlc05MZkZ4UkFHZW5HeHMvc0J5cEJvb3dKZWdhY1krNFAvR0hkTjBGZ283?=
- =?utf-8?B?cDI2YnRRbGQ3SGR5KzBmZWVpMXVyc3MyVG5mZFpjZFBVS1RvSDl2VDNBZEdN?=
- =?utf-8?B?bzdTejEyMHNYUGQzK0c0aDlYdGhmOHNydDAxQVBZR3ZVQzlxQ1hzSWZ0TEJ4?=
- =?utf-8?Q?KciAqHMw6HXD7dpA5H?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4729cdf4-27d7-4109-463e-08df49c3885b
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB999228.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 00:40:26.7506
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: quX57Cg8G4/pKplcHY3tWfRPMntBt2dXU+bAcHzb2yLsdgNzXpOMzVP7FISiD/a7w+ETWQnBssuG7TURNfebaw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB9069
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 23 Nov 2026 16:54:35 -0800
+Message-Id: <DN314UP7ZLCR.39N4XNGLWKR05@google.com>
+Cc: <stable@vger.kernel.org>
+Subject: Re: [PATCH v2 07/16] PCI: Serialize bridge window sizing and
+ resource assignment
+From: "David Matlack" <dmatlack@google.com>
+To: =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ <linux-pci@vger.kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>, "Rob Herring"
+ <robh@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ "Rafael J. Wysocki (Intel)" <rafael@kernel.org>,
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, "Alex
+ Williamson" <alex@shazbot.org>, <linux-kernel@vger.kernel.org>
+X-Mailer: aerc 0.21.0
+References: <20261120134716.3027-1-ilpo.jarvinen@linux.intel.com>
+ <20261120134716.3027-8-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <20261120134716.3027-8-ilpo.jarvinen@linux.intel.com>
 
-On 24/11/26 02:29, Jason Gunthorpe wrote:
-> On Mon, Nov 23, 2026 at 02:03:29PM +0530, Aneesh Kumar K.V (Arm) wrote:
->> Register the built-in TSM class with subsys_initcall() so it exists
->> before a platform TSM driver probes, independently of object link order.
->> CONFIG_TSM is boolean; remove the unused module exit path.
-> 
-> Why isn't it modular? This is going to force alot of stuff to be
-> non-modular.
+On Fri Nov 20, 2026 at 5:47 AM PST, Ilpo J=C3=A4rvinen wrote:
+> +/*
+> + * Serializes bridge window sizing, resource fitting, and assignment.
+> + * pci_rescan_remove_lock cannot be used for this because BAR resize and
+> + * some drivers run these operations under device_lock() during probe.
+> + *
+> + * Context:
+> + *  - Nests inside pci_rescan_remove_lock and device_lock().
+> + *  - Nests outside pci_bus_sem.
+> + */
+> +static DEFINE_MUTEX(pci_res_setup_lock);
 
-The TSM core registers a class. The platform TSM drivers register TSM devices of that class. If a platform module loads before the TSM code - the class is not registered yet so it fails. We could either teach modprobe or have dependencies in the module or do this:
+Hi Ilpo,
 
-https://github.com/AMDESE/linux-kvm/commit/9eaa9c95824e69d0f852c20d7aa33a8ccb5af2ce
+Could this lock live in struct pci_host_bridge instead of being global?
 
-or just make it built-in which it's been for ages. I did try making it a module when I started but lost that battle. It did not do much but I guess I'll revisit this because of ctlv. Thanks,
+As far as I can tell, a sizing and assignment pass never goes above a
+root bus, and root bus windows are only allocated from, never modified.
+So passes on different host bridges never touch the same resources.
+Every entrypoint has a pci_bus or pci_dev to look up the host bridge
+with, and pci_assign_unassigned_resources() already goes one root bus at
+a time.
 
+To be clear, the lock wouldn't protect any fields of struct
+pci_host_bridge itself. It would protect the resource[] entries of the
+devices below the host bridge, and the BAR, bridge window and Resizable
+BAR registers they mirror. The host bridge is just the smallest object
+that contains a whole pass.
 
+My motivation isn't performance. It's that global locks make it hard to
+tell what data they protect. pci_rescan_remove_lock is a good example:
+it's held around runtime rescans, but not around enumeration of ACPI
+host bridges at boot, and that was confusing when I was working on PCI
+Live Update. This is a different lock, of course, but it would be nice
+to avoid adding another global lock.
 
-> 
-> Jason
+I tried it on top of this series to see how much it changes. Only this
+patch is affected. It adds a mutex to struct pci_host_bridge,
+initializes it in pci_init_host_bridge(), and uses a small helper in
+setup-bus.c:
 
--- 
-Alexey
+  static struct mutex *pci_res_setup_lock(struct pci_bus *bus)
+  {
+  	return &pci_find_host_bridge(bus)->res_setup_lock;
+  }
 
+All of the guard() sites and most of the lockdep asserts already have a
+bus or dev to pass in. __assign_resources_sorted() only gets a list, so
+it would have to assert using the first entry.
+
+Putting the lock in the host bridge would also make it reachable from
+remove.c. pci_destroy_dev() drops pci_bus_sem after list_del() and then
+calls pci_free_resources() without pci_res_setup_lock. I couldn't find a
+path where this can cause bugs, but that seems like just a lucky
+side-effect of the current code. It would be nice to have the new lock
+explicitly cover that case too.
+
+This is not a blocker by any means, just wanted to get your thoughts.
+
+Thanks,
+David.
