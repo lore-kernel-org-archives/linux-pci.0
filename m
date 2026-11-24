@@ -1,83 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.177
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795549669;
-	b=ZAVVPX5/Zi18sbfT4yhTjOdI70pCiE1s1HGXMfScIzZniC9hbMfadYeK8s8VjsjbBTaY
-	 RpzrALtKCIm7G1tnLYIyoG5+zdPSarh0MPkASxnhC4Zj3BHXVWCCKXmbVIoTD0afIt8Op
-	 Xf2YUDb0NGeEXEHIZXgNwBMiJrw5cFJOG5t1gYMY4LYHk6yM6aKIdl4YD8cTut87EXYeV
-	 WBlzEkiJ/JVS/aQ9jt5FnbP+QmX7+33thsy0KJFHERiECZnnaGAfMwOlb3cgrqa7AghAp
-	 E/fFKafD0edLdaJQ6vn9kmn/zFRlYJ4FLA8fUKy1lQYBrZvA1FCih+dq+JB+aochRxA==
+	t=1795554304;
+	b=bth0Cq5TT5FTTThB5jSqOc7AN0vQk/M+0tEakrmq53Z8do/HyvFstmC/D510+hPYGASY
+	 hhdWChGWm1gxPQY1rNEKT29tE/VM26Z3DGL+1zbOgw2pWbwruoBqV6Nhu5J4N4aqVY0bU
+	 dgtwNMBM0H74wVcQVma2cgfkBCwtBjbOIkFFQFMTB4uRM0/T5hwBlmgItIOef6NCIJpow
+	 80FpuBLoAsxgM3yzQ4oixr7SeMSdUpZwbiuOwJgCZ6agC+0pmnWaXQNGVFM5/qQFBxQo/
+	 An9hDRJNuiaQGv9RC14AI9G611uhRvKalq0HutHNgyI11mnqkPbOCOPlPmvuVJpegJA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795549669;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795554304;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Mime-Version:
-	 Content-Transfer-Encoding:Content-Type:Date:Message-Id:Cc:Subject:
-	 From:To:X-Mailer:References:In-Reply-To;
-	bh=lUpe/tRxEZ5NPFIdAznJnUvDVmlMVX6s3wfMo2I3P5U=;
-	b=U3lC4monLNYNwRBZpr0Uc72N3FAwJ33qTZ4ibtPGYy5hqtixvX6apq/bs0l45mGSXjlU
-	 dbCTuk4zx7GHRzd6e0F5N55V0dtaa/t3bQJzJNdXYYzI2f4v6qN4b3APi1dhchRFe5SWH
-	 tfLLIQuvp8LXLT3TXpxAt/qyeqDS8mkGS/LDQovlXQjliMLhPldoifW65h0eZ57At5E3s
-	 O1mJtwFvmCv7fJzdEtJNoMAhD+rHifWsmKDcIDAmy1rXYcE+9N3h+6j0SysmMC3jxSLvU
-	 BS3X2Bxm8c/UF4RnoIMv000JHMCd6z+F1Nhz0JqHb+7pOEH5qVsF1mBY1dH5bBNk9Hg==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=8989DAIhEGp2+SqiqOgHbnDP3tqjvddGwcJYPtRttbc=;
+	b=48JdDybBtT72FEDc+cKUBKc3FKsfvdnLjuUYcdYJ24Wp9YdpfA4oTZQk8rUP9kFQMBwg
+	 8y0vOz8fmShLrRfWrwXdV0ZBw+N/WaNq324a/WAS+J0UNG1pTMi7lT9y1CdpnxoamC94t
+	 5+oVUNsYoZ3UaCarnkBYo62Zxg5s6pzcJ7cpU+5l2hc6nrOxc1sHODimVzc1vxxywHpFP
+	 /nBR6uHA/6t3Cu/8lTZPVsgb68NYxmJ6KTyA+2JY3/Kc6RDxkT9D5QJ3XRqpCaEIT9bI0
+	 pC2vfowEwVbgf6wA+zZMZoV33+sKZ8Rjo6DovSYQ/HDsBo0wp9tx9tSkZXflNCrmBUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=hkDQJ8SE;
-	arc=none smtp.remote-ip=209.85.216.45
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Zk43yelt;
+	arc=none smtp.remote-ip=209.85.214.177
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 887CC606A323
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 19:47:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 887CC606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B77D606A31E
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 21:05:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5B77D606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=hkDQJ8SE
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-3adac5c10e3so2608976a91.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 11:47:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Zk43yelt
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2f0afdb97abso150485ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 13:05:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795549669; x=1796154469; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=lUpe/tRxEZ5NPFIdAznJnUvDVmlMVX6s3wfMo2I3P5U=;
-        b=hkDQJ8SE9T5NTx+bSFOZ+oAkTZjhjNqbr5FwlOIkYHU2pfuWXC4hay2mNhTxK23qcb
-         E8pT2H1fsqK37LeIiSSxX+PRvqqMIlXOGG1K5wMto2pHYRL7DGTrjN32Kxqb5iHlE1CU
-         u8mGCY7DYmYOnknCKDT8FMwDs5wZDo3rUKOjZCq5TlJv7ns4QVJIwOYleRHqUCDxLmbb
-         7YnPGhg7aqE+4Hv3MnHRPSoR4oNT9YVwd86QcqSi2X5nJU1eg+L+AM7gmkVbGnnDdTIi
-         khfGHwB06pBcZLt4VFZZPlFrOhNv9bh5Db3XcBIMRmkCvI+BTRNN1Py8AOJ39USrGJ+v
-         4xPQ==
+        d=google.com; s=20260707; t=1795554304; x=1796159104; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=8989DAIhEGp2+SqiqOgHbnDP3tqjvddGwcJYPtRttbc=;
+        b=Zk43yelt/tm8w8qrnUw/rYu8FoZfnG9Xcmo++SabJlb6abZbjfVjnfXI9XBZw/hv16
+         t9J8gTLH1sX5tjg/It/0QBr2WzKZaY4XroMeHNijrqAwKoXlcMeh8MCUjdw4+fKdt+md
+         RJ362duEdbPSO3k5gsNh20PW+bipuMnBbFmth+eRATzNg7Dyn1iPORbToeVVtiu2b6AI
+         hm4eeLQByAl4SS2/bYpWwJkDm00JSFY4WW83me9on7ZD4LR2C0L+7ip0ebIuUjbEEJKB
+         R3YRFTxd2ka1it3eIloE22crT1tiIze58b8gMdGr/dFPC5uLraumWlzqrK3w/8ZePRfc
+         zyHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795549669; x=1796154469;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1795554304; x=1796159104;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=lUpe/tRxEZ5NPFIdAznJnUvDVmlMVX6s3wfMo2I3P5U=;
-        b=xGiM4FBIGD31TrlDkL92sK/7J7NPh6H0Bu1zjFFVIDHFuaWxvVqUxCKBGTD8J1CoK8
-         bbFBzMCUh2cdK0U/5S4hIOMHXEuuKxfqbOctNeGLnybMVkI71olAqHIG/1qv5TqarZUr
-         uz/2ZJIDXk6JYMabYB6kme/LsEPZHe7EYuIg7P1ekM2iHLvyNK9dTN+7EseNfNgV7Yt3
-         LV1/Fnehja7IUMM6k2nxnxZDgOQJlc2uEpbUSpf7+9pNxMia0Jag1JEZjxTzgHqYhEkq
-         RegBoGKRhCqK7V+nLbdPsKV9KN5mvuZMQ84U3HJDx7NWfJxSqOuF0u7BwVbwKisR7gwr
-         YdkA==
-X-Gm-Message-State: APuU4Z+SZqThrGbFHjk07dcAaLClAau/hv2qiSqVxgSgqZoxxBhub8Pp
-	QPc0vz3Mo0apqLc2m3IUxD4RU+8KawivyT/G4RBfWJ6aGc2X4ffIRrB3gXhHzK3aEA==
-X-Gm-Gg: AZFdTZel4lhB7OGuNsRxv8sONBmGPksatqbm4hxevq/OtdSBzCAf9ueZDmK2u5M9OU8
-	02kbSBr2S/tHHd0X3hYHtQWTlqEGz0L8Y1PsxFDwYEHXaiQPTaQNxqNhXeTOdTCd/WU6/vIpTYn
-	RrkTlpsVapZEe/pGw4KAzJ6VxsvKPUKFCDpayPB8zcpTuQhQG2cjKRbx93TK7bZFjzXvSi7ofXd
-	4gmBNP3fQDdUdNOyCM+AIYg7Plf78WxFeOy+d7MKuW9KOsQEp99KjfQG9PlOLMyDbRHnRuDA/Ld
-	H+BOlm7Gh4UNt9pvfhkJkNlBlV93ThKZt5lE/zG7u+svri5gFKGTOC2smUzRDMAYtzDdEJfiFIh
-	U7QTLfUVz62BIan4O5RRjqGxiBQdXtsswfJXNmK8UuG+QnrW00oNR/t80h+BhiJB9zaDjz/urr1
-	eSUnyDhlQtG6o7Det+nSsuwDObVzJwy5BIZGn9lcFNYrVpDkmNU38WgPd6erK9AF2MkNLVzDgtp
-	rcooS59Zx54kgM1iLZsVyLr+7Vef3Goy5WDKypnF3OP3d78V7ImKb7ce7FWYjEgMrOZrZ3jPzZw
-	ZxhqZpQabZuCLfCrt3XmESJiUYB4vvqnwJhFvL+i3dRA0ey2NqzM1xnVr4ACfAQp
-X-Received: by 2002:a17:90a:e70c:b0:3b0:d551:ab2 with SMTP id 98e67ed59e1d1-3b41c955b0emr14483470a91.51.1795549668300;
-        Tue, 24 Nov 2026 11:47:48 -0800 (PST)
-Received: from localhost (33.79.127.34.bc.googleusercontent.com. [34.127.79.33])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b41adcfe23sm23939545a91.15.2026.11.24.11.47.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Nov 2026 11:47:47 -0800 (PST)
+        bh=8989DAIhEGp2+SqiqOgHbnDP3tqjvddGwcJYPtRttbc=;
+        b=ooBgUt8YkfsGYVM7WJsi+7HRftV39WxgsKVJFuEH3kaKtIbAx2rZZmUbCAzW0oa0ij
+         /dalNZr4Ek4pyHrcnnqxsBhf96zcp+jNFI5XQHuNY5dAg41d06E2OZVYbEq5ZPjgoOu9
+         /4j5acBbe8ODvxRaJ9HYDmMEUstVdV8aAbjJuzpNEOFmLzDx0sgjy3M49uioHEDKp4VB
+         sHq7LvRaxqUJaf+UMqvUgz+Kp4Zigp32bojfOSA04UOk0rWoUSniHhN9PFP53OuzMJvQ
+         QUwKaxGzcKNtyNdIcDFvFgwQuese5W/niSCnZreQQHc0EuUOCNVf5m+9gH5yjSJPTeSt
+         Lq4w==
+X-Forwarded-Encrypted: i=1; AL+hErGRs15DvsiP56UVNjtVovTyqrjOYcm8y0hNJXrkE7WZIGS4cD9A2EQPtix1wHOraYbMC+7sWIg414Q=@vger.kernel.org
+X-Gm-Message-State: APuU4Z97SLB76TweIHEXksC2KCywhgE612XZkM3wGdSftZqSKLSmG5Ii
+	IlgV/eFmWgfjAiaRuia3utNWh98grHlfbBkp/uVI5XrzpxSKG66KdlqiLV0Ky8huVA==
+X-Gm-Gg: AZFdTZcB65nzfYiXrmv0nbAlqSIBG5scL6ghVcKRJcx0siPieYpv2DVvp/oljQ9msn2
+	f31JoWrmwLhk+QPBXwkwLOsREBNsh/BJoxd14jIPZvDqE401xyYLCPTpqKRJQ2XB2q5Nz4gaAPu
+	NlwPXB3EJsyU2WqpwIJazrJnztug7W8g6HQbZ4q6GEf8O9m6GeDj5C1FHB8MbSJOKIQt1n8BHbQ
+	wrJJaZQO0eZYUwpd2lLeOonmyUTCAFzWi7bfeD8kHA+Fi4pZw/sNRsdY3YIco0Pz1oggahCQwMe
+	87rH3ZIh0qiW6kOXR67dmYW9IKQ86dyM8M8LKZz091SVqMvf2uN6HB2SfZdK5u7stOJ1l6uddsb
+	+74pxbajkRFso3TQxhysHyBm8UhW/pJ8tp9gPWNtMl8uqobCJmuwSLKNffkeyPWFjYY3EvgHpo5
+	O0rUJvQQ2Aow3ETFMojOeL6barNxcx392k5MQNTPlqXrf6zqWTpMk68fx3UJyE4vGVVnMLMaUsl
+	ApFyNBeRnKbY+NCtN4nhPck3sVaMW6FqMSSFCvn3gDZyirzaZRSRpSrSDwYurl9qrVe0P3YqMEu
+	h1PB3kEc6feL519PoJrwUONiGuKW4cqTzqw6lH1WUc75vVmi+Y4hLqbsuUpCKXML9bTYeCei6UZ
+	ogNUm0zNmsc1ju7A8NXvAew==
+X-Received: by 2002:a17:903:3887:b0:2e2:d665:6ad8 with SMTP id d9443c01a7336-2f062b6ecb2mr14518045ad.4.1795554303196;
+        Tue, 24 Nov 2026 13:05:03 -0800 (PST)
+Received: from google.com (25.75.145.34.bc.googleusercontent.com. [34.145.75.25])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b41abb1b66sm25196583a91.1.2026.11.24.13.04.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Nov 2026 13:05:00 -0800 (PST)
+Date: Tue, 24 Nov 2026 21:04:57 +0000
+From: Samiullah Khawaja <skhawaja@google.com>
+To: Alex Williamson <alex@shazbot.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Kevin Tian <kevin.tian@intel.com>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Anthony Pighin <anthony.pighin@nokia.com>, 
+	Dave Jiang <dave.jiang@intel.com>, Dan Williams <dan.j.williams@intel.com>, kvm@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] vfio/pci: Only lock the upstream bridge if the reset may
+ need it
+Message-ID: <awXedVCoT7M79Rk5@google.com>
+References: <20261112235700.2029562-1-skhawaja@google.com>
+ <20261118163706.7138d246@shazbot.org>
+ <20261119143237.4bf54796@shazbot.org>
+ <awC5Ldqmue6DiO44@google.com>
+ <20261124084852.661dd7c1@shazbot.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,71 +103,148 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 24 Nov 2026 11:47:47 -0800
-Message-Id: <DN3P8HO01T16.1XHR8MD7J5JSJ@google.com>
-Cc: <linux-pci@vger.kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
- "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>, "Rob Herring"
- <robh@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- "Rafael J. Wysocki (Intel)" <rafael@kernel.org>,
- =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, "Alex
- Williamson" <alex@shazbot.org>, "LKML" <linux-kernel@vger.kernel.org>,
- <stable@vger.kernel.org>
-Subject: Re: [PATCH v2 07/16] PCI: Serialize bridge window sizing and
- resource assignment
-From: "David Matlack" <dmatlack@google.com>
-To: =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, "David
- Matlack" <dmatlack@google.com>
-X-Mailer: aerc 0.21.0
-References: <20261120134716.3027-1-ilpo.jarvinen@linux.intel.com>
- <20261120134716.3027-8-ilpo.jarvinen@linux.intel.com>
- <DN314UP7ZLCR.39N4XNGLWKR05@google.com>
- <42d7af61-bf69-b440-8685-5d9cec4863dd@linux.intel.com>
-In-Reply-To: <42d7af61-bf69-b440-8685-5d9cec4863dd@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20261124084852.661dd7c1@shazbot.org>
 
-On Tue Nov 24, 2026 at 6:10 AM PST, Ilpo J=C3=A4rvinen wrote:
-> I don't immediately see anything preventing from moving it into the host
-> bridge struct, I'll look into this.
+On Tue, Nov 24, 2026 at 08:48:52AM -0700, Alex Williamson wrote:
+>On Fri, 20 Nov 2026 22:21:16 +0000
+>Samiullah Khawaja <skhawaja@google.com> wrote:
+>
+>> On Thu, Nov 19, 2026 at 02:32:37PM -0800, Alex Williamson wrote:
+>> >On Wed, 18 Nov 2026 16:37:06 -0800
+>> >Alex Williamson <alex@shazbot.org> wrote:
+>> >
+>> >> On Thu, 12 Nov 2026 23:57:00 +0000
+>> >> Samiullah Khawaja <skhawaja@google.com> wrote:
+>> >>
+>> >> > Commit 962ae6892d8b ("vfio/pci: Lock upstream bridge for
+>> >> > vfio_pci_core_disable()") makes vfio_pci_core_disable() trylock the
+>> >> > upstream bridge before resetting the device, and skips the reset if the
+>> >> > trylock fails.
+>> >> >
+>> >> > All VFs of a PF have the same upstream bridge. Take a device with two
+>> >> > VFs, both used by one process. When the process is killed, both VFs can
+>> >> > be released at the same time. The first one takes the bridge lock and
+>> >> > does its FLR, the second one fails the trylock and is never reset.
+>> >> >
+>> >> > The bridge lock is only needed for a bus reset, which is done through
+>> >> > the bridge. A VF is reset with FLR, and pci_parent_bus_reset() never
+>> >> > resets the bus for it because the PF and the other VFs are on the same
+>> >> > bus.
+>> >> >
+>> >> > Add pci_reset_needs_bridge_lock(), which returns true if any reset
+>> >> > method enabled for the device is a bus reset, and only lock the bridge
+>> >> > in vfio_pci_core_disable() when it does.
+>> >> >
+>> >> > Fixes: 962ae6892d8b ("vfio/pci: Lock upstream bridge for vfio_pci_core_disable()")
+>> >> > Cc: stable@vger.kernel.org
+>> >> > Signed-off-by: Samiullah Khawaja <skhawaja@google.com>
+>> >> > ---
+>> >> > Tested in QEMU with an igb PF behind a PCIe root port, bound to vfio-pci
+>> >> > with two VFs. Both VFs are opened through VFIO and then closed from two
+>> >> > threads at the same time, counting FLRs with a kprobe on pcie_flr().
+>> >> > Without this patch one VF missed its FLR in 50 of 50 rounds, with it
+>> >> > both VFs were reset in every round. I will send a VFIO selftest for this
+>> >> > separately.
+>> >> > ---
+>> >> >  drivers/pci/pci.c                | 28 ++++++++++++++++++++++++++++
+>> >> >  drivers/vfio/pci/vfio_pci_core.c |  3 ++-
+>> >> >  include/linux/pci.h              |  1 +
+>> >> >  3 files changed, 31 insertions(+), 1 deletion(-)
+>> >> >
+>>
+>> [snip]
+>>
+>> >> > +
+>> >> > +		if (pci_reset_fn_methods[m].reset_fn == pci_reset_bus_function ||
+>> >> > +		    pci_reset_fn_methods[m].reset_fn == cxl_reset_bus_function)
+>> >>
+>> >> This looks like a maintenance nightmare.  What if instead we did
+>> >> something like:
+>> >>
+>> >> bool pci_parent_bus_reset_possible(struct pci_dev *dev)
+>> >> {
+>> >> 	struct pci_dev *pdev;
+>> >>
+>> >> 	if (pci_is_root_bus(dev->bus) || dev->subordinate ||
+>> >> 	    !dev->bus->self || dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+>> >> 		return false;
+>> >>
+>> >> 	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+>> >> 		if (pdev != dev)
+>> >> 			return false;
+>> >>
+>> >> 	return true;
+>> >> }
+>> >> EXPORT_SYMBOL_GPL(pci_parent_bus_reset_possible);
+>> >>
+>> >> static int pci_parent_bus_reset(struct pci_dev *dev, bool probe)
+>> >> {
+>> >> 	if (!pci_parent_bus_reset_possible(dev))
+>> >> 		return -ENOTTY;
+>> >>
+>> >> 	if (probe)
+>> >> 		return 0;
+>> >>
+>> >> 	return pci_bridge_secondary_bus_reset(dev->bus->self);
+>> >> }
+>> >>
+>> >> Where we'd then condition acquiring the bridge lock on whether it's
+>> >> even possible for a function scoped reset to perform a bus reset.
+>> >>
+>> >> It's a bit broader of a test than whether we actually have the necessary
+>> >> methods in our reset_fn list, but since we're not locking the reset_fn
+>> >> list between test and function-reset, it's also safer.  Thanks,
+>> >
+>> >After exploring Ionut's patch[1], what I propose above is probably
+>> >wrong.  We don't have any guarantees that the sibling topology is
+>> >static and this bus-reset-possible function presents it as immutable.
+>> >The existing bus-reset function has the same race, but the gap is
+>> >smaller, let's not make it bigger.
+>> >
+>> >There are however immutable properties we can test that cover a fair
+>> >number of cases.  For example:
+>> >
+>> >bool pci_reset_function_needs_bridge_lock(struct pci_dev *dev)
+>> >{
+>> >	return pci_upstream_bridge(dev) &&
+>> >		!(dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET) && !dev->is_virtfn;
+>> >}
+>> >EXPORT_SYMBOL_GPL(pci_reset_function_needs_bridge_lock);
+>> >
+>> >We should be able to use this as a condition on whether we acquire the
+>> >bridge device lock, in pci_reset_function() and in vfio-pci code.
+>> >Thanks,
+>>
+>> This sounds good and it will also fix the bug that I am seeing.
+>>
+>> The only caveat is that pci_dev_wait() might fail during VF reset and
+>> then it might try to do a bus reset if the VF is behind a pciehp or CXL
+>> port. I would prefer to do it only for vfio-pci code as that is where
+>> the reset skip issue is. pci_reset_function() takes the lock and
+>> serializes the VF reset. Are you ok with doing it just for vfio-pci?
+>
+>I think the test I'm proposing precludes a bus reset, ie. there is no
+>upstream bridge, the device flags prevent it, or we're provided with a
+>VF.  It's only those cases where we can't do a bus reset anyway, that
+>we can skip the bridge device lock.  I think that means it's useful in
+>PCI-core as well as vfio-pci.  Did I miss something?
 
-Thanks!
+Yes, the slot reset probe doesn't account for the VFs and will allow
+reset of the slot when hotplug is enabled.
 
-> Not sure if it really helps much currently because pci_bus_sem is also
-> held but that might eventually change (there's the series which
-> attempted to split that into a separate lock in each bus, I don't
-> remember why that work stalled).
+I think that is probably a fix that needs to be done orthogonal to this.
+I will send a v2 of this by doing the needs_bridge_lock() as you
+mentioned above.
 
-A lock per bus seems hard to get right, since a sizing pass or a BAR
-resize can span many buses and you'd have to lock up and down the
-hierarchy. Per host bridge avoids that.
-
-> ...I already have another (unsubmitted) series that adds
-> pci_rescan_remove_lock around host bridge setups because they too can rac=
-e
-> with a sysfs /rescan leading to adding devices more than once, etc.
-
-That would have saved me a lot of head scratching. Please Cc me when you
-post it. I'm happy to review it and test it with Live Update.
-
-> Now I actually started to wonder why couldn't pci_rescan_remove_lock also
-> be per host bridge?? (+ a separate lock to protect root buses list)
-
-I've been thinking the same thing. Both pci_bus_sem and
-pci_rescan_remove_lock could move into struct pci_host_bridge, with a
-small global lock for the root buses list as you said.
-
-A big benefit of a per-host-bridge pci_rescan_remove_lock is that it
-makes it obvious which lock to take during boot-time scans: the lock of
-the host bridge being set up, which nothing else can be holding yet. It
-would also solve the re-entrancy problem, at least for VMD.
-vmd_remove() could always take the VMD domain's own lock, which is a
-different lock from the parent domain's, whether or not the caller
-holds the parent's.
-
-Eventually, the per-host-bridge pci_bus_sem and res_setup_lock could be
-merged into a single rwsem, with sizing and assignment taking it for
-write.
+>
+>I do see that cxl_reset_bus_function() only does a cursory test for
+>probe, but then calls pci_reset_bus_function() when it executes, which
+>is an inconsistency issue of its own.  Thanks,
+>
+>Alex
 
 Thanks,
-David
+Sami
