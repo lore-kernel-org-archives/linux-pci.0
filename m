@@ -1,60 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=140.211.166.183
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795562747;
-	b=ZnsP2IkawBkxNFVbnE0Fjvm8Qel/69erkff6fTWlKHVp4K/RueuHgniDyaHU94KYfsew
-	 VysyPH2cILPL5VAkz9jA5AadDATU4Y/X7uG4QMTk3FKkkR1qcI7ZddEjf5YxgIbz00kAO
-	 GxKtee6DXY+/7ABNoaUgQHAqPT0hOyD3qD+D1umiN+WNH0R5gWePWvS5qlRlJAz+bOjKi
-	 QfqvqUjELT6y0BRrHqzf6ApXkd3EOvWhglrhAJecqAeD0x3c8mvoFz4KrrIaeSHGrn9pX
-	 s3Br9rKG2VDc8arRs+DtwfORDoz+jPhBwsMWBPD1oq9NaYDcdQXNXbq0W+TaOuh+hZg==
+	t=1795562885;
+	b=C1BHx66ADVrJlwHELEKINV+9MV6Va+0Cp93U4OqIMenXd9/lAv9xrmwCXPKRa793Lw80
+	 NQyIxwV+1NJOMBhzL67tPxfnPJYfV1gW5uLjvvzb//oyQopXdY5aJI9s2jEHUg8h6PLEK
+	 6N88UaKso5dVj/v4tTlMARN0w9jHAxh4PYEDP0ahKaDRE1JnS+l+4nQec6cRMpQ3E1XSR
+	 J8uYvpGABIANqjceEXXNv3Lw8LP8puuG8rTXUxYRvU8UEj8wp/LgbvNrEl2YmRlF0SMZy
+	 Cq3iBHZD02e0OygNWkqVsWfWQBxjq5GcCR126xchToWEr3trDKB+umGLmHj3Y7Awv4A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795562747;
-	h=DMARC-Filter:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:User-Agent:MIME-Version;
-	bh=FJ16bXZFcdXtHsxZY9v7xo6tcK8QhcjGNUaSnANHJx0=;
-	b=Mv2UEkHsudSsrUsccqh/I1GXxtqs64znEZuIsc3M9r1zTBv6/BwTqVO64DQREDcYhKAl
-	 vw4Mi40IcKP9a7uraUcvnaez55lcRf+rJLBK7C8L1xPp8FZCjQPHGaYGtzELHsYYimhx/
-	 k/izlwNAEseuCpNCDv6gCCW1Wr+cHm21zWD8nMTBGePKajUNGPXORuvKtfUmR2oP7sJ+I
-	 eYnxdPgreRvH4nd6f9V2iqZPQQtNbB9RNmYYJ0cENY4K2iK3RWClsacM7kJ3g6Zuuj/J3
-	 XcNJijaIt+ttDWflpF1LbvenomC+83BzR5EEQOwPT19lPYvP6xjgdgN3/Sd+sRlgxgQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795562885;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:X-Patch-Reply:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=e08IKl8cuBBIsRhTefRMXH9yyrlJ5903Bm6C16lOTgw=;
+	b=4hQYwTC3V9G5+aeDy40dWLokI1x0ab8JYBfoOxrrXWxJYzMDMspaf4ABSsxFiQMcqGB4
+	 1sTThN/m5TQXU90I5esIio4Qm6zGhbwWn7jyBWASXTHRv14vZsYnTiLSTl9bhmDIPumMg
+	 /t9Q6naITspptTr0xS8qh4KrPX69d/isy2C7zPyG1zEDnBIcRSS/QUSJHuZ2xkJqaJbIX
+	 NknbcbYo9uSNCeEqskbg+7AqoX+Tw6QzutPn7Tva9eSKkCrl67rOz+Xx0W4gUdMchfFoL
+	 Zns0At++Hha5YU6/3LHrx/1lyYvcmOAifk6SHFBtP2dtw9DnY7bzB3701UpJ/gmQbJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gentoo.org;
-	spf=pass smtp.mailfrom=gentoo.org;
-	arc=none smtp.remote-ip=140.211.166.183
-Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=opC0cO78;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF56D606A690;
-	Tue, 24 Nov 2026 23:25:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BF56D606A690
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
-Received: from 8.2.7.0.b.1.5.7.a.9.4.1.f.a.c.8.c.6.e.0.c.6.2.0.0.b.8.0.1.0.0.2.ip6.arpa (unknown [IPv6:2001:8b0:26c:e6c:8caf:149a:751b:728])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: chewi)
-	by smtp.gentoo.org (Postfix) with ESMTPSA id CA44E34245A;
-	Tue, 24 Nov 2026 23:25:43 +0000 (UTC)
-Message-ID: <3d7bac3c74eec1015e17954e461fc5c4c41e6a72.camel@gentoo.org>
-Subject: Re: [PATCH] PCI: dw-rockchip: Clear stale link down interrupt
- before unmasking it
-From: James Le Cuirot <chewi@gentoo.org>
-To: Niklas Cassel <cassel@kernel.org>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>,  Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	
- <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Rob
- Herring	 <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko
- Stuebner	 <heiko@sntech.de>, Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Cc: Sebastian Reichel <sebastian.reichel@collabora.com>, Shawn Lin
-	 <shawn.lin@rock-chips.com>, stable@vger.kernel.org, Manivannan Sadhasivam
-	 <manivannan.sadhasivam@oss.qualcomm.com>, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org
-Date: Tue, 24 Nov 2026 23:25:38 +0000
-In-Reply-To: <20261123121217.1107902-2-cassel@kernel.org>
-References: <20261123121217.1107902-2-cassel@kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-qi+2NtxgvrcQ9iOuxkU9"
-User-Agent: Evolution 3.60.2 
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82171606A323;
+	Tue, 24 Nov 2026 23:28:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=opC0cO78
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AA681F000CF;
+	Tue, 24 Nov 2026 23:27:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795562885;
+	bh=e08IKl8cuBBIsRhTefRMXH9yyrlJ5903Bm6C16lOTgw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=opC0cO78hR5M0GxIiFgeUlDOJYGAjpNo00je0ZS+32Tw1bHsTDC9+VWYDnI5bTUdG
+	 x82rcEJqjVFBrR/gavYI+bdes2Z8LWb3g/BZIxIH5fiVpz7ch/RgLaJtAwSyJqUVou
+	 ExcKrbpD4jnVjVGUCT6HAVN4RlFIT3ZTyC913Qhxm10dK+zoycDp1bcd1829W0QJHJ
+	 D7bmKf8SgFo3y7XNzHjI8ECLIjRB+VqJUFbvJfur4L78QQ4YsYmfeETI+W+fKSSHnH
+	 wqC8DIZZ86ctR2jYGQZzYZOrjzu3i36kR/5uYo9nv9B5pToBUz5Vz4aa/viSThR0yL
+	 cQOMWZqx3o6Lw==
+From: Danilo Krummrich <dakr@kernel.org>
+To: John Hubbard <jhubbard@nvidia.com>
+Cc: Danilo Krummrich <dakr@kernel.org>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Timur Tabi <ttabi@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Eliot Courtney <ecourtney@nvidia.com>,
+	Zhi Wang <zhiw@nvidia.com>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Boqun Feng <boqun@kernel.org>,
+	Gary Guo <gary@garyguo.net>,
+	=?UTF-8?q?Bj=C3=B6rn=20Roy=20Baron?= <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>,
+	Trevor Gross <tmgross@umich.edu>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Tamir Duberstein <tamird@kernel.org>,
+	=?UTF-8?q?Onur=20=C3=96zkan?= <work@onurozkan.dev>,
+	linux-pci@vger.kernel.org,
+	rust-for-linux@vger.kernel.org,
+	nova-gpu@lists.linux.dev,
+	dri-devel@lists.freedesktop.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 0/1] rust: pci: add a prerequisite for the r000 GSP firmware
+Date: Wed, 25 Nov 2026 00:27:57 +0100
+Message-ID: <20261124232757.2443082-1-dakr@kernel.org>
+X-Mailer: git-send-email 2.56.1
+In-Reply-To: <20261111200549.160806-1-jhubbard@nvidia.com>
+References: <20261111200549.160806-1-jhubbard@nvidia.com>
+X-Patch-Reply: applied
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,56 +84,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+On Wed, 11 Nov 2026 12:05:48 -0800, John Hubbard wrote:
+> [PATCH v2 0/1] rust: pci: add a prerequisite for the r000 GSP firmware
 
---=-qi+2NtxgvrcQ9iOuxkU9
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Applied, thanks!
 
-On Mon, 2026-11-23 at 13:12 +0100, Niklas Cassel wrote:
-> PCIE_LINK_REQ_RST_NOT_INT is set by smlh_req_rst_not, which according to
-> the RK3568 TRM "is asserted after power-on reset until first link up".
-> The bit is thus already pending when the driver unmasks the interrupt
-> after resetting the controller, both in probe and in .reset_root_port(),
-> so the interrupt fires as soon as it is unmasked, even though the link
-> is up. Since each recovery resets the controller again, this results in
-> an endless loop, as seen on a Quartz64 Model B (RK3566):
->=20
-> =C2=A0 pcieport 0000:00:00.0: Recovering Root Port due to Link Down
-> =C2=A0 pcieport 0000:00:00.0: Root Port has been reset
-> =C2=A0 pcieport 0000:00:00.0: AER: device recovery successful
-> =C2=A0 pcieport 0000:00:00.0: Recovering Root Port due to Link Down
->=20
-> Clear the bit before unmasking the interrupt, and in .reset_root_port()
-> only unmask it once the link is back up, like in probe. Also keep the
-> interrupt masked while .reset_root_port() resets the controller, so the
-> link down caused by the reset itself is not reported.
->=20
-> Fixes: b376b3ff9cb0 ("PCI: dw-rockchip: Implement .reset_root_port() and =
-use for link down")
-> Reported-by: James Le Cuirot <chewi@gentoo.org>
-> Closes: https://lore.kernel.org/linux-pci/08cc96c5171fc969b074371692e6d95=
-d46eba60b.camel@gentoo.org/
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+  Branch: topic/pci-sriov-7.5-rc1
+  Tree:   git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-core.git
 
-I can confirm that this fixes the issue I reported. Thank you. :)
+[1/1] rust: pci: add domain_nr() accessor
+      commit: 002b9422b314
 
-Tested-by: James Le Cuirot <chewi@gentoo.org>
+      [ Move domain_nr() to Device<Bound>, since pci_domain_nr() may access
+        host controller data through bus->sysdata. References to the PCI
+        device and bus do not necessarily keep that data alive after host
+        controller removal. The bound context guarantees the required
+        lifetime. - Danilo ]
 
---=-qi+2NtxgvrcQ9iOuxkU9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQEDBAAWCgCrFiEE6qETVs4yu3Lfuc3XsNCJZ6jP87QFAmsGHPIbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTIsMiwyXxSAAAAAAC4AKGlzc3Vlci1mcHJAbm90YXRpb25z
-Lm9wZW5wZ3AuZmlmdGhob3JzZW1hbi5uZXRFQUExMTM1NkNFMzJCQjcyREZCOUNE
-RDdCMEQwODk2N0E4Q0ZGM0I0ERxjaGV3aUBnZW50b28ub3JnAAoJELDQiWeoz/O0
-yP8BAPdopBp92UiyxdZ+jUx1aLnzOP2TATZVOBOtL27OYcZ1AP9p8sIx9Hk+iRsu
-qeK2k/0h9IIIwLieulOsh/hlJkdDAw==
-=jlB3
------END PGP SIGNATURE-----
-
---=-qi+2NtxgvrcQ9iOuxkU9--
+The patch is in the topic/pci-sriov-7.5-rc1 topic branch and will be merged into
+the corresponding target branch soon.
