@@ -1,120 +1,120 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795527977;
-	b=AxHGijmFXflvUf2r8LZwM4i0Y3qW/MUa4Ml3A7dQm3Pdr2MWF4FuFtrxM/4LYt8Yt/9R
-	 KudkBrL5tfQX76bjJXb36yFSXokYdJL2Pk1G9aUu4t6YZzNkAyZ7naFxEn/gwbPhaXSYb
-	 lVZDBPhkeWB7UsjVJ4FIIWEEmsSdcHy4MPhgjberxabhm5s7Pq2FAT/LKo13GQhB/4lU0
-	 7JmTrri1UW7V5ztgpMtPRFiVgVqyba6DxEaoSfcKvavwhdf+SiZZzZ+gtDjR7tZqMBTkN
-	 Y7ITgcRdKjM/3goEmlIw5iD83kU42Gez2TjsCSBIx1om4livgxjpZ9KO55jqkpUm7hg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795527977;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
-	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:X-Proofpoint-Spam-Info:
-	 X-Authority-Analysis:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=zPbiw4ZB1gHphClGjdjeA4UlOcJJr69dzbBrC67QfsM=;
-	b=c74G78I89Hcx4M0DvFEcrStJgMLoL3uL6gpl192oh2UezwmrM2Lyor2b490LsMfp3jrY
-	 S61UrON1QnCtrNveyGsg+sSzpnDslDPNU7dq/q4g2xhYJPB1g/dk1Iiqvjh+baYSQpwEH
-	 ljDTN/+Tt1My1quD0iFexoU0w8zRa2AgCkiQHCw3GZGs13LdikheFJrrnJWBrEh4x5Vq7
-	 CjXF4IJ/pSTbwRdS8P/6wCNnhMu6AMQePNc7dlpUfRB3SAFpaUQq8TqcN9Jyty1qrHksU
-	 4UdA3J5Uop0mtlGN/Qg7Cf/qE05Z/qMpCO9IcptCZbw6SR/An3grNw7A/ps1+VSUSrA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=hJrGOuW5;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=HBsIl43z;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.70
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795528849;
+	b=4cHKoVtCxYdpxKJgkf2TVvmfBXpPpuRoykdFhGzuRyDX5ttcn3BSgkhnS5/fhwVkzfch
+	 p1ghRVuuM0oO94mehoIweAWCak2J2mVh8znnvhNsZf9nJC4Qk+09XzioPdRmoC5kDNhdi
+	 XeJBGytvTIhMXv90x1kCEmKX8F0ab3JJdEwbpfDK67aMkfcmVYD7ubSd/BMPhBjMnbBWB
+	 MF4NSy8WKib1o9QkI3XYmvvboxbyDKLm/E89TCRBITqphwQAoA8QHIqlQij4twqq2oHjL
+	 Cu6r99Du8czjYZhmF9nJmFWi2ZwP3uWb/VJdxweIKGy8qtyMp2vF13+X+cBXtxHSSTw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795528849;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
+	 X-ClientProxiedBy:X-EOPAttributedMessage:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=3/qqqgrpPiTXcXj/266oFciaDVvenAuW6UxQbKtq5P8=;
+	b=n5mYoXKAQK+cJ1MsUkZ3qW5G5Va6kSRh89InPtPC+KXVuhb50mota5Jsv8PPlLz7M4Xa
+	 ALNpewWqJ2C8NY86PR8TaTlCbbPwZ1ZgKinIqw+zdlSM3+J82wMQHUt3NgTZUG9OfjV9v
+	 QG8BFp5+wozEIG7XXyTtQFplgYvmBsu8Ymhl76Ze9pMT8OOmZ9wShPrqh6ncop/JDnDVO
+	 m/e90xu/FozGjYOiHzO1gscvuAsYw/YLDSt00Ytg6FnWkUfpRw5XtQnXAxXt1rQoq8+rm
+	 cxEMB8y/CEO9yoXVGwUp2eh16aNZiYufvgIKaxDZS05F9/Xw/sX9K1qyyUPA9iNeSVQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=E0vOZciE;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.70
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013070.outbound.protection.outlook.com [40.93.196.70])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ECDC606A321
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 13:46:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6ECDC606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F9E8606A338;
+	Tue, 24 Nov 2026 14:00:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0F9E8606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=hJrGOuW5;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=HBsIl43z
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AOCDOwK2848992
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 13:46:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=zPbiw4ZB1gHphClGjdjeA4Ul
-	OcJJr69dzbBrC67QfsM=; b=hJrGOuW5YBaVut9iXn7lGp7xYi/OmdTQQ8JEOixM
-	kwf4pcVmkssjx8VSeXYLKSSYgKMPwoNJvSGG8jOQNbhFQqV2/FcJwyzxyZStABas
-	MF6J2mZswzBqX0MaeCj4Wg2/ktASqG+2r73J1Rr7+Ju7FKudyffLz994scEuTGU8
-	YB89zZfCFMrbGOm+KqQbzzeS4BQVxVjCQM7Dl3oFv0+WvGgE2ULnDitpxER9lIWI
-	go/tXT+iY3pw99H22AN7oOGmx+ELK6c9BDX1vSLYDaPRJnz3gjjSws3lO+nFGqsJ
-	Zyc8vYxyqMU1MFQ7/oWEz6pILy5a3SuQ4QmE+DB0jLn/sg==
-Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j5ad7rer4-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 13:46:15 +0000 (GMT)
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-382af5cfc58so3668500eec.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 05:46:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1795527974; x=1796132774; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=zPbiw4ZB1gHphClGjdjeA4UlOcJJr69dzbBrC67QfsM=;
-        b=HBsIl43zc2eV5m7cmOVSTp8zWSm9HRvgiqyLBmR2iFgSWKAsdlWxNPLXAUNR2yYTtL
-         04XJgKLC9Bmz/YXOYlbUOSwAE4ldrzaRna2xLWXZSiYb6fBpF5xmQNtb0nJcqa3RwdFX
-         khoLe4M6qcsZhYy1g8sM4BzA9iTtyIO8GAh7ArsyuMXZoBTiA942WnDCZZNjPDeIh5ff
-         pkfe2y5fQcUI3En2h/OA4a3h9xMd6IKnqJ8oKzSBdQyeTn0/1UXUS3+KZwDjz2FP0EhB
-         zyPCU4wiyRk7EMttNKhf2G5r2RypNtvcILw2gxvg9f2DDYaxg7RJpUG3rxEA3e5yVQmd
-         c+eA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795527974; x=1796132774;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=zPbiw4ZB1gHphClGjdjeA4UlOcJJr69dzbBrC67QfsM=;
-        b=uLmgRcSZ7oPjBozMCX4YwJe8AZFfJkC7jWWTdzr0fUN818819HhDdSbdbOERqpl4Xm
-         fngzGnkC3qzJZhCAUN14Fqhu8eIN9e670yV3O+psj1Gst91t0DMVnSNig9jT8yalibKP
-         eK6Aw6A+xjEOIT0A3WbR5MqlX8QS3L+C7kn8PGZm5sW9HGVx/QX++7QPBDDT9GjAxE5E
-         lpklxJ47RvG/noYUhC0pl1/xgqrwdTKCQDIvCDrLlnRLSJUh8fRLdOM0ghRGjjQv50RC
-         5QdghVTvRU+fTGqPQYaA8dRPjeb7BrfC9+nZFys3MoiaqFiqwLppGCyH4Co/vP0a/TG0
-         nADQ==
-X-Forwarded-Encrypted: i=1; AL+hErHGU+DmOxDYhuncaWKWPc4pUb+ha9RFn2glOJ/vX/ZHLCwx+exzHw+7kj6TjESiuB86er03EbrhIyU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+i4MVPSEDKfgiTKE+DYdeLAbp2kjl92Pqn+fP6tIi7tbn2xFyT
-	OlqZ56y40Ut6hz/1ycvDi+VY6bax2RjIDpdoR1r0LuVoWTrjiJGQHILgVLgT1FYxHMMkGq0DE2p
-	JzETcCt5FJUTv1KAmNs+hs/Tt9ZAAc9uOch9Ngcsp7Uzu7BMol4x7DzJNolX0VS8=
-X-Gm-Gg: AZFdTZdOKWcLn94ItMRSm1bhzokO4wD5+3kRt8eXpsrlVwm4cQsi0rSt/M1iNrev4g2
-	MSmNYAsc9s4nPY3MpA94W7uUWzbLwbhEal0rEKCTL0OMrbmsZWvSbd70iksLV1r/Tj9sEKoRJFr
-	Dt81sJI7Rh6mKJA33JWdIehDCDy0YGrR5IafC/7f7Q9TWXswo4KFzo+vhzp+hTV+elHzwTZJPkl
-	hSepLfEDj4gtxZVlVfhcsKzhQ0pQtPwiCJur5yGglzozuXIbkQ1i5El618QkNsrZKKVoURx4+No
-	GRtyj9ZvdCr4mpERDc12uRMj6TH1q8FTTLbLsXUn0UUtuBjWvNP9ETUxWi3h8ZI+xD3YQRfjqeo
-	HwtiC90Zw4Vo3/smlXbPUwkZnNoFUqgh7kEoxI/V0Q3ehPzFeVylAM/kYyN5n2OFSVL0PX+DYtD
-	QK6+ozU2PwGBYJ+Uiu
-X-Received: by 2002:a05:693c:805a:b0:376:a6d7:8f51 with SMTP id 5a478bee46e88-3856e63bbe9mr18149368eec.12.1795527973957;
-        Tue, 24 Nov 2026 05:46:13 -0800 (PST)
-X-Received: by 2002:a05:693c:805a:b0:376:a6d7:8f51 with SMTP id 5a478bee46e88-3856e63bbe9mr18149346eec.12.1795527973410;
-        Tue, 24 Nov 2026 05:46:13 -0800 (PST)
-Received: from QCOM-aGQu4IUr3Y (i-global052.qualcomm.com. [199.106.103.52])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-386992b404bsm33790831eec.1.2026.11.24.05.46.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 05:46:13 -0800 (PST)
-Date: Tue, 24 Nov 2026 21:46:08 +0800
-From: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Mask PARF_INT_ALL_3 events on Nord
-Message-ID: <awWVIGmkGzyVL89N@QCOM-aGQu4IUr3Y>
-References: <20261114084700.907031-1-shengchao.guo@oss.qualcomm.com>
- <179492110006.194330.16578214355369868159.b4-reply@b4>
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=E0vOZciE
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=E8HRPNvbQN/2VHy+K61366E4YYZJrad2r6CacD6Dvr6o+IH2gokYFYlmHyfxjdYVq7/iVhYeSkvaKzR+x6i5mgi6FKy6zIuWGF7akd23ieOBOH/P6yaFMAfC95EK5ep/vFlLI7YXZm/kZrxPkTHuajSfAYCZYq7kaM2nZhyleJdtfaMdphJKXcTNv/Ku1f4OfZ4j4w4jzGHe49S4wYi5g8uWbyGb2kixGTlEJT+XMa2BrHTPv2tm+w3wBHF3+xLem0pNAV7LK86pEhDBQs07UYsUziXRTvFoo2TxYWEmgTpMl26oNl+5A7HzUw63WNqK9TrJbqqaHwCHq+kxEJboAA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3/qqqgrpPiTXcXj/266oFciaDVvenAuW6UxQbKtq5P8=;
+ b=WBW1EVfUQ0ndtYPs1M107YcZgv3LlYaBEsh9Uhp1HFIUvhpXiUmBBvUVOoUHjtjambqrqMBYUGPPhnWsRGdhr3HePmgm9XkM9IFaXOaEqJvYxEQfg2nZIdUkLeRzkcOT+8KGNjLXSg3JeW50bEMMmNtW/M/BD0eWxyLKJQxEKewSUeJsl8WmO2QBo0PrnEH7d20LjVn+oiHnv1MMkWc+zBN+kyi5ZMM39DA/xhVCLsODxrSAslCXsLJXNtMCxbdsJkaCDSCtUYhGeecWgnH0s0IFcbl+VEm1uUEOFgjoGNdgqrVD7WFjiQUS/my9YUNZlC5jQAQ36/ustBflU00g+w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3/qqqgrpPiTXcXj/266oFciaDVvenAuW6UxQbKtq5P8=;
+ b=E0vOZciELh/tN4mAWlULm15zPyQnlHtsAYB2KYCs899Mdptgo7MF73HpN9m2zlLHo6HYIwAm57DIfR0u7lquzQtYf+8spFlIswA9t1OhUP8nxy+wHWUJ/98+CEsNpAKdCjclYDQBMibNQqIFmdpnGhuCwjB8Qd7dgceyAFN3uvnqXro0/y2/z31fmb0zh2VSrnVKWQ4LI9b4uu4I1JOeMJUf5GlvTI3oME6s3MARMf4g5/hfmE/E5U1YGZ+tTkUAqOniTiOOZC9WGeN77ApZvPniVqioLyiXoeF1PC7HL/Ac5Dcyawsmh8K9gD+m/M3Xna8EdjsL62+YNFd293CxqA==
+Received: from BL1PR13CA0137.namprd13.prod.outlook.com (2603:10b6:208:2bb::22)
+ by DM4PR12MB5819.namprd12.prod.outlook.com (2603:10b6:8:63::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Tue, 24 Nov
+ 2026 14:00:37 +0000
+Received: from BN3PEPF00022BD4.namprd03.prod.outlook.com
+ (2603:10b6:208:2bb:cafe::98) by BL1PR13CA0137.outlook.office365.com
+ (2603:10b6:208:2bb::22) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.6 via Frontend Transport; Tue, 24
+ Nov 2026 14:00:37 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ BN3PEPF00022BD4.mail.protection.outlook.com (10.167.248.102) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.662.3 via Frontend Transport; Tue, 24 Nov 2026 14:00:37 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Tue, 24 Nov
+ 2026 06:00:13 -0800
+Received: from kalok-SPC741D16QM3.nvidia.com (10.126.231.37) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.57; Tue, 24 Nov 2026 05:59:59 -0800
+From: Alok Kumar <alkumar@nvidia.com>
+To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+	<linux-pci@vger.kernel.org>
+CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
+	<skolothumtho@nvidia.com>, <kevin.tian@intel.com>, <airlied@gmail.com>,
+	<simona@ffwll.ch>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+	<lossin@kernel.org>, <a.hindborg@kernel.org>, <aliceryhl@google.com>,
+	<tmgross@umich.edu>, <markus.probst@posteo.de>, <jhubbard@nvidia.com>,
+	<apopple@nvidia.com>, <joelagnelf@nvidia.com>, <ecourtney@nvidia.com>,
+	<cjia@nvidia.com>, <smitra@nvidia.com>, <kjaju@nvidia.com>,
+	<alkumar@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+	<kwankhede@nvidia.com>, <targupta@nvidia.com>,
+	<linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
+	<boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
+	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<peter@colberg.org>, <xinmengs@nvidia.com>
+Subject: [PATCH v5 00/35] Introduce NVIDIA vGPU manager
+Date: Tue, 24 Nov 2026 19:28:56 +0530
+Message-ID: <20261124135937.18583-1-alkumar@nvidia.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -124,190 +124,244 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <179492110006.194330.16578214355369868159.b4-reply@b4>
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI0MDA1MyBTYWx0ZWRfXyfnIEPPAtWNz
- WMOER70x+H1wHIR2WPhy+TIRwVGfe4BoOndjy9UJVp6riQFbuq/FE9ZH7HZ0zCPmHWP0cTDRYLL
- bO0MsK98Ftj1gsemdHnHj2I8ZFuOwks=
-X-Authority-Analysis: v=2.4 cv=cI51IVeN c=1 sm=1 tr=0 ts=6b059527 cx=c_pps
- a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
- a=kj9zAlcOel0A:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=EUspDBNiAAAA:8 a=GkseLWfAocwtZgMctr0A:9 a=CjuIK1q_8ugA:10
- a=6Ab_bkdmUrQuMsNx7PHu:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI0MDA1MyBTYWx0ZWRfXyJ7C4sNW0eqv
- z8vCXZCcijnWW8rL6hxVfNbtR5RWqUh43FsRv8PZ5D/PAPrPCx9Acy0tgMD3IEqiHQ8RW4qrgt5
- S6hD2Hj9tXp9gpfVq0Up2i2/leF+LyAWmena2OcWXYvj5y+JepjQ8a3cu7BxZNbsJ6hjmNyg+d2
- Ac5VLhSQRKWMpHNCUKY9cQeV0xTAbn8stSxfw3S0eeZnTf8W7Vrmxab+sUioQbG2KOGh7yphUUy
- i0NzFbHqiaAZe96KNfT6viCMLqzLSdlE2zmqugh4YrvURCzx9DYJc1f+Y92igmmgTiVJrPpufN4
- yPs5lygHaT4JMbcf/zEwcVZnL14yxLcz7srCyz2n9JknOBQ9RS+jQ13kNTNkuwXemQUtulCOvGf
- UrlcUZlB6OmDTkXkWkyd3ClwBzpkO3hPmviA1qOk8WdQ3THz3/QYP4YWKnGZx40IRlANZTGVTUj
- RGwxiE87GG6PPg+1E1Q==
-X-Proofpoint-ORIG-GUID: LSoaVQOuXnDaK0hLAvnCwOxeCo7OlWIZ
-X-Proofpoint-GUID: LSoaVQOuXnDaK0hLAvnCwOxeCo7OlWIZ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-24_02,2026-11-23_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 lowpriorityscore=0 bulkscore=0 suspectscore=0
- clxscore=1015 impostorscore=0 spamscore=0 adultscore=0 malwarescore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2611040001
- definitions=main-2611240053
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN3PEPF00022BD4:EE_|DM4PR12MB5819:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5b2a019f-40d3-4d29-8410-08df4a3350ff
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|7416014|376014|36860700016|23010399003|1800799024|6133799003|18002099003|3023799007|260925021911599003|260925022911599003|261026140227099003|11063799006|261022113327099003|261021130227099003|56012099006|5023799004|261021123027099003|261021135927099003|261028144727099003|261026121527099003|261021121427099003|261009223027099003|261102123227099003|261022105027099003|261102130727099003|10067099003|261022075727099003|261022115727099003|260925021311599003|261026130827099003;
+X-Microsoft-Antispam-Message-Info:
+	6mccWild8a8r+fDMJxj9l9rppRUq2JFcSqYN5QFJyssrw23QWV1vbONz7cvpw74NECoUgXoCbCICaGGx6/yojD1VNq29AqyJDr9Ii9aCdm1cqqUPABz2Vp8aPrIARUSQS+elsobLaXvs/IwFDdUDldSAVVJFAwTlOFrWYBkXN9XIG5Ni7+bNlFMDsAt1TxK5dfmoNgzMrWJXVNjRI3RNVCXk/uyH1dYRbqHebvjw0oXXtYoEJuo+K4TfQrTLCcAhhtMP939wSUAHKK7cYYyMyrMJR8NxCbBSJJzl/V+x3mXtqM/EXZHss4igjCxpDuIPvJDUXbuW8X1OZT5EPhlD+yZHapEvMCML6G/knbRVHHdMnYVMO0jDTUKYjXyauFdRUM+OQzEy/9IEqv4leTdGSXny1VXfkFquU76XoET+WhewJ6Jd7ev3rbJnvVrekiCOSZuRUK3RCnHTPMchKLuyvhSTP0JQVxHzP78ZxtrPS4JIjx3ix0qy89MsJF0BAT6P7OgAfKxOtW1AyWZ2/Y2XsZ7EhjtAiNz6Ab67WKRBB69vV6foD6ZSL4ti1Hu8ZvBSFWu8DQvhS4sP1DrHICzCr/Uv2/ObyDw1y/9rWaEnH8XLWmBTDjANO9PHQW7WVas2u7tS4HKzy5eL3L8SnPJMRYmpE5YxGAiX2p39h4+miOHRayOV13ioLlBjiyNtF/H4SMrmiLYOP9y1r6C6fDxNKg==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(376014)(36860700016)(23010399003)(1800799024)(6133799003)(18002099003)(3023799007)(260925021911599003)(260925022911599003)(261026140227099003)(11063799006)(261022113327099003)(261021130227099003)(56012099006)(5023799004)(261021123027099003)(261021135927099003)(261028144727099003)(261026121527099003)(261021121427099003)(261009223027099003)(261102123227099003)(261022105027099003)(261102130727099003)(10067099003)(261022075727099003)(261022115727099003)(260925021311599003)(261026130827099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	d2a3H8CSXTBbWgYo1E+SWUl8EHP0Gd5Wwhro0Z8OJRdGjiZ7ZjzwrLAIag71/70MgcqpJqhdufGrgVyiIZzW/+KJSL5crnwxIDaJxkZlnDK0ThdurTUl/EYo0Cv9KJXuDpf0qoLb6bMUNjShJXU981f9KK3eyWaFWBRSG2ZwCQiLppzb1v6ZwNefVhnPAFn5sU4TEBsRqpG/WqAHZpWqop9N95h3SQEN+RdSzOqRzJqKdx5xT/sttlA3404huKjjhbmkUnEeYFASb1/bVssG+uW+bzvEt2vwjHXrfvr9c1/OmRbRH4LhPacjwDTAov1/jsXRyMZ73AFAKkWSF1ZxE+ts3lkh0Ud4feIRc89ZARtcmYi295nAGUIzaLuP7cFgMs56P9bmMmtvxSmmdljKSYDQPXaiNMu6K7QzrBQ8UnOjQtjMCD2f7b6+ruNZQ/f+
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 14:00:37.1178
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5b2a019f-40d3-4d29-8410-08df4a3350ff
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN3PEPF00022BD4.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5819
 
-On Tue, Nov 17, 2026 at 02:11:40PM +0100, Manivannan Sadhasivam wrote:
-> On 2026-11-14 16:47 +0800, Shawn Guo wrote:
-> > On Nord, the PARF_INT_ALL_3 interrupt group is unmasked out of reset
-> > (PARF_INT_ALL_3_MASK reads 0x43fff), and its events are routed to the
-> > same 'global' IRQ as PARF_INT_ALL. The driver neither handles nor clears
-> > any of them, and the global IRQ handler only looks at
-> > PARF_INT_ALL_STATUS.
-> > 
-> > Some endpoints send a Device Readiness Status (DRS) message after link
-> > up, e.g. the SK hynix HFS001TFM9X186N NVMe drive (1c5c:1069). This
-> > latches DRS_MSG_RECEIVED (bit 12) in PARF_INT_ALL_3_STATUS and keeps
-> > the level triggered global IRQ asserted. The threaded handler then runs
-> > in a tight loop with PARF_INT_ALL_STATUS reading 0, starving other work
-> > and stalling the boot (RCU/SRCU stall warnings).
-> > 
-> > Mask all PARF_INT_ALL_3 events and clear any latched status on Nord,
-> > before the global IRQ is requested in probe and again in
-> > qcom_pcie_reset_root_port(), since the register is reset together with
-> > PARF_INT_ALL_MASK. To keep the two writes together, move the
-> > PARF_INT_ALL_MASK programming in probe into the same helper, which now
-> > runs right before devm_request_threaded_irq() instead of after it.
-> > 
-> > Signed-off-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-> 
-> Missing Fixes tag.
+Add the nova-core support needed to create and manage NVIDIA vGPU
+instances on the whole-GPU SR-IOV path.
 
-Will add:
+The overall control path is shown below. This series contains the
+nova-core manager and PF-side lifecycle APIs. Typed PF-service
+publication and the VFIO variant driver are separate series.
 
-Fixes: f75d2d64fff1 ("PCI: qcom: Add Nord PCIe controller support")
+ +-----------------------+         +-----------------------+
+ | Linux guest           |         | Windows guest         |
+ | NVIDIA guest driver   |         | NVIDIA guest driver   |
+ +-----------+-----------+         +-----------+-----------+
+             |                                 |
+ +-----------v-----------+         +-----------v-----------+
+ | QEMU (VFIO user)      |         | QEMU (VFIO user)      |
+ +-----------+-----------+         +-----------+-----------+
+             +----------------+----------------+
+                              |
+                      +-------v-------+
+                      |   VFIO core   |
+                      +-------+-------+
+                              |
+        +---------------------v---------------------+
+        | NVIDIA vGPU VFIO variant driver           |
+        +---------------------+---------------------+
+                              |
+              +---------------+----------------------+
+              | binds PCI VF                         | PF lifecycle API
+              |                                      | open / close / reset
+              v                                      v
+     +--------+--------+               +-------------+-------------+
+     |    PCI VF(s)    |               | nova-core (PF driver)     |
+     |  (virtual GPU)  |               |       vGPU Manager        |
+     +--------+--------+               |     VRAM / channels ...   |
+              |                        +-------------+-------------+
+              |                                      |
++-------------v--------------------------------------v----------------+
+|                      NVIDIA physical GPU                            |
+|            VF resources                 PF / GSP / VRAM             |
++---------------------------------------------------------------------+
 
-> 
-> > ---
-> >  drivers/pci/controller/dwc/pcie-qcom.c | 30 +++++++++++++++++++++-----
-> >  1 file changed, 25 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> > index eba1b2cb30f0..03b2e61fc20f 100644
-> > --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> > @@ -73,6 +73,8 @@
-> >  #define PARF_DEVICE_TYPE			0x1000
-> >  #define PARF_BDF_TO_SID_TABLE_N			0x2000
-> >  #define PARF_BDF_TO_SID_CFG			0x2c00
-> > +#define PARF_INT_ALL_3_MASK			0x2d8c
-> > +#define PARF_INT_ALL_3_CLEAR			0x2d90
-> >  
-> >  /*
-> >   * Outbound blocker range registers. The blocked range has a write pair
-> > @@ -294,6 +296,8 @@ struct qcom_pcie_ops {
-> >    * @override_no_snoop: Override NO_SNOOP attribute in TLP to enable cache
-> >    * snooping
-> >    * @firmware_managed: Set if the Root Complex is firmware managed
-> > +  * @mask_int_all_3: Mask PARF_INT_ALL_3 events, which are unmasked by default
-> > +  * and would otherwise keep the 'global' IRQ asserted
-> 
-> Reword the last line to 'and are not handled by the driver'.
+The manager queries the type assigned to a VF by GSP-RM, reserves its
+channel and VRAM resources, boots and configures the GSP plugin, and
+handles reset and shutdown. Guest VRAM is scrubbed before reuse.
 
-Ack.
+Host resources remain owned until firmware teardown and BAR unmapping
+complete. Failed creation rolls back through the instance owner. If
+firmware ownership is uncertain or teardown fails, the manager retains
+the affected resources until device removal.
 
-> 
-> >    */
-> >  struct qcom_pcie_cfg {
-> >  	const struct qcom_pcie_ops *ops;
-> > @@ -301,6 +305,7 @@ struct qcom_pcie_cfg {
-> >  	bool firmware_managed;
-> >  	bool no_l0s;
-> >  	bool disable_cgc;
-> > +	bool mask_int_all_3;
-> >  };
-> >  
-> >  struct qcom_pcie_perst {
-> > @@ -1738,6 +1743,7 @@ static const struct qcom_pcie_cfg cfg_nord = {
-> >  	.override_no_snoop = true,
-> >  	.no_l0s = true,
-> >  	.disable_cgc = true,
-> > +	.mask_int_all_3 = true,
-> >  };
-> >  
-> >  static const struct qcom_pcie_cfg cfg_sc8280xp = {
-> > @@ -1871,6 +1877,22 @@ static int qcom_pcie_set_max_opp(struct device *dev)
-> >  	return ret;
-> >  }
-> >  
-> > +static void qcom_pcie_enable_global_irq_events(struct qcom_pcie *pcie)
-> > +{
-> > +	/*
-> > +	 * The PARF_INT_ALL_3 events (e.g. DRS_MSG_RECEIVED) are unmasked by
-> > +	 * default, but not handled by the driver. Once latched, they keep the
-> > +	 * level triggered 'global' IRQ asserted, so mask and clear them.
-> > +	 */
-> 
-> This comment can be dropped.
-> 
-> > +	if (pcie->cfg->mask_int_all_3) {
-> > +		writel_relaxed(0, pcie->parf + PARF_INT_ALL_3_MASK);
-> > +		writel_relaxed(~0U, pcie->parf + PARF_INT_ALL_3_CLEAR);
-> > +	}
-> > +
-> > +	writel_relaxed(PARF_INT_ALL_LINK_DOWN | PARF_INT_MSI_DEV_0_7,
-> > +		       pcie->parf + PARF_INT_ALL_MASK);
-> > +}
-> > +
-> >  /*
-> >   * Qcom PCIe controllers only support one Root Port per controller instance. So
-> >   * this function ignores the 'pci_dev' associated with the Root Port and just
-> > @@ -1928,8 +1950,7 @@ static int qcom_pcie_reset_root_port(struct pci_host_bridge *bridge,
-> >  	 * non-sticky.
-> >  	 */
-> >  	if (pcie->global_irq)
-> > -		writel_relaxed(PARF_INT_ALL_LINK_DOWN | PARF_INT_MSI_DEV_0_7,
-> > -				pcie->parf + PARF_INT_ALL_MASK);
-> > +		qcom_pcie_enable_global_irq_events(pcie);
-> >  
-> >  	qcom_pcie_start_link(pci);
-> >  
-> > @@ -2429,6 +2450,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
-> >  			goto err_host_deinit;
-> >  		}
-> >  
-> > +		qcom_pcie_enable_global_irq_events(pcie);
-> 
-> You should not enable interrupts before registering handler. So you'd have to
-> mask and clear here and keep the enable where it was. This means, you don't need
-> a helper at all.
+This continues the rework of the earlier vGPU RFC [2]: firmware-facing
+management belongs to nova-core, while the VFIO driver binds to the VF
+and uses the PF's services. The companion VFIO driver does not need its
+own copies of the RM firmware headers.
 
-Right, unmasking PARF_INT_ALL_MASK before devm_request_threaded_irq() is
-wrong. Will drop the helper and leave both PARF_INT_ALL_MASK writes as
-they are today.
+The patches are organized as follows:
 
-Before I send v2, I'd like to check where the PARF_INT_ALL_3 masking
-should go. Masking only in probe and qcom_pcie_reset_root_port() misses
-system resume. When the controller is powered down in suspend,
-qcom_pcie_resume_noirq() goes through dw_pcie_resume_noirq() ->
-qcom_pcie_host_init(), which resets the core just as
-qcom_pcie_reset_root_port() does. I checked this on Nord RRD:
-PARF_INT_ALL_3_MASK reads 0 after probe, and reads 0x43fff (the reset
-value) after an s2idle cycle in which the link went through L2 and was
-re-trained. A DRS message after that would wedge the global IRQ again.
+  1-8   VF boot information, boot state, runtime parameters and WPR2 heap.
+  9-15  Typed BAR1 access, mapping ownership and VRAM allocation.
+ 16-18  Typed GMC payloads, command IDs and completion-event waits.
+ 19-23  Plugin bindings, NVKV conversion, properties and allocation.
+ 24-31  Plugin boot requests, communication buffers, shutdown and RPC.
+ 32-33  CeUtils commands and guest VRAM scrubbing.
+ 34     SR-IOV PF lifecycle APIs.
+ 35     Preserve BAR1 self-test page-table ownership until GPU teardown.
 
-So I'd rather mask and clear PARF_INT_ALL_3 in qcom_pcie_host_init(),
-right after ops->post_init():
+Changes since v4 [1]:
 
-        if (pcie->cfg->mask_int_all_3) {
-                writel_relaxed(0, pcie->parf + PARF_INT_ALL_3_MASK);
-                writel_relaxed(~0U, pcie->parf + PARF_INT_ALL_3_CLEAR);
-        }
+  - Rebase onto the newer r000 firmware and vGPU integration stack.
+  - Include VF information in GSP_INIT in this series.
+  - Add typed BAR1 MMIO access and SharedGpuMm support, and rework the
+    memory helpers and VRAM slot pool for the newer interfaces.
+  - Use the existing typed GMC transaction API. Add variable-length
+    payload aliases, vGPU command IDs and a typed completion-event wait.
+  - Place plugin ABI definitions under vgpu/fw/r000_00, keeping them
+    separate from the base GSP firmware bindings.
+  - Query VgpuProperties through typed requests and retain BAR0 in the
+    manager for instance plugin RPC setup.
+  - Fold plugin RPC buffer initialization into the communication-buffer
+    and RPC transaction patches.
+  - Leave per-instance plugin log export through debugfs for a follow-up.
+  - Include the BAR1 self-test lifetime fix as patch 35. The test borrows
+    the persistent BarUser VMM and releases its lock before BarUser::map()
+    acquires it again.
 
-That one place covers probe (dw_pcie_host_init() runs before the global
-IRQ is requested), qcom_pcie_reset_root_port() and resume. It also runs
-before PERST# deassert, so the mask is in place before the endpoint can
-send DRS, and no helper is needed.
+Dependencies:
 
-Does that work for you?
+The drm-rust-next base is:
 
-Shawn
+https://gitlab.freedesktop.org/drm/rust/kernel/-/commit/0dbf41fd03abee01a37a83336ed84cd5812af633
+
+The complete integration tree, including the prerequisites and the
+companion VFIO driver, is available at:
+
+  https://github.com/alokk-nvidia/nova-core/tree/nova-vgpu-wip-20261124
+
+Previous versions:
+
+v4 posting: [1]
+v3 posting: [3]
+v2 posting: [4]
+v1 posting: [5]
+
+[1]
+https://lore.kernel.org/nova-gpu/cover.1793906667.git.alkumar@nvidia.com/
+[2]
+https://lore.kernel.org/kvm/20250903221111.3866249-1-zhiw@nvidia.com/
+[3]
+https://lore.kernel.org/nova-gpu/cover.1790580105.git.zhiw@nvidia.com/
+[4]
+https://lore.kernel.org/nova-gpu/20260914074907.1399629-1-zhiw@nvidia.com/
+[5]
+https://lore.kernel.org/nova-gpu/20260905081116.106613-1-zhiw@nvidia.com/
+
+Alexandre Courbot (5):
+  gpu: nova-core: mm: replace BarUserAccess accessors with typed MMIO
+    view
+  gpu: nova-core: mm: add SharedGpuMm
+  gpu: nova-core: gsp: cmdq: gmc: add types for variable-length payloads
+  gpu: nova-core: gsp: add the vGPU commands to GmcCommandId
+  gpu: nova-core: gsp: cmdq: add send_gmc_command_await_event
+
+Alok Kumar (2):
+  gpu: nova-core: gsp: decode the FIFO engine table
+  gpu: nova-core: vgpu: add VRAM slot pool
+
+Zhi Wang (28):
+  gpu: nova-core: populate VF information in GSP_INIT
+  gpu: nova-core: gsp: pass boot context through setup helpers
+  gpu: nova-core: gsp: decouple boot context from VgpuManager
+  gpu: nova-core: vgpu: detect boot state independently
+  gpu: nova-core: gpu: add a channel ID pool for vGPU
+  gpu: nova-core: vgpu: initialize runtime parameters after GSP boot
+  gpu: nova-core: vgpu: reserve the 48-VM WPR2 heap
+  gpu: nova-core: mm: retain BAR1 reservations after unmap failure
+  gpu: nova-core: mm: borrow BarUser for temporary BAR1 access
+  gpu: nova-core: mm: add VramBlock
+  gpu: nova-core: mm: add VramRegion
+  gpu: nova-core: mm: add BarMapping
+  gpu: nova-core: vgpu: add r000 plugin bindings
+  gpu: nova-core: gsp: factor out NVKV payload conversion
+  gpu: nova-core: vgpu: query VF assignments and properties
+  gpu: nova-core: vgpu: add instance create/destroy
+  gpu: nova-core: vgpu: encode vGPU boot requests
+  gpu: nova-core: vgpu: add GSP plugin communication buffer
+  gpu: nova-core: vgpu: add instance boot
+  gpu: nova-core: vgpu: add instance shutdown
+  gpu: nova-core: vgpu: add GSP plugin RPC transactions
+  gpu: nova-core: vgpu: negotiate the GSP plugin RPC version
+  gpu: nova-core: vgpu: send GSP plugin configuration parameters
+  gpu: nova-core: vgpu: update the GSP plugin BME state
+  gpu: nova-core: vgpu: add CeUtils commands
+  gpu: nova-core: vgpu: scrub guest VRAM with CeUtils
+  gpu: nova-core: vgpu: introduce SR-IOV PF APIs
+  gpu: nova-core: mm: keep BAR1 self-test page tables alive
+
+ drivers/gpu/nova-core/fb.rs                   |  28 +-
+ drivers/gpu/nova-core/gpu.rs                  |  97 ++-
+ drivers/gpu/nova-core/gpu/channel.rs          |   4 +
+ drivers/gpu/nova-core/gsp.rs                  |   7 +-
+ drivers/gpu/nova-core/gsp/boot.rs             |   2 +-
+ drivers/gpu/nova-core/gsp/cmdq.rs             |   2 +-
+ drivers/gpu/nova-core/gsp/cmdq/gmc.rs         |  68 ++-
+ drivers/gpu/nova-core/gsp/commands.rs         |  11 +
+ drivers/gpu/nova-core/gsp/commands/gmc.rs     |  86 ++-
+ drivers/gpu/nova-core/gsp/fw.rs               |  23 +-
+ drivers/gpu/nova-core/gsp/fw/commands.rs      | 127 +++-
+ .../gpu/nova-core/gsp/fw/r000_00/bindings.rs  |   2 +
+ drivers/gpu/nova-core/gsp/hal/gh100.rs        |   2 +-
+ drivers/gpu/nova-core/gsp/hal/tu102.rs        |   2 +-
+ drivers/gpu/nova-core/gsp/load_exec.rs        |   9 +-
+ drivers/gpu/nova-core/gsp/nvkv.rs             |  42 +-
+ drivers/gpu/nova-core/gsp/nvkv/encode.rs      |  12 +
+ drivers/gpu/nova-core/mm.rs                   |  31 +-
+ drivers/gpu/nova-core/mm/bar_user.rs          | 209 +++++--
+ drivers/gpu/nova-core/mm/vmm.rs               |  18 +-
+ drivers/gpu/nova-core/mm/vram.rs              | 141 +++++
+ drivers/gpu/nova-core/nova_core.rs            |   6 +
+ drivers/gpu/nova-core/regs.rs                 |  31 +-
+ drivers/gpu/nova-core/sbuffer.rs              |   7 +
+ drivers/gpu/nova-core/vgpu.rs                 | 136 ++++-
+ drivers/gpu/nova-core/vgpu/commands.rs        | 412 +++++++++++++
+ drivers/gpu/nova-core/vgpu/fw.rs              |  45 ++
+ drivers/gpu/nova-core/vgpu/fw/commands.rs     | 402 +++++++++++++
+ drivers/gpu/nova-core/vgpu/fw/r000_00.rs      |  25 +
+ .../gpu/nova-core/vgpu/fw/r000_00/bindings.rs | 183 ++++++
+ drivers/gpu/nova-core/vgpu/gsp_plugin_comm.rs | 243 ++++++++
+ drivers/gpu/nova-core/vgpu/gsp_plugin_rpc.rs  | 170 ++++++
+ drivers/gpu/nova-core/vgpu/instance.rs        | 559 ++++++++++++++++++
+ drivers/gpu/nova-core/vgpu/scrubber.rs        | 172 ++++++
+ drivers/gpu/nova-core/vgpu/vgpu_api.rs        | 153 +++++
+ drivers/gpu/nova-core/vgpu/vram.rs            | 150 +++++
+ 36 files changed, 3414 insertions(+), 203 deletions(-)
+ create mode 100644 drivers/gpu/nova-core/mm/vram.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/commands.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/fw.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/fw/commands.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/fw/r000_00.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/fw/r000_00/bindings.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/gsp_plugin_comm.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/gsp_plugin_rpc.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/instance.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/scrubber.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/vgpu_api.rs
+ create mode 100644 drivers/gpu/nova-core/vgpu/vram.rs
+
+
+base-commit: a8b840ca342e40b0d8af03b85958b63cdf29ff41
+-- 
+2.53.0
+
