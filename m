@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795513585;
-	b=RoooaaOW7Ux+bHTuSKSAxDQXrHZKIU/TF9tZc7G5lhmEEgS3nu55/MkI28IeKK27OZhI
-	 jik5Cao2/wG2ZPR7haNoA5hLKGOfb+FGrb4fIanmnBdDaOJlh/6+Mqe+vZhReGHESW50r
-	 apw8Qy2OPNlBXyM/8yYp2U4mdBmF6lbm7BgFITf+ds/j97q6aYLulZcwlc6rO+lmi1F17
-	 g2lZvCQBE9onoDhrSeRIQ79voidx/WDKiFtuVRaVpfHVETa/D3+2BaIgt9xm75PrB3zpu
-	 h7meU2z/v1K9HwiR8vhGGJ7DPmlxeqkfKIo1rtiyObsgMmvyNAmErDcPUIrtthunryQ==
+	t=1795513581;
+	b=dcV0t1gXsxCEbYYMNlLv86XCa5p/p+9b9klznUxxyreAA02Kw+GS7GgWkR8h7IuSI8Ky
+	 7aWfHA75JNZNb8aSJGth2L9BFny5AbDfoH1Oes26ifSN1oWm4jElOIZqjXeUAS1ct0pFm
+	 sfn5/ZJ65OCzCqD/oxiigRjx3GAidOYHp5Sp4xdjiGnUfGAkaWRDDLdAfH87q2y3rIS/k
+	 CREod4f3jiut/tsZ9Cz/A6l5Lseoou16aSqlnRyZY7cQFv6EhFL4FIl4qDknAnlvrpJLJ
+	 JP+Wc8/5nXKkeqNwJc7qgjuAr7qJY3pSdokaX4I5mgbyjmlSTYpBwa3v5i6Qv/h9o3g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795513585;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795513581;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=ACH0QP0Df8Q+KvPtc3RDClRqoeZVsyJD6IcERMn9LAQ=;
-	b=0/y9/my4mhXn59PKNYMAA6Ci2p8uifnr/Dk7PcTRLL+I1DRBzbTPf6AmpBS6QGYlA+Al
-	 2R1VBdf4WHu5bB67QsJ23OUubmE0xesVANlMu1bwKKTVRew5ki1LepsDVzhjHb+EEOrUp
-	 TYIfUIqDnv91F5TuaeH3xqGHWD8WbvigQiBWPwSU20ixaImUEuI9HV5XHqgluztEUcHvA
-	 qLwDMuSKmUDZUqNN5aslFurJMb6PMVYcPJMG5eTmLvjp72mbPUmi3DLqw9QBSnNMzBWtv
-	 b2kog2y6cQNcMgnRxECNXsBJZ/DBHrm9rLZUqlc0oIoUFoXY8eaZXMDiY4ze75YTwrQ==
+	bh=cZ7tXZ0snSmUYYrntTWkC0yJTVn4BQWhNo2OO8FL8SQ=;
+	b=uHWOtT3IccASRVB/XirRz8X5H4ArtiVJpgcQeBWchYGVEDKqiVzql8lLfenOjx7kKbRa
+	 /asqZSatyJ8BjJB9mLVm54OCcEU54cCiFe5JazLI88/xJzLnGrjAHNuudlVXgXb/zqXh/
+	 lmE8QEn6gNL5hznh8ueGiEZzPypa31Pgjc5zRQtBlBpjauGj+koHq04bvbIcn6w6qYK08
+	 8SMDIKlT4xn0zeUM7xQXBdd0e6ba42ds+nxcnD8UXbb3CYAkjBznOLPXzxZfxQZyxrugy
+	 tTMfkvQEsMkZrIzjO5az61/Phw1bWxYsGRJzQAPcrKbEhUOruGhlR/+kRxTKoDZ13wQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IakvQ5Da;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Cj7GCUjK;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48DBF606A69E;
-	Tue, 24 Nov 2026 09:46:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46A8C606B712;
+	Tue, 24 Nov 2026 09:46:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IakvQ5Da
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D70021F00A3E;
-	Tue, 24 Nov 2026 09:46:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Cj7GCUjK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF1BB1F000CF;
+	Tue, 24 Nov 2026 09:46:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795513584;
-	bh=ACH0QP0Df8Q+KvPtc3RDClRqoeZVsyJD6IcERMn9LAQ=;
+	s=k20260515; t=1795513580;
+	bh=cZ7tXZ0snSmUYYrntTWkC0yJTVn4BQWhNo2OO8FL8SQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IakvQ5Da/Gh4K6sBHTyHbfltZXdEyfK98raJEjcwIw6hgnVLjtiXVUQANndVUB++0
-	 eKzgwDXvsEe2ZYcD3HgIOAKVhtIlLHQ2dCXQvTshJ9VKFGMOxYSVkjy2OZcQjiHVvB
-	 W7q2S3Ln1PCBesXOj5LO1HpWvbzUxKAFb4frmXkYbMd+fqP7C77iX0amCZdKjmiZaL
-	 9hfjqN6GitLmaLRYOMeRkk3E1QxpqiCNMy7WlVrwU9x4UEqtnsvNlQsT3PgGr1m3zg
-	 u3lMdT1PxyF83Q/kCOn+BehOXAZEWC7uhFUWkz4y6sQG9zhtELyGyQxbZBGY3JVGyd
-	 Le3SsmYRMgjiA==
+	b=Cj7GCUjKkjBryFVJ1f0N3P0z5iruapeuXWw3CX5jd7POtlsRqk21/9+HAGPb/KJ7M
+	 Cr+TMjMmW/AzVV2Iy1ik2xCCSFx1UAlUFwtjjrZv5UdC42NnJjwqKLMbNA9F47GZ3G
+	 ANnRdg0uPGQD1zDcn0yJ7kRaKs9i7Gkt8cCMSzfd5oPuCATaQap56nUqDNFKOSncMR
+	 BsBdgHvjVH4nkyaObMGLA87onmRyfd96VqBOOvhtUSJK484hvMjdn/JS0c2Ps1w9ca
+	 77QqoFOvQ6lsB1devY/Xej4+nqJ02m+BgkBCOIIlS6tl+dd3G8hdLyEX0Jlszjj6C7
+	 K9BqrqCzfokYQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -100,9 +100,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v4 31/33] USB: Retain the result of configuration requests
-Date: Tue, 24 Nov 2026 11:44:02 +0200
-Message-ID: <20261124-device-trust-core-v4-31-037eb0d17b1f@nvidia.com>
+Subject: [PATCH v4 30/33] driver core: Allow driver attachment with the device lock held
+Date: Tue, 24 Nov 2026 11:44:01 +0200
+Message-ID: <20261124-device-trust-core-v4-30-037eb0d17b1f@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
 References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
@@ -121,78 +121,101 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-The generic USB device driver can bind successfully even when setting its
-configuration fails. Authorization that attaches this driver therefore
-cannot use the attachment result to report configuration errors or decide
-whether setup can be retried.
+USB authorization needs to keep driver attachment and its configuration
+result under the same device lock. Dropping the lock to call
+device_attach() would let another request change that result before the
+authorizing caller can inspect it.
 
-Retain the last configuration result for callers holding the device lock.
-Keep driver binding successful so userspace can recover by selecting
-another configuration.
+Provide synchronous attachment for callers that already hold the device
+lock. Keep asynchronous scheduling outside the lock in the existing path.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/usb/core/message.c | 12 +++++++++++-
- include/linux/usb.h        |  2 ++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ drivers/base/dd.c      | 34 ++++++++++++++++++++++++++++++----
+ include/linux/device.h |  1 +
+ 2 files changed, 31 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/usb/core/message.c b/drivers/usb/core/message.c
-index ca6976e266f02..32014605b6db6 100644
---- a/drivers/usb/core/message.c
-+++ b/drivers/usb/core/message.c
-@@ -2042,6 +2042,8 @@ static bool usb_has_claimant(struct usb_device *dev,
- 	return false;
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 4c4723384dc66..2f45b53e5ba91 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -1222,12 +1222,11 @@ static void __device_attach_async_helper(void *_dev, async_cookie_t cookie)
+ 	put_device(dev);
  }
  
-+static int usb_set_configuration_internal(struct usb_device *dev, int configuration);
-+
- /*
-  * usb_set_configuration - Makes a particular device setting be current
-  * @dev: the device whose configuration is being updated
-@@ -2089,6 +2091,15 @@ static bool usb_has_claimant(struct usb_device *dev,
-  * drivers currently known to the kernel.
-  */
- int usb_set_configuration(struct usb_device *dev, int configuration)
-+{
-+	int ret = usb_set_configuration_internal(dev, configuration);
-+
-+	dev->config_error = ret;
+-static int __device_attach(struct device *dev, bool allow_async)
++static int __device_attach_locked(struct device *dev, bool allow_async,
++				  bool *async)
+ {
+ 	int ret = 0;
+-	bool async = false;
+ 
+-	device_lock(dev);
+ 	mutex_lock(&dev->p->driver_lock);
+ 	if (dev->p->dead) {
+ 		goto out_unlock;
+@@ -1265,7 +1264,7 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 			 */
+ 			dev_dbg(dev, "scheduling asynchronous probe\n");
+ 			get_device(dev);
+-			async = true;
++			*async = true;
+ 		} else {
+ 			pm_request_idle(dev);
+ 		}
+@@ -1275,6 +1274,16 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 	}
+ out_unlock:
+ 	mutex_unlock(&dev->p->driver_lock);
 +	return ret;
 +}
-+EXPORT_SYMBOL_GPL(usb_set_configuration);
 +
-+static int usb_set_configuration_internal(struct usb_device *dev, int configuration)
- {
- 	int i, ret;
- 	struct usb_host_config *cp = NULL;
-@@ -2347,7 +2358,6 @@ int usb_set_configuration(struct usb_device *dev, int configuration)
- 	usb_autosuspend_device(dev);
- 	return 0;
++static int __device_attach(struct device *dev, bool allow_async)
++{
++	bool async = false;
++	int ret;
++
++	device_lock(dev);
++	ret = __device_attach_locked(dev, allow_async, &async);
+ 	device_unlock(dev);
+ 	if (async && !async_schedule_dev_nocall(__device_attach_async_helper, dev)) {
+ 		put_device(dev);
+@@ -1284,6 +1293,23 @@ static int __device_attach(struct device *dev, bool allow_async)
+ 	return ret;
  }
--EXPORT_SYMBOL_GPL(usb_set_configuration);
  
- static LIST_HEAD(set_config_list);
- static DEFINE_SPINLOCK(set_config_lock);
-diff --git a/include/linux/usb.h b/include/linux/usb.h
-index a5e706f67f33a..d372712eba34c 100644
---- a/include/linux/usb.h
-+++ b/include/linux/usb.h
-@@ -599,6 +599,7 @@ struct usb3_lpm_parameters {
-  * @descriptor: USB device descriptor
-  * @bos: USB device BOS descriptor set
-  * @config: all of the device's configs
-+ * @config_error: Result of the last configuration request.
-  * @actconfig: the active configuration
-  * @ep_in: array of IN endpoints
-  * @ep_out: array of OUT endpoints
-@@ -686,6 +687,7 @@ struct usb_device {
- 	struct usb_host_config *config;
- 
- 	struct usb_host_config *actconfig;
-+	int config_error;
- 	struct usb_host_endpoint *ep_in[16];
- 	struct usb_host_endpoint *ep_out[16];
- 
++/**
++ * device_attach_locked - try to attach a driver with the device locked
++ * @dev: device to attach
++ *
++ * Synchronous device_attach() with the device lock held by the caller.
++ * When called for a USB interface, the parent lock must also be held.
++ * The device lock remains held on return.
++ *
++ * Return: 1 if bound, 0 if no driver bound, or a negative error.
++ */
++int device_attach_locked(struct device *dev)
++{
++	device_lock_assert(dev);
++	return __device_attach_locked(dev, false, NULL);
++}
++EXPORT_SYMBOL_GPL(device_attach_locked);
++
+ /**
+  * device_attach - try to attach device to a driver.
+  * @dev: device.
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 5c86e7a19e47b..3857545f67df3 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -1337,6 +1337,7 @@ int __must_check device_driver_attach_unrestricted(
+ int __must_check device_bind_driver(struct device *dev);
+ void device_release_driver(struct device *dev);
+ int  __must_check device_attach(struct device *dev);
++int __must_check device_attach_locked(struct device *dev);
+ int __must_check driver_attach(const struct device_driver *drv);
+ void device_initial_probe(struct device *dev);
+ int __must_check device_reprobe(struct device *dev);
 
 -- 
 2.56.1
