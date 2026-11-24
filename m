@@ -1,69 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.174
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795502647;
-	b=EWtKjhZ/hfsoxDacHfgqYvLf1erGJKLw7yBgqArClyWBKo3M6ViVOV0xrv9N/rSVVREo
-	 O2TkvD5uUWC6TzjFaFonGmYsvgVlIvfctZLu6sx7VyCDUeY7xfpE376GTZqazqkb14Jt1
-	 mLrkAasNIfEHfap/q2uSiyD1IjI9XMgW/eMzXdoB4dx952NH1SPiPhFboFqfDBoIZ8YSY
-	 9LPMQjXJtjw6zAbEWWKga24l6osWEN/HGCWuqF7gXxCkBYjGq18MDrY5lOXqPYS5ApO90
-	 12al3Gs+kiSbPfOJAKIUAyNwo2uAYu1b4Y8Zt37ik3m67Sa50AeG2aHZB2ATgyLeTpQ==
+	t=1795503632;
+	b=doqIORROlPydjdgLKLAQEsmpjWRDDOEtfi2QIgrJw16gDtHt083N6s+GlGgu1LGfjW8c
+	 0bjANvS/Mm3sHS2XtXL0vSR+DWinvhzMpjHbUTMa8BIety61W0NqlsrMOpJeffGBCwyEt
+	 c/ZaAND+jM0Y0hRUo2q9++pYLuehOTkEvx0XwZN3ZDkr7itf8QiKRRpfDifKNyYbQnIl9
+	 mc89ApvARNtM9FYqw8IYkk/qTIp1ZUqG5bixA37ut83wbuhTdfu8bXz16b7JjrnM6JhSC
+	 I6tPKayVIlIxyaF5mv2qDC49yCjWPbpbxpkoWpyk963CitbiREk9fTlA6jhrpMna81A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795502647;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=f4D9nzAQs8JOljc1HKpN79I++6boE/LG2zcA3JJ7t6I=;
-	b=ZT+8FFTjaX5FMUiRt1I1e0pxSlmC+cqctv+fcJ2yiAdH2TFN1Eci0Us3EpAUanHNuNnZ
-	 y67rB2/Z2yp+9I13Hnd7KjL9DL6iOmbh5LIAYfBfu6z4HGfcvn607/oY8d4mj+xzhmbwE
-	 WmkC+J/A3Npw9Hp8XgI6io1QR5/5Ii0wcTA/1j8Dhv1waBIUDObVPWvWkMoaakaalqFa+
-	 LS9bAkZCo9xp1rkgSVS07aKNsE4mpVnbqI899MBfTVRGsLYYtVATWaz4zorSim4IRi/eW
-	 ieUI3vkTvhS6QFvkHKQBmlJzNWeu/0qMy5TjchrqH5IK8zViv9KId2eEUsLbncj73Nw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795503632;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 Content-Transfer-Encoding:MIME-Version:Content-Type;
+	bh=bUUKY0RsjD+IVYyi5SJxAofkyIWwSJR0q+NQRX7ZwwU=;
+	b=F6/MMHe5rFNpuiMMniFothnkP1NBoYwpJHdY+9T8d1fGTkYd6mVrtXoMjALydI3jAsj6
+	 jeTXIenFitn6n9yGNG0htmYXaRVaGkT9RFKQFFtBQG3eOJVVI14jccwLAv/VZHDTROWRX
+	 /2uk4z99jq5kVrcIzrJvhuT/9L0DKcIWyoNIxTj5HZlemj3jFo31fLxsvCsAQkCFPzvAd
+	 24Kbh0XltekoAP/UqrYISyZKh4yxCIUd1PLmDaYNs/okJB9lzaVwsjjVwslgj3C01LHKZ
+	 XlTqtI/FnZct134ORyIug3MN73W4EBMkPrziMuNnLzQE0Dxoclz5O2Oy/kHxPYpBjQQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=swlRVAES;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=QVGdd82U;
+	arc=none smtp.remote-ip=209.85.208.174
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451AC606A31E;
-	Tue, 24 Nov 2026 06:44:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10E80606A32E
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 07:00:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 10E80606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=swlRVAES
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A83B1F000C4;
-	Tue, 24 Nov 2026 06:44:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1795502646;
-	bh=f4D9nzAQs8JOljc1HKpN79I++6boE/LG2zcA3JJ7t6I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=swlRVAES1lf+TbopEIgCYz7MevC0eym2gj5HfNJVcbLZUN2SQJeWBdTK/9a0ypMmZ
-	 7FPapsbW3v+AvfTDgwJEqJrFVcylpTVlObq6e6/sfbLUSMQP77c/oNELPMj0tgXh1N
-	 zPMwti6babKk5h8Bew0osty7GQj1zb60G+T4+5H8=
-Date: Tue, 24 Nov 2026 07:44:03 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Nicolin Chen <nicolinc@nvidia.com>, linux-coco@lists.linux.dev,
-	Dan Williams <djbw@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
-Message-ID: <2026112429-expansion-wilder-a0c2@gregkh>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <2026112325-emit-squeezing-5d96@gregkh>
- <20261123090623.GK14811@unreal>
- <yq5a7bi3riha.fsf@kernel.org>
- <20261123115803.GN14811@unreal>
- <yq5awlq3pto0.fsf@kernel.org>
- <20261123135638.GO14811@unreal>
- <20261123152533.GE179082@ziepe.ca>
- <yq5aik1n4iz3.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=QVGdd82U
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-3adfed9a887so37392321fa.3
+        for <linux-pci@vger.kernel.org>; Mon, 23 Nov 2026 23:00:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795503630; x=1796108430; darn=vger.kernel.org;
+        h=content-type:mime-version:content-transfer-encoding:message-id:date
+         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=bUUKY0RsjD+IVYyi5SJxAofkyIWwSJR0q+NQRX7ZwwU=;
+        b=QVGdd82UruFfPdkhhDtfnYqoV6hQDoIc6LmdBLufjtmQpvNKfQQwYNlPT4YjkByGtC
+         6b10N5ALfWr87MLq6fS42XMmf1oLMR0lG3tNc4la+6M161rsBCiPEePoiahvpmI08Q0Z
+         aC53VISrmlWQvFm0CjvJHI1xPz0/R66Iz3+AvjcnKb1mVt0qOVT2+wIJk6LSYi4ate2X
+         4S2MWMQVrYYIDvhFU0Kt9KID8whWfbFTA2VbauqgCBsy5/MTuy1exwBW+v/soVSc+irp
+         EaLAxJqrZHrbGSaMGF5XpL87gVdKhgZTt3I1BMvo5spUCzG5KXRjOVvEysxZq4rlxvLm
+         BBkw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795503630; x=1796108430;
+        h=content-type:mime-version:content-transfer-encoding:message-id:date
+         :references:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bUUKY0RsjD+IVYyi5SJxAofkyIWwSJR0q+NQRX7ZwwU=;
+        b=bCdTBj9i7/7UIIVjrAeXBEu1pbmhwrLKUa4w79H7sQi2GAbJMjK5X7QGE6NNjoadgf
+         W8pAKR+mt4d/Q+3E2nLYjRBdLWwvTqBbB4NxpvYcisNyxXtpFFFLXV2tjRghwcYJdTGL
+         kGt5qAJnnyfrfu9ELzUo9aKVgwygfIXq8sCsnb2TYfmvHT7pedfETGChL7dNnvBdccsq
+         lwwzqYaKIF76suatCiDXMVL9XMFeJsmWJJIwHW8TZHfJWy9AwGwxmxSCvCEr7CU1dVW4
+         IqjRA1EnTp2qRm6+rd87VFupDbjEILAXWVzKkbIb3roLLLh3jSj549zXgiJPdACSMjAC
+         2v6g==
+X-Forwarded-Encrypted: i=1; AL+hErGjv+pEmiHTTGPfvMqePERiYy2HjETy23x8s+8CM1+kGyc8MtMqBAIvzUy04+jUT7Fo+ltAIVIkvsc=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8meO2Jb1zir/fn7Z5DT2t3mwAL2tB0NcSS6NC7CIaXOUHVZOsJ
+	4lYNBw6SAVxcNxwXKQ6b3Ut/RQwhlzghgk2bUg5URWddqDk5sgFcSpW1
+X-Gm-Gg: AZFdTZfl0l5LtxZZq/4aRkb1pzNH4QHPKmv6Fxiu2Lb/YLY0GJpUSvZ2ibFyg5kbB86
+	xqSqKuappP6jx/W1UVYLMblnQj3vlaqnSVpDwXqL2U7DbaVVF9gtBQkkBuH/tFz5hjdxIVi190d
+	LRkxx5WIYigyiWpUbT6JZccBEJG8aRCUDpIhqwFX4q5qxbujFF/2RhWE7aQds16KbZvsBBPUWn3
+	fpmHks/f0/NrAiU5MXZLzppCkfCYEVy62m4KHKEypp/eK+Fir8xuxqDgxpIGXXUtWl6E9OOmAOZ
+	JpaaCFMBCttNLRc8p6phjU6BrLgxZlIk5oMQrnjm3L3ixUZtyx9sQaOjJOmYDeJ3MlJI4dXZ+rz
+	mCVOO5686jcFG5QqSNXaKHSeJMNBvrr2GbYYdNYCrqktSI6eEbn4YzMeehGtTXEGW/4gu9qYkqR
+	QqzGRruAjrBrf/LmtdvGkHTjkXkmiC2ODVK13QN8gne6ZgR+jOIsMUO3U5ks6WJsZHBPOZTQ+g0
+	kF6dtpZkF7J/I1HtTYqi1C07Z3CVLgdLyq+sYgd3jOkET4EdwQi+Cp6DlzOaRUbEH7MhJZuGYZQ
+	7icGyzO6YHywN0NyLBK2lDrKXOmPYo4SfMg4br0BniHjUSqIYufpuS4=
+X-Received: by 2002:a05:6512:12c4:b0:5c1:563f:ff23 with SMTP id 2adb3069b0e04-5c1bc84ebc3mr3803268e87.61.1795503630067;
+        Mon, 23 Nov 2026 23:00:30 -0800 (PST)
+Received: from [127.0.1.1] (ip-024-180.users.dtel.ru. [91.210.24.180])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5c1bd05e235sm3481118e87.64.2026.11.23.23.00.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Nov 2026 23:00:28 -0800 (PST)
+From: Fil Dunsky <filipp.dunsky@gmail.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
+ Vinod Koul <vkoul@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof Wilczynski <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Brian Masney <bmasney+clk@redhat.com>,
+ Jerome Brunet <jbrunet+clk@baylibre.com>,
+ Neil Armstrong <neil.armstrong@linaro.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
+ linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject:
+ Re: [PATCH 2/8] dt-bindings: clock: Describe CS7542 PCIe gates and resets
+In-Reply-To: <831a6498-9c1a-4829-b47d-52035fe15444@kernel.org>
+References: <20261123-b4-cs7542-pcie-v1-0-4cde5201d404@gmail.com>
+ <20261123-b4-cs7542-pcie-v1-2-4cde5201d404@gmail.com>
+ <831a6498-9c1a-4829-b47d-52035fe15444@kernel.org>
+Date: Tue, 24 Nov 2026 09:58:48 +0300
+Message-ID: <179550352887.5.18085137758862458863@gmail.com>
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -73,110 +111,20 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5aik1n4iz3.fsf@kernel.org>
+Content-Type: text/plain; charset="utf-8"; format="fixed"
 
-On Mon, Nov 23, 2026 at 09:51:04PM +0530, Aneesh Kumar K.V wrote:
-> Jason Gunthorpe <jgg@ziepe.ca> writes:
-> 
-> > On Mon, Nov 23, 2026 at 03:56:38PM +0200, Leon Romanovsky wrote:
-> >> > >> >> But it should not, as you are making driver core changes that will
-> >> > >> >> mirror the same thing that that patchset is attempting to do.  Please
-> >> > >> >> work together on this.
-> >> > >> >
-> >> > >> > +10000000,
-> >> > >> >
-> >> > >> > Greg,
-> >> > >> >
-> >> > >> > This series came as a surprise to me given the fact that device trust
-> >> > >> > series is exactly for that - allow confidential computing.
-> >
-> > Device trust's primary role in enabling confidential computing is to
-> > give space for the userspace to do all the TSM and attestation stuff
-> > to get the device into T=1 private DMA mode.
-> >
-> > It is the userspace that does all this and the userspace bridges from
-> > "I got the device into T=1 mode" to "Now it meets my userspace policy
-> > to be trust level Full" and then finally "Now I can bind and start a
-> > driver"
-> >
-> > The two concepts work together, but they are not linked inside the
-> > kernel.
-> >
-> >> > >> > Adversarial is equal to the "cc_accepted".
-> >
-> > I expect most policies would make "cc_accepted" as a full trust level,
-> > but we do want to allow adversarial as an option too.
-> >
-> >> > >> I think the confusion stems from this thread:
-> >> > >> 
-> >> > >> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
-> >> > >> 
-> >> > >> Based on that discussion, I understood TRUST and eligibility for private
-> >> > >> DMA to be complementary attributes. Device acceptance determines whether
-> >> > >> a device may access private memory, while trust determines whether the
-> >> > >> core must enforce additional restrictions. 
-> >
-> > Yes.
-> >
-> >> > > Device trust does little beyond preventing driver binding and recording the
-> >> > > trust decision in "struct device". The missing piece, which I would expect
-> >> > > you to address, is ensuring that the IOMMU and private DMA are configured
-> >> > > only after the trust level has been decided or as part of that decision,
-> >> > > rather than beforehand, as they are today.
-> >
-> > They are orthogonal and unrelated.
-> >
-> > All the TDISP and T=1 DMA flow is about how the DMA API works and has
-> > no direct impact on trust level. You can choose any trust level for a
-> > device using T=1 DMA.
-> >
-> > Getting the device into T=1 should influence how the userspace decides
-> > to set the trust level, but it doesn't interact inside the kernel.
-> >
-> > Aneesh has it right that these are orthogonal and unrelated
-> > activities. There may be some confusion as Dan attempted to couple
-> > them, but after discussion we have moved away from that since it
-> > doesn't meet all the use cases.
-> >
-> >> > What I am still trying to understand is how you view the DMA allocation
-> >> > and mapping paths determining whether a device can access private
-> >> > memory. Paths such as force_dma_unencrypted() and SWIOTLB receive a
-> >> > struct device pointer and need to decide whether to use private memory
-> >> > or shared buffers.
-> >
-> > It is Nicolin's work here that needs to go before the TSM drivers:
-> >
-> > https://lore.kernel.org/all/cover.1794343501.git.nicolinc@nvidia.com/
-> >
-> 
-> 
-> This adds
-> 
-> index 429e39f647cf9..01d7877d0b571 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -604,6 +604,8 @@ struct device_physical_location {
->   *		ancestor device.
->   * @DEV_FLAG_OFFLINE_DISABLED: If set, the device is permanently online.
->   * @DEV_FLAG_OFFLINE: Set after successful invocation of bus type's .offline().
-> + * @DEV_FLAG_DMA_CC_PRIVATE: The device is able to access private (encrypted)
-> + *		memory, no shared memory bouncing is required from the DMA API.
->   * @DEV_FLAG_COUNT: Number of defined struct_device_flags.
->   */
->  enum struct_device_flags {
-> @@ -617,6 +619,7 @@ enum struct_device_flags {
->  	DEV_FLAG_OF_NODE_REUSED = 7,
->  	DEV_FLAG_OFFLINE_DISABLED = 8,
->  	DEV_FLAG_OFFLINE = 9,
-> +	DEV_FLAG_DMA_CC_PRIVATE = 10,
+Hi Krzysztof,
 
-Again, NO!  No "cc" nonsense for device states please.  That's an insane
-policy decision that will be driven by userspace crazyness, NOT
-in-kernel stuff.  The kernel will give userspace the tools to enforce
-this type of policy if someone so desires.
+Agreed. I have folded these controls into the parent global syscon in the
+separately posted shared-global follow-up:
 
-thanks,
+https://lore.kernel.org/all/20261124-b4-cs7542-global-controls-v1-0-12548785df2c@gmail.com/
 
-greg k-h
+The parent node now provides both clocks and resets directly. The prepared
+PCIe revision removes this resource-less child binding/provider and uses
+the parent. I will let the ongoing reviews settle before reposting the
+PCIe series.
+
+Thanks,
+Fil
+
