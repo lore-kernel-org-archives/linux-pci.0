@@ -1,47 +1,69 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795502311;
-	b=RmN0IuJiSAE/dsw4VYhxpc/Nb2OXZRllW5OxGbySpyWa1TGMukZEbi0iIOfm58LcbfUE
-	 yZ7O9Re1j64qh/IKzhVK0x3JJZYrepJ/UpS/kci1qG1bGAru3W9R0q2XUshpvpuo1pYuF
-	 f3brpYPmbgN6zld60DBjriCjygAVJ3MPoCtq30k0P8bT9CPJzQQJnOnznyH4S3perQ0+k
-	 1PpO4HreO95u3nhVppWe9fab1OHF4nLUaM+K67joqFsFFI7R3S1/WNWWfb+KHmnSI5vxC
-	 5HIXJpE8nXzpmayWSjlXTkGkldtwzfW5w8VRQvCOrx6WNc0mubKCNrcWIrofavgv2Eg==
+	t=1795502647;
+	b=EWtKjhZ/hfsoxDacHfgqYvLf1erGJKLw7yBgqArClyWBKo3M6ViVOV0xrv9N/rSVVREo
+	 O2TkvD5uUWC6TzjFaFonGmYsvgVlIvfctZLu6sx7VyCDUeY7xfpE376GTZqazqkb14Jt1
+	 mLrkAasNIfEHfap/q2uSiyD1IjI9XMgW/eMzXdoB4dx952NH1SPiPhFboFqfDBoIZ8YSY
+	 9LPMQjXJtjw6zAbEWWKga24l6osWEN/HGCWuqF7gXxCkBYjGq18MDrY5lOXqPYS5ApO90
+	 12al3Gs+kiSbPfOJAKIUAyNwo2uAYu1b4Y8Zt37ik3m67Sa50AeG2aHZB2ATgyLeTpQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795502311;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:Content-Language:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=G4Jws+luoVJ3BEeYNiEMEcC6CxB49mTq6uZPEZLGGks=;
-	b=N+VE/z3Z3h+sYrVhcLs/RX7fbu2mfOw8yU/pl1ZGDsrIBYM4qvrYZ3a46DVmizL9gwPg
-	 gzbTME1eyYZxbVe8XBnLbbW0wmmUPn3gF6e+VvHMU0x7goh3YTIPWkmAoZvr0akQVZUk6
-	 rJW5f5Mj+TYe+zRNrr0PrmYDCoo3dVWTnH9DDP+kB8Mb4tofIGPPQQsxKvE2L+NfDYYMZ
-	 4ejwUV++E9XFTl43GOcEbwopz6dWv5gJpmSn+R8qI2D+01JKTQvfBtpFZXCLrBqsapVnd
-	 MYB/AC29Vs7fe8SgN071hSIifvqXY7ASwVvfy0ov3ngdiWF8sZroeqgYTHWrxIZyQ9A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795502647;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=f4D9nzAQs8JOljc1HKpN79I++6boE/LG2zcA3JJ7t6I=;
+	b=ZT+8FFTjaX5FMUiRt1I1e0pxSlmC+cqctv+fcJ2yiAdH2TFN1Eci0Us3EpAUanHNuNnZ
+	 y67rB2/Z2yp+9I13Hnd7KjL9DL6iOmbh5LIAYfBfu6z4HGfcvn607/oY8d4mj+xzhmbwE
+	 WmkC+J/A3Npw9Hp8XgI6io1QR5/5Ii0wcTA/1j8Dhv1waBIUDObVPWvWkMoaakaalqFa+
+	 LS9bAkZCo9xp1rkgSVS07aKNsE4mpVnbqI899MBfTVRGsLYYtVATWaz4zorSim4IRi/eW
+	 ieUI3vkTvhS6QFvkHKQBmlJzNWeu/0qMy5TjchrqH5IK8zViv9KId2eEUsLbncj73Nw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="B/3MInbc";
+	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=swlRVAES;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F0F606A31E;
-	Tue, 24 Nov 2026 06:38:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451AC606A31E;
+	Tue, 24 Nov 2026 06:44:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B/3MInbc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFD911F000C6;
-	Tue, 24 Nov 2026 06:38:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795502310;
-	bh=G4Jws+luoVJ3BEeYNiEMEcC6CxB49mTq6uZPEZLGGks=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=B/3MInbc+7/0bDMIJBx5IpI7khMruoB3nanB6Qr6Ea1AR/zDoK4FSJ9uzLlLEPqdi
-	 hWQyJlkkVSq57rbY1JorQgZG6eeGCh4/t0gs4SpMfrtxDiZiFm/4jJffnl/d9W2aM9
-	 Yud68vicJZxeyqYsenMLhSgIl5gAyQYsO1qrBEgwSGITXC3Q5F1KhRg61ZkqbT1LVP
-	 bWwS8kQ3NYxHanEI5oTl2ocYbSaxB8BnOl7ctH/7NGWo1opvfAEzc7GnxXsMNckYNU
-	 JcGHalGxDkLnKM/+fccXSeZb/3mj6OJLe1zHuxp4/gvoxpZNA91DeoinsSqX9DbBVT
-	 qkQPr9dj60Jlw==
-Message-ID: <831a6498-9c1a-4829-b47d-52035fe15444@kernel.org>
-Date: Tue, 24 Nov 2026 07:38:22 +0100
+	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=swlRVAES
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A83B1F000C4;
+	Tue, 24 Nov 2026 06:44:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1795502646;
+	bh=f4D9nzAQs8JOljc1HKpN79I++6boE/LG2zcA3JJ7t6I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=swlRVAES1lf+TbopEIgCYz7MevC0eym2gj5HfNJVcbLZUN2SQJeWBdTK/9a0ypMmZ
+	 7FPapsbW3v+AvfTDgwJEqJrFVcylpTVlObq6e6/sfbLUSMQP77c/oNELPMj0tgXh1N
+	 zPMwti6babKk5h8Bew0osty7GQj1zb60G+T4+5H8=
+Date: Tue, 24 Nov 2026 07:44:03 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Nicolin Chen <nicolinc@nvidia.com>, linux-coco@lists.linux.dev,
+	Dan Williams <djbw@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 00/10] PCI/TSM: Support guest TSM drivers
+Message-ID: <2026112429-expansion-wilder-a0c2@gregkh>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <2026112325-emit-squeezing-5d96@gregkh>
+ <20261123090623.GK14811@unreal>
+ <yq5a7bi3riha.fsf@kernel.org>
+ <20261123115803.GN14811@unreal>
+ <yq5awlq3pto0.fsf@kernel.org>
+ <20261123135638.GO14811@unreal>
+ <20261123152533.GE179082@ziepe.ca>
+ <yq5aik1n4iz3.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -51,87 +73,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/8] dt-bindings: clock: Describe CS7542 PCIe gates and
- resets
-To: filipp.dunsky@gmail.com, Manivannan Sadhasivam <mani@kernel.org>,
- Stephen Boyd <sboyd@kernel.org>, Vinod Koul <vkoul@kernel.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Krzysztof Wilczynski <kwilczynski@kernel.org>, Rob Herring
- <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Masney <bmasney+clk@redhat.com>,
- Jerome Brunet <jbrunet+clk@baylibre.com>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-clk@vger.kernel.org, linux-phy@lists.infradead.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261123-b4-cs7542-pcie-v1-0-4cde5201d404@gmail.com>
- <20261123-b4-cs7542-pcie-v1-2-4cde5201d404@gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <20261123-b4-cs7542-pcie-v1-2-4cde5201d404@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq5aik1n4iz3.fsf@kernel.org>
 
-On 23/11/2026 19:43, Fil Dunsky via B4 Relay wrote:
-> +properties:
-> +  compatible:
-> +    const: cortina,cs7542-pcie-control
-> +
-> +  "#clock-cells":
-> +    const: 1
-> +
-> +  "#reset-cells":
-> +    const: 1
-> +
+On Mon, Nov 23, 2026 at 09:51:04PM +0530, Aneesh Kumar K.V wrote:
+> Jason Gunthorpe <jgg@ziepe.ca> writes:
+> 
+> > On Mon, Nov 23, 2026 at 03:56:38PM +0200, Leon Romanovsky wrote:
+> >> > >> >> But it should not, as you are making driver core changes that will
+> >> > >> >> mirror the same thing that that patchset is attempting to do.  Please
+> >> > >> >> work together on this.
+> >> > >> >
+> >> > >> > +10000000,
+> >> > >> >
+> >> > >> > Greg,
+> >> > >> >
+> >> > >> > This series came as a surprise to me given the fact that device trust
+> >> > >> > series is exactly for that - allow confidential computing.
+> >
+> > Device trust's primary role in enabling confidential computing is to
+> > give space for the userspace to do all the TSM and attestation stuff
+> > to get the device into T=1 private DMA mode.
+> >
+> > It is the userspace that does all this and the userspace bridges from
+> > "I got the device into T=1 mode" to "Now it meets my userspace policy
+> > to be trust level Full" and then finally "Now I can bind and start a
+> > driver"
+> >
+> > The two concepts work together, but they are not linked inside the
+> > kernel.
+> >
+> >> > >> > Adversarial is equal to the "cc_accepted".
+> >
+> > I expect most policies would make "cc_accepted" as a full trust level,
+> > but we do want to allow adversarial as an option too.
+> >
+> >> > >> I think the confusion stems from this thread:
+> >> > >> 
+> >> > >> https://lore.kernel.org/all/yq5amrr8yldi.fsf@kernel.org
+> >> > >> 
+> >> > >> Based on that discussion, I understood TRUST and eligibility for private
+> >> > >> DMA to be complementary attributes. Device acceptance determines whether
+> >> > >> a device may access private memory, while trust determines whether the
+> >> > >> core must enforce additional restrictions. 
+> >
+> > Yes.
+> >
+> >> > > Device trust does little beyond preventing driver binding and recording the
+> >> > > trust decision in "struct device". The missing piece, which I would expect
+> >> > > you to address, is ensuring that the IOMMU and private DMA are configured
+> >> > > only after the trust level has been decided or as part of that decision,
+> >> > > rather than beforehand, as they are today.
+> >
+> > They are orthogonal and unrelated.
+> >
+> > All the TDISP and T=1 DMA flow is about how the DMA API works and has
+> > no direct impact on trust level. You can choose any trust level for a
+> > device using T=1 DMA.
+> >
+> > Getting the device into T=1 should influence how the userspace decides
+> > to set the trust level, but it doesn't interact inside the kernel.
+> >
+> > Aneesh has it right that these are orthogonal and unrelated
+> > activities. There may be some confusion as Dan attempted to couple
+> > them, but after discussion we have moved away from that since it
+> > doesn't meet all the use cases.
+> >
+> >> > What I am still trying to understand is how you view the DMA allocation
+> >> > and mapping paths determining whether a device can access private
+> >> > memory. Paths such as force_dma_unencrypted() and SWIOTLB receive a
+> >> > struct device pointer and need to decide whether to use private memory
+> >> > or shared buffers.
+> >
+> > It is Nicolin's work here that needs to go before the TSM drivers:
+> >
+> > https://lore.kernel.org/all/cover.1794343501.git.nicolinc@nvidia.com/
+> >
+> 
+> 
+> This adds
+> 
+> index 429e39f647cf9..01d7877d0b571 100644
+> --- a/include/linux/device.h
+> +++ b/include/linux/device.h
+> @@ -604,6 +604,8 @@ struct device_physical_location {
+>   *		ancestor device.
+>   * @DEV_FLAG_OFFLINE_DISABLED: If set, the device is permanently online.
+>   * @DEV_FLAG_OFFLINE: Set after successful invocation of bus type's .offline().
+> + * @DEV_FLAG_DMA_CC_PRIVATE: The device is able to access private (encrypted)
+> + *		memory, no shared memory bouncing is required from the DMA API.
+>   * @DEV_FLAG_COUNT: Number of defined struct_device_flags.
+>   */
+>  enum struct_device_flags {
+> @@ -617,6 +619,7 @@ enum struct_device_flags {
+>  	DEV_FLAG_OF_NODE_REUSED = 7,
+>  	DEV_FLAG_OFFLINE_DISABLED = 8,
+>  	DEV_FLAG_OFFLINE = 9,
+> +	DEV_FLAG_DMA_CC_PRIVATE = 10,
 
-No resources here, not a separate device. Fold it into the parent.
+Again, NO!  No "cc" nonsense for device states please.  That's an insane
+policy decision that will be driven by userspace crazyness, NOT
+in-kernel stuff.  The kernel will give userspace the tools to enforce
+this type of policy if someone so desires.
 
-Best regards,
-Krzysztof
+thanks,
+
+greg k-h
