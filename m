@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795513512;
-	b=y2/GwYiiFDz5R04k9FbmuD5RwZBwr1HXPmH6hsWQIef3YP/86lFcD3yj4DAtwoYx33HQ
-	 VTwzxJp/KtIOy/uF9wdxrL+bNJ4U62J0UD0Z22jPNB2n/JhHicux4zSVCDuhQIFECc3kI
-	 QPwmnzmHufx4aiU/MRjCykZbrfr9nhTOY9mq7WD+q7hgRg3ki2pKf7F99B4gWH7A+EZyD
-	 gyzmDSH8Xx+DsXP5N4RJWwLOmwS3WWUgzxgYT4k9hkphHG9BXXxn69022kzIj5BMF9r/x
-	 UGNpunDBhFN8rQMavCbbZO/Jw1dgc/MtOmw7vH+uxgBCRx7APSoNTRcaUB023ItTBbA==
+	t=1795513525;
+	b=KXJlizjgRXIeQV3G1lUl8VKiTOpJ/8r9dmEhrc2gTf77TQJuWjX2nyC2gIlY+gwNb3bp
+	 ZCBLCy0Kq0st5/DTmNda9W6d6nWrjY2MB/E7EHbzwsFVjp9v1SY9zWtbx4v1KMTv62q9V
+	 5CQ/QQV2SXjznaHv5cQytbNxQXViQv/HluKu8+O7Qj+Hb3e3zL9lQBLXBW2YkHcb7ATqY
+	 jTi00orW3uvmSAzqlCDNYDEc8xIRwTHJN1V964/KagaXbYelCFlwnX9LifjQyXksQ/d0r
+	 Ig1459/gVEiCCHfKbEJ4sGd5DPAMMYQU1/P2EvMHr3PYNxQZuAOg9xN5tzL6HMZWKIA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795513512;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795513525;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=ApA1EolZAFdk8jTSD56scrzuYcCnsTXqldWRwLF6D30=;
-	b=IvdQTHCQ32f/JLGCgaZMaWd9BBijFKh7qc7J+PmVf8qoT7MmI9fmoOtNoWbvc1qcXOq4
-	 YrGtw0ibjlPvHf12+m8wZvu0dEo2WWz7udScQZPUmjzxfiuXrSMYeC/yvQj8sGwQNX2Gq
-	 WHvMe/ZrRs9WGtlQxhfFGtEHyrVKObVDsNn/z7tL+LOr933TmlqS9lDKkaJwBHoBGGT5q
-	 I38pyMZEB7PYc62NTcsC2OMzwZv3djpiQnUDxhhJs7EXuhPq3VOE+8t9MbkcM224uatep
-	 xNo5pRppQcs4EGOopdYGImvq7+r9ri55RWq49lrxSkryrYlqbKOnCVIar///wbILXRw==
+	bh=LHYj5RNi7XvfXBnbm1SbTiMtiCmXpIiLuGJrR2GJWwc=;
+	b=hD/R9Ku13hFZoI/uM0OQsZglUhZjhs/5zJcQ+3U4ZqO5rNv1s8NF7g/eSRbR4fHkUCRN
+	 l9xH9l5YRLlGUMRFDilJLGOgicY+MPjF++6zK9G0txor0wy6tjsINgj/9QoARvAMIeosY
+	 V3U2ZI3qDAadNc7NlSDuJKfmmkJZVdA7xke7af05ukRu/R7x6PiNc17O+IjiDQFm6NEND
+	 Os2OAM1XZ23T3Kb26uGBdu4vdVX8vJkZvHESfpCflbu8pA20i+/1WozKNi4dqYcKshKs5
+	 cDFFiBrcE4EWXejWh9DukEivVUrt5GI1c0MRLud/KfcVNMa8rPlzRC3codQTlY5pQSg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lsMHhECp;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Vmtr/gCV";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DA1C606B009;
-	Tue, 24 Nov 2026 09:45:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CCA4606B004;
+	Tue, 24 Nov 2026 09:45:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lsMHhECp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC6251F000EC;
-	Tue, 24 Nov 2026 09:45:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vmtr/gCV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB31F1F000EC;
+	Tue, 24 Nov 2026 09:45:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795513511;
-	bh=ApA1EolZAFdk8jTSD56scrzuYcCnsTXqldWRwLF6D30=;
+	s=k20260515; t=1795513524;
+	bh=LHYj5RNi7XvfXBnbm1SbTiMtiCmXpIiLuGJrR2GJWwc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=lsMHhECpMclIPMnGtu0zf0pupBnYZkXAJKko1nz2op4MVz7EyK7UAvMi70u64yaNy
-	 m0jdf9unTFmIN/sCjAJOZyDUdsB02qfAqqiYhICFSTRZwrEIjTOKEFpX8/nI+q1Z/m
-	 o7g9u3MnrD4XeLbyb99HkZHrSEUOUNvu5p6TxniqIjvcw6nsWsa04QrMmAGADT15ZY
-	 UwxmDwUn1aWkbmOsWlhnP7K9ATyYL/9pIVm0gA47Vh2h9NG14Iy82PwToW30MsMQLd
-	 dpKwMcLtBcgkoyigbi3QCzPfCuxoYA97ybDBh398iA/6W5JWKiWFtMhQoOEdEi2u46
-	 U1W/qV08lIJwg==
+	b=Vmtr/gCV5mFlhmL5fYdy1BFDkTDFgZXY8A7Ivtap3aBB1FbJnoWDo49qa8zu+i6hg
+	 /qAn4VJVc4NqkdwryMEo+/clY8adVODQ2Nop7ro6aB8lcBjunuNQf7tigwompyOcdw
+	 iZLTxGX/z4ngkEwCrqAGDcGX5yEISXNYXbaCtYMxGxOER/UKG+sCabqa5XDOekqJjG
+	 8ZlN/0kvYu+6bhk8CQcGSG601QgimZ33XvwX8e8no/H3viXDixCxCFSXWVXK+DsoDk
+	 bUwi4RI2kwAk8ZwX7nsbqFCgg8Jr3wZhfCYakMjGRAlAT3g90aPMPMd6AE3hhFsjzy
+	 0464XxhU8qPJQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -100,9 +100,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v4 14/33] cdx: Propagate DMA configuration errors
-Date: Tue, 24 Nov 2026 11:43:45 +0200
-Message-ID: <20261124-device-trust-core-v4-14-037eb0d17b1f@nvidia.com>
+Subject: [PATCH v4 17/33] Input: gameport - use the compatibility driver attachment API
+Date: Tue, 24 Nov 2026 11:43:48 +0200
+Message-ID: <20261124-device-trust-core-v4-17-037eb0d17b1f@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
 References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
@@ -121,32 +121,57 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-CDX reports successful DMA configuration when firmware setup defers or
-default-domain acquisition fails. Driver probing can then proceed without
-the required DMA setup or IOMMU ownership.
+Manual gameport binding calls the driver's connect callback without the
+device lock, allowing it to race with generic sysfs probing. Normal
+probing would run CONFIG_DEBUG_TEST_DRIVER_REMOVE under gameport_mutex;
+a disconnect callback that unregisters a child port would then deadlock
+trying to acquire the same mutex.
 
-Return the configuration result so driver core stops or defers probing
-instead of allowing a driver to use a rejected domain.
+Use device_driver_attach_unrestricted() to centralize binding and failure
+cleanup without the debug removal cycle. Take the device lock with
+device_trylock() to serialize attachment with generic probing. Return
+-EBUSY on contention because waiting while holding gameport_mutex could
+deadlock with probe cleanup that needs it.
 
-Fixes: 2959ab247061 ("cdx: add the cdx bus driver")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/cdx/cdx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/input/gameport/gameport.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/cdx/cdx.c b/drivers/cdx/cdx.c
-index a118a89a7779d..0a030bf522690 100644
---- a/drivers/cdx/cdx.c
-+++ b/drivers/cdx/cdx.c
-@@ -367,7 +367,7 @@ static int cdx_dma_configure(struct device *dev)
- 			arch_teardown_dma_ops(dev);
- 	}
+diff --git a/drivers/input/gameport/gameport.c b/drivers/input/gameport/gameport.c
+index 9707b155bc947..88b1a3464bf3e 100644
+--- a/drivers/input/gameport/gameport.c
++++ b/drivers/input/gameport/gameport.c
+@@ -216,24 +216,12 @@ static int gameport_bind_driver(struct gameport *gameport, struct gameport_drive
+ {
+ 	int error;
  
+-	gameport->dev.driver = &drv->driver;
+-	if (drv->connect(gameport, drv)) {
+-		gameport->dev.driver = NULL;
+-		return -ENODEV;
+-	}
++	if (!device_trylock(&gameport->dev))
++		return -EBUSY;
+ 
+-	error = device_bind_driver(&gameport->dev);
+-	if (error) {
+-		dev_warn(&gameport->dev,
+-			 "device_bind_driver() failed for %s (%s) and %s, error: %d\n",
+-			gameport->phys, gameport->name,
+-			drv->description, error);
+-		drv->disconnect(gameport);
+-		gameport->dev.driver = NULL;
+-		return error;
+-	}
+-
 -	return 0;
-+	return ret;
++	error = device_driver_attach_unrestricted(&drv->driver, &gameport->dev);
++	device_unlock(&gameport->dev);
++	return error;
  }
  
- static void cdx_dma_cleanup(struct device *dev)
+ static void gameport_find_driver(struct gameport *gameport)
 
 -- 
 2.56.1
