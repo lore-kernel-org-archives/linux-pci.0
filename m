@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795513460;
-	b=f39cIID9weUMM3RCil9BSidkf61C92wXp2bgE6aVoPb3b+Z2HnTcUvhs7nENXqreLGj2
-	 duV/VGkfmKynkQI0X2m9Atqy/i8C0Ez6gY50k4XEEXd5KyqANrH2IcatZgAcZ3mQAIDJG
-	 5LHlJTf7sVmuBMuqUMpIKJgzeZK8pplzTUB0U/WqgPlRCwm3sRHgNnk+8STxog+TB5X6k
-	 yU0oxzpfoEbVVMuhsF0DncYozr/iLjSBn0oPQl3KobN+D1LmM+8q/8WKyoOCCYj4yv09+
-	 zvFo6+05nSHM5kIuCynC5UXgu29W02/zSK3RiJ/mCKmQkaZLDgMqrUhAl8UR95ShkZg==
+	t=1795513478;
+	b=IEXFV/kxqxqNz0OcS92MBrCjXKMy7bW7uNXYmbnP9OAJph5n/fA0RBYwGvSbTPEqzLoi
+	 BoNK4jv4eZIt0GTaytjvWVTw3i3nlvHhMxmlsi+2y3NRaCXxN9hZcYZ2Wcfg2BXOX2GIY
+	 j/rD/7wxB69ndedND9rrkzvZJTiKFXpTWNIn5OocgWC66RMCJFKWrDmwC59J9Vifgpecs
+	 oTaX8j94TE3n4wSp5vVEbdmhdU1x5nFmN60yKf3nQH2t0ZVPZSAqqI7vyBcCM0E7gf01J
+	 RahC0e4hs4xoitdFwzjpuWxuKtpJdqC3xlGj74Cv/XKWdoHjzRpHSuUXu86vptPYajg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795513460;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795513478;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=0q1TynGssykC2LOKqTJCRLWewJrYt+Qms+Y+NUNnNmQ=;
-	b=YO0lR1BGDb082E8NjlIeImGQO8KxXo7DHuycr2I5Hm/8awuNr3IjJqHqxpwhj/LrHQXi
-	 f/2Z/Qvyp7rh+lNX9B+Dx9KV9eZxJW9G+PI5dsQGZW8R7lZd9ongAet4Qc9egHERNa8Ur
-	 sN8GuIIJR6aYSBTvtrZ5vALS5qUG/i/V7TOE2Z8i1EHsLWQh7GmdxI+gA9ghsEXbe/Mgr
-	 EFb8dINaFjuVZEN0D7opIl2hHsiYCES8e83WwZPQyB+BEJPS6Kgf/p2/yk5gxbcEIdpqQ
-	 OuoAXq68xNm7eh8i0kfe+jlgZ8u5akFUWLCTNyRaLntWBV2Mh0HpiE7cYarnF8DubeA==
+	bh=U1U4cqLXy2TPKYTc2nCd+GXlXsu96XA9ImgVgtVC+CM=;
+	b=uImIfrB/I7jqpo3Rqhepoa6AcFvo+5eJPnrtUsxOLIiavmTrskzoYkcumFUt/tEIuWa4
+	 ZkZ+rUb4OdlqzX9WIfxJc2wlodUK3OWjIGLt3CBS5OEtcnBEJ2Qiajq6PQcLGJfTteOBJ
+	 ji+67keWATKCsu5thApNcsfoD9mS7+TCEdpusXzJOutj4UlivT92yUWc+78Zq0a0eaayl
+	 l4dB73Y6gyx7vRbw6+hRiuBzKaWfxtusa9XwUySFAoq2RA9sz9UfIAOh+fmt79XfP8Bk+
+	 MjgWdMHS+2DZTKkMQilAWgY3RjWszVB1d0cz8PxTVQ/S8jtSwd4aejK+H09O3HCTrkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BQfkEJzP;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AOOAh7Hu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEFC0606A68B;
-	Tue, 24 Nov 2026 09:44:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7507606A68C;
+	Tue, 24 Nov 2026 09:44:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BQfkEJzP
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 900A81F000F0;
-	Tue, 24 Nov 2026 09:44:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AOOAh7Hu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9573F1F000E0;
+	Tue, 24 Nov 2026 09:44:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795513460;
-	bh=0q1TynGssykC2LOKqTJCRLWewJrYt+Qms+Y+NUNnNmQ=;
+	s=k20260515; t=1795513478;
+	bh=U1U4cqLXy2TPKYTc2nCd+GXlXsu96XA9ImgVgtVC+CM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BQfkEJzPxWxHAzsKlB+3KWBFh3wYLHR82k5EG50AGPZhb+T9glDqQMvlMmfMtSOsK
-	 In3GXSvT1Jx+Jxn+Km78xmHJzxBLwhqsXcrJAuhYUqFIoVqJ+WHaejJqWpCjGKm3v6
-	 /zxNmhC64QH0D6xK8bYsCcBXC/28rKjSmHFOt+P0edzymxb93WC7Nt6MQK4Zdcb95X
-	 1qjP+v64Mpi7Xqe38t5wyqV3NypSpHuPHmNYtMm8QGg4E6NCtQoVYXHj4WRef+fSkN
-	 CheEna9tLKzM1eH1J1w3rXzz7WHsNDJeMxkMu5zEVDJ+o7jMpogXdOqI6B8fq1KEdp
-	 /+RaSpBgtj5mg==
+	b=AOOAh7HuGjeBfXfb5eWeJV+oHc8wfCUEHmHQ+DBb/OCZdkyZmUA1e7PTZhrRXkfIS
+	 O5yANy1DoQl3UPJyfh69s1JvEp1jj5q5lDfylrtJUZRXIYs0S0B/vi/nrJlDYAQMAM
+	 3rgavDyekraF5uuVXjYQ27JfnDmrk/WS4mf6EA2kugPAUyvwhChfKkAiAE+jOvBDPB
+	 MUwaHNWrq2Xrv2W8MdSmSYsXscFbXTzNHfaEYpjsjm8/H0lG0B0bXaVo0Ih5qWuKaJ
+	 3GSN7DOEC3fb91rBY3o0x8jvSgSVdg5EpWFk8V7GsKsctQ0RDH5mu1oBx/yT0zl2GQ
+	 NFOO9/bcoFfOA==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -100,9 +100,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v4 01/33] wifi: mac80211_hwsim: lock device for manual driver binding
-Date: Tue, 24 Nov 2026 11:43:32 +0200
-Message-ID: <20261124-device-trust-core-v4-1-037eb0d17b1f@nvidia.com>
+Subject: [PATCH v4 06/33] USB: Reject usbfs connect requests for unregistered interfaces
+Date: Tue, 24 Nov 2026 11:43:37 +0200
+Message-ID: <20261124-device-trust-core-v4-6-037eb0d17b1f@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
 References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
@@ -121,30 +121,46 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-The documented API contract for device_bind_driver() requires the device
-lock. mac80211_hwsim uses it for a newly created class device with no bus,
-so no automatic driver-core path can bind the device concurrently and the
-missing lock was safe.
+USB core does not register DT-disabled interfaces, and an interface whose
+registration failed stays in the active configuration. USBDEVFS_CONNECT
+still asks driver core to attach a driver to such an interface:
 
+proc_ioctl()
+  device_attach()
+    __device_attach()
+
+The interface has no driver-core private data, so the request
+dereferences a NULL pointer.
+
+Return -ENODEV for an unregistered interface. An interface claimed by a
+sibling driver keeps reporting -EBUSY.
+
+Fixes: ef0ff68351be ("driver core: Probe devices asynchronously instead of the driver")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/usb/core/devio.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index e53714b81ec2c..b796da3dd54b3 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -5769,7 +5769,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		goto failed_drvdata;
- 	}
- 	data->dev->driver = &mac80211_hwsim_driver.driver;
-+	device_lock(data->dev);
- 	err = device_bind_driver(data->dev);
-+	device_unlock(data->dev);
- 	if (err != 0) {
- 		pr_debug("mac80211_hwsim: device_bind_driver failed (%d)\n",
- 		       err);
+diff --git a/drivers/usb/core/devio.c b/drivers/usb/core/devio.c
+index 101cb94254809..1491ba015bcd8 100644
+--- a/drivers/usb/core/devio.c
++++ b/drivers/usb/core/devio.c
+@@ -2366,10 +2366,12 @@ static int proc_ioctl(struct usb_dev_state *ps, struct usbdevfs_ioctl *ctl)
+ 
+ 	/* let kernel drivers try to (re)bind to the interface */
+ 	case USBDEVFS_CONNECT:
+-		if (!intf->dev.driver)
+-			retval = device_attach(&intf->dev);
+-		else
++		if (intf->dev.driver)
+ 			retval = -EBUSY;
++		else if (!device_is_registered(&intf->dev))
++			retval = -ENODEV;
++		else
++			retval = device_attach(&intf->dev);
+ 		break;
+ 
+ 	/* talk directly to the interface's driver */
 
 -- 
 2.56.1
