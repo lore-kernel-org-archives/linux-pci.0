@@ -1,54 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795510352;
-	b=oR3FJr5nxHpOvEmdIghCfRTC/+CNs+3YNixpdz3axssOIs21hXNuPFaN03uJS10YnZwG
-	 P/KmH0VtKSZdfPqkaGJ6u2D0SEmVc+jqlMaHPCcYSupwg4UKkCXMY1j7ICd2YNvlK+0XM
-	 69P8H/F3DspgfEwCejy+2bD5y4FyE+jzhVkef6a/Q0/YseaKqgVnc/p9JYfulRoP2XtYj
-	 mRrqFUpGSWrUtspGE6TksDbYQyb/Otsl6LM55fFgB4ALBHkFr81R06U7A9zSIFZ8QE6/1
-	 3CTaNKl/CsvIOlMdJUFCos3+w3Vq/PgTeaV6oufX+APUZMBGc+oFViuv4gjP/G+2YJA==
+	t=1795510486;
+	b=H1VzGJmaYUHmt6xVyBx0zHZ8XCM/3Zxd3PDFr+MuEQS9vonCQY29OzUqluET4FhX757c
+	 vp0Tut/eE6hCZYgbmV9slHTvbdM6SrNNIq5rGIfo7LvNumIoEbjLmzYBP+Ne1utVvaolW
+	 qUKrNR6RMyn/sLYGnfJe1ASffm+ICjmyruhaFbyxroNcf07T6ZQ1/eI0Qy3hqg/DzSMhz
+	 eLMrnVi79W3vxScUhNhdit/k6XPumttVpx9Zsi6zn/UZrIYhjW43iHr2W9A/aiP5ggm29
+	 FNfkRi8S2gca1Zxq6ZZ5oBglacgUy+RHOsdY7T4uhmi4eQdXyVdW5kn2IctlDvJzAxw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795510352;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795510486;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=13azyXGvHKrknCLGtDbLN0QYujThRUWNhuhFb1eY8ns=;
-	b=tAVDHTNBRA/R5EpG8N3G2HjBsEYAqwoUwlQdgBxETaxXBM57qxUc1gtEAQ+ke/p182lj
-	 GCTxfH+KZxjbJSPUf3ZsgEu8wESrgoPi9Ynj4trq8JeU9rf9noTTLyaHIcv0BC/TVU2DZ
-	 cxi4PpPTsZXgeNEpxnqins5ODGC+Njfu1H2au5BttYt7ZMbujLLNeAwIZjfRIrwVv8JF/
-	 IzmyGbxRYOywT1DpAOH2fi1H+pgBaRZle2S5vY28ijFVe2hRi1xsddv78aeVEbbQXPQ43
-	 uW5ynllQr/DBzwpDHL3sjxzqVRwSppjqpY+0N/ucFv2LNv1z/ZDxyZr5hUeg1zBPzng==
+	bh=LeN13AY7OaT5SaP8gn1Mj3iPqbEob2yLbodtmi6k6mo=;
+	b=feWNrFXn8/SJN+S+bBRqmOHapN6v3AsFgxUedXTuB1EqtfxrW5HK+NCXHamqgQS6Q7Sw
+	 zv4KvTcbK3Oc7lWX4VCj9wLf34W5dD6yoG2ms3FbcxF/s7rcSYXwAg6WvJzJPBxB8+q2A
+	 lP2wUHCxdRDj3KCL1RoXJIo11oqrfcnble7s91J+ya/eJCQTDIOOjiwnMGAR+fiyBDYEo
+	 sdR2n1jUgULGnjTOF6tUKqkpbWj8+uuVJT9WezNtCcsnrlotq4ERk90JHA+tXtFXqhTOf
+	 NfmbQqBa/+U8MG/dzfdnfXsTJJviyphtzRWSw50XY7osr5OvjlV9PlE1bXaI9UQxu4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FwqoJqZm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jwCqZ5F9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391AE606A334
-	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 08:52:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1658F606A31E
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 08:54:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FwqoJqZm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 761BA1F000F4;
-	Tue, 24 Nov 2026 08:52:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jwCqZ5F9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E1531F000C0;
+	Tue, 24 Nov 2026 08:54:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795510351;
-	bh=13azyXGvHKrknCLGtDbLN0QYujThRUWNhuhFb1eY8ns=;
+	s=k20260515; t=1795510485;
+	bh=LeN13AY7OaT5SaP8gn1Mj3iPqbEob2yLbodtmi6k6mo=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=FwqoJqZmeuZ28l9+7Il3lSwSAiaxGgszzeFCcXBJpWAV9oq2uw1auzAKmw4Fk84lA
-	 Fpusiih0mU8hAW51Bpo8PmPxoDHeTyunwI0rSguOuPsQW0lmze3RlIKW13ju6R4hpP
-	 ZQQfJCYT92xPy9NdEowAN4g2HAi94DGeURNUJXC9NYzhZ30Y/cJckpCiPxmlMR/S7E
-	 FJpsLcllrv/7fVhLgtkze0PjEXXU50DIYXg3Sq6cigT9VmWRhIaR5V1f+E6IFzcWts
-	 BPRvpcO0CpXkl/FAPRcvDAjA+VceppmU9/UgUNER47MN83JMJK1oXZFRgyCwVZLsoN
-	 5T16w7PmVPsSQ==
-Message-ID: <sashiko-outbox-230747@kernel.org>
+	b=jwCqZ5F9OyU/rat+QJ3lP1f3h8Se3LbQp5j5G/gFhWG2/GBIJX01B13/WBEIha9WM
+	 XI37Fc1H41zMZm5ukkwBUlJAeo4dB+mQWK4H52y7+ygY7RHy1MURKpx7vSh+SAPCvK
+	 74V0ncj+WuOgJ0hvAWmuayF8Ns282Fp3hUBSbW+V+9JYT2BjMW0fZlvHqp7MlcFw8b
+	 7ELcUleEtGHlRF5KWg1SwGzu+lsRgKL2WcE6UhN4mazGqCuuKFUeNUh2HkJuNf3GqO
+	 USCBjUMYZjLKKOC2PmoBwrmUaKHGu/0Jag64C2LsZXbYuCG9OUTitTjX0ZMNlvdY6x
+	 sObOZm21cpTvw==
+Message-ID: <sashiko-outbox-230751@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: Correct PCIe port type field encoding
+Subject: Re: [PATCH v3] PCI: Correct PCIe port type field encoding
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gokulkrishna Sekar" <gokulkrishnasr@gmail.com>, linux-pci@vger.kernel.org
-In-Reply-To: <20261124084828.15318-1-Gokulkrishna.Sekar@harman.com>
-References: <20261124084828.15318-1-Gokulkrishna.Sekar@harman.com>
+In-Reply-To: <20261124085038.17299-1-Gokulkrishna.Sekar@harman.com>
+References: <20261124085038.17299-1-Gokulkrishna.Sekar@harman.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 24 Nov 2026 08:52:31 +0000
+Date: Tue, 24 Nov 2026 08:54:44 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -86,5 +86,5 @@ arvell.com/
 Sashiko has reviewed this patch and found no issues.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124084828.1531=
-8-1-Gokulkrishna.Sekar@harman.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124085038.1729=
+9-1-Gokulkrishna.Sekar@harman.com?part=3D1
