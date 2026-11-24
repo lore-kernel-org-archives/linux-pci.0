@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795513491;
-	b=ZtesSgNCsqkrw7q5ORvXGC3vQF2IMqaxgiFa/4p8MXIxUWHUmKA2l5tGkX6RxJPrnZzo
-	 aaYUnCOWLdjI0HbFhk+gaHs+VTLUr3teE98YrFpK0A9aPa6fuUKNJVq8DcBAm27JNLJ+T
-	 OiWU8k8dwkMUSXv8d9iG5QZ834uVn2xVj46mMoDDPgkJzhG+f62FHi6AylQdtzZk9h21V
-	 MgAv5R+C9ar6jPSY+e6qx/Jjg+ZDFlUnIHOFaCPzt/4GlIeVKQ/EDv0NRJio5jL8INlO1
-	 ORoPM+fQgZfskro6sLHA/Ca65LapNnuYsCkgmFbrXoP3QA9jeBxBvsKV7foW+N/kIVg==
+	t=1795513495;
+	b=dpK/0gR3SJ2lDeKM7GIdTYznJ2TW8yO2hcD7Cu8SpbVoTCdyIeMkmMo5H8S9j4PHe3XH
+	 JS7ouvbNhS1wJJAXyQJaCRsPyKQ9vaOMrC+4nu78GWak7WwLIlJ1uCzq0HOApDLZNDEaf
+	 e2ZtH8u6K7IKV/5mffusCbWitEUxGX8eP4sBuTMYD/srKI/yoJIEtQ5CaNYbXmCtapI9K
+	 4wMuCp5W4sZSwyheXjxpsALDLj2NHYQVC/saXufD6OyCSdWT5qspgsnKJx3+lgRDo1Hc6
+	 W+L9taSV+zpvDkGs1d/QE+tUA9hUVRwhP0YvPzw2hMruMfGnYzq0PIOInyYzUW9Gd2g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795513491;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795513495;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=SnrsLB5kZ1UeQnsG8kHcQUsE97ktcTSiGi8C0w4swCU=;
-	b=3c55q8Eu/5wxjGa9DybsBG6n4sNtohyxQPWiVpL0qSijk+/85sz8ORxfc8cFS5E2yzVU
-	 B1j1XxgLBmWbk2WGq1G2zN56P38cnul2l9wZwUtkPu5ATKGegO+nKaGe5rKN9tL4m5b8Z
-	 242h/vh7zAi019D4y+bL6UV+QdLTUwRqd85hZ2QXttX2+6T5U209GU3g9TZVJOLms48ST
-	 oLp1LkukAQtfvExmePxN27f38MnLHlJU5geGfGga3Q65xAIEFlLYZ3NfigSAE0prTNuQZ
-	 p63PaU6y38Z5datDPWm/ZDwgcFQtOhQRclyDX+Ml6/Akqy8U5+Adk/cYc5pGXVTI8AQ==
+	bh=wbkmNHR1nRw2+5k8665nB5tZwQXzmDpbNKqdau8pHu8=;
+	b=0mdLsCD5NuGBThJQ4aadyX3nRYgbSQzEbnF1Z1SppsBHxcL4Q2lJYWL3nqD1pgdkvdTj
+	 y8bGQ3HVZQGp4eMACJWy+pCExxqDrL+wG1WgI4uvD74sjcmr4qO4er1rGYgY5N+Gcc1fb
+	 12mg/Cr0FDtjX6eo6j78clxkMvkiwMeM77XSxatYOT2HtRU6FGg7otPHluyaotj3Dzoqy
+	 ZCiX2OfTVMbdgNlgeH5sbSBtDk6vvy/xi+UwxZ4OKAVse04Fh2G1zM4R0mUDnfVKSl/2U
+	 y9GPtOrt7H7QiDt7i26/J059Mg63lvzNdUIrxnYgi5QO9tf/8Mj5FNPIn/bhq2KFOtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O4b7rWrO;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E+QwfXHX;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 256AA60A2600;
-	Tue, 24 Nov 2026 09:44:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E0FC606A687;
+	Tue, 24 Nov 2026 09:44:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O4b7rWrO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C39591F000EB;
-	Tue, 24 Nov 2026 09:44:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E+QwfXHX
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 485151F01571;
+	Tue, 24 Nov 2026 09:44:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795513490;
-	bh=SnrsLB5kZ1UeQnsG8kHcQUsE97ktcTSiGi8C0w4swCU=;
+	s=k20260515; t=1795513495;
+	bh=wbkmNHR1nRw2+5k8665nB5tZwQXzmDpbNKqdau8pHu8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=O4b7rWrO1VpG8afkXvveRCQ6YKJEp+gt/W9EoJDm6WcxBEe/g1W96uFgHuYI8T0+0
-	 BIsZY4Chu9xsSLa8vljpFxYTta8Z+s266dbePuaTwuK6xH2VAA24RrIlAus1Z/BOMT
-	 hw9RH90qpt+INrnYym7884AjhXqDt3W8yNZistew0pkM/0XIP0C3ws40PdhIVWvN6b
-	 DbkttT8lO8Drm4uao2HA5xzSPWlsPJPD2ZQfB6y1zcuAVZf4eUJVgxk5wTzeiwyzf9
-	 ULUOcPx/3PYUQfl1nUT+ny64ylWdF1+yNLYkg8To07mua5OHPZBFAO8zhWFvZiWw5D
-	 yu1RhikKVzZPg==
+	b=E+QwfXHXS5IG/odlN7brAQZlVr9TWZPj6Yyuy8/tTE/qaCY1di8E6SrkCocdW5eUB
+	 66hebez9PG9t8U7vHZzgpBLcRFAJsjPZNGyEqePG4zJVBVsI2X78KC0jXx6oFV7V9W
+	 b4VTuVu5FlipZkB3tdxH+5vgHGa3B83MELw3qtpsh8lmqzZYsg0tHCSFUNOGPqtDDK
+	 rCzqEkFMC+8dnafvXqe1q9QTj0sIyI3CplwTgprrvhcBOTxp/8wc7gQ6p4hRfFWp5Q
+	 8KdggQ1IZ3wgRq1aO4Wiwij8L/KbJL4h6VTyEpopQcdLbPfs6rE38OCm6dOEHEW219
+	 pm0sO2Ye0Y89Q==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -100,9 +100,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v4 09/33] ALSA: usb-audio: Release interface claims when probe fails
-Date: Tue, 24 Nov 2026 11:43:40 +0200
-Message-ID: <20261124-device-trust-core-v4-9-037eb0d17b1f@nvidia.com>
+Subject: [PATCH v4 05/33] USB: Reject claims of DT-disabled interfaces
+Date: Tue, 24 Nov 2026 11:43:36 +0200
+Message-ID: <20261124-device-trust-core-v4-5-037eb0d17b1f@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
 References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
@@ -121,37 +121,39 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-If the first control-interface probe fails after claiming streaming or
-MIDI interfaces, freeing the card leaves those claims behind. Module
-unload can then race with registration of the claimed interfaces and
-leave dangling driver pointers.
+USB core skips registration of DT-disabled interfaces but keeps their
+objects available to sibling drivers. A CDC-ACM control interface can
+therefore claim a disabled data interface: manual claims check USB
+authorization without checking Device Tree availability.
 
-Release auxiliary claims when discarding a newly created card. Preserve
-them when a failed secondary probe leaves an existing card in use.
-
-Fixes: 9ad3d6ccf5ee ("[PATCH] USB: Remove USB private semaphore")
+Fixes: 01fdf179f4b0 ("usb: core: skip interfaces disabled in devicetree")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- sound/usb/card.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/usb/core/driver.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/sound/usb/card.c b/sound/usb/card.c
-index 59979b793fe91..56ebdd61f72e7 100644
---- a/sound/usb/card.c
-+++ b/sound/usb/card.c
-@@ -1090,6 +1090,13 @@ static int usb_audio_probe(struct usb_interface *intf,
- 		atomic_dec(&chip->active);
- 		if (!chip->num_interfaces) {
- 			usb_audio_disconnect_components(chip);
-+			for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
-+				struct usb_interface *iface = dev->actconfig->interface[i];
-+
-+				if (iface->dev.driver == &usb_audio_driver.driver &&
-+				    usb_get_intfdata(iface) == USB_AUDIO_IFACE_UNUSED)
-+					usb_driver_release_interface(&usb_audio_driver, iface);
-+			}
- 			snd_card_free(chip->card);
- 		}
+diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
+index e1de348cc0cac..735ae3310b45d 100644
+--- a/drivers/usb/core/driver.c
++++ b/drivers/usb/core/driver.c
+@@ -28,6 +28,7 @@
+ #include <linux/device.h>
+ #include <linux/slab.h>
+ #include <linux/export.h>
++#include <linux/of.h>
+ #include <linux/usb.h>
+ #include <linux/usb/quirks.h>
+ #include <linux/usb/hcd.h>
+@@ -560,8 +561,8 @@ int usb_driver_claim_interface(struct usb_driver *driver,
+ 
+ 	device_lock(dev);
+ 
+-	/* reject claim if interface is not authorized */
+-	if (!iface->authorized) {
++	if (!iface->authorized ||
++	    (dev->of_node && !of_device_is_available(dev->of_node))) {
+ 		retval = -ENODEV;
+ 		goto unlock;
  	}
 
 -- 
