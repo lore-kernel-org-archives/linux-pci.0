@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.58
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.40
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795528941;
-	b=bPNguyd8K03IdQ7VamdZy77ys/BIF+g++yGL2d3Kts/Wm2tg1T0FOyaKuzuNyyNwEs8X
-	 HwZFSS8zwIsD5zoal1WWGJCO7UgQ33odbqht6PyK+5SkeXqKXtBiunEHNENNxadrWslpn
-	 5RArEPqXELFF4fCFSU9h3SEl2e/OSZ0MbRFYcQnoSU2rqJ9BI/XnONtW2NV7s795b5eP5
-	 3bWSXdI2sHoCwS3fDVWEfQ1yzCtj83Ca9c7L3dwSwTCePQr8uAF2sP9P9mm/F4+L9XH6V
-	 Bok2c+c/rvWITUStv7eSwf4ET48jEHfLKSGVhUMbEdo+oDvHuvNaVDDbzPDcUlIwEdQ==
+	t=1795528948;
+	b=vys0tcanDtor2gBbjFd6lFw/TgYjVTktKu9YgWIrwRidnft3coaSr3Ih3+wbDCoDXkqQ
+	 jLqMo4kiEZfG6mTgxQxPK1xWtVpPdMpdcQV3u2CR/CcN2R8yduvh6q3smaueEtSW8gawn
+	 WZ2nTqx5D77QKwW1bOd1veXFBKpyRE1iGbhHU3q+aJrLyDDrrMi78Z3koBLcefynrEj9U
+	 nkwK+FAeoQ5DkwGVi2pkRsc9xhd77cQh/H/MaY/gbaSHLcNBB6dUWrAhAszvnw4DLvE4d
+	 YQ6bwK0HTVAjZjQung2JJyAYbOZrubOH9vIdOoByci6rvIuy/iuHCLaXnlthLuIuy9A==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795528941;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795528948;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
@@ -26,72 +26,72 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=Fd1zPqNHgS+4Ga0VXPuo70dNx4D9OFdqAG8YSx8oBfk=;
-	b=fvIYtsamlzufV+9uSLSOj4jzjhC6aVRNZAU6m0+VUFSmDDGiJFtImiNz8ZAll4mnCtJN
-	 zLvindtkREldCPnGyR4YVVmdHhioxYzVysWKJZScsDzT+nQO1G6bBdjG95tObb+RoHP7o
-	 ZZuVh3+jOlWuo+NmTPVeflAuD1Y/rzn5DpoSF/Uz+zPOs7tNvMBmEHgjQBqdqAMwJJx99
-	 ZMwPIeKlbH+eN0fbv65cbZLCVWvEagUwcHyjMRXFj+fJQHDgoxBDJ/HHZReWp+WUkxqy0
-	 +sbE0o82l292i/918C+yhU/7v0mFIHZm840zr/L4SZ2FF2JgvTN2yHsR6cGwaP5kjww==
+	bh=E9QJpxzqq7JpRWCEv7ft6TwjLcsh1GMBDe8TpzdYDcs=;
+	b=RJhP6coOPbPEJ4i0h1efq08POX03FuhVkR9Ya8iRnP+wgJt20lF7T6M4Yp9mYvtfQVrp
+	 3kuKGFW+qfs1sQ6hGJ8gdrvhWLQTY4ablmkD7A5rWJCJOHMqDpFHzsVnecSjv3ZoZP1y4
+	 hTUS5lRrrudVWmlCn90P7hCa8n84/8y3lbiFANzBOYczJdYe7y9SGKXHnEIpFFmM0lWdo
+	 zHGEQEHpY5VlLyIwhGLWPn+2pE65oSA9nCNNQV3oT7YKlUm/fVuv5H8XYxt07dEa8T7uK
+	 h6TMU7EeuKbXr9KJ9iGBAaRQatDcNST98r/UhRu2T04hvgwYJ9Q8Nus+7E0m6kRJeMA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=HmmbuALX;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.194.58
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011058.outbound.protection.outlook.com [40.93.194.58])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=jzJkucgv;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.198.40
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010040.outbound.protection.outlook.com [40.93.198.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31FC5606A327;
-	Tue, 24 Nov 2026 14:02:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 31FC5606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765C5606A6A2;
+	Tue, 24 Nov 2026 14:02:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 765C5606A6A2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=HmmbuALX
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=jzJkucgv
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=kMdqZ8MUgvXBp7QJRHFzCgkGds5HXDjgnX/cXImMoZXjpZfuXsUdAFgXS1E7+G94fpZE5MUiAcnUyJkic/vZ24aDTBExtekERDuE8Tv1Ay4X4IF/NeUp2Ny3OhyMq+KdNkvpgL5Zr7QP+B4LxHSNkIi/krQKh59o6PfjkFmq4osyAalosGOf2Mn40IQsvuy1L3fPBzCktn6SpgjStEqMtixNan4WLhwDo3ux8QvHuesytMJvcUE/XkeMdws8jFbkRPGxkVdmAJgZ7z4XX6tou2AauVvhZV8X20SgUqYbTwhGFDZlEpp5s1E5KLys4y95jOXErQvZXTsM6VtuTvydGw==
+ b=L0zSOOmnTwLULMLEvQgLjqEqwvf6TLKnvrS7iE+C5PbqvoY9ejnJlqoDabVhKjZUfOpdItIRZKp8Mgstfsmv7gPjmuqPuMoRWbMxPZgB+KeSgaJss3nj2EwBxvaWpklA2o/dlsLhZo7IUCgIJLg3nTgsmkkhUNLK2Wz9ZbRhxGhOeGEf+DobialABVhFykW7h3Co51P8U3dlBBcQVuzS4kvaDlppJHABUb8up5LyQVGDWc9YNXgEPJSFMP+KdV1rVJDlqHgz/BBXIML9lGoE4LqYYtqJKUkQShV/nm40X9eB1kaWzA6NmTZx3biwNaU7sK66VoZIhgikOcjjwDMhYg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Fd1zPqNHgS+4Ga0VXPuo70dNx4D9OFdqAG8YSx8oBfk=;
- b=YVAHiSInGrMGy1gx/PKkqXvPxmmW3evzBjgHXk/saYPkpabvpqA03S5tSR0gfg+9gLtGi8Z8NrsHmvunkEGYNaFePH6v0EKnSUZyZj7P4KEi0B3XK34G3mqisKEY/iIvW8zrbIZHiQGcoONtACzbaahhp0PTRKKh2WtRXPpxWOrz2UjPqLtSLxI8aC+ZQLQJ/n5to80h8QISx8a30vUOLXXCwUecg57O0vkxHm9O994kh9YEx4EF0ICXu2Tw/UiaC+/X7SX+2BhFLdULJq5Z80TyZZYU5A9X/qKOJIz+sLgrNAqYPwneSAeulR6vmztHflmui8v/KSaJXuIoq1wefQ==
+ bh=E9QJpxzqq7JpRWCEv7ft6TwjLcsh1GMBDe8TpzdYDcs=;
+ b=rTxP/XqXouHYqPpyG9+THn2CBx1Q1rnRH6mhZ150OIINOw12DWCm3s1fvadiiP9XOgLVRHu6b5XVSe7N4NxzN3zILfXzYrPrmpQP3QskvUdwSLE20cHfy6R9rmBpa/uaunE/iX4IfMh7X1uj+fvdOr5YmDV6axAIXS8b7pvkTwLJJ2B8eqoIjULwLXndnz8JQpVRUv+mw4iBOdgGemBfK12m/1wZZdOg3oHrnpfVEuU7pOOpqRUyBaJ3JCP0dQpfrXAQmt9uDyPk83IDIp/dRXM7/cFS6wKtDgsSdv4k9yXo0JjsrVtyKloiMuhWc69zKUNphd5/66Sn3CGB9wOUTA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Fd1zPqNHgS+4Ga0VXPuo70dNx4D9OFdqAG8YSx8oBfk=;
- b=HmmbuALX2GA5y6CdXYz1IJVschXlo5K8klSakaDwAIph47kiNEpMEcq86FHRlh8mtiVvdhTZqab+iuNCQQ3JSorwHlXpaqE9MQGK64lsKF76h/+AVoos8XLhTqMgItpUNYS4S9tUmQwEjXpI7mVRNIMq4dohKizXCMJjoaRrB/Xs9qxf/Og7QyB29HttUA5oR2U3KIwQWtHBsI3/e4snZ6qv5brDYkrGG/WhI+riv1K54EvGTjEYi9YgzVShQlvj3ImTAbBvGPmp70Sk5sT80kLAC4oy0aqeTC32DxnDxtMxPHk+zL6lFI8nncbXn6ZWp1y2qvWMKfikzErF9RvV6g==
-Received: from CH0PR03CA0412.namprd03.prod.outlook.com (2603:10b6:610:11b::24)
- by SA1PR12MB8163.namprd12.prod.outlook.com (2603:10b6:806:332::17) with
+ bh=E9QJpxzqq7JpRWCEv7ft6TwjLcsh1GMBDe8TpzdYDcs=;
+ b=jzJkucgvRPr08U4w96I6510BkUJFBZsDfOJn/cSs9x+Hjv9VyXx+DIPJZ8ZfjG1mSDAInl7VuDea2lwp40a/3njW6UnlNJEq4zSsXj/Y4gLCbF+uLGcyxlffh90VBmg0WOxqrzSQkdnMVPCvK4KkNSQjbb659GMrdEhurb9gb1Ng5oVPqQSXoQd0Wt2e1JoCS5BTaO8iuCdMxhxlBfVms6XwyFxpJzXBS8qOnHWR3Oy+cNKK5tDZzQ6PFH/LLv+ZMWeVeTx9t1F6XsXZWCBZI0IcI5sIOS1jjaYHBmVhoeJIWmJvP8nlfmpVkgEaJA/9TBci3m6/IDvTfTvUZJpxvg==
+Received: from BLAPR03CA0047.namprd03.prod.outlook.com (2603:10b6:208:32d::22)
+ by MW4PR12MB6825.namprd12.prod.outlook.com (2603:10b6:303:20d::17) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Tue, 24 Nov
- 2026 14:01:33 +0000
-Received: from CH2PEPF000166BA.namprd04.prod.outlook.com
- (2603:10b6:610:11b:cafe::a7) by CH0PR03CA0412.outlook.office365.com
- (2603:10b6:610:11b::24) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.6 via Frontend Transport; Tue, 24
- Nov 2026 14:01:33 +0000
+ 2026 14:02:13 +0000
+Received: from LV8PEPF00000069.namprd03.prod.outlook.com
+ (2603:10b6:208:32d:cafe::85) by BLAPR03CA0047.outlook.office365.com
+ (2603:10b6:208:32d::22) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.615.14 via Frontend Transport; Tue,
+ 24 Nov 2026 14:02:12 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ is 216.228.117.161) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- CH2PEPF000166BA.mail.protection.outlook.com (10.167.252.4) with Microsoft
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ LV8PEPF00000069.mail.protection.outlook.com (10.167.248.42) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.662.3 via Frontend Transport; Tue, 24 Nov 2026 14:01:32 +0000
+ 15.21.662.3 via Frontend Transport; Tue, 24 Nov 2026 14:02:12 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Tue, 24 Nov
- 2026 06:01:03 -0800
+ 2026 06:01:42 -0800
 Received: from kalok-SPC741D16QM3.nvidia.com (10.126.231.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.57; Tue, 24 Nov 2026 06:00:50 -0800
+ 15.2.2562.57; Tue, 24 Nov 2026 06:01:29 -0800
 From: Alok Kumar <alkumar@nvidia.com>
 To: <dakr@kernel.org>, <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
 	<rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
@@ -111,9 +111,9 @@ CC: <alex@shazbot.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
 	<work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
 	<kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
 	<peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: [PATCH v5 04/35] gpu: nova-core: vgpu: detect boot state independently
-Date: Tue, 24 Nov 2026 19:29:00 +0530
-Message-ID: <20261124135937.18583-5-alkumar@nvidia.com>
+Subject: [PATCH v5 07/35] gpu: nova-core: vgpu: initialize runtime parameters after GSP boot
+Date: Tue, 24 Nov 2026 19:29:03 +0530
+Message-ID: <20261124135937.18583-8-alkumar@nvidia.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261124135937.18583-1-alkumar@nvidia.com>
 References: <20261124135937.18583-1-alkumar@nvidia.com>
@@ -132,161 +132,207 @@ X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PEPF000166BA:EE_|SA1PR12MB8163:EE_
-X-MS-Office365-Filtering-Correlation-Id: dc5d0780-87c6-4bf5-ccfc-08df4a33721f
+X-MS-TrafficTypeDiagnostic: LV8PEPF00000069:EE_|MW4PR12MB6825:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7261902f-2687-4d92-28d3-08df4a33899a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|36860700016|23010399003|82310400026|261026140227099003|11063799006|261021123027099003|261009223027099003|10067099003|261021121427099003|261102123227099003|56012099006|261028144727099003|261022105027099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|7416014|36860700016|1800799024|376014|23010399003|82310400026|11063799006|10067099003|56012099006|261022105027099003|261026140227099003|261021123027099003|261022075727099003|261021121427099003|261028144727099003|261102123227099003|261009223027099003|6133799003|22082099003|18002099003|3023799007;
 X-Microsoft-Antispam-Message-Info:
-	Nnro/znoPi51qtdkm3ZUFP4nb1N3iOM1S4Om1P8QTfo08zs845iu1Uy2EyorvWGcrrvOQKq4DujwYf1e9p5whbT8ZLcRHtGCL0Z8Y3vEM7qGtySm0lmVtFzA+BFLBWhpfA/mfxBcHx8y0hGKyTasd3yS0BQ+qvssjnS4H4tdYpb8GznBsQglHYYeenEVLB0nXgE9u/za0jyfhOQC7EiJ/vIATCOVr3YZ/25pTnx58YpmkDsRXjVhRMjti42S4e/8YG9ZogYPPq6L5klIps2pgrE+7moXPKCR6dly3/sP4Ii83xfEwRNAQZS+0dhD3XG19I4JaSHH3soHJqAVdcdkVrRXjIZQedN9toe2dPYO/AxuWX4XSpoTveiy+Hp2dlJOi3METcJ2t5R5I53wDtLpShQLNjBbFlR6nQg3Wjt464S96Qzi0A9N7/j62tCaRaDvnBladlYQtam6HIL7fEkqDvQsdrsPA/HcF9mAAx56wWP53IIabI2nOgwkYl67vw/fzezu4b50TsD9eSrY7GiCE6xtGMFoa372zStG23ZVCIKTJAR8Pz7Dwo7msNYjK4gn4BhNKHFqxmVH0UI17tcQExCyHuRLIk//nxyWKdMEgaWMlKkkglM730DV/tJe+6RTy/eBdz+tYmJMrcyrTfuyTV7H/4vByRYZXv/hsSSR5a7SI+99cqd0mOSYtEwhykyM2DH5fDT3u0Iqj6M3fFJEEA==
+	he/qwpHXcYEw5o2A9sg+0RKtdzI/JKuPrXwgtEsbSOf1ETDAoykR8kKev6Xc4E1ebZqjAxh2/5nlUg0QeyP4ohh452ST06ZXfa+OyVmq7lwsk1uT3sBzfR/oQYy1cSy/wg/Q1e8KNa9IU4g2HdE4pZpoDSgjuq0svutbWM8AUvjv2F3TQ4v6E48enOdBeTxPbPocejoJJQEs0dSGuUOXob/FmeItGuTPqmz67vvLyFHHh9i0LgLW3tRKs7ZWgn0tZmWZW5LIjxyb+xcb95g0SZHizfAcYJ9FAdMvUzMp5WQqml7XAUnHoCmuTNaeBVlECOqcxNtBbzO+tEFAXsg8DnaQiQN5mEGAoS7IXqGvxJHXdpcWRqE3D9ZFuup6uby7rMNYjsft+VDUQ21izVZJA6TiYx+uBcfTHc6wROGOsL3gtcHGLduwxaUoVPh4w53cgUYRVdhi7CLY1wMQVl4kQNUM6Qcz20/W3rh1wL17GlRjOcbcvbR/ZNz7uQFg3JK+UJ5eWBTk3vLlN9J5eFnaIAVPKhN58YCV0CxdK2HD/G1gpd1YMe9qp+7fTH2lRuPLgnQTsyviMqOWBkueRYblgLWIrmxd27WSvHjqtfrewmaa9/HvGZ8NKM2/3pwboqJFRx45IJ9bx4AAd5mckOYVXmA7UvC7Qf+R1fAOR9KjWwLNNDXuvz4hnihPpy5d8ZNKwbzCC+RTlr1ptARfkq/MmA==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(36860700016)(23010399003)(82310400026)(261026140227099003)(11063799006)(261021123027099003)(261009223027099003)(10067099003)(261021121427099003)(261102123227099003)(56012099006)(261028144727099003)(261022105027099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(36860700016)(1800799024)(376014)(23010399003)(82310400026)(11063799006)(10067099003)(56012099006)(261022105027099003)(261026140227099003)(261021123027099003)(261022075727099003)(261021121427099003)(261028144727099003)(261102123227099003)(261009223027099003)(6133799003)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	OsPs5llGyQBlKY86J7U43qeShjCV66dAMqxhvlzEhfK6qZxrA3wQNoJ3EZxuISuBPB8u9QX/Uovr+ARc5m07Af8mgmcqM8dLi644/7z06I+5YtxaY9vAyMYJ4cYJs4senwbe7H54TDXwQbk7zZEyslfCh2yr0peEfMWUpI6wMHdD3v3xb8jOAyrOV2Vd9FJhPHwSR27Pfr/o4DXfBW6+XHnn86Sx9r2qw+QGMTwhUnaN8eZBBDS0hBi2W2QyP3hgFUmJm9dq96XTgtFmp5XuErnDM7HFeMIjIDOkuTn9A9jPMNQqAVv2mrDeemEjEGqsd4LBbKRxs9LOFVugyE9/az3l2lPsTELMVNTKp4OAuOsy5Wzc3jP/P8ocBA0iBPGuSRtL+1YZe5Z+GkyQ2H0N8gEcn9OMsDeOkb5jcjY8Uhnjza7BjpLpHknaHkgG+cw+
+	HC8UIZahGyJAWBoq/20cPJ/2ECsZFgkqf7gPsc0Z3gZSwYwuoGNL9sPgo/uuOqWTBt/ajOqAd/+RFp5MbJeAkro472AmWgesZfWYhvNDBVgvCgDE6rVqQ53IoGNfpwHafUJcD6H11EAFAmO9XdzlQWdxN1bL0lVU5itM4BFkXH/g97wF7Qfi/SwV2+l7gpCW+oINGGFUsPndS7MsybPhKXe7zXGzeKLSxlJukkG1yfTvwzNt3Vld/w28MRGXS1ya15rloV4ESUrnqxO/wDas8WeHqPIwluHXya4LeN+XAUTFDiI6odM2q6r//DFtq8rzPrG7zltbA9LsmUKJVKIu7icR6PdCkLYAHeG+6SrobPfFcjBrwWXRnnIh9IkKAjWjXw9anZPGg7zdMlYBOyfI4K+XysijxmmU/uace75mTCkK0+wqvCM3JBZH+OutFPXL
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 14:01:32.7183
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2026 14:02:12.0897
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: dc5d0780-87c6-4bf5-ccfc-08df4a33721f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7261902f-2687-4d92-28d3-08df4a33899a
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CH2PEPF000166BA.namprd04.prod.outlook.com
+	LV8PEPF00000069.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8163
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB6825
 
 From: Zhi Wang <zhiw@nvidia.com>
 
-The vGPU manager currently contains only the detected boot mode. Its
-construction couples mode detection to an object with no runtime
-management responsibilities.
+The vGPU manager needs the VMMU segment size and FIFO engine topology
+returned by a successful GSP boot to divide instance resources.
 
-Firmware setup needs the mode before allocating GSP resources, even
-when vGPU is disabled. Keeping that value with GspResources also makes
-it available throughout the firmware lifecycle without a manager.
+Construct VgpuManager only for a vGPU-enabled boot. Retain the GPU-owned
+channel pool, the ordered host-driven engine
+list and the VMMU segment size. Expose the existing decoded VMMU value
+from GspStaticInfo at its first consumer, preserving zero when firmware
+omits the key.
 
-Move detection to VgpuState and store its result in GspResources.
-Borrow it directly when constructing the boot and unload contexts, and
-remove the state-only manager wrapper. Preserve the FSP query order,
-existing diagnostics and disabled fallback.
-
-No functional change is intended.
+Keep the runtime values in the manager for its instance module, and drop
+the manager before the pool and memory resources it borrows.
 
 Cc: Alexandre Courbot <acourbot@nvidia.com>
 Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 Signed-off-by: Alok Kumar <alkumar@nvidia.com>
 ---
- drivers/gpu/nova-core/gpu.rs  | 11 +++++------
- drivers/gpu/nova-core/vgpu.rs | 25 ++++++++-----------------
- 2 files changed, 13 insertions(+), 23 deletions(-)
+ drivers/gpu/nova-core/gpu.rs              | 20 ++++++++++++-
+ drivers/gpu/nova-core/gsp/commands.rs     |  5 ++--
+ drivers/gpu/nova-core/gsp/commands/gmc.rs |  1 +
+ drivers/gpu/nova-core/gsp/fw/commands.rs  |  2 +-
+ drivers/gpu/nova-core/vgpu.rs             | 36 ++++++++++++++++++++++-
+ 5 files changed, 59 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpu/nova-core/gpu.rs b/drivers/gpu/nova-core/gpu.rs
-index ad200242f0f5..5c304a129df2 100644
+index b3775365a74e..cf7173b72a13 100644
 --- a/drivers/gpu/nova-core/gpu.rs
 +++ b/drivers/gpu/nova-core/gpu.rs
-@@ -53,7 +53,7 @@
+@@ -54,7 +54,10 @@
          Timer,
          TimerState, //
      },
--    vgpu::VgpuManager, //
-+    vgpu::VgpuState,
+-    vgpu::VgpuState,
++    vgpu::{
++        VgpuManager,
++        VgpuState, //
++    },
  };
  
  #[cfg_attr(not(CONFIG_KUNIT = "y"), expect(dead_code))]
-@@ -335,8 +335,7 @@ struct GspResources<'gpu> {
-     fsp: Option<Fsp<'gpu>>,
-     /// Timer state - contains system timer offset
-     timer: TimerState,
--    /// vGPU state detected before GSP boot.
--    vgpu: VgpuManager,
-+    vgpu_state: VgpuState,
-     /// GSP runtime data.
-     #[pin]
-     gsp: Gsp<'gpu>,
-@@ -443,7 +442,7 @@ fn drop(self: Pin<&mut Self>) {
-                     gsp_falcon: &*this.gsp_falcon,
-                     sec2_falcon: &*this.sec2_falcon,
-                     fsp: this.fsp.as_mut(),
--                    vgpu_state: this.vgpu.state(),
-+                    vgpu_state: this.vgpu_state,
-                 },
-                 bundle,
-             )
-@@ -502,7 +501,7 @@ pub(crate) fn new<'a>(
+@@ -395,6 +398,7 @@ unsafe fn new(
+ #[pin_data]
+ pub(crate) struct Gpu<'gpu> {
+     pub(crate) spec: Spec,
++    vgpu: Option<VgpuManager<'chid_pool>>,
+     /// GSP event interrupt registration, and the enable of its subtree.
+     ///
+     /// Must be kept declared *before* `gsp_resources`, so that the handler is unregistered, and
+@@ -602,6 +606,20 @@ pub(crate) fn new<'a>(
+                     bar1,
+                 )
+             },
++
++            vgpu: {
++                let info = &gsp_resources.boot_result.static_info;
++                match gsp_resources.vgpu_state {
++                    VgpuState::Disabled => None,
++                    VgpuState::Enabled { .. } => Some(VgpuManager::new(
++                        chid_pool.get_ref(),
++                        &info.fifo_engine_list(),
++                        info.vmmu_segment_size,
++                        TOTAL_CHANNELS,
++                    )),
++                }
++            },
++
+         })
+     }
  
-                 timer: Timer::setup(dev, bar, spec.chipset, fsp.as_ref())?,
+diff --git a/drivers/gpu/nova-core/gsp/commands.rs b/drivers/gpu/nova-core/gsp/commands.rs
+index f5ec27995627..799f26e0ae74 100644
+--- a/drivers/gpu/nova-core/gsp/commands.rs
++++ b/drivers/gpu/nova-core/gsp/commands.rs
+@@ -11,7 +11,7 @@
  
--                vgpu: VgpuManager::new(pdev, spec.chipset, fsp.as_mut()),
-+                vgpu_state: VgpuState::detect(pdev, spec.chipset, fsp.as_mut()),
+ use kernel::prelude::*;
  
-                 gsp <- Gsp::new(pdev, bar),
+-use super::fw::commands::FifoEngineList;
++pub(crate) use super::fw::commands::FifoEngineList;
  
-@@ -516,7 +515,7 @@ pub(crate) fn new<'a>(
-                     gsp_falcon,
-                     sec2_falcon,
-                     fsp: fsp.as_mut(),
--                    vgpu_state: vgpu.state(),
-+                    vgpu_state,
-                 })?,
-             }),
+ /// The static GPU configuration, which GSP-RM reports in reply to [`GspInit`](gmc::GspInit).
+ pub struct GspStaticInfo {
+@@ -25,6 +25,8 @@ pub struct GspStaticInfo {
+     pub(crate) usable_fb_regions: KVec<Range<u64>>,
+     /// Exclusive end of the FB physical address space.
+     pub(crate) total_fb_end: u64,
++    /// VMMU segment size in bytes, or zero if GSP-RM omitted it.
++    pub(crate) vmmu_segment_size: u64,
+     /// Host-driven engines in firmware FIFO order.
+     fifo_engine_list: FifoEngineList,
+ }
+@@ -68,7 +70,6 @@ pub fn gpu_short_name(&self) -> core::result::Result<&str, GpuNameError> {
+     }
  
+     /// Returns the host-driven engines in their firmware FIFO order.
+-    #[expect(dead_code)]
+     pub(crate) fn fifo_engine_list(&self) -> FifoEngineList {
+         self.fifo_engine_list
+     }
+diff --git a/drivers/gpu/nova-core/gsp/commands/gmc.rs b/drivers/gpu/nova-core/gsp/commands/gmc.rs
+index 4f813a780d1b..14e04db90594 100644
+--- a/drivers/gpu/nova-core/gsp/commands/gmc.rs
++++ b/drivers/gpu/nova-core/gsp/commands/gmc.rs
+@@ -185,6 +185,7 @@ fn read(payload: &mut SBufferIter<core::array::IntoIter<&[u8], 2>>) -> Result<Se
+             usable_fb_regions,
+             total_fb_end: reply.total_fb_end().ok_or(EINVAL)?,
+             fifo_engine_list: reply.fifo_engine_list(),
++            vmmu_segment_size: reply.vmmu_segment_size,
+         })
+     }
+ }
+diff --git a/drivers/gpu/nova-core/gsp/fw/commands.rs b/drivers/gpu/nova-core/gsp/fw/commands.rs
+index af3948ed79f5..d9dd4841566f 100644
+--- a/drivers/gpu/nova-core/gsp/fw/commands.rs
++++ b/drivers/gpu/nova-core/gsp/fw/commands.rs
+@@ -387,7 +387,7 @@ pub(crate) struct GspInitResponse {
+     gpu_gid: ArrayVec<u8, { GspStaticInfo::GID_LEN }>,
+     fb_regions: KVVec<FbRegion>,
+     bar1_pde_base: u64,
+-    vmmu_segment_size: u64,
++    pub(crate) vmmu_segment_size: u64,
+     fifo_engine_count: FifoEngineCount,
+     fifo_engine_gmc_ids: [u32; MAX_FIFO_ENGINES],
+     fifo_engine_flags: [u32; MAX_FIFO_ENGINES],
 diff --git a/drivers/gpu/nova-core/vgpu.rs b/drivers/gpu/nova-core/vgpu.rs
-index e074a8294d36..c59e7d2f933c 100644
+index c59e7d2f933c..8a6d87233aaf 100644
 --- a/drivers/gpu/nova-core/vgpu.rs
 +++ b/drivers/gpu/nova-core/vgpu.rs
-@@ -31,19 +31,16 @@ pub(crate) enum VgpuState {
+@@ -14,7 +14,11 @@
+         Fsp,
+         VgpuMode, //
      },
- }
+-    gpu::Chipset, //
++    gpu::{
++        ChannelIdPool,
++        Chipset, //
++    },
++    gsp::commands::FifoEngineList, //
+ };
  
--/// vGPU state manager.
--pub(crate) struct VgpuManager {
--    state: VgpuState,
--}
--
--impl VgpuManager {
--    /// Creates a vGPU manager by querying SR-IOV and the FSP PRC vGPU knob.
--    pub(crate) fn new(
-+impl VgpuState {
-+    /// Detects the boot mode, falling back to disabled if querying the device fails.
-+    ///
-+    /// Call after creating the FSP and before allocating GSP firmware resources.
-+    pub(crate) fn detect(
-         pdev: &pci::Device<device::Core<'_>>,
-         chipset: Chipset,
-         fsp: Option<&mut Fsp<'_>>,
-     ) -> Self {
--        let state = Self::detect_state(pdev, chipset, fsp).unwrap_or_else(|e| {
-+        let state = Self::query_state(pdev, chipset, fsp).unwrap_or_else(|e| {
-             dev_warn!(
-                 pdev,
-                 "vGPU state detection failed: {:?}; disabling vGPU\n",
-@@ -52,12 +49,11 @@ pub(crate) fn new(
-             VgpuState::Disabled
-         });
-         dev_dbg!(pdev, "vGPU state: {:?}\n", state);
--
--        Self { state }
-+        state
-     }
- 
-     /// Detects the vGPU state from the chipset, SR-IOV capability and FSP PRC knob.
--    fn detect_state(
-+    fn query_state(
-         pdev: &pci::Device<device::Core<'_>>,
-         chipset: Chipset,
-         fsp: Option<&mut Fsp<'_>>,
-@@ -84,9 +80,4 @@ fn detect_state(
-             VgpuMode::Disabled => Ok(VgpuState::Disabled),
+ mod hal;
+@@ -81,3 +85,33 @@ fn query_state(
          }
      }
--
--    /// Returns the detected vGPU state for this boot.
--    pub(crate) fn state(&self) -> &VgpuState {
--        &self.state
--    }
  }
++
++/// Runtime resources for an enabled vGPU boot.
++pub(crate) struct VgpuManager<'gpu> {
++    #[expect(dead_code)]
++    chid_pool: &'gpu ChannelIdPool,
++    /// VMMU segment size in bytes, or zero if GSP-RM omitted it.
++    #[expect(dead_code)]
++    vmmu_segment_size: u64,
++    #[expect(dead_code)]
++    total_channels: u32,
++    #[expect(dead_code)]
++    fifo_engine_list: FifoEngineList,
++}
++
++impl<'gpu> VgpuManager<'gpu> {
++    /// Retains runtime parameters from a completed vGPU-enabled GSP boot.
++    pub(crate) fn new(
++        chid_pool: &'gpu ChannelIdPool,
++        fifo_engine_list: &FifoEngineList,
++        vmmu_segment_size: u64,
++        total_channels: u32,
++    ) -> Self {
++        Self {
++            chid_pool,
++            vmmu_segment_size,
++            total_channels,
++            fifo_engine_list: *fifo_engine_list,
++        }
++    }
++}
 -- 
 2.53.0
 
