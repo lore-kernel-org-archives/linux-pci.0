@@ -1,54 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795521291;
-	b=r7CvyG2LdyDEcgXvQXUfE7OebdoV41T9UCnGm+J+RI86Kf4sC1qZi+BgWG/4jwkaMgYX
-	 15uW8UhjDIBWpfPR3vmGXOSMe4RWJlcB2cP9trSNYkFQLubkvQj2mhFoj2wJEhhRQoP9M
-	 +/ZErw1VwWDgnOlD6iFHrz2k+l9A4U0jaVZExYq51UKObbIX7GECvhPUp7nLazp8f98a2
-	 FutoBdG554ilytABI4dta5pmsHW6vM0zypth5dfFR/2dFtIWRYO9iy6iGCP+g/wEK4Ioy
-	 3pvh5+9kuL001J+78p4xIqCSFq9UB+atXvURBFLCoSJaDaHbQODsSB2uMKY1eVzes2Q==
+	t=1795521304;
+	b=dOvLMRSICb8uc5LOsw989YquqM6V2WYRZUjElYXHJrzpeq57UdAOcLYgZ2S3d2vnFdvg
+	 uCpyVBsJgLJRr9xMAljAvIWOsckIh5hPgbiMMDNrfoJWaHdnUUcvTGRtSyFvEZo3btXXn
+	 mEiTsb5M/61lk1VtspZCzzN8lrYWfwSmZedp5matzVI5qvU9/i2rIQY5zEWxoSDsfEr8C
+	 qP/V++pxABT5FqapI2qkReTGqeUwAdYEYCm79Yu4/j+CpcwccbGeAs1uMgu3LVa5yB9W8
+	 ioMxnKVb7FGtXFfD+tE4Z5i/iidwsu1xkNZqjlk0EjXlLG7zrvJVc3LhTxP6Rkip03A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795521291;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795521304;
 	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
 	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 X-Mailer;
-	bh=T/XCcMtIyJeMT+WrNl0yaReR86Ki6Ko/g4qKifWyi1c=;
-	b=EUadAIw955Un4i3BV6gCBjroH4Vd58qfJVp2GZd76RcbkMUSlcVg3Eyylzlmoo4U18N4
-	 H2nPg8+dTO9jxdjAzcW7lHAQtkDFCZssZp7cSpDux3IGJiBRHe5M/vhcrVk1bnh6cy/wJ
-	 ZY/X/V9JzgsjtP5PJBFGJiUF5rJW0FmqskV09HkiigP39ZnyOnC+Ew49A0SpeRK0sN0RW
-	 6cqY+4pKwP3SzsAHeQTsJvFFymAbxWazL+gYJEQEhm51dpKIpCu7cxUhHf3M6Wehof+gd
-	 YAKeGRypK/rCY49BRKoam7rzrnA6wtnvyuAM5++BP4nwNbOw3vnLwoF5qlMScxhy+tQ==
+	bh=fmZo+0Ao3EF+QIl04S3p/W9Lj1cWNEMUZFJap4lCZFU=;
+	b=aueVY4LH+t7D/Zl6ohFFRw+5R7zPSyktkJO+B3svtYAo77IdzUlGHyvZTB/rAzVOMA7A
+	 lmEaE28i9s8sIjUMzk7HkrMPqCG9rrqHJs4UDe015ieQB6tbVPYZbzaqsdszO5R5bj6Xi
+	 eeryzfIxh41vVW+lglW707jGFuuGHBfZ1WUJtnyH1m533zWTsiW9l2i+PvJITQCn0lLmZ
+	 rbuCu2DsyJ8wFT0c74asykWR2ROBFI09J124mx65HMRKLuaMUZg2gW9o2NCUjoXwegpbn
+	 eooidh72kAW9AI1cPEQRaQ9/1ytW4+n17B9sB3tYHwxyil5T6rMa61wuj/Cm3b9hJWQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EDK8jq1I;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T3pYvJHL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9853C606A31E;
-	Tue, 24 Nov 2026 11:54:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0667606A31E;
+	Tue, 24 Nov 2026 11:55:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EDK8jq1I
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32B241F000D1;
-	Tue, 24 Nov 2026 11:54:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T3pYvJHL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 942CB1F000D0;
+	Tue, 24 Nov 2026 11:55:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795521291;
-	bh=T/XCcMtIyJeMT+WrNl0yaReR86Ki6Ko/g4qKifWyi1c=;
+	s=k20260515; t=1795521304;
+	bh=fmZo+0Ao3EF+QIl04S3p/W9Lj1cWNEMUZFJap4lCZFU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=EDK8jq1IlezR+p9Hys3x21wl3ktFNMJd4MCKf0moKM3UwTfF1XVd/MzXWZFF6aPl0
-	 dj1lSLbeyONjlLHnQjFOu8lJeajJudx0RO/vei2Pu5+bHB/BY/VHhG54SZgDieLJpO
-	 0nZMiQ/dFG4hTo9djikRJWSqXGRZQ2p7cjj/eOlZ8jlWUtxdbAyS0XT7MCmCzEydO1
-	 ZXbuYDLPY6T+XuneffMBQoYdnzrrgWGgvcrqZEi02SVZTM182miKV4SSfvmvVvi4pM
-	 Z/kp17rI5G3ZXOTeNqegz+5smE86JGqJsG8JNBRKpt2iTIjw5z4wOyXcRyjDNgPAUE
-	 wM+y07QAbXsqg==
+	b=T3pYvJHLYy5vKyu8LB3UEg/PMFLBcBDp/eCMnScvwUojcDMDhrMfxUCp8F/oiRU6Q
+	 dkrZgVLgeSgC1FmTIGNbOweOxRlWStQ7Ga4+Gd/OxWijqX36jSP2R5KXFu/CwOiF/Y
+	 EMB7Q3ghlrKevRuJqc580qRP6WIKHFKGTdEM9cp6RXKOPIeK71+E1FX0MbsuoJ5OJG
+	 GY9QEXnjq+KXb672Nqpn2xqwqKGgRh2yBzQYZeFtkpYEdlQBNRFikM/Pc4fB56+CI/
+	 9EJDhi1ZClinNxLTCoCzZBGG2Q6EXKCboUowcKk/2C4Z9soEHBaqnja+lk4Jd9vTV5
+	 Xb59PauHKHmtw==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20261107-configfs-const-pci-v1-1-8545f5886a01@weissschuh.net>
-References: <20261107-configfs-const-pci-v1-1-8545f5886a01@weissschuh.net>
-Subject: Re: [PATCH] PCI: Constify struct configfs_attribute pointers
-Message-Id: <179552128882.34473.16493029120563185271.b4-ty@b4>
-Date: Tue, 24 Nov 2026 12:54:48 +0100
+To: =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Niklas Cassel <cassel@kernel.org>, 
+ Koichiro Den <den@valinux.co.jp>, 
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Frank.Li@oss.nxp.com
+Cc: imx@lists.linux.dev, Frank Li <Frank.Li@nxp.com>
+In-Reply-To: <20261106222142.86087-1-Frank.Li@oss.nxp.com>
+References: <20261106222142.86087-1-Frank.Li@oss.nxp.com>
+Subject: Re: [PATCH 1/1] PCI: epf-test: Use dmaengine_has_cap() instead of
+ dma_has_cap()
+Message-Id: <179552130022.34532.6770615796596970693.b4-ty@b4>
+Date: Tue, 24 Nov 2026 12:55:00 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,15 +69,15 @@ Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.16.0
 
 
-On Sat, 07 Nov 2026 04:35:29 +0000, Thomas Weißschuh wrote:
-> In preparation for the constification of configfs attributes, make the
-> pointers to struct configfs_attribute in drivers/pci/ const
-> and use the new ct_attrs_const field of struct config_item_type.
+On Fri, 06 Nov 2026 17:21:39 -0500, Frank.Li@oss.nxp.com wrote:
+> dmaengine_has_cap() takes a dma_chan pointer and avoids direct access
+> to the cap_mask field inside struct dma_device, which is a step toward
+> making struct dma_device internals private.
 
 Applied, thanks!
 
-[1/1] PCI: Constify struct configfs_attribute pointers
-      commit: 2c9ea76b74935491078e5795e04ba3358e3d7a19
+[1/1] PCI: epf-test: Use dmaengine_has_cap() instead of dma_has_cap()
+      commit: dd3bc74bea3263774e30fd6305012eb16dc0ec96
 
 Best regards,
 -- 
