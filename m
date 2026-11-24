@@ -1,85 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=65.109.113.108
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795494115;
-	b=Hclq5Xm27kMe/ZIOAJe1/1W+uf4ecmjfuXv90OZfZTIves4a/YpvzP2wdQPq/WrEykN4
-	 qXuN7BpJ0uGmCDP2KtaLyYHzfbKt9ELP8HA8bIC/WXrLGngKILQQR5ZMT2KyPvRcTVNpb
-	 lxfQFF+8VouC0/jQ8sOX1AOQHoOwKAT8aCcjaP3AGdSwkM+bP76Hx32LtkLrvO7HV2b9F
-	 ISyQbbBBwBA9yfz9OdEjX5KQ6nzZTGpItE97iHLcbqWMaluon+Y+PRiL9+gWXjLc3sGGp
-	 MJtmTAjC2aZayQhY29fjWqLJP9zOEWuwcl8SU2a8IOu9GAKhGwZmJNm+IVoHj5ivD1g==
+	t=1795496492;
+	b=VWbMO5FTjd3XcKEB1r6JfgXaYEAGBzJvZwb/LBM5EWJSnXJIaTflt6VAU8I/4OI0++9n
+	 zNH+kfrozOrufK9wHZc7pxsw6S7yuo4c1HhoHDCpnfpmtM7zLvMKrEHV1P5RFsqjqwXkd
+	 lmFKL56bFmRe4t3MboDWZ+R56wJZbOM5rr6Y4gyMPWYijiyEa3Tickodo+p3gqElHJF5x
+	 qlTYkWQvCBJngkpx/BOQa2FdEpmnVw1W065VjkCncQKtUXKQ0c3kxh30vtCQVr9IcvVql
+	 ABCCu0PIvteTW84Nngqs8q9M07nYSaI0aSgUo2a4gt2G8S7OdWoHczFa0H59cgsIGhQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795494115;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=hbVHtz/VdYNG4+MjjYkeMuPNijBtmeBtCtXVJa8U9S8=;
-	b=P6otvCTx+40E60xWAQr0bJC/EcbSK7iBTfY1vL68J5F+Qbxd2xnPCPLWIMp08KmnhDU7
-	 enu6yvKCqgENGSY9mushv3+rL30rdEvZ23WQjA/v7ndaCC/T3lrFD3xmWD6uhvSUnxCTO
-	 UTFXfn17TKvtDukksT39Fbw8IpJ4fuDNCweuEQg14i4925OD4Rh8uiU9tObN+X3xElUpC
-	 fGQJs4iqdVoQvU9eO2vmJXrZ/G3KCYCEQo3hKJbxF2KwHGGPv9Ib0mt6KvwaLzX3ayn2p
-	 MGU7MfIiL9rq14ETl0jYLkO6MgpysyLpOl6Ie33Wy3A+I+Xv9Jul7OrPijvB3hu/FtA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795496492;
+	h=DMARC-Filter:Received:X-Virus-Scanned:Received:DKIM-Signature:
+	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=XM+P0UUh8M7+zT3EmoQUfy6DuwH+/xR6iA2fTPRkpYo=;
+	b=gwCWRWAxHXiwTRrX9ymIJspFjjSc8jNB6K0OGYLdTZzVq9c7i+Sy2KaeJQyyVkpJeES4
+	 IwbeGCWzqgP0vQFKfPPJnjWzfZQyTEYtwDo/bma4n/b8dTecyushneSXI4GjMmn1Nwk6R
+	 BRQT51pY/Vvc7EOzIn7HK/y+FhCEZXr3PF7fQZYGPP8z1m+VEMc26Mfr8h0nK0jTU45iG
+	 Ooav1FOyy6Casl1zUrT/FaOCKEWk6P3j6uRnSfc9ClOyT1cUjCjEXEQQyJofMRX9BFj6t
+	 dqieaOq1ZBrD1aPgPYfPM6vpUxPmmUFfaP+ksVcSbwN99VOp7ifYtLGL+w6N8Xbghyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h8Ws8tl1;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=alien8.de;
+	spf=pass smtp.mailfrom=alien8.de;
+	dkim=pass header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=XoN6dl4w;
+	arc=none smtp.remote-ip=65.109.113.108
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7C55606A31E;
-	Tue, 24 Nov 2026 04:21:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40A7A606A322;
+	Tue, 24 Nov 2026 05:01:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 40A7A606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h8Ws8tl1
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37C901F000C6;
-	Tue, 24 Nov 2026 04:21:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795494115;
-	bh=hbVHtz/VdYNG4+MjjYkeMuPNijBtmeBtCtXVJa8U9S8=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=h8Ws8tl1T+bdpKBk1d2DZoqHGkqwkaVFD9PJ2bQmIN0sXVsrZPP5Dpfk9SsatQCYi
-	 ejhnA9ix9Ge6tkTCbNK/mI9KuER/1ttGP7k/XDy9PynlBs93PrBE5DdvwhRzz5y/c6
-	 53I8CeJk2nJfa7/Tbjq3HlUx0/On3fJyvYhUreeHd/nwE3pxxD1uwHwQpyXQ3sapmU
-	 1FuUrvGWrKLgZj5qZ63wNo69Bsf9CpJrfm88moDzevtidQsa1FvZOkKPK6reP4mRnZ
-	 baIA3//cUFGDVUkN0YSqh3lbjDPHWLZFcEKKsga1Hy2MX/MlBG9Ug1CAALFKXGOjCJ
-	 SaluYIuRuFRMQ==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: linux-coco@lists.linux.dev, Alex Williamson <alex@shazbot.org>,
-	Alexey Kardashevskiy <aik@amd.com>,
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.a=rsa-sha256 header.s=alien8 header.b=XoN6dl4w
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id A5CE440E02A9;
+	Tue, 24 Nov 2026 05:01:28 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id 6vKUTZogjik0; Tue, 24 Nov 2026 05:01:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1795496485; bh=XM+P0UUh8M7+zT3EmoQUfy6DuwH+/xR6iA2fTPRkpYo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XoN6dl4w0hO8vS82WF2sVspVH2Ft2yCybHFMhRmD+El3S2igLXKpsYPHgCoUVcvmb
+	 Oz8oGr8HDNWwBeOzl8rrUhUvaApVM9oPECC7d/9Ju/qibMK8Vo9T2dhtQWb95atjRZ
+	 MPFM0BOsEaCCUjHB/s3oXpSVfkL0TSDZNVttkSIEVv2GKzR8SzLlMQ+RW/hewfU6W5
+	 4Lxi7W6xN7fGfE33HLqD7S4d8vlc086is0sSBgTYcxlqpt4HVRdDWog3K8Mzi/W1Xf
+	 UlKcVU9nRdy1tP9J3ON3tF/jnhKp2rFe62GH+8QqxhjC/dt63NbTVdeMLdHCUzfE6+
+	 4AW7xbzjs7BZ1/+frP7bdFDkV52jvKF89A1KzaaLrpf0KbI9gVgkmGgQFkJjYVMo44
+	 DvW/KaEZpAIIQXozkEuWEeDMy4WXvEsMy75lE8aVlUbMF5MxC29dzQ5NVno2nDYq4+
+	 /foqT78Nar8WxvBxBRCsqHunGBN57QcfZswYl5yajf99gaCsX76l9xMNxDemElB4Cj
+	 tcBle8899/aszxRJRuMvOp/ZfdSf3iNFzLRp+u047z7oLqR3blWLgzairNs1uj+r7Y
+	 fjrtn9W6rytSEvHwabaQDXRpMAVcvSbpuc7IdEoHaYy3hSX82+tUZS2V6/Pbnayk03
+	 Gd+BMPN4fLEPETqdC9IO9FsE=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::2b])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 2EB5340E0240;
+	Tue, 24 Nov 2026 05:00:48 +0000 (UTC)
+Date: Mon, 23 Nov 2026 21:00:45 -0800
+From: Borislav Petkov <bp@alien8.de>
+To: Pierre Gondois <pierre.gondois@arm.com>
+Cc: linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@oss.qualcomm.com>,
+	James Morse <james.morse@arm.com>, Mark Brown <broonie@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Shuai Xue <xueshuai@linux.alibaba.com>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Joerg Roedel <joro@8bytes.org>,
+	Maciej Wieczor-Retman <maciej.wieczor-retman@intel.com>,
+	Pawel Chmielewski <pawel.chmielewski@intel.com>,
+	Yazen Ghannam <yazen.ghannam@amd.com>,
+	Avadhut Naik <avadhut.naik@amd.com>,
+	Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
 	Jonathan Cameron <jic23@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Krishna Reddy <vdumpa@nvidia.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Steven Price <steven.price@arm.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Thierry Reding <thierry.reding@kernel.org>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Will Deacon <will@kernel.org>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Ashish Kalra <ashish.kalra@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	iommu@lists.linux.dev,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>, kvm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, patches@lists.linux.dev,
-	jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH v9 10/13] iommufd/viommu: Allow PCI TSM backends to
- provide vIOMMU operations
-In-Reply-To: <20261119115041.00007215@linux.microsoft.com>
-References: <20261116081935.85372-1-aneesh.kumar@kernel.org>
- <20261116081935.85372-11-aneesh.kumar@kernel.org>
- <20261119115041.00007215@linux.microsoft.com>
-Date: Tue, 24 Nov 2026 09:51:40 +0530
-Message-ID: <yq5aqzgac10r.fsf@kernel.org>
+	"Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Kai-Heng Feng <kaihengf@nvidia.com>,
+	Breno Leitao <leitao@debian.org>,
+	Terry Bowman <terry.bowman@amd.com>, Dan Williams <djbw@kernel.org>,
+	linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	acpica-devel@lists.linux.dev
+Subject: Re: [PATCH v1 09/19] ACPI: extlog: Report errors independently of
+ RAS consumers
+Message-ID: <20261124050045.GOawUZ_S5imwUOyh8B@fat_crate.local>
+References: <20261117111444.4185512-1-pierre.gondois@arm.com>
+ <20261117111444.4185512-10-pierre.gondois@arm.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -89,205 +106,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20261117111444.4185512-10-pierre.gondois@arm.com>
 
-Jacob Pan <jacob.pan@linux.microsoft.com> writes:
+On Tue, Nov 17, 2026 at 12:10:19PM +0100, Pierre Gondois wrote:
+> The RAS consumer check removes:
+> - trace events when no daemon is registered
+> - CPER console report when one is registered
+> This ties tracing, PCIe recovery and CXL protocol delivery to daemon
+> registration, and can hide a fatal record when userspace cannot process
+> its trace event before a reset.
+> 
+> Remove the RAS consumer registration condition and:
+> - always emit trace events
+> - print the CPER record only for CPER_SEV_FATAL
+> 
+> [1] additionally suggested to have a cmdline parameter to dynamically
+> update the above policy. Keep a simple hard coded policy for now.
+> 
+> [1]
+> https://lore.kernel.org/lkml/20240521183913.GGZkzqUSN1hdE-_OEY@fat_crate.local/
+> 
+> Signed-off-by: Pierre Gondois <pierre.gondois@arm.com>
+> ---
+>  drivers/acpi/acpi_extlog.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
+> index e09ea571c32f5..16a16b12d8ccf 100644
+> --- a/drivers/acpi/acpi_extlog.c
+> +++ b/drivers/acpi/acpi_extlog.c
+> @@ -208,10 +208,9 @@ static int extlog_print(struct notifier_block *nb, unsigned long val,
+>  	if (cper_estatus_len(tmp) > ELOG_ENTRY_LEN || cper_estatus_check(tmp))
+>  		return NOTIFY_DONE;
+>  
+> -	if (!ras_userspace_consumers()) {
+> +	/* Print fatal records regardless of RAS consumer registration. */
+> +	if (tmp->error_severity == CPER_SEV_FATAL)
+>  		print_extlog_rcd(NULL, tmp, cpu);
+> -		goto out;
+> -	}
 
-> Hi Aneesh,
->
-> On Mon, 16 Nov 2026 13:49:32 +0530
-> "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org> wrote:
->
->> In confidential-computing configurations, a vIOMMU may be implemented
->> by a TSM driver rather than by the physical IOMMU driver. Such an
->> implementation also needs the TSM identity when creating and
->> validating vdevices.
->> 
->> Allow VIOMMU_ALLOC to first query the TSM associated with the target
->> PCI device for vIOMMU operations. Fall back to the physical IOMMU
->> driver when the TSM does not provide operations for the requested
->> vIOMMU type.
->> 
->> Resolve the PCI TSM association under pci_tsm_rwsem, take a TSM device
->> reference, and pin the module providing the operations. Store the TSM
->> device in the vIOMMU. Release the device reference and module pin on
->> allocation failure, fallback to the physical IOMMU driver, or vIOMMU
->> destruction. Drop the device reference before releasing the module
->> pin, since the final put may call into the backend module.
->> 
->> The device reference preserves the TSM allocation. Backends providing
->> vIOMMU operations must not unregister their TSM while the module is
->> pinned, since the reference does not prevent backend resource
->> teardown.
->> 
->> Cc: Jason Gunthorpe <jgg@ziepe.ca>
->> Cc: Kevin Tian <kevin.tian@intel.com>
->> Cc: Joerg Roedel <joro@8bytes.org>
->> Cc: Will Deacon <will@kernel.org>
->> Cc: Robin Murphy <robin.murphy@arm.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Alexey Kardashevskiy <aik@amd.com>
->> Cc: Lukas Wunner <lukas@wunner.de>
->> Cc: Xu Yilun <yilun.xu@linux.intel.com>
->> Cc: iommu@lists.linux.dev
->> Cc: linux-pci@vger.kernel.org
->> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
->> ---
->>  drivers/iommu/iommufd/viommu.c | 35 +++++++++++++++++++++++++++-----
->>  drivers/pci/tsm/core.c         | 22 ++++++++++++++++++++
->>  drivers/virt/coco/tsm-core.c   | 37
->> ++++++++++++++++++++++++++++++++++ include/linux/iommufd.h        |
->> 2 ++ include/linux/pci-tsm.h        | 24 ++++++++++++++++++++++
->>  include/linux/tsm.h            | 25 +++++++++++++++++++++++
->>  6 files changed, 140 insertions(+), 5 deletions(-)
->> 
->> diff --git a/drivers/iommu/iommufd/viommu.c
->> b/drivers/iommu/iommufd/viommu.c index 2eba1562a704..7e74d3992ae4
->> 100644 --- a/drivers/iommu/iommufd/viommu.c
->> +++ b/drivers/iommu/iommufd/viommu.c
->> @@ -15,6 +15,8 @@ void iommufd_viommu_destroy(struct iommufd_object
->> *obj) 
->>  	if (viommu->ops && viommu->ops->destroy)
->>  		viommu->ops->destroy(viommu);
->> +	if (viommu->tsm_dev)
->> +		tsm_put_device(viommu->tsm_dev);
->>  	refcount_dec(&viommu->hwpt->common.obj.users);
->>  	if (viommu->kvm_file)
->>  		fput(viommu->kvm_file);
->> @@ -30,6 +32,7 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd
->> *ucmd) .len = cmd->data_len,
->>  	};
->>  	struct iommufd_hwpt_paging *hwpt_paging;
->> +	struct tsm_dev *tsm_dev = NULL;
->>  	struct iommufd_viommu *viommu;
->>  	struct iommufd_device *idev;
->>  	struct iommu_device *iommu_dev;
->> @@ -49,15 +52,33 @@ int iommufd_viommu_alloc_ioctl(struct
->> iommufd_ucmd *ucmd) rc = -EOPNOTSUPP;
->>  		goto out_put_idev;
->>  	}
->> -	if (!iommu_dev->ops->get_viommu_ops) {
->> -		rc = -EOPNOTSUPP;
->> +	tsm_dev = tsm_get_device(idev->dev);
->> +	if (IS_ERR(tsm_dev)) {
->> +		rc = PTR_ERR(tsm_dev);
->> +		tsm_dev = NULL;
->>  		goto out_put_idev;
->>  	}
->> -	ops = iommu_dev->ops->get_viommu_ops(idev->dev, cmd->type);
->> -	if (!ops) {
->> -		rc = -EOPNOTSUPP;
->> +	ops = tsm_dev ? tsm_viommu_get_ops(tsm_dev, idev->dev,
->> cmd->type) : NULL;
->> +	if (IS_ERR(ops)) {
->> +		rc = PTR_ERR(ops);
->>  		goto out_put_idev;
->>  	}
->> +	if (!ops) {
->> +		if (tsm_dev) {
->> +			tsm_put_device(tsm_dev);
-> nit: Since tsm_get_device() may legitimately return NULL, maybe you can
-> make tsm_put_device NULL safe, then you can avoid this check and other
-> places.
->
->
->> +			tsm_dev = NULL;
-> nit: maybe a candidate for cleanup helper? if tsm_put_device is null
-> safe. then:
->            tsm_put_device(no_free_ptr(tsm_dev));
->
+So after rereading that link, we had this conversation back then about
+reorganizing and reworking RAS error reporting and Dan (may he rest in peace)
+wanted to unify and dump all the old cruft - especially since
+ras_userspace_consumers() is not really used anymore. Apparently.
 
-I will see whether both suggestions can be added.
+But what else uses it?
 
->
->> +		}
->> +		if (!iommu_dev->ops->get_viommu_ops) {
->> +			rc = -EOPNOTSUPP;
->> +			goto out_put_idev;
->> +		}
->> +		ops = iommu_dev->ops->get_viommu_ops(idev->dev,
->> cmd->type);
->> +		if (!ops) {
->> +			rc = -EOPNOTSUPP;
->> +			goto out_put_idev;
->> +		}
->> +	}
->> +
->>  	/*
->>  	 * It is a driver bug to omit the required operations or
->> provide a size
->>  	 * smaller than the core vIOMMU structure.
->> @@ -95,6 +116,8 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd
->> *ucmd) viommu->kvm_file = get_file(idev->kvm_file);
->>  	viommu->type = cmd->type;
->>  	viommu->ictx = ucmd->ictx;
->> +	viommu->tsm_dev = tsm_dev;
->> +	tsm_dev = NULL;
->    viommu->tsm_dev = no_free_ptr(tsm_dev)
->
->>  	viommu->hwpt = hwpt_paging;
->>  	refcount_inc(&viommu->hwpt->common.obj.users);
->>  	INIT_LIST_HEAD(&viommu->veventqs);
->> @@ -119,6 +142,8 @@ int iommufd_viommu_alloc_ioctl(struct
->> iommufd_ucmd *ucmd) out_put_hwpt:
->>  	iommufd_put_object(ucmd->ictx, &hwpt_paging->common.obj);
->>  out_put_idev:
->> +	if (tsm_dev)
->> +		tsm_put_device(tsm_dev);
-> ditto, can be unconditional.
->
->>  	iommufd_put_object(ucmd->ictx, &idev->obj);
->>  	return rc;
->>  }
->> diff --git a/drivers/pci/tsm/core.c b/drivers/pci/tsm/core.c
->> index 8f0e5af808a5..4107ff443228 100644
->> --- a/drivers/pci/tsm/core.c
->> +++ b/drivers/pci/tsm/core.c
->> @@ -9,6 +9,8 @@
->>  #define dev_fmt(fmt) "PCI/TSM: " fmt
->>  
->>  #include <linux/bitfield.h>
->> +#include <linux/iommufd.h>
->> +#include <linux/module.h>
->>  #include <linux/pci.h>
->>  #include <linux/pci-doe.h>
->>  #include <linux/pci-tsm.h>
->> @@ -36,6 +38,26 @@ static const struct pci_tsm_ops
->> *to_pci_tsm_ops(struct pci_tsm *tsm) return tsm->tsm_dev->pci_ops;
->>  }
->>  
->> +struct tsm_dev *pci_tsm_get_device(struct pci_dev *pdev)
->> +{
->> +	const struct pci_tsm_ops *ops;
->> +	struct tsm_dev *tsm_dev;
->> +
->> +	guard(rwsem_read)(&pci_tsm_rwsem);
->> +	if (!pdev->tsm)
->> +		return NULL;
->> +
->> +	tsm_dev = pdev->tsm->tsm_dev;
->> +	ops = tsm_dev->pci_ops;
->> +	if (!ops->viommu_get_ops)
->> +		return NULL;
->> +	if (!try_module_get(ops->owner))
->> +		return ERR_PTR(-ENODEV);
->> +	get_device(&tsm_dev->dev);
-> what if tsm_unregister() is called directly? without protection from
-> tsm_dev->users, unregister can succeed tearing down backend while this
-> reference is held.
->
-> For bisectable result, maybe you can move tsm_get() and wait patch
-> before this one?
->
+This is something other luserspace probably relies on and we should probably
+do our due diligence and slowly deprecate it with a warning splat but not just
+whack it unceremoniously.
 
-But, the current code calls tsm_unregister() only during module
-unload, so this cannot happen.
+And what I'm missing in all that effort is the big picture. What are you even
+trying to achieve here, what's the point of all that gymnastics?
 
->
->> +	return tsm_dev;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_tsm_get_device);
+Unify GHES and acpi_extlog? That's it?
 
- [ ... 201 lines skipped ... ] 
+I'm sure there's much more to it than just a plain unification. 
 
--aneesh
+Probably CXL-something is going to use this too eventually?
+
+But I should not be guessing - I should be reading about the big picture
+somewhere. No?
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
