@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795513464;
-	b=hoImwAUnuI5uju3lg9jhO7m38yjvJn9Mq8VxHSOVROTNsOWHU2zxC+6LOq7PT+6NsvCX
-	 MflPVB7yOidUX8DWh44Ay85u7aphXc5GTKQdrBVkSGBiFFJ1h1yb22bKnMCvx+LQk1sUO
-	 4CPK3BPuW6renG8lOzPBM7OhM0xPClMujmJyGQW2E0/vd6E2lVH/JAVxFjrMplsYY9z33
-	 eYNXPFKxW0kgnkCWIDLiOV2E9fTTTW0l8F8doft9NqMHYqR0sizeMhxX2jOiSsLGSi4D/
-	 lzQiuBhHKo3A0r0js93ZK6qnJhT2SygKwUsHuYFPPTNQjKKcLYsXabuYzHpDO9/yYSg==
+	t=1795513460;
+	b=f39cIID9weUMM3RCil9BSidkf61C92wXp2bgE6aVoPb3b+Z2HnTcUvhs7nENXqreLGj2
+	 duV/VGkfmKynkQI0X2m9Atqy/i8C0Ez6gY50k4XEEXd5KyqANrH2IcatZgAcZ3mQAIDJG
+	 5LHlJTf7sVmuBMuqUMpIKJgzeZK8pplzTUB0U/WqgPlRCwm3sRHgNnk+8STxog+TB5X6k
+	 yU0oxzpfoEbVVMuhsF0DncYozr/iLjSBn0oPQl3KobN+D1LmM+8q/8WKyoOCCYj4yv09+
+	 zvFo6+05nSHM5kIuCynC5UXgu29W02/zSK3RiJ/mCKmQkaZLDgMqrUhAl8UR95ShkZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795513464;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795513460;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=7H0DbC2AGOKMh+PJiFXiDaE/tg5L8MS7tMmMthgfzIY=;
-	b=DbD0GqlVQsQY9cxOffCwJvIDGkCHZEh8lDa0VGlfKw/x+NAn8xWL9vaV9Dmiw9x0zy6I
-	 m6JDC4vJvkAKkQ94t9A2umnd5eomU7dqvKinzgyDKr+y2HkPyp9znyo4hNd+mMxJbsgGU
-	 DWuoY+CKvhfcpfAwmSz6eanr921KjnaaRodXnsyOT/cZeL8zdI91Grnid37fux4LoWi8+
-	 YDOqhhd6Odz+nnTZNR/OClOHJaCA5zAqGMBoit3L8gIa+Q6NGG0H8BsbGIOi0EvAgFRYm
-	 u2FAlXLdx6IZ+jEozFQc+QPpHl3muJn1bKGJoKcOifsqE1C3lt0EbxAS3arT/AROkoA==
+	bh=0q1TynGssykC2LOKqTJCRLWewJrYt+Qms+Y+NUNnNmQ=;
+	b=YO0lR1BGDb082E8NjlIeImGQO8KxXo7DHuycr2I5Hm/8awuNr3IjJqHqxpwhj/LrHQXi
+	 f/2Z/Qvyp7rh+lNX9B+Dx9KV9eZxJW9G+PI5dsQGZW8R7lZd9ongAet4Qc9egHERNa8Ur
+	 sN8GuIIJR6aYSBTvtrZ5vALS5qUG/i/V7TOE2Z8i1EHsLWQh7GmdxI+gA9ghsEXbe/Mgr
+	 EFb8dINaFjuVZEN0D7opIl2hHsiYCES8e83WwZPQyB+BEJPS6Kgf/p2/yk5gxbcEIdpqQ
+	 OuoAXq68xNm7eh8i0kfe+jlgZ8u5akFUWLCTNyRaLntWBV2Mh0HpiE7cYarnF8DubeA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oTXv2o6S;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BQfkEJzP;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F41A606A69F;
-	Tue, 24 Nov 2026 09:44:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEFC0606A68B;
+	Tue, 24 Nov 2026 09:44:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oTXv2o6S
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D118D1F000C4;
-	Tue, 24 Nov 2026 09:44:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BQfkEJzP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 900A81F000F0;
+	Tue, 24 Nov 2026 09:44:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795513464;
-	bh=7H0DbC2AGOKMh+PJiFXiDaE/tg5L8MS7tMmMthgfzIY=;
+	s=k20260515; t=1795513460;
+	bh=0q1TynGssykC2LOKqTJCRLWewJrYt+Qms+Y+NUNnNmQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oTXv2o6SfFVj7sLnN5MnYvR9GFihy2pu6GjRdwT4zUFR8tFsodZdK2H9LbUFJOrD3
-	 n7ZqGhMf/pRqQC/MyQZ+Rv8SjIAUWYFWAMdlQomkraPQruF8tEJ1E6XqEHqyx6SBgr
-	 mFw3mcC/d1fXfHIbWrZjFBbSiUaty0u3P6im2UB0a8QaBjyvzwh637ZN+b4PRcA6bQ
-	 2QeNtFzBKfu+YEBC7mFOw73x7R2bBt6ohgGranDt9YdjHzY+FsZVVJ+l3XNkBVilsi
-	 gUcoD1mZK4xBJ9LFqZxbADmh2XFic50Gx9VGtuEcHLoxbwJQKcEl2uGDoblpjRqw1L
-	 lV022n2TsFqFA==
+	b=BQfkEJzPxWxHAzsKlB+3KWBFh3wYLHR82k5EG50AGPZhb+T9glDqQMvlMmfMtSOsK
+	 In3GXSvT1Jx+Jxn+Km78xmHJzxBLwhqsXcrJAuhYUqFIoVqJ+WHaejJqWpCjGKm3v6
+	 /zxNmhC64QH0D6xK8bYsCcBXC/28rKjSmHFOt+P0edzymxb93WC7Nt6MQK4Zdcb95X
+	 1qjP+v64Mpi7Xqe38t5wyqV3NypSpHuPHmNYtMm8QGg4E6NCtQoVYXHj4WRef+fSkN
+	 CheEna9tLKzM1eH1J1w3rXzz7WHsNDJeMxkMu5zEVDJ+o7jMpogXdOqI6B8fq1KEdp
+	 /+RaSpBgtj5mg==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -100,9 +100,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v4 03/33] USB: Lock interfaces during manual driver binding
-Date: Tue, 24 Nov 2026 11:43:34 +0200
-Message-ID: <20261124-device-trust-core-v4-3-037eb0d17b1f@nvidia.com>
+Subject: [PATCH v4 01/33] wifi: mac80211_hwsim: lock device for manual driver binding
+Date: Tue, 24 Nov 2026 11:43:32 +0200
+Message-ID: <20261124-device-trust-core-v4-1-037eb0d17b1f@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
 References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
@@ -121,71 +121,30 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-Driver core requires the claimed interface's device lock during binding.
-The parent USB device lock alone does not satisfy this requirement.
+The documented API contract for device_bind_driver() requires the device
+lock. mac80211_hwsim uses it for a newly created class device with no bus,
+so no automatic driver-core path can bind the device concurrently and the
+missing lock was safe.
 
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/bluetooth/btusb_main.c |  2 --
- drivers/usb/core/driver.c      | 15 ++++++++++-----
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/bluetooth/btusb_main.c b/drivers/bluetooth/btusb_main.c
-index 128ec6f7d31f0..37f36434c6e9a 100644
---- a/drivers/bluetooth/btusb_main.c
-+++ b/drivers/bluetooth/btusb_main.c
-@@ -3024,10 +3024,8 @@ static int btusb_mtk_claim_iso_intf(struct btusb_data *data)
- 	if (err)
- 		goto put_interface;
- 
--	device_lock(&btmtk_data->isopkt_intf->dev);
- 	err = usb_driver_claim_interface(&btusb_driver,
- 					 btmtk_data->isopkt_intf, data);
--	device_unlock(&btmtk_data->isopkt_intf->dev);
- 	if (err) {
- 		/* MT7663 and MT7668 leave interface 2 to Wi-Fi. */
- 		bt_dev_err(data->hdev, "Failed to claim iso interface: %d", err);
-diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
-index d3a61ebc6afb0..e1de348cc0cac 100644
---- a/drivers/usb/core/driver.c
-+++ b/drivers/usb/core/driver.c
-@@ -540,9 +540,8 @@ static void usb_shutdown_interface(struct device *dev)
-  * No device driver should directly modify internal usb_interface or
-  * usb_device structure members.
-  *
-- * Callers must own the device lock, so driver probe() entries don't need
-- * extra locking, but other call contexts may need to explicitly claim that
-- * lock.
-+ * Callers must hold the parent USB device lock, but not the claimed
-+ * interface's device lock.
-  *
-  * Return: 0 on success.
-  */
-@@ -559,9 +558,13 @@ int usb_driver_claim_interface(struct usb_driver *driver,
- 	if (dev->driver)
- 		return -EBUSY;
- 
-+	device_lock(dev);
-+
- 	/* reject claim if interface is not authorized */
--	if (!iface->authorized)
--		return -ENODEV;
-+	if (!iface->authorized) {
-+		retval = -ENODEV;
-+		goto unlock;
-+	}
- 
- 	dev->driver = &driver->driver;
- 	usb_set_intfdata(iface, data);
-@@ -602,6 +605,8 @@ int usb_driver_claim_interface(struct usb_driver *driver,
- 		pm_runtime_set_suspended(dev);
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+index e53714b81ec2c..b796da3dd54b3 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+@@ -5769,7 +5769,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 		goto failed_drvdata;
  	}
- 
-+unlock:
-+	device_unlock(dev);
- 	return retval;
- }
- EXPORT_SYMBOL_GPL(usb_driver_claim_interface);
+ 	data->dev->driver = &mac80211_hwsim_driver.driver;
++	device_lock(data->dev);
+ 	err = device_bind_driver(data->dev);
++	device_unlock(data->dev);
+ 	if (err != 0) {
+ 		pr_debug("mac80211_hwsim: device_bind_driver failed (%d)\n",
+ 		       err);
 
 -- 
 2.56.1
