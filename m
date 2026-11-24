@@ -1,53 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795507294;
-	b=2NggyyuSNd1oKLl/qWKgrZZFNVjE2j+X5PWpybAHP7PRsPAZiVLOlFcNEQ8j0R0MePOR
-	 TXytd2J/ai9jFhhyZ5ZDraocQykx+qJL7vO47nvhH+nVX5sdjARMQt9aJaDMaZJ3A01vE
-	 KMvVvHi2nVRfuDIhEilXLmWUtk+jGNnE7UWCkqMJvxy9faZ9aAWOfusWuTk3Ga2ojVKKK
-	 MePCeo9OapS0vOgDdn3wx+aS+T7VkpGSy6nGEwbUvvs6WHrH0Yuv/O5TA5lWnqIVCHkD3
-	 HbVI3Rl2GVN1y+xiyhek9vuT01kQZNZmgztLxnJWNjNVRuUTj9Zr09L/tGfqmneK7iw==
+	t=1795510150;
+	b=Bn8Gq6Di2ymHpQ7ibdElLoJJwqPJ+DMYH6HySQwyh+4vD6WtJEp6/+aOqGcd7Sf9H/sO
+	 ESpD4ierNsQdvt6LIMDSIDMBXJpsVg0TOLprq7hfcDiBSfFEisQiVwAfhNeWaRLJ97xKg
+	 cloRL1BrveW/W+pvtbOT1NE8BBYG5uyR1ShaZgDjeBYSXMFZmzf2AhJuroelq9rXFM8il
+	 R/QPWs68r0fix5LH9NlfxM9r7PBz7NVmxotG8HLeFS14HB9GNiwJuyZckb4CL1TDhZTg8
+	 iwxY64En9/AzBqge5aeI6BMAPTCK2zWzUQF8ysVpcGgtx50Y4htjL/xGIzVmv3NzmlQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795507294;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=w60ChxhfjjyfFkUUASsSzKZDcN5aQP+KbDtTX3bjvGw=;
-	b=XyKAG8aPOBwfGABlTIYsEqIxJH4F+WJ6duUCwtgvjT0md3Tjas6YGnmd3+fG53CkRsln
-	 0ZT9nooiHCy726pvGeeRE2HpI4oLrpme/U9J4xDFcOZyfqtXcpYINUMzMDmB2bMcbhG/y
-	 9RgKoqx7Px4bS8fS3ZfuJGYpURIjr3bCPhYlqyTqfN6Z01q9hWGRsyEtkgCJbUd67Gw25
-	 WSSBgybcRmzggxKOz8tMyHeI9GiHGLBEpLgF5OgzR31MbyUQ/am2WPquINsdIlHWfhk4L
-	 /eQbkGUSNhxMWPhhf0od7jrPSqek/iSBaqrPfqWBxDAlyS3H2w4KUh7fALi9d/ENrZw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795510150;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:
+	 X-Google-Original-From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=MFg6AsJZlAHZYkg8EWkBVHGKeTBRg/h+xqjFyeI8VnA=;
+	b=OqgTM6DyQAjsye/PRSms676150VMgdK0ALF9jqaX6hWRIJBjC7QV4oM9IsG4uMpIhE2z
+	 xKX9OAFlUk/O0OrfvV6KWugDFAywtKlhmY6KC049R0czBb0an6Qup54gpey0SiRehI/n6
+	 cL2J57qrw+cjJrcuxR4AGKhlVKHBEScPMdL3B5L/GDucYFs87sXanCxHgK4f3CXdW37ee
+	 Lt5VHE9xLErKYeLvwJMQi/YE2c6Gb0KZYHoRbt7xMKKuS5qxjZkWUSZyh3GeKlWQezTSF
+	 YpvFv2uH3e5wDIoOoHFUycQSlJ6AWygl/6bYbqyrrapSpKRLqnMNVnyTdOv2vLmZprQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=83.223.95.204
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Qa+8K6Kp;
+	arc=none smtp.remote-ip=209.85.221.47
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69065606A31E;
-	Tue, 24 Nov 2026 08:01:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 69065606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with ESMTPS id 5DDE2383;
-	Tue, 24 Nov 2026 09:01:24 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 48EFB6016C52; Tue, 24 Nov 2026 09:01:24 +0100 (CET)
-Date: Tue, 24 Nov 2026 09:01:24 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Yazen Ghannam <yazen.ghannam@amd.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH 4/4] PCI/AER: Hide the "aer" sysfs directory on devices
- without AER
-Message-ID: <awVEVPX1dzGZeVya@wunner.de>
-References: <awMs4CwlPT2vsDV2@wunner.de>
- <20261123234603.GA1123067@bhelgaas>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D24606A322
+	for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 08:49:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33D24606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Qa+8K6Kp
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-4a3e706b5dfso2704746f8f.2
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 00:49:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795510148; x=1796114948; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=MFg6AsJZlAHZYkg8EWkBVHGKeTBRg/h+xqjFyeI8VnA=;
+        b=Qa+8K6KpprmVocNR0qPP3+ECxTeqDLhv5D0nLQ9Q9rFR4ELA01sl8+UrM08OHiEQ0e
+         gon9i6/HyR+FzMEpsPeoBgRTds/lHsT6AWq3Y16gVR3cqbxoUAHzq99V314EOSkyj2p6
+         eYHf9s7uU31HhQNqxanx9elNSJj/CUAkJUKE+4R+57K1PlE1aMJP9hi8H88UNMDPhxWW
+         Q2otxFGC3h9rnKdsfHnRO4dncMnV1y0z7Jp5v+NUmRZVEQbrvZcN6VgIf0ximeea5W0O
+         /u9cbZYGGs3G8+ZYzbXkVVHFXrjpsmEVJL+i5skNNgQg9j7KBh01JOb8r4J1Yb9Ouj4c
+         T80Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795510148; x=1796114948;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=MFg6AsJZlAHZYkg8EWkBVHGKeTBRg/h+xqjFyeI8VnA=;
+        b=Mpkfq7Xjo7i3Yzi2/EUHLTp6xhKtVPKfLmNEY58cgYeveBkITstxaU1Nxs39XRIv6N
+         DITRDPffjH1cUsyy2OwuTmGg8+7s8mwKVjLNHkvnt6/Nl+dR6isUWhSdrhzdHYFlYgww
+         FGpE4LCzDTXy9z/Pk8sUr+wkE5s5flf/YNFeqX66s8OUCaj7yCyL9hcB29gS9DK27aBE
+         GDRN7wSFika9CPOXAFF3N6BQirioIFOJMC/XsWcn802a/VoVflfH7FkkA69/gQYDRnZs
+         RanjP4kz4MMaftKOMHZSm8behc7nWQ1oMmS9N8wZz894F1uY0lVQ4a2ylNjAth9ikyOZ
+         X3ZA==
+X-Gm-Message-State: APuU4Z+Tb9WJl4UZsZTHrLgy9ISKORoNJ016bibgUZ7xvTQ7aePcvyAK
+	eXMD0K5cIpsygldveu3liAXcJXfrb7Dy3++dW4rZLjLaIpQxe62JQAE5zWb59pMX
+X-Gm-Gg: AZFdTZeL8X66ivxy9vp+NFkFjeVcVH8BvGw2am+2Xqm8uwzAd5Zibdh3TZkJdIbqXeQ
+	cvFkvTb8bgYepj2EMJLHUSU47Z2cFfuGvkKH96PzcnfsY7P3Qeg8mKahVg47zSlq8hLKbPhNyLZ
+	jcEWR3aHFx43SRvhWojOj4OBLRiUuNTsL1PZ7uUCRXzMY3O5/xFKnsFFh451WMUVlGEJDynyb/i
+	/tOLpGN9q1plpLdR2G9kZCWpxxTVR7HP36gL8kHfGV74Z7wdOxBP7CAfomg95UIny7CpFcd2Ews
+	fsaRJS84BA0NaYMxgJ52sotyPq1lxVqdog3o3WJgcEy0MeHehZlxh3zE7jfdmEvRf5MlEmRd2rV
+	BmwmAxwQVM2yzAM2YYCA7F7tlhFDh30hHObyGzVrbBj+b5eyZ92r2jSnZF5tCwJIKOMP64xGj9q
+	WeQgxirwFYbWelgJuKv5Je3MjFimjOBRZdR3DhfZ/qAZYpiJvKNbBOFM8fjYJ1A4rAbfir8uuh6
+	jrhc+bmKx0y6Rikp/Vk4wiKMFkMgeNM6r/SmrNMMjm4CLTs8qp2E3Qfdved4matpb5PphLHQUJu
+	v4mq2nOClWTPcIrCQve866gvJEPvJvL9o0gKHBWchCi4TZ9LLNAtHFW97CEosw3GOtNghDxt91Q
+	yQiIC+w3LHWmmIMhCzt29q72i2fID93KYuSwONWg3D3QPj8EvznXO00MlHmWle+TuG10UNX2HPF
+	KW0ZbJceBAxOAfuktsn8m1brxQ28E0Y1p91TyQYJpkSf1EKnyHCguE3Ohqs5YxfDc24/YtRNqCv
+	Du+m45eUgP5z43jgLD6ghTR+pc2vQe/Ot0S/YM=
+X-Received: by 2002:a05:6000:288e:b0:49e:4ba2:a775 with SMTP id ffacd0b85a97d-4abb86e50eamr26630676f8f.56.1795510148163;
+        Tue, 24 Nov 2026 00:49:08 -0800 (PST)
+Received: from coder-gsekar-hip-hyg-new-69bc66c5b4-skkj6.coder.svc.cluster.local (ec2-13-205-193-176.ap-south-1.compute.amazonaws.com. [13.205.193.176])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab658e2d60sm27270565f8f.3.2026.11.24.00.49.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Nov 2026 00:49:07 -0800 (PST)
+From: Gokulkrishna Sekar <gokulkrishnasr@gmail.com>
+X-Google-Original-From: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com,
+	mika.westerberg@linux.intel.com,
+	linux-kernel@vger.kernel.org,
+	Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>,
+	Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Subject: [PATCH] PCI: Correct PCIe port type field encoding
+Date: Tue, 24 Nov 2026 08:48:28 +0000
+Message-ID: <20261124084828.15318-1-Gokulkrishna.Sekar@harman.com>
+X-Mailer: git-send-email 2.56.1
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,56 +100,61 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261123234603.GA1123067@bhelgaas>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 23, 2026 at 05:46:03PM -0600, Bjorn Helgaas wrote:
-> On Sun, Nov 22, 2026 at 06:56:48PM +0100, Lukas Wunner wrote:
-> > On Fri, Nov 20, 2026 at 07:31:25PM -0600, Bjorn Helgaas wrote:
-> > > If so I might amend this commit log to mention
-> > > that, since Lukas's subsequent "PCI/AER: Enable baseline capability
-> > > error reporting" enables aer_dev_correctable, aer_dev_fatal, etc even
-> > > for non-AER PCIe devices.
-> > 
-> > With that subsequent patch, the "aer" subdirectory with the ratelimiting
-> > knobs appears below every PCIe device (unless allocation of aer_info fails
-> > due to high memory pressure), but not e.g. below Conventional PCI devices.
-> 
-> Are the ratelimit knobs useful for devices other than Root Ports and
-> RCiEPs with an AER Capability?  That's the only place we get
-> interrupts, isn't it?  I guess DPC also?
+set_pcie_port_type() validates PCIe port topology and corrects
+invalid upstream/downstream port type information in the cached
+pcie_flags_reg value.
 
-Ratelimiting is per-device, hence the ratelimiting knobs appear below
-every device capable of error reporting (AER or baseline).  With baseline
-capability error reporting, the same messages appear in dmesg and tracing,
-albeit with fewer details.
+When performing these corrections, the code updates
+PCI_EXP_FLAGS_TYPE using PCI_EXP_TYPE_UPSTREAM or
+PCI_EXP_TYPE_DOWNSTREAM directly. The PCI_EXP_TYPE_* values are
+decoded port type numbers, not values encoded for the
+PCI_EXP_FLAGS_TYPE bitfield, so the corrected type is stored in the
+wrong bit position.
 
-If your question is whether the ratelimiting knobs are useful unless
-there is an AER-capable Root Port above the device (or the device is
-associated with an AER-capable RCEC, or is itself an AER-capable
-Root Port or RCEC) then the answer is indeed no.  They're not useful.
-We could hide them if you want.  The same applies to the error statistics
-exposed in sysfs.
+As a result, a device whose type has been corrected may subsequently
+be reported as PCI_EXP_TYPE_ENDPOINT instead of the intended
+upstream or downstream port type.
 
-Without an AER-capable Root Port or RCEC, errors can only be signaled
-as System Errors.  This needs to be enabled in the Root Control register
-of Root Ports or RCECs (PCIe r7.1 sec 7.5.3.12), either manually by
-the user or by platform firmware.  The kernel doesn't set those bits.
-It only clears them (in aer_enable_rootport()).
+Use FIELD_MODIFY() to update PCI_EXP_FLAGS_TYPE so the corrected
+port type is encoded consistently with the format used in the PCI
+Express Capabilities Register.
 
-For DPC, there is no ratelimiting implemented.  Recovery from DPC normally
-takes on the order of seconds, so the recovery procedure limits the amount
-of messages emitted via dmesg or tracing.
+Fixes: ca78410403dd ("PCI: Get rid of dev->has_secondary_link flag")
+Reported-by: Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Link: https://lore.kernel.org/all/20241213070241.3334854-1-gthiagarajan@marvell.com/
+Signed-off-by: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
+---
+ drivers/pci/probe.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-The DPC driver does call aer_get_device_error_info(), which would perform
-ratelimiting.  But first of all, this is only called if DPC is triggered
-by the Downstream Port itself (e.g. upon an ACS Violation), not when
-receiving an Error Message from a subordinate device.  I.e. it uses the
-Downstream Port's pdev->aer_info struct.  And second, the DPC driver
-populates the info->ratelimit_print[0] field with "1" beforehand in
-dpc_get_aer_uncorrect_severity(), which means "always print".
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 9a178e0e5f7f..4c7e0ad1aa1a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1673,8 +1673,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 		 */
+ 		if (pcie_downstream_port(parent)) {
+ 			pci_info(pdev, "claims to be downstream port but is acting as upstream port, correcting type\n");
+-			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+-			pdev->pcie_flags_reg |= PCI_EXP_TYPE_UPSTREAM;
++			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg,
++				     PCI_EXP_TYPE_UPSTREAM);
+ 		}
+ 	} else if (type == PCI_EXP_TYPE_UPSTREAM) {
+ 		/*
+@@ -1684,8 +1684,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 		 */
+ 		if (pci_pcie_type(parent) == PCI_EXP_TYPE_UPSTREAM) {
+ 			pci_info(pdev, "claims to be upstream port but is acting as downstream port, correcting type\n");
+-			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+-			pdev->pcie_flags_reg |= PCI_EXP_TYPE_DOWNSTREAM;
++			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg,
++				     PCI_EXP_TYPE_DOWNSTREAM);
+ 		}
+ 	}
+ }
+-- 
+2.54.0
 
-Thanks,
-
-Lukas
