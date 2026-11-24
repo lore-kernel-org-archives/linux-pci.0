@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795513529;
-	b=NsKTHZSJOLmOSakE2x+1JzlwqMUNSJlukRt+HNfe3bFD0c/YofsWeEjy9gfDP7Mk6gFG
-	 uCQh5DZENiKBYhdeefJoLhiQPphygmVM7f9tBk7QCZ2VmM6UW9Tbd/aIycYjF9ZNztsQH
-	 pyZh8cEuUkl6QOwb/+lOUdYmw3e56S5xTpyxqKfyxwerId4JkJxptnd4Z9NhsZ2ZnJO+I
-	 W1qw2U5SjUHT+nFWcXUUopOxAJg22lk02TwRHGXXIntM6j3p39dS11O9aZl+z6DzrBx4D
-	 WAGUOn0lt1WKRrqJiLCFuseHlxL885z+YULUHk5NQ+reDLR003NPzVKvZKAGINeh7LA==
+	t=1795513537;
+	b=Rdz4llUGhzVA5vkZGBZLwzo9sXgdASqm35ol4kg47gWnTjqSBD9aKVgrr1hAOvE5XPV+
+	 ljYHtJA4TXr/2PaI1EoPnVOCIYLylHvrCNU3CodGU0t9buMleeycgBNa0Uw6lpAHI55yQ
+	 ctretLOk+7KoGKm05tTVn4YrJyefiJHPLgunbdkpq6rJ3m6KJoBC+w2HuXld8z7JnJkqA
+	 T6HKyPArsW0C0e3Yg7Xor6eXn3tIySbap2bkm0ryI33eAMgrvM9kzJ7D5W1lV7Ovh0GaP
+	 6UdQXt0T5ZGWaCV+Q0qiI8r813ysKGQkiYqgTZRQN3HeOqteb7lyua5Apeiqepx6oyQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795513529;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795513537;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 Content-Transfer-Encoding;
-	bh=AI23EedCHOkVt2bUFVxVq0Tw4jV6qHaXsCMKfKtBCb8=;
-	b=hD+gFyMGeFGQaiiIDBJxxKXQ3tvNvna7TnJG9KVl1wsitQfRupY/qDPeZ+FFKm3B++at
-	 E4mrx+dmTcCbSUAAMmTET8EGJqvhAM05A4vfHCpPLayjXbbhZOsMeaScC2eFIqrxuz+IL
-	 0xVQZ+Epw/3wXV7vVIjkxcOaF07nV5Zkk8FLWn4eFR5MWp1Z9QV6i0J79GCkqT+oo5CMk
-	 duySJX8MU3PqxbkdttdFmDqshKp9qLS6lniAkEXrLyxNEQhBebYYAu3gwVu6RClOniFNJ
-	 gRAZjEhl3op9GVJHTFAp2erBbxXHGv81SByAjO+wwcYduks+F0m2/J8b2/CttNWPCbQ==
+	bh=XQYDdAkVR7IUALr9I7d52ZHJP7tMO6LB2W6b4WjMN48=;
+	b=w8Tx2TUJngKG34J/7z3aplTi+Ot0JnChmd2sEu9kp9VW8bfLp8kqeZZJsvCL+P2QHBJE
+	 pVHAX/8Olo6WoWAK1fam5xthKnZY3Ai/dLrCgK4hmCC/+ZDWYaHsPahRtTVifh7Wtrf2I
+	 OeGm0RnYOUZaUOaTPr5FGp/MFpuz9vis5KPFnyEJFt5ByjTrpRnZCYPf0XRE856Jc09S8
+	 FSHSw/lLbHvgKO+jwa7jS/EEgoYQ1F9zkHTOarqF+ZUrHrI6gaA4E9UzXRZDNOd95Fi2X
+	 QvN5w2CpkkOF6blEaUroIYGH/dsxTiiTT5A/0GyF/EjCMzJJ7nCdqxGma5MFer9b2Jw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nnHik31J;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iiuSPhE7;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E2460A2607;
-	Tue, 24 Nov 2026 09:45:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA11E606A850;
+	Tue, 24 Nov 2026 09:45:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nnHik31J
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10B1A1F000C4;
-	Tue, 24 Nov 2026 09:45:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iiuSPhE7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EEEA1F000D3;
+	Tue, 24 Nov 2026 09:45:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795513529;
-	bh=AI23EedCHOkVt2bUFVxVq0Tw4jV6qHaXsCMKfKtBCb8=;
+	s=k20260515; t=1795513537;
+	bh=XQYDdAkVR7IUALr9I7d52ZHJP7tMO6LB2W6b4WjMN48=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=nnHik31JyN/Y3TS9cyBiDeVRA00Ub5gX3cbTGh5LLBhpP23T1U52BZf4Z3OXrcbY4
-	 whWIq5d7u/lP5039cdtVPaeBNWaoyZkH343rSPE3yYysFNt6Z1+xh8hmVMgwstoXBZ
-	 O8DiJJUb4YTDb1FUZnp7XskQSA5mcrL49QyGzXh0NlfvsyWF88vKOejkr2dlkdzeAD
-	 7GjXVqLpdb5QnUIJFVvJIY/v6UIL1rJOeAgsV4aeVu6m4yeDgK0RptHlm10daF1DWZ
-	 f0fmo265bGWWnLUn9NTXM8iNkDKUIwkv/PrqdITUo25T2QoKRdDZvZ1m0QbGp8Nkba
-	 cAX09au3hVw6g==
+	b=iiuSPhE7d0aFQ/3kN5MynOqTlhXtfKkrDmddmf0sOZTsjJX+EaveBVTfjou3Tc/sG
+	 eYexEcZKWUJurNBW9vXUm3TyKgqQOuRGENUEJocb2Owy7VHsojW39y0pECNsyHEaqO
+	 lEn7sbwzGdghC2Otgsq4cRb5NQgiYVoD58J4xr372kGAXVBynW6MmBsbF1AzCPtGZl
+	 nfMdkjcTG3Tq5ABuaab3UvrZfktep9A+XoDFdnjPWDeVMukZ/M4pA6RDZH6M/eHKOZ
+	 qZ7Nnz7xii3TH5aaG0OBgWSuvFU5KVo7YGfgf1ZCWQuTRpCCE0U/FcHjQPQ3RqjIEV
+	 Zwg87blV9FOFQ==
 From: Leon Romanovsky <leon@kernel.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -100,9 +100,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	linux-sound@vger.kernel.org,
 	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v4 15/33] driver core: Report deferred probes through sysfs drivers_probe
-Date: Tue, 24 Nov 2026 11:43:46 +0200
-Message-ID: <20261124-device-trust-core-v4-15-037eb0d17b1f@nvidia.com>
+Subject: [PATCH v4 19/33] net: phy: Use the compatibility driver attachment API
+Date: Tue, 24 Nov 2026 11:43:50 +0200
+Message-ID: <20261124-device-trust-core-v4-19-037eb0d17b1f@nvidia.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
 References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
@@ -121,83 +121,107 @@ Content-Transfer-Encoding: 8bit
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-commit b8c5cec23d5c ("Driver core: udev triggered device-<>driver
-binding") introduced the concept of "Systems who want to control the
-driver binding with udev" can use the drivers_probe sysfs to trigger a
-driver bind based on the kernel's match list.
+The generic PHY fallback probes directly before publishing its binding.
+Device trust admission needs to precede that probe without changing the
+caller's serialization, so use device_driver_attach_unrestricted()
+to serialize the generic attachment.
 
-If attaching the driver is deferred before its probe callback runs,
-userspace sees EINVAL and cannot tell it should try again, maybe after
-loading other drivers.
-
-Map that deferral to EAGAIN and add missed documentation for the
-drivers_probe sysfs. A deferral requested by the probe callback itself
-is still not reported.
-
-Fixes: b8c5cec23d5c ("Driver core: udev triggered device-<>driver binding")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- Documentation/ABI/testing/sysfs-bus-drivers-probe | 14 ++++++++++++++
- MAINTAINERS                                       |  1 +
- drivers/base/bus.c                                |  9 +++++++--
- 3 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/net/phy/phy_device.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-drivers-probe b/Documentation/ABI/testing/sysfs-bus-drivers-probe
-new file mode 100644
-index 0000000000000..ed8828e55d6bf
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-drivers-probe
-@@ -0,0 +1,14 @@
-+What:		/sys/bus/.../drivers_probe
-+Date:		February 2007
-+Contact:	driver-core@lists.linux.dev
-+Description:
-+		(WO) Writing a device name requests driver attachment on this
-+		bus, even when drivers_autoprobe is disabled. A successful
-+		write does not guarantee that a driver bound. The driver link
-+		can appear before probe completes; a bind uevent signals
-+		successful binding.
-+
-+		EAGAIN means attachment was deferred before the driver's probe
-+		callback, for example while a supplier or the device itself
-+		is not ready. ENODEV means the device was not found. Other
-+		attachment errors return EINVAL.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 93abbb315065d..b726344362b41 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8149,6 +8149,7 @@ M:	Johan Hovold <johan@kernel.org>
- L:	driver-core@lists.linux.dev
- S:	Supported
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-core.git
-+F:	Documentation/ABI/testing/sysfs-bus-drivers-probe
- F:	Documentation/core-api/kobject.rst
- F:	Documentation/driver-api/driver-model/
- F:	drivers/base/
-diff --git a/drivers/base/bus.c b/drivers/base/bus.c
-index 396097fdb3162..ecff32c3704b5 100644
---- a/drivers/base/bus.c
-+++ b/drivers/base/bus.c
-@@ -310,13 +310,18 @@ static ssize_t drivers_probe_store(const struct bus_type *bus,
- 				   const char *buf, size_t count)
- {
- 	struct device *dev;
--	int err = -EINVAL;
-+	int err;
+diff --git a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
+index 5d4508bcfbe99..4f20b451e270d 100644
+--- a/drivers/net/phy/phy_device.c
++++ b/drivers/net/phy/phy_device.c
+@@ -1857,7 +1857,6 @@ static void phy_detach_internal(struct phy_device *phydev, bool notify_bus)
+ 		/* The release below lets phy_probe() write this field. */
+ 		phydev->irq = phydev->mdio.bus->irq[phydev->mdio.addr];
+ 		device_release_driver(&phydev->mdio.dev);
+-		phydev->is_genphy_driven = 0;
+ 	}
  
- 	dev = bus_find_device_by_name(bus, NULL, buf);
- 	if (!dev)
- 		return -ENODEV;
--	if (bus_rescan_devices_helper(dev, NULL) == 0)
-+	err = bus_rescan_devices_helper(dev, NULL);
-+	if (!err)
- 		err = count;
-+	else if (err == -EPROBE_DEFER)
-+		err = -EAGAIN;
-+	else
-+		err = -EINVAL;
- 	put_device(dev);
+ 	/* Assert the reset signal */
+@@ -1912,6 +1911,8 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	struct device *d = &phydev->mdio.dev;
+ 	struct module *ndev_owner = NULL;
+ 	struct module *drv_owner;
++	struct device_driver *drv;
++	bool bind_genphy;
+ 	int irq = phydev->irq;
+ 	int err;
+ 
+@@ -1939,16 +1940,16 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	/* Assume that if there is no driver, that it doesn't
+ 	 * exist, and we should use the genphy driver.
+ 	 */
+-	if (!d->driver) {
++	drv = d->driver;
++	bind_genphy = !drv;
++	if (bind_genphy) {
+ 		if (phydev->is_c45)
+-			d->driver = &genphy_c45_driver.mdiodrv.driver;
++			drv = &genphy_c45_driver.mdiodrv.driver;
+ 		else
+-			d->driver = &genphy_driver.mdiodrv.driver;
+-
+-		phydev->is_genphy_driven = 1;
++			drv = &genphy_driver.mdiodrv.driver;
+ 	}
+ 
+-	drv_owner = d->driver->owner;
++	drv_owner = drv->owner;
+ 	if (!try_module_get(drv_owner)) {
+ 		phydev_err(phydev, "failed to get the device driver module\n");
+ 		err = -EIO;
+@@ -1956,11 +1957,8 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	}
+ 	phydev->drv_owner = drv_owner;
+ 
+-	if (phydev->is_genphy_driven) {
+-		err = d->driver->probe(d);
+-		if (err >= 0)
+-			err = device_bind_driver(d);
+-
++	if (bind_genphy) {
++		err = device_driver_attach_unrestricted(drv, d);
+ 		if (err)
+ 			goto error_module_put;
+ 	}
+@@ -2071,8 +2069,6 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
+ 	module_put(phydev->drv_owner);
+ 	phydev->drv_owner = NULL;
+ 	phydev->irq = irq;
+-	phydev->is_genphy_driven = 0;
+-	d->driver = NULL;
+ error_put_device:
+ 	put_device(d);
+ 	if (ndev_owner != bus->owner)
+@@ -3813,6 +3809,8 @@ static int phy_probe(struct device *dev)
+ 	int err = 0;
+ 
+ 	phydev->drv = phydrv;
++	phydev->is_genphy_driven = phydrv == &genphy_driver ||
++				 phydrv == &genphy_c45_driver;
+ 
+ 	/* Disable the interrupt if the PHY doesn't support it
+ 	 * but the interrupt is still a valid one
+@@ -3949,6 +3947,7 @@ static int phy_probe(struct device *dev)
+ out_reset:
+ 	/* Re-assert the reset signal on error */
+ 	phy_device_reset(phydev, 1);
++	phydev->is_genphy_driven = 0;
+ 
  	return err;
+ }
+@@ -3977,6 +3976,7 @@ static int phy_remove(struct device *dev)
+ 	phy_device_reset(phydev, 1);
+ 
+ 	phydev->drv = NULL;
++	phydev->is_genphy_driven = 0;
+ 
+ 	return 0;
  }
 
 -- 
