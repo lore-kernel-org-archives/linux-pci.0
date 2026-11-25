@@ -1,70 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795595848;
-	b=r44hRd52i4pfMbVde6/OTqbdDPa21RjW2BaFFY0nGYZ3PdFjYfSuuFTVHwKDrdWFGvRZ
-	 oTIVuI5k7yktBeRAQsxCKNquEbuuOBasp6bkN7b3kwH1Idw9ZfhfM9C3DTA40OBtA2bbO
-	 3odPZaAA9aVyFXF9djWO94tmS2sBDhBnWZuKH/BJC9Y6XKkT8qpwTk8kBEpahuRbi6SPg
-	 7U4jOYHF7uXbFO/RkuOooO7QhX5JkiiTVBAiNQpy1E/nSmmjl+6AMcOP7GdBRrB7O0qt3
-	 x3ONZ3z/6hB5v2X7hvbdn3cFCn1sp4/OI1ohFYAwCL1si9W40L67W7yEVDmoIJcDszA==
+	t=1795596204;
+	b=33B4KMWmzKz7EjcU3oJMYUm1jlpGz0fPThZmrA6CZJ9MFb+e6vY4HohnxWQrNWVX2W9O
+	 gfLfNyrA/ahplZPHvrjP0T2z0zK0DQAnTwyK5McQgKzk1lwj0nvxxhgl5DTK/xXoYUv4x
+	 gviwm1e+RpAVZufB4f8eBAo6myfoWorsUUmQ2owklRgCWbssN7EvoTNMtPty1+uIzIG9d
+	 VZKLjfz86Np9A1U7JchGZVcn4fH57SAe1E6onD1BlfOUFe/ocKgX4NwYyQ7z0xL/a/o3x
+	 F+8dtg6+qyBmkWx58tisZkR0JiyVp02Y6UQL7rIf0NrU4ZOp4v7L7KtnLzIAXaHex3Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795595848;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=zPQ6zQ8uV4eKmUcVRQ1hIv+A3D6QwvcOfGuZSPbSW+c=;
-	b=C1qWGQA5ObvF6y1ajc1HniZ/Yjv3Q+h27GEojHQi7C5Ndd/Uq69q2ASdGXlArAIyQtnb
-	 mlb9dcjcusob57Ls32EQWaFDdySFWkk7kgqkj6BGUEKx3z0leNXqEYzh6HFyVWzztHo71
-	 3OqKemj2V5xtk//scH9R3ONG3esy3zcacjHde+/5OYVe5dEZPacn4YDnS2gfczzJsPhoi
-	 QSni4Fni14+PS4ifsCsONFf2i0D0VDypwcT3wM+H4sfBg3Rhi7uwAj8Kk/HTClIGfo20L
-	 V3/ARfCvVsUMwuMgNg+q9AkZRUUvcVqz0rLFRVbpj0QPlvXekDyClUPpCpPfp4im7rA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795596204;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=yo5G8/CmAVTOoh3N8NgGFlVdWnXq5Gw9EyEZ+jci7Yc=;
+	b=F3vu3bGsotlSPuDFsP4Vyh3vzXqXUNKeZ7iqXACfmlKriftK3KAii/Z2Bc5Z6GLs6L7H
+	 tv0GTm9ZecX6xFLjreRddHaJRCry9vPHHQ2kI7CRizxMbgbhARdxOm2GKDMklLJp9ZCrB
+	 v0Ai2QP/Ej8OPPB05J2/wK5+sIbEZYcGzgnoX4dhLRUH1zUAPCi+wmL904r2HS9nR72Ir
+	 mq9laxpN0UrbiPbCNlYt10OLu2mwANfncVl7vdyUAiBXDMl/Q2ISHJS9oVSo08WnCIoA1
+	 Ey7y6yxiWCTTLdz4szKh3rkbEscGxgOeUVlPd10LKg8pWmS6Q4eKSni/oT6yqrEnlDg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RqwuNeO+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GEkyUBxy;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CB1606A326;
-	Wed, 25 Nov 2026 08:37:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53386606A321;
+	Wed, 25 Nov 2026 08:43:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RqwuNeO+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 378A21F000C0;
-	Wed, 25 Nov 2026 08:37:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GEkyUBxy
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAB091F000CF;
+	Wed, 25 Nov 2026 08:43:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795595848;
-	bh=zPQ6zQ8uV4eKmUcVRQ1hIv+A3D6QwvcOfGuZSPbSW+c=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=RqwuNeO+en6ylIrQjzIoRLSLJhqQ/ZEyfYT8SJDHB3wI2f2OzxEgKMPBIlvgaqk1h
-	 c6xRRn988L/1TZNfg9RGOfrRNNLhx1dMzqvvTtj6c7Loysu62HBh/uAKDr5B3KbF6y
-	 p0Z+DNpiOhk02aH8n36HkVQmg0/jgCIaJUWy2a9uWWel2U0JlbonYZV9CjE+eZjCda
-	 4eEbSnB40uO4ASwHyxUjLcYHzrPtrCG3FGcNIgX1MpH9N9fkfCCW2QcEEvpp8c/yjw
-	 bFMpMfj49pN8fXhTM8egt0MwzWw8FMZoyQ9nwPNeG1rHL1dQ5NaC2jopXjoxN4Gttf
-	 2U9by7pYmIEkA==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Alexey Kardashevskiy <aik@amd.com>, linux-coco@lists.linux.dev
-Cc: Dan Williams <djbw@kernel.org>, Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 04/10] PCI/TSM: Defer TSM vDEVICE allocation until
- device setup completes
-In-Reply-To: <5e04323f-dfdc-4956-acee-bcc09926726d@amd.com>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-5-aneesh.kumar@kernel.org>
- <5e04323f-dfdc-4956-acee-bcc09926726d@amd.com>
-Date: Wed, 25 Nov 2026 14:07:19 +0530
-Message-ID: <yq5aqzg99uio.fsf@kernel.org>
+	s=k20260515; t=1795596203;
+	bh=yo5G8/CmAVTOoh3N8NgGFlVdWnXq5Gw9EyEZ+jci7Yc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GEkyUBxye/rkpiIC58cTZhbwYbdtQBwMulYxja6hBfrFEmDlgMq65Yz8x9fH/QmNA
+	 MKO25mEoAAtGmOBNNqYfxn3a/flB8n157SpWX1xPFNJET9UM0jbZWQnRArogJgJSUX
+	 +I7KERcjwHa5rr7SuEhhNkDRw4+R/u+AC2OucAAbsglJy+WdY0Tugb7uXG+UPFL0G7
+	 VVSAmcrmk6/jpf0WkA6lYiKZsUSJKCrMeeJYB0zjlgZnMwki46w5FCNv/nui6aMl4G
+	 xm5pQw/dUdSq+cHg8WHwQEQHw1ZqefBW+7w7u+8zulM5HlKRd0PpCecrlgJHK2qyhy
+	 nPP1WD+aZhW0g==
+Message-ID: <sashiko-outbox-232929@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v10 18/18] PCI/TSM: Wait for vIOMMUs to release the TSM
+ before unregistering
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?QW5lZXNoIEt1bWFyIEsuViAoQXJtKQ==?= <aneesh.kumar@kernel.org>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20261125081121.379481-19-aneesh.kumar@kernel.org>
+References: <20261125081121.379481-1-aneesh.kumar@kernel.org>
+ <20261125081121.379481-19-aneesh.kumar@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 25 Nov 2026 08:43:23 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -73,60 +60,250 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Alexey Kardashevskiy <aik@amd.com> writes:
+Thank you for your contribution! Sashiko AI review found 2 potential
+issues to consider:
+- [High] PCI/TSM: use-after-free on tsm_dev in tsm_unregister() and
+  sev_tsm_uninit()
+- [Medium] PCI/TSM: holding registration_lock across wait in
+  pci_tsm_destroy()
+--
 
-> On 23/11/26 19:33, Aneesh Kumar K.V (Arm) wrote:
->> A successful connect does not necessarily complete the checks and setup
->> needed to assign a device to a confidential guest. Authentication and
->> userspace evidence acceptance may still be required.
->> 
->> Add pci_tsm_pf0::ready and pci_tsm_set_ready(). While ready is false,
->> pci_tsm_context_get() returns -EACCES, preventing TSM virtual device
->> (vDEVICE) allocation.
->> 
->> Initialize ready to true to preserve existing TSM driver behavior. A
->> follow-up CCA patch will clear ready during connect and set it after
->> evidence-accept completes the required device setup.
->
->
-> If the host is not yet happy with the device, it can simply not pass
-> it through to a VM, what is the value of doing this blocking in the
-> kernel? I'd drop this one. Thanks,
->
->
+commit 12207b3dbfdc30d4f6117b169c90eebf960192b8
+Author: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
 
+PCI/TSM: Wait for vIOMMUs to release the TSM before unregistering
 
-That is what this patch does. If IDE setup is not complete but the
-device already has tsm0 attached and connected, pci_tsm_context_get()
-returns an error from cca_vdevice_init(), preventing the device from
-being assigned to the VM.
+This commit adds a user reference count to struct tsm_dev so that
+tsm_unregister() waits for active TSM users (such as IOMMUFD vIOMMUs) to
+drain before tearing down backend resources, and coordinates PF0 removal in
+pci_tsm_destroy() with TSM unregistration via registration_lock.
 
-static int cca_vdevice_init(struct iommufd_vdevice *vdev)
-{
-.......
-	ret = pci_tsm_context_get(pdev, viommu_tsm_dev);
-	if (ret) {
-		if (ret == -EOPNOTSUPP)
-			return 0;
+> diff --git a/drivers/pci/tsm.c b/drivers/pci/tsm.c
+> index b10bf0b2d5b7b..8b3f6d1513c6c 100644
+> --- a/drivers/pci/tsm.c
+> +++ b/drivers/pci/tsm.c
+[ ... ]
+> @@ -728,52 +750,93 @@ static void __pci_tsm_destroy(struct pci_dev *pdev,=
+ struct tsm_dev *tsm_dev)
+> =20
+>  void pci_tsm_destroy(struct pci_dev *pdev)
+>  {
+> -	struct pci_tsm_pf0 *pf0 =3D NULL;
+> -	struct completion *drained;
+> -	bool interrupted =3D false;
+> -	long rc;
+> +	struct tsm_dev *tsm_dev =3D NULL;
+> +	bool registration_locked =3D false;
+> =20
+>  	down_write(&pci_tsm_rwsem);
+> -	if (pdev->tsm &&
+> -	    is_link_tsm(pdev->tsm->tsm_dev) && is_pci_tsm_pf0(pdev)) {
+> -		pf0 =3D to_pci_tsm_pf0(pdev->tsm);
+> -		drained =3D &pf0->dsm_context_drain_complete;
+> +	if (pdev->tsm && is_link_tsm(pdev->tsm->tsm_dev) &&
+> +	    is_pci_tsm_pf0(pdev)) {
+> +		struct pci_tsm_pf0 *pf0 =3D to_pci_tsm_pf0(pdev->tsm);
+> +
+>  		mutex_lock(&pf0->lock);
+>  		pf0->removing =3D true;
+> -
+>  		mutex_unlock(&pf0->lock);
+> -		/* An unused DSM may never have completed dsm_context_drain_complete. =
+*/
+> -		if (pf0->dsm_context_users)
+> -			rc =3D try_wait_for_completion(drained);
+> -		else
+> -			rc =3D 1;
+> -
+> -		/* Context release needs the read side of pci_tsm_rwsem. */
+> -		up_write(&pci_tsm_rwsem);
+> -		while (rc <=3D 0) {
+> -			if (interrupted) {
+> -				rc =3D wait_for_completion_timeout(drained, HZ * 10);
+> +
+> +		if (pf0->dsm_context_users) {
+> +			struct completion *drain_complete;
+> +			const char *users;
+> +			bool interrupted =3D false;
+> +			long rc;
+> +
+> +			tsm_dev =3D pdev->tsm->tsm_dev;
+> +			/*
+> +			 * Retain tsm_dev and its users_drain_complete while waiting
+> +			 * without the TSM registration lock.
+> +			 */
+> +			get_device(&tsm_dev->dev);
+> +			registration_locked =3D tsm_trylock_registration(tsm_dev);
+> +			if (registration_locked) {
+> +				/* The TSM registration lock prevents freeing PF0 here. */
+> +				drain_complete =3D &pf0->dsm_context_drain_complete;
+> +				users =3D "IOMMUFD device assignment contexts";
+>  			} else {
+> -				rc =3D wait_for_completion_interruptible_timeout(drained,
+> -									       HZ * 10);
+> -				if (rc < 0) {
+> -					interrupted =3D true;
+> -					pci_warn(pdev, "Task \"%s\" (%d) blocked until vdevices are release=
+d\n",
+> -						 current->comm, task_pid_nr(current));
+> +				/*
+> +				 * The DSM completion is embedded in PF0.
+> +				 * If unregister runs while pci_tsm_rwsem
+> +				 * is dropped, it may free PF0 after the
+> +				 * last context signals the completion but
+> +				 * before this waiter finishes accessing
+> +				 * it.
+> +				 *
+> +				 * Without the registration lock, wait on
+> +				 * the TSM's users_drain_complete completion
+> +				 * instead. The device reference keeps that
+> +				 * completion allocated even if unregister
+> +				 * finishes before this waiter resumes.
+> +				 */
+> +
+> +				drain_complete =3D &tsm_dev->users_drain_complete;
+> +				users =3D "virtual IOMMUs and other TSM users";
+> +			}
+> +
+> +			/* Context release needs the read side of pci_tsm_rwsem. */
+> +			up_write(&pci_tsm_rwsem);
+> +			rc =3D try_wait_for_completion(drain_complete);
+> +			while (rc <=3D 0) {
+> +				if (interrupted) {
+> +					rc =3D wait_for_completion_timeout(drain_complete, HZ * 10);
+> +				} else {
+> +					rc =3D wait_for_completion_interruptible_timeout(
+> +						drain_complete, HZ * 10);
+> +					if (rc < 0) {
+> +						interrupted =3D true;
+> +						pci_warn(pdev, "Task \"%s\" (%d) removing Device Security Manager;=
+ waiting for %s\n",
+> +							 current->comm, task_pid_nr(current),
+> +							 users);
+> +					}
+>  				}
+> +
+> +				if (!rc)
+> +					pci_warn(pdev, "Device Security Manager removal blocked; waiting fo=
+r %s\n",
+> +						 users);
+>  			}
+> -			if (!rc)
+> -				pci_warn(pdev, "TSM connection is in use, waiting for vdevices\n");
+> +
+> +			down_write(&pci_tsm_rwsem);
+>  		}
+> -		down_write(&pci_tsm_rwsem);
+>  	}
+> +
+>  	__pci_tsm_destroy(pdev, NULL);
+>  	up_write(&pci_tsm_rwsem);
+> +	if (registration_locked)
+> +		tsm_unlock_registration(tsm_dev);
+> +
+> +	if (tsm_dev)
+> +		put_device(&tsm_dev->dev);
+>  }
 
-		return ret;
-	}
-}
+[Severity: Medium]
+Does holding tsm_dev->registration_lock for read across the userspace drain
+wait in pci_tsm_destroy() block a concurrent tsm_unregister() in
+down_write(&tsm_dev->registration_lock) before it can drop its initial
+tsm_dev->users reference?
 
-int pci_tsm_context_get(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
-{
-	down_read(&pci_tsm_rwsem);
- ....
-	pf0 = to_pci_tsm_pf0(pdev->tsm);
- 	mutex_lock(&pf0->lock);
-	if (!pf0->ready) {
-		rc = -EACCES;
-		goto out_unlock_mutex;
-	}
+If tsm_unregister() is called while pci_tsm_destroy() is waiting on
+pf0->dsm_context_drain_complete, tsm_unregister() blocks in an unbounded
+TASK_UNINTERRUPTIBLE sleep on down_write(&tsm_dev->registration_lock)
+instead of reaching tsm_put_user() and the timed wait in
+tsm_wait_for_users().
 
-}
+While tsm_unregister() is queued as a writer on registration_lock,
+down_read_trylock() in tsm_trylock_registration() also fails for any second
+PF0 entering pci_tsm_destroy(), causing that second PF0 to wait on
+tsm_dev->users_drain_complete even though tsm_unregister() has not yet
+called tsm_put_user() to release the initial users reference.  Even when
+tsm_unregister() already holds the write lock, falling back to
+tsm_dev->users_drain_complete makes PF0 removal wait for all vIOMMUs on the
+TSM rather than just PF0's own dsm_context_users, which deadlocks if
+userspace closes PF0's vdevice on hot-unplug and waits for PF0 removal to
+finish before destroying the vIOMMU.
 
--aneesh
+> diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
+> index 8cb6fdaf8a846..fa717e0702088 100644
+> --- a/drivers/virt/coco/tsm-core.c
+> +++ b/drivers/virt/coco/tsm-core.c
+[ ... ]
+> @@ -137,12 +216,63 @@ struct tsm_dev *tsm_register(struct device *parent,=
+ struct pci_tsm_ops *pci_ops)
+[ ... ]
+> +int tsm_unregister(struct tsm_dev *tsm_dev)
+>  {
+> -	/* Remove the class lookup first. */
+> +	down_write(&tsm_dev->registration_lock);
+> +	if (tsm_dev->unregistering) {
+> +		up_write(&tsm_dev->registration_lock);
+> +		return -ENODEV;
+> +	}
+> +
+> +	tsm_dev->unregistering =3D true;
+> +
+>  	device_del(&tsm_dev->dev);
+> -	pci_tsm_unregister(tsm_dev);
+> +	/* No new user references can be acquired while the write lock is held.=
+ */
+> +	tsm_put_user(tsm_dev);
+> +	tsm_wait_for_users(tsm_dev);
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_TSM))
+> +		pci_tsm_unregister(tsm_dev);
+> +
+> +	up_write(&tsm_dev->registration_lock);
+>  	put_device(&tsm_dev->dev);
+> +	return 0;
+>  }
+
+[Severity: High]
+Can a second concurrent call to tsm_unregister() trigger a use-after-free on
+tsm_dev?
+
+tsm_unregister() checks tsm_dev->unregistering under
+tsm_dev->registration_lock to reject a second caller with -ENODEV, but the
+first caller drops the final registration reference with
+put_device(&tsm_dev->dev) immediately after up_write().  In SEV-TIO,
+sev_firmware_shutdown() calls sev_tsm_uninit() outside sev_cmd_mutex, and
+sev_tsm_uninit() leaves sev->tsmdev non-NULL while tsm_wait_for_users()
+sleeps waiting for userspace to close vIOMMUs:
+
+CPU0                                  CPU1
+sev_platform_shutdown()
+  sev_firmware_shutdown()
+    sev_tsm_uninit()
+      tsm_unregister(tsm_dev)
+        down_write(&registration_lock)
+        tsm_dev->unregistering =3D true
+        device_del(&tsm_dev->dev)
+        tsm_wait_for_users(tsm_dev)
+                                      sev_dev_destroy()
+                                        sev_firmware_shutdown()
+                                          sev_tsm_uninit()
+                                            tsm_unregister(tsm_dev)
+                                              down_write(&registration_lock)
+        ...
+        up_write(&registration_lock)
+        put_device(&tsm_dev->dev)
+          tsm_release()
+            kfree(tsm_dev)
+                                              if (tsm_dev->unregistering)
+                                                up_write(&registration_lock)
+                                                <-- use-after-free
+
+In addition, if tsm_unregister() returns -ENODEV to sev_tsm_uninit(),
+sev_tsm_uninit() warns and returns early without waiting for the ongoing
+unregistration, and sev_firmware_shutdown() proceeds to run
+__sev_firmware_shutdown() and kfree(sev->tio_status) while the first caller
+is still draining TSM users or running pci_tsm_unregister().
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261125081121.3794=
+81-1-aneesh.kumar@kernel.org?part=3D18
