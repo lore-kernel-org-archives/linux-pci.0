@@ -1,61 +1,32 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795625136;
-	b=jJnrc5dCTLi52+xmIQaXvYzxzSaawMuybCgeNMSzJJvFeMf2rnib1IxIkRqG0L0OWTYu
-	 IpV/r7lKv0PJ/+P7WgHFkqqXBSZHjMQs7jAHsYPXduBNtTpHVIMkCzII9AP+cOg/xudwo
-	 bSLQfe2MrJtOjghaoxMH8N+zJFEuNWp8o4cKxvDkiE9mTV6wtHTkFfaNjM4AEJw4euyY1
-	 kimAasv7ezZ8vlSHuT9iTO1vA4MzD0uIUx6NOSaDb6b21zQOEbbKAUlTW0YKewQdvgpPG
-	 XQFLj5oNx8DbsTTP0/hQjNsyFQdMo9D6iIUrGucTIpM/hfAJpeaQej5fbH0Vkj7Ihmg==
+	t=1795625398;
+	b=z2eijaeznc9z0Z89FqJJaYFgdufFQgUy6xQyNHRKmERcwsRVT3WPchkwgodeQnvrMDGQ
+	 OydpKBYxS0c0i9aM7mOYd3fOQdNtjV/0p0qqMlsgXOCxZZUN0adbB5ICwysDZCDbRSZrG
+	 L8R+lXSql9NK2GNyIsS1nwvN8Ga361CapIlVledTDNoaxnw5Iv+DLpKSYblfmlRwEJMXi
+	 NYyDlWtl2N2m5L0RD/HjdD6357vnTUp6H7pBGKrKh41MI7nvYpPikWbLIcT5R1fLfv52A
+	 k/e91M/hmN1NjqPi0vutG+N0m0VGtO/TpK4uWIQHa4pxS9YbPT1KrA9AV+NMPItvSTQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795625136;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=MYisWCg5t/umOzhA3FS/AXzeUQ7QzGatCxZGPN8ChPA=;
-	b=KU3oSyvUHVoBH7uyY5sZxQOST0+IkdDbhTX/ul17iWpHsdesGKtgzX7gmHPplofLTte5
-	 CrLOY0mgxThbcBj1HpjgaI/HAllJeca9fu2dujDbM6x0PkKT2a1D8RaM9OwmAjgtoOQEe
-	 2T4WK96SHh5uqDj2gK6UMpwPs0xf9O17udsBffIiOeYN0ioBpKWQopRkHwAbPwyuo4UBK
-	 7VtP1DLZrTRvbNVKrB9bDiIe2p6QxSGxtN8QGAAUn395vLkRE/3XftcDIEoZJ/NcXrsTd
-	 FTHYI3nHBvnWVCax4Fy6DfX7aJqMypzZ3pJ5wnZA17J+eVUjkCJCAQzNYDL6y5ounxQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795625398;
+	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
+	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key;
+	bh=UezByG7U2h9IqUKFRk/D6mBTIPmbDfL92nk/JrUNots=;
+	b=GRQt8dpsbQmHAgoiz17gD0ZTDmXh6R0F8pi2aJgFr6hypRcWEpk/3jQOSdQh2WPnAGBC
+	 B3fX7/JWYKLCSQcCckpmHvRbmXgkBRvog0MtnIdr+RXY/5Y+ALNk6GeYLlwNxcGw/axBp
+	 TVCj1cmGh+WC8XLG2SZ5Dh3bPe0iQzIVbMbDom/8SbqNcaULMFkDDvvzj4YZ9wjWo1Met
+	 uUApPUCEa/uYrZbOq+hZYc0dGeWeCqc2xGWTO6sUCePCtpldHiXBTQLoX7lDcVHRdeC+9
+	 80EzjyuHsU6XDkYJ5hscp+zw1yXuGkjO5n6+SssZ9k7LMja1baaI+SHTrG1c+awDIVA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=83.223.78.233
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B043606A323;
-	Wed, 25 Nov 2026 16:45:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B043606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 8A7B610DDF;
-	Wed, 25 Nov 2026 17:45:34 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 75763600E3B0; Wed, 25 Nov 2026 17:45:34 +0100 (CET)
-Date: Wed, 25 Nov 2026 17:45:34 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Yazen Ghannam <yazen.ghannam@amd.com>
-Cc: Tony Luck <tony.luck@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/6] PCI/DPC: Decide DPC ownership with
- host_bridge->native_dpc
-Message-ID: <awcQrljZYEuCZWGA@wunner.de>
-References: <awVV71IbFuYAJDzh@wunner.de>
- <20261125000838.GA1194450@bhelgaas>
- <awbF3MrVWm98q95O@wunner.de>
- <20261125162258.GH2156781@yaz-khff2.amd.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7560F606A32D;
+	Wed, 25 Nov 2026 16:49:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C5A31F000C0;
+	Wed, 25 Nov 2026 16:49:52 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -65,41 +36,76 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261125162258.GH2156781@yaz-khff2.amd.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v7 05/14] PCI: rzg3s-host: Initialize the IRQ domains
+ after the IRQs are masked
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Claudiu Beznea <claudiu.beznea@kernel.org>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
+ robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de, 
+ geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-renesas-soc@vger.kernel.org, 
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, stable@vger.kernel.org
+In-Reply-To: <20261019065025.2146539-6-claudiu.beznea@kernel.org>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+ <20261019065025.2146539-6-claudiu.beznea@kernel.org>
+Date: Wed, 25 Nov 2026 22:19:48 +0530
+Message-Id: <179562538809.5580.13436039230126479202.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1572;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=ZvF9ztr21DpWZoUrOG9CFbSng8ecM0Pad1c9yPt2Q7E=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBxGwZCu3h+uHdoIiCDAF21b017dHOkwcFi8ki
+ fqfxnYyYMaJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcRsAAKCRBVnxHm/pHO
+ 9UxjB/9Ny8WXQiS8iBiz2oORKmlANGxRSx2MwqCifikl3Pd1Gr/67B5vEr+dicvb6QKzfNyWPw+
+ x96y16moSYEPhWSNrwepreGGh41KmT+hxIwAwMKlLr0Zosy3hJbk1zyPqQlMogIvejSx3OdM01E
+ XtYh4jIPue8KwBTJMRj/nfwANlUKgTRcpw7sNCY0kbYqh+4iTtgfC5AYcS4R/SHBgewDHa/Stkv
+ /2o6+AhNMtOs6QsdnAp+gGJ+NCJhr4Pdt+XhZKqTMljWaT6ONCNqm6M8htRqcVr83VllXPXV7Lt
+ 2JWYZu+S93qzjAgbAoLujGU8NPaYXd4RvSTqBWZj5AQYlnyN
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On Wed, Nov 25, 2026 at 11:22:58AM -0500, Yazen Ghannam wrote:
-> On Wed, Nov 25, 2026 at 12:26:20PM +0100, Lukas Wunner wrote:
-> > Hm, I thought about this some more and realized that at least on x86,
-> > the kernel may receive PCI System Errors through pci_serr_error() in
-> > arch/86/kernel/nmi.c.
-> > 
+On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
+> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 > 
-> Do modern systems still do this?
-
-The reports I found are for systems sold in the early 2010s, e.g.:
-
-HP Proliant ML330 G6 (2010)
-HP Proliant DL380 G6 (2010)
-Intel Server Board S2600CP (2012)
-
-However the reports are as recent as 2024 because people continue using
-the hardware despite its age.
-
-> I don't think the reason and CPU give any explicit indicator for the
-> error-reporting device.
+> The IRQ domain initialization requests the interrupts and installs the
+> chained handlers before rzg3s_pcie_irq_init() masks the controller
+> interrupt sources. An interrupt left enabled (e.g. by the bootloader,
+> or latched from a previous controller state) could therefore fire
+> before the controller initialization is complete and be handled on
+> half-initialized state.
 > 
-> I expect there would need to be a platform-specific handler. Or do you
-> think a brute force search across all PCI devices would be okay?
+> Move the IRQ domain initialization after rzg3s_pcie_irq_init(), so that
+> all the interrupt sources are masked by the time the handlers are
+> installed.
+> 
+> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> ---
+> 
+> Changes in v7:
+> - none, this patch is new
+> 
+>  drivers/pci/controller/pcie-rzg3s-host.c | 31 ++++++++++++------------
+>  1 file changed, 15 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+> index cc985020d962..94345d6f0bee 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> @@ -1418,7 +1418,10 @@ static int rzg3s_pcie_host_init_port(struct rzg3s_pcie_host *host)
+>  	return ret;
+>  }
+>  
+> -static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+> +static int
+> +rzg3s_pcie_host_init(struct rzg3s_pcie_host *host,
 
-The PCI topology of these systems seems to be fairly small, so a
-brute force search would seem okay.
+This split seems unnecessary.
 
-However my point is that there are platforms which do signal System
-Errors in a way that may benefit from the statistics and ratelimiting
-knobs exposed for AER.
+- Mani
 
-Thanks,
 
-Lukas
