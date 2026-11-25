@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795628694;
-	b=dY5pETnKJ3bsdxUfe0QjZe9ZFB2U/po5G6oT9xEPqSjTAct9Sk3zAYt/RIDhyUchCi5u
-	 WmtsYwLqY0TaEeKnoP7I1oB8310yqVn55o5Pz1qdCl48xbEMNApbTgW/q33uu2Hr+gMFU
-	 gr4ui12g9FnQ0qHfZqC5Ud+MXgUAsgClih5YTo7OaWLxH4LQz6Z0Z7nm5bkVeaUKqU5Nd
-	 +7VKSOVkllUup74LKs5EnrFLL+gpriW1Kamgwyc1SH/k4dufQzmgtOJucqQpeQ2bCqDqN
-	 sAtaqAjPGPu0xwQW/qMlUO0GipuC61rVdCg+oMwXudat2PTIY5XWlGqzxNJBxWvIpKQ==
+	t=1795628902;
+	b=FOP6JQUu64kngxpWHrYpVWCpDkXMmv5C41sVzIMGuHCKiaNmMfusiWQBxlFRRlncEvSO
+	 n2reTZojEU95cN88upS+VSL99n+RrVaq4f9F9TsIUzeodWfhxUqmq+3XZKYlDjIsP7KQD
+	 pcqiaqeiE19W+eYRLGlNEsAbyC1i3HBeE85kkohQVvYMXPC9UgLDTFwPcYygCYUw9MyKE
+	 qKQqU9qY0YvYyCVRYvI08i8ApM+JOhmSdBZ9KMa+8slFx8eFIMFzVU60prGuR4plmLquy
+	 1Huz/I+jS44neoKSTAFnePi5VTVHZ8RAFs6mZnyiQlUw2qMkKJ2OMFe2gi5vGYPmtNA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795628694;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795628902;
 	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
 	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key;
-	bh=Wj3JhPSHxDH0zNRtHfCEoFUGnDIh9JjFtKfk59svFz0=;
-	b=cwSkfPCi2dd8wvVLSOYVj4hzKBU442lMhNAEplAu9ge3do+gHXUkjA4/876FjpMnYxeq
-	 JS58uejzY0q/MW4mvJKFTS1Jfln2trnscZziGw8qp7TzGemI9rAILe01mJ/IaB5kyAQdD
-	 n8mtqQraBJIeGOYLIIjLgXYzR9vz1AIgUps82Hh1eYPVloM5rt2zbmRjZF26yAXHt/gdr
-	 riyei2ykWFJOm4CC6XZZJ5b7zd4zaUNR5Oqio+F2DTI6C/cwyEsiSwcLsa8LR+yejW54v
-	 ii0ktDTRSG62amB78lBfzdZtt4aFhYykUdUbCBNCWah2nGlQxyA6KXBkxmc+rbYib8Q==
+	bh=0q0MLo3BGWILZ9gNyuQzc7su8itTZ84AHzV6dj/fCyc=;
+	b=v9Nwz1uJxrr4ADjESV5hr8nM9NPHFpIUxTrUgz/J1ZnK0fx9mFYl7i5OC0cTkx+HQaOO
+	 u967Z/HdZO7rgID9IBiBTW8YHh8rF835he/WMTFcHs7I49RIn9e4WJOeuIc/vEjpqw0uW
+	 +zZYsW9kh9hwtfY9ldsJrDqK6KFPykhg78J5p1EEPSzYqG5oMfsu0QFbBSp+nEf0e5ppp
+	 hQ/nu/YnM+DluBvgMfA4+zdHM68mvqCDxsrnkLhnF7HZbXk0Kwk3GzXW57Y6fqqslxKu1
+	 WV3oQ0RYYtl2zgVdOcUsA+kf85m8kG6w2poG1qLb8vdFeW1z9kOe1B3VQJG+EVZiL6Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE78606A336;
-	Wed, 25 Nov 2026 17:44:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EA051F000C0;
-	Wed, 25 Nov 2026 17:44:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55EF2606A321;
+	Wed, 25 Nov 2026 17:48:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B6CA1F000D1;
+	Wed, 25 Nov 2026 17:48:15 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -37,67 +37,55 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 00/14] PCI: rzg3s-host: Add PCIe hotplug support
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] PCI: xilinx-nwl: Use devm_clk_get_enabled() in
+ nwl_pcie_probe()
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Claudiu Beznea <claudiu.beznea@kernel.org>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
- robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de, 
- geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev, 
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-renesas-soc@vger.kernel.org, 
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-In-Reply-To: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
-References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
-Date: Wed, 25 Nov 2026 23:14:44 +0530
-Message-Id: <179562868433.5580.1979396952125967073.b4-reply@b4>
+To: Markus Elfring <Markus.Elfring@web.de>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Hyun Kwon <hyun.kwon@xilinx.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Michal Simek <michal.simek@amd.com>, Rob Herring <robh@kernel.org>, 
+ Sean Anderson <sean.anderson@linux.dev>, 
+ LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, 
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ Christophe Jaillet <christophe.jaillet@wanadoo.fr>, 
+ Florian Fainelli <f.fainelli@gmail.com>, Frank Li <Frank.Li@kernel.org>
+In-Reply-To: <f691bbaa-ddb5-45bf-8f85-fcf354a6af03@web.de>
+References: <f691bbaa-ddb5-45bf-8f85-fcf354a6af03@web.de>
+Date: Wed, 25 Nov 2026 23:18:10 +0530
+Message-Id: <179562889095.5580.5805178037943195830.b4-reply@b4>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1435;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=613;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=2abeH/0GgzPtZMZdPZDPHJoIba8EDvwoGBBRc3lxdT0=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBx6QHgA2huRvdQOlBPRm4CfymKGwbF7HxpCCK
- dNubwKVmqWJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcekAAKCRBVnxHm/pHO
- 9QolB/9RdiERyI1uZ2d8Gq9r53nRgcXEIko6XOHpz2ofOGnzWlwXldPn1aaJuq/cCHXozZZ01f8
- Uwq3GeziZHu1IsA36XXkJPCd9Yg9sSsqOJ/7psOzGgEocI85bONLoPj1knJs+rfIxHxjnYiKr3r
- r5EUloqhQxHxuPl7XuyNrS63KvnZ9vAFSz+3lUvgt4+iAsx8lvHJG34xUj5P20v9NuEP3+XzeaK
- k73QrEQzpBWIo19R9+l+qOza7wGHcnszDZXjFxp5xfnwJLvr5EOq9+h8SOWktmdz6J0nE9FQa1o
- ESO0tss+p7cOC5g5cckWiYa6V2v3qaiIUttHZPrdtIE6NUvP
+ bh=oVmsAKPla0SSCmhlMgEfiLun7tvxgbJftIFjZnWKpuc=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBx9frFFBxMMzmhhHbjIT7NtxqGHjr+aASXO3R
+ AwMZBOcjTmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcfXwAKCRBVnxHm/pHO
+ 9dFJB/9chrc9j0yGBvYPUiJSXKOl8+2fWGrELXUciCWoJN7XzWm2ov7aOCjqzGof6ExhKjFDXjd
+ RJIe2TsYOE3VBSxRi4fg7kveo3hepmJ8N5PldDkiPJJ3rhYzWw5wX9afZkrGkoK45Ro35TwAef2
+ DXJxBSpGL3wMdt+wR/wTA9V8c/yBCU4AawHFprtwcrZIoGv19uV/KgsbGhAPbJkGnauqp19JD9X
+ UfKMryv65/6uDeHRiExPLAEI4Ow33Xuovl2RykpvSrJ5LaVzEWpugw15cx9Jfu/V4b3L9QcQtTI
+ WNYzYlR4miKw8U8qBnsEW+QGFFeZqPdGC4nkORJH7zB281z3
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
-> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+On 2026-11-22 20:52 +0100, Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sun, 22 Nov 2026 20:35:35 +0100
 > 
-> Hi,
+> * Reuse existing functionality from devm_clk_get_enabled() instead of
+>   keeping duplicate source code.
 > 
-> Series adds hotplug support for the rzg3s-host driver. This is a
-> continuation of the series John posted initially at [1]. Along with it,
-> prerequisites fixes and cleanup patches were added.
+> * Omit a clk_disable_unprepare() call on an error handling path
+>   and in the implementation of the function “nwl_pcie_remove”.
 > 
-> Series was tested on RZ/G3S and RZ/G3E boards by generating consecutive
-> link down/up events. The RZ/G3S has an I2C device which, depending on
-> the way it is programmed, it controls the state of the PCIe link. The
-> board has 3 PCIe interface: PCIE_SLOT, M.2 Key E, M.2 Key B. The
-> following script was executed for ~9 hours:
-> 
-> #!/bin/sh
-> 
-> echo performance > /sys/module/pcie_aspm/parameters/policy
-> 
-> while :; do
->         i2cset -y 1 0x18 0xf4 0x8 # Link down
->         i2cset -y 1 0x18 0xf4 0xc # Link up: PCIE_SLOT (NVMe Micron)
->         i2cset -y 1 0x18 0xf4 0x8 # Link down
->         i2cset -y 1 0x18 0xf4 0xd # Link up: M.2 Key B (NVMe Transcend)
->         i2cset -y 1 0x18 0xf4 0x8 # Link down
->         i2cset -y 1 0x18 0xf4 0xb # Link up: M.2 Key E (WiFi AX200)
-> done
+> * Delete the label “err_clk”.
 > 
 
-Given that this series is already 14 patches, you should really consider
-splitting it into atleast two. Patches 1-12 are mere code cleanups/refactors, so
-they can get merged independently and you can post the follow-up series after
-incorporating comments for patches 13 and 14.
+THis isn't how the commit message should be written. It should be contiguous,
+not bullet points and just say what the patches does and why it is needed.
 
 - Mani
 
