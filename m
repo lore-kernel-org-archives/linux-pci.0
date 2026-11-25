@@ -1,71 +1,114 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795617835;
-	b=iUE9sZwZujJP/wLrAZuyHNMhTSoGBlIyKUD57GNOs5lU58N84WmT6GQFLt94rvjAvCrB
-	 ou4h1d9IFrRhFXw3yOS1fuRaOqhfV2yY7ph9Pkxq3F/tNxdnlOfeLR4I3FtHHUR0iU1eB
-	 D9LtCZ4o1f1Z79Yo4VtcPG/oFDH5tonzV7vSfIiCS/4ac5lbAdumNRFbO8XLIk2ceJdmP
-	 yLwcj353Panulh3AVZUXciPV27EBj6TsialZ/DHVqU/wtSlL8xFe6eGVQ1bhYeqPiA4rx
-	 zx0EM1kfEf/s9Kziegb/s/6SRE9KDWgByxpOiQbRNHd2b82ouoLiYtiaIBEDH1WnWkw==
+	t=1795617876;
+	b=wyQ/EZx8x7332hw9s0Icus4J7wUdsbNIVJY8MCGrIQAsh7Hc8GmFODvtQDaRoqtUgL4M
+	 QdiHXwNiHzpgnU3o3g4S6Q960YsIC0Bm2S17ZhDEm0DS6nhgcUK1hE1WClozi53qh6f/3
+	 12ItCyx+LLM0xZEi/uGvQwB5g8o5aaiCIQrH8y9b8Ljrb31kNUMqr599Q2NnhalqUblat
+	 DsEaRHEFiwfz2UWZzVID7c9hh9Z4r8mnngfpplpYgANuWjx5dYrS4MIXIFUjGV60TMTnW
+	 PhbDIXmMphC36zuAfZoSMJqUawkiBCI2KqF1oB0Qq9jbjntvItOBzkxjiDL+uoB+pLg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795617835;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:In-Reply-To:References:
-	 Date:Message-ID:User-Agent:MIME-Version:Content-Type;
-	bh=DSDBbrxDF7QE7mJ7cGh5psk8NDNsiMzdc0pE9t4TEt8=;
-	b=OQhaYXsn9hxEJUWc0bWcvtHM9hvQLmvtT90tnVIVVKsIvOPqhy4c55HrIsUGndsucUau
-	 hnjjA9/zGcfyqOrFJI/2cqglg1h4ETIoCqJHG8Vg42a3VopZ+WPiOjsdBvJKDKTKBUK7a
-	 HLnRqxCbfz8WpkzRlh9NbylGQ4FuNjRihumGX5BPrJ/AthTaxxjK5zlrJZKsGXToJts7Y
-	 I7QKxub1PUPwU3SfF58T/k4HEugKhKGs6oxLTexqsNc3W5qksRcY9T7RvTKbNOxliFqKw
-	 8Zttpr4PEqWtAvLHVH05MC99TgW8hQEeAcqO1j+Rdi7jNmSo1eGR72E4eE/VdTWSugA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795617876;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=8ll/7pjiu26j2DN45BTUViH87j7UCm3E+vVLd5MHWxI=;
+	b=OVMrlPsEmZSGKOBmfhF8hMxyAGoKwgwWV4knJEHb63D1ZUmz3BgGxMdhpHp5u8xqDMwD
+	 IXJbrPEOEMiiOmz4ZkpbSqeV8cjlTr3QyKnbK0R/aRmlnnn4v+1pPA49n1Fle3ir9jniH
+	 gOCMJB+S6OcLy7exsBJi5N+SF4q9g2FxqX1GHspXoC0ZiQLFY2xhu9qcbUuxdBJE3p2Rd
+	 2M7CxGTqnSRy8g9Ht1Lf5tgrm8c/V64P8XGtYKxAC/hdIsMAwC3FgNxqm9LUkQDC2kce3
+	 MQyTnDQ8fW/Og9/8uKI6mC8lrxgIY7kKLda+fjR6U1crv00L0vu3zgesFZSgnlpgLdw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IaxxUP7L;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JJz8OA1E;
+	arc=none smtp.remote-ip=209.85.128.41
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C32B606A326;
-	Wed, 25 Nov 2026 14:43:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C31EC606A326
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 14:44:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C31EC606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IaxxUP7L
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F3521F000C6;
-	Wed, 25 Nov 2026 14:43:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795617835;
-	bh=DSDBbrxDF7QE7mJ7cGh5psk8NDNsiMzdc0pE9t4TEt8=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=IaxxUP7LRnqywT22he7m+Fp7ezJgAfkpHSw5REph0tRYPRC/9tQDBnxNGaqFCUe0P
-	 HC4OCPR1FvefXZR0jreOarx1/ItxF0Kd5XwRm18+njWXI6kfrP7K+QHWF1l9XvxXHk
-	 Wb3T7KBp5sU8Uq3JjMSsDtDz2cQ1vDbxW6cRqzm0jkDQjr5S84bbH7Zbc/9r5XtFga
-	 tXPaD+SS8GZvYPYpD187DBOSIhZ28zt4gF80M0lT+Uc0vOeuoEM5ntTj2myprO+Uo6
-	 0KAYN/vccLRY3U4aBHQmotXHdObAadnDVOITnax/jMq8UASOsc7R09dQV9GiPujVaw
-	 zu/OOYjuPVOYA==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: "David Matlack" <dmatlack@google.com>
-Cc: "Pratyush Yadav" <pratyush@kernel.org>,  "Tarun Sahu"
- <tarunsahu@google.com>,  "Pasha Tatashin" <pasha.tatashin@soleen.com>,
-  "Mike Rapoport" <rppt@kernel.org>,  <robin.murphy@arm.com>,
-  <maz@kernel.org>,  <will@kernel.org>,  "Alexander Graf"
- <graf@amazon.com>,  <seanjc@google.com>,  <jgg@nvidia.com>,
-  <loganodell@google.com>,  <arnd@arndb.de>,  <dwmw2@infradead.org>,
-  <baolu.lu@linux.intel.com>,  "Bjorn Helgaas" <bhelgaas@google.com>,
-  <oupton@kernel.org>,  <alex@shazbot.org>,  <gle.com@google.com>,
-  <pbonzini@redhat.com>,  "Andrew Morton" <akpm@linux-foundation.org>,
-  <kevin.tian@intel.com>,  <joro@8bytes.org>,  <kvmarm@lists.linux.dev>,
-  <linux-pci@vger.kernel.org>,  <kexec@lists.infradead.org>,
-  <kvm@vger.kernel.org>,  <iommu@lists.linux.dev>,
-  <linux-arm-kernel@lists.infradead.org>,  <skhawaja@google.com>,
-  <sagis@google.com>,  <linux-arch@vger.kernel.org>,  <linux-mm@kvack.org>,
-  <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 03/19] kho, memfd_luo: Reference struct kho_vmalloc
- via serialized pointer
-In-Reply-To: <DN3VG4JCILOO.YN40XHHSWRPH@google.com> (David Matlack's message
-	of "Tue, 24 Nov 2026 16:39:52 -0800")
-References: <20261110050202.529473-1-tarunsahu@google.com>
-	<20261110050202.529473-4-tarunsahu@google.com>
-	<2vxz4idb1i2w.fsf@kernel.org> <DN3VG4JCILOO.YN40XHHSWRPH@google.com>
-Date: Wed, 25 Nov 2026 14:43:47 +0000
-Message-ID: <2vxzld6hx97g.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JJz8OA1E
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4bb72b6e1b2so4242335e9.2
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 06:44:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795617874; x=1796222674; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=8ll/7pjiu26j2DN45BTUViH87j7UCm3E+vVLd5MHWxI=;
+        b=JJz8OA1EX5JjC4bTAmY1z4tgzBcYDWsAGttWpwvLVZTnYuyKjKWKXVZLQAuKKWWOUD
+         OsbiqnlgZVBoHqQcNbUmmnGGiM9aN8x/5lmqNA6CoLaHaAgqI3Nuxn6m7RK4mm7NRHTs
+         qAn0Iyzdz6gAJJhr6ankYT25Fuvx45uCSCJraPFjmfOefb1wmjIcysiu2/kogHxTZQEP
+         u3qdVCypnFA7+KFuApaPnk1yIGEvzxk+ETJZJbSkhrf4h1Chzr97zkSKVFU5dru+TbCb
+         krkngx1mIiIKsDCLfzU6AxzOVLcV7XoP1nm1CkjXCr1MeYobFyXumDcouQBatquU6sbC
+         n9oA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795617874; x=1796222674;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=8ll/7pjiu26j2DN45BTUViH87j7UCm3E+vVLd5MHWxI=;
+        b=vGJhGx5jz9PlWU9/pdc4AMcDC5BkCs/y6nG+EScKG4bB6EVCA6DkDxOX7nPgNhmA9a
+         wHsb5UU+957JRLm1AZ2grVAfWOQO1nea/r9lJdMj5nLS5TFFYhJ3YBmDtZZqbjf/jCwS
+         fI90+1YciK4WQvsC11VAgrLFNmNlA2tukj0/hPJBAlVYADIZkuJdfVhjPWSWaURnNzcA
+         1NtF7oaGjiwmhGkzMKu8DvKKl6qpYH4K1OVW5/f/bDCsGhrudDTbdOusnY2Pzs3ogppy
+         8eVoQV1anWyXosqpzf+3x4mpM6eBdOnSe+SCY1HqODM7B9lzy86TfmipqEFO6zvITxS8
+         MOCA==
+X-Forwarded-Encrypted: i=1; AL+hErFbbPKZL6dM9RTMETP6ZnhzvXlDoVP7eQN2G1zaMGEIfvx0gaWgPQimuyoooJ7Mujxh24n7otHfYxA=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/0wy9ZabS2DMiE+ZhrzAcZcljKuUh1Hh0plWjKfM8VbBbvG5Rz
+	sRfLOYzfE7Wncaw8Sq7RmjXXhSjzoMeQUKIyAygC9XTGDPsFvtZ+QtyS
+X-Gm-Gg: AZFdTZem8rddVSZsLwuVPvI+xDloWBymPcHvAIdkY90QrXnuesS2pSv9iCISd/0ALr5
+	ShxMG8gmssKTSGDuYtVa8jJ7Cog9J1xDB4xC+McniNQwuk6j/og03rC1695Z5lHotgPMCzKGF7U
+	aTX96J59A6HqRDwSO8k/ACytIOMgkSeTFmg00W7bMKv/DXIbm5NT6zpG8eo+7IBQdPD8ZkrDog/
+	daGxREDAPsfCYtsnKXD4jdNx53lk7Vhsdx9WDZrb+pKWqDJb6X55w2CalwxZZ4+Y1EXTKeLcN4N
+	vvpV9gmtp7cpQL11nnpJOYFHg6NQFdUe0MtgMn6XUYKRgIuXR4OT3cq/yqkFmrCUWi75VO0baN3
+	qzq+lwTnebLi3mfKwVx6I2zwnBCbmIY962MipA/pgQswIWMEUk2uBT8MQSdHaQGGexMRMEPsRZD
+	AXdrCDICa+CXmXN+HAVwgcdAgQjjQvKOQJXJW6S6ItJEBMW9xJXCbkp5CEQXJc0xBFzL04BkXH3
+	lCNurmD3nxjLEdpMnB8Qkm/HlZXoujzs5kudj940gYrC5t3WQbO9D0nxLvGXZ7zcv/s7lh57waE
+	gM4pkGqXRqiqBKtWoDPl6w==
+X-Received: by 2002:a05:600c:1088:b0:4a2:417:7db5 with SMTP id 5b1f17b1804b1-4bb887f43cdmr285531595e9.2.1795617873970;
+        Wed, 25 Nov 2026 06:44:33 -0800 (PST)
+Received: from skbuf ([2a02:2f04:d401:2601:d3cc:6bc:a861:f9da])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb906e4ce6sm303747515e9.4.2026.11.25.06.44.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2026 06:44:32 -0800 (PST)
+Date: Wed, 25 Nov 2026 16:44:28 +0200
+From: Vladimir Oltean <olteanv@gmail.com>
+To: jan.petrous@oss.nxp.com
+Cc: Vincent Guittot <vincent.guittot@linaro.org>, 
+	Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>, Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>, 
+	NXP S32 Linux Team <s32@nxp.com>, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@kernel.org>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bogdan Hamciuc <bogdan.hamciuc@nxp.com>, 
+	Ionut Vicovan <ionut.vicovan@nxp.com>, Andrew Lunn <andrew@lunn.ch>, 
+	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, Maxime Chevallier <maxime.chevallier@bootlin.com>, 
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>, 
+	Chester Lin <chester62515@gmail.com>, Matthias Brugger <mbrugger@suse.com>, 
+	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, 
+	Pengutronix Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, 
+	Richard Cochran <richardcochran@gmail.com>, linux-arm-kernel@lists.infradead.org, 
+	linux-phy@lists.infradead.org, netdev@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, imx@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, Alexandru-Catalin Ionita <alexandru-catalin.ionita@nxp.com>, 
+	Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>, Bogdan Roman <bogdan-gabriel.roman@nxp.com>
+Subject: Re: [PATCH RFC v4 09/15] phy: freescale: s32g: Add SerDes subsystem
+ PHY
+Message-ID: <awbmvSYZ9RJ6agIu@skbuf>
+References: <20261125-s32g_serdes-v4-0-3bfe0589be8d@oss.nxp.com>
+ <20261125-s32g_serdes-v4-9-3bfe0589be8d@oss.nxp.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,80 +118,70 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261125-s32g_serdes-v4-9-3bfe0589be8d@oss.nxp.com>
 
-On Tue, Nov 24 2026, David Matlack wrote:
+Hi Jan,
 
-> On Fri Nov 20, 2026 at 10:19 AM PST, Pratyush Yadav wrote:
-> [...]
->
->>> +static size_t memfd_luo_ser_size(void)
->>> +{
->>> +	return sizeof(struct memfd_luo_ser) + sizeof(struct kho_vmalloc);
->>> +}
->>> +
->>> +static struct memfd_luo_ser *memfd_luo_ser_init(void *mem)
->>> +{
->>> +	struct kho_vmalloc *kho_vmalloc = mem + sizeof(struct memfd_luo_ser);
->>> +	struct memfd_luo_ser *ser = mem;
->>> +
->>> +	KHOSER_STORE_PTR(ser->folios, kho_vmalloc);
->>> +	return ser;
->>> +}
->>> +
->>
->> Hmm, I am not a huge fan of this. This makes doing such allocations
->> quite annoying, and I reckon we will be seeing a fair bit of them in
->> many places.
->>
->> The key observation here is that most file handlers need to allocate a
->> bunch of preserved memory, but they usually can free it all at once. So
->> we can get away with a very simple allocator that hands out memory
->> linearly.
->>
->> I have sketched out some code for this, take a look at the patch below.
->> Note that it is only compile tested.
->>
->> Perhaps give it a try and see if it does the job better.
->
-> I agree the manual packing in memfd_luo_ser_init() isn't great, but I'm
-> not sure we need an arena. This seems like something KHO slab support
-> will solve properly, and since kho_alloc_preserve() already takes a
-> size, KHO slab can be dropped in underneath it later without changing
-> any callers.
+On Wed, Nov 25, 2026 at 10:33:51AM +0100, Jan Petrous via B4 Relay wrote:
+> From: Vincent Guittot <vincent.guittot@linaro.org>
+> 
+> Each S32G SerDes subsystem is made of one PCIe controller, two XPCS and
+> a shared 2-lane combo PHY. The lanes carry PCIe and/or SGMII.
+> 
+> Add the SerDes subsystem driver: the PCIe PHY, the combo PHY bring-up
+> and the setup of the XPCS instances. A MAC gets its phylink PCS through
+> s32g_serdes_pcs_create(), which also creates a device link, so that the
+> MAC is unbound and suspended before the SerDes.
+> 
+> SS_RW_REG_0[SUBSYS_MODE] is derived at probe from the consumers' phys
+> references to the SerDes node, <lane type instance max-speed>: a PCIe
+> root port names its lanes, a MAC names its lane, the XPCS instance it
+> is wired to and the highest speed the lane is wired for, 1000 in this
+> series. The driver walks the tree for them, as the mux is programmed before
+> the reset is released, long before the consumers probe. Each supported
+> mode has a unique lane mux; a lane nobody references takes the function
+> it has in the first matching mode. The reference clock rate is
+> validated against the derived mode.
+> 
+> The SerDes provides one PHY for the PCIe link, whatever its width, and
+> one PHY per XPCS instance in use. The XPCS lane PHY has no operations:
+> the lane is brought up with the SerDes, and the MAC drives it through
+> the PCS, which it gets from s32g_serdes_pcs_create() with its own node.
+> 
+> After the subsystem reset is released, the PHY needs up to 5.2 ms to
+> become operational (MPLL_STATE). Poll it before any further PHY or XPCS
+> PMA access, in every mode.
+> 
+> Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
+> Co-developed-by: Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>
+> Signed-off-by: Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>
+> Co-developed-by: Alexandru-Catalin Ionita <alexandru-catalin.ionita@nxp.com>
+> Signed-off-by: Alexandru-Catalin Ionita <alexandru-catalin.ionita@nxp.com>
+> Co-developed-by: Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>
+> Signed-off-by: Ghennadi Procopciuc <ghennadi.procopciuc@nxp.com>
+> Co-developed-by: Ionut Vicovan <Ionut.Vicovan@nxp.com>
+> Signed-off-by: Ionut Vicovan <Ionut.Vicovan@nxp.com>
+> Co-developed-by: Bogdan Roman <bogdan-gabriel.roman@nxp.com>
+> Signed-off-by: Bogdan Roman <bogdan-gabriel.roman@nxp.com>
+> Co-developed-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
+> Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
+> ---
 
-While it would be nice to have, I peeked at what we need for slab
-support and it sounds overkill. For one, a slab cache is for fixed size
-objects. So you'd need a bucket of slabs for different sizes, similar to
-what kmalloc() does. You probably don't want to preserve objects spread
-around in kmalloc's buckets, so you would need a set of buckets
-dedicated for LUO/KHO.
+I am trying to spend some time to understand this design. I have a few
+basic questions:
 
-For another, slab cache is great when you are allocating and freeing a
-bunch of objects of varying sizes. But that isn't really the workload
-preservation has. Each preservation hook needs to allocate a handful of
-objects, and then hold them until unpreserve. This arena style allocator
-does the job pretty well.
+- Simply explained, what do you gain by integrating with the Generic PHY framework?
+  The XPCS has a dummy phy_ops. Clearly this means phy_init(), phy_power_on(),
+  phy_set_mode_ext() etc will do nothing for it. Who and why is better
+  off if it exists?
 
-And finally, the object layout within a page/slab of the cache can
-change based on configs or kernel versions. See SLAB_RED_ZONE or KASAN
-for example. We would need to standardize the layout without
-compromising the non-KHO slab users. We can probably solve these
-problems, but I don't expect it to be easy.
+- If you have 2 physical lanes, why do you have 3 Generic PHY objects?
+  Why not a Generic PHY object per lane?
 
-So I wouldn't want to support slab until we have file handlers that
-churn through a lot of preserved objects.
-
->
-> Until then, maybe we should just allocate struct kho_vmalloc separately
-> with kho_alloc_preserve() and accept wasting a folio per object. For
-> memfd that's one extra page per preserved file.
-
-Yeah, that is fine too I suppose, at least until we start to run into
-problems with the memory overhead. I think the arena style allocator is
-fairly straightforward and makes the memory savings easy so to me it
-sounds promising.
-
--- 
-Regards,
-Pratyush Yadav
+- Does the lane mux need to be programmed by the kernel driver? Does it
+  ever need to change at runtime? How do previous boot layers use the
+  SerDes? If you leave the lane mux set by a previous boot layer, and
+  make the device tree describe that configuration as read-only, what
+  doesn't work for your use cases?
