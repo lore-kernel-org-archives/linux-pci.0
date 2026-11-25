@@ -1,76 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795588337;
-	b=mMFrV9wZChqX9jd6ScqI31mTmgoZs6fCzKTU5I5/p7sZ6DE98ITnCIPwEGRuuztK2pVA
-	 M/pbZ7WOBGHKm4Q4K+nx4XjCBUOKdpnxvvq7uk903hMWTfxSPLICUkvLvR7DCXQTaaCSw
-	 dNAADaym9RNlk1D1wtTRK7AMDDtD3EWmJD8wwYu9RO8ob6eRmE39Pjl9mYRt2mxIf6VGR
-	 2jk2hlBwplb0uw6Co7tZBGRdO27Jo+Sjvhyabll8oQWZB7n9wbmvc8zeiIU/bhcQYWkzB
-	 2Z+E3KjEzJqX2v72tQqgKk/sgHjLVgdpudcE7Al45M4xDI8X8/WNZvlGhj/aKutQePQ==
+	t=1795589159;
+	b=Fpy2K9onSaegpo7lNqu0nIaTU3MkkWk9tc2rvsJNHoXngRHV/sTmBOjhAo6UAuY/Rcr9
+	 JUi8C5OaVA4iXgEkmwqdN0yGv+M3YS0PMmJjST9Yxr4wPuqvhMSeEJP2a9+ZdHJpVm/lc
+	 9IJ6cMxZ31JFz7GldoOapO5A3rO3ku3n3awg7j845B+85J8i25MJ6Cisf15yYbMvkPYDX
+	 CjHpMiXsfbBzB+xfP/LYF+CCzKFgmrWloF6YU17V34WVQhjbBGSHxa1/gJe6z5XbXqeuB
+	 pUDh0oNzi1lZ3Ep8uGhcutXhWLvd5hg3p16Xk2VnnzgqiFYiNBnyLkNQxmgUyEOvDrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795588337;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=KHXzp+84iLQUjnjlG0As4PHmQ5NglIl63AJkWeb4QbE=;
-	b=EYkt09dhh9QtaPoABVVXvnEgGwgFlS//DtgMUqlF1CotZVrkC9h3nD+n/AQsLgvKFMX3
-	 2ouD+1CYETfP70Ndmr0Zbgl6gqraPfDRsJwrUzkWKMn1vje5pgspg5YeUUARA0GUD7HWQ
-	 mGzNd2R70icfjBXGDmE5whJLxb6bTkE/Yku4uwLJnEoNWfUDPvl8Cw0TwPvV5jJjZ65BK
-	 qnecYYGXczv8RSEF6TOJj9X5fJxDbuK+m6b1z6J7NzFrIqHi38tGubH9YYcymD0PqkBSE
-	 oZBGmldSV83IzqXFu7jWbLzgwnBrxmY0MbqspD1ifdnmcFZp+UALz04t7C2zgCwyu9g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795589159;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=VkkGbwq08SluLWGI4C9q+lJTIPO6YiHo3aEbu8U1fdk=;
+	b=LvxTyFQyUetZ+ijPFV5sDvzjcezOGOSwC3PbA9BIxnxYiLDS2Nf3lWil70JlTlmwxtPW
+	 AKz1t+Or3pt7dO2auvbf0Y3/krCCRQKOhhNACGYQZHIesQ46bAE1myRwG1SGocWyRDp8t
+	 7x4Q3/I3h8wIANnSJKuFrHKvretTw4sHDORd7Ahfik3MCcHOsuqoJOIvLTpZZZ2dT4iN3
+	 UqJ0o5nbQ3QSmYVE9WQU9WfImj6eXQmKePiwe9AjQKt2uUqIPkEBOHAUsGHK7do/kL8Do
+	 mv1zriEAamdKaXm8riXGSMdQmW1ZscRdRnl3dV0pURrBw7dp+W9qtNY2EIV0T2mUGNw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=WqNWpXUL;
-	arc=none smtp.remote-ip=209.85.214.199
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="OH7/5FHv";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 341BA606A337
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 06:32:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 341BA606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D89E6606A323
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 06:45:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=WqNWpXUL
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2f052777c7cso53678735ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 22:32:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795588337; x=1796193137; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=KHXzp+84iLQUjnjlG0As4PHmQ5NglIl63AJkWeb4QbE=;
-        b=WqNWpXULC+EIH0Lll03C1uAj8+QrlYSD6zZ6l5JmPh/M1qVqVhFjKf1DAP/h0XH+KH
-         cMte7N7XbzS/N9OvTXLLoC+sGA5G2xbShvF+4cJj6tEInwRWNttMVGBqz2glvCS+dMfJ
-         d0q+4YWI79W4lv5g+HPVVgbHZzwo33ECEMwke6VxTFjmA2MukGUWh3u/jPuwibwGjKyU
-         hwX9fyZBFP1YFHmsNAJA5jd9as88utou1zUXya0zQhjhZnPciF0hhW5RWJOUMIwnuLBq
-         ppPhhUM5AMRpFaGN67H1TejRcGStauT42VkuhlENdmrQrqD19o0xkHW1r20Awb6H/Btr
-         q6Ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795588337; x=1796193137;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KHXzp+84iLQUjnjlG0As4PHmQ5NglIl63AJkWeb4QbE=;
-        b=jsBHtxXobjPN3T8F41nho5qUteAL3Nx9er3f3Bn3Ko2sqV9i/mBS7KB/kDR9ITnHb0
-         eDEfdIjk3U5sqL108iLmDAj9GlaV25hz1GxOSx9XdxVvPbF+MzVR3SW5cDZmr7oDSw1P
-         6/KtIRc5fh8lOcwlWqEoOZTNmLYnX3Wv4JCr4aJXuQUR4NQNWRLyOF2IsXDRJZYDvSZG
-         v4zjgJKLAJJ9HbwN1li8iOX3A5KroGuxKvyLEL25jss+19z6VcPYD+sbHLvFEp2d02b0
-         2RJQHKPmrR4tXp/ZIszfSqAOD7Zoxex1Mylgc+kIFrH1IEWHP+e5GQ0ibPO0V7YUqAL7
-         HtkA==
-X-Forwarded-Encrypted: i=1; AL+hErEwNqD2fRlIKgfYKGZSe1eDm+TY0eNl/kt88xsdYBN+RQB41L+vxW1SYAmlSqKJVw/MWMmRBBacSXY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/RdemxyZf3xvvNt//9j1zsQkc3hc381tRxNaw9XwbSGA9Y4Ndj
-	HCFdZvHdcfjZ3NW+PGDyBL3tyAY0GuSZJPV/ikbVfvPHUR+jDowfSOtet7yUowQBzbewqcSyc3U
-	kxcP0nIafplEPaXWpYC11TQiSZGdYwBFXMA==
-X-Received: from plbms15.prod.google.com ([2002:a17:903:acf:b0:2e1:326b:da73])
- (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:903:19cb:b0:2ed:2856:6442 with SMTP id d9443c01a7336-2f03f1eaa0fmr179076345ad.28.1795588336373;
- Tue, 24 Nov 2026 22:32:16 -0800 (PST)
-Date: Wed, 25 Nov 2026 06:32:15 +0000
-In-Reply-To: <20261125002808.GA1198022@bhelgaas>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OH7/5FHv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6672A1F000C6;
+	Wed, 25 Nov 2026 06:45:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795589159;
+	bh=VkkGbwq08SluLWGI4C9q+lJTIPO6YiHo3aEbu8U1fdk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=OH7/5FHvNVOtOyiLk2ugHqGmL9Yt1VWOjzblY1KwZF6BvQy6jDi2HiaYABEdSMtyF
+	 MMqr4EqZodxHodLFc3mq3QWldGlbIzQXLW0ppc6XLs2xJ3AhmYnXbN5H/nWUEB0IWO
+	 S3NQpnwMl5QaA6nUMzrIrrfYDA8a/8//4J9Al5IuWlehP7A6pQ9Y+SuNDuUzxdyrG9
+	 f85LkqR+dNhQvrjg6IJTQa5KFre4io/LeJqe+9ZK6nOT+N3fLwgoVsTwxwv2NQvSYR
+	 2Ey+x8VYG69yyP9UBmk8EuGrNM1Q7kZxSwYtBQXOhHvGrhsAclpjaOwzvAj9WyQFbv
+	 N71VYcO/T8rtA==
+Message-ID: <sashiko-outbox-232732@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 2/3] PCI/LMR: Add Lane Margining at the Receiver
+ debugfs interface
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Priyank Rathod" <rathodpriyank@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261125-pcie-link-endpoints-v8-2-19d49c17c05f@google.com>
+References: <20261125-pcie-link-endpoints-v8-0-19d49c17c05f@google.com>
+ <20261125-pcie-link-endpoints-v8-2-19d49c17c05f@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 25 Nov 2026 06:45:59 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,34 +60,148 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261012-pcie-link-endpoints-v7-0-36aba9c91f10@google.com>
- <20261110002437.2376944-1-rathodpriyank@google.com> <20261124174411.4183038-1-rathodpriyank@google.com>
- <20261125002808.GA1198022@bhelgaas>
-X-Mailer: git-send-email 2.56.1.831.g720f3f5937-goog
-Message-ID: <20261125063215.1499950-1-rathodpriyank@google.com>
-Subject: Re: [PATCH v7 0/2] PCI: Add Lane Margining at the Receiver debugfs interface
-From: Priyank Rathod <rathodpriyank@google.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, linux-pci@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Hi Bjorn,
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] PCI/LMR: use-after-free on port->dev in pci_lmr_release() on
+  teardown race
+--
 
-Thanks =E2=80=94 I have rebased the series onto v7.4-rc1 and just posted it=
- as v8:
-https://lore.kernel.org/r/20261125-pcie-link-endpoints-v8-0-19d49c17c05f@go=
-ogle.com
+commit c126cec11a02e704f7895b57855ddcc4e39ac680
+Author: Priyank Rathod <rathodpriyank@google.com>
 
-(There are no dependencies on anything in pci/next beyond v7.4-rc1;
-drivers/pci/pcie/Kconfig just has a minor context difference in pci/next
-after the PCIE_EDR cleanup.)
+PCI/LMR: Add Lane Margining at the Receiver debugfs interface
 
-Thanks,
-Priyank
+This commit adds a debugfs interface for the PCIe Lane Margining at the
+Receiver Extended Capability on Downstream Ports and Function 0 devices
+below them, allowing user space to run margining sessions on links at
+16.0 GT/s or faster.
+
+> diff --git a/drivers/pci/pcie/margin.c b/drivers/pci/pcie/margin.c
+> new file mode 100644
+> index 0000000000000..df73fed885fa5
+> --- /dev/null
+> +++ b/drivers/pci/pcie/margin.c
+[ ... ]
+> +static struct pci_dev *pci_lmr_teardown(struct pci_lmr_port *port)
+> +{
+> +	struct pci_dev *partner =3D port->partner;
+> +	bool removing;
+> +
+> +	lockdep_assert_held(&port->lock);
+> +
+> +	if (port->state !=3D LMR_ACTIVE)
+> +		return NULL;
+> +
+> +	removing =3D !pci_dev_is_added(port->dev) || !pci_dev_is_added(partner);
+> +
+> +	if (!pci_dev_is_disconnected(port->dev))
+> +		pci_lmr_reset_lanes(port);
+> +	pci_lmr_autonomous_restore(port);
+> +	if (!removing)
+> +		pci_lmr_aspm_restore(port);
+> +	else
+> +		port->aspm_inhibited =3D false;
+> +
+> +	pci_lmr_forget_rx(port);
+> +	scoped_guard(mutex, &pci_lmr_mutex) {
+> +		port->partner =3D NULL;
+> +		pci_lmr_set_state(port, LMR_IDLE);
+> +	}
+> +
+> +	return partner;
+> +}
+> +
+> +static void pci_lmr_release(struct pci_lmr_port *port, struct pci_dev *p=
+artner)
+> +{
+> +	pm_runtime_put_sync(&partner->dev);
+> +	pm_runtime_put_sync(&port->dev->dev);
+> +	pci_dev_put(partner);
+> +}
+[ ... ]
+> +static void pci_lmr_end_sessions(struct pci_dev *dev)
+> +{
+> +	struct pci_lmr_port *p;
+> +	struct pci_dev *ended;
+> +
+> +	for (;;) {
+> +		scoped_guard(mutex, &pci_lmr_mutex)
+> +			p =3D pci_lmr_find_session(dev);
+> +		if (!p)
+> +			break;
+> +
+> +		scoped_guard(mutex, &p->lock)
+> +			ended =3D pci_lmr_teardown(p);
+> +		if (ended)
+> +			pci_lmr_release(p, ended);
+> +		pci_lmr_port_put(p);
+> +	}
+> +}
+> +
+> +/**
+> + * pci_lmr_exit - End margining on a device that is being removed
+> + * @dev: PCI device
+> + *
+> + * Called from pci_destroy_dev() for every device.  Removes the debugfs
+> + * directory of @dev, waiting for file operations in progress, and ends
+> + * every session that involves @dev, whichever end of the link hosts it.
+> + */
+> +void pci_lmr_exit(struct pci_dev *dev)
+> +{
+> +	struct pci_lmr_port *port;
+> +
+> +	scoped_guard(mutex, &pci_lmr_mutex)
+> +		port =3D pci_lmr_find_port(dev);
+> +
+> +	if (port)
+> +		debugfs_remove(port->dir);
+> +
+> +	pci_lmr_end_sessions(dev);
+> +
+> +	if (!port)
+> +		return;
+> +
+> +	scoped_guard(mutex, &pci_lmr_mutex)
+> +		list_del(&port->node);
+> +	pci_lmr_port_put(port);
+> +}
+
+[Severity: Medium]
+Can pci_lmr_release() use port->dev after it has been freed if another
+context tears the session down concurrently with pci_destroy_dev(port->dev)?
+
+Neither pci_lmr_init() nor pci_lmr_start() takes a pci_dev_get() reference
+on port->dev, and port->kref only pins struct pci_lmr_port.  Because
+pci_lmr_teardown() sets port->state to LMR_IDLE before its caller drops
+port->lock and runs pci_lmr_release(), pci_lmr_exit(port->dev) does not
+wait for pci_lmr_release() to finish:
+
+CPU0                                  CPU1
+pci_destroy_dev(partner)
+  pci_lmr_exit(partner)
+    pci_lmr_end_sessions(partner)
+      p =3D pci_lmr_find_session(...)
+      pci_lmr_teardown(p)
+        p->partner =3D NULL
+        p->state =3D LMR_IDLE
+                                      pci_destroy_dev(p->dev)
+                                        pci_lmr_exit(p->dev)
+                                          debugfs_remove(p->dir)
+                                          pci_lmr_end_sessions(p->dev)
+                                            /* state is LMR_IDLE, returns */
+                                          list_del(&p->node)
+                                          pci_lmr_port_put(p)
+                                        device_del(&p->dev->dev)
+                                        put_device(&p->dev->dev)
+      pci_lmr_release(p, ended)
+        pm_runtime_put_sync(&p->dev->dev)  <-- use-after-free
+
+Taking a pci_dev_get(port->dev) reference for the lifetime of the session
+(or of struct pci_lmr_port) and keeping the session non-idle until
+pci_lmr_release() completes would prevent pci_destroy_dev() from tearing
+down and freeing port->dev early.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261125-pcie-link-=
+endpoints-v8-0-19d49c17c05f@google.com?part=3D2
