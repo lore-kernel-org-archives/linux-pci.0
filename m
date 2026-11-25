@@ -1,53 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795564898;
-	b=vyRyzdt2vi2OvktFP84aO1xgy0Gfb3JDagRhzWiHEeRP+oAG9sJjW1gfQ7x4z22av/61
-	 YmTzh2b8/q2VApGcPj6VLJrqkN1t/x5f0TyjXPlQUt2QlKniUwvMWefNLfUG0gQ/72gX2
-	 uKkWMxpVOi9NnXCW+lepWxSGN4r+PVM6nFKwSknmRHx/V5MjEbn3/tr6t6qIytg60BPq4
-	 nmv5nYhWdQH6n1cQKUP8pOQH7DyK1YWWYWVsaRppjDpeYZI5D7eWsr9Y+0DK26ncx3CRS
-	 T/IGDMVZ4Dzz2VdiBkqQxG7Pe4hKMwJxmbPFz6/5o86zIYRQ/hM7QPfuDagIZE23eGQ==
+	t=1795565320;
+	b=DR5KZWp7kcS3wV3i8YNHeXntjmQpVlp/TZhKgWZfQD8mhqm9s9XzaLI+K3nNUvLL5j8K
+	 J+VsgZN/sGGGPX6kIoFZJrm0ArL0PJiPmkUsJZPCFtjHAJrWxPvz6zdylDfuHaroexZlA
+	 20NgVtyngksj0+GwiXNVemkpobt3b0HFLN78JLYxvQuzTjsAHYsDAnL5TJ747GLQwnYMj
+	 yoxgEP/S/u7BX9nYESeWPKbx4YNxux3qUHO9dGS/bcOIgBT1CLduRNCu/rmKaU8z9wHPZ
+	 p+h8xK6DXbaPRM8t9jae3Fm5Qj0jh2y79/jFU81WYK3cv6fm+64XxaKFgSyaofIMw3A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795564898;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795565320;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=t0o4zYuR5JjkPQPydcYj5itA0swFE+//OOXlRttRo+U=;
-	b=mVK2Ag5x+6GwGcX+QT5kjpBs2YF6e8r/ey8+T5/AFQMirvtKI1yMYfGk7Bm48vGuHFrP
-	 JWhZP7QKeQ3u4pGali3fzqurdelrFCLr1gKCtV1V/RO5XT0JlhKRcy4t31m3p7lKqueKK
-	 5gvjh8HTrgl0rs++qZLNHD65EiMhHwBnLXhvWK3QhcyvT6Izng0j6ELyes0RJ7x1FGnRE
-	 7Aayieb8Eq80REl4TzQtacSYpn8/g4iZsC4o+QNKmsyhJYLKONnOtGq5hyXNDtsxYZVfd
-	 WgcoZLrJG1q3EKyOwI14vcNry/7MqfFFgHmlGi/cQCWamE9sD41N5Ees/fJekrp9Z5A==
+	bh=Mb1VUJyQXUJd5r0N+87LOv0VhAv9PGlLG895h5R0p/w=;
+	b=VGGO5NV6tZMIPLcIkz/kfX0PkfkwrfQsOqwhMebN8ZxXRjIZqc4G/Gnfm4OreottL7iZ
+	 zuxxFoyEcJL4VIS2NJG1keAVK4cHy5hynC+2+V65PWKPzLAMgNaoWd7FQQHRjGoTsrwq6
+	 KhxNaqpiePnNPy/ECudYBhd9DG6kqz3gkZFh+R4oNEVrmvCEmE2KvrxT1lTb3FNqXY/h1
+	 aJquzEhtHbhZqAIuGn4pZhotGbwpc7ONJ5v2WkfaP4IhOzDim+Ckp82rehBCHJiDLxU7p
+	 zxq4U+otHqJYMGV3XdfFu+4stiTuzdBECnZsRyAigxb5aCaZ7aOdlAU1umwxwCJJNVw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HLy9KbFN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dKkkkSdi;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EE8B606A31E;
-	Wed, 25 Nov 2026 00:01:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE99A606A331;
+	Wed, 25 Nov 2026 00:08:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HLy9KbFN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CBC81F000C0;
-	Wed, 25 Nov 2026 00:01:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dKkkkSdi
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 897C51F000C6;
+	Wed, 25 Nov 2026 00:08:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795564897;
-	bh=t0o4zYuR5JjkPQPydcYj5itA0swFE+//OOXlRttRo+U=;
+	s=k20260515; t=1795565319;
+	bh=Mb1VUJyQXUJd5r0N+87LOv0VhAv9PGlLG895h5R0p/w=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=HLy9KbFNBD7FHa5dm66XLgrEGjrOfKDP/pOs2V/mrgXGeZ6s9BqU03EVpKBggHwZ4
-	 IL4LqA8lz5RfIDUAtnijQS9+A55OZJMKy5qf4Dbz99s6L2U8k4DXlDqv5VheNP+ulR
-	 DTTQgQbH04AWci0mC7NbpgxQ0R8n/olyNoz4dVUForHoYcZx4TY4xMbiNyDOgz65Eg
-	 hVY1prhYEnIx3GYzvnDcXOZv1or0IBmRxcvkvY70YKsp/aPPU6SnYvGjsmhgBxT7Ns
-	 mV8/wCNi7z+z3h+9bCb7tfMUzBTNqSz8BIutVqedlGSKorVZ5YrxsQTeUhKB16bsbk
-	 dUeIwPWVGMlqg==
-Date: Tue, 24 Nov 2026 18:01:36 -0600
+	b=dKkkkSdi2xQQIlhXTiQUdp3dDtWoJu1Qz/G7bqC3Ll9mAH1G4W9gtMnznmDLOOLxD
+	 55LGHk5xoKzT+1EJVFHjm3jVIUN4kJhZfpmdq0RcJNXYbsZ8xTWkOPFPbGLaChWd0u
+	 c8jlw3eZ3Q9kRPQHWbmWr4EX3+E3EVUARU062BeWqHs1MWfQSWzTfoaJ7zYbhgAw0L
+	 SJy/Tw1Fhq2wPcb2CvERufjlVzAqs8wEbq0EQ+W7r7LwOm9KefX87iMu7j7a+1gqnp
+	 8UzO5pMC8Dri0dLlSoU85FluInkbGSZhtCErim3QhJKYAR5rtvb95B6cQvhQEkvenH
+	 D8H5e6Uwc+FAA==
+Date: Tue, 24 Nov 2026 18:08:38 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gokulkrishna Sekar <gokulkrishnasr@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	mika.westerberg@linux.intel.com, linux-kernel@vger.kernel.org,
-	Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>,
-	Gowthami Thiagarajan <gthiagarajan@marvell.com>
-Subject: Re: [PATCH] PCI: Correct PCIe port type field encoding
-Message-ID: <20261125000136.GA1191322@bhelgaas>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yazen Ghannam <yazen.ghannam@amd.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/6] PCI/DPC: Decide DPC ownership with
+ host_bridge->native_dpc
+Message-ID: <20261125000838.GA1194450@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,65 +64,40 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261124084828.15318-1-Gokulkrishna.Sekar@harman.com>
+In-Reply-To: <awVV71IbFuYAJDzh@wunner.de>
 
-On Tue, Nov 24, 2026 at 08:48:28AM +0000, Gokulkrishna Sekar wrote:
-> set_pcie_port_type() validates PCIe port topology and corrects
-> invalid upstream/downstream port type information in the cached
-> pcie_flags_reg value.
+On Tue, Nov 24, 2026 at 10:16:31AM +0100, Lukas Wunner wrote:
+> On Tue, Nov 24, 2026 at 10:04:31AM +0100, Lukas Wunner wrote:
+> > On Fri, Nov 20, 2026 at 12:18:41PM -0600, Bjorn Helgaas wrote:
+> > > On Thu, Nov 19, 2026 at 10:28:36AM +0100, Lukas Wunner wrote:
+> > > > https://lore.kernel.org/r/cover.1794997749.git.lukas@wunner.de
+> [...]
+> > One more thing:  sashiko flagged two valid issues in patch [7/7] of my
+> > above-linked-series (which is now the top-most commit on pci/aer).
+> > I've provided a fixup patch for both findings at the bottom of my reply
+> > to sashiko:
+> > 
+> > https://lore.kernel.org/r/av4j5j9-In1uWC8T@wunner.de/
+> > 
+> > Could you fold this into the commit?  Alternatively, I'd be happy to
+> > submit these as two separate patches if that is preferred, with a
+> > proper commit message to explain each change.
 > 
-> When performing these corrections, the code updates
-> PCI_EXP_FLAGS_TYPE using PCI_EXP_TYPE_UPSTREAM or
-> PCI_EXP_TYPE_DOWNSTREAM directly. The PCI_EXP_TYPE_* values are
-> decoded port type numbers, not values encoded for the
-> PCI_EXP_FLAGS_TYPE bitfield, so the corrected type is stored in the
-> wrong bit position.
+> Actually... come to think of it, you had this question about whether
+> ratelimiting knobs should be exposed at all if there is no AER-capable
+> Root Port or RCEC.  I think this could be implemented simply by not
+> allocating aer_info in pci_aer_init() and jumping directly to the
+> "enable" label.  (Because I think we still want to continue enabling
+> Error Messages in case the user or the platform sets the System Error
+> bits in the Root Control register.)
 > 
-> As a result, a device whose type has been corrected may subsequently
-> be reported as PCI_EXP_TYPE_ENDPOINT instead of the intended
-> upstream or downstream port type.
+> That would implicitly hide all statistics and ratelimiting files
+> and may be a cleaner approach to overcome sashiko's objection that
+> Root Port statistics are exposed on AER-incapable Root Ports with
+> patch [7/7] of my series.  It would also save a little bit of memory
+> if we don't unnecessarily allocate aer_info.
 > 
-> Use FIELD_MODIFY() to update PCI_EXP_FLAGS_TYPE so the corrected
-> port type is encoded consistently with the format used in the PCI
-> Express Capabilities Register.
-> 
-> Fixes: ca78410403dd ("PCI: Get rid of dev->has_secondary_link flag")
-> Reported-by: Gowthami Thiagarajan <gthiagarajan@marvell.com>
-> Link: https://lore.kernel.org/all/20241213070241.3334854-1-gthiagarajan@marvell.com/
-> Signed-off-by: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
+> Do you agree?  If so I can prepare a patch.
 
-Applied to pci/enumeration for v7.5, thank you!
-
-> ---
->  drivers/pci/probe.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 9a178e0e5f7f..4c7e0ad1aa1a 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1673,8 +1673,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
->  		 */
->  		if (pcie_downstream_port(parent)) {
->  			pci_info(pdev, "claims to be downstream port but is acting as upstream port, correcting type\n");
-> -			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
-> -			pdev->pcie_flags_reg |= PCI_EXP_TYPE_UPSTREAM;
-> +			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg,
-> +				     PCI_EXP_TYPE_UPSTREAM);
->  		}
->  	} else if (type == PCI_EXP_TYPE_UPSTREAM) {
->  		/*
-> @@ -1684,8 +1684,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
->  		 */
->  		if (pci_pcie_type(parent) == PCI_EXP_TYPE_UPSTREAM) {
->  			pci_info(pdev, "claims to be upstream port but is acting as downstream port, correcting type\n");
-> -			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
-> -			pdev->pcie_flags_reg |= PCI_EXP_TYPE_DOWNSTREAM;
-> +			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg,
-> +				     PCI_EXP_TYPE_DOWNSTREAM);
->  		}
->  	}
->  }
-> -- 
-> 2.54.0
-> 
+I folded in the fix above for now, but will be happy to replace with
+the approach you propose.
