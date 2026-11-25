@@ -1,114 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795617527;
-	b=yPqiPC87W8yckh6TeaRhMWeyJ4ysDgJum2JabaQ5/QRKSdUtgWm3LueIXNUO2XcYh6Ej
-	 TxdiF7aZFZ7g/n3jUIdmLkS0Vlb1t92Pr9/lt92Sh3FwzJbzRxXqOkHDkBwqt57gcyixz
-	 lG1FH4R21aWCUP1mnplHakK+3IQy5swq40lKziRYP3mirUlxuLqH4HhMGtrIn7SkoTXcj
-	 mvPsCh3iEHSRi0eEtw7/fCpEPu+aBq/nJOXb1pm0ntE6vJ5Cr8mgPHflckiI5FO8Uwt6V
-	 1jxJHEwQ3AZZppDSOmfSvXFRBjHTqgf39t3FyIQcmFSuqlkrxjo+R89xdhFqWBtCe9A==
+	t=1795617835;
+	b=iUE9sZwZujJP/wLrAZuyHNMhTSoGBlIyKUD57GNOs5lU58N84WmT6GQFLt94rvjAvCrB
+	 ou4h1d9IFrRhFXw3yOS1fuRaOqhfV2yY7ph9Pkxq3F/tNxdnlOfeLR4I3FtHHUR0iU1eB
+	 D9LtCZ4o1f1Z79Yo4VtcPG/oFDH5tonzV7vSfIiCS/4ac5lbAdumNRFbO8XLIk2ceJdmP
+	 yLwcj353Panulh3AVZUXciPV27EBj6TsialZ/DHVqU/wtSlL8xFe6eGVQ1bhYeqPiA4rx
+	 zx0EM1kfEf/s9Kziegb/s/6SRE9KDWgByxpOiQbRNHd2b82ouoLiYtiaIBEDH1WnWkw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795617527;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=dCtVGEXy/TUgxCZ9qLhPI3rUEmqk4eMQKQPU17VUyZ0=;
-	b=gUFcbHGXC9wUv9CMXA+hQM8QxS58nAIINYVhIyHglKjoZqXXzGpVVE8TMh+QfRtA0sJw
-	 ETSke+jcKWyIeSsCMJF89y/Y5GJzlAqHOcAdp9muq5ZweWTe4xQCQYB+2O/RlwnsPYXor
-	 RAIo3nPFQt/lISaw1+rt8HBGzjdCvQ62Si16s0gStAyTh4JDNdWxbbm3ylvbO0LjcAir0
-	 KcSL6JvbmfiTBFmS5yfVkc46y2wop3z77i8U7KWHFRRep+s1Ur7HAG11Dd9t/Y3JsPTp/
-	 t6ueby8VDYuKj2+I6YXlK0sksVOCsCLkWstLTSu2gHPYQPYtSuPoOhoNGAG8y70EGmg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795617835;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:In-Reply-To:References:
+	 Date:Message-ID:User-Agent:MIME-Version:Content-Type;
+	bh=DSDBbrxDF7QE7mJ7cGh5psk8NDNsiMzdc0pE9t4TEt8=;
+	b=OQhaYXsn9hxEJUWc0bWcvtHM9hvQLmvtT90tnVIVVKsIvOPqhy4c55HrIsUGndsucUau
+	 hnjjA9/zGcfyqOrFJI/2cqglg1h4ETIoCqJHG8Vg42a3VopZ+WPiOjsdBvJKDKTKBUK7a
+	 HLnRqxCbfz8WpkzRlh9NbylGQ4FuNjRihumGX5BPrJ/AthTaxxjK5zlrJZKsGXToJts7Y
+	 I7QKxub1PUPwU3SfF58T/k4HEugKhKGs6oxLTexqsNc3W5qksRcY9T7RvTKbNOxliFqKw
+	 8Zttpr4PEqWtAvLHVH05MC99TgW8hQEeAcqO1j+Rdi7jNmSo1eGR72E4eE/VdTWSugA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=Mq7gvBej;
-	arc=none smtp.remote-ip=209.85.222.49
-Received: from mail-ua1-f49.google.com (mail-ua1-f49.google.com [209.85.222.49])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IaxxUP7L;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA85606A327
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 14:38:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BA85606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C32B606A326;
+	Wed, 25 Nov 2026 14:43:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=Mq7gvBej
-Received: by mail-ua1-f49.google.com with SMTP id a1e0cc1a2514c-97ccbba8e86so1496717241.3
-        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 06:38:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1795617526; x=1796222326; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=dCtVGEXy/TUgxCZ9qLhPI3rUEmqk4eMQKQPU17VUyZ0=;
-        b=Mq7gvBejM/RZvujAB/JEcfBx2K0Fd39qIALvDchjS4ryUUcG3H9YRSXurhg5IBj3yz
-         pkqGPedd7Rg81VzihlHF8Yhb//N3cQ2Bd1Y3QxcEN7BdJjVo6NcJnhvz8CXwlQrGZAi9
-         fq3nyncoYkZygD+C/eIJWMAfqikOC06+TglwefSzPx8/q92kqj86RrOIHHyvQOy2QBIy
-         HFvePBB4Esu4O5rGc0YNu4Y+Er34fdIqA3I7AgIq864JDxVezm5GySWGVdkJNFQkpyIq
-         GH3wLNUTu5pBqY/Smk0GeOoyOhV7L8RdVevHK/IfPSAAvxqGnZlM53TpNS7ql2b7sPBz
-         rQIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795617526; x=1796222326;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=dCtVGEXy/TUgxCZ9qLhPI3rUEmqk4eMQKQPU17VUyZ0=;
-        b=OahzPwkOYaveLj4Lnv98/jSj1K3lROefiAY/rE4X2PwveCrXwYVJkIr+YtNrULUSVj
-         /hwM52BqwyGzbcrlkZEO7qYTf/+E4e3hTe06c8bZFEdqCq7sniJxhFroHhYd7Ro6z6M7
-         jAQWxYjFrmdPnCkSMeocdmchqQ7kewSnSd8SnsB6js3RR69lR2byMQ9+697ea48rqMMl
-         +K5ajG4OSmAcDP1EI0GthZMnjCLXyzwBPSAtWASRorE0gy8/0RRipGo7XMv6Eb0fMyTd
-         2OWLoEVVcLk6kGfiVfbx6rCH84Y0n6noFcmhEEjSR+sMQCVyfrCNIHx+4vSXFPXoUhcX
-         oREg==
-X-Forwarded-Encrypted: i=1; AL+hErFda1YIVox/bt9S1pVe6GUfvZiSrYAatvEzUd9u02jrx/LPw+8RqGVaXDRh/DbWr3AaBOFRhrlgVsI=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/JnaSi4KKrTGnYGlkgddA1x5GDSegEsgdcZKvkvsGjRtoCfVnW
-	n+kXNA5OLl4j364DKjc5DU9zcn3HRWxtBKHHoCpu8D47M1tFM0faeYv59lUtQaD5Cik=
-X-Gm-Gg: AZFdTZeagfYvIADFk63kEHR2SfZDnKTaK6mymoLyB8uNHHe+WRdx0JsQRyFi4WcVmwz
-	J0NvLLRCMzfi4H75zpVpRYuEjVlRWacAswuMBM7BymKxHyjxaVdPYCP4hpF6JwAF8NdUvS1rOEA
-	a5pJy7pONusTqj4jx8Wh423W2gGJSaIeegg+v7cdQrX+cVwbMwyzcJhMEWIN7svUbmCI9AqmF7l
-	+kurHRcKYu2xnLvYulS8vr0VxvdsKua3X8wgQq8wJ6tkleNFRk5Bf0gdxKLA9ueZhYa3h+kgirj
-	8GT4AREJV0uA58ugXZ3H6CWYii6wRtVfup/M6v4lzQ96T19d9mcpZXlkleWWalWtIttrPbIqV5s
-	wq4Dk2W7e7MB5z5nSlr2PRWLmOGFH73J5s6Dml2pxLPpC2yzaYPEFqE5n8EwuLXKLFytkCv/PBv
-	dRr09MpNySaUhBeF8GS+fgBcclYsDM85okhGW/AnATen61oAHUvflP37tsZZbBrhxJie8mZDbW4
-	NJZs6yCMfe4ny4xybi+Y62DBTSdictY1ymLUY/cRr1YDJnsKcC5vzzZWjOmQRspMqsYR1cxUC9u
-	fD15vQ==
-X-Received: by 2002:a05:6122:1816:b0:5ec:4112:6839 with SMTP id 71dfb90a1353d-5ee8af18034mr9201283e0c.15.1795617526133;
-        Wed, 25 Nov 2026 06:38:46 -0800 (PST)
-Received: from ziepe.ca ([142.177.118.84])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-921349d383asm163086316d6.22.2026.11.25.06.38.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 06:38:45 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xWE8z-00000001lnK-03Mz;
-	Wed, 25 Nov 2026 10:38:45 -0400
-Date: Wed, 25 Nov 2026 10:38:45 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
-	Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 05/10] PCI/TSM: Add association locking helpers for
- evidence acceptance
-Message-ID: <20261125143845.GG246011@ziepe.ca>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-6-aneesh.kumar@kernel.org>
- <20261123153507.GH179082@ziepe.ca>
- <yq5ald6h9r1g.fsf@kernel.org>
- <yq5aa4mx9nsj.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IaxxUP7L
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F3521F000C6;
+	Wed, 25 Nov 2026 14:43:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795617835;
+	bh=DSDBbrxDF7QE7mJ7cGh5psk8NDNsiMzdc0pE9t4TEt8=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=IaxxUP7LRnqywT22he7m+Fp7ezJgAfkpHSw5REph0tRYPRC/9tQDBnxNGaqFCUe0P
+	 HC4OCPR1FvefXZR0jreOarx1/ItxF0Kd5XwRm18+njWXI6kfrP7K+QHWF1l9XvxXHk
+	 Wb3T7KBp5sU8Uq3JjMSsDtDz2cQ1vDbxW6cRqzm0jkDQjr5S84bbH7Zbc/9r5XtFga
+	 tXPaD+SS8GZvYPYpD187DBOSIhZ28zt4gF80M0lT+Uc0vOeuoEM5ntTj2myprO+Uo6
+	 0KAYN/vccLRY3U4aBHQmotXHdObAadnDVOITnax/jMq8UASOsc7R09dQV9GiPujVaw
+	 zu/OOYjuPVOYA==
+From: Pratyush Yadav <pratyush@kernel.org>
+To: "David Matlack" <dmatlack@google.com>
+Cc: "Pratyush Yadav" <pratyush@kernel.org>,  "Tarun Sahu"
+ <tarunsahu@google.com>,  "Pasha Tatashin" <pasha.tatashin@soleen.com>,
+  "Mike Rapoport" <rppt@kernel.org>,  <robin.murphy@arm.com>,
+  <maz@kernel.org>,  <will@kernel.org>,  "Alexander Graf"
+ <graf@amazon.com>,  <seanjc@google.com>,  <jgg@nvidia.com>,
+  <loganodell@google.com>,  <arnd@arndb.de>,  <dwmw2@infradead.org>,
+  <baolu.lu@linux.intel.com>,  "Bjorn Helgaas" <bhelgaas@google.com>,
+  <oupton@kernel.org>,  <alex@shazbot.org>,  <gle.com@google.com>,
+  <pbonzini@redhat.com>,  "Andrew Morton" <akpm@linux-foundation.org>,
+  <kevin.tian@intel.com>,  <joro@8bytes.org>,  <kvmarm@lists.linux.dev>,
+  <linux-pci@vger.kernel.org>,  <kexec@lists.infradead.org>,
+  <kvm@vger.kernel.org>,  <iommu@lists.linux.dev>,
+  <linux-arm-kernel@lists.infradead.org>,  <skhawaja@google.com>,
+  <sagis@google.com>,  <linux-arch@vger.kernel.org>,  <linux-mm@kvack.org>,
+  <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 03/19] kho, memfd_luo: Reference struct kho_vmalloc
+ via serialized pointer
+In-Reply-To: <DN3VG4JCILOO.YN40XHHSWRPH@google.com> (David Matlack's message
+	of "Tue, 24 Nov 2026 16:39:52 -0800")
+References: <20261110050202.529473-1-tarunsahu@google.com>
+	<20261110050202.529473-4-tarunsahu@google.com>
+	<2vxz4idb1i2w.fsf@kernel.org> <DN3VG4JCILOO.YN40XHHSWRPH@google.com>
+Date: Wed, 25 Nov 2026 14:43:47 +0000
+Message-ID: <2vxzld6hx97g.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -118,24 +75,80 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5aa4mx9nsj.fsf@kernel.org>
+Content-Type: text/plain
 
-On Wed, Nov 25, 2026 at 04:32:36PM +0530, Aneesh Kumar K.V wrote:
-> Even then, wouldn't we still need pci_tsm_trylock_association() at
-> spdm-start? Once spdm-start completes, we can ensure that the
-> association remains stable until spdm-end, but that still does not
-> eliminate the need for this API, does it?
+On Tue, Nov 24 2026, David Matlack wrote:
 
-If you have a valid attestation device for the TSM then the TSM is
-guarenteed to be alive.
+> On Fri Nov 20, 2026 at 10:19 AM PST, Pratyush Yadav wrote:
+> [...]
+>
+>>> +static size_t memfd_luo_ser_size(void)
+>>> +{
+>>> +	return sizeof(struct memfd_luo_ser) + sizeof(struct kho_vmalloc);
+>>> +}
+>>> +
+>>> +static struct memfd_luo_ser *memfd_luo_ser_init(void *mem)
+>>> +{
+>>> +	struct kho_vmalloc *kho_vmalloc = mem + sizeof(struct memfd_luo_ser);
+>>> +	struct memfd_luo_ser *ser = mem;
+>>> +
+>>> +	KHOSER_STORE_PTR(ser->folios, kho_vmalloc);
+>>> +	return ser;
+>>> +}
+>>> +
+>>
+>> Hmm, I am not a huge fan of this. This makes doing such allocations
+>> quite annoying, and I reckon we will be seeing a fair bit of them in
+>> many places.
+>>
+>> The key observation here is that most file handlers need to allocate a
+>> bunch of preserved memory, but they usually can free it all at once. So
+>> we can get away with a very simple allocator that hands out memory
+>> linearly.
+>>
+>> I have sketched out some code for this, take a look at the patch below.
+>> Note that it is only compile tested.
+>>
+>> Perhaps give it a try and see if it does the job better.
+>
+> I agree the manual packing in memfd_luo_ser_init() isn't great, but I'm
+> not sure we need an arena. This seems like something KHO slab support
+> will solve properly, and since kho_alloc_preserve() already takes a
+> size, KHO slab can be dropped in underneath it later without changing
+> any callers.
 
-That is the invariant we need to create to have a sensible subsystem.
+While it would be nice to have, I peeked at what we need for slab
+support and it sounds overkill. For one, a slab cache is for fixed size
+objects. So you'd need a bucket of slabs for different sizes, similar to
+what kmalloc() does. You probably don't want to preserve objects spread
+around in kmalloc's buckets, so you would need a set of buckets
+dedicated for LUO/KHO.
 
-The session cookie, combined with a revoked/disassociated attestation
-FD guarentees that userspace cannot be confused by a TSM host
-plug/unplug. It will simply see the attestation FD it has open stop
-working entirely.
+For another, slab cache is great when you are allocating and freeing a
+bunch of objects of varying sizes. But that isn't really the workload
+preservation has. Each preservation hook needs to allocate a handful of
+objects, and then hold them until unpreserve. This arena style allocator
+does the job pretty well.
 
-Jason
+And finally, the object layout within a page/slab of the cache can
+change based on configs or kernel versions. See SLAB_RED_ZONE or KASAN
+for example. We would need to standardize the layout without
+compromising the non-KHO slab users. We can probably solve these
+problems, but I don't expect it to be easy.
+
+So I wouldn't want to support slab until we have file handlers that
+churn through a lot of preserved objects.
+
+>
+> Until then, maybe we should just allocate struct kho_vmalloc separately
+> with kho_alloc_preserve() and accept wasting a folio per object. For
+> memfd that's one extra page per preserved file.
+
+Yeah, that is fine too I suppose, at least until we start to run into
+problems with the memory overhead. I think the arena style allocator is
+fairly straightforward and makes the memory savings easy so to me it
+sounds promising.
+
+-- 
+Regards,
+Pratyush Yadav
