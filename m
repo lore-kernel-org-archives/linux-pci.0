@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795599289;
-	b=lh5lEkG5frun31XRL25/izJVSvmQ4SgdZGiBqMukp+HNZfZ7bHidW2G0+BmN1radvN44
-	 PNnWnxjTpaCdpVc3zsYfSKsHxeWJ8VmpLSWibCdegw31rVDGLiF6qOCF3VKyUuUJZq9Gy
-	 ZJJoon03Aco2QlpmU8BNP7kfUDsZEL2onYasRvhr7mRV4ResikfvwiXU1e9ivMb5utZRg
-	 Er8q04XKTWsN8lkZJ6s3NvhMhHg9G2BuOlIL1+TkZt8aNQeHqg41hQ+iA53PoPAe/uLbN
-	 Dx5Go4YfhZ0fEtN5IQwQfmZIHNLk6xYH/HUpazni8wweVit76jBg0xjyd4R291OazHA==
+	t=1795599290;
+	b=2mszFSPk5+UTPKRwdZPlp5NlmIHJGyxINkv2e+/4KTxmPoZB+puQstZOpT5aG3k12dL5
+	 TTE4/nB1W4jzYhemFo/raAgQkFvoFi5H8GtfOHjvelDAqzfdXHKttbHUfMzX9KjFaRuK9
+	 UGBpgcJqYCtWsMkQQvIc1Q3kEboscYpx2+8nn/0UpdbnuKlh+mVkf06VkKQKx/BbL6mzR
+	 zDBU8UhJRB80DDVZSrwouesWUPvA+tc8fRYO4cHX3m4LK8Nhj7bPo+04EKo/sOl6sIgsI
+	 iRegxAPWXWW/Q0H42EkVndt+pF43rbGegL+rjOJsmXlRQWh/F6TSLymW6RZx4dbCB1A==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795599289;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795599290;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=FPW2O/CZksG07s1KEeo2I5JR2fFDL0AqSEPRwnJ+rAw=;
-	b=kG9GVb6x8JxoNrmqw28iCMhFZeZNXfADe9lvzQMJGxqrvvJTCjSJdSyQNQJtSC9lELFB
-	 p0Mqo7QYsGi4b3Xynkb8aD6mjNZtpWkT977Fm/CAm3SRjD47RyDh7pTpns5klm9TzCw2J
-	 GfhfcLz2dTR87sPXymN979DIxnfEfJEyPjoXNXxSBwVZ9EkSWeWMX8j6/S3d3yIYiSHzF
-	 BJzCiitUNv/lIyMdyME7wJotG4fdca2ke0FD9qVRhhugHh3XV3lyHqquInutjIiIgEoYc
-	 +4uPOORgg1FSHYalXbSi2Yr/KvxyYs2naeJ/+zAW3B6JLEBQK1g+5sCaB3PGFSCMIgA==
+	bh=HHerysfzLkwh4t+JN7V5vSAXizEIQWGJB/Ol2KOsRx8=;
+	b=TXXTiG2vzIxEQ65EUeziII2vDWWXMis1LFUFws1tGLlradW9YCbD6oAEio109ubQ42sk
+	 o3W82UY/VtEHgjMfUsek3671O6Uk4CEfIu/JFvrcr8Htnk/ZZNO32wljWZ7snjrfZi2Xb
+	 jMZ7GWQSAEFTGoVTNHZiosnHergxF2jhbwcQVS1WBk6asS3mTyeLJ4NupRnO1hKdR5a0J
+	 w7x1P27kmXU5trfpcDT0pSkrL7fV4wUciLkr8vDd4zAychvvHCUHFGhs3w0nM0xjvbq2A
+	 9INxWqkjwRyve6VI9tt+k9JrNwORpDsPGENRBM7446yMwa/Eh73rXNzjydhyBXxFa7A==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WClvNEeu;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="BnKo/a6t";
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F65606A339;
-	Wed, 25 Nov 2026 09:34:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA3C0606A697;
+	Wed, 25 Nov 2026 09:34:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WClvNEeu
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BnKo/a6t
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795599288;
-	b=F6sSTVMoPwAuetQzUHUeTV1YZHKOkTB4OZvHvoAAuJ65SfY71FtGcLN/0E1mxBXjFzsd
-	 6TP2gy1SVNV/bsUVWTgApXdswjc8sSkc/BzExp5dD+pRZgg2gJ1lyHPfvP0Y4KRjcweww
-	 RGk4QHJlfhjyPwxOjNC+K4N3IYMvXgwI/3GUNvIwTqyVmAY6yyhaFAfVVwY5gb8R1reKo
-	 Djuf3lBOShUxEqfK+BNf1/GQ42+x6M35zvd1F1uMnESnQWndWczjfV0QZEisna895DjOJ
-	 6EyNZvSrsQk5AucqvzBXwnNG7sxjjzKOV2zc4qsI1uFIvynVmyTqfDs0ArF59gJQykg==
+	t=1795599289;
+	b=ut71GH6QEtGbhI7NgZGIzLnDhLiUw7Qt5lSk13TYi1nU9jf3I24EiGGe9y2o4mSLCLT8
+	 2Xe/4WVh+u+N84h/UctglJS1Qsx00hgp5QkCS64rj+/Jj42GR08Uy/wZZ1PIMk7OFvVsa
+	 IRHF4hlsfvkzBAb/gD90rEGnBwsGsj6GZ6jzz8OWJ19ioLj6Xf9jOhh7fYl7CHr3aYeFm
+	 YlYAN1jwoyfv2QP2e3jf4NIHp3dRJI9TkXNw7fjYtE04iqPBJEqi8MiiaPk7I6MHo2JAv
+	 9HIJggvDuu4qY24lmy13MiEjmzDBLh2PT8BIDbyueybLH3V63gP9lR+P5JHJR6hZE/Q==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795599288;
+	c=relaxed/relaxed; t=1795599289;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=FPW2O/CZksG07s1KEeo2I5JR2fFDL0AqSEPRwnJ+rAw=;
-	b=ABAyZ3YxknMTPTz+QL+MCbNcVh3oAlzL54tM8Vng7oFr73MTPAG6iQxDCyJmlSQX1yAj
-	 GefpdTSelpfpngIEGIw/N8FJ7QKdDwZZlQJ28CsPTNcc43y5OxokvFKIvSibv2GhD7qQ2
-	 qz7rwXEv4HuYufYIzZzjstnXAJ6V5aEBgJM9aOSrGvOYs6/SsD5yh08cH5lEXLnfHe3tO
-	 U11AHC3q/lDT0sffH1ZBHucqH5SBthfDkYCB65sFW0sIdTztTYP5qDXK08wGCzG5ZubUu
-	 sj4ju0BjvbvT4FX2/Zn2PcCjOYiX+vdNcOUAy70IpCkZSj6bzjC/iZgaOcMevVUqFgA==
+	bh=HHerysfzLkwh4t+JN7V5vSAXizEIQWGJB/Ol2KOsRx8=;
+	b=eOZ/ZQpd0viRtStdk74/53mFJ++VDhPwn9uW1k12uBFCgnCzcRqAWA/ypoJ3UHuk7a1a
+	 c7Fj3zKQYiYG/BOWezwt6Syd/Ijz1glxM8GmDfI00PO96fIOl6h0y9nKaL65FC7F3m2eU
+	 EaMlq6j0WOYq3+IBr5ZqjyIzDvXVz9IlJGSVH1eizgT0htB92/XO2nCoWUg/EXF4TAeIN
+	 WIQMnPi4W56+L/e4/LwXJOmVGUPWMUvZnNhNcIU5sEPHkqmCOyKw3YSRVFO1JvX7WkZPa
+	 MJZk4SRokZ0M8v1Y7KF/22iXaQu3E+fgMLazKVeZAXk6dpdE6hwiIgQzweiXkYkchqg==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 369111F000D1;
-	Wed, 25 Nov 2026 09:34:37 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id E8EF41F000CF;
+	Wed, 25 Nov 2026 09:34:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795599288;
-	bh=FPW2O/CZksG07s1KEeo2I5JR2fFDL0AqSEPRwnJ+rAw=;
+	s=k20260515; t=1795599289;
+	bh=HHerysfzLkwh4t+JN7V5vSAXizEIQWGJB/Ol2KOsRx8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=WClvNEeu4R4e79Exo+1TmvDr1NaEyRokfzKKYRko5BeGZjUKilF2+PWME/pL2QO7a
-	 nFBc/8fjkeemYy+Yvmuo5FNPX6Nz9f7vM39XsjGL6jGtwKfLLWeKnQxblHnFFj718P
-	 6vhA8WZk0S42AVOVYfoDZzKoJEFcQFwqRsgaoeUzNL6m9bicI0KEVsh3JK3Q1nQG+2
-	 bhsUwBnNx91euH+WHS2E+812zGXTGqAxsR0weY/tRiBycwSRBwNU8wVzfAne5e7C0O
-	 fXdvPj+9NZyypAvkNbWlA8hvXIJAa60gq7Gn4xzWhn8XcHFYVjTHikYaM3UCRed9FP
-	 ufJR9/aOwKwVQ==
+	b=BnKo/a6tkGrRnvDK0gStcVAzO/TJtwCGtgrzdqQaWT98U2zIYxRR6agmNDp0Y2U29
+	 PuPDseRhSUCtxgw7yf1RWOepArrZXnfnbw7Wf/xJAKFhhi/ocPq/052+ziXP4+FSAy
+	 7RJh4sQ//eDeovhtCkHRxYroUroXSKYuKGTDi+iCd0jFaXM1W8DFl+QMHyMm2lOfEE
+	 7ZyGEOgkODlyKmDNayI6TIgfVCjnzdrVGVjPK3Y62EZ+xe+0s2bW5DwP6qpA1Q2Xtw
+	 1M/XvyzyN5cAY+XBc9zjm/uCnoP6E7mQSnmTRHA2hYgBzXe6AXOJw/WUBw6yBOOx/t
+	 TqMMurgeO0vUw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id B4BFD4CDFE;
+	by lkml.kernel.org (Postfix) with ESMTP id 75A9E4CDF6;
 	Wed, 25 Nov 2026 09:34:36 +0000 (UTC)
 From: Jan Petrous via B4 Relay <devnull+jan.petrous.oss.nxp.com@kernel.org>
-Date: Wed, 25 Nov 2026 10:33:46 +0100
-Subject: [PATCH RFC v4 04/15] net: pcs: xpcs: allow a PCS to opt out of
- soft reset and EEE
+Date: Wed, 25 Nov 2026 10:33:44 +0100
+Subject: [PATCH RFC v4 02/15] dt-bindings: net: nxp,s32-dwmac: Document
+ pcs-handle
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261125-s32g_serdes-v4-4-3bfe0589be8d@oss.nxp.com>
+Message-Id: <20261125-s32g_serdes-v4-2-3bfe0589be8d@oss.nxp.com>
 References: <20261125-s32g_serdes-v4-0-3bfe0589be8d@oss.nxp.com>
 In-Reply-To: <20261125-s32g_serdes-v4-0-3bfe0589be8d@oss.nxp.com>
 To: Vincent Guittot <vincent.guittot@linaro.org>, 
@@ -119,11 +119,11 @@ Cc: linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org,
  linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
  "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795599274; l=2142;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795599274; l=2480;
  i=jan.petrous@oss.nxp.com; s=20240922; h=from:subject:message-id;
- bh=XscJymCuOoPX6VkV4O1nIKYSBnUzCtjWiHRRdPqdbMk=;
- b=iE2FYHKkZBcU6n24n7zNpgnccWxNcvMAikDlY+jLN6198179BHbRw1XeT2teHMY9FSK6wFUv8
- dIL2U1KySspC9q2iEtKQHhV1fidG8GKop8Oba4PFSWj7J2idWFs6aFx
+ bh=XvSbxkQlAkTxdnIVmZ2WLc0f8gwakCGU+LGgQcKuPyU=;
+ b=WRCaqxowpj4b59FfSwGMljIDNOKr0FtOfHQsD8XUEWyRyPDGaq00tpV/gVejjd7NuOoZWsm0T
+ iZvcnn4B57hDVUU7GaEoD50g4JIwpPIsrH2dooqiKY7mepjIXU9ypx2
 X-Developer-Key: i=jan.petrous@oss.nxp.com; a=ed25519;
  pk=Ke3wwK7rb2Me9UQRf6vR8AsfJZfhTyoDaxkUCqmSWYY=
 X-Endpoint-Received: by B4 Relay for jan.petrous@oss.nxp.com/20240922 with
@@ -134,76 +134,78 @@ Content-Transfer-Encoding: 7bit
 
 From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
 
-Add a quirks mask to struct dw_xpcs_desc, with two flags:
+With SGMII, the PCS is one of the SerDes XPCS instances. The MAC
+references its SerDes lane through phys, with the lane, the PHY type,
+the XPCS instance and the highest speed in the argument cells, and the
+SerDes node that provides the PCS through pcs-handle.
 
- - DW_XPCS_QUIRK_NO_SOFT_RESET: no soft reset in pcs_pre_config(). When
-   the XPCS shares its PMA with another controller, the reset belongs
-   to a bring-up sequence owned by the platform.
+The pcs-handle type comes from ethernet-controller.yaml. Only
+maxItems: 1 is added, as the MAC has a single PCS.
 
- - DW_XPCS_QUIRK_NO_EEE: VR_MII_EEE_MCTRL0/1 are not implemented and
-   must not be written.
-
-No entry sets a quirk yet, so there is no functional change.
+phy-mode "sgmii" requires both properties, and each of them requires
+the other.
 
 Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
 ---
- drivers/net/pcs/pcs-xpcs.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ .../devicetree/bindings/net/nxp,s32-dwmac.yaml     | 30 +++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/pcs/pcs-xpcs.c b/drivers/net/pcs/pcs-xpcs.c
-index 6466e0ff2a98..442c64a731b7 100644
---- a/drivers/net/pcs/pcs-xpcs.c
-+++ b/drivers/net/pcs/pcs-xpcs.c
-@@ -158,10 +158,20 @@ struct dw_xpcs_compat {
- 	int (*pma_config)(struct dw_xpcs *xpcs);
- };
+diff --git a/Documentation/devicetree/bindings/net/nxp,s32-dwmac.yaml b/Documentation/devicetree/bindings/net/nxp,s32-dwmac.yaml
+index fcad2274302d..219a033b889d 100644
+--- a/Documentation/devicetree/bindings/net/nxp,s32-dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/nxp,s32-dwmac.yaml
+@@ -15,7 +15,8 @@ description:
+   The SoC series S32G2xx and S32G3xx feature one DWMAC instance,
+   the SoC S32R45 has two instances. The devices can use RGMII/RMII/MII
+   interface over Pinctrl device or the output can be routed
+-  to the embedded SerDes for SGMII connectivity.
++  to the embedded SerDes for SGMII connectivity, in which case the
++  SerDes lane is referenced via phys and the PCS via pcs-handle.
+   The DWMAC instances have connected all RX/TX queues interrupts,
+   enabling load balancing of data traffic across all CPU cores.
  
-+/*
-+ * The integration owns the PCS reset sequence: skip the soft reset in
-+ * pcs_pre_config(). Only for PCS without Clause 73, whose fault recovery
-+ * still resets.
-+ */
-+#define DW_XPCS_QUIRK_NO_SOFT_RESET	BIT(0)
-+/* VR_MII_EEE_MCTRL0/1 are not implemented */
-+#define DW_XPCS_QUIRK_NO_EEE		BIT(1)
+@@ -81,6 +82,19 @@ properties:
+       - const: rx
+       - const: ptp_ref
+ 
++  pcs-handle:
++    maxItems: 1
++    description:
++      phandle pointing to the SerDes node that provides the SGMII PCS for
++      this MAC. See
++      Documentation/devicetree/bindings/phy/nxp,s32g-serdes.yaml.
 +
- struct dw_xpcs_desc {
- 	u32 id;
- 	u32 mask;
- 	const struct dw_xpcs_compat *compat;
-+	unsigned int quirks;
- };
- 
- static const struct dw_xpcs_compat *
-@@ -729,6 +739,9 @@ static void xpcs_pre_config(struct phylink_pcs *pcs, phy_interface_t interface)
- 		dev_err(&xpcs->mdiodev->dev, "switch interface failed: %pe\n",
- 			ERR_PTR(ret));
- 
-+	if (xpcs->desc->quirks & DW_XPCS_QUIRK_NO_SOFT_RESET)
-+		xpcs->need_reset = false;
++  phys:
++    maxItems: 1
++    description:
++      The SerDes lane that carries the SGMII link, with the lane, the PHY
++      type, the XPCS instance and the highest speed in the argument cells.
 +
- 	if (!xpcs->need_reset)
- 		return;
+   power-domains:
+     maxItems: 1
  
-@@ -1318,6 +1331,9 @@ static void xpcs_disable_eee(struct phylink_pcs *pcs)
- {
- 	struct dw_xpcs *xpcs = phylink_pcs_to_xpcs(pcs);
+@@ -88,8 +102,22 @@ required:
+   - clocks
+   - clock-names
  
-+	if (xpcs->desc->quirks & DW_XPCS_QUIRK_NO_EEE)
-+		return;
++dependentRequired:
++  pcs-handle: [ phys ]
++  phys: [ pcs-handle ]
 +
- 	xpcs_config_eee(xpcs, false);
- }
+ allOf:
+   - $ref: snps,dwmac.yaml#
++  - if:
++      properties:
++        phy-mode:
++          const: sgmii
++      required:
++        - phy-mode
++    then:
++      required:
++        - pcs-handle
++        - phys
  
-@@ -1325,6 +1341,9 @@ static void xpcs_enable_eee(struct phylink_pcs *pcs)
- {
- 	struct dw_xpcs *xpcs = phylink_pcs_to_xpcs(pcs);
- 
-+	if (xpcs->desc->quirks & DW_XPCS_QUIRK_NO_EEE)
-+		return;
-+
- 	xpcs_config_eee(xpcs, true);
- }
+ unevaluatedProperties: false
  
 
 -- 
