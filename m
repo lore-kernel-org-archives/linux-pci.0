@@ -1,58 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795565320;
-	b=DR5KZWp7kcS3wV3i8YNHeXntjmQpVlp/TZhKgWZfQD8mhqm9s9XzaLI+K3nNUvLL5j8K
-	 J+VsgZN/sGGGPX6kIoFZJrm0ArL0PJiPmkUsJZPCFtjHAJrWxPvz6zdylDfuHaroexZlA
-	 20NgVtyngksj0+GwiXNVemkpobt3b0HFLN78JLYxvQuzTjsAHYsDAnL5TJ747GLQwnYMj
-	 yoxgEP/S/u7BX9nYESeWPKbx4YNxux3qUHO9dGS/bcOIgBT1CLduRNCu/rmKaU8z9wHPZ
-	 p+h8xK6DXbaPRM8t9jae3Fm5Qj0jh2y79/jFU81WYK3cv6fm+64XxaKFgSyaofIMw3A==
+	t=1795565430;
+	b=W98iXKXwsuM9ZdI8gOarScWeMEQpCfycufPQqoZrdE/JzA8ifwHd97kVYeVPPOhob6Ta
+	 T3YrMYMtoaw1jCo9YtWKPT9UcQlCi+y4qnHXRKp/2oJ8pKM8Tcgxe4HaiNZZxWVbW/b3Y
+	 xEMaZcp55PpPRTvGU+yEuOPV+MtqrQh9oiI6iiA5K4smGsOuf98ueAm247JOhrCiqcPic
+	 hM2coFkMwKGKotLBr0vGhXC7vr50cYFdrGmUJVBf2wekkkAn/RMxMBO+Xvc2+xzuba0Gg
+	 Ez0KP2l4hfUiqEZVSdHRD9hSY8Kn7Di+r2LiqLvHt9xGbwUn1YUg225tme7gjEj7Nug==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795565320;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795565430;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Mb1VUJyQXUJd5r0N+87LOv0VhAv9PGlLG895h5R0p/w=;
-	b=VGGO5NV6tZMIPLcIkz/kfX0PkfkwrfQsOqwhMebN8ZxXRjIZqc4G/Gnfm4OreottL7iZ
-	 zuxxFoyEcJL4VIS2NJG1keAVK4cHy5hynC+2+V65PWKPzLAMgNaoWd7FQQHRjGoTsrwq6
-	 KhxNaqpiePnNPy/ECudYBhd9DG6kqz3gkZFh+R4oNEVrmvCEmE2KvrxT1lTb3FNqXY/h1
-	 aJquzEhtHbhZqAIuGn4pZhotGbwpc7ONJ5v2WkfaP4IhOzDim+Ckp82rehBCHJiDLxU7p
-	 zxq4U+otHqJYMGV3XdfFu+4stiTuzdBECnZsRyAigxb5aCaZ7aOdlAU1umwxwCJJNVw==
+	bh=UXIld9QrTe+UE0l/81XlCBtJ2t8TTqOmbpSiK2nPqBM=;
+	b=v7nOtYU42ZGxQmECrch5Gl8NOtbplJ3IfIjKDQbTjXK+hG4dSBEbPW+aGi1alkSpiWDB
+	 aZoPjsphCLFmFm7c0cct7HBMfiou+l0ce+YkEXX9aim1RXcSrYdZBXIeJR4AqeO6i8Q6g
+	 UXTWKFONomNp9h3r654MqElZ841+kzW3Lis3P6BRkpyRYwYON9Ar/rsiMPGgLRhsiS1nQ
+	 rDYQalG6Z1aIx4LviDrOCQPa7nvWa+LG5z+Nze0P1TAPVEjUUT3G9GQXZlabN2/ld70F7
+	 zkyN2yVVu1JhkKkH8aJxOZMhzSkJw8BXYnt4awvImjOoL/jfArDDZOvFewWkW3Iz2aQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dKkkkSdi;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gyHLuBJt;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE99A606A331;
-	Wed, 25 Nov 2026 00:08:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7255C606A31E;
+	Wed, 25 Nov 2026 00:10:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dKkkkSdi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 897C51F000C6;
-	Wed, 25 Nov 2026 00:08:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gyHLuBJt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A1281F000C0;
+	Wed, 25 Nov 2026 00:10:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795565319;
-	bh=Mb1VUJyQXUJd5r0N+87LOv0VhAv9PGlLG895h5R0p/w=;
+	s=k20260515; t=1795565429;
+	bh=UXIld9QrTe+UE0l/81XlCBtJ2t8TTqOmbpSiK2nPqBM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=dKkkkSdi2xQQIlhXTiQUdp3dDtWoJu1Qz/G7bqC3Ll9mAH1G4W9gtMnznmDLOOLxD
-	 55LGHk5xoKzT+1EJVFHjm3jVIUN4kJhZfpmdq0RcJNXYbsZ8xTWkOPFPbGLaChWd0u
-	 c8jlw3eZ3Q9kRPQHWbmWr4EX3+E3EVUARU062BeWqHs1MWfQSWzTfoaJ7zYbhgAw0L
-	 SJy/Tw1Fhq2wPcb2CvERufjlVzAqs8wEbq0EQ+W7r7LwOm9KefX87iMu7j7a+1gqnp
-	 8UzO5pMC8Dri0dLlSoU85FluInkbGSZhtCErim3QhJKYAR5rtvb95B6cQvhQEkvenH
-	 D8H5e6Uwc+FAA==
-Date: Tue, 24 Nov 2026 18:08:38 -0600
+	b=gyHLuBJt3fYGXFD2OttwhMGc+aj+vkZjnBE+33di7izJVDOoiXGvVgBi4XyXFV8ER
+	 UxfFXEtmtIN7a5Sz9nUNgS8Jf/v9VOAsm9pWjG+VNeE0Jnbzw6ApZnjYjoITt7T0jO
+	 FtMPYzJznhDhrYpigZI0eDuzEbWfIgxm5TEj4Ixfiyn2tzey28WZi0fR9VDKkgppZQ
+	 9iA7usey5lc/xHxF6aWDP1jwUa25nDaOrSKKbg/bSkJnNsbrYES8BVjaJ6ImIRT7Qd
+	 StisrFZkSJQH5xf3MEC39fXTgCGlzHwaayQUguLfB0eBypXYAWvtWDBB3xX0kTYykW
+	 AL1aQC1FUaUAw==
+Date: Tue, 24 Nov 2026 18:10:28 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yazen Ghannam <yazen.ghannam@amd.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/6] PCI/DPC: Decide DPC ownership with
- host_bridge->native_dpc
-Message-ID: <20261125000838.GA1194450@bhelgaas>
+To: Joshua Machauer <machaujo@amazon.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
+	Richard Cheng <icheng@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
+	nh-open-source@amazon.com
+Subject: Re: [PATCH v2] PCI: Skip the CXL state update for a VF
+Message-ID: <20261125001028.GA1195082@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,40 +59,61 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <awVV71IbFuYAJDzh@wunner.de>
+In-Reply-To: <20261123162035.79133-1-machaujo@amazon.de>
 
-On Tue, Nov 24, 2026 at 10:16:31AM +0100, Lukas Wunner wrote:
-> On Tue, Nov 24, 2026 at 10:04:31AM +0100, Lukas Wunner wrote:
-> > On Fri, Nov 20, 2026 at 12:18:41PM -0600, Bjorn Helgaas wrote:
-> > > On Thu, Nov 19, 2026 at 10:28:36AM +0100, Lukas Wunner wrote:
-> > > > https://lore.kernel.org/r/cover.1794997749.git.lukas@wunner.de
-> [...]
-> > One more thing:  sashiko flagged two valid issues in patch [7/7] of my
-> > above-linked-series (which is now the top-most commit on pci/aer).
-> > I've provided a fixup patch for both findings at the bottom of my reply
-> > to sashiko:
-> > 
-> > https://lore.kernel.org/r/av4j5j9-In1uWC8T@wunner.de/
-> > 
-> > Could you fold this into the commit?  Alternatively, I'd be happy to
-> > submit these as two separate patches if that is preferred, with a
-> > proper commit message to explain each change.
+On Mon, Nov 23, 2026 at 04:20:35PM +0000, Joshua Machauer wrote:
+> set_pcie_cxl() runs for every added device. It first refreshes the CXL
+> state of the upstream bridge, which walks that bridge's extended
+> capabilities and recurses up to the Root Port, and then searches the
+> device's own extended capabilities for the Flex Bus Port DVSEC.
 > 
-> Actually... come to think of it, you had this question about whether
-> ratelimiting knobs should be exposed at all if there is no AER-capable
-> Root Port or RCEC.  I think this could be implemented simply by not
-> allocating aer_info in pci_aer_init() and jumping directly to the
-> "enable" label.  (Because I think we still want to continue enabling
-> Error Messages in case the user or the platform sets the System Error
-> bits in the Root Control register.)
+> For a VF neither step changes anything. A CXL device exposes its Flex
+> Bus Port DVSEC through Function 0 (CXL r4.0, sec 8.1.8), so the search
+> in a VF finds nothing and the VF's is_cxl stays false. The bridges
+> above a VF are the ones above its PF, which were already refreshed when
+> the PF was added. Because enabling SR-IOV adds the VFs one after
+> another, each add repeats both walks without effect.
 > 
-> That would implicitly hide all statistics and ratelimiting files
-> and may be a cleaner approach to overcome sashiko's objection that
-> Root Port statistics are exposed on AER-incapable Root Ports with
-> patch [7/7] of my series.  It would also save a little bit of memory
-> if we don't unnecessarily allocate aer_info.
+> Return early for a VF. Every device keeps the is_cxl value it has
+> today, and the bridges above the PF are no longer refreshed during a
+> VF add.
 > 
-> Do you agree?  If so I can prepare a patch.
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> Signed-off-by: Joshua Machauer <machaujo@amazon.de>
 
-I folded in the fix above for now, but will be happy to replace with
-the approach you propose.
+Applied to pci/enumeration for v7.5, thank you!
+
+> ---
+> v2:
+> - Shorten the commit log (Dave)
+> - State that VF adds no longer refresh the bridges above the PF, and
+>   cite the spec section in the comment (Richard)
+> 
+> v1: https://lore.kernel.org/all/20261119164219.51540-1-machaujo@amazon.de/
+> 
+>  drivers/pci/probe.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 9a178e0e5f7f..e302f9dabddd 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1717,6 +1717,15 @@ static void set_pcie_cxl(struct pci_dev *dev)
+>  	if (!pci_is_pcie(dev))
+>  		return;
+>  
+> +	/*
+> +	 * A CXL device exposes its Flex Bus Port DVSEC through Function 0
+> +	 * (CXL r4.0, sec 8.1.8 "PCIe DVSEC for Flex Bus Port"), so a VF has
+> +	 * none. Its upstream bridges are the PF's, which were updated when
+> +	 * the PF was added.
+> +	 */
+> +	if (dev->is_virtfn)
+> +		return;
+> +
+>  	/*
+>  	 * Update parent's CXL state because alternate protocol training
+>  	 * may have changed
+> -- 
+> 2.47.3
+> 
