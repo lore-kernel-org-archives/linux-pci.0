@@ -1,71 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795604566;
-	b=urwZ15gPVhjyHsQeRTGXhI5HPU7kQb2ZXRdcdDEEii1ECW+kzXqHcQTnx001CJSlpfVH
-	 VhEeDlA3HwqAVyec6J4+pJPTBNKHaCXAowjcqGJGT0EG/yR12o5pempNDaJQCEP0d1a5l
-	 A9VK/Wen9VO5eTjzkIGK0YdVmmkEXl0q47wJncEYz734UjztL06kvSYSatsQWAcuYQOC/
-	 5vBnUqLVJU018SPF/IR4GFy0fvQCP+zLR0NQBqLlIB51pbXDfyJCjLCCPSw3Oy5uonms9
-	 Pr7/CqUe3/+iUsBozSIMSWOR9rfiq1ZMKyUYca/MZ3uUg4ZfJF1b+jEs/GVWgLN4edg==
+	t=1795605214;
+	b=A+y4np1lii6lF/sJikeMpC+DFwQIgc9nwCdr+N/JElaBq809CD4jSeETU/pvQflhiIPq
+	 YjbfDswRyKmolX1M3yWMLcDkIPNW0k+64iR/jpqv+AybhOqmw3WHo6RtyXCVi55Gnw4zN
+	 d58H/B6L9plM+Z+ySK7rUfq5yAWR+mEMt8r4EHppp/o8pUHoZk8O9g+p1H2gscCScg/TL
+	 vmqDVSlhw3bhLS81FTzo9rEl4t54EGaQ4qnKNIRLBrVdtouoErkzXgIC3UZV7+k5rTG5E
+	 inVnExVrihkEsKszRj2iyLTG3/9RyVp5NSsUwJvagkJiImsk964wv/OzUh9LZEe343w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795604566;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=T0/grb7hqX6huTfFN3IVlCEBMQYZ2/Yv8VYwqOJkMG4=;
-	b=zKpjan1fhRsxGV5wAX2SRMSViNaG8wMZYETZvfeWVxKvbRE2EJ8lf4MvXcPcl2ghPfZn
-	 RJeZdMLyg2IT5XAET9Mt15OqgwAF3jpo3ct5FoRPXTL18D00t0p/4h6oqF16yIgey6Iy7
-	 DAJjOE+27ME/YipAwT8Qs8lpp4Z3dFwpw4I6KD+WyeiUs5WzeLg0+XF4D1uzi8UqWmZuO
-	 cQ5/Svdp+ZfgzDHIgZmb8RHTu7TWxo6ZN9f4ATzO0fzws0TWnO2AbjqlF8xIhd8cZlL7t
-	 ubSPlfsbvzgqHZMlUIhoPsbukvWGaUrYUTTGf9Cd9sLbqD43LfNFblh+KFPzrrLxj6Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795605214;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-GUID:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=mN5Wi/oP+/iEZPIHVVYdEV/26IVRoESzTs9DlS/w+zw=;
+	b=anR823e7kA0OszjvXSfyISNuB6IU1nCDbw3qjAKyKvEAbJy/CP4/B6rAhJM1f+YJepiT
+	 kWZu7lrWOUBo7tuX+KbiQ3YjOUDT3vsR/kaVssH9jMGuCNOIeckZSIQ2/UivYpnii+Gdo
+	 lDAgeibFsxlsigV0APlwRmxIav/2/eohVXo48D6Ki9fR2n65i41oC/LJyaEKeng+z4mKN
+	 d6YD5/1NkagbLKgvxlVn/GtU9y0CL2IMMbsqRrlo7CzPfQdi1gknZPLaXdGObQVkFcrjr
+	 fwyeaARxy9NWqgNa5EtlKD1DcTrOsMi5BfUF0lRaY2fv7zVXKVdlEiKN8s8mLQopA9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UTBYCJ1s;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=o9MBqwBO;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=h6ZbwCHi;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D05606A335;
-	Wed, 25 Nov 2026 11:02:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FFED606A326
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 11:13:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6FFED606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UTBYCJ1s
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 778F41F000CF;
-	Wed, 25 Nov 2026 11:02:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795604566;
-	bh=T0/grb7hqX6huTfFN3IVlCEBMQYZ2/Yv8VYwqOJkMG4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=UTBYCJ1sshanx/nXPRWinb09Cvfi/3WgfFqN65EjcHZTK2xdsfGY26aFLCk50xvX7
-	 eTPk2mRmQswSeB+s+b3oBHkzTVhHzemKDT6yzrrRNwzbupsEzVLfQOCwkH2/Sq9xPG
-	 Lw3DGy9Dhz51jWPZICbAghZSmlf9Y99VVwAOQH4H5a2uNwot+xo6WMmR+LdESnveJV
-	 Gh1SEtRKftzxvt8NOHWoTuYy7407vMYEJrl9gzDQGtyFk0Kxeua8VVRRZKCsSYD1+0
-	 1mwQbH2+U1GD0FONBIYzpuKwxXmsiDnEog9HwCIoHksB2GP+tC5mOnUQmdckwqwCrc
-	 E2y9BvmzR6Q8w==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
-	Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 05/10] PCI/TSM: Add association locking helpers for
- evidence acceptance
-In-Reply-To: <yq5ald6h9r1g.fsf@kernel.org>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-6-aneesh.kumar@kernel.org>
- <20261123153507.GH179082@ziepe.ca> <yq5ald6h9r1g.fsf@kernel.org>
-Date: Wed, 25 Nov 2026 16:32:36 +0530
-Message-ID: <yq5aa4mx9nsj.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=o9MBqwBO;
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=h6ZbwCHi
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AP9nlFc1505248
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 11:13:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	mN5Wi/oP+/iEZPIHVVYdEV/26IVRoESzTs9DlS/w+zw=; b=o9MBqwBOu3LAk3Ql
+	kluDjP24AD5Fne6UqAfHIGo4aXZyOPqqNhGWSMuLNOSzZjicR5UqeSWaXbzQRXpC
+	3S3swPaoOA2/2pfeLK9d2q60YA6NW3o3k2M7kqjahCRwHEdXGu2VXsKVK1N3XgsZ
+	GksJF0GKZyCRJ4lZx4U1z6Z1+Ow8Q527VpGzEaa9uz5cHC3dp/nR+xbu2dNLJlY5
+	FCGD5GihpERpZoM47wKRHcbqGFn2tMDIVhD9Sx1KWJROBzqzDOxGvGsuq+J6CfMk
+	o0mkvgLk1sjDO6DsCgr3DhlD4tNBN24Fob5Y9fb9gNq6l5d4gdTozjxZ5YTltUDq
+	VexuVg==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j5qa29wst-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 11:13:32 +0000 (GMT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-53657d237ddso8539381cf.2
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 03:13:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1795605212; x=1796210012; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mN5Wi/oP+/iEZPIHVVYdEV/26IVRoESzTs9DlS/w+zw=;
+        b=h6ZbwCHibim5dZLdQTk/KVIK7DHkQFXs5f9wRPTh96Muk4tbeCJJqgCHL7Z/e0Jedc
+         TekoU1O25P/yI1+9qVgzPaqcMKSHASm1kZZu2T7j/Eno9s7aaumrfCs5aEv+nXoVygI8
+         adNWrRp3i1xX2Gi62yz1ksyqUkOeeVkOrpfy98JV5lh/Fd4MU9rbRy3KkykFP6uYnXJI
+         6fEThBtu4ZqXOlvdhyYeoPD/xjATetEUqCMjMfECyvva6EeGe8SfOH5/qF/zCFrmrcP/
+         cjhgLkvK79I/HsPFV2tvbY9i2USI+TIP7h0hNlEJ44lBZc5aBvGuUNybglgNFByMPiRD
+         5/hA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795605212; x=1796210012;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=mN5Wi/oP+/iEZPIHVVYdEV/26IVRoESzTs9DlS/w+zw=;
+        b=DI9cVfUMeSy/UBZIwXk8WezHj1TVM0CHqEjMNN4U4yZ+i4SYuWP6RUr5ceDPord6EL
+         DfT2W+UCNMN0n9Gtr18bF4UrZ5K0nhNZrJsdaP3nIouGetk8CleBDNre2nkGOAJwl2UA
+         /1otSbS+9efGXrHYOsnOCCCAsfRNoL25GGmBx+uR62Z4tdW07rfehW6sW71k0QQCH9Aw
+         BuEeNFWV4WqkTqzAh+a+vwLn+TtTbHbLn6FWzxe5iumgbjk8PUudpRpcQZrax44i5eHK
+         oHwr7y+wG3KU/CMS2fui1Ig2dbo5YyAI1Zk0PpHwReXatcR4KTLOIswKP0d3uLmXxdF5
+         OIDA==
+X-Forwarded-Encrypted: i=1; AL+hErH2gSEEhaAHLcQpxNii99dkgKmpkMvS2Ztkxx+s0w3JaIaGGMxWleQZJb326ykmfXBtJCp3UFXMvO0=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8iqB846I8C73SFVz+9kaoTuo1pcZJwdnXH8YDeLwCZxcO0P11K
+	xPk46aZ9j5JVhXiQkznJNi/0DOXl2npqGOMlFvnj4GbSfP5rHJOV07kdADclWMT3ldqGe7aBgP2
+	COEl+fyrxw17GMfXdrmJdpImz4ubhlAFv9+WvmOfUQl6PKmSF52CkRW712+BPoOU=
+X-Gm-Gg: AZFdTZcE0QBxM1ADQObkwvxttQZnS6Cor7SgjIV7DMAjuFKlg5r/hqetH4o7bT41ajb
+	kLluikKw8iYEHHcWpekUz+fCli+28+bfh4N+EktU1/JGl6pL7c+rssQ6n7WVO2pjggFxhAtfx+r
+	sfjrEJB2sbnVs09xtCV+E3gl5yJk1KGsrtrkYjo8hMiWdB3krYqBRxS+kOgnYzkZ1E9ZzycoBJu
+	oG9aaCtptXZjK5nrvHp5pmk8IAIZn5D9x8QY8ZZdT/wRSuc8V7Ue1VnE4kaox7whfAQ5xS2C2F3
+	TimAn6vDX8RxjaI5s37N69kJDpWfKP/eq1w+zWYPTEtzzoCEpr3huX3Yt1oOxfWfLi4pN+KrtZ5
+	LPdHlZd4YECG4hKwouyvTihLGnXGbjVdExnzyHhcVolyZ8nLwRpOdYOI8/DCsk9OXPwMjmwo=
+X-Received: by 2002:a05:622b:57:10b0:536:61d4:cc80 with SMTP id d75a77b69052e-55d76a6b28dmr296719701cf.5.1795605211560;
+        Wed, 25 Nov 2026 03:13:31 -0800 (PST)
+X-Received: by 2002:a05:622b:57:10b0:536:61d4:cc80 with SMTP id d75a77b69052e-55d76a6b28dmr296719371cf.5.1795605211141;
+        Wed, 25 Nov 2026 03:13:31 -0800 (PST)
+Received: from [192.168.226.72] ([178.235.128.140])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6ba36e35641sm8146988a12.1.2026.11.25.03.13.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Nov 2026 03:13:30 -0800 (PST)
+Message-ID: <e3add71f-8624-457b-a304-d5791015bae1@oss.qualcomm.com>
+Date: Wed, 25 Nov 2026 12:13:26 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -75,78 +115,83 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/4] arm64: dts: qcom: glymur-crd: Describe the PCIe
+ M.2 Key B connector
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>
+Cc: Abel Vesa <abelvesa@kernel.org>, alchark@flipper.net,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+References: <20261122-pcie6_fix-v2-0-2e0fe615d90b@oss.qualcomm.com>
+ <20261122-pcie6_fix-v2-3-2e0fe615d90b@oss.qualcomm.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20261122-pcie6_fix-v2-3-2e0fe615d90b@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: syqXXpYf0EjJM_QBmHk8jUq9eRXvunTA
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI1MDA0NCBTYWx0ZWRfXyCfKeSEFJ8Zw
+ j5xqGvvDP85S5ZZmPgs9jFoG/zgmZglnuKO9XdViWu+k1nEQScbYJVu3vXUeL+lP6lVVu/Gf05W
+ XWxr32ulRBngeqXyZDcHV86Q1CGV6Mw=
+X-Proofpoint-GUID: syqXXpYf0EjJM_QBmHk8jUq9eRXvunTA
+X-Authority-Analysis: v=2.4 cv=CKu/zhrD c=1 sm=1 tr=0 ts=6b06c2dc cx=c_pps
+ a=JbAStetqSzwMeJznSMzCyw==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=EUspDBNiAAAA:8 a=fmVD6mvdgdatrdQPAe4A:9 a=QEXdDO2ut3YA:10
+ a=uxP6HrT_eTzRwkO_Te1X:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI1MDA0NCBTYWx0ZWRfXyjaDS5kqnOs7
+ QnI7xAMkSMNY5lS7oL+SvQAfGtmA4Y6MBqtxTQvCFjl4GF1QIo7QWekJjq36e6z7jE8EWFsVdTv
+ kaRIm2z3KTPf3NGapmEB8LBHn36q120Gnq96MsmHFiDmyW0m9nCZjohNPCNEOsIgUWHGIlfWxn8
+ eXqhl+9Ava5bwjfEVxm/QBgO4GZ8+8RqYze+e/ygBrYmPMIjpaYRHDAmrLCzGp/r2ewvlXLUDB8
+ rFsAJAaUr5nXr5rIxSgs5ifJNODLjbMiOJLyp/JURAl8D5cv9up8YJiMvvZf6ck2UXKV5TK7n/G
+ MbKkLGVOxZQ9d7Mygi3a7vWTwoWHrMRj4wtAllQIkLjn69OWjlmRpW+mzDhrTNpvxfKj+XMO9WQ
+ gCr32LUp7S0BqOxLYtPxQgDYHEqgM5XXFgjkkPhm6OozbXYfQpHQq+PpiB9UOpNHoc+JNvbTiN8
+ ZyDLL/0RG+Y+ftcSSZA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-25_03,2026-11-23_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 lowpriorityscore=0 clxscore=1015 malwarescore=0 bulkscore=0
+ spamscore=0 phishscore=0 impostorscore=0 suspectscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611250044
 
-Aneesh Kumar K.V <aneesh.kumar@kernel.org> writes:
+On 11/22/26 7:45 AM, Krishna Chaitanya Chundru wrote:
+> The Glymur CRD has a WWAN M.2 slot connected to PCIe6, whose vreg_wwan
+> supply is described on the PCIe6 Root Port. Describe the slot as a PCIe
+> M.2 Mechanical Key B connector that owns the supply, so that the slot
+> power is controlled through the pwrseq-pcie-m2 driver and the PCI
+> pwrctrl framework, like the other M.2 connectors on this platform.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  arch/arm64/boot/dts/qcom/glymur-crd.dtsi | 29 +++++++++++++++++++++++++++--
+>  1 file changed, 27 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/glymur-crd.dtsi b/arch/arm64/boot/dts/qcom/glymur-crd.dtsi
+> index 3a9cd5f3ec2b..a66ba8c0ac8c 100644
+> --- a/arch/arm64/boot/dts/qcom/glymur-crd.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/glymur-crd.dtsi
+> @@ -230,6 +230,27 @@ vreg_wwan: regulator-wwan {
+>  		pinctrl-names = "default";
+>  	};
+>  
+> +	wwan-connector {
+> +		compatible = "pcie-m2-b-connector";
+> +		vpcie3v3-supply = <&vreg_wwan>;
 
-> Jason Gunthorpe <jgg@ziepe.ca> writes:
->
->> On Mon, Nov 23, 2026 at 02:03:32PM +0530, Aneesh Kumar K.V (Arm) wrote:
->>> Later attestation patches let userspace finish device setup through
->>> evidence-accept after host sysfs connect or guest sysfs lock returns.
->>> Those commands use a saved struct pci_tsm and must prevent disconnect or
->>> guest unlock from changing pci_dev::tsm or freeing the saved structure
->>> while setup is in progress.
->>> 
->>> Add pci_tsm_trylock_association() to acquire pci_tsm_rwsem for write and
->>> check that pci_dev::tsm still points to the saved structure. For a TSM
->>> implementing devsec_ops, first take device::mutex to prevent driver
->>> attachment during MMIO validation and device acceptance. This matches
->>> the device-mutex-before-rwsem order used by PCI DMA preparation.
->>
->> This doesn't seem the API I'd expect here.
->>
->> When we trigger SPDM session start AKA lock through the CTLV it needs
->> to capture some kind of 'session cookie' for this locked that ties
->> back to whatever the TSM is using to prevent a hostile host from
->> locking/unlocking while we are working.
->>
->>
->> That cookie should be held in the attestation driver and when we get
->> to acceptance it should be presented to confirm that nothing has been
->> tampered with.
->>
->
-> We already do something like this on lock, we track the cookie as part
-> of CCA and use that during accept. Sure if every architecture supports
-> this at firmware level we can abstract that to attestation layer. Yes
-> and this protect from hostile host.
->
->>
->> It is a further reason why we can't have lock under sysfs control.
->>
->> It should be attestation that provides a general purpose lock that
->> serializes all attestation operations including lock/unlock so we
->> don't need a TSM lock like this.
->>
->> The driver should rely on that lock and use its internal mechanism to
->> process the cookie.
->>
->
-> But this patch is about keeping pdev->tsm stable in the guest. We need a
-> mechanism to associate a TSM with a pci_dev. Currently, the host uses
-> sysfs 'connect', while the guest uses sysfs 'lock'. It is not clear that
-> we were proposing to remove that mechanism.
->
-> We also have a single sysfs teardown operation: 'disconnect' on the host
-> and 'unlock' on the guest. This tears down IDE, unlocks the guest
-> device, and disassociates the TSM from pdev->tsm.
->
-> How do we ensure that pdev->tsm remains stable across the different
-> operations?
->
-> As described in the commit message, this patch takes the lock to prevent
-> a sysfs unlock from running concurrently with evidence-accept.
->
-> Are you suggesting that the TSM association remain under sysfs control,
-> while IDE teardown and TDISP unlock become CTLV operations, and that
-> sysfs disconnect or unlock be prevented until the above CTLV operations
-> have completed?
->
+On the schematic I have, it also routes FULL_CARD_POWER_OFF_N,
+DISABLE_N, GPS_DISABLE_N, 2 UART ports (one muxed down the line),
+and a USB port (also muxed down the line), plus of course the
+m.2 config pins
 
-Even then, wouldn't we still need pci_tsm_trylock_association() at
-spdm-start? Once spdm-start completes, we can ensure that the
-association remains stable until spdm-end, but that still does not
-eliminate the need for this API, does it?
-
--aneesh
+Konrad
