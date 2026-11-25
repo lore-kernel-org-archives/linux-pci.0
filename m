@@ -1,75 +1,75 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.17
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795599674;
-	b=pffgYWho9R6TaovUNn7I7r8bqPPgj0pMDTSgxItUMEHsqbQBGZcS/pNC6Qz0Ws13CBo8
-	 6c6GeTU1znFIaeBQvO8oebRZ3vxhIl3cQN1qYWymhQqb88hvLpi0t74m9k/RYWgjGgQ7Z
-	 3y5FTvG1YF/VTh+n+hAbXC72mskzSDG/zj5WjuWh9gjGJJJ3xVwnZ9uhZqQAV5wpZhmYH
-	 23kmuEytcLNwMF1VQnfBuJlR5VGqDEXMrmB4FdDQCZ7gXiQaKv6sMc8mah3CjCwyuXvBb
-	 7/3DeVK5Eip6KSIv1vym5j6WMKDZE3bzntCAT5VOtQeL3SDy8aWWtelDQpEK07DJYCA==
+	t=1795599675;
+	b=1dTI5JhNsHkOdM2VfyY9Zit3yoW1nF0dRy/l9pWoaxMXCrLtTJGpgKXmhKgxBUckIWZ8
+	 HwgRrBkHq0xbYRt1OLHF33qI1xl6vbyqwIrk4D9XGPptbkSxrP4GqLyZSzqgoC+UsO7mC
+	 cY9XYsTMU5kZXFxKhfIkUyEx2o6NV46qBB3DTSbXXeYRVTFUvpaawW+ATYsj+eySIfVnr
+	 ZLSBxm5N7L/n1Ko/x5Chy0oV58mo/m4shfq0PR5LEe0bK9iPtkIFPKsHrvF3YWCi0Sb71
+	 cBFKaeg9UFFu43cuHbxFkkvDS4eks1BvctuMQLg0ZRvKQGihLRyD6fbbYx6XgIH3vZw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795599674;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795599675;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
 	 Cc:Subject:Message-ID:User-Agent;
-	bh=ZLimqD30+9bm576pQBBbEC9cd8isLZzqlkF79ooXiU8=;
-	b=MkSR7KONEIRlLfet563V/IOXg9TQmSMrqSlrRdicAIayHnATf17VXC8p+inDdX2G31R+
-	 Y8uzfsVjZRdm0Byk+0Rzlax+6QRNQjBlrnMxODJcDyCdcRs4DYZpishIWombAquMOXVqn
-	 EHFSLyuucdPhOauZDr7431xEvFxdvN8byvVNJNGGN4L24BGIf6yP3pz/YnZSYjLt7hcF6
-	 F8NbFXGGNHir4DtEKQpyFSL2Z78c7jCwx41AHp+zZ0QUZHpdJrl6F7PDwiyz35J1R89h1
-	 VuKkyf8+MFQKpnm/oFMz93Csa1Z4broEO3UfgZL0XIBj5ua5cWgDSaQ4yqJyHS8h5ig==
+	bh=0vo010KJnYbYcgOpos0TfEyc9idE41Kp222p7QwL/Lw=;
+	b=dZbNgI2ux71EP7R/N4J3jQUZ9F5OZVP3LnuupZ6G47o1Mu2CWLeS+JXipnEshs0nn6gk
+	 fsZKTec0FzXw0Ef0gFw0PEr8Jv+yTdRnmQO3zIMiw1zoUuBRrk0MFBOjl3+3NTWo3ZjA1
+	 RL7tw/zJ9WbdbG9gaxR7qFAGw00kQ3eUBqESi32lxY8rNZNeVOBs9UjGPESPL1wxGsac/
+	 A0TTJ0iiNjqQRj6r5zhqB4j859RF1UYOAT45rOdXeyrUk4QJfv8ZOFJ8Kigo1jTA43U5O
+	 If1I7j/Zc9jl+v3bPqbDw9R0veJIcz9pFl49arW91GlH/1kd98xMuwBGDB9Vb19sm6w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KsP7Dmvj;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=K5pI5J28;
 	arc=none smtp.remote-ip=198.175.65.17
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6983606A32D
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 09:41:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6983606A32D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DC2606A327
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 09:41:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7DC2606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KsP7Dmvj
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=K5pI5J28
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795599673; x=1827135673;
+  t=1795599675; x=1827135675;
   h=date:from:to:cc:subject:message-id;
-  bh=fLrz5eBezqUCnTQGwRJ1AHb9JtaZpkGFy8iGBdsgQYQ=;
-  b=KsP7DmvjD8XvIZxYcfAKK9CJNEzTA5mq+G3Zb6x3ojN4QzSNyY7zKgHz
-   8uDcqyQFyIAGDMAPBGlN1NaXQndXTLWNx21kMzgnaDA9e9FBjH6j0lGCb
-   ebn5PdqYS5jHjKgpluvqIabNr4Tldb4uIG1GkVpKxO31WlSTn+zVEUMAY
-   5X7fI3dCv8JTAZ0k426Gc2aHomHSpimBNDI993VpHuBOrwiA9J9aozaWK
-   ZpA5Ca2qwCs4EolG54rYJpMxldeE7QgXqxAEg/BH7Zcv1VUC43uP/I5hK
-   +DqeygQO4IhHlOmh+PDPrYQaO8EOp4jgQ20+23k9k90IeIsN0gSZMzptI
-   A==;
-X-CSE-ConnectionGUID: RbBRgktBR9a78v0Qp2H7/A==
-X-CSE-MsgGUID: pPCx6ahQTwy0ndYRqyltFQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11976"; a="4473558"
+  bh=4eCBWffF135+y+jeUaSH2Gq9+FJ34Ruqc8ZNgAl3T2g=;
+  b=K5pI5J28lL7Ncqo4Z2OM4tQUtM6q5To0bLlSulLJ6O1+Ir5tWnLbK0Wz
+   eDaTwMJ1mrOHLCC/Q0izO7b+RQSbqLOhhSdVeoQNfsR/3ZaQctEMeg/+m
+   1XNJW33wXBAbA2nhCFcFjqX2ZFIsrvkuxvdUOBme6R/yhos5ifxTbR2vI
+   caT9OrUg8gsxPFdaAbxfutTaPjulYRaVY72AuvMYB8PpWdnj250JAhHa3
+   12+3JLUg+z6Yv6h82ZxhYAKFEGu7n+WIn07nHGyT6x860jkmN2vC0eedM
+   zixzdwMrPsLlVH/eXBKMhWUu/3isPHUw055u+8/QxkmascMESsbfErM7R
+   w==;
+X-CSE-ConnectionGUID: 5zcmgjmhTtGTYjMJouJyAw==
+X-CSE-MsgGUID: qhZU7ORuSfyPM9GRXwrkdw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11976"; a="4473556"
 X-IronPort-AV: E=Sophos;i="6.27,232,1787036400"; 
-   d="scan'208";a="4473558"
+   d="scan'208";a="4473556"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
   by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2026 01:33:45 -0800
-X-CSE-ConnectionGUID: QSuJOSUgQQ2sIrSZuQkcbg==
-X-CSE-MsgGUID: U/jZeaEWTcqGuXlDf5i0Eg==
+X-CSE-ConnectionGUID: S98g4tnGRbihLMr7ooWSTg==
+X-CSE-MsgGUID: U7xj/lRBRSq2JJpU2ahXXg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,232,1787036400"; 
-   d="scan'208";a="11612307"
+   d="scan'208";a="11612305"
 Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
   by orviesa008.jf.intel.com with ESMTP; 25 Nov 2026 01:33:44 -0800
 Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xW9Nl-00000001RHy-1tcj;
+	id 1xW9Nl-00000001RI0-1zmm;
 	Wed, 25 Nov 2026 09:33:41 +0000
-Date: Wed, 25 Nov 2026 17:33:26 +0800
+Date: Wed, 25 Nov 2026 17:33:36 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller:dwc-histb] BUILD SUCCESS
- 8d340910eefc1398b137c564d56128e40aadb9a3
-Message-ID: <20261125173326.cENm1ScI-lkp@intel.com>
+Subject: [pci:controller:dwc-imx6] BUILD SUCCESS
+ adf478a1cc9985ca1e7143fc185f2a4c59da7a30
+Message-ID: <20261125173336.cN1dlESE-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -80,8 +80,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-histb
-branch HEAD: 8d340910eefc1398b137c564d56128e40aadb9a3  dt-bindings: PCI: Convert HiSilicon STB PCI host to DT schema
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-imx6
+branch HEAD: adf478a1cc9985ca1e7143fc185f2a4c59da7a30  PCI: imx6: Enable L1SS support when supports_clkreq is true
 
 elapsed time: 929m
 
