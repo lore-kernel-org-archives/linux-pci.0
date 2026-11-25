@@ -1,78 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795599303;
-	b=fGQUQXat8yyd8/PoSq4rQ04/eX4wc4jDG7sAv7vhnxeKTwAxWm6koT3+f7fmnNYv/MdA
-	 XACzInxVd+t9nvxyrk4R2ROU/pEtxgJt45280dSq5izjgSaxDMc9Y++tJBPYUsPSKsX2J
-	 8OuZ5cLEkrGUSoufl0AzJYVGPAhJntTAS61noC8oOqpReoXhi1vM80Gm3FJbqY9ANEGJ0
-	 JAf1jY4uPpVbolA/awUPo50BVHA6rjvC1DQDlTvVI/Teww/6gXkgFw3NFlYqOvGin1SJD
-	 3bkBkf08ljY6xrmib1VbYihEibVNMLBX+bM4kqUvCe2MJkeJWjZABvJeAtdwaBYhGfA==
+	t=1795599329;
+	b=y81xYnDW+hUX3mUrKT0iBoLd+UtqiczQHek34oFrmPmXxxseQoV9L//ezYKXaWjoPrDY
+	 SpUJC3tbxb85vllSsDg1/HCDuaavEIUqpwSkb5P4HiX+eb1NIkKeKxpx8FeSSRSc+LfNX
+	 ElnARTJVN6k9jWa08JqRavwzuQ57ZPproE+L7cx+gDBrWVoh7EQqi+Gb3RvDwRBxy9m5q
+	 xPdDNEH04opkDVt++6Z7uzxZDTDxzmovBi68Nd5OLFFSQo5lqgHLpi9UZ8NSkfX/llQDt
+	 xBsNCzpbT9yJrQhPkwkREYNFr+Hbep53t6Vb2ek0sUclFyM/CdUnMywmhk7VZ76rPdA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795599303;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795599329;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=GE0X2Af1f0g88wp6AaRBRdIJWXxatq8TXaVKu/Afmt0=;
-	b=e4AlwilO5tY+z/JC52TbdEWHEYnqHYR9b1Mb5fE75woaAE1a62kw/1uX9qBlGoQR63L0
-	 qO/jrZTfsqWi9u01nna5oSdcTvVZcLJFWEehsbFbXIoOP+j9vRZ3XqW7ild1N0c0aYbxD
-	 lzY3zRoecflQLH7o6inWKo7mcGfhY0hUJSyrIOh2Pu3jXs1/fKukx4BuPIBKeXPj2KgtR
-	 bONIFwGCzsMJ8jw0QCESRQeIfwEbqSGaF2peH58qvnyFhW+Jfx59CEs2Q3t+kNtfYglsr
-	 1O2m6tCUqkUC/RqAQN+w/VuYS/YqqmXt42WNNmszo0M7Sv+G0bxz9kauo2h86RGRlDQ==
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=0yUkBGKmBoC6GhNX7wcbNe62PEHvACOAwQiXFUd2RPI=;
+	b=vfzetvyxSjIGPqc6RPUvKeV0UVpUpkmfuc30eQ7pdr5/1tojrgMJ+JMrWa5dqA8jYB6j
+	 IlBpcyTW4iYZwXoOaXxeCkDthkx1heIA6k71NcAkqyCJjdTOVRn1lLYqIPs6DmwpRSjS2
+	 TIKVv1+h13NmaO60ibAMiwKS0FjYAfh2ULwnA/OrGBS8lVlFy1jCokZpqmVfKBch+BGnX
+	 ZHt9iaO7wL8YzlKX/1ZIX1fcxYasII5rkM6pxbK2r8SUC7H/Ud93BoLdoWKdlc5OfPaUz
+	 3aXzX3tK6y2QhM9k07WbThfvBXXKIfW9wFg6Rh9BwDB8jI4q9bXcQ366C4u3Ux7MOgg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jDVsTFrv;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Zex+jN/+";
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EA6460A5BE8;
-	Wed, 25 Nov 2026 09:35:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DF1606A686;
+	Wed, 25 Nov 2026 09:35:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jDVsTFrv
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zex+jN/+
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795599303;
-	b=aDoJSC1WrCk30FvXCCZm23DtJpGGfKZ4E+pMT2Bn5wPKZr+STFkFWmai2u4HmUMgkr5v
-	 1kXsdNO5VOMNCR4glnCLLtKuD7okPf8+4v0/g6ZL4jONCGoIY7no88FXPbOkDAGLKrsL0
-	 sHB16Ealtql5pN6eVoRI50/0i6IIEwOGBhdES+VjWgnfHE3KU6Qc0IdxNAb+T7z1P2BPe
-	 z6FrWUf+Eq8SeAYZ5Gec7bnHj2Sxf/JAeA+GuY42ypcTL4nJ/6Yfxgyo6d/Ko6r5uklyt
-	 anBEDTqVxj630TNljkjTFaHTCpcLp0BRATqST9fCiIddeMilViPXPg8O3ka3qoehFxg==
+	t=1795599328;
+	b=ZzB6lleHf7a0HXp5DpV3ipNNvEO8o0onl47+OMH+SJODVRo79gGnqn6Lhoq+Nb0CmncP
+	 52fZOomUL8667LoeH0ZgCw5iQAMxNZy3qFwsp/Gt3bj8A5YmK735DUYEOqckreV/Knk4i
+	 D1uZMlAGtblSRVUr3FNUzLvCoKzykdpPNGKj5sG95KoslKuOrajx9AOWIazL0cXN39Ck2
+	 rOSoJZvjqKZoiwaGRjbkoEuJ6EJ/KciZfV5eB8EalCOVRiuef5HD9lPQhoInELNXIrsgM
+	 N/2zrJKFuJjzhwzzIzx6rDCARk+IzEGPYxwDpQhgG10YeoIx2OrVC+dlhD1QEorURFA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795599303;
+	c=relaxed/relaxed; t=1795599328;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=GE0X2Af1f0g88wp6AaRBRdIJWXxatq8TXaVKu/Afmt0=;
-	b=OQEnMTfso6mprUkagjmmyP1Nek8+Ypq+uPwKL4gJwWkAgYAPbyTrd2dHqYqToELkcoZo
-	 vsoaFaHqk1cos3VW1xv0uSu1sGsL4rRraF51PKrGqyGfMFRViytesmsPLbLnwbpQBK6xb
-	 VN9SU0VnO9rY5QOL6Yb6zKtIHqOFBBMc7jYJGDN+KqydoDPvTfxV6oPx4SXqlDtWfvJ4A
-	 AmKItDzdOFwM3PBvMeAGlm2iJO3d018NR5G1nBQ0fWBOpiX2YkFZQuRRRxR6w9Y1Y4ZC+
-	 we7hSIY+pppIeeWEAqG6tLnVsQQTz7fBy+6yZI4Rl5tlgNU5sy2ftXeOxXV8x/F67TA==
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=0yUkBGKmBoC6GhNX7wcbNe62PEHvACOAwQiXFUd2RPI=;
+	b=3PNh2NfTImGH73IFpmemJDBSXqTphzfqW9SgZszDqRUdSr5IewWB0Zb9W0oLxlv/MRWL
+	 y58PK3Jx0rKrxmT41vq6+G8V09O5+4UWDvFBr5H8EzzaLpBb3F+R26UXcVzdy6O7+exLK
+	 8Tq4zkVIfuGXOuD1euePfGh4oPr3W4Ix72m3TruOV9ng5lNwluUFfaZjluQ9dzLRaBus5
+	 a7A3BOpT41Jjb9miO3VpH5oj07hYhK33X9D4NN05Px56FvGWwNnFGEhnatwy+O1biMV/V
+	 nBZcuCFLeW+uyiR7XIb6g2X2hNnklRB3pXqKFWum1zqtLmuy7LHcYfSOWteKUsV3L1Q==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id BE2641F000EB;
-	Wed, 25 Nov 2026 09:34:50 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 6E4BE1F000F0;
+	Wed, 25 Nov 2026 09:34:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795599303;
-	bh=GE0X2Af1f0g88wp6AaRBRdIJWXxatq8TXaVKu/Afmt0=;
+	s=k20260515; t=1795599328;
+	bh=0yUkBGKmBoC6GhNX7wcbNe62PEHvACOAwQiXFUd2RPI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=jDVsTFrvYlqAq+dA94tWpUMzQQ6OKIyhWJ+44xfFQynlxGiJwE1tvwFL6EC0GGpx0
-	 WIn/4HACg6ZCAllPZlI+X4a7tUn1S1DuxxSMKafU8EDO4SiLZtxBcyWX1dfwqufe2j
-	 YxCHw1ZkH+5HMDThEPsgbmhm6exJFLcUAIi6zMjxNycMAqHzhXjrkcAT8LfF0QQvqi
-	 dImf8kj+69AMC3LvEpP9P77Lu7+CXSDiT2gOs1xGfTk05Ar2HMFG44mxUiWgfodRbv
-	 3JheS6fAh7ag3g13/bhixOEkJnR0rLdPv4h1q45f/XJGVoVRJSUIr7qHolsoXthc/W
-	 XEgLk+BWrKdag==
+	b=Zex+jN/+37HMvNaBECWdUKjnUlubol4xzfXc7I3G3u1Iy2zSoZMMpUSnUMXjVBWjV
+	 2qp8mNfop9TM/bn80ojjR8p2wZSJIeFKLCQGxhYJWznnRK1JIop4EtRFit1LIJrEZ6
+	 mxhGIN624A+pfx6R57Bu+FaYzMAI7VnaI0tc4BigbCSLC/Rtx4fd3ajO5Tt5YJP6J2
+	 JJYWjasA03W/b4mKRLIwz3P9HNyT2Oc4b8PV9dGEfZx548JQOhQ4hygvBi7REXr1jt
+	 wg2FJ9z0QwQUhLHvCf9qDH12IullaBfoEIBhKTeoMqFmXHlQOaeHAiDl++ydAQkj1A
+	 6TrzeN7A7SMJw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id A3EFA4CE1A;
-	Wed, 25 Nov 2026 09:34:37 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 2FD814CE2A;
+	Wed, 25 Nov 2026 09:34:38 +0000 (UTC)
 From: Jan Petrous via B4 Relay <devnull+jan.petrous.oss.nxp.com@kernel.org>
-Date: Wed, 25 Nov 2026 10:33:53 +0100
-Subject: [PATCH RFC v4 11/15] MAINTAINERS: Add NXP S32G SerDes entry
+Date: Wed, 25 Nov 2026 10:33:57 +0100
+Subject: [PATCH RFC v4 15/15] arm64: dts: s32g: Add S32G3-RDB3 SerDes
+ routing variants
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,8 +84,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261125-s32g_serdes-v4-11-3bfe0589be8d@oss.nxp.com>
+Message-Id: <20261125-s32g_serdes-v4-15-3bfe0589be8d@oss.nxp.com>
 References: <20261125-s32g_serdes-v4-0-3bfe0589be8d@oss.nxp.com>
 In-Reply-To: <20261125-s32g_serdes-v4-0-3bfe0589be8d@oss.nxp.com>
 To: Vincent Guittot <vincent.guittot@linaro.org>, 
@@ -119,58 +119,183 @@ Cc: linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org,
  linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
  "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795599274; l=1513;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795599274; l=5200;
  i=jan.petrous@oss.nxp.com; s=20240922; h=from:subject:message-id;
- bh=86svSsXyW7XbXvUHtBhNIUJ9Mfx/TitxfATul2iPoAs=;
- b=Gn3XzjwMZOtGZ1tpGqksVlxXFvvg/WVPIMYMlFPNjKYIjT+/z53UTUVfoAcEhSfLFZO4pJrFP
- rnLdd3g1YLCBeMxaKmPQkCpeiJ+E+6Aemr9FWq/nclrrZL9SVwY4VL1
+ bh=ey+259q8NVdz+nmA6w91HlJzOAXDIhQhflExVQ+Y8o0=;
+ b=O0br6DpDGuG00R9/Celm9Vz7oEv9fLtAFCfkd5v/N6CHAZKEdn/Imv4bxMILlCtnoOJSiljUK
+ aZxBB69RSipClJeod4fr8tGUD+wbk0T49UrIEPVkvvKgfIFgP0hgD4B
 X-Developer-Key: i=jan.petrous@oss.nxp.com; a=ed25519;
  pk=Ke3wwK7rb2Me9UQRf6vR8AsfJZfhTyoDaxkUCqmSWYY=
 X-Endpoint-Received: by B4 Relay for jan.petrous@oss.nxp.com/20240922 with
  auth_id=217
 X-Original-From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
 Reply-To: jan.petrous@oss.nxp.com
+Content-Transfer-Encoding: 7bit
 
-From: Vincent Guittot <vincent.guittot@linaro.org>
+From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
 
-Add an entry for the S32G SerDes PHY driver, the S32G XPCS glue, the
-S32G part of pcs-xpcs, their headers and the SerDes binding. netdev is
-listed because the PCS code lives in drivers/net/pcs/.
+The S32G3-VNP-RDB3 wires GMAC0 to an on-board KSZ9031 RGMII PHY by
+default. Add two board variants which route GMAC0 over SerDes_0 for
+SGMII instead:
 
-Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
-[jan.petrous: dropped the shared core entry along with the core]
+  - mode 1: PCIe x1 on lane 0, GMAC0 SGMII (XPCS0) on lane 1;
+  - mode 3: GMAC0 SGMII (XPCS0) on lane 0. Lane 1 (XPCS1, PFE_MAC2)
+    has no consumer, as there is no PFE driver, and is not described.
+
+The variants are full .dts files that include s32g399a-rdb3.dts, not
+overlays: they drop the phy-handle of GMAC0, and /delete-property/ has
+no effect in an overlay.
+
+The routing is described by the consumers: the PCIe root ports
+reference lane 0 with PHY_TYPE_PCIE, GMAC0 references its lane with
+PHY_TYPE_SGMII and XPCS0, and takes the PCS from the SerDes through
+pcs-handle.
+
+The mode 1 variant also enables both PCIe root complexes: PCIe_0
+reaches the M.2 slots when board switch SW17-2 is ON, PCIe_1 the PCIe
+card slot. SerDes_1 carries only PCIe_1 on lane 0, as there is no PFE
+driver to reference lane 1, and runs the first matching mode, PCIe x2,
+with an x1 link.
+
+The SGMII lane goes to the on-board SJA1110 switch, which the variants
+do not describe, so the MAC side is a fixed 1G link.
+
 Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
 ---
- MAINTAINERS | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ arch/arm64/boot/dts/freescale/Makefile             |  2 +
+ .../dts/freescale/s32g399a-rdb3-serdes-mode1.dts   | 65 ++++++++++++++++++++++
+ .../dts/freescale/s32g399a-rdb3-serdes-mode3.dts   | 40 +++++++++++++
+ 3 files changed, 107 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 742c4e6b291f..cb465ba42d73 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3449,6 +3449,22 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml
- F:	drivers/pci/controller/dwc/pcie-nxp-s32g*
- 
-+ARM/NXP S32G SERDES DRIVER
-+M:	Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>
-+M:	Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>
-+M:	Jan Petrous <jan.petrous@oss.nxp.com>
-+R:	NXP S32 Linux Team <s32@nxp.com>
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+L:	linux-phy@lists.infradead.org
-+L:	netdev@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/phy/nxp,s32g-serdes.yaml
-+F:	drivers/net/pcs/pcs-nxp-s32g-xpcs.c
-+F:	drivers/net/pcs/pcs-xpcs-s32g.c
-+F:	drivers/phy/freescale/phy-nxp-s32g-serdes.c
-+F:	include/linux/pcs/pcs-nxp-s32g-xpcs.h
-+F:	include/linux/phy/nxp-s32g-serdes.h
+diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
+index a80cccf34eb5..f92670254c6a 100644
+--- a/arch/arm64/boot/dts/freescale/Makefile
++++ b/arch/arm64/boot/dts/freescale/Makefile
+@@ -1047,5 +1047,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-phygate-tauri-l-rs232-rs485.dtb
+ dtb-$(CONFIG_ARCH_S32) += s32g274a-evb.dtb
+ dtb-$(CONFIG_ARCH_S32) += s32g274a-rdb2.dtb
+ dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3.dtb
++dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode1.dtb
++dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode3.dtb
+ dtb-$(CONFIG_ARCH_S32) += s32n79-rdb.dtb
+ dtb-$(CONFIG_ARCH_S32) += s32v234-evb.dtb
+diff --git a/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dts b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dts
+new file mode 100644
+index 000000000000..c881376db27a
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dts
+@@ -0,0 +1,65 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
++/*
++ * Copyright 2021-2026 NXP
++ *
++ * NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3),
++ * SerDes_0 Mode 1: PCIe x1 (lane 0) + 1G SGMII via GMAC0 (XPCS0, lane 1).
++ */
 +
- ARM/NXP S32G/S32R DWMAC ETHERNET DRIVER
- M:	Jan Petrous <jan.petrous@oss.nxp.com>
- R:	s32@nxp.com
++#include <dt-bindings/phy/phy.h>
++#include "s32g399a-rdb3.dts"
++
++/ {
++	model = "NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3), SerDes_0 Mode 1";
++};
++
++&serdes0 {
++	status = "okay";
++};
++
++/*
++ * SerDes_1: PCIe_1 on lane 0. Lane 1 (PFE) has no consumer, so the first
++ * matching mode, PCIe x2, is used.
++ */
++&serdes1 {
++	status = "okay";
++};
++
++/*
++ * PCIe_0 reaches the M.2 slots (M-key or E-key) when board switch SW17-2 is
++ * ON, PCIe_1 the PCIe card slot.
++ */
++&pcie0 {
++	status = "okay";
++};
++
++&pcie0_rp {
++	num-lanes = <1>;
++	phys = <&serdes0 0 PHY_TYPE_PCIE 0 0>;
++};
++
++&pcie1 {
++	status = "okay";
++};
++
++&pcie1_rp {
++	num-lanes = <1>;
++	phys = <&serdes1 0 PHY_TYPE_PCIE 0 0>;
++};
++
++&gmac0 {
++	/delete-property/ phy-handle;
++	clocks = <&clks 24>, <&clks 17>, <&clks 16>, <&clks 15>;
++	clock-names = "stmmaceth", "tx", "rx", "ptp_ref";
++	phy-mode = "sgmii";
++	phys = <&serdes0 1 PHY_TYPE_SGMII 0 1000>;
++	pcs-handle = <&serdes0>;
++	status = "okay";
++
++	/* The lane goes to the on-board SJA1110 switch, not described here */
++	fixed-link {
++		speed = <1000>;
++		full-duplex;
++		pause;
++	};
++};
+diff --git a/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dts b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dts
+new file mode 100644
+index 000000000000..8b90d5f14d2a
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dts
+@@ -0,0 +1,40 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
++/*
++ * Copyright 2021-2026 NXP
++ *
++ * NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3),
++ * SerDes_0 Mode 3: 1G SGMII via GMAC0 (XPCS0, lane 0). Lane 1 (XPCS1,
++ * PFE_MAC2) is not described.
++ */
++
++#include <dt-bindings/phy/phy.h>
++#include "s32g399a-rdb3.dts"
++
++/ {
++	model = "NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3), SerDes_0 Mode 3";
++};
++
++/*
++ * SerDes_0 mode 3: GMAC0 via XPCS0 on lane 0. Lane 1, PFE_MAC2 via XPCS1,
++ * has no consumer, as there is no PFE driver.
++ */
++&serdes0 {
++	status = "okay";
++};
++
++&gmac0 {
++	/delete-property/ phy-handle;
++	clocks = <&clks 24>, <&clks 17>, <&clks 16>, <&clks 15>;
++	clock-names = "stmmaceth", "tx", "rx", "ptp_ref";
++	phy-mode = "sgmii";
++	phys = <&serdes0 0 PHY_TYPE_SGMII 0 1000>;
++	pcs-handle = <&serdes0>;
++	status = "okay";
++
++	/* The lane goes to the on-board SJA1110 switch, not described here */
++	fixed-link {
++		speed = <1000>;
++		full-duplex;
++		pause;
++	};
++};
 
 -- 
 2.55.0
