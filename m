@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795601888;
-	b=FIg/83Jal8HvOAMMkPJloNo2oupSBBhA97U1nla+OUOIR2Gnnzw081hTl/Qz5sVNuLYb
-	 iQOuWkXbs84duOtCAEinFvzrOd7XjMikw1BgBF7Y11YqDGm+ClSQIcn9p68Pi3W8ZRtsA
-	 JGBHU8mxgyZxR3vCpkuGZbYU8WZrWRl7eKIzs7JsibXRwPW5bH6m6MX1ccIfU2M4run83
-	 7MQX9ZUg0+7YWc1eooEhdfNYJK1Yl68f1nmVRaHrKS4tRR6SVMnQ0RognZjNf8lvdgYYc
-	 JIezuXba0m4mfF3rroBg3W2NZxnrIIEgBQWkftcOXfqBI9r+fSVDPKLueVYVjR43HoA==
+	t=1795601894;
+	b=ie5mPUwol81HLmmJJhtq7+VbGQKPgMn4iH7b5g13usRlW2j5pJUnOTMoOjQkOFLKmeQp
+	 YzT81KGDadg5v9n82CbHRZcUT54HrZkefwl+YelYM3F+N3TmThGOMeokrDzOnR10SrkKB
+	 UcBR9p2hQRl85tL3M+PWhqWpbtxyWFUVLNTp6ZM++7F4vvOp4U5++pOgAGCyDYFU/jpL7
+	 acizAs+wxzDfxg1SVvTqoghfrFK8a0e5EXkwX5mxEC/v1SvIhE81XuJx8Afv9CIY2MOk5
+	 v5J89matTp2RLt1IjXffWXfrnSmyN6TGbMIAlzS0Ci6Owt1fbIdug5jGIyDW4luNIFw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795601888;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795601894;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=CriRUap8AmJOUJMxrXkt9qWW59g/yopAD2nnYbYSa7A=;
-	b=u7a9YZ7656bzcbFcClvBZJ9Vq1lPnjVHvlubwHS4JWh9em+7Fr3lTwLSuEB2sDnZ9Rwz
-	 Qy5kbWWCkpjbhFbKI3vOD0wuVVSgKo+EIveYjqKyWMKY6Qb1tp8sLhBk31PYX1084O0x3
-	 Hnmrur+YwtFd1L+VnDiVGsSMJAzh67UIVrn874M9tvrtkGChDQyHoit/a5glusU+JN9Y/
-	 sjw+wupvgMDwoJ3X9TkxXaylmJLW0xXUaDjIIgySqvvXK2HK4PxphQz1ub1b62PQhzPRt
-	 npqIzte3Mnd+ReURI1clrOhfnEV4WmzUBBdqdYCdMmKbCLg+C+morQCL0I4rhqVyLAw==
+	bh=LICvFzVOGOGmNjipLyltEiVsGlWlsIewU35KFPGz8nA=;
+	b=Ppscp0UVv4hhdo0+7KMS7MiIEEs8T0huv0cB708iWghr163y3KLDsenLzveEtkxADNUh
+	 /h+gRgsFv6O6/w5c21IVoYy0q+y6N0O7c3VgvCxckysV/A0iK2iDkcQ6sBFfjv3ond4tS
+	 N8Akd49Dkdt3SkLQVGmZQrKXtaPdmqcacPaA4iKyxG4RLAC3OhAFocGFe+XO80PjqDVKI
+	 qA4cRtPc2CN03FqXMDmEWcY+zwQ8vgAuBO+LiXPTL5JlnvPh97Y+fy1TCAFVes3y3lW2p
+	 Hi3Qlztt+PyWfXkOlw5NQCk+YKiCPdOWJbWr1qttM8h6JLZGruLJo7m+dCgHuPYlugA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Pc4zaTBx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CL6vuYWM;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82D28606A326;
-	Wed, 25 Nov 2026 10:18:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8406A606A323;
+	Wed, 25 Nov 2026 10:18:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Pc4zaTBx
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CL6vuYWM
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795601888;
-	b=uVWGEx+0d2t9rfiaIRotinj48jis5ZeExBDVGtJwZt3tCyO8UAtJgGE7dg0hUMiS+/oJ
-	 OK39HwRmPCEZVE3xUD08ybaTJkfe9B1i5oRhD2ngt5z3sCwahWEXGKl0vOPm1bjDkG8Qe
-	 PYxBphlkkl8Fng6eaLdfLznK0h5NsdaUsO5+VZtqX+1c5/VMKBefIS9dX0PqqVf9FpaJ3
-	 ZUgXk+XwafjFnK4tIxCi/RYZvJh1vJMwryjiLGlJFGnppLS4rDoz15SXU/w252SmWOk8S
-	 llKKr43Ee29fz/6jYAdNVScpjYY/qzyz7oje5CBkMKnZmOei9W4ztatT/j8PJ9B7WKw==
+	t=1795601893;
+	b=127oBQeBrUt21o9p+LuRL58EPS5+ydCL0PiiQcRW58HXX45Ye7xWlq0x40y8sTvdDCg4
+	 0Ur9TvcJwNRMtJ1aAbG07i2Zwxez0fCvHTgLITiVRl8NHZPEP1KSToxG+oZm5sRXVR0rc
+	 4iqSR50T6b2ikWaw/NqMbgG1TmRcfYtm8euvIunVmoOofZhSG1odEksKGLowRa/Zsjcek
+	 pXiJKsd/e9Gcturrcy8+zLEtVF4GHtFDuFDjG1b3s4YZ6ydkqFrcuq6HB6rLfBJUgOazN
+	 vl6fDYzT/Vur1doSr0TM2dD9odJQkyubJNf6zb+0aeT1QrXnX4K/E8iswJWwAfyNRrg==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795601888;
+	c=relaxed/relaxed; t=1795601893;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=CriRUap8AmJOUJMxrXkt9qWW59g/yopAD2nnYbYSa7A=;
-	b=RQ2N3PReg1wajgv4m6teoCzTEX9M3/J5BsHMy/koK/Q1rLVOy7rdmn03CJ/guqrjTPxM
-	 kEtO6OZcPaM59v6bSTuxpryFruiZ6FwCGrvtAsdgS7viSp6LQ93QdtiwVPR5MvwMm1KDu
-	 VBYO4FQ7OcJGn2NDNabjAge17RzBG5A5vwnd/05KRz/JSH9sMEGsHjrY4TBat3hoB+2bf
-	 MimU3VfDk/0lga40pYE3kXcPScc7uDlyTrfMUu9Y4LfD95BtD+yH88Ee8PlTl6ptoaxJj
-	 nH/2pBc9PUAY37sMiY34BPCtUa40BMd5apSTR9fipmJwJIgRui3Z36daYrB93XcX5Gg==
+	bh=LICvFzVOGOGmNjipLyltEiVsGlWlsIewU35KFPGz8nA=;
+	b=vBGCmM3vvEbAPbgz3aROekPzWWUj3M4uB5G08oChAtAwCBDsx88SEYC1EWHZjQZLWqSX
+	 iqVQGBMKhKoEN42ASXswswRq+yjFU6q5hmpNT5JPFEYqjcitBzgnvM3bBJdsUZZPw7Du2
+	 6APp1o+RisEC2SvSFPd3KwGW7KZMCryzH3FB5GadxaPCnbFlbYfq1heLtQ2piLEKxq/oT
+	 PCWKk0utBBx0799uM3wEgFiE9gYL5vvps2LCCTHstkTnkNM103GHf7GV/+zm6JzpxJJtL
+	 0qc2+Ls2uE9Ko7Q26E2UKvdr2ngTxOHFtUcYjH6xYA+f+PsB3NLydGsk1nfjQGyCBGQ==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 106B41F000D3;
+	by smtp.kernel.org (Postfix) with ESMTPS id 4B4251F000D8;
 	Wed, 25 Nov 2026 10:17:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795601888;
-	bh=CriRUap8AmJOUJMxrXkt9qWW59g/yopAD2nnYbYSa7A=;
+	s=k20260515; t=1795601893;
+	bh=LICvFzVOGOGmNjipLyltEiVsGlWlsIewU35KFPGz8nA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=Pc4zaTBxRYj2i0f/oc4u/yoqU8pUgNedhHenwXmyJRX+J7DgLs/NjyE5WtwcTA0BB
-	 A2URHxs5lCf8m3Akek0QfdF9uC/2uwMcY/ksa3nhlYusua/xnGKEVjf5htjJw6tArI
-	 UpnW2ePVjnb+G23LEhwVBsEJgZMassaYPl9yxlwZ6yatxCRPJ7WAi2VyXo86QxwHhe
-	 bTIxDrs+hpoITePJqE4GYazLlXsNTPxa37ktToj3vM0ik85tcGPmk3hPy7x5kF5R8P
-	 zfDL7XQ8avPqTYq7XOCeH6xQJE2z51XmmTAfHwkccD2p0jRShbdl4OmZ6pRuMgfIBY
-	 qk7qQJ5+tA07Q==
+	b=CL6vuYWMQyMkhv92CwToIetFEDtp9QGaKXZBr3qId1Ixr5vRDGbGrOBsKJ3Xcc1LH
+	 apSF5zS5xWsI+4VOIxlBNlLjkdEjMHFakk33GcyUkPo2T+svqk9dPbyeIoys5+n9Zu
+	 wUK9YVqLx2aZjSCuyqw9qq294p7SmIBofDcpu/jZWO+7GTbYBSgLQTlFCM17m4oqmZ
+	 cgHsf/bYMQnCnb4RmR8riFLg5WED/v4fw0CHpgqoflWEthdziRp2d3Aw7nJp7QqhAB
+	 XlooVpGtSlqhn1smh0RID/sAdy/dgF8Fe8QD2olOBljND5GJHfFd9ePIYrzH0JtxBA
+	 Sey5QzOS5Zt6A==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 960104CE3B;
+	by lkml.kernel.org (Postfix) with ESMTP id D02C74CE43;
 	Wed, 25 Nov 2026 10:17:52 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 25 Nov 2026 11:17:42 +0100
-Subject: [PATCH 2/4] dt-bindings: PCI: qcom,pcie-x1e80100: Add
- qcom,pcie-recalibration-thermal-zones
+Date: Wed, 25 Nov 2026 11:17:44 +0100
+Subject: [PATCH 4/4] arm64: dts: qcom: glymur: Describe the PCIe thermal
+ inputs
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261125-glymur-thermal-fix-v1-2-b93a9feae156@oss.qualcomm.com>
+Message-Id: <20261125-glymur-thermal-fix-v1-4-b93a9feae156@oss.qualcomm.com>
 References: <20261125-glymur-thermal-fix-v1-0-b93a9feae156@oss.qualcomm.com>
 In-Reply-To: <20261125-glymur-thermal-fix-v1-0-b93a9feae156@oss.qualcomm.com>
 To: "Rafael J. Wysocki" <rafael@kernel.org>, 
@@ -101,16 +101,16 @@ Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
  devicetree@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2757;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1696;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=aidfoMBoiQFj9PzexN43ZSatE2G0PFF5W2U8Fq+yNOs=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBrXNmeIZ+xo9d+6cYA3A3WnzI93dWegmdWvDl
- v2SLtNsk8iJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawa1zQAKCRBVnxHm/pHO
- 9SOtB/4hE4AsbhtT5MCVl/8n4v+pw50876z4vtxVRxyPWqMWh1b5LvHYQnYW0H9eq+3+iE4XKZy
- QmWq2Qwi9Tx6/KkzQovRPhDEsjG201TTzCj/TFYw2LtYXWxpzwwrwomQdgzkVeMbxWFitDQ38+Q
- 8aDib88CyVoLJWsAyQBej4MfyUSQW2EuzAkji+MECYd14s3C0FNz5or24aqFegXob8txy7AKhoO
- krDPtRD6txfWJJFxT5uyYsSBxCTO4jXX3PrkecShDVsPGYzUUC4Ob05mxnp+ba9saBcN2ivXhDG
- tHDVXOJMbn8pXDcNJxPeOouDXFrGIeTaDdJkt1mq9GMQ0qz3
+ bh=ZJdaduTk3N5k77RqvSkUVPMcjS8LQRuYo7/mT0mao2c=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBrXO5rubwpqmuuItaW3qXKpFo5HiwqgL6+ptk
+ IkZdZLlTqGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawa1zgAKCRBVnxHm/pHO
+ 9eSWB/4mX+m4XO+3doi+juA7wBm7jYpXi/ZFjYA2dwhmvZp68hEvoKfRr+VYh1vx49Z4PILNRGJ
+ sk6yrl0ZMS2HTAkHTk50HdDfgv4VBlP8fkW/RL6UZ7+RQEDdPVyZVRX1+8Nfcx0w7adPvWUPkMF
+ q+boqD0phfuaQ6batSIHc5kbfZWDk35IXbazb7X9pod9NMJlEXkjpoOceop6tBilpIx+4vU6YPR
+ MOHW+UMsyGohCMztc9KneVI8fdJ7MWsvSLFrCOOdeOEVMSz3UnXha7VicKmRefqTm4H5DM49ujn
+ bloHGZFB7j0c3h/OynCKzFGcgeM2EikuPBoCgEr/j4lQT90H
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -121,73 +121,45 @@ Content-Transfer-Encoding: 7bit
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Some PCIe PHY instances on SoCs like Glymur benefit from periodic
-recalibration to compensate for temperature-related drift and maintain
-stable link operation. Otherwise there is a potential for a link drop. The
-recalibration is performed by the hardware during a PCIe link speed
-switch, which the driver initiates once the temperature change on a
-polled sensor exceeds the defined threshold. For this purpose, the driver
-needs to know which sensors track the PHY temperature and the drift
-temperature.
+Some PCIe PHY instances on Glymur benefit from periodic recalibration to
+compensate for temperature-related drift and maintain stable link
+operation. The controller driver triggers the recalibration with a link
+speed switch once the temperature change on a polled sensor exceeds the
+defined threshold, but for that it needs to know which sensors track the
+PHY temperature and the drift temperature.
 
-So introduce a new property 'qcom,pcie-recalibration-thermal-zones' to
-specify the tuples of thermal zone phandle and the drift temperature in
-millidegree Celsius to be monitored by the driver, and allow it only for
-Glymur, which is the only SoC needing it so far.
+So add a property to identify the relevant temperature sensors,
+'qcom,pcie-recalibration-thermal-zones', to PCIe domain 5 pointing at the
+aoss-6 zone and to PCIe domain 7 pointing at the nsphmx-0 zone, as those
+are the zones whose sensors track the respective PHY temperature. Both
+zones are allowed a drift temperature of 25 degC.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- .../bindings/pci/qcom,pcie-x1e80100.yaml           | 31 ++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ arch/arm64/boot/dts/qcom/glymur.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-x1e80100.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-x1e80100.yaml
-index 3d3b9f309a73..389a6bbacaa9 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie-x1e80100.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie-x1e80100.yaml
-@@ -78,6 +78,26 @@ properties:
-       - const: pci # PCIe core reset
-       - const: link_down # PCIe link down reset
+diff --git a/arch/arm64/boot/dts/qcom/glymur.dtsi b/arch/arm64/boot/dts/qcom/glymur.dtsi
+index 65a398c0a992..6fb254abf81a 100644
+--- a/arch/arm64/boot/dts/qcom/glymur.dtsi
++++ b/arch/arm64/boot/dts/qcom/glymur.dtsi
+@@ -3127,6 +3127,8 @@ pcie5: pcie@1b40000 {
  
-+  qcom,pcie-recalibration-thermal-zones:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    minItems: 1
-+    maxItems: 16
-+    items:
-+      items:
-+        - description:
-+            Phandle to a thermal zone corresponding to the sensor used to
-+            monitor the PHY temperature drift.
-+        - description:
-+            Temperature drift this zone is allowed to accumulate before the
-+            PHY needs a fresh calibration, in millidegree Celsius.
-+          minimum: 1000
-+          maximum: 100000
-+    description:
-+      Thermal zones whose sensors track the PCIe PHY temperature, along with
-+      the temperature drift each zone is allowed to accumulate before the PHY
-+      needs a fresh calibration. Applies to PCIe instances that rely on
-+      periodic PHY recalibration to maintain stable link operation.
+ 			operating-points-v2 = <&pcie5_opp_table>;
+ 
++			qcom,pcie-recalibration-thermal-zones = <&thermal_aoss_6 25000>;
 +
- required:
-   - power-domains
-   - resets
-@@ -85,6 +105,17 @@ required:
+ 			msi-map = <0x0 &gic_its 0xd0000 0x10000>;
+ 			iommu-map = <0x0 &pcie_smmu 0x50000 0x10000>;
  
- allOf:
-   - $ref: qcom,pcie-common.yaml#
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: qcom,glymur-pcie
-+    then:
-+      properties:
-+        qcom,pcie-recalibration-thermal-zones: true
-+    else:
-+      properties:
-+        qcom,pcie-recalibration-thermal-zones: false
+@@ -3615,6 +3617,8 @@ pcie3b: pcie@1b80000 {
  
- unevaluatedProperties: false
+ 			operating-points-v2 = <&pcie3b_opp_table>;
+ 
++			qcom,pcie-recalibration-thermal-zones = <&thermal_nsphmx_0 25000>;
++
+ 			msi-map = <0x0 &gic_its 0xf0000 0x10000>;
+ 			iommu-map = <0x0 &pcie_smmu 0x70000 0x10000>;
  
 
 -- 
