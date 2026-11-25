@@ -1,82 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795581437;
-	b=drLCDeOcF4moVNGk3NA0QG5TK4D0q+bhkkOGtx49PXr3nMYmVKRjOJDEwvPTHTfqOA2Q
-	 sBfHYfDIF+HhBB077z0Pxz06qukf4sbAWvDQjF1fPX0eyLsRc2rHEgPC74/ZN3XD8UKRR
-	 iHP7vHZXLHnBt/ifX+SNChFMJJiF+l6AWt7OA6IO5/gXmtPpkdf/qonmsaMjLmF3CEd5W
-	 wPnhn792aC3dfcMSTWyuh5hR6rrxxCbIMcGuIHe7Xo8esz95TdGnxZKyngvJNL4cbJ+aZ
-	 OuPgSOaS05wlQ73gu3DAgtWOkxKdgWBWhDR9gOOmUTL9KBodk6vhN/DElcRI0nzH1pQ==
+	t=1795581440;
+	b=sDaJvcrq1xSDtiCv+wLRYPykpMy4fchgKHJpjO0VSkjVNaay9I2K0+aVNEuPKH6IeyHT
+	 LyVMP3/gAnTslXs9c0hSHscv0cngdUb8E6MR0t915aS7+R3SL8fDGsxTi/KMGpHUaqXcP
+	 CuEnPsSSH6J1padJase8DQhXVcEpdEo7ZksunvjS5QrkUBtIUpUHthpIByFnjwYK9YbLA
+	 s/iDazhN2eATScACBCVL7dft/yWp2PAAIEGeyo4wrDQTBEdD2KN9mmMfB+FBq+RCaTUVS
+	 4mG65senHG4rL37DeLhxq4dbXOmkeulnrsM8s6qSf8XzU71VxbWE91c3vIlvBswGESg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795581437;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795581440;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=6DVyoXA6Tib/v85orEHsRlE+EW8lKD49gIz3qCv+SNo=;
-	b=Kw9NPdCxSyODkV1J2o7dgss5mOtfKIaHhXhEoFPsGE9KN2xizqRbfF8zNX1WvYHFfy/2
-	 cGXWxuYhvW0lcwstR5lRlenYJAkIipXYWt0qVGBoIzgE6AcaTd3RkK0JtZrUEATVr419i
-	 FmRnacBOzy51EfYx/QbkD/pGgwUa0oEW35zvNK4F/BEuEb0/ByK2W/vb5pYfsKpigMVDV
-	 vRGtwquufZX0TZ2R3Gu3vH0D7P60JilrqIO4ghZZK6wuUxZ4CQ1Kb92kXVHAUliOQ8IfW
-	 GSokMiuWkMo5E3pGZUaDeH8s0yjonliK6g3an0qBH30oLO8XAyOsurM2XLn8eAEKklw==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=v73lnBxXLvBxSu7XkVP0pFYU3Balrjs//m2fQ2pstrU=;
+	b=oUGqy3P/acpcMw4eqTw+o5QgGH7faWSUS2AkOcPQOG1j2puQsrG6l+wo76ogWAUncwrw
+	 30gBtdcg6E1QGaAcs3oiAFyZ7L+Kw1K9e/mCDsBRwmGjJMAVEypUeLyHEmUPQgeZp13KA
+	 s+SMedLfg9WAxlTj0ufN34XeaKzXnDtLVwg2Spe2u50Y++Rz/SP4Bxof0Reae3onIzKNm
+	 w+DXFBpqkZbsHgGU/pdfCpDNzQKVsZEj33HR7Az+JpwbpMB+afpkPMI1c3+2jSE1XHhwi
+	 BbGeJBo4Ac4P7ML1Ma8iFBbTMSTSe4L/OUsjhE4zcT+zB+XsJiSp0s/t4bCQZeAOcdQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O7g2XuqK;
-	arc=none smtp.remote-ip=209.85.210.182
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hoAvfN9g;
+	arc=none smtp.remote-ip=209.85.214.180
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FAAC606A326
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 04:37:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2FAAC606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C90A606A32E
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 04:37:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C90A606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=O7g2XuqK
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-8c6c06b3321so4157371b3a.3
-        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 20:37:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hoAvfN9g
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2f04e3bf46dso37909035ad.2
+        for <linux-pci@vger.kernel.org>; Tue, 24 Nov 2026 20:37:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795581436; x=1796186236; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=6DVyoXA6Tib/v85orEHsRlE+EW8lKD49gIz3qCv+SNo=;
-        b=O7g2XuqKb2NjjCG1AMyPqByNWECHGvWcXhDJERGGEvrmT1/RRzEtQgnPAKFz45YRhJ
-         2lelDmQ23v7UWIvleB3HGbODKMrlT3bcb/GXEbv1FZ9RKK1ICVnsmfeB2CgM5jur6MpP
-         rveumlVJXt1+bDAL7Qz8SLOcPxyaN7z1xX4yueSw4CBl90E/xmKoDXRb2nk7iRys8UEj
-         sn1HfTDFzE/YVmJ6NTkZL2MNY00vGrxjMayo6AsWH8HeUOaZ0o5nMIDq5l+PixQDcTwV
-         0K9CjysIWIvpBbdH1SG5N4bbAJ1GeRNAG0bY0qyhYBNqMyNO3ftl2goVjdkgePltt4aJ
-         itTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795581436; x=1796186236;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1795581439; x=1796186239; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=6DVyoXA6Tib/v85orEHsRlE+EW8lKD49gIz3qCv+SNo=;
-        b=eOaqzGSoxXiW6AAi17cR+EPpmCn5AxH+IVcb80Pyt6b6ODW/S2xahzhiLbBQLbluig
-         GQxcgomJvm/x6K1d4OMJot3YNWqJMMSRVXa6INBcwHwWhwlUvKq0OfUUwDN/++bolbmL
-         +GitHCA94aNk4zUk2fBlyOMrlRF9tDWhybVLCI1VrEGoXWmSk4ZLTMWESvqDm1NnBk5G
-         rr0zyac3uiTBF+uh89XyaLeIBo4Vbsaj2Yk1XyuXqEzSckU/3Qgu14LSd+zQVILM0L8W
-         MWsmKD36kRhhF+yjT0pjI06NpwbkZDelcG9Q403RJpgxQOwfHyeBReEPdNqXgTlbfed9
-         Fd5Q==
-X-Forwarded-Encrypted: i=1; AL+hErHYso3ixpVtTf6gQrQjpwh9Ddw5vYwiH0ZYl2n9lI/rWZn/W1fXa9mqirZ0g+I4jZLwFsYT/AHPoOc=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/WJaM9KKX0VbfOlHtO0e8z6DasBZJ677n8nUwFx+bfXCzxjGL0
-	qMbtXQ2awbf++hlL0HYcYkHeekQuJkxz/d3KLnLwBj73Sk812qWtdsY+
-X-Gm-Gg: AZFdTZeJIHJYL3KdPL5P4bFplLrrnRr+Eg+LzuS4edEIoQWE8z7Cev6BPZyDp3RIsHk
-	rrCs7fxFm9w1jQeRacJklB3wZtQEecjSAiigAQU6pH4grf6uYF2OWH46Tf6A3Mgg+m4ctkUaWj6
-	KW6LWT3Q1o32ITg/bpCZQks0QuZt8RJPYwoIUD5V3BEcKPU6qewt6XMYMPo5iaBO7SE1KeiTMxH
-	2Z32o/DBRnMHMJpglby6RxB1LVQL/SFLcQJ8K+wb1MFpb9KlmtI7u0hHDayYinFSnuGdGOp9EfX
-	WHng7Y+LIAysue9ERrMtVkFK/TbJpf4q/Hy9i2LQynmtZQSS3WVilHION9zoJlOGr/shGY0/5+E
-	p1X+6F8T6BRn82hlscsW5g0e7jJnX28g6N45excomk3pKfpq7eG4djb+BsmpGTh3+OBkAsLTfLX
-	Im79SLgwdkGgPyZr5oK8YT6BdMMoTXs7lNeP3p4MCri2lBEE9u+0aMzC/FAvzw6fk+5uf5+NhCj
-	HRc/+VNJpbCuK1RrJRhE5KKZiwjmJ+zAao1YVLJVeKnvcmlKiViQ4HBK6bHg8c/MP/DcsYXvRuq
-	ugaBtx7IoZejO1wAnNZXZjGRZYYI
-X-Received: by 2002:a05:6a00:3998:b0:8a0:5da1:2264 with SMTP id d2e1a72fcca58-8c87d2289f9mr13508087b3a.47.1795581436417;
-        Tue, 24 Nov 2026 20:37:16 -0800 (PST)
+        bh=v73lnBxXLvBxSu7XkVP0pFYU3Balrjs//m2fQ2pstrU=;
+        b=hoAvfN9gzx2LyLk/gEV2pCQQvL2eHN7Ybl9S9sseLNfnxe3TLOcWzkEHsO7H6i52Z8
+         ITIu0vs7T0b8u7ysTdtMP3BWhjQlfdDNdds8EuQtokuuaolNc47LQgMP5JHrlNBrvvNY
+         q9gGurHUD/mXM8g3m3m4nnxtcS3ZNNq1GBaQ7k8tfmyG0pdFAYOWPER24dpLCCp52kf3
+         DDrkI4f/Kew96kmDkgo7bik5bil4SFvJCzb0Eipy3PVqHi4pPc4ymxRehHa7UcOcivEg
+         4C0+klwghxMs7IUhkeI6brCl6T5Hh7pBcL0nbKwnipb1PZLIUD0kE2x12R/M4CRr3dYs
+         M4jQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795581439; x=1796186239;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=v73lnBxXLvBxSu7XkVP0pFYU3Balrjs//m2fQ2pstrU=;
+        b=knys5urBdJsHfTV5G+wEBlstZZLlUoM+JpZbGlZIW8kUcFsOZ2Rgx1vLHuB3qyWni2
+         m1ckg0ue14NnBAArWbN+EUepPgPuYRRmcodNvDMkJOyrSbNCFITqp9DjJAaGSpgOzZg9
+         QdaAHVT/0KVV95WrQHhYmA0c0FQJ8uUQSSsl6xfsAXUjFL9zHNyOLwbvgp1KyT7f1MY4
+         bbvrefFBxMenXPj8EQc7eZOSS4UKMnx0WI4u5wPbCtdiWJI4+TrsYKD50wX+qsGQN8kB
+         pnYmPBwW1ls7esSpHNydTVzpePggtrnz3sVhxjrizqMqLbx4g41VUkD0ZDqEpW/GDExT
+         XvRA==
+X-Forwarded-Encrypted: i=1; AL+hErHS/WPCVd/peWuwsIBbUVWCqvDNylB/cbVnYnj9NNxqwWos+/MsI/vTxaiVen2aN4QAtwwyGonF90E=@vger.kernel.org
+X-Gm-Message-State: APuU4Z97vLDybFLJaiMxfFRb3qUWKO/kwyytJaaHLEMDOfZ7/KhH46Om
+	UeVoLmC0A+yaiDF9Uz/FASTw5pvy3HGhof787/UDQDo2LiiwNf8e9Jcq
+X-Gm-Gg: AZFdTZd5wz0tqXnXtSBV2T7X+s/4DMkJTca2+JR0Wgz5PEIxm+49pVdIjGlWnMlkQ1J
+	QrqpNq47xQ/j5ZjjZXYoRhOtrG2hjpFjQOc/JWZC1VgDfoHeI1OU9xDUCGGBwnxDJTZIQeuCaUi
+	qOzVqSntjekQjalme+ovyufNOSGvDZuBMK/QJUDbrrK4X+jFVtp2dCIvpS25qwZOOgQpe/57+aB
+	LXuVJzgBfa5TXIHwkdml4jO4Y4AIFkXsDKnN6gsGygLlcHJUJODfaGNX0QCypn2gbPvSWbNYp5a
+	LfTEd4i1Bczw+iYR6O02jxR1uzyxCVEa3YxeQ+L8ekh6Uz5Tk+h0/d3ILNXzebFYAcwJ9OxuXyy
+	vQ3arV2Rq5EPUQrN9epQL5wSUEBN3NBanTsys67nLkbsAUDJnmX8e0l29z5AJmI0AlnxBG3mSJL
+	gOdMRysDHKmr812ihczwfxyHaAuJGlcDIOkT4d7ntSQoCYso88DAz8mrRC7THaWRvRU2jke/4yu
+	6i2ZJj5zj9mM2aDlpwm+5GrYhD1XBrxLS0vU0UvSUWdAwDXtEiwsdueZowkky8NY7nV/+lZAcDl
+	EpR2QClW/0u8tTsXDrjbu3+6Q1E=
+X-Received: by 2002:a17:902:dacc:b0:2ed:472:b9d6 with SMTP id d9443c01a7336-2f03efb1397mr182475285ad.2.1795581439561;
+        Tue, 24 Nov 2026 20:37:19 -0800 (PST)
 Received: from localhost ([2001:19f0:8000:4ce8:5400:7ff:fe0e:e6b2])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8c87343f83dsm8178515b3a.39.2026.11.24.20.37.15
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f118c72sm78614345ad.54.2026.11.24.20.37.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 20:37:16 -0800 (PST)
+        Tue, 24 Nov 2026 20:37:19 -0800 (PST)
 From: Inochi Amaoto <inochiama@gmail.com>
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
 	Jonathan Corbet <corbet@lwn.net>,
@@ -112,10 +113,12 @@ Cc: linux-doc@vger.kernel.org,
 	linux-phy@lists.infradead.org,
 	Yixun Lan <dlan@gentoo.org>,
 	Longbin Li <looong.bin@gmail.com>
-Subject: [PATCH v5 0/8] phy: core: Add phy bulk helpers support
-Date: Wed, 25 Nov 2026 12:36:31 +0800
-Message-ID: <20261125043639.249525-1-inochiama@gmail.com>
+Subject: [PATCH v5 1/8] phy: core: Add common helper to add phy phandle device link
+Date: Wed, 25 Nov 2026 12:36:32 +0800
+Message-ID: <20261125043639.249525-2-inochiama@gmail.com>
 X-Mailer: git-send-email 2.56.1
+In-Reply-To: <20261125043639.249525-1-inochiama@gmail.com>
+References: <20261125043639.249525-1-inochiama@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -127,116 +130,129 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-As discussed in [1], some drivers may do not care the difference between
-phys. Instead, they only need to treat them as a group and operate them
-together. This means a bulk operation is needed.
+It is very common for adding a device link for phy phandle
+for device managed phy helper functions. So add a common
+helper for future reuse.
 
-Add some bulk helper functions for phy core by referencing the design of
-clock/reset subsystem. This can relieve the driver owners' life who needs
-to handle many phys, as well as each phy error reporting.
+Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/phy/phy-core.c | 46 ++++++++++++++++++++++++------------------
+ 1 file changed, 26 insertions(+), 20 deletions(-)
 
-The example consumer driver is at [2], with the following function used:
-- phy_bulk_init
-- phy_bulk_exit
-- phy_bulk_power_on
-- phy_bulk_power_off
-- devm_of_phy_bulk_get_all
-The devm_phy_bulk_get_all() is also added as a simple wrapper of
-devm_of_phy_bulk_get_all().
-
-This patch set also includes another two porting for cadence PCIe driver,
-and the the IMX SATA driver, as I have the document of these two device
-so I can verify the PHY timing requirement.
-
-Note:
-1. The patch still uses -EOPNOTSUPP for dummy blob. Instead, I send
-   a new patch [3] for fixing the left function.
-2. libahci_platform.c is not ported, as its getter require additional
-   check on the DT so it can no be handled by a simple bulk get.
-
-[1] https://lore.kernel.org/linux-pci/ak9KzNFF26B0Kttz@ashevche-desk.local/
-[2] https://lore.kernel.org/linux-pci/20261125041523.242588-1-inochiama@gmail.com/
-[3] https://lore.kernel.org/linux-phy/20260929084739.467082-1-inochiama@gmail.com/
-
-Changed from v4:
-- https://lore.kernel.org/linux-phy/20260923023304.78428-1-inochiama@gmail.com/
-1. rebased to v7.4-rc1
-2. Apply Andy's tag to patch 1, 2.
-patch 3:
-1. Add this patch as Andy's request for simpler bulk api handling.
-patch 4:
-1. Add reversed recovery operation in phy bulk operator APIs like the
-   reset subsystem.
-2. Use int instead unsigned int to simplifiy the error check.
-3. Fix wrong error handling in phy_bulk_get()
-4. Fix document of the existed bulk API.
-patch 5:
-1. Remove unnecessary num_phys and device node check in the bulk getter
-   API. Now it expects user will give a valid input.
-2. Add devm_phy_bulk_get() and related helper function
-3. Add devm_phy_bulk_put_all() for future porting
-4. Make all dummy handler follows the same semantics in other subsystem.
-patch 6:
-1. Add missing doc of the all function
-patch 7,8:
-1. Add these two patches as an example for phy bulk API.
-
-Changed from v3:
-- https://lore.kernel.org/linux-phy/20260923023304.78428-1-inochiama@gmail.com/
-patch 5:
-1. Fix spell error in the document.
-
-Changed from v2:
-- https://lore.kernel.org/linux-phy/20260904083709.425893-1-inochiama@gmail.com/
-patch 1:
-1. Add Andy's tag
-2. Update comment for phy_add_device_link
-patch 2:
-1. Add Andy's tag
-2. Update comment for changed function
-patch 3:
-1. Remove all unused function and make the dependency as static things.
-2. Update comments for struct phy_bulk_data and left functions
-patch 4:
-1. Remove all unused function and make the dependency as static things.
-patch 5:
-1. Add phy document for these newly added apis.
-
-Changed from v1:
-- https://lore.kernel.org/linux-phy/20260831025319.94886-1-inochiama@gmail.com/
-patch 1:
-1. Update document.
-patch 2:
-1. Fix document format.
-2. Fix several document description.
-patch 3:
-1. Split into two patches: one for non devm helpers, one for devm helpers.
-2. All the bulk helper now use unsigned int for counts.
-3. Fix multiple the while loop statement.
-4. Rename of_phy_get_parent_count() to of_phy_get_count().
-5. Fix some 80 line function problems.
-6. Use PTR_ERR_OR_ZERO() to simplify the error handle.
-7. Fix zero value in the document
-8. Use two separate release function for devm helpers.
-
-Inochi Amaoto (8):
-  phy: core: Add common helper to add phy phandle device link
-  phy: core: Add common helper for get phy phandle by index
-  phy: core: Make phy_put() ignore NULL and error pointers
-  phy: core: Add phy bulk data helper functions
-  phy: core: Add managed phy bulk data helper functions
-  doc: phy: Document some bulk helper functions
-  PCI: cadence: Use phy bulk data api to simplifiy the logic
-  ata: ahci_imx: Use bulk PHY APIs for calibration PHYs
-
- Documentation/driver-api/phy/phy.rst          |  40 ++
- drivers/ata/ahci_imx.c                        |  57 +-
- drivers/pci/controller/cadence/pcie-cadence.c |  62 +-
- drivers/pci/controller/cadence/pcie-cadence.h |   2 +-
- drivers/phy/phy-core.c                        | 546 ++++++++++++++++--
- include/linux/phy/phy.h                       |  69 +++
- 6 files changed, 648 insertions(+), 128 deletions(-)
-
---
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 597e6b234f5e..b7550ca37e66 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -606,6 +606,27 @@ int phy_validate(struct phy *phy, enum phy_mode mode, int submode,
+ }
+ EXPORT_SYMBOL_GPL(phy_validate);
+ 
++/**
++ * phy_add_device_link() - Associate the phy with the device
++ * @dev: the device consuming the PHY
++ * @phy: the PHY supplied to @dev
++ *
++ * Add a device link with @dev as the consumer and @phy as the
++ * PHY supplier.
++ */
++static void phy_add_device_link(struct device *dev, struct phy *phy)
++{
++	struct device_link *link;
++
++	if (!phy)
++		return;
++
++	link = device_link_add(dev, &phy->dev, DL_FLAG_STATELESS);
++	if (!link)
++		dev_dbg(dev, "failed to create device link to %s\n",
++			dev_name(phy->dev.parent));
++}
++
+ /**
+  * _of_phy_get_with_args() - lookup and obtain a reference to a phy by of_phandle_args
+  * @args: of_phandle_args to the phy
+@@ -805,7 +826,6 @@ struct phy *phy_get(struct device *dev, const char *string)
+ {
+ 	int index = 0;
+ 	struct phy *phy;
+-	struct device_link *link;
+ 
+ 	mutex_lock(&phy_provider_mutex);
+ 	if (dev->of_node) {
+@@ -833,10 +853,7 @@ struct phy *phy_get(struct device *dev, const char *string)
+ 
+ 	get_device(&phy->dev);
+ 
+-	link = device_link_add(dev, &phy->dev, DL_FLAG_STATELESS);
+-	if (!link)
+-		dev_dbg(dev, "failed to create device link to %s\n",
+-			dev_name(phy->dev.parent));
++	phy_add_device_link(dev, phy);
+ 
+ out_unlock:
+ 	mutex_unlock(&phy_provider_mutex);
+@@ -912,7 +929,6 @@ struct phy *devm_of_phy_get(struct device *dev, struct device_node *np,
+ 			    const char *con_id)
+ {
+ 	struct phy **ptr, *phy;
+-	struct device_link *link;
+ 
+ 	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
+ 	if (!ptr)
+@@ -927,10 +943,7 @@ struct phy *devm_of_phy_get(struct device *dev, struct device_node *np,
+ 		return phy;
+ 	}
+ 
+-	link = device_link_add(dev, &phy->dev, DL_FLAG_STATELESS);
+-	if (!link)
+-		dev_dbg(dev, "failed to create device link to %s\n",
+-			dev_name(phy->dev.parent));
++	phy_add_device_link(dev, phy);
+ 
+ 	return phy;
+ }
+@@ -982,7 +995,6 @@ struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
+ 				     int index)
+ {
+ 	struct phy **ptr, *phy;
+-	struct device_link *link;
+ 
+ 	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
+ 	if (!ptr)
+@@ -1006,10 +1018,7 @@ struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
+ 	*ptr = phy;
+ 	devres_add(dev, ptr);
+ 
+-	link = device_link_add(dev, &phy->dev, DL_FLAG_STATELESS);
+-	if (!link)
+-		dev_dbg(dev, "failed to create device link to %s\n",
+-			dev_name(phy->dev.parent));
++	phy_add_device_link(dev, phy);
+ 
+ out_unlock:
+ 	mutex_unlock(&phy_provider_mutex);
+@@ -1059,7 +1068,6 @@ EXPORT_SYMBOL_GPL(phy_get_by_of_node);
+ struct phy *devm_phy_get_by_of_node(struct device *dev, struct device_node *np)
+ {
+ 	struct phy **ptr, *phy;
+-	struct device_link *link;
+ 
+ 	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
+ 	if (!ptr)
+@@ -1073,10 +1081,8 @@ struct phy *devm_phy_get_by_of_node(struct device *dev, struct device_node *np)
+ 
+ 	*ptr = phy;
+ 	devres_add(dev, ptr);
+-	link = device_link_add(dev, &phy->dev, DL_FLAG_STATELESS);
+-	if (!link)
+-		dev_dbg(dev, "failed to create device link to %s\n",
+-			dev_name(phy->dev.parent));
++
++	phy_add_device_link(dev, phy);
+ 
+ 	return phy;
+ }
+-- 
 2.56.1
 
