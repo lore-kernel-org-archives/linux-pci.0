@@ -1,75 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795630960;
-	b=D/TZwxqTArnRgJDGwD24i+FFaD9QCVLYa1tOxU4T1hJizrsZv3kqEZitQ921v+uKZbRc
-	 SA748soi+17nKXog2sTSywGg3zSVyv4LYKIJp7+ixYt/gPG7q/HS3HqRmknEBLsgqZHeN
-	 ug1t275NZdBbKcRAWv/2s3uLcj7ISSWdtS4DAlrYrZTtRvWoxWVFvva0/w2L4/HNcfTjE
-	 Sy2pzLHuPq6BS1LwSzkBWMan/QiMMMap9gPDYN7FFI/j7nM1wnVzcGcC3KGTVquSwLN+K
-	 eWftNjVX1altq1mzXV2YCQrPKO3A+B2Fu5mgU1Ci9NYHOmy1BlOgFRPDIvWsh7wambw==
+	t=1795630961;
+	b=3AsugOf6vCoY9XmM/f0/J98cYwdQa+FQ+QYQQK8pzYa4j+WJB0ZNEdGMTdarSuY8jUK4
+	 tyZ6iuvs9QIcbPQWlH7OEN32b5GK+oT205tT1hHxaGPCi9Ple/UjwcWpvTSLEMUHXsL26
+	 Z7CCr6mxilAJAE9EndSSkrKDmlHx9eQ7T3m4HTIUgjiJbqvsah/R9VE20rF5oJhpew7UC
+	 vSioIjZ7AnRMquSmvx9y3sWTBXwYq05DfiWxM/xKoxVlW4+mDHxnYdHiPW4v9PUNn+xV5
+	 jJTPfezCPPZgYUiDdKJk0PLNKh2+5t6fxzcyBjlEpCUJ3fU3OXDkCwx+us+P50GJszA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795630960;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795630961;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=muHbETEQ5J0nFGhT+U6cGvseIAQr5YwFizEtL9WHdZ8=;
-	b=l6arUUykooRKIF4jVSIvUfJ9E0igwLZBClZ0Jes0op3UF+RwS6hSq19O3wL764MIhryM
-	 wFmqrVhlaGEgJg2CbIAHo8/LHTasPN6diV3Zf9ymyp3/bVb9Egz5a8wIr3s0zPE3jNX9w
-	 G05ZxGmXvS/A3WyNim+4wGAYdgFxTv+NDtIJ20onLeDcDZn0lIm+pz5ezkmetCAub6up9
-	 1ttrZGKrqOPqic9L+b812l4GFzRaIZ/mDYxvB1YPez8/C9+5RmEJ1hXsf+zJfp5S93Jty
-	 6inYpEVe/s0JSXaVZaYs/jV/23bxXcbtcULwAXuELRc8YwI1B+SOzFnn/mavb6Mm08w==
+	bh=sfEVlacBV97ie02thpjOgM2D6cDC2tSVCZoWDEnfrKo=;
+	b=jMKaePncSddynxCXjWOssM6ySAc3wPfU3gzNmWkUWNozVhtjLmfozEdfKwjYyUXewXru
+	 5PVbUeO0c+dBtPWH788q0jayfRtKQTqc/RdDDNc8dkw7tW5Qf6lpUCjakUNkf+qaEwlKe
+	 U8WO/SR07+IgQzfSWCdE/G7hAvD7WkKhbdGOIkwCcBQb/t+E8e1iYaUKkss23Mv+2Y6v4
+	 IRhVJXHrqyQqRE9NKqSMVsQGolRtU71v0U3FEWvvVccvmorjBpgSUuD4LKH0RC6ro6EH+
+	 x81C1/vQKjif17kd7DRyusknyPJbKyZrBzmKvGD62pehCS681kFMFpr4lU//rtSQOLQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=eJPO8oah;
-	arc=none smtp.remote-ip=209.85.214.199
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XltHJeJc;
+	arc=none smtp.remote-ip=209.85.214.197
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 930DB606A323
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 18:22:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 930DB606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912F2606A335
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 18:22:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 912F2606A335
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=eJPO8oah
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2f033dc37cfso58623215ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 10:22:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XltHJeJc
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2f052777c7cso60421075ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 10:22:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795630960; x=1796235760; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1795630961; x=1796235761; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=muHbETEQ5J0nFGhT+U6cGvseIAQr5YwFizEtL9WHdZ8=;
-        b=eJPO8oahjXKWiGFedCbZYdGmJq/ZXEI6qzCKDG63OYUAhUlXSifYBiNU4RjoH3r1Wk
-         tmYZYvtJAfYbhXFmXuxx8vh9T6zSDgAi762IuX2fChAKETqRwVSu4RVrZeNfquwtXF1F
-         A2rC0fgumfErVy4o02s2c3p0D1bAnKjnTdlHCoWNvwEsa7HPqpCNfeWBzvJXDuYwr0i/
-         RmJ+FuEsG3GO/rxIURL7jVWHfjyhq1ZD2Ms6wXpynJWSJ2m/SNhX8J38Yp9z3h5pK+Xj
-         awpUXUlChCFh4tDUFYJr0zQHBi1OyfY3iginJjqAz/fpE7Oz40bfM0b0uoXoSshW+kPy
-         T31A==
+        bh=sfEVlacBV97ie02thpjOgM2D6cDC2tSVCZoWDEnfrKo=;
+        b=XltHJeJcafnoz7rWSdh67DNM8cUVU33Kf/95Saqoq1SakVT7WitG6OsBqDZPGchsCE
+         y/G1PGTFqEJu0lBEmJpEIiHh2bs+IcYU8n5pRQb6MCXjpvL2vVXWyjr78fxLTeBKFKQH
+         LbZNOzgfAlbMrtPg3br43/a0SJZBBByAaTgwqOI1btWwBNj5Ty//bbU2AK1YZTsmpv+P
+         Rx1sqeQZDnE6Me/PAQ2VZSIlCF1Pj+UVs+co5YrbldjuVaIcAFJ5jyFNTi9XJNwyBgom
+         juH/Li+nPLPJ/sXNQ9fbhC3+mMLejxLcvsDBSkMQCDsTkfuIdqvNpOGCTIPpHqYCNwEs
+         6FOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795630960; x=1796235760;
+        d=1e100.net; s=20260707; t=1795630961; x=1796235761;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=muHbETEQ5J0nFGhT+U6cGvseIAQr5YwFizEtL9WHdZ8=;
-        b=qfBvw35mLDHtHX3G7tUxaoV8X/WRQsPVt5MUYuUw1Adl1PUyWSuDNxN1xMVhiqqP1O
-         SbiU4ciOEAKGgAzLwFl3cUkSYxNE96pz9xk3oo/EdUMhYmOPS6vjv++r14/JgNRfGjAu
-         rMv6z7vlthfOIDiS8XNtbpoC/WqinlDpKhSdnbzyUTvz3ynupgQd533Gko3LT3J3VnWo
-         It+7vOZ2cHbPeDR9yR3AgT+2IaxFAfCj6wwX6Jk6BY/zVdylaW/RyYeUbjkgeYlcVzrv
-         mUs+OxGgv+zZHiC8GABXXZ8f/yhq8J5y+iy5ogM44XBVw9WJHjFZ2prvlHd8A5qoQe/n
-         O0lw==
-X-Forwarded-Encrypted: i=1; AL+hErEbFE0hmXrP5f9xj5Dbt3HItXrL3v4HbenhXy8CqBLpOZxPhvkQbPYBK4YjsP9D81E6eP8CoGwrWlc=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+SubrC7QVTK7NMnHHen7LnAbhdqbmu1ZOUZeuWE08javlTCDgH
-	n9TFQfkjP7Pk3X7AH2dMZln2vUlNdCBS+pAmoPlCXbcuUHO6oX1hR8oenMZmno/lkk+/dYrv6M8
-	RaTk2wzTs5C3h8QDR9EvTz6dxIR2dzV6Vrg==
-X-Received: from plbiy9.prod.google.com ([2002:a17:903:1309:b0:2ed:8eec:6a11])
+        bh=sfEVlacBV97ie02thpjOgM2D6cDC2tSVCZoWDEnfrKo=;
+        b=Mw2cyUiIq7Oea711fLzK8wCEgJKPdmB3Xx0+2MX/oT9XNSrrk3JJxHrslUpdNy3kaQ
+         6Pt4Bv0vwKsb2fjCei68Ze+6T00chniR/0zFD2juVpASIB26qHwl3bllxXMm+wVduaKj
+         2tyRYKa5mDGNcoDUuqDYXgwkoUtAhljnnF28Js+nGYAUB1xtn8R9PqC09PGWVNdwFebY
+         02c4hbBJA0mlsIE/U8c/TkBVOaXjGjaLtuXvnFqvnc0o1GYVXDLuJOXB+bWBl045HSU4
+         fe+lVX0YySSJuoYA94wwPUoAYAHAIp7MoCYCWqkR4bC51FYh4rLPh0RZ/gs/xyUJK7Dd
+         6ikg==
+X-Forwarded-Encrypted: i=1; AL+hErGmwhp6Aud3iKORsOXKFVtwHGD1MJyb3YRybBtWreuLzY99E7mIXP17BVblaaZNCI4hltYtk+6RiAE=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/PU0oJ3fa+o/PucqjOET0PxSPiOSar3OZ8HGgJ1foFy81DLw77
+	16B5p83tFj+WL6F9qnVna3Npnb79n73bej8qauCVaZqXRO6fLEVHRRF1LXeDwPL7x3Q974J1eR2
+	k98SE2YTUCIOGBpQrGNvBGwq4B5DeZ876qQ==
+X-Received: from plau5.prod.google.com ([2002:a17:903:3045:b0:2f0:349:b3a4])
  (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:902:e811:b0:2ed:3f47:96a3 with SMTP id d9443c01a7336-2f03f169628mr184052615ad.42.1795630959630;
- Wed, 25 Nov 2026 10:22:39 -0800 (PST)
-Date: Wed, 25 Nov 2026 18:22:39 +0000
-In-Reply-To: <20261016220900.GA2020355@bhelgaas>
+ 2002:a17:902:ce85:b0:2f0:3e44:4761 with SMTP id d9443c01a7336-2f03f25e801mr195497385ad.54.1795630960732;
+ Wed, 25 Nov 2026 10:22:40 -0800 (PST)
+Date: Wed, 25 Nov 2026 18:22:40 +0000
+In-Reply-To: <115e024d-f49b-256f-550c-7a64b546a076@linux.intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -79,54 +79,31 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-References: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org>
- <20261014205117.GA1665327@bhelgaas> <atG61oicHbsLKiib@debian> <20261016220900.GA2020355@bhelgaas>
+References: <20261125-pcie-link-endpoints-v8-0-19d49c17c05f@google.com>
+ <20261125-pcie-link-endpoints-v8-1-19d49c17c05f@google.com> <115e024d-f49b-256f-550c-7a64b546a076@linux.intel.com>
 X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
-Message-ID: <20261125182239.2291980-1-rathodpriyank@google.com>
-Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
- and convert Atheros drivers
+Message-ID: <20261125182240.2292209-1-rathodpriyank@google.com>
+Subject: Re: [PATCH v8 1/3] PCI/ASPM: Add internal pcie_aspm_inhibit() helper
 From: Priyank Rathod <rathodpriyank@google.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
+To: "=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Val Packett <val@packett.cool>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	"=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Nirmal Patel <nirmal.patel@linux.intel.com>, 
-	Jonathan Derrick <jonathan.derrick@linux.dev>, Jeff Johnson <jjohnson@kernel.org>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>, Emmanuel Grumbach <egrumbach@gmail.com>, 
-	Matthew Garrett <mjg59@srcf.ucam.org>, linux-pci@vger.kernel.org, 
+	Lukas Wunner <lukas@wunner.de>, Manivannan Sadhasivam <mani@kernel.org>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Shuah Khan <shuah@kernel.org>, 
+	Randy Dunlap <rdunlap@infradead.org>, linux-pci@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-Hi Manivannan, Bjorn, Ilpo,
+Hi Ilpo,
 
-Following up on this thread since both the PCIe Lane Margining debugfs
-series [1] and Krishna's bwctrl bandwidth scaling series [2] need a way to
-temporarily keep ASPM states disabled and restore the link's configured
-ASPM policy afterward without clobbering permanent quirk disables or
-sysfs settings.
+Thanks for the feedback.  I reached out to Manivannan, Bjorn, and you on
+the ASPM thread to check whether Manivannan has a v4 in progress or if I
+can take over finishing the core ASPM changes cleanly first, and to align
+on the per-state counter API details before implementing it.
 
-Manivannan, do you already have a v4 of this series in progress, or would
-you be okay with me taking over and finishing the core PCI/ASPM patches
-(while keeping the ath* driver conversions separate so they can land
-afterward)?
-
-If taking over makes sense, I'd like to align with Bjorn and Ilpo on the
-API shape before writing the patches.  From the Oct 13-16 discussion and
-Bjorn's recent bwctrl comment, leaving pci_disable_link_state() (one-way
-quirk disables) and pci_enable_link_state() (init-time aspm_default setup
-for vmd and pcie-qcom) unchanged avoids semantic conflicts for backports
-and existing drivers, while adding a new per-state reference-counted
-inhibit/uninhibit pair for temporary callers.  Sysfs writes would keep
-their own disable bit per state so repeated sysfs writes cannot skew the
-counter, and pcie_aspm_get_link() could accept both Downstream Ports and
-child devices (along with moving the PCI-PM L1SS D0 transition from patch
-3/8 into the shared path).  Alternatively, would you still prefer renaming
-pci_enable_link_state() as Ilpo discussed earlier?
-
-[1] https://lore.kernel.org/r/20261125-pcie-link-endpoints-v8-0-19d49c17c05f@google.com
-[2] https://lore.kernel.org/r/20261119-bwscale-v6-1-9a9a715fcb46@oss.qualcomm.com
+Also noted on avoiding bullet lists in commit messages, and I will fix the
+port->dev lifetime issue in pci_lmr_release() that sashiko-bot flagged on
+patch 2/3 when preparing the next revision on top of the ASPM prerequisite.
 
 Thanks,
 Priyank
