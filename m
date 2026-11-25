@@ -1,57 +1,70 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795595339;
-	b=jsDO1daKo8ay6xlvwod3lgg9OEsDzvHPm7Z6cHHmq0y+EMFurluKPZ8j8j9oqHtqUku7
-	 NZZ/NSETKoLA3J/NdgrfFzPVlum+rXeZ/o6fRaFw5E1gdoG0gh7jXByo2tKton2pp+8Vx
-	 GfLbv23So1iJx1vskOOFCJBuGoOVsILXuiQqIc5MRIlzp5eakqCL678YCujuYeVIGoucP
-	 JCrGhLAvroJPEt6U8JUKewv6d83wIjE9bwXUDQznOyoc7+VgPN9B4is3tfdbjbZJPnBv0
-	 4MruB0eAvTwPcxJOnbU03YlbZV6bbulJahvJvsOK9shTYOXmnRRDdlJnFua1Ql1RgVg==
+	t=1795595503;
+	b=vpigWH22k0IvF4CSmTZHsUwLFA1X/UzXyECL9YF8b3d8xGp5K8Dc3thcZzdVcVRuo6yT
+	 +kkEbU/s3eEBNae4GsVps+DV3bbVvzxGGt+nyFl19O2iqG9qZeXbe8pw78uvwK+59jRri
+	 FW5xqBXpLfwi7RcqXcKu5F/T8fD/zkd6EmDnyeOAbqyWl2tpmk6uqCtZvjd33L4eEm2Me
+	 NNjMT81p0JxRJ2iz0Q/FotPEaj/u7THnjC9E43JtCXbEuqOJEGkl4jjTdgGB16jaPPUfN
+	 RhE6N9G0Q6+LQXMm3+zXryhYecVhs2gsHb7vmBd1w3Gtcd4dKc9c+J85PPihC7B9ZIQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795595339;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ySq06g5cxa7re1sjzz84ApYAVrUTfHGeIEBLoePNFOI=;
-	b=FAvCStL5BPBjG+2ovlCmQ/3xN4FxBXQybDlFYEmt2m7p9q8ztGy9Q/WcLnIdBq3NEdt8
-	 s6D+ntHtpwhJIXEc8eDqnrZsh9t8yYkQKyib48MKQ626waknp5OmALnQClvO/rLs/3Nrs
-	 8ESuQ2/cBrQJgZUtnpz7XC+PbT1MHzYR4r5vve74gI4eaCcrIEZOydGDJBAlMCg9ZO5dW
-	 rZNeZEXthYBRYK1r8vanh4x461mxYDt1SoNKXLwByqNnpPPw7vI7iyitKtPZDBXUsPLU4
-	 1OoOcZV0GFKUnPpRaW+p/ladYdlmi+LTMVvi0G2AAE2tDyGYwJvAiUWZIrAYhVJxNZw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795595503;
+	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=NR5n9vnMwUztju7EXEqCo7XSLAUDb4Xqk+VIxyLE7/c=;
+	b=lxEr7T41g6MmeooyjYitfYQaaNxUH6v1LNmEPpgV3tmwSDWIawqaqVImq4N9EYb7ib0F
+	 /fQ7p1RvPOElCk32Gw1UI2xpb8QbRSLL8sy/RIJvB0rc/Q7rjl7pRObJkfpBxiMQWxsgO
+	 oD6KwqEqUMzIXLVvrUPd1NcP+z/4l3uwlxO9zdO8GldAL5jRKWmFthG4Tx0dfP63SEcx0
+	 wVt7+9DGCXxYosnV0Hc+ns681Y1D+cBbmDXfaUendqYC0rmBmYe7m6Dx3OIId4kZPJKIS
+	 iS01kyrkyAyx/NSCtmBQAPV+dVCPvRnrf2djGGHTJSA3K/4hj1xCeCLMw4eQzmimI0A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZnEvNRoT;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HLC5lvWP;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC5E606A31E;
-	Wed, 25 Nov 2026 08:28:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02349606A329;
+	Wed, 25 Nov 2026 08:31:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZnEvNRoT
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52CA51F000CF;
-	Wed, 25 Nov 2026 08:28:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HLC5lvWP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CC321F000D1;
+	Wed, 25 Nov 2026 08:31:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795595338;
-	bh=ySq06g5cxa7re1sjzz84ApYAVrUTfHGeIEBLoePNFOI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZnEvNRoT62t0t2kSUS3fDeh4HQ0IQjNb1V3XT/Gew+/TQ1xvOVxnUHt8VuEYN6ozo
-	 KfCTThjayApqItcudi4OZ0hQJ3MuxL/s2z4GZ5Y51QDJB4BApK56ey3/+FKbgMdD7M
-	 yJskjex9tJP3qGoprJseFjoGzbC4mi4vXxB2wUIMLxhdyER/xETaejG3RlAWyi10EX
-	 QdVcVtXw4I+0+KKOAk98lFdja7YcFBxskbkwWTbZee7sox5pK/tO3/t4B0vI+NW6CP
-	 VyTwHQI3qzTFXLctegX8P/lDW4VBuRURZ3WSQ/tvFOJoDuiDdIqgBrAQp/sI/H7Ont
-	 95Hrlm6mWtOCQ==
-Message-ID: <sashiko-outbox-232900@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 12/18] iommufd/viommu: Select vIOMMU operations
- before allocation
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?QW5lZXNoIEt1bWFyIEsuViAoQXJtKQ==?= <aneesh.kumar@kernel.org>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261125081121.379481-13-aneesh.kumar@kernel.org>
-References: <20261125081121.379481-1-aneesh.kumar@kernel.org>
- <20261125081121.379481-13-aneesh.kumar@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 25 Nov 2026 08:28:57 +0000
+	s=k20260515; t=1795595502;
+	bh=NR5n9vnMwUztju7EXEqCo7XSLAUDb4Xqk+VIxyLE7/c=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=HLC5lvWPvpRSC9jTJfKtu4fMESxtMMFO5C7Yoj6vnnCP9MiS9vmvYmuW53XLNVPbf
+	 HlkfJuTvtxYb3uLi3GqPy7wHWypzMIziP36kJXFP3kP/OfsvpInni9uBdbhD5H3anj
+	 KliWQaHd8M6l5d0Y5ZYx77+zWobP9kWCN3ChdsaX8pNOtmy420MjoDG1h6OwUnE8Lo
+	 Zztk1Fhxinh2x5d3aCA2xHVndIF4WoZphX5261LJt/OiEKq/EIhlhB7Mwo2O13HOs/
+	 5gWu5PraXInicwPXcrVCMWymSwF9SzxCcWQ0e1oVS52EIyab2KWntUhLfeczOeCfH1
+	 w9qhP7GoDTDVQ==
+X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Alexey Kardashevskiy <aik@amd.com>, linux-coco@lists.linux.dev
+Cc: Dan Williams <djbw@kernel.org>, Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 03/10] PCI/TSM: Let TSM drivers discover the CMA DOE
+ mailbox
+In-Reply-To: <4279cc50-0e05-4d86-ac12-398adcfb6091@amd.com>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <20261123083337.2731019-4-aneesh.kumar@kernel.org>
+ <4279cc50-0e05-4d86-ac12-398adcfb6091@amd.com>
+Date: Wed, 25 Nov 2026 14:01:32 +0530
+Message-ID: <yq5atsl59usb.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,89 +73,33 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] iommu/amd: unreferenced amd_viommu_ops in
-  drivers/iommu/amd/iommufd.c
---
+Alexey Kardashevskiy <aik@amd.com> writes:
 
-commit 20918297bf65ffa4cc97b5bf68fa703d00f55ba5
-Author: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> On 23/11/26 19:33, Aneesh Kumar K.V (Arm) wrote:
+>> Move CMA DOE discovery out of pci_tsm_pf0_constructor(). An external
+>> Endpoint requires a mailbox, while an RcIEP can use device assignment
+>> without DOE. Let each TSM driver enforce its own requirement.
+>> 
+>
+> It is DOE of a PF which will be passed through (or its VF).
+>
+> The AMD hardware has such devices too which are still PCIe so I'd
+> think it is the same TSM driver. imho this is quite common and needs
+> to be handled in the common code.
+>
 
-iommufd/viommu: Select vIOMMU operations before allocation
+If this is common across TSM drivers, we can move it into the common
+code. For the next iteration, I will implement the arm requirement
+there, and we can resolve any architectural differences later?
 
-This commit adds iommu_ops::get_viommu_ops() to select vIOMMU operations
-before allocation, moves get_viommu_size and viommu_init into
-iommufd_viommu_ops, and converts AMD, Arm SMMUv3, Tegra CMDQV, and the
-selftest backend to the new interface.
+>
+> And the patch does too many unrelated renames, a bit harder to see the
+> actual change.
+>
 
-> diff --git a/drivers/iommu/amd/iommufd.c b/drivers/iommu/amd/iommufd.c
-> index 52300b867c1f2..dcbe80fcb8c70 100644
-> --- a/drivers/iommu/amd/iommufd.c
-> +++ b/drivers/iommu/amd/iommufd.c
-> @@ -32,13 +32,21 @@ void *amd_iommufd_hw_info(struct device *dev, u32 *le=
-ngth, enum iommu_hw_info_ty
->  	return hwinfo;
->  }
-> =20
-> -size_t amd_iommufd_get_viommu_size(struct device *dev, enum iommu_viommu=
-_type viommu_type)
-> +static size_t amd_iommufd_get_viommu_size(struct device *dev,
-> +		enum iommu_viommu_type viommu_type)
->  {
->  	return VIOMMU_STRUCT_SIZE(struct amd_iommu_viommu, core);
->  }
-> =20
-> -int amd_iommufd_viommu_init(struct iommufd_viommu *viommu, struct iommu_=
-domain *parent,
-> -			    const struct iommu_user_data *user_data)
-> +const struct iommufd_viommu_ops *
-> +amd_iommufd_get_viommu_ops(struct device *dev, enum iommu_viommu_type vi=
-ommu_type)
-> +{
-> +	return NULL;
-> +}
-> +
-> +int amd_iommufd_viommu_init(struct iommufd_viommu *viommu,
-> +		struct device *dev, struct iommu_domain *parent,
-> +		const struct iommu_user_data *user_data)
->  {
->  	unsigned long flags;
->  	struct protection_domain *pdom =3D to_pdomain(parent);
-> @@ -47,8 +55,6 @@ int amd_iommufd_viommu_init(struct iommufd_viommu *viom=
-mu, struct iommu_domain *
->  	xa_init_flags(&aviommu->gdomid_array, XA_FLAGS_ALLOC1);
->  	aviommu->parent =3D pdom;
-> =20
-> -	viommu->ops =3D &amd_viommu_ops;
-> -
->  	spin_lock_irqsave(&pdom->lock, flags);
->  	list_add(&aviommu->pdom_list, &pdom->viommu_list);
->  	spin_unlock_irqrestore(&pdom->lock, flags);
-> @@ -73,5 +79,7 @@ static void amd_iommufd_viommu_destroy(struct iommufd_v=
-iommu *viommu)
->   * struct iommufd_viommu_ops - vIOMMU specific operations
->   */
->  static const struct iommufd_viommu_ops amd_viommu_ops =3D {
-> +	.get_viommu_size =3D amd_iommufd_get_viommu_size,
-> +	.viommu_init =3D amd_iommufd_viommu_init,
->  	.destroy =3D amd_iommufd_viommu_destroy,
->  };
+Sure, I will drop the unrelated renames.
 
-[Severity: Low]
-As reported by kernel test robot on v8 [1], does leaving amd_viommu_ops
-unreferenced trigger a -Wunused-const-variable warning when building with
-W=3D1?
-
-Removing viommu->ops =3D &amd_viommu_ops from amd_iommufd_viommu_init() and
-returning NULL from amd_iommufd_get_viommu_ops() leaves amd_viommu_ops with
-no references in drivers/iommu/amd/iommufd.c.  Also,
-amd_iommufd_viommu_init() is no longer used outside this file and can be
-made static instead of being declared in drivers/iommu/amd/iommufd.h.
-
-[1] https://lore.kernel.org/r/202611051602.nH0L0uqs-lkp@intel.com
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261125081121.3794=
-81-1-aneesh.kumar@kernel.org?part=3D12
+-aneesh
