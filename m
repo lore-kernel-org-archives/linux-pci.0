@@ -1,32 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=83.223.78.233
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795625063;
-	b=fVaR4Ctf1PMtiLwRbOlTLqDyYK6xzZSTPZnfFf+gGNKHiqINVIeKTJOzfINVEjJbSB6j
-	 X91SRqwB/KnaJpyqrqPvhOifhSKzW4aCjhXagOpkeRs3L2K/NQIfEQwcWn4nzLyPQxw0f
-	 l4C0Or6iNXffMk4lSnkvorL6PwVc5n2jSBP7YNHQ1koEoueoNhMKrkByNcizbyW3/aVl2
-	 GeIeSRf+JYKKuv7wBfwTJ0tnY+ovICIZ3d0fcmAe++ZoyTi4f8b2orCjPY5VZZogKjVur
-	 rbIGgoKdB2g3MOAx0htOqH4UfQcADhzJiY3ahsVWBpR5E/1WF9zOoAQKODxC8fdyGmA==
+	t=1795625136;
+	b=jJnrc5dCTLi52+xmIQaXvYzxzSaawMuybCgeNMSzJJvFeMf2rnib1IxIkRqG0L0OWTYu
+	 IpV/r7lKv0PJ/+P7WgHFkqqXBSZHjMQs7jAHsYPXduBNtTpHVIMkCzII9AP+cOg/xudwo
+	 bSLQfe2MrJtOjghaoxMH8N+zJFEuNWp8o4cKxvDkiE9mTV6wtHTkFfaNjM4AEJw4euyY1
+	 kimAasv7ezZ8vlSHuT9iTO1vA4MzD0uIUx6NOSaDb6b21zQOEbbKAUlTW0YKewQdvgpPG
+	 XQFLj5oNx8DbsTTP0/hQjNsyFQdMo9D6iIUrGucTIpM/hfAJpeaQej5fbH0Vkj7Ihmg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795625063;
-	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
-	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key;
-	bh=Ufc5X5KPtSpN7LAkgIoRBGIIkQWdxqKwSyFbcVYvUyw=;
-	b=xmdLQwUIxOVGCY4nh86rV7pIdbrhQTDbGSvll21ChgKs4enaMHp6yHxMj9e02xyOF3Cq
-	 OXuH+nqaCiHBzVoVyYbyIyH9sc4dhH86tqK7KpR70/hsyeBHa2RMOHyBVNlmSfViqL8nl
-	 vkOjl1hZ4+luDNBtn/Jlk+BYhLZQ+K0WylSNzWhAQm9svLKN/x4cANHXFpHQXRru+hJN1
-	 ymcAPx0gr1+N+yB2JBphlvLvNIxhz10I4mcGpGtaCFx1L3Hxmfk1uzc6WoYQ3xh0aUykQ
-	 3IFh3cgW0PFOmJ+pbNO8b4spBQnvLAfdlOpehSo4hnWiLpQxQVfs8td5UD7e+8GXg7g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795625136;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=MYisWCg5t/umOzhA3FS/AXzeUQ7QzGatCxZGPN8ChPA=;
+	b=KU3oSyvUHVoBH7uyY5sZxQOST0+IkdDbhTX/ul17iWpHsdesGKtgzX7gmHPplofLTte5
+	 CrLOY0mgxThbcBj1HpjgaI/HAllJeca9fu2dujDbM6x0PkKT2a1D8RaM9OwmAjgtoOQEe
+	 2T4WK96SHh5uqDj2gK6UMpwPs0xf9O17udsBffIiOeYN0ioBpKWQopRkHwAbPwyuo4UBK
+	 7VtP1DLZrTRvbNVKrB9bDiIe2p6QxSGxtN8QGAAUn395vLkRE/3XftcDIEoZJ/NcXrsTd
+	 FTHYI3nHBvnWVCax4Fy6DfX7aJqMypzZ3pJ5wnZA17J+eVUjkCJCAQzNYDL6y5ounxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=wunner.de;
+	spf=pass smtp.mailfrom=wunner.de;
+	arc=none smtp.remote-ip=83.223.78.233
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15565606A329;
-	Wed, 25 Nov 2026 16:44:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D72C71F01562;
-	Wed, 25 Nov 2026 16:44:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B043606A323;
+	Wed, 25 Nov 2026 16:45:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B043606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 8A7B610DDF;
+	Wed, 25 Nov 2026 17:45:34 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 75763600E3B0; Wed, 25 Nov 2026 17:45:34 +0100 (CET)
+Date: Wed, 25 Nov 2026 17:45:34 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Yazen Ghannam <yazen.ghannam@amd.com>
+Cc: Tony Luck <tony.luck@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/6] PCI/DPC: Decide DPC ownership with
+ host_bridge->native_dpc
+Message-ID: <awcQrljZYEuCZWGA@wunner.de>
+References: <awVV71IbFuYAJDzh@wunner.de>
+ <20261125000838.GA1194450@bhelgaas>
+ <awbF3MrVWm98q95O@wunner.de>
+ <20261125162258.GH2156781@yaz-khff2.amd.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -36,51 +65,41 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 04/14] PCI: rzg3s-host: Create the INTx IRQ domain
- before setting the chained handlers
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Claudiu Beznea <claudiu.beznea@kernel.org>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
- robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de, 
- geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev, 
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-renesas-soc@vger.kernel.org, 
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, stable@vger.kernel.org
-In-Reply-To: <20261019065025.2146539-5-claudiu.beznea@kernel.org>
-References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
- <20261019065025.2146539-5-claudiu.beznea@kernel.org>
-Date: Wed, 25 Nov 2026 22:14:13 +0530
-Message-Id: <179562505368.5580.2150497706749194750.b4-reply@b4>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=663;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=aXar4x2N8gQJTl/ZNKcihlhafecP6Nche80dL3tuzYA=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBxBgJ5tVOCEmi1KWNu7mCRxmFtmxilxnXuP9L
- kBY8bO0SzqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcQYAAKCRBVnxHm/pHO
- 9bbCB/4k9mZGKX6nhG0HCgb5ZCAGgrQy8JHmafqY14GtFQ+LkXDlSF4MW1BRMoBjZGAPUjrxfJL
- 9gllCDF6w3rsFb0nD46Xkx1isl1vNuUNtaNjpk7eqEDspLzWKLxPEivM/G7twbNdH5nSmJfSRve
- FfG8Pf+4AVfL3JX640uFaclAFAtDs2KlCGXRq/1rdKbkyi3VBfXxgMQlAuQcWN9EZaSuraudvbo
- N7J5VnxNMBRQTgmrZPO5Li53OTZDSc8JDB3G+8fGZo0SDo4651ka30ZdHySqtRJkel+vsn0p6XF
- F53Hg2YEVZ5m8XGPWoR+/KZPiCPO72f0uuFvkeL0VNAgbRYa
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261125162258.GH2156781@yaz-khff2.amd.com>
 
-On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
-> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+On Wed, Nov 25, 2026 at 11:22:58AM -0500, Yazen Ghannam wrote:
+> On Wed, Nov 25, 2026 at 12:26:20PM +0100, Lukas Wunner wrote:
+> > Hm, I thought about this some more and realized that at least on x86,
+> > the kernel may receive PCI System Errors through pci_serr_error() in
+> > arch/86/kernel/nmi.c.
+> > 
 > 
-> rzg3s_pcie_init_irqdomain() installs the chained INTx handlers before
-> creating the INTx IRQ domain. irq_set_chained_handler_and_data() also
-> enables the interrupt, so an INTx interrupt arriving in between is
-> handled by rzg3s_pcie_intx_irq_handler() while host->intx_domain is
-> still NULL, leading to a NULL pointer dereference.
+> Do modern systems still do this?
+
+The reports I found are for systems sold in the early 2010s, e.g.:
+
+HP Proliant ML330 G6 (2010)
+HP Proliant DL380 G6 (2010)
+Intel Server Board S2600CP (2012)
+
+However the reports are as recent as 2024 because people continue using
+the hardware despite its age.
+
+> I don't think the reason and CPU give any explicit indicator for the
+> error-reporting device.
 > 
+> I expect there would need to be a platform-specific handler. Or do you
+> think a brute force search across all PCI devices would be okay?
 
-Did you observe the NULL ptr dereference on the device or just figuring it out
-from the code? If you have seen it, please include the log, otherwise just state
-it that it could be possible.
+The PCI topology of these systems seems to be fairly small, so a
+brute force search would seem okay.
 
-- Mani
+However my point is that there are platforms which do signal System
+Errors in a way that may benefit from the statistics and ratelimiting
+knobs exposed for AER.
 
+Thanks,
 
+Lukas
