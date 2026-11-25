@@ -1,80 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795562885;
-	b=C1BHx66ADVrJlwHELEKINV+9MV6Va+0Cp93U4OqIMenXd9/lAv9xrmwCXPKRa793Lw80
-	 NQyIxwV+1NJOMBhzL67tPxfnPJYfV1gW5uLjvvzb//oyQopXdY5aJI9s2jEHUg8h6PLEK
-	 6N88UaKso5dVj/v4tTlMARN0w9jHAxh4PYEDP0ahKaDRE1JnS+l+4nQec6cRMpQ3E1XSR
-	 J8uYvpGABIANqjceEXXNv3Lw8LP8puuG8rTXUxYRvU8UEj8wp/LgbvNrEl2YmRlF0SMZy
-	 Cq3iBHZD02e0OygNWkqVsWfWQBxjq5GcCR126xchToWEr3trDKB+umGLmHj3Y7Awv4A==
+	t=1795564898;
+	b=vyRyzdt2vi2OvktFP84aO1xgy0Gfb3JDagRhzWiHEeRP+oAG9sJjW1gfQ7x4z22av/61
+	 YmTzh2b8/q2VApGcPj6VLJrqkN1t/x5f0TyjXPlQUt2QlKniUwvMWefNLfUG0gQ/72gX2
+	 uKkWMxpVOi9NnXCW+lepWxSGN4r+PVM6nFKwSknmRHx/V5MjEbn3/tr6t6qIytg60BPq4
+	 nmv5nYhWdQH6n1cQKUP8pOQH7DyK1YWWYWVsaRppjDpeYZI5D7eWsr9Y+0DK26ncx3CRS
+	 T/IGDMVZ4Dzz2VdiBkqQxG7Pe4hKMwJxmbPFz6/5o86zIYRQ/hM7QPfuDagIZE23eGQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795562885;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:X-Patch-Reply:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=e08IKl8cuBBIsRhTefRMXH9yyrlJ5903Bm6C16lOTgw=;
-	b=4hQYwTC3V9G5+aeDy40dWLokI1x0ab8JYBfoOxrrXWxJYzMDMspaf4ABSsxFiQMcqGB4
-	 1sTThN/m5TQXU90I5esIio4Qm6zGhbwWn7jyBWASXTHRv14vZsYnTiLSTl9bhmDIPumMg
-	 /t9Q6naITspptTr0xS8qh4KrPX69d/isy2C7zPyG1zEDnBIcRSS/QUSJHuZ2xkJqaJbIX
-	 NknbcbYo9uSNCeEqskbg+7AqoX+Tw6QzutPn7Tva9eSKkCrl67rOz+Xx0W4gUdMchfFoL
-	 Zns0At++Hha5YU6/3LHrx/1lyYvcmOAifk6SHFBtP2dtw9DnY7bzB3701UpJ/gmQbJA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795564898;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=t0o4zYuR5JjkPQPydcYj5itA0swFE+//OOXlRttRo+U=;
+	b=mVK2Ag5x+6GwGcX+QT5kjpBs2YF6e8r/ey8+T5/AFQMirvtKI1yMYfGk7Bm48vGuHFrP
+	 JWhZP7QKeQ3u4pGali3fzqurdelrFCLr1gKCtV1V/RO5XT0JlhKRcy4t31m3p7lKqueKK
+	 5gvjh8HTrgl0rs++qZLNHD65EiMhHwBnLXhvWK3QhcyvT6Izng0j6ELyes0RJ7x1FGnRE
+	 7Aayieb8Eq80REl4TzQtacSYpn8/g4iZsC4o+QNKmsyhJYLKONnOtGq5hyXNDtsxYZVfd
+	 WgcoZLrJG1q3EKyOwI14vcNry/7MqfFFgHmlGi/cQCWamE9sD41N5Ees/fJekrp9Z5A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=opC0cO78;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HLy9KbFN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82171606A323;
-	Tue, 24 Nov 2026 23:28:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EE8B606A31E;
+	Wed, 25 Nov 2026 00:01:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=opC0cO78
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AA681F000CF;
-	Tue, 24 Nov 2026 23:27:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HLy9KbFN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CBC81F000C0;
+	Wed, 25 Nov 2026 00:01:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795562885;
-	bh=e08IKl8cuBBIsRhTefRMXH9yyrlJ5903Bm6C16lOTgw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=opC0cO78hR5M0GxIiFgeUlDOJYGAjpNo00je0ZS+32Tw1bHsTDC9+VWYDnI5bTUdG
-	 x82rcEJqjVFBrR/gavYI+bdes2Z8LWb3g/BZIxIH5fiVpz7ch/RgLaJtAwSyJqUVou
-	 ExcKrbpD4jnVjVGUCT6HAVN4RlFIT3ZTyC913Qhxm10dK+zoycDp1bcd1829W0QJHJ
-	 D7bmKf8SgFo3y7XNzHjI8ECLIjRB+VqJUFbvJfur4L78QQ4YsYmfeETI+W+fKSSHnH
-	 wqC8DIZZ86ctR2jYGQZzYZOrjzu3i36kR/5uYo9nv9B5pToBUz5Vz4aa/viSThR0yL
-	 cQOMWZqx3o6Lw==
-From: Danilo Krummrich <dakr@kernel.org>
-To: John Hubbard <jhubbard@nvidia.com>
-Cc: Danilo Krummrich <dakr@kernel.org>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Timur Tabi <ttabi@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Eliot Courtney <ecourtney@nvidia.com>,
-	Zhi Wang <zhiw@nvidia.com>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Boqun Feng <boqun@kernel.org>,
-	Gary Guo <gary@garyguo.net>,
-	=?UTF-8?q?Bj=C3=B6rn=20Roy=20Baron?= <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>,
-	Trevor Gross <tmgross@umich.edu>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Tamir Duberstein <tamird@kernel.org>,
-	=?UTF-8?q?Onur=20=C3=96zkan?= <work@onurozkan.dev>,
-	linux-pci@vger.kernel.org,
-	rust-for-linux@vger.kernel.org,
-	nova-gpu@lists.linux.dev,
-	dri-devel@lists.freedesktop.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 0/1] rust: pci: add a prerequisite for the r000 GSP firmware
-Date: Wed, 25 Nov 2026 00:27:57 +0100
-Message-ID: <20261124232757.2443082-1-dakr@kernel.org>
-X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261111200549.160806-1-jhubbard@nvidia.com>
-References: <20261111200549.160806-1-jhubbard@nvidia.com>
-X-Patch-Reply: applied
+	s=k20260515; t=1795564897;
+	bh=t0o4zYuR5JjkPQPydcYj5itA0swFE+//OOXlRttRo+U=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=HLy9KbFNBD7FHa5dm66XLgrEGjrOfKDP/pOs2V/mrgXGeZ6s9BqU03EVpKBggHwZ4
+	 IL4LqA8lz5RfIDUAtnijQS9+A55OZJMKy5qf4Dbz99s6L2U8k4DXlDqv5VheNP+ulR
+	 DTTQgQbH04AWci0mC7NbpgxQ0R8n/olyNoz4dVUForHoYcZx4TY4xMbiNyDOgz65Eg
+	 hVY1prhYEnIx3GYzvnDcXOZv1or0IBmRxcvkvY70YKsp/aPPU6SnYvGjsmhgBxT7Ns
+	 mV8/wCNi7z+z3h+9bCb7tfMUzBTNqSz8BIutVqedlGSKorVZ5YrxsQTeUhKB16bsbk
+	 dUeIwPWVGMlqg==
+Date: Tue, 24 Nov 2026 18:01:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gokulkrishna Sekar <gokulkrishnasr@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	mika.westerberg@linux.intel.com, linux-kernel@vger.kernel.org,
+	Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>,
+	Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Subject: Re: [PATCH] PCI: Correct PCIe port type field encoding
+Message-ID: <20261125000136.GA1191322@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -84,25 +57,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261124084828.15318-1-Gokulkrishna.Sekar@harman.com>
 
-On Wed, 11 Nov 2026 12:05:48 -0800, John Hubbard wrote:
-> [PATCH v2 0/1] rust: pci: add a prerequisite for the r000 GSP firmware
+On Tue, Nov 24, 2026 at 08:48:28AM +0000, Gokulkrishna Sekar wrote:
+> set_pcie_port_type() validates PCIe port topology and corrects
+> invalid upstream/downstream port type information in the cached
+> pcie_flags_reg value.
+> 
+> When performing these corrections, the code updates
+> PCI_EXP_FLAGS_TYPE using PCI_EXP_TYPE_UPSTREAM or
+> PCI_EXP_TYPE_DOWNSTREAM directly. The PCI_EXP_TYPE_* values are
+> decoded port type numbers, not values encoded for the
+> PCI_EXP_FLAGS_TYPE bitfield, so the corrected type is stored in the
+> wrong bit position.
+> 
+> As a result, a device whose type has been corrected may subsequently
+> be reported as PCI_EXP_TYPE_ENDPOINT instead of the intended
+> upstream or downstream port type.
+> 
+> Use FIELD_MODIFY() to update PCI_EXP_FLAGS_TYPE so the corrected
+> port type is encoded consistently with the format used in the PCI
+> Express Capabilities Register.
+> 
+> Fixes: ca78410403dd ("PCI: Get rid of dev->has_secondary_link flag")
+> Reported-by: Gowthami Thiagarajan <gthiagarajan@marvell.com>
+> Link: https://lore.kernel.org/all/20241213070241.3334854-1-gthiagarajan@marvell.com/
+> Signed-off-by: Gokulkrishna Sekar <Gokulkrishna.Sekar@harman.com>
 
-Applied, thanks!
+Applied to pci/enumeration for v7.5, thank you!
 
-  Branch: topic/pci-sriov-7.5-rc1
-  Tree:   git://git.kernel.org/pub/scm/linux/kernel/git/driver-core/driver-core.git
-
-[1/1] rust: pci: add domain_nr() accessor
-      commit: 002b9422b314
-
-      [ Move domain_nr() to Device<Bound>, since pci_domain_nr() may access
-        host controller data through bus->sysdata. References to the PCI
-        device and bus do not necessarily keep that data alive after host
-        controller removal. The bound context guarantees the required
-        lifetime. - Danilo ]
-
-The patch is in the topic/pci-sriov-7.5-rc1 topic branch and will be merged into
-the corresponding target branch soon.
+> ---
+>  drivers/pci/probe.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 9a178e0e5f7f..4c7e0ad1aa1a 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1673,8 +1673,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  		 */
+>  		if (pcie_downstream_port(parent)) {
+>  			pci_info(pdev, "claims to be downstream port but is acting as upstream port, correcting type\n");
+> -			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+> -			pdev->pcie_flags_reg |= PCI_EXP_TYPE_UPSTREAM;
+> +			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg,
+> +				     PCI_EXP_TYPE_UPSTREAM);
+>  		}
+>  	} else if (type == PCI_EXP_TYPE_UPSTREAM) {
+>  		/*
+> @@ -1684,8 +1684,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  		 */
+>  		if (pci_pcie_type(parent) == PCI_EXP_TYPE_UPSTREAM) {
+>  			pci_info(pdev, "claims to be upstream port but is acting as downstream port, correcting type\n");
+> -			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+> -			pdev->pcie_flags_reg |= PCI_EXP_TYPE_DOWNSTREAM;
+> +			FIELD_MODIFY(PCI_EXP_FLAGS_TYPE, &pdev->pcie_flags_reg,
+> +				     PCI_EXP_TYPE_DOWNSTREAM);
+>  		}
+>  	}
+>  }
+> -- 
+> 2.54.0
+> 
