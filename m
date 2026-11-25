@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795625674;
-	b=xRBNBEwUWKaE/pAmKoJh487LV6l/RzpEhDvrQtMg9WAC+PDWJBFb2wHdZp3nIeybFv25
-	 cZVwTmGfSL9UZqUzhIN0CvuLq+3ylWc39JdcO2/gTZtn6JuPPIS/m9/1BuJlYAEwnlEHt
-	 iG6Ohc1oQm5QL04iLqyhx4wqHaCffe1Ndzov32/fAURUMArccv5agsJFW70IfR2TU7cGl
-	 wWnnq9XBWuzrFXpim9EVkc6L6JWiVFshuN3HBhH4WRID6HaUQifrh9Z68XtK7iutZzvg2
-	 0qFgtFjLzVpL8rN6XoOVTNd6bcbM8Egg7TtVijoIMUmCaTrEXhnR057qu+6ToF1E28Q==
+	t=1795625767;
+	b=dvOqG2mHEUEzZfU7wrL7nvUT/xBwxCdwIBZkqzeFhgGZAK4ys7881wYuQRZKvLKPodVQ
+	 sbz4deivYG006GuWl4ZKddL3ox082wbgtF4dWeLo/75YJ651AhcqBklxavphi7+Tw4gEO
+	 XHDN/5NcrZ7p56lMo5za/yrnGBZORnSUuayPo5lcbedLzSLUVUwbCRLB+pz2X3d8hK4h8
+	 gRBc83HiS3ellNT1Ll3Lv+a9o+H5FwLyiRcOYdpfht50r7SrROGUeK63haUnzacLkGlyt
+	 k5EksaQpWc5IPSB6/7aQ9fCPKzNT2+NJHDxJKhuUoMGGBRSCveQ1MBG5Wt/qXHVEF8w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795625674;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795625767;
 	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
 	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key;
-	bh=jr2lASo3LHhhQY05x8Ui7GbgCZ7rkwICfoFLdbyY6ow=;
-	b=E9g/d525Yd4ry2E4d4iAEpIZKgPbdLmdDyeejxkaBKrfHMYNB7CbcrPYEoINi7leXEwF
-	 driPxgFfF2BP95OEaE4xKzgnBQwnSW/VDI5fJLBRkR5iGGkjE5vidiyCsVa5iDv38Mc+P
-	 KYKSoamLTjuDDY3SGL4q3a21B8X28SXAxY/iSVwtqlTE2ooM8SYZBp4LoKB9b2pNVRuGh
-	 JxlPnRZTJoxrQENS8y84IcwKZNBVsPUrOmbB/l+NgZnUO7eXM8JNOSTGFUywE3NxF0w1U
-	 NJl5u8IG32XubV0oCTdklyLrN6yqUyFd835z0V5m6eZnqvlj6LYDm0p4935vRu8nKTQ==
+	bh=sl3XjpqHUySaLcpibfs5vOgS/etUvzwR6CVqZL0TdnU=;
+	b=ev2D+yUcFVqCr2SMrkR+qD7WOra5m49Mqa6gWqQFMy8tRmtbGx+/gJJYcHon+r5096oG
+	 U9zB+4t43JX9H3/dTUlClA3ZdAE7uHdTSpOQD0C+Jq3MUZBKKaAGBr6sE0t7hx8SWZOqn
+	 +JstghLyr8j79N4nOwcwSKHk+MjKA52H8VkG6WMiD7/IRQs9kj6DsyS8YzKkiKXoiE/nx
+	 /ijxwwYBov1wn1tM5c68htZHRZKjRhczUsci1LmwhYJcCNNNXxLdcWhY0Hwq4Ga9YlyAw
+	 AcLWj0gQhWIEG64w8KGHGzeHVrJRoMb3Ng3bZ+yEl7x7mvlgibflI5E8m/22FF2wYOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 121FB606A321;
-	Wed, 25 Nov 2026 16:54:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79A0B1F000C6;
-	Wed, 25 Nov 2026 16:54:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC51D606A31E;
+	Wed, 25 Nov 2026 16:56:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65A851F000CA;
+	Wed, 25 Nov 2026 16:56:02 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -38,7 +38,8 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 08/14] PCI: rzg3s-host: Drop nop instructions
+Subject: Re: [PATCH v7 10/14] PCI: rzg3s-host: Move suspend/resume code
+ into dedicated functions
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 To: Claudiu Beznea <claudiu.beznea@kernel.org>
 Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
@@ -48,37 +49,37 @@ Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
  linux-renesas-soc@vger.kernel.org, 
  Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
  Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <20261019065025.2146539-9-claudiu.beznea@kernel.org>
+In-Reply-To: <20261019065025.2146539-11-claudiu.beznea@kernel.org>
 References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
- <20261019065025.2146539-9-claudiu.beznea@kernel.org>
-Date: Wed, 25 Nov 2026 22:24:23 +0530
-Message-Id: <179562566319.5580.8113747221186721413.b4-reply@b4>
+ <20261019065025.2146539-11-claudiu.beznea@kernel.org>
+Date: Wed, 25 Nov 2026 22:25:57 +0530
+Message-Id: <179562575756.5580.12529619216547597559.b4-reply@b4>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=587;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=548;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=l4lWft3rtL1DKNOv8bvA9rRRDUu3sRlxk1cqvDTck9A=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBxLDFjeNpP2Vvf2wo7Ol1WzXkNuYiHv1ftaoB
- 1IQsnQOWRWJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcSwwAKCRBVnxHm/pHO
- 9cALB/9rmTJw0PYqsu5UNEgD7v19D5VLwXcIrneY7whMCTLJvf9evLZee1jV79M1uneaW7iVAHZ
- Hx+oABx6Ca4ZqwYB2JhZDSh60yEEI/L2GeBxlbdQjt3l1KAeA501K9cKBKNZBZU9LDQy6+81wBX
- cJ9t06632YUx2RtAnBXJS4n7M6IbCPAIEY8vLrV9o9jQd+kRGDPofVUFUU5szwGnBHieC4KY/AO
- W/d09frz03GsuPO3t8PlmK1eV5U7E3OkkDRWza8bzc2KT17GMyGCtO+Tmh9Dg+WTrAIQBoBH6QH
- v+V7cVG1IJmRvOsrzogg5aCJ2ilLIA6nnu3NkK/EVixncymN
+ bh=es3u4qpah4vSw4YCTCzXw+x/GiNpguUc5Pu9KO0CPn8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBxMh+zlqiVvwdP/ISe+y9XKHO+K73XKYEomRT
+ GPqtfpsoOCJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcTIQAKCRBVnxHm/pHO
+ 9VDJB/0SI9kgEO4M+jsvdpKURd2kKWjZIYZYeu47Jh3p0Y9ADWPthdcZxG43yddlgt9AvlcifhJ
+ L14QI85oHA8YNogacxdaw6G8xmqu9copstfbdTz4w4pdOcFH3qjOZ72K9d3Wb/gHABBI29SkEi7
+ 9yGSE1WMTFgl4VJjPu6kwFmcYdSmI35L5xdrqZaD9H4CLc8ZZtZyUx7gi8jWGqkb/yXzu5R81wG
+ HSlE2hRf3a7pGicJps29QXZA+WgRcX+oKU4O1/gVTp8sS2nDfUvP6fbpMk4VDuxxHPy/zCgZxIM
+ i6VokWoFQrTIAbOfdnOXL+OdwE811kA868psf4xufBidXb9P
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
 > From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 > 
-> On the RZ/G3S PCIe IP variant (which is similar to those used on the
-> RZ/G3E, RZ/V2H, and RZ/V2N SoCs), access to the PCIe Type 1 registers
-> requires setting the PCI_PERM.CFG_HWINIT_EN bit. Since this bit is not
-> set on the code paths where rzg3s_pcie_set_max_link_speed() is called,
-> the writes to PCI_EXP_LNKCTL2.TLS are nops. Drop them.
+> In preparation for implementing hotplug using
+> pci_host_bridge::reset_root_port(), move the suspend/resume code into
+> rzg3s_pcie_host_stop() and rzg3s_pcie_host_start(). These functions
+> will later be reused by the hotplug implementation through
+> pci_host_bridge::reset_root_port().
 > 
 
-Shouldn't you ensure that TLS is written by setting HWINIT_EN? If not required,
-please state the reason.
+Bjorn dislikes :: notation and would want me to change it in commit message. So
+please do me a favor by switching to '->'.
 
 - Mani
 
