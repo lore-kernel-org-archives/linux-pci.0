@@ -1,122 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.154.119.183
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.199
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795630691;
-	b=eeHG8xlsV2YPU1M0SmWBu6fPzWUQ6ETlDtgHl0QIBX3GrVMWmjytlZP1gNOpcfgl4AuO
-	 hR2qwa0ltqFxzTEj/DTuJRXeKU+BR1fHh0Et224gjqewIizoWVpzi5TnDRgEEsJzi+qP2
-	 kQ8GCAlpT3CGuFteFiiVO1Ym7TCD6l/ozGWG3GeBgFL5qhEgBDGl1/Y0UIOVnKC2Ygjwt
-	 atnRUGaejw21mZPP+5hdpRemWwbzktkE6tVfKn3ArLt1JLboQRUTBTfQmVu4wYehWrYm2
-	 gmgnsfvFUGAdFil/BCWbMVPpmdOP0s19yHq60m/Z159gIZBhtjPIjPkpdlkOwXBZjlg==
+	t=1795630960;
+	b=D/TZwxqTArnRgJDGwD24i+FFaD9QCVLYa1tOxU4T1hJizrsZv3kqEZitQ921v+uKZbRc
+	 SA748soi+17nKXog2sTSywGg3zSVyv4LYKIJp7+ixYt/gPG7q/HS3HqRmknEBLsgqZHeN
+	 ug1t275NZdBbKcRAWv/2s3uLcj7ISSWdtS4DAlrYrZTtRvWoxWVFvva0/w2L4/HNcfTjE
+	 Sy2pzLHuPq6BS1LwSzkBWMan/QiMMMap9gPDYN7FFI/j7nM1wnVzcGcC3KGTVquSwLN+K
+	 eWftNjVX1altq1mzXV2YCQrPKO3A+B2Fu5mgU1Ci9NYHOmy1BlOgFRPDIvWsh7wambw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795630691;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:Mail-Followup-To:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:User-Agent;
-	bh=e9zrcR4+b/kS9Qb1mwVlZGZVo3jDZ/rmDsPjIuq74Z8=;
-	b=ddZrEbqEjxU0Ao5BEB13fUxahsPB0S68hIzZK6A/r3+Bs2xWNTsE4/UjMRddGJJeh9Pp
-	 RfpVcIzuSZ3xyiEzeVU7R6gLHJFlpO/Ix2y56GXkUnwoCqlm2rQTQx6z1FvBHjRKjvYYC
-	 4i6jRrXThNj0qEIWfxE04SdzIvuyM16wY3W35A0nuDhQrGLnQ2nHt+a2R7hiXQAUFepQe
-	 h1ESwsCo7vv95+Kzm5XgITB9003UPENsul1rho3VDhLnWxgP1rrU7PuinpLo5IIQ8ncgC
-	 tZvYISGBxSWji3iUX8wyvuhsmM0s39ARSJ1f9E9/CUv1xSoqszhk/KnBbE0+t6/cReA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795630960;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=muHbETEQ5J0nFGhT+U6cGvseIAQr5YwFizEtL9WHdZ8=;
+	b=l6arUUykooRKIF4jVSIvUfJ9E0igwLZBClZ0Jes0op3UF+RwS6hSq19O3wL764MIhryM
+	 wFmqrVhlaGEgJg2CbIAHo8/LHTasPN6diV3Zf9ymyp3/bVb9Egz5a8wIr3s0zPE3jNX9w
+	 G05ZxGmXvS/A3WyNim+4wGAYdgFxTv+NDtIJ20onLeDcDZn0lIm+pz5ezkmetCAub6up9
+	 1ttrZGKrqOPqic9L+b812l4GFzRaIZ/mDYxvB1YPez8/C9+5RmEJ1hXsf+zJfp5S93Jty
+	 6inYpEVe/s0JSXaVZaYs/jV/23bxXcbtcULwAXuELRc8YwI1B+SOzFnn/mavb6Mm08w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=aurel32.net;
-	spf=pass smtp.mailfrom=aurel32.net;
-	dkim=pass header.d=aurel32.net header.i=@aurel32.net header.a=rsa-sha256 header.s=202004.hall header.b="kG/VHBsd";
-	arc=none smtp.remote-ip=195.154.119.183
-Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=eJPO8oah;
+	arc=none smtp.remote-ip=209.85.214.199
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F168B606A323;
-	Wed, 25 Nov 2026 18:18:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F168B606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 930DB606A323
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 18:22:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 930DB606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rathodpriyank.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.a=rsa-sha256 header.s=202004.hall header.b=kG/VHBsd
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
-	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
-	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
-	bh=e9zrcR4+b/kS9Qb1mwVlZGZVo3jDZ/rmDsPjIuq74Z8=; b=kG/VHBsddVEJx97y/LwWQW7+aT
-	SPi2PSd0iwDBudf5aAqJGC5uARR+wieLNmdzaVcmVtiHB91IwYHHeZMVwanKqbctsyFwES3MqDrj5
-	c/GJedWJRnkyhG23qW54+Aap5eXLrDO3Rg3EFuaUGrite6fBoTvwq9FehSfrKRayCg9gsQJwzRZQS
-	zbUZglKHVn1hheZvQoG+5Th5ngdZuWd6kMGA9X+fYlYOmYxckUvSFrzh9wjC+VOyVNmR5iKkOl24v
-	NDDWoPTX3MVWun8wOdTYuwYIVIqK7V1FNrllVYH7vNuAUkrHfIXUu9k+ePEhbRh1aB+Z5K74GPLxq
-	ebdxqljg==;
-Received: from authenticated user
-	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <aurelien@aurel32.net>)
-	id 1xWHYm-0000000ADku-0F4E;
-	Wed, 25 Nov 2026 19:17:36 +0100
-Date: Wed, 25 Nov 2026 19:17:35 +0100
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: Inochi Amaoto <inochiama@gmail.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
-	Troy Mitchell <troy.mitchell@linux.spacemit.com>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Frank Li <Frank.Li@nxp.com>, Sherry Sun <sherry.sun@nxp.com>,
-	Niklas Cassel <cassel@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	LECOINTRE Philippe <philippe.lecointre@thalesgroup.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-	Randolph Lin <randolph@andestech.com>,
-	Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Vladimir Oltean <vladimir.oltean@nxp.com>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>,
-	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-	Alex Elder <elder@riscstar.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	Yixun Lan <dlan@gentoo.org>, Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v8 0/6] riscv: spacemit: Add PCIe RC controller support
- for K3
-Message-ID: <awcmP-iHD-E8eZRT@aurel32.net>
-Mail-Followup-To: Inochi Amaoto <inochiama@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
-	Troy Mitchell <troy.mitchell@linux.spacemit.com>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Frank Li <Frank.Li@nxp.com>, Sherry Sun <sherry.sun@nxp.com>,
-	Niklas Cassel <cassel@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	LECOINTRE Philippe <philippe.lecointre@thalesgroup.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-	Randolph Lin <randolph@andestech.com>,
-	Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Vladimir Oltean <vladimir.oltean@nxp.com>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>,
-	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-	Alex Elder <elder@riscstar.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	Yixun Lan <dlan@gentoo.org>, Longbin Li <looong.bin@gmail.com>
-References: <20261125041523.242588-1-inochiama@gmail.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=eJPO8oah
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2f033dc37cfso58623215ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 10:22:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1795630960; x=1796235760; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=muHbETEQ5J0nFGhT+U6cGvseIAQr5YwFizEtL9WHdZ8=;
+        b=eJPO8oahjXKWiGFedCbZYdGmJq/ZXEI6qzCKDG63OYUAhUlXSifYBiNU4RjoH3r1Wk
+         tmYZYvtJAfYbhXFmXuxx8vh9T6zSDgAi762IuX2fChAKETqRwVSu4RVrZeNfquwtXF1F
+         A2rC0fgumfErVy4o02s2c3p0D1bAnKjnTdlHCoWNvwEsa7HPqpCNfeWBzvJXDuYwr0i/
+         RmJ+FuEsG3GO/rxIURL7jVWHfjyhq1ZD2Ms6wXpynJWSJ2m/SNhX8J38Yp9z3h5pK+Xj
+         awpUXUlChCFh4tDUFYJr0zQHBi1OyfY3iginJjqAz/fpE7Oz40bfM0b0uoXoSshW+kPy
+         T31A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795630960; x=1796235760;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=muHbETEQ5J0nFGhT+U6cGvseIAQr5YwFizEtL9WHdZ8=;
+        b=qfBvw35mLDHtHX3G7tUxaoV8X/WRQsPVt5MUYuUw1Adl1PUyWSuDNxN1xMVhiqqP1O
+         SbiU4ciOEAKGgAzLwFl3cUkSYxNE96pz9xk3oo/EdUMhYmOPS6vjv++r14/JgNRfGjAu
+         rMv6z7vlthfOIDiS8XNtbpoC/WqinlDpKhSdnbzyUTvz3ynupgQd533Gko3LT3J3VnWo
+         It+7vOZ2cHbPeDR9yR3AgT+2IaxFAfCj6wwX6Jk6BY/zVdylaW/RyYeUbjkgeYlcVzrv
+         mUs+OxGgv+zZHiC8GABXXZ8f/yhq8J5y+iy5ogM44XBVw9WJHjFZ2prvlHd8A5qoQe/n
+         O0lw==
+X-Forwarded-Encrypted: i=1; AL+hErEbFE0hmXrP5f9xj5Dbt3HItXrL3v4HbenhXy8CqBLpOZxPhvkQbPYBK4YjsP9D81E6eP8CoGwrWlc=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+SubrC7QVTK7NMnHHen7LnAbhdqbmu1ZOUZeuWE08javlTCDgH
+	n9TFQfkjP7Pk3X7AH2dMZln2vUlNdCBS+pAmoPlCXbcuUHO6oX1hR8oenMZmno/lkk+/dYrv6M8
+	RaTk2wzTs5C3h8QDR9EvTz6dxIR2dzV6Vrg==
+X-Received: from plbiy9.prod.google.com ([2002:a17:903:1309:b0:2ed:8eec:6a11])
+ (user=rathodpriyank job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:902:e811:b0:2ed:3f47:96a3 with SMTP id d9443c01a7336-2f03f169628mr184052615ad.42.1795630959630;
+ Wed, 25 Nov 2026 10:22:39 -0800 (PST)
+Date: Wed, 25 Nov 2026 18:22:39 +0000
+In-Reply-To: <20261016220900.GA2020355@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -125,134 +78,55 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261125041523.242588-1-inochiama@gmail.com>
-User-Agent: Mutt/2.4.1 (2026-07-04)
+Mime-Version: 1.0
+References: <20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org>
+ <20261014205117.GA1665327@bhelgaas> <atG61oicHbsLKiib@debian> <20261016220900.GA2020355@bhelgaas>
+X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
+Message-ID: <20261125182239.2291980-1-rathodpriyank@google.com>
+Subject: Re: [PATCH v3 0/8] PCI/ASPM: Add pci_force_enable_link_state() API
+ and convert Atheros drivers
+From: Priyank Rathod <rathodpriyank@google.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"=?UTF-8?q?Ilpo=20J=C3=A4rvinen?=" <ilpo.jarvinen@linux.intel.com>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Val Packett <val@packett.cool>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	"=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Nirmal Patel <nirmal.patel@linux.intel.com>, 
+	Jonathan Derrick <jonathan.derrick@linux.dev>, Jeff Johnson <jjohnson@kernel.org>, 
+	Qiang Yu <qiang.yu@oss.qualcomm.com>, Emmanuel Grumbach <egrumbach@gmail.com>, 
+	Matthew Garrett <mjg59@srcf.ucam.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Inochi,
+Hi Manivannan, Bjorn, Ilpo,
 
-On 2026-11-25 12:15, Inochi Amaoto wrote:
-> The PCIe controller on Spacemit K3 is almost a standard Synopsys
-> Designware PCIe IP with extra control and external MSI controller
-> (IMSIC).
-> 
-> Add binding and driver support for PCIe RC controller support on K3.
-> 
-> Since v5, multiple vendor fix are included in this series, you can find
-> in [1]. And this version required [2] for phy bulk data support.
-> 
-> [1] https://github.com/spacemit-com/linux-6.18/commits/k3-br-v1.0.y/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> [2] https://lore.kernel.org/linux-phy/20260923023304.78428-1-inochiama@gmail.com/
-> 
-> Changed from v7:
-> - https://lore.kernel.org/linux-pci/20260929083755.458238-1-inochiama@gmail.com/
-> 1. rebased to v7.4-rc1
-> 2. Apply Andy, Rob, Aurelien's tags to related patches.
-> patch 1:
-> 1. The const declaration is reserved, as the it hold the pointer of the
->    static const data.
-> patch 6:
-> 1. Add comment to the PCIe topology description to the commit message.
-> 2. Fix some 80 chars line problem.
-> 
-> Changed from v6:
-> - https://lore.kernel.org/linux-pci/20260923015016.64069-1-inochiama@gmail.com/
-> patch 6:
-> 1. Keep PERST# when init failed like the deinit.
-> 
-> Changed from v5:
-> - https://lore.kernel.org/linux-pci/20260907112606.465778-1-inochiama@gmail.com/
-> patch 1:
-> 1. Return ENODATA for no device data found.
-> patch 2:
-> 1. Add power_on/power_off suggested in [2].
-> 2. Add zero phy check in the driver.
-> patch 5:
-> 1. Add K3 device description.
-> patch 6:
-> 1. Update comments.
-> 
-> Changed from v4:
-> - https://lore.kernel.org/linux-pci/20260709040027.958400-1-inochiama@gmail.com/
-> patch 1:
-> 1. fix comments
-> patch 2:
-> 1. Use phy bulk data to simplify the code
-> patch 3:
-> 1. Rebased to latest master
-> patch 6:
-> 1. Apply several fix from the vendor code
-> 2. Use separated init/deinit function for K3.
-> 3. Add some error handle for K3 init function
-> 
-> Changed from v3:
-> - https://lore.kernel.org/linux-pci/20260703020003.485436-1-inochiama@gmail.com/
-> patch 5:
-> 1. Add missing interrupt/interrupt-names check for K1
-> 
-> Changed from v2:
-> - https://lore.kernel.org/linux-pci/20260517014841.254085-1-inochiama@gmail.com/
-> patch 2:
-> 1. Use unify PCIe phy get/enable/exit function for both K1 and K3.
-> patch 3:
-> 1. New patch for updating device id for both K1/K3
-> patch 5:
-> 1. Reuse binding for spacemit,k1-pcie-host
-> patch 6:
-> 1. Multiple cleanup for the logic already generalized in the previous
->    patches.
-> 2. Use generic description for the Kconfig entry.
-> 
-> Changed from v1:
-> patch 1:
-> 1. Remove post_init callback.
-> patch 2:
-> 1. Fix devm_kmalloc_array arguments order and error check.
-> patch 3:
-> 1. Apply Rob's tag.
-> 2. Change check from oneOf to anyOf.
-> 3. Fix spelling mistakes in commit message.
-> patch 4:
-> 1. Add comment about PHY handle.
-> 2. Remove interrupt "app".
-> 3. Fix spelling mistakes in commit message.
-> patch 5:
-> 1. Remove all logic related to link up interrupt.
-> 2. Clean up all unused macros.
-> 3. Fix devm_kmalloc_array arguments order and error check.
-> 4. Remove unnecessary start_link logic.
-> 5. Make all magic number as a macro.
-> 6. Fix spelling mistakes in code and commit message.
-> 
-> Inochi Amaoto (6):
->   PCI: spacemit-k1: Add device data support
->   PCI: spacemit-k1: Add multiple PHY handles support
->   PCI: spacemit-k1: Add device id update helper
->   dt-bindings: PCI: snps,dw-pcie: Add msi-parent for MSI handle check
->   dt-bindings: PCI: spacemit: Introduce Spacemit K3 PCIe host controller
->   PCI: spacemit-k1: Add Spacemit K3 PCIe host controller support
-> 
->  .../devicetree/bindings/pci/snps,dw-pcie.yaml |   7 +-
->  .../bindings/pci/spacemit,k1-pcie-host.yaml   |  55 +++-
->  drivers/pci/controller/dwc/Kconfig            |   4 +-
->  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 235 ++++++++++++++++--
->  4 files changed, 268 insertions(+), 33 deletions(-)
-> 
-> --
-> 2.56.1
+Following up on this thread since both the PCIe Lane Margining debugfs
+series [1] and Krishna's bwctrl bandwidth scaling series [2] need a way to
+temporarily keep ASPM states disabled and restore the link's configured
+ASPM policy afterward without clobbering permanent quirk disables or
+sysfs settings.
 
-Thanks for this new version. I have tested it with the v5 of the "phy: 
-core: Add phy bulk helpers support" patchset. It works all fine.
+Manivannan, do you already have a v4 of this series in progress, or would
+you be okay with me taking over and finishing the core PCI/ASPM patches
+(while keeping the ath* driver conversions separate so they can land
+afterward)?
 
-Therefore for patches 1, 2, 3 and 6:
+If taking over makes sense, I'd like to align with Bjorn and Ilpo on the
+API shape before writing the patches.  From the Oct 13-16 discussion and
+Bjorn's recent bwctrl comment, leaving pci_disable_link_state() (one-way
+quirk disables) and pci_enable_link_state() (init-time aspm_default setup
+for vmd and pcie-qcom) unchanged avoids semantic conflicts for backports
+and existing drivers, while adding a new per-state reference-counted
+inhibit/uninhibit pair for temporary callers.  Sysfs writes would keep
+their own disable bit per state so repeated sysfs writes cannot skew the
+counter, and pcie_aspm_get_link() could accept both Downstream Ports and
+child devices (along with moving the PCI-PM L1SS D0 transition from patch
+3/8 into the shared path).  Alternatively, would you still prefer renaming
+pci_enable_link_state() as Ilpo discussed earlier?
 
-Tested-by: Aurelien Jarno <aurelien@aurel32.net>
+[1] https://lore.kernel.org/r/20261125-pcie-link-endpoints-v8-0-19d49c17c05f@google.com
+[2] https://lore.kernel.org/r/20261119-bwscale-v6-1-9a9a715fcb46@oss.qualcomm.com
 
-Regards
-Aurelien
-
--- 
-Aurelien Jarno                          GPG: 4096R/1DDD8C9B
-aurelien@aurel32.net                     http://aurel32.net
+Thanks,
+Priyank
