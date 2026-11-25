@@ -1,78 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795601899;
-	b=4gAx/zuRpyufoP938ZYxsyX7AUqpT+JyA546NMYBRYZp1hBI60+kAeKffnwxs4OIbtmg
-	 drBWqlfaS8RnklYKewuLawuTBtXXh87TsL/+5qIiL5ws1qZFfd+Qa3RQHPWBskPcYivR0
-	 LFfGnym5ORamg6DfxBq80IqSMW5u0IfOYUJcOIB92V8IJ82JiypevWWaNCjoOvQlYDDFU
-	 qJqOVUK55Fe3zi9VD0axyg2yuMNjgOJP7S2oZED1jIPhsY7TDXbIvpwtZzEFTIPpXH4nS
-	 iJgO1TRyyBTOCXo6ea9IYw7CbTwOrd1qJkhfXU+LTuoKmB+KnPBct/D6NqE0VDT/fkw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795601899;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=SlAc5GHun06GuRnvDq9pFuNgXSegjLg/TxokKDum6TM=;
-	b=qG8NMEVuILBhJZn3LjmeRUj2q7QpBCZExYp88IlWHH87L3VIodsT7TkFn7QWsB4OxU09
-	 TlhB0XuarCVxJI2RZc2YsVYVe3tRM4Yy8X2pzdu3yueh7ROhzmgNT7rmead+ZVeKjFeQF
-	 jFIUA+L1kgUB5LeQ47F8b876ZxvDK/3COruGXP/jeD/YkR4bwSAtdCv5fMjITJVVI3qwA
-	 l0wzvw5eJv9NAtUuSK+w//m2AXVivWsSYUKEJD+MXcalVv4M2U29wDA341VUc5jOFCmyl
-	 nwyD80gHM+K5E9y5RLq1V+F3CCw6VLmHTqEDTFjYe/FTf2bYhjO4cmkYDm7pUHI+f2Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cD3sEnPs;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01F3A606A330;
-	Wed, 25 Nov 2026 10:18:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cD3sEnPs
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795601898;
-	b=lqGt7TPhRMc12/vKQgqZRGVpiV/mVSZV+Kgtese5EpSjYsvQBYB2bsco3B/yB1AGA7eS
-	 ea4kZk1ewPnNMt7vGMwlsnuFATbrStBFdV8wPlYYmZkqQXuHd83HZpGVSeIh7HiK8qM+I
-	 HAIPBJddMLR20bg1ueUTBWyTuvi5kvkU5t31RD402K9jBYJtdx4AwAl1DPns5zleqYgRp
-	 zfFeEndXpYFiuaL9DzoduRLnjP2kccqo78EzRZRz0yBB9QNoxIw9yw0eDX6JTC4jhqutd
-	 LiPaLzUFcuV+dVQHOpc/p8o0jfHdLq0C6ACzgEps5KBOjPzq0NeOI3b6KDJoqoOTcmA==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795601898;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=SlAc5GHun06GuRnvDq9pFuNgXSegjLg/TxokKDum6TM=;
-	b=MGT7TfV3rJLZBIUH11sZ1NkpoYT2n7/vxqcLs0rHK+IVKRKGLMD0wTFGhZ/1uLbuwMVX
-	 h9oh9wLv2k3mWuA2Ke07P0RIof0LPB8MtN8PgLnp/yFqwYpXQc2pTnoSHdRYNnTU6tZih
-	 BhGW+VYggyxMdmRyx5brkKFj6g0pxjJFZgvcJi312lglB0PLSAYwl4WrHvjS1W+G4JgmJ
-	 C/052L4aNRI9TgTpsSvyuSdghZJYSJt/3R/WsHkuDNn2txWhw1vUzn9Yad4c2bv7KkHI9
-	 UdWfHpWeVnnMp4xRZhnwS6Bf+SUYs9LItIr8XbaRcHpwB/zuYIZ51Yk/2RmG1nzNvCQ==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795602833;
+	b=lqRtv4dxP2Sm8nlUCJZyUY9c7jPGTaEw8hP5nI4kkoazYsrlPCc2QXh8BZIgLxsFrjyx
+	 Ncgs52Gv2iAc2+0Mi3afZzZCgQcD9OvA8WtHpbE0ROvohdMZg4xCKRmRV9MQuKac/Q3QO
+	 yp+/oJDrsNigfm9K+2F6iq9w6nF64NtoUC8iQ3nc+cUbP5LGXqse+jfyPLGSDWNVzKMdb
+	 dhCX7QfxjFQjADydKxFqQuPPN3o5KkTG8Wu5Q7nCxj3b55MkgjOREt5JlqAAaWSElKVSH
+	 ASh4IHW2BY6S5Lt6hbGX3+sFwlzQaIpgwlGnwSIrdpcl2Cvf0t9qIRge94xYNR0IPvw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795602833;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Proofpoint-Spam-Info:X-Authority-Analysis:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=t5YTXasqnbB2xHdsrAa2S2NlKmSeJxLC6xnSplAPAUs=;
+	b=A0CCfZst6mvK78c3jSpybBF1SVD6xZRwkV12BzRPVoROEGObFzxu6zmPBAn4qQ0j9lrJ
+	 yEaniXl20mh9+bbB24WFMErXAZteOqPfpUwIT22Z7EDNKz6BKBCqDgYzwDJ+b11OYsEaz
+	 ickCUsFm+IkUAiWbMEvtcf9ZOJQhJGbsaF0CDEKMkns/SfTQEdlbEFyX1mQsen+4gbHg9
+	 GmOLkxz+7M1fUbfxcBVNBEU2zC3XG+UploN4LNiFjwO39agJQCJMwMXTXIW1gYZdPwzuZ
+	 3ZxssMafntm7Xb1pQvs9Uoy2izhz6x/OhArJFHgJ2cNO7m0+7tDhHysHmjYjvaqR8Mw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=g1jkhZIa;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=RaKf96Gr;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 2CFA01F000D4;
-	Wed, 25 Nov 2026 10:17:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795601898;
-	bh=SlAc5GHun06GuRnvDq9pFuNgXSegjLg/TxokKDum6TM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=cD3sEnPsxirJPqt/uTV3VRk/USEy7JgZIjBR5VhvMdLbbNOx9khHIeJLIG3PHFuJ5
-	 2Dgst0aEV5LK3nAK6TOZ/EqCffFFEAMabi36nX31qNt3u4xW99ye04yyMN8HbW2plT
-	 PGRpeqBMd2+AhOAgQBoyeqhUVss59bOF0OwfS7Fitjob4mSSfFUCZq4INIXTUwtCVq
-	 CJt7V27suhpaxu6TE6zaoTmPiySN8fTcuwlTUQ5WpqZAYZzXU2psTnD28XQyHy9jMX
-	 iG0QFZeJXJnhNxaF16vEcKHP6zsu9UnVzKhZXVGwNszhAoOdcoRg99SrY5bUv0hSk9
-	 FBf+JK71FuWzw==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id B32C04CE3F;
-	Wed, 25 Nov 2026 10:17:52 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 25 Nov 2026 11:17:43 +0100
-Subject: [PATCH 3/4] PCI: qcom: Recalibrate the PHY on temperature drift
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB1B606A326
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 10:33:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2FB1B606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=g1jkhZIa;
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=RaKf96Gr
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AP9mTgM4034201
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 10:33:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	t5YTXasqnbB2xHdsrAa2S2NlKmSeJxLC6xnSplAPAUs=; b=g1jkhZIayrjzYxTj
+	uUBCN5a/x+W2VAyWny9Xm7cCzFFqQNiQpJ4CFS6NtKtumxvjuhMrm+y1eiktdRf5
+	o2MlhaQAlF813ddB1/efHervQUd/jA9kj+SVq9ZAK5puN9Yp6M/G3pdXzMILDVUC
+	MgEPRlyZrMpFP3qV7n0mvkzgAo+NkJFjH+l+ygH18hIGU4kPxS4i13SAwTWBjphk
+	KgvWc7W8ofJbN7EboJCKUmJTfrnRrdFZHuRyxK3PNbzvGJOXxjpW+bwt+0yw2bNU
+	CvMfNamR9lCjwRYqAp4X46/uVC8JEH28eNIDuwmO5dhRyn6FSRM+AP0mhsq0Q8vY
+	IHz4Eg==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j5mqbja95-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 10:33:52 +0000 (GMT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-55c4997063aso16502451cf.2
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 02:33:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1795602831; x=1796207631; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=t5YTXasqnbB2xHdsrAa2S2NlKmSeJxLC6xnSplAPAUs=;
+        b=RaKf96GrG6zG88VXlSI/sleEgjHzkgXkHYjLCw/XlKaQJfB0xDKTAiWD97axAeDlgn
+         Nsfar/VVWh7/mCzZRp5aFY8u75JBRBX9+uSyDy0bF2VY7WplYRi8kBviGDrKCjgpZmd4
+         8RyeK66n6pP7w1Vm7eNDEcGjkcJXeRtWSdrMRIAvAr8yKTwG/7r2uz/CoL0eb5vMYGPl
+         ujXLPV02G7VKHdIl5nirZLLPMuaJEirM2rzs6/ScNU7ZibMXaDhtCjLYk4y/Rz+w3exJ
+         Jz2JzJPrgaNb/ZhfVnUbfFebKLl7NBKeIMr1qHGc32dShdw5ttQPcG7HwoDkfVe0nwZX
+         mdwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795602831; x=1796207631;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=t5YTXasqnbB2xHdsrAa2S2NlKmSeJxLC6xnSplAPAUs=;
+        b=NJQ2Pe0iqiAjR8GvBbgOCKS7NCGuMQNgQodb4ayWxOKcXZI/0dzRqhNbYP4oQrVkS6
+         6bo8xgxoRPsWrKIBlLrfVCwKmWMNYqE2vJprhIpwKn5moN6Nd6R9HJSHOEqUM0KNBvl0
+         8I+CL7PztcdbvixbyAGoGzdd8bPFCeQvtqyKGPTBC7e8fW5sFKgS0w0itEVLOraxd1Q2
+         0LyI10bR3gsRsvKU0TRAwzXdUjXJvXTfJEt2E0kZ1i6wg87aEKOEyE9uxWKhx9iZ+JeO
+         xO7hOfxyKBcOd03JOrYLRfUpjYzPMnneQx4cjaGY34xg3VMKnvJCpU7IkxY8SvPL+ULo
+         m6iw==
+X-Forwarded-Encrypted: i=1; AL+hErF8mTyb6bvujh58yRL1cWZKYJrHDQ5rcuWhbH4DPf1q9DDye52KKsvlAbSXy1ytcojSB7hp6JmC8JM=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+1ypvSymPPIVV7MfKwHybkr9gv6bAM3kqKVrB/7PuTEzwAv4E2
+	NOEmiQYfL4YprsHckHUgJz1G0aljJEvJ+SLshXNR/xAl3S0655rx2mJ5M0xoHIZGmNLo2tyq9an
+	e0nQ+qnjdaKoGNsC0TQHVfeV947vxOzvTRjwi/JeqHQmHzYDEjFB5jj8BLeVmTeA=
+X-Gm-Gg: AZFdTZfKzIwaoJpDf5sdKxCBYU4og/2+QGGQYiH26M+JkSL3LUbpuzsfmk3BLuNiaXe
+	mzyuN64Ktrs/axWlP2p/q2wa6mISs+QsTYlsQsoJ+Chl/wDyGTjXGuxWDSG9iBhLMLUuopI8JL6
+	eCvou8BgF/yO1oBghawpM/Cm5QQB7hrShLQRpdRjkN6sRXt1hZjw8rW/f6V+QCd8sdG2PZX2lL6
+	X9Zubvo7Vt4kT5V1LR1dDuzNNNG4DMe7UpQgrm0eR/348OG5346TgV/RUghSijrb2+1pQOiNb2B
+	YsWyoqJ+oWR5b181SbW/TR+9yLH80qj07WNhtthm1lTzphYPAJrZp0FC4JyUE+gC2ivijObS5xR
+	eqHtkMkd2B/tBd2KjXsOvTJiPdXIZnhGZBNF/6OF4t5wg2L9YhdZJ7zjIFxylALu07NLHluE=
+X-Received: by 2002:a05:622b:113:20b0:55d:36b1:9291 with SMTP id d75a77b69052e-55d76741cf4mr301145891cf.0.1795602831357;
+        Wed, 25 Nov 2026 02:33:51 -0800 (PST)
+X-Received: by 2002:a05:622b:113:20b0:55d:36b1:9291 with SMTP id d75a77b69052e-55d76741cf4mr301145681cf.0.1795602830983;
+        Wed, 25 Nov 2026 02:33:50 -0800 (PST)
+Received: from [192.168.226.72] ([178.235.128.140])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6ba370e8ad0sm7990385a12.18.2026.11.25.02.33.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Nov 2026 02:33:50 -0800 (PST)
+Message-ID: <25ba0a24-85e8-4aa2-a2a0-23c64729fd70@oss.qualcomm.com>
+Date: Wed, 25 Nov 2026 11:33:46 +0100
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -82,373 +115,80 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261125-glymur-thermal-fix-v1-3-b93a9feae156@oss.qualcomm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 4/4] arm64: dts: qcom: glymur: Describe the PCIe thermal
+ inputs
+To: manivannan.sadhasivam@oss.qualcomm.com,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Abel Vesa <abelvesa@kernel.org>
+Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
 References: <20261125-glymur-thermal-fix-v1-0-b93a9feae156@oss.qualcomm.com>
-In-Reply-To: <20261125-glymur-thermal-fix-v1-0-b93a9feae156@oss.qualcomm.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>, 
- Daniel Lezcano <daniel.lezcano@kernel.org>, Zhang Rui <rui.zhang@intel.com>, 
- Lukasz Luba <lukasz.luba@arm.com>, Manivannan Sadhasivam <mani@kernel.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>, Abel Vesa <abelvesa@kernel.org>
-Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
- devicetree@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=10105;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=TFDAjWR+23MEVOtOz9p+bSn13D7ZIySlWyk2j+uTRNY=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBrXOmi8rNoSC+/cMC8Il9mN6QUNurM2aYbd87
- OBJgYS1ngaJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawa1zgAKCRBVnxHm/pHO
- 9U0+B/9BJWbKXXwXIDmBwkkXOpabXhk7HlSvaZAg4dTOXl9j/dwwEDvqrQ9StcbW0QgmIMazPsK
- LxTySSC+unrVMVJPQXi0WOMJwn00RBlIDgQQylVnjFbBn7yVCmsq6vAO/Yd5RXUbWJMl5MmyJwu
- VUCHuzQJWH0y1Fs094Wpg3GvnI89qi1qP/0LbQdiwtdaaUd560NTtt1PJqaHSTi3kdLwCVt4CwW
- UJQtgIw3nBzHoFHdmXqRvozZtITW95xgbQfRb8L6+aR01pGbEEz+PZuOog22gAyr4MoBD1x8ppG
- TQBAlOO8yV1RRMDrR8+frdTjz/KYUp0V/RcLSeFVhXsQx5gk
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
+ <20261125-glymur-thermal-fix-v1-4-b93a9feae156@oss.qualcomm.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20261125-glymur-thermal-fix-v1-4-b93a9feae156@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI1MDA0MSBTYWx0ZWRfX0L9MVPkqVCjr
+ nJu8qAiK4TXqIA5eC7tdjbhPdnCWIz7nBNlTCz1aOT9OiIgMWwkIFFli0L9V2iVc5nEBtXeVXAL
+ eDLjslXSkEp0Fzg8fIJSssXLvNDv+as=
+X-Authority-Analysis: v=2.4 cv=Bb9NQbt2 c=1 sm=1 tr=0 ts=6b06b990 cx=c_pps
+ a=JbAStetqSzwMeJznSMzCyw==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=EUspDBNiAAAA:8 a=TtJGJgRM3qr-9yLlEbAA:9 a=QEXdDO2ut3YA:10
+ a=uxP6HrT_eTzRwkO_Te1X:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI1MDA0MSBTYWx0ZWRfX4hLF6D7qPRqT
+ eplDLpohYsj+QWSpX5YJGLJGDKho82ZiyR3m7dyJY+1Ue8gmUXSs0rO6wBvuBoVwud3ACXGOJeU
+ EahllSQQkPcCkZvKn5nFnwkGsE5awuZ70gB8ptuC3HdWKH6o9ok+K7UjAS2t3Zy1uBWnLaC1aOK
+ 5KtnorpJEIEPf17tmceo/zcFsR26wg/oV4j8UoGl/YwJMgEGJoD9JFWbpvwiSX5TlngEs2AT/Hv
+ uRs3A7KMUHd9Vu92HHue0XCuN8V15wtyrCPfthiqQmsuGwxNY1OS7NwzG0IDRbosjHrYqN0hFBD
+ qSlNalARqYiPHSIOGpBG6ideEQtFCXluyU6RFF6fi0mQnYr0stRrPhmknYbcUelDChrbWKcVDDH
+ V+Q23OKs0EgTFCT2NaT3t+tZFY7jWnvm69n3B4oEIJoZDTfPUYTlbRYZinBsms6UKp56jLcJDXN
+ GtYhW3nFfq7212BsGlA==
+X-Proofpoint-ORIG-GUID: WPCdV7lvvSvXsMTKAbinW9m_4MUIYll3
+X-Proofpoint-GUID: WPCdV7lvvSvXsMTKAbinW9m_4MUIYll3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-25_03,2026-11-23_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 adultscore=0 clxscore=1015 priorityscore=1501 impostorscore=0
+ malwarescore=0 lowpriorityscore=0 bulkscore=0 phishscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611250041
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On 11/25/26 11:17 AM, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> Some PCIe PHY instances on Glymur benefit from periodic recalibration to
+> compensate for temperature-related drift and maintain stable link
+> operation. The controller driver triggers the recalibration with a link
+> speed switch once the temperature change on a polled sensor exceeds the
+> defined threshold, but for that it needs to know which sensors track the
+> PHY temperature and the drift temperature.
+> 
+> So add a property to identify the relevant temperature sensors,
+> 'qcom,pcie-recalibration-thermal-zones', to PCIe domain 5 pointing at the
+> aoss-6 zone and to PCIe domain 7 pointing at the nsphmx-0 zone, as those
+> are the zones whose sensors track the respective PHY temperature. Both
+> zones are allowed a drift temperature of 25 degC.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
 
-Some PCIe PHY instances on SoCs like Glymur benefit from periodic
-recalibration to compensate for temperature-related drift and maintain
-stable link operation. Otherwise there is a potential for a link drop. The
-recalibration is performed by the hardware during a PCIe link speed
-switch, which the driver initiates once the temperature change on a
-polled sensor exceeds the defined threshold. For this purpose, the driver
-needs to know which sensors track the PHY temperature and the drift
-temperature.
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 
-First, get the list of thermal zones and the drift temperature by parsing
-the 'qcom,pcie-recalibration-thermal-zones' DT property. Then record the
-current temperature of each zone, which is the reference the drift gets
-measured against. Then schedule a delayed worker thread 'recalib_work' for
-every 5s to monitor the temperature drift and initiate the recalibration if
-the drift happens.
-
-qcom_pcie_recalib_work() does the actual work of reading the sensor
-temperatures and performing recalibration when required. The worker
-compares every zone against the reference recorded for it, and if none of
-them has drifted far enough, it skips the recalibration. Otherwise the
-worker performs the link speed switching by scaling down the Target Link
-Speed to 2.5 GT/s and then restoring the original Target Link Speed. This
-forces the link to run Equalization again, which recalibrates the PHY
-against the current temperature, thereby maintaining stable link
-operation. Equalization only runs on a speed change to 8.0 GT/s or above.
-
-Finally, the recalibration has to be stopped across system suspend as it
-touches config space, which is not reachable once the interconnect paths
-are powered down. So cancel the work in the noirq suspend callback and
-rearm the recalib worker on resume.
-
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 224 +++++++++++++++++++++++++++++++++
- 1 file changed, 224 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index d903f10211c2..fb11718cea39 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -8,6 +8,7 @@
-  * Author: Stanimir Varbanov <svarbanov@mm-sol.com>
-  */
- 
-+#include <linux/atomic.h>
- #include <linux/clk.h>
- #include <linux/crc8.h>
- #include <linux/debugfs.h>
-@@ -34,6 +35,7 @@
- #include <linux/regulator/consumer.h>
- #include <linux/reset.h>
- #include <linux/slab.h>
-+#include <linux/thermal.h>
- #include <linux/types.h>
- #include <linux/units.h>
- 
-@@ -314,6 +316,18 @@ struct qcom_pcie_port {
- 	struct list_head perst;
- };
- 
-+/**
-+ * struct qcom_pcie_recalib_zone - thermal zone used for recalibration
-+ * @tz: thermal zone whose sensor tracks the PHY temperature
-+ * @drift: drift this zone may accumulate before the PHY needs recalibrating
-+ * @ref: temperature @tz reported after the last recalibration
-+ */
-+struct qcom_pcie_recalib_zone {
-+	struct thermal_zone_device *tz;
-+	int drift;
-+	int ref;
-+};
-+
- struct qcom_pcie {
- 	struct dw_pcie *pci;
- 	void __iomem *parf;			/* DT parf */
-@@ -328,6 +342,11 @@ struct qcom_pcie {
- 	int global_irq;
- 	bool use_pm_opp;
- 	struct mutex reset_lock;
-+
-+	struct qcom_pcie_recalib_zone *recalib_zones;
-+	unsigned int recalib_num_zones;
-+	struct workqueue_struct *recalib_wq;
-+	struct delayed_work recalib_work;
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -1839,6 +1858,197 @@ static void qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
- 	}
- }
- 
-+static int qcom_pcie_recalib_update_ref_temp(struct qcom_pcie *pcie)
-+{
-+	unsigned int i;
-+	int temp, ret;
-+
-+	for (i = 0; i < pcie->recalib_num_zones; i++) {
-+		struct qcom_pcie_recalib_zone *zone = &pcie->recalib_zones[i];
-+
-+		ret = thermal_zone_get_temp(zone->tz, &temp);
-+		if (ret)
-+			return ret;
-+
-+		zone->ref = temp;
-+	}
-+
-+	return 0;
-+}
-+
-+#define QCOM_PCIE_RECALIB_INTERVAL_MS	5000
-+
-+static void qcom_pcie_recalib_arm_worker(struct qcom_pcie *pcie)
-+{
-+	if (!pcie->recalib_wq)
-+		return;
-+
-+	queue_delayed_work(pcie->recalib_wq, &pcie->recalib_work,
-+			   msecs_to_jiffies(QCOM_PCIE_RECALIB_INTERVAL_MS));
-+}
-+
-+static void qcom_pcie_recalib_work(struct work_struct *work)
-+{
-+	struct qcom_pcie *pcie = container_of(work, struct qcom_pcie,
-+					      recalib_work.work);
-+	struct dw_pcie_rp *pp = &pcie->pci->pp;
-+	struct device *dev = pcie->pci->dev;
-+	struct pci_dev *port __free(pci_dev_put) = pci_get_slot(pp->bridge->bus, PCI_DEVFN(0, 0));
-+	enum pci_bus_speed speed;
-+	bool drifted = false;
-+	unsigned int i;
-+	u16 lnkctl2;
-+	int temp, ret;
-+
-+	if (!port || !port->subordinate)
-+		goto rearm;
-+
-+	scoped_guard(mutex, &pcie->reset_lock) {
-+		for (i = 0; i < pcie->recalib_num_zones; i++) {
-+			struct qcom_pcie_recalib_zone *zone = &pcie->recalib_zones[i];
-+
-+			ret = thermal_zone_get_temp(zone->tz, &temp);
-+			if (ret) {
-+				dev_err(dev, "Failed to read %s: %d\n",
-+					thermal_zone_device_type(zone->tz), ret);
-+				continue;
-+			}
-+
-+			if (abs(temp - zone->ref) >= zone->drift)
-+				drifted = true;
-+		}
-+
-+		/* No zone has drifted far enough to need a recalibration */
-+		if (!drifted)
-+			break;
-+
-+		ret = pcie_capability_read_word(port, PCI_EXP_LNKCTL2, &lnkctl2);
-+		if (ret != PCIBIOS_SUCCESSFUL)
-+			break;
-+
-+		speed = PCIE_LNKCTL2_TLS2SPEED(lnkctl2);
-+		if (!pcie_valid_speed(speed))
-+			break;
-+
-+		/*
-+		 * Equalization only runs at 8.0 GT/s and above, so a slower
-+		 * link has nothing to recalibrate.
-+		 */
-+		if (speed >= PCIE_SPEED_8_0GT) {
-+			ret = pcie_set_target_speed(port, PCIE_SPEED_2_5GT, true);
-+			if (ret)
-+				dev_err(dev, "Failed to step down the link speed: %d\n", ret);
-+
-+			/*
-+			 * The device below may not be able to train to the
-+			 * original Target Link Speed, which is reported as
-+			 * -EAGAIN even though the speed was restored.
-+			 */
-+			ret = pcie_set_target_speed(port, speed, true);
-+			if (ret && ret != -EAGAIN)
-+				dev_err(dev, "Failed to restore the link speed: %d\n", ret);
-+		}
-+
-+		/*
-+		 * Update the reference temperature of every zone and not just
-+		 * of the one that drifted, so all of them measure their next
-+		 * drift from the same point in time.
-+		 */
-+		ret = qcom_pcie_recalib_update_ref_temp(pcie);
-+		if (ret)
-+			dev_err(dev, "Failed to update the reference temperature: %d\n", ret);
-+	}
-+
-+rearm:
-+	qcom_pcie_recalib_arm_worker(pcie);
-+}
-+
-+#define QCOM_PCIE_RECALIB_ZONE_CELLS	2
-+
-+static int qcom_pcie_recalib_get_zones(struct qcom_pcie *pcie)
-+{
-+	const char *prop = "qcom,pcie-recalibration-thermal-zones";
-+	struct device *dev = pcie->pci->dev;
-+	struct of_phandle_args args;
-+	unsigned int i, num_zones;
-+	int ret;
-+
-+	ret = of_count_phandle_with_args(dev->of_node, prop, NULL);
-+	if (ret == -ENOENT)
-+		return 0;
-+	if (ret < 0)
-+		return ret;
-+
-+	if (!IS_ENABLED(CONFIG_THERMAL_OF))
-+		return dev_err_probe(dev, -ENODEV,
-+				     "%s requires CONFIG_THERMAL_OF\n", prop);
-+
-+	num_zones = ret / QCOM_PCIE_RECALIB_ZONE_CELLS;
-+
-+	pcie->recalib_zones = devm_kcalloc(dev, num_zones,
-+					   sizeof(*pcie->recalib_zones), GFP_KERNEL);
-+	if (!pcie->recalib_zones)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < num_zones; i++) {
-+		struct qcom_pcie_recalib_zone *zone = &pcie->recalib_zones[i];
-+		struct thermal_zone_device *tz;
-+
-+		ret = of_parse_phandle_with_fixed_args(dev->of_node, prop,
-+						       QCOM_PCIE_RECALIB_ZONE_CELLS - 1,
-+						       i, &args);
-+		if (ret)
-+			return ret;
-+
-+		tz = thermal_zone_get_zone_by_node(args.np);
-+		of_node_put(args.np);
-+		if (IS_ERR(tz))
-+			return PTR_ERR(tz) == -ENODEV ? -EPROBE_DEFER : PTR_ERR(tz);
-+
-+		zone->tz = tz;
-+		zone->drift = args.args[0];
-+	}
-+
-+	pcie->recalib_num_zones = num_zones;
-+
-+	return 0;
-+}
-+
-+static void qcom_pcie_recalib_deinit(void *data)
-+{
-+	struct qcom_pcie *pcie = data;
-+
-+	cancel_delayed_work_sync(&pcie->recalib_work);
-+	destroy_workqueue(pcie->recalib_wq);
-+}
-+
-+static int qcom_pcie_recalib_init(struct qcom_pcie *pcie)
-+{
-+	struct device *dev = pcie->pci->dev;
-+	int ret;
-+
-+	if (!pcie->recalib_num_zones)
-+		return 0;
-+
-+	pcie->recalib_wq = alloc_workqueue("pcie-recalib/%s",
-+					   WQ_UNBOUND | WQ_HIGHPRI | WQ_MEM_RECLAIM,
-+					   0, dev_name(dev));
-+	if (!pcie->recalib_wq)
-+		return -ENOMEM;
-+
-+	INIT_DELAYED_WORK(&pcie->recalib_work, qcom_pcie_recalib_work);
-+
-+	ret = qcom_pcie_recalib_update_ref_temp(pcie);
-+	if (ret) {
-+		destroy_workqueue(pcie->recalib_wq);
-+		return dev_err_probe(dev, ret, "Failed to update the reference temperature\n");
-+	}
-+
-+	qcom_pcie_recalib_arm_worker(pcie);
-+
-+	return devm_add_action_or_reset(dev, qcom_pcie_recalib_deinit, pcie);
-+}
-+
- static int qcom_pcie_set_max_opp(struct device *dev)
- {
- 	unsigned long max_freq = ULONG_MAX;
-@@ -2370,6 +2580,10 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 			goto err_pm_runtime_put;
- 	}
- 
-+	ret = qcom_pcie_recalib_get_zones(pcie);
-+	if (ret)
-+		goto err_pm_runtime_put;
-+
- 	ret = pcie->cfg->ops->get_resources(pcie);
- 	if (ret)
- 		goto err_pm_runtime_put;
-@@ -2430,6 +2644,10 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	qcom_pcie_icc_opp_update(pcie);
- 
-+	ret = qcom_pcie_recalib_init(pcie);
-+	if (ret)
-+		goto err_host_deinit;
-+
- 	if (pcie->mhi)
- 		qcom_pcie_init_debugfs(pcie);
- 
-@@ -2464,6 +2682,10 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
- 	if (!pcie)
- 		return 0;
- 
-+	/* Recalibration touches config space, so it must not run past here */
-+	if (pcie->recalib_wq)
-+		cancel_delayed_work_sync(&pcie->recalib_work);
-+
- 	ret = dw_pcie_suspend_noirq(pcie->pci);
- 	if (ret)
- 		return ret;
-@@ -2575,6 +2797,8 @@ static int qcom_pcie_resume_noirq(struct device *dev)
- 
- 	qcom_pcie_icc_opp_update(pcie);
- 
-+	qcom_pcie_recalib_arm_worker(pcie);
-+
- 	return 0;
- disable_icc_mem:
- 	icc_disable(pcie->icc_mem);
-
--- 
-2.43.0
-
-
+Konrad
