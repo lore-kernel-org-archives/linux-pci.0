@@ -1,98 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.216.53
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795596859;
-	b=qqUuAh39d27Xoakocpq8LkxyAeL6sQ9U8kJDm3yWp0gqTxHQU3RwI6D6VWEzKPg4MlWx
-	 0jAf7VLVqBBNmtgiPB6f9KC5dGCgyH7T6XdBjuHrkde+GoAW0HkHoZGbT9W09dCotbcyE
-	 8Ep/r4V26E2zEPNMO95QpArLRMW96jjc30d4vLWoo7gdoKeq9hnOiV14yUU3nkH9npeXp
-	 zGnr9svQweOtrgLj24ew/pfOB2Ifdc6nDB/s+5zXePdVKA/QNgsaeke/vUQ/gnz12f2JT
-	 EJ6PtSBFK9ZE21mnVwjnNx/RndWRq/bUfENAL5EOOVn8ciXmoqVOpVspGM9ChO1Ukrw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795596859;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=PyNfHdqsKFfNkLXZbnASHjXvSaWoZIYOYFHe7lu1rkY=;
-	b=D9KisHtiHDovWhbR2yGWQWyqV/BsucVgFJQW8I6/yKSEFTRXf2UmbrDdHowPy/0hWLdP
-	 jSmbGMJZ7Xn9o+TB+E8mgVaFatBUg0uPqlz/ZWPvHXhrX8wUsgMP7V/eHOF/q/xa6g3Pn
-	 Yz1S9fy4t3/qu66pxVSR9hPK1I4tCBIy45rVtWsXUz2TNQra7MSdTLzOPLQAB69/md/kB
-	 cSH0Hd/9jJUmrtpcz9H6gJqqMRD/ljdarxQ4h3IiC/l711oQ5QNR8DwoRObZ7irbL41ua
-	 NL+fUc+JFtwQVvmUdu9wtnCAkdkWf5PcZgPwsrMLiHpUmPyVxqyEr+gr9Il+puoFLFA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XDcvqtOz;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.216.53
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795597417;
+	b=BZ/FSdUxdM8j2ySePPxgKxUecpqRZvFaWcrAmSTAJj2GUNeKoUCyGUQgYfuqjWUZrUFc
+	 tkVcFCUIqr+woy7chno94/yDhgwULBupfPkuH+hDbLlMQHTY5ZegAT4YQaBh3GhxmX6to
+	 2jhYJEioWCECtxmZUNN+OSXbCNYMQ2b7JxxTvZZoE/JNAb6HIJotgRzCGkPs8phf6Bt19
+	 j9ZtpQdO9I7+zOzNY8LQ09aGwEfqYb5/hNyYUT+ouh7Bje47QGdqnO5h37HGEi4451dTx
+	 bRzyy3JIvZN8aN7Sdklv03GOe11NjnGjCkeZrXBkSOZRajE49c5TWdVVTW90PPdh8/A==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795597417;
+	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=VKJwAy1lGpq4z0cOO8aJHyNLtiPZ13aYi7c5omKUShE=;
+	b=DenGyIoRuwFmiwgy6tngfTvLK9KH/jAvpj3e/WF74tuKphcWP/8CBZMWUTHkYdkViglj
+	 TvxEduQeYJBHwRVxUYAbpmhB8CXOXNOZfcrRjZzC6HQWKiefg88XA/mrMnr0NVb+mjBVV
+	 nVYnJTL9GDpjxn0kCGpfA/swLAMm6+E0SHOdOPFlclxFm8hrioPz5vCHFIEM5zXYO950Q
+	 0BDoKPPzsCxsmwenAwxwh2Mf9LXqmbDP059bOGLWDt5XWTpXGJFmfcM+St1u1AxZyChXo
+	 03D4gRVuGosRbXBLjqFVKWIEZmnkuOGjpKv6SUKZA3AnzciaDPcFAUps4SJGNMiCbYw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CNjuEEgY;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67487606A31E
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 08:54:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67487606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2822B606A31E;
+	Wed, 25 Nov 2026 09:03:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XDcvqtOz
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-3b3e85baf7cso3333975a91.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 00:54:19 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795596859; cv=none;
-        d=google.com; s=arc-20260327;
-        b=NINPvImyoXc1OL+X18rzr9h3YI2hkli+vCUYHSAK5wRhTLcTe2fGXcFMGQ2nWFZ/gg
-         a7wn7CsylJHgLHAOJWNt3JrlJ8ERKtbvNsThu8L2VIKPd4l6EG50s3fyuQGCOUde1Dfi
-         N1Nr7WrtXScJ4qetJjFr6QrJOXl/j4cPTGVdranS6ZgZPQI98lTxUPw+I0Jw962LrGxz
-         VfCvS7XEqQWV0wfMvRHEjSE8WWdAZvvua3cyqMsvo0kkKthCkcflIzw7zmcws1CqrL8J
-         a/816DKEvsqQDHdpme1vQDAJ23RwsPWwokJQJ9Req6X0OdsDAKKARuY07lckW4vKuhy7
-         2P6A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:dkim-signature;
-        bh=PyNfHdqsKFfNkLXZbnASHjXvSaWoZIYOYFHe7lu1rkY=;
-        fh=FM1JayZdjRhyrLe+iOaG660vxPCT1Jz4unvepzNFN0I=;
-        b=d0bYysE1HcljcaQENwB1QyYGYNA9Vu4OyMqzoL0XUwr/rEcn+R79AzV+LS7W0OA6un
-         ssK0qkJs/VVSMgGbO4R+/jhLsUmvPjDmdEFR1IZDuYhGz88srp31Ty4jA+Bqncthv8NM
-         /0vCT7/J1zUhqQT0uLzs5/O/gFqTimcC+vBr3jHUvqGy1O6Bwfo6tyiI6Fog6gl2sjmF
-         RDjQ8h/I/i2p8LJM07qPeWp75UXD3vO4Jm3B+SFXQNl4Vt39mp2AxCk5bkfCOj6/iD5c
-         wGuyd2bZ7Ry+6OEdvY1jQQappHzsYJdr60CF4ISY05secASvT4oGkDasadpGDPJqMRLX
-         Zmcg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795596859; x=1796201659; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PyNfHdqsKFfNkLXZbnASHjXvSaWoZIYOYFHe7lu1rkY=;
-        b=XDcvqtOzkYMmMrWtCGbv5BjIygw0oUyRKHu6HryRnP4+mEi+l4xCXlj4F9BFI9unwx
-         lX17uHnb+85GyWHmIB43LdoVMQnS5e4hZED6Z7YJTZVwHx7E1Wz3+uF8Qi3GQwQIDj87
-         wj91y099QbrOqpwDJF927CziIGED5jjVDHT5rSshJ4QeNWpZBsXqf86hiBfDpF0hbZZR
-         nzOhwe8HGRR81hLEjNY/4FuJ7tT8cvCvvvL22RIRQ955w68aSQyhpjswqMY5quvbWNFj
-         ndQniIXsFvIeGwIWfNkJjwzor7wLOY9niia2rlbifehu3NEqPsLCabGAO7jNThgS7dfn
-         W2Mg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795596859; x=1796201659;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=PyNfHdqsKFfNkLXZbnASHjXvSaWoZIYOYFHe7lu1rkY=;
-        b=ydSpiD2juzZ2134EV6jvQQeiFSzyqgkbXhWRY4/kjpMgDKD8mTH+88gYAZtHFe7y0s
-         uO/1tNKppK+7x6W1jpCIp+iSPOOsPI/CE6VXUk0Cjbq0wZahYwFcGrN5yIv2eQ5eewhq
-         emwVPbF9CXIXNXNAu5Tir4Pe+tfCRAE8d/uo0pqIsJxOpFyR7qfjuhibnzgnJuYuKjPm
-         EepF3lItGT6U2+DkqEeudRd7UfuJEm1A3MM5Eh1PRKKIRaudqdczrwpj2K6hamnpsXDa
-         xbbfMvxifpBXhx75Ow0N0mV/O2J19mdvgIRv+akyDWoqk2+XcugaDJp1ZvvdE5u+Piqd
-         l/Uw==
-X-Gm-Message-State: APuU4Z/KIbmwIYR4fmFp1r2Is0ZGAdORzZ/4Hg+dEC5v9d38UFNjBIpz
-	7WwvRi1TYwpLitipK+DvsonCXY2Xf1Me638MsD0BxypmwhuqZYvZdjvoSUsLbW8nih9d62hmcyo
-	G3hB1FRf9OnEMzd3o1UNoy32KOeQd9s/HTMDC
-X-Gm-Gg: AZFdTZdhLsmBi9IdIBTrS7trev6GTW3OygmUS8i/tNv90VsGJ6fDD4zg11uBM2gbhx+
-	iRLQ7bqvn+XJ/Vqb8PkdAvNDPz3KUyupozFGH6AiT5ZPiwCp1HogaxDr0SWM0/j/JXq40WwaCJG
-	D2x+xjXhbhoWm2f1f7XCk/ugrBUw73bzNvFFeOgYJgh0O2Jqccf4DSsC8MZB53E9UeEzuOuXQHY
-	43wxmlxf45gcifPELqs270Okk1yXCbg6y1zKKZltHAg2vcsAhYFGKH/I0fi/k0b54X2LEjEAa9P
-	3sh4zS4MMGQ34b0phcRpqtkLr2foLhy31ejtz01rfvj+snFgae9cpa1IpOMfUl12k1rYf8ICwII
-	1DZNHbjpCriFwS5sNrYHSCwwOKsVS06nIM3QC
-X-Received: by 2002:a17:90b:2790:b0:3b3:b417:607e with SMTP id
- 98e67ed59e1d1-3b41c95b3e3mr15533009a91.44.1795596858645; Wed, 25 Nov 2026
- 00:54:18 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CNjuEEgY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C1A51F000CA;
+	Wed, 25 Nov 2026 09:03:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795597416;
+	bh=VKJwAy1lGpq4z0cOO8aJHyNLtiPZ13aYi7c5omKUShE=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=CNjuEEgYPQAcKuQYdl6za1C0ebFVINRWCNnFCjlDwJQd+I/ft9hJRStwX/N39vxDl
+	 nD23OV2ymNPVX2Uw0dBQXKUZ2pljh7PYWojD+DrY1EHXYrg3HK2mDB5bALqGspQiLH
+	 SYHXiF2jIeecjb8F6IJKb/u9s1m0y8iyXAYaxveO8vsbKbwS4cMiAv9VlFgSJK9CU3
+	 jttF9y94eSzUmGwHJ4s5Zn1dIMAsIzN86hHAZQvDZ44B0uM0DYzY0K8U9mYvuHkNfF
+	 0MC3pZ6VKlroRd/tz1qK6dsFELPlNoHuJVoP9DntITzk6FMOqpA3ySLBNObxFU/Y82
+	 6Tf4S/2+emG6g==
+X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 08/10] PCI/TSM: Add sysfs lock and unlock for
+ guest-assigned devices
+In-Reply-To: <20261123152738.GF179082@ziepe.ca>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <20261123083337.2731019-9-aneesh.kumar@kernel.org>
+ <20261123152738.GF179082@ziepe.ca>
+Date: Wed, 25 Nov 2026 14:33:26 +0530
+Message-ID: <yq5ao6bd9tb5.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -102,108 +75,133 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: Seylon <seylon@gmail.com>
-Date: Wed, 25 Nov 2026 10:54:07 +0200
-X-Gm-Features: Aa3M54r-pHdY3xVMeBatr4tjAan3opxcyVcgExvTkqW83OhipLQOiS4a4n5bvbA
-Message-ID: <CAP-Sd9_iAujzVgXyGV1bW1nzU8T0LjNnpDSMmSb0Xmk8jUdc3w@mail.gmail.com>
-Subject: =?UTF-8?Q?=5BREGRESSION=5D_PCIe_ASPM_L1_disabled_on_AMD_root_port_?=
-	=?UTF-8?Q?=2F_Intel_switch_=E2=80=93_Intel_Arc_A580_idle_power_increase?=
-To: linux-pci@vger.kernel.org
-Cc: regressions@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 
-Hello,
+Jason Gunthorpe <jgg@ziepe.ca> writes:
 
-I would like to report a PCIe ASPM regression affecting an Intel Arc
-A580 connected through an Intel PCIe switch on an AMD Ryzen 5 9600X
-system.
+> On Mon, Nov 23, 2026 at 02:03:35PM +0530, Aneesh Kumar K.V (Arm) wrote:
+>> A confidential guest needs to lock a PCI device before collecting and
+>> verifying evidence about it. Userspace also needs a way to unlock the
+>> device after use or when verification fails.
+>> 
+>> Add tsm/lock and tsm/unlock sysfs attributes for TSM drivers
+>> implementing devsec_ops. Writing a TSM device name to tsm/lock calls its
+>> lock callback. Unlock calls the matching driver's unlock callback
+>
+> I thought we agreed not to do this in sysfs as we worked through the
+> SPDM stuff?
+>
+> LOCKED should be the 'start SPDM' action in the guest
+> RUN should be the 'accept SPDM' action in the guest
+>
+> And though we didn't talk about it there is likely some 'destroy SPDM'
+> action that is UNLOCK and UNRUN.
+>
 
-Summary
+I may have misunderstood. I implemented that flow only on the host, but did
+not add a "start SPDM" action for the guest.
 
-On newer Proxmox VE kernels, ASPM L1 is disabled by default on two
-upstream PCIe links. This causes the Arc A580's idle power consumption
-to increase from approximately 5=E2=80=936 W to 40=E2=80=9345 W.
+Currently we have it as
 
-Manually enabling ASPM L1 on both links restores the expected idle
-power consumption.
+    # Host SPDM authentication and stream acceptance are complete.
+    # VMM has created the guest's VDEV.
 
-Regression range
------------------------
+    guest lock                 -> associate guest attestation endpoint
+                               -> RHI: request TDI CONFIG_LOCKED
+                               -> host/RMM: VDEV_LOCK + VDEV_COMMUNICATE
+                               -> RSI_VDEV_GET_INFO:
+                                 trusted state, lock sequence and digests
 
-The last known working kernel:
-7.0.14-16-pve: ASPM L1 enabled by default; GPU idle power approximately 5=
-=E2=80=936 W.
+    spdm-get                   -> available objects, certificate slots,
+                                 formats and current state
 
-The first known affected kernel:
-7.0.14-17-pve: ASPM L1 disabled by default; GPU idle power
-approximately 40=E2=80=9345 W.
+                                 current firmware:
+                                   * expose only the existing selected identity
+                                   * report independent signing-slot selection
+                                     unavailable
 
-The issue has persisted in subsequent tested kernels:
+                                 updated firmware:
+                                   * expose all discovered candidate chains
+                                   * expose slot/key metadata when supported
+                                   * bind the catalog to this assigned VDEV
 
-7.0.14-20-pve
-7.0.14-22-pve
-7.0.14-30-pve
-7.3.5-1-pve
-7.3.6-1-pve
+    spdm-get(certificate,
+             slot=0)           -> retrieve captured slot 0 chain, if available
+    spdm-get(certificate,
+             slot=1)           -> retrieve captured slot 1 chain, if available
+                               -> check the applicable trusted RMM bindings
 
-These are Proxmox VE kernel package versions. The issue has been
-reproduced across multiple Proxmox kernel updates, but has not yet
-been tested against a vanilla upstream kernel.
+    # Guest inspects the available chains and selects a signing identity.
+    # For 1.3 multi-key, its key usage must permit measurement signing.
 
-Hardware
-CPU: AMD Ryzen 5 9600X
-Motherboard: ASRock B850 Pro-A
-GPU: Intel Arc A580
-GPU driver: i915
-PCIe topology:
+    evidence-get(
+        slot=1,
+        nonce=N,
+        selected-key-identity) -> select the firmware's supported measurement flow
 
-00:01.1 =E2=80=93 AMD Raphael/Granite Ridge GPP root port
+                                 current firmware:
+                                   * support the existing signing identity only
+                                   * reject unsupported slot/key selection
+                                   * RMI_VDEV_GET_MEASUREMENTS(nonce)
 
-01:00.0 =E2=80=93 Intel PCIe switch upstream port (8086:4fa0)
+                                 updated firmware:
+                                   * enhanced RHI_VDEV_GET_MEASUREMENTS(
+                                         slot, nonce, selected-key-identity)
+                                   * validate the requested slot/key association
+                                   * enhanced RMI_VDEV_GET_MEASUREMENTS(
+                                         slot, nonce, selected-key-identity)
 
-02:01.0 =E2=80=93 downstream port leading to GPU
+                               -> VDEV_COMMUNICATE
+                               -> device GET_MEASUREMENTS:
+                                 request signature using the selected identity
+                                 and the guest-provided nonce
+                               -> collect the complete guest device bundle:
+                                 * selected certificate chain
+                                 * fresh signed measurement exchange
+                                 * locked interface report
+                                 * available supporting transcript
+                                 * trusted device/identity and sequence bindings
+                                 * formats and declared capture limitations
+                               -> obtain fresh RSI_VDEV_GET_INFO
+                               -> check evidence digests and lock/device state
+                               -> retain one consistent complete bundle
+                               -> return bundle, device generation and receipt
 
-03:00.0 =E2=80=93 Intel Arc A580
 
-Observations
+    guest verification         -> verify certificate policy and measurements
+                               -> verify signature with the selected leaf key
+                               -> verify signed inputs bind the original nonce N
+                               -> verify association with the assigned device
+                               -> approve the interface report before acceptance
 
-On affected kernels, lspci -vv reports ASPM disabled on both upstream links=
-:
+    evidence-accept            -> validate this guest attempt's generation/receipt
+                               -> validate/map approved interface resources
+                               -> RHI: request TDI RUN
 
-00:01.1 =E2=80=93 AMD root port
+    trust_policy=full          -> authorize driver binding
+                               -> configure PCI DMA and the default IOMMU domain
+                               -> RSI_VDEV_DMA_ENABLE with accepted sequences
+                               -> driver probe
 
-01:00.0 =E2=80=93 Intel switch upstream port
+    driver unbind              -> driver removal
+                               -> RSI_VDEV_DMA_DISABLE
+                               -> release default-domain ownership
 
-Both links advertise ASPM L1 support in their PCIe capabilities.
+    guest unlock               -> revoke guest access and mappings
+                               -> return TDI to CONFIG_UNLOCKED
 
-Manually enabling L1 on both links using:
 
-setpci -s 01:00.0 CAP_EXP+10.w=3D0002:0003
-setpci -s 00:01.1 CAP_EXP+10.w=3D0002:0003
+Both host and guest flows are documented
 
-immediately reduces GPU idle power from approximately 40=E2=80=9345 W to 5=
-=E2=80=936 W.
+https://git.gitlab.arm.com/linux-arm/linux-cca/-/blob/cca/topics/7.4/cca-da-integration-v2/Documentation/userspace-api/attestation-spdm.rst?ref_type=heads
 
-Reversing these settings causes power consumption to return to
-approximately 40=E2=80=9345 W. Re-enabling L1 restores the lower power
-consumption.
 
-The workaround has also been tested during Jellyfin transcoding and
-Immich thumbnail and machine-learning processing without apparent GPU
-errors.
+The reason I did not add spdm-start for the guest is that lock does not
+take an input parameter. Only GET_MEASUREMENTS requires the key details to
+use for signing.
 
-Questions
+However, we can keep the guest flow consistent with the host flow: use
+the tsm/lock sysfs attribute only to associate the TSM, drive the entire
+TDISP flow via ctlv, and have spdm-start lock the device.
 
-Could this behaviour be related to a change in PCIe ASPM handling
-introduced between the working 7.0.14-16-pve and affected
-7.0.14-17-pve kernels?
-
-Should this be investigated in the PCI subsystem, or could there be an
-interaction with the AMD root port and Intel PCIe switch?
-
-I would appreciate any guidance on further debugging or information
-that would help identify the change responsible.
-
-Thank you.
-Seylon
+-aneesh
