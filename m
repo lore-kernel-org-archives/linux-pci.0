@@ -1,57 +1,70 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795595596;
-	b=a/EG7WSchaDs8UbICt//Fh/84Oh5Agf88jDbFyG8a8P/GfJrItO0hshTGJShEMWRUpU5
-	 n4llhWMYmnXHWhpyDPf6i5VrpX/tmSQS5u2plL27B/sqzmp7+5QeYfdqn/w2x2r4ZCTI3
-	 pIiG65rLj02troEas0haUdH+z5dUNBYVvvWppSGN0xQkmgYSsyCKpWs5YHk8tylwPPRy4
-	 e22mnnr9YHKqtJJK+7SWRYfT+C1mEkwayperrFMeRdOXzaVTSHJL/qKtzt1SxDpku4X4l
-	 EkE1XeWhk7TFC/jFjM5m8D+czUlWUvp3X0nQUv0XJ1R5bvfMq57Q/1TaHWf7Tz0nqbw==
+	t=1795595848;
+	b=r44hRd52i4pfMbVde6/OTqbdDPa21RjW2BaFFY0nGYZ3PdFjYfSuuFTVHwKDrdWFGvRZ
+	 oTIVuI5k7yktBeRAQsxCKNquEbuuOBasp6bkN7b3kwH1Idw9ZfhfM9C3DTA40OBtA2bbO
+	 3odPZaAA9aVyFXF9djWO94tmS2sBDhBnWZuKH/BJC9Y6XKkT8qpwTk8kBEpahuRbi6SPg
+	 7U4jOYHF7uXbFO/RkuOooO7QhX5JkiiTVBAiNQpy1E/nSmmjl+6AMcOP7GdBRrB7O0qt3
+	 x3ONZ3z/6hB5v2X7hvbdn3cFCn1sp4/OI1ohFYAwCL1si9W40L67W7yEVDmoIJcDszA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795595596;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=+tp9JqNIA6F9SlFATNPSGhUxhafMRHKXMy6268Tnw2I=;
-	b=fZ+0OWQkrigsBKeRnSITm07vsmasqCoMk1cT9WtfWUkwQ82vbj8XAEvbtoK6uPmeqTJc
-	 uRvG7u70CJoIhw7wkg/laWjBz5dUn3ExkdbLhMeVD+uD1CXE10MNv2SDnJ7dDWxZRWtl4
-	 vFuR5K8Z1AjIHJhPzNIOE6hj72EMC48xhCApgs799dDRkgcdeTblaM2FFaTVHfqv0gfYl
-	 XTvjAEm5AmnY8u7VWoZq8WLM3iRcjJ1I+ZZP65nV+muwxbkAJtwC+NOFiJARrApnJ4Hip
-	 PR1oMwkw9f5OFsK8LvCYYXAVcktFzcch9XZlklmziyAXQozwvyVGrDNYFT9eJ4vIyeQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795595848;
+	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=zPQ6zQ8uV4eKmUcVRQ1hIv+A3D6QwvcOfGuZSPbSW+c=;
+	b=C1qWGQA5ObvF6y1ajc1HniZ/Yjv3Q+h27GEojHQi7C5Ndd/Uq69q2ASdGXlArAIyQtnb
+	 mlb9dcjcusob57Ls32EQWaFDdySFWkk7kgqkj6BGUEKx3z0leNXqEYzh6HFyVWzztHo71
+	 3OqKemj2V5xtk//scH9R3ONG3esy3zcacjHde+/5OYVe5dEZPacn4YDnS2gfczzJsPhoi
+	 QSni4Fni14+PS4ifsCsONFf2i0D0VDypwcT3wM+H4sfBg3Rhi7uwAj8Kk/HTClIGfo20L
+	 V3/ARfCvVsUMwuMgNg+q9AkZRUUvcVqz0rLFRVbpj0QPlvXekDyClUPpCpPfp4im7rA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BCbFoZ5k;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RqwuNeO+;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55FF2606A321;
-	Wed, 25 Nov 2026 08:33:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CB1606A326;
+	Wed, 25 Nov 2026 08:37:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BCbFoZ5k
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CFF81F000CA;
-	Wed, 25 Nov 2026 08:33:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RqwuNeO+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 378A21F000C0;
+	Wed, 25 Nov 2026 08:37:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795595595;
-	bh=+tp9JqNIA6F9SlFATNPSGhUxhafMRHKXMy6268Tnw2I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BCbFoZ5kfGPfEfxEF9JglC4E6sqx0XDz9R2XsZPXjl6EMLWuZnRsBH6kMG3Nepbez
-	 87PDgOdOixUpo3GA83pTEyxWylBNDapqbXHAt0T4UlCla29/dB+Uzr8lu6zifcRnKV
-	 P4eda3TgIhQgHjOMGhYvQI9Jawxv6gIWH87WKrRfg7Etx1JLoOhOqaNuGwJplFg4Qh
-	 3T1J3r0rNpUbIIMwou+zf0vOau16iR7HA5l9m0Gg+mqv5a33zF1FTrQMpkJOH1FYuT
-	 ADGh5Z5D7EMMqncU2l0NkZGKhorZ5O9dbm4NSXwtl8HentlXvUZDec9VQdtJeZfpR7
-	 CxUse10A4hTBw==
-Message-ID: <sashiko-outbox-232909@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 15/18] iommufd/viommu: Allow PCI TSM backends to
- provide vIOMMU operations
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?QW5lZXNoIEt1bWFyIEsuViAoQXJtKQ==?= <aneesh.kumar@kernel.org>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261125081121.379481-16-aneesh.kumar@kernel.org>
-References: <20261125081121.379481-1-aneesh.kumar@kernel.org>
- <20261125081121.379481-16-aneesh.kumar@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 25 Nov 2026 08:33:15 +0000
+	s=k20260515; t=1795595848;
+	bh=zPQ6zQ8uV4eKmUcVRQ1hIv+A3D6QwvcOfGuZSPbSW+c=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=RqwuNeO+en6ylIrQjzIoRLSLJhqQ/ZEyfYT8SJDHB3wI2f2OzxEgKMPBIlvgaqk1h
+	 c6xRRn988L/1TZNfg9RGOfrRNNLhx1dMzqvvTtj6c7Loysu62HBh/uAKDr5B3KbF6y
+	 p0Z+DNpiOhk02aH8n36HkVQmg0/jgCIaJUWy2a9uWWel2U0JlbonYZV9CjE+eZjCda
+	 4eEbSnB40uO4ASwHyxUjLcYHzrPtrCG3FGcNIgX1MpH9N9fkfCCW2QcEEvpp8c/yjw
+	 bFMpMfj49pN8fXhTM8egt0MwzWw8FMZoyQ9nwPNeG1rHL1dQ5NaC2jopXjoxN4Gttf
+	 2U9by7pYmIEkA==
+X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Alexey Kardashevskiy <aik@amd.com>, linux-coco@lists.linux.dev
+Cc: Dan Williams <djbw@kernel.org>, Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev
+Subject: Re: [PATCH v1 04/10] PCI/TSM: Defer TSM vDEVICE allocation until
+ device setup completes
+In-Reply-To: <5e04323f-dfdc-4956-acee-bcc09926726d@amd.com>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <20261123083337.2731019-5-aneesh.kumar@kernel.org>
+ <5e04323f-dfdc-4956-acee-bcc09926726d@amd.com>
+Date: Wed, 25 Nov 2026 14:07:19 +0530
+Message-ID: <yq5aqzg99uio.fsf@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,82 +73,60 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] iommufd: mix of __free() and goto error handling in
-  iommufd_viommu_alloc_ioctl()
---
+Alexey Kardashevskiy <aik@amd.com> writes:
 
-commit c23c0e750868729bcf5c18f6b9904e0a5d226915
-Author: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> On 23/11/26 19:33, Aneesh Kumar K.V (Arm) wrote:
+>> A successful connect does not necessarily complete the checks and setup
+>> needed to assign a device to a confidential guest. Authentication and
+>> userspace evidence acceptance may still be required.
+>> 
+>> Add pci_tsm_pf0::ready and pci_tsm_set_ready(). While ready is false,
+>> pci_tsm_context_get() returns -EACCES, preventing TSM virtual device
+>> (vDEVICE) allocation.
+>> 
+>> Initialize ready to true to preserve existing TSM driver behavior. A
+>> follow-up CCA patch will clear ready during connect and set it after
+>> evidence-accept completes the required device setup.
+>
+>
+> If the host is not yet happy with the device, it can simply not pass
+> it through to a VM, what is the value of doing this blocking in the
+> kernel? I'd drop this one. Thanks,
+>
+>
 
-iommufd/viommu: Allow PCI TSM backends to provide vIOMMU operations
 
-This commit allows VIOMMU_ALLOC to query PCI TSM backends for vIOMMU
-operations before falling back to the physical IOMMU driver, and tracks
-TSM-backed vIOMMU instances in struct iommufd_viommu.
+That is what this patch does. If IDE setup is not complete but the
+device already has tsm0 attached and connected, pci_tsm_context_get()
+returns an error from cca_vdevice_init(), preventing the device from
+being assigned to the VM.
 
-> diff --git a/drivers/iommu/iommufd/viommu.c b/drivers/iommu/iommufd/viomm=
-u.c
-> index dab499d24c453..909ef86f39a98 100644
-> --- a/drivers/iommu/iommufd/viommu.c
-> +++ b/drivers/iommu/iommufd/viommu.c
-[ ... ]
-> @@ -44,20 +48,38 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *u=
-cmd)
->  	if (IS_ERR(idev))
->  		return PTR_ERR(idev);
-> =20
-> -	iommu_dev =3D iommufd_device_get_iommu_dev(idev);
-> -	if (!iommu_dev) {
-> -		rc =3D -EOPNOTSUPP;
-> +	struct tsm_dev *tsm_dev __free(tsm_put_device) =3D tsm_get_device(idev-=
->dev);
-> +	if (IS_ERR(tsm_dev)) {
-> +		rc =3D PTR_ERR(tsm_dev);
->  		goto out_put_idev;
->  	}
-> -	if (!iommu_dev->ops->get_viommu_ops) {
-> -		rc =3D -EOPNOTSUPP;
-> +
-> +	if (tsm_dev)
-> +		ops =3D tsm_viommu_get_ops(tsm_dev, idev->dev, cmd->type);
-> +	else
-> +		ops =3D NULL;
-> +
-> +	if (IS_ERR(ops)) {
-> +		rc =3D PTR_ERR(ops);
->  		goto out_put_idev;
->  	}
-> -	ops =3D iommu_dev->ops->get_viommu_ops(idev->dev, cmd->type);
-> +
->  	if (!ops) {
-> -		rc =3D -EOPNOTSUPP;
-> -		goto out_put_idev;
-> +		tsm_put_device(no_free_ptr(tsm_dev));
-> +
-> +		iommu_dev =3D iommufd_device_get_iommu_dev(idev);
-> +		if (!iommu_dev || !iommu_dev->ops->get_viommu_ops) {
-> +			rc =3D -EOPNOTSUPP;
-> +			goto out_put_idev;
-> +		}
-> +
-> +		ops =3D iommu_dev->ops->get_viommu_ops(idev->dev, cmd->type);
-> +		if (!ops) {
-> +			rc =3D -EOPNOTSUPP;
-> +			goto out_put_idev;
-> +		}
->  	}
+static int cca_vdevice_init(struct iommufd_vdevice *vdev)
+{
+.......
+	ret = pci_tsm_context_get(pdev, viommu_tsm_dev);
+	if (ret) {
+		if (ret == -EOPNOTSUPP)
+			return 0;
 
-[Severity: Low]
-This isn't a bug, but iommufd_viommu_alloc_ioctl() mixes a scope-based
-__free(tsm_put_device) variable with goto-based error handling
-(out_put_hwpt and out_put_idev), which violates the kernel Cleanup API
-convention and causes out_put_idev to release idev before tsm_dev is
-released at function exit.  Could tsm_dev be released via a goto label or
-all resources in this function converted to __free()?
+		return ret;
+	}
+}
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261125081121.3794=
-81-1-aneesh.kumar@kernel.org?part=3D15
+int pci_tsm_context_get(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
+{
+	down_read(&pci_tsm_rwsem);
+ ....
+	pf0 = to_pci_tsm_pf0(pdev->tsm);
+ 	mutex_lock(&pf0->lock);
+	if (!pf0->ready) {
+		rc = -EACCES;
+		goto out_unlock_mutex;
+	}
+
+}
+
+-aneesh
