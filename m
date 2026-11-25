@@ -1,79 +1,152 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795599329;
-	b=y81xYnDW+hUX3mUrKT0iBoLd+UtqiczQHek34oFrmPmXxxseQoV9L//ezYKXaWjoPrDY
-	 SpUJC3tbxb85vllSsDg1/HCDuaavEIUqpwSkb5P4HiX+eb1NIkKeKxpx8FeSSRSc+LfNX
-	 ElnARTJVN6k9jWa08JqRavwzuQ57ZPproE+L7cx+gDBrWVoh7EQqi+Gb3RvDwRBxy9m5q
-	 xPdDNEH04opkDVt++6Z7uzxZDTDxzmovBi68Nd5OLFFSQo5lqgHLpi9UZ8NSkfX/llQDt
-	 xBsNCzpbT9yJrQhPkwkREYNFr+Hbep53t6Vb2ek0sUclFyM/CdUnMywmhk7VZ76rPdA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795599329;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=0yUkBGKmBoC6GhNX7wcbNe62PEHvACOAwQiXFUd2RPI=;
-	b=vfzetvyxSjIGPqc6RPUvKeV0UVpUpkmfuc30eQ7pdr5/1tojrgMJ+JMrWa5dqA8jYB6j
-	 IlBpcyTW4iYZwXoOaXxeCkDthkx1heIA6k71NcAkqyCJjdTOVRn1lLYqIPs6DmwpRSjS2
-	 TIKVv1+h13NmaO60ibAMiwKS0FjYAfh2ULwnA/OrGBS8lVlFy1jCokZpqmVfKBch+BGnX
-	 ZHt9iaO7wL8YzlKX/1ZIX1fcxYasII5rkM6pxbK2r8SUC7H/Ud93BoLdoWKdlc5OfPaUz
-	 3aXzX3tK6y2QhM9k07WbThfvBXXKIfW9wFg6Rh9BwDB8jI4q9bXcQ366C4u3Ux7MOgg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Zex+jN/+";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.69.67
+ARC-Seal: i=3; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795599594;
+	b=al0sA7u5e1OW7PwLDL4P29W85WjmL/cUQ0zi8QPiqrtuLlqkp0ii+X+9cmKaBzxVMJag
+	 iGm2TYzpvrVZO6qxX3ivIyKiOBa6/Wd8/l/mIpvKtBbLWOylrZJDvGSduhrz6MkFjy3rs
+	 A5xbC0kgn+tLVrJaGCSlFIX1BpFQ/6WAEKGpZN/eYDYLEkOHAR3dVw2+QD281opfDrqXy
+	 nQOmczlOajTxcb/CdocGSON+kvKNLa6ZUANIsbmnjcZXGt7he6IOjQvxlpuFfa4fx2mmz
+	 4C3VslpxqK8PEzFkIOdSH8vynaAvOa+ukR1KNq6PpjI70B5+oQxY0ATh+HVOF8eeFlg==
+ARC-Message-Signature: i=3; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795599594;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:
+	 DKIM-Signature:Authentication-Results-Original:Received:Received:
+	 Message-ID:Date:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-ClientProxiedBy:MIME-Version:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:x-checkrecipientrouted:
+	 NoDisclaimer:X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam-Untrusted:
+	 X-Microsoft-Antispam-Message-Info-Original:
+	 X-Forefront-Antispam-Report-Untrusted:X-Exchange-RoutingPolicyChecked:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:
+	 X-EOPAttributedMessage:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStripped:
+	 X-MS-PublicTrafficType:X-MS-Office365-Filtering-Correlation-Id-Prvs:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=/IoKp3p2fNWfiEhsj1mrgYTfa4Qr9k5HRicIBJVa//s=;
+	b=qk6wXwK2SO5N1sc/ffKmbhtXHPTaXpET1jInc+CqR/OALIvzPBJ85mbT9wxUrcQH/Rsz
+	 Lt9h2QCPseGeI+BKtVOr459jYac2sWwxssBPPQCYWVrD0sijiMwvEMyQ973PitphpbJVg
+	 pZeL9x6AyPM35orOVGCkL2s5oat7d9Rf7LrLjWqZhOPFgtugTQnwi7P/eBZulLsVEJKXY
+	 fycW2ACeD5vlX1pLz1BreAdXMIb726QWnJFdQ7PJjcK3ltwtohIwskpQrKKNjW3U+m43v
+	 oLVHklme6FukmWiKhLqXGWx1q6nnMly4abPXqdVN4CP1Q00PQJDps4DKyX38vIW8cGw==
+ARC-Authentication-Results: i=3; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=arm.com;
+	spf=pass smtp.mailfrom=arm.com;
+	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=dlNKRSCz;
+	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=dlNKRSCz;
+	arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.69.67
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010067.outbound.protection.outlook.com [52.101.69.67])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DF1606A686;
-	Wed, 25 Nov 2026 09:35:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F20FC606A321;
+	Wed, 25 Nov 2026 09:39:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F20FC606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zex+jN/+
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795599328;
-	b=ZzB6lleHf7a0HXp5DpV3ipNNvEO8o0onl47+OMH+SJODVRo79gGnqn6Lhoq+Nb0CmncP
-	 52fZOomUL8667LoeH0ZgCw5iQAMxNZy3qFwsp/Gt3bj8A5YmK735DUYEOqckreV/Knk4i
-	 D1uZMlAGtblSRVUr3FNUzLvCoKzykdpPNGKj5sG95KoslKuOrajx9AOWIazL0cXN39Ck2
-	 rOSoJZvjqKZoiwaGRjbkoEuJ6EJ/KciZfV5eB8EalCOVRiuef5HD9lPQhoInELNXIrsgM
-	 N/2zrJKFuJjzhwzzIzx6rDCARk+IzEGPYxwDpQhgG10YeoIx2OrVC+dlhD1QEorURFA==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795599328;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=0yUkBGKmBoC6GhNX7wcbNe62PEHvACOAwQiXFUd2RPI=;
-	b=3PNh2NfTImGH73IFpmemJDBSXqTphzfqW9SgZszDqRUdSr5IewWB0Zb9W0oLxlv/MRWL
-	 y58PK3Jx0rKrxmT41vq6+G8V09O5+4UWDvFBr5H8EzzaLpBb3F+R26UXcVzdy6O7+exLK
-	 8Tq4zkVIfuGXOuD1euePfGh4oPr3W4Ix72m3TruOV9ng5lNwluUFfaZjluQ9dzLRaBus5
-	 a7A3BOpT41Jjb9miO3VpH5oj07hYhK33X9D4NN05Px56FvGWwNnFGEhnatwy+O1biMV/V
-	 nBZcuCFLeW+uyiR7XIb6g2X2hNnklRB3pXqKFWum1zqtLmuy7LHcYfSOWteKUsV3L1Q==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 6E4BE1F000F0;
-	Wed, 25 Nov 2026 09:34:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795599328;
-	bh=0yUkBGKmBoC6GhNX7wcbNe62PEHvACOAwQiXFUd2RPI=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=Zex+jN/+37HMvNaBECWdUKjnUlubol4xzfXc7I3G3u1Iy2zSoZMMpUSnUMXjVBWjV
-	 2qp8mNfop9TM/bn80ojjR8p2wZSJIeFKLCQGxhYJWznnRK1JIop4EtRFit1LIJrEZ6
-	 mxhGIN624A+pfx6R57Bu+FaYzMAI7VnaI0tc4BigbCSLC/Rtx4fd3ajO5Tt5YJP6J2
-	 JJYWjasA03W/b4mKRLIwz3P9HNyT2Oc4b8PV9dGEfZx548JQOhQ4hygvBi7REXr1jt
-	 wg2FJ9z0QwQUhLHvCf9qDH12IullaBfoEIBhKTeoMqFmXHlQOaeHAiDl++ydAQkj1A
-	 6TrzeN7A7SMJw==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 2FD814CE2A;
-	Wed, 25 Nov 2026 09:34:38 +0000 (UTC)
-From: Jan Petrous via B4 Relay <devnull+jan.petrous.oss.nxp.com@kernel.org>
-Date: Wed, 25 Nov 2026 10:33:57 +0100
-Subject: [PATCH RFC v4 15/15] arm64: dts: s32g: Add S32G3-RDB3 SerDes
- routing variants
+	dkim=pass (1024-bit key, unprotected) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=dlNKRSCz;
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=dlNKRSCz
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=KrN/N635dcNol3PzgFTNVyGklmI4vZsX0of94NNC5ek43tISj+7buo2/8AmakFfz48wTtLP9IFZdn/6xmb0MIqtIdQ7D2dCdnI+jHEzpODCnZkubY7RMc48q8SCuyhQdOMov5a7DLO/Z4DEMnzmeG2XaRYhCJNYF+ZtMZv8fgsqfFxLRZ0b3tLSfaZTQlMO94Y7Gb2ihE9DfJXaFbCmRqEBf1SWutrtdp0vBMuQyVwqvbuKPASH0HZotAhQDWvR9IYq5fpmuJWXxWzIHRH/L7cL0Gz2DOoC2UfEhEc/NYXWLgt9WBJgmU4M8AoxyBckC+0nqvgpDzfgkST4DIibx7w==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/IoKp3p2fNWfiEhsj1mrgYTfa4Qr9k5HRicIBJVa//s=;
+ b=nRY3re9p1v68IPWI2mmU9kBMDGktkbK5kgknAuYtvpZzpJYE4Zl80+DbLjlBRZaGwKTpuUZyK51pYpnCKzmuTZlg0tAkGFJnrPuxNTgErlA0rac+vga5vJ64t1dO61WKQ5lGUBFReEVDdCJE76Y/XWr7LapMYWwA1BUTRFBjm8eZJo2GSACCBFaWszXPB8UAIZ1S3tTASnBPN00SeJLxCq1UgkmtR8EtniK9M8VoUa4AvFEDdp+Y28Ihd1KHDzJ8wQzoYzCTEQ1ypNU73cG6l+K3sLmXn0GnpHMGkT96SeQ/LqRJec5swe1OEsYsrK7b1MN7d/4pofjYc43jp0koRQ==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
+ 4.158.2.129) smtp.rcpttodomain=nvidia.com smtp.mailfrom=arm.com; dmarc=pass
+ (p=none sp=none pct=100) action=none header.from=arm.com; dkim=pass
+ (signature was verified) header.d=arm.com; arc=pass (0 oda=1 ltdi=1
+ spf=[1,1,smtp.mailfrom=arm.com] dkim=[1,1,header.d=arm.com]
+ dmarc=[1,1,header.from=arm.com])
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/IoKp3p2fNWfiEhsj1mrgYTfa4Qr9k5HRicIBJVa//s=;
+ b=dlNKRSCz4jm0mVlHn3kHOwQ2BEjk0d9vropoClj7FwGIPPWvWXX2cl2Id/LcTX8Bhi5uuJHHBansof9aB3XFrhRU2bUsN7Mypr2j2WzpM3ZMfk20OPq9Nq8YqrYi8zBIZZBSVp4Dat447BvDIwkuk42o6Eu5HuK+mFxe0XyQHrk=
+Received: from PR1P264CA0126.FRAP264.PROD.OUTLOOK.COM (2603:10a6:102:2cd::20)
+ by AS8PR08MB6310.eurprd08.prod.outlook.com (2603:10a6:20b:292::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.6; Wed, 25 Nov
+ 2026 09:39:48 +0000
+Received: from MI3PEPF00008494.eurprd03.prod.outlook.com
+ (2603:10a6:102:2cd:cafe::39) by PR1P264CA0126.outlook.office365.com
+ (2603:10a6:102:2cd::20) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.7 via Frontend Transport; Wed, 25
+ Nov 2026 09:39:48 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 4.158.2.129) smtp.mailfrom=arm.com; dkim=pass (signature was verified)
+ header.d=arm.com;dmarc=pass action=none header.from=arm.com;
+Received-SPF: Pass (protection.outlook.com: domain of arm.com designates
+ 4.158.2.129 as permitted sender) receiver=protection.outlook.com;
+ client-ip=4.158.2.129; helo=outbound-uk1.az.dlp.m.darktrace.com; pr=C
+Received: from outbound-uk1.az.dlp.m.darktrace.com (4.158.2.129) by
+ MI3PEPF00008494.mail.protection.outlook.com (10.167.240.155) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.3
+ via Frontend Transport; Wed, 25 Nov 2026 09:39:47 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=esrsQfJ8IzMhRYzt38msvr7ZySzbt8wVxK34vxPAd9FGXyXQqAVwnxaDeQd/sHvKK7NJxzw0mFWNoSUqBgEUFEfUfFxatC5rZ/siq9MjJP1zPyoVqlJScVChMzxUbJt6LCiZt57eT99mTfRsg2H+fSLPBjYcNNRDXVvPBAGBhGz58maXMpO420Q6ipzbwftioA/W5F2Telng+cJgB5fKnojRNqAqSqNP6+2/iYRtoYRGTt4Cv5KaNo+sRTs4oQURvXmlgG2FNKu9OdGaAUpEWw1FoTsvJ7yovFzdtCFCmbA/X6eGDPtTM2ZQQAT2Yvy94moapT9Ly3Zh9dfSobqSZA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/IoKp3p2fNWfiEhsj1mrgYTfa4Qr9k5HRicIBJVa//s=;
+ b=bqmD6ZrqdoSi2v9k6rqx22KwZcJZXmp3xKmfmUxsT7sMlo555gCkUTFUf4iId8gzXkDk7YLVgnKSB9JEIobG29pjjqsKqDaGPplGyG9Blz/v0LvQPjTg2QB784IjAhVpSaQCG971mo7yNRKF01coGgbpb0q60g09SuW91N3byKouwoXJw1L9oqJXShIlmIgo87w4u+GWbA8bBEgTsvlFGH6mi1j1PB6MlVbhYFHYCIB9VLmCLImxdevmNZiJscduEL2NwRl5MwG/6GrTT+0U3IakpZXlmCWMdBQW+Humg4xRFEnS/nKpYSc7vU+jc5tZuidGEMNqc4hN4tp/nNg+nQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=arm.com; dmarc=pass action=none header.from=arm.com; dkim=pass
+ header.d=arm.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/IoKp3p2fNWfiEhsj1mrgYTfa4Qr9k5HRicIBJVa//s=;
+ b=dlNKRSCz4jm0mVlHn3kHOwQ2BEjk0d9vropoClj7FwGIPPWvWXX2cl2Id/LcTX8Bhi5uuJHHBansof9aB3XFrhRU2bUsN7Mypr2j2WzpM3ZMfk20OPq9Nq8YqrYi8zBIZZBSVp4Dat447BvDIwkuk42o6Eu5HuK+mFxe0XyQHrk=
+Authentication-Results-Original: mx.microsoft.com 1; dkim=none (message not
+ signed) header.d=none;dmarc=none action=none header.from=arm.com;
+Received: from PAWPR08MB8959.eurprd08.prod.outlook.com (2603:10a6:102:33f::15)
+ by MI3PR08MB147672.eurprd08.prod.outlook.com (2603:10a6:290:96::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.14; Wed, 25 Nov
+ 2026 09:37:03 +0000
+Received: from PAWPR08MB8959.eurprd08.prod.outlook.com
+ ([fe80::71d3:7b21:3594:e33f]) by PAWPR08MB8959.eurprd08.prod.outlook.com
+ ([fe80::71d3:7b21:3594:e33f%7]) with mapi id 15.21.0639.012; Wed, 25 Nov 2026
+ 09:37:03 +0000
+Message-ID: <f0cc8236-d06a-4f2d-a9fd-e60977017979@arm.com>
+Date: Wed, 25 Nov 2026 09:37:02 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v11 11/16] iommu/arm-smmu-v3: Add CMDQ_PROD_STOP_FLAG to
+ gate CMDQ submissions
+To: Pranjal Shrivastava <praan@google.com>
+Cc: iommu@lists.linux.dev, Will Deacon <will@kernel.org>,
+ Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Mostafa Saleh <smostafa@google.com>,
+ Nicolin Chen <nicolinc@nvidia.com>, Daniel Mentz <danielmentz@google.com>,
+ Ashish Mhetre <amhetre@nvidia.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, rafael@kernel.org,
+ Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
+References: <20260929034510.2023173-1-praan@google.com>
+ <20260929034510.2023173-12-praan@google.com>
+ <0fe0d909-a01b-4f4f-9faa-c533b8925f25@arm.com> <awRDwxkrZjouy9b9@google.com>
+Content-Language: en-US
+From: John Garry <john.garry@arm.com>
+In-Reply-To: <awRDwxkrZjouy9b9@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PA7P264CA0516.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:102:3da::9) To PAWPR08MB8959.eurprd08.prod.outlook.com
+ (2603:10a6:102:33f::15)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,221 +156,96 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261125-s32g_serdes-v4-15-3bfe0589be8d@oss.nxp.com>
-References: <20261125-s32g_serdes-v4-0-3bfe0589be8d@oss.nxp.com>
-In-Reply-To: <20261125-s32g_serdes-v4-0-3bfe0589be8d@oss.nxp.com>
-To: Vincent Guittot <vincent.guittot@linaro.org>, 
- Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>, 
- Ciprian Marian Costea <ciprianmarian.costea@oss.nxp.com>, 
- NXP S32 Linux Team <s32@nxp.com>, Vinod Koul <vkoul@kernel.org>, 
- Neil Armstrong <neil.armstrong@linaro.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@kernel.org>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Bogdan Hamciuc <bogdan.hamciuc@nxp.com>, 
- Ionut Vicovan <ionut.vicovan@nxp.com>, Andrew Lunn <andrew@lunn.ch>, 
- Heiner Kallweit <hkallweit1@gmail.com>, 
- Russell King <linux@armlinux.org.uk>, 
- Philipp Zabel <p.zabel@pengutronix.de>, 
- Maxime Chevallier <maxime.chevallier@bootlin.com>, 
- Maxime Coquelin <mcoquelin.stm32@gmail.com>, 
- Alexandre Torgue <alexandre.torgue@foss.st.com>, 
- Chester Lin <chester62515@gmail.com>, Matthias Brugger <mbrugger@suse.com>, 
- Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>, 
- Pengutronix Kernel Team <kernel@pengutronix.de>, 
- Fabio Estevam <festevam@gmail.com>, 
- Richard Cochran <richardcochran@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org, 
- netdev@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, imx@lists.linux.dev, 
- linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
- "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
-X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795599274; l=5200;
- i=jan.petrous@oss.nxp.com; s=20240922; h=from:subject:message-id;
- bh=ey+259q8NVdz+nmA6w91HlJzOAXDIhQhflExVQ+Y8o0=;
- b=O0br6DpDGuG00R9/Celm9Vz7oEv9fLtAFCfkd5v/N6CHAZKEdn/Imv4bxMILlCtnoOJSiljUK
- aZxBB69RSipClJeod4fr8tGUD+wbk0T49UrIEPVkvvKgfIFgP0hgD4B
-X-Developer-Key: i=jan.petrous@oss.nxp.com; a=ed25519;
- pk=Ke3wwK7rb2Me9UQRf6vR8AsfJZfhTyoDaxkUCqmSWYY=
-X-Endpoint-Received: by B4 Relay for jan.petrous@oss.nxp.com/20240922 with
- auth_id=217
-X-Original-From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
-Reply-To: jan.petrous@oss.nxp.com
-Content-Transfer-Encoding: 7bit
+X-MS-TrafficTypeDiagnostic:
+	PAWPR08MB8959:EE_|MI3PR08MB147672:EE_|MI3PEPF00008494:EE_|AS8PR08MB6310:EE_
+X-MS-Office365-Filtering-Correlation-Id: bf39f02c-a05b-4bef-aaf4-08df4ad80bb2
+x-checkrecipientrouted: true
+NoDisclaimer: true
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam-Untrusted:
+ BCL:0;ARA:13230040|366016|23010399003|7416014|376014|1800799024|4143699003|261028144727099003|10067099003|261026121527099003|261021135927099003|261009223027099003|56012099006|11063799006|261021121427099003|261102123227099003|261022105027099003|261026140227099003|18002099003|22082099003|3023799007;
+X-Microsoft-Antispam-Message-Info-Original:
+ IrfJRIacXhRx+zzuhQZhmpamSkGxk9ttVwwKvD/PhzWdn38x1786Rv54N+i/yAQFxE1zQPPbbaVJfQwVFnhE++EqHmKjvlxRXwgNmhBqCB4gvfguGkxZ/XVcsVWmPOcGAgErJUP62pkJmDE35dOWwoHt9Yn7gKj+5BPVYMfhFlERglJ+2afkjDyjTZzWYAkf07fKloGvaceWuP5cfv6b7Sd56rX9hG7GkqrWZtBYwttp5hjHDgQi8dEZQ0LKyqukC+hL5K+978u2LhksNwx7HtzEGVyYhpBtxIAJ8i72b9YA/gO/PregrizRf4JqwH7o3aYQi6Hoz+qFyL9+Bo6704HzH6k9Cpqv9CLtAgNHFsEbJd0QEZaSdSYCU0ZYnIjvds+wSWR/RBC72cfdy+hSZ27ANbtibfHzlUfIy6ZIeP1EsVe8lnd/gEoE2o+mTDUIEhYU8vJLyp57Bcs/YrWiVRPrwjE3qIx1cwGIx342v57vvToNOvGzUtAgRGtnvFRcNrxR6l3yk2mCNcS3W/zWzEcq0cP5EJcirKISqgWwINv0uwcIUvrlx7jluMbcaEwiJQqOp5Zbfbu7dQvmtib5gP+WVbKMMpaRvOHI8ICH+NB1n8roN579kW78QpydnUIbBO7t6qB6YfMYh6Lyt4v1fXIUs7t882sU+BJW2VP5ELg=
+X-Forefront-Antispam-Report-Untrusted:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAWPR08MB8959.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(7416014)(376014)(1800799024)(4143699003)(261028144727099003)(10067099003)(261026121527099003)(261021135927099003)(261009223027099003)(56012099006)(11063799006)(261021121427099003)(261102123227099003)(261022105027099003)(261026140227099003)(18002099003)(22082099003)(3023799007);DIR:OUT;SFP:1101;
+X-Exchange-RoutingPolicyChecked:
+ ZVXnYG4VCGa32OcZg15/uJomKuwyUbMIhEswmHMUEUkh9p8CxRlLNIM6ANAWX++H48hBhQpswpE1IBQ9sOjIYCHZ0Li7ugMol2P0RyphwgZfacKDlKBiYyPqynV6nk5L5aQmPf0IX1Ya4/GnyAWQJck+1CP0RpH1j26gl2Jbi9apwe2lqg/E23rACBLastzGQfZ8oGTkWjZdDH61RkYAh7IkBFEavNjCNT7wCG7tp/IPzB+hust7pEHeDz3va7VAKEaj2KlV4hnSDLkYUzKkQjA2H0FXNdk7p9XFkNyrsM8/Fjds3pVvf+7f1e1HIF70c2jHD9xu2B2+EE81/SdxcA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MI3PR08MB147672
+X-EOPAttributedMessage: 0
+X-MS-Exchange-Transport-CrossTenantHeadersStripped:
+ MI3PEPF00008494.eurprd03.prod.outlook.com
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id-Prvs:
+	133423be-c1e8-4abe-4b62-08df4ad7a97c
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|14060799003|376014|7416014|35042699022|23010399003|1800799024|82310400026|10067099003|56012099006|11063799006|261022105027099003|261028144727099003|261026121527099003|261026140227099003|261021121427099003|261021135927099003|261102123227099003|261009223027099003|4143699003|22082099003|18002099003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	D/j4ROPSh8FxHKg6GyZZBoEhJyKYRJg0skeCSB0k9CI7766px4p2p9KdurLOQcxqR1x6Tmb/PFBj/m0MteaLqQioaSZdHuqcERLFiIY6X4xv0nQ0L5+e/0UDcuHoqLSx6ShC+KpSLgzEU2t/4vIHEQenTgujRB/KTgHf6Z+mv1zVK/dmzRxzO+bl+HU7lmVAEUGvkkTFVX7KCkElGvLVQ0FhL1Qdwy8iST1SJyLi060m/N42SGv2kMjWrnfa76nsxmQw57qybyS7a/3cA8U/Id1489rrS4tC1QZBMAXniq+Q+DQv4Za8K1jEAM5HI4BPB38n+pnPdXzzOPjWXM6fUm7yMHqpeIN3UF4PyZtO7+zMzPLelgRZhxwYZ5XtEjXOhN50Cw7juKDkI2qQfBz0NXkm8WFeq7QOJxlz4kA5W0WLp2LTWlUlH3sxXsoi6N1EwI4aGGuHODu5VuVk+iTzBptTeNESv7sF2L9dyv4Ps9Ps3O/RCeswBpwPDq9xH+cXmrdzO7O24QmMsfKG42TvWX56uXv+0k8ltaREJ8QH3GOkHHNdwzcyhau4/BmApxaTw4Utl/JImN60sgD5FnXWWDWNXOMfvc9LQ46ttnMz214O9TPeo2J+cxla6g5JjLD+NzIc4vzc3ta0CjtZMtyNUuJyQq9fWRSxq6BMd9PF3fFUmsox2WkQPxXJND7SFBqcqlckZRXjPuhYsme6K47Mtw==
+X-Forefront-Antispam-Report:
+	CIP:4.158.2.129;CTRY:GB;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:outbound-uk1.az.dlp.m.darktrace.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(14060799003)(376014)(7416014)(35042699022)(23010399003)(1800799024)(82310400026)(10067099003)(56012099006)(11063799006)(261022105027099003)(261028144727099003)(261026121527099003)(261026140227099003)(261021121427099003)(261021135927099003)(261102123227099003)(261009223027099003)(4143699003)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	C0BVN4NM6NuS6NmvS9TwFWwz2yDs7dEZfageqFUv8hIVl6/XRLsXRvmv0mlBKsnE2u77E+y4tFZAwRaZAnwNSHTiRtsoMinYyYrjul+QLYZoWGMLjGsScUDfR1LmfgTvR0kflTEckk1vbDL3JRosA7zZv8TqGSZPrrWwncQ07Rg+hB+Yehc8Tz4hrb5h4Wa3hGBXUx/eNH5xacJon+HkUt3ZShqdFimHMVy80cOEBVmIzoSROWoMUwyUSAm7hf3WHITfLygZQ5ckJdBrG6AJqJJ575hXs+g+U2jy48w9uSgSa/f6ft18MJ5OgFr5CZlpM8EsVFdkxePuIfT848klw0RQG5eHU2d6E7kOf8miYW8Gmau/S0XOOfxELdN2jUMcNUFvUAyHQ9dVpBN9dt0BXVCiuobjK+/x+AKOK4T+MoGrjw1Kno8dEDsEiXFNEGdb
+X-OriginatorOrg: arm.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2026 09:39:47.7787
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: bf39f02c-a05b-4bef-aaf4-08df4ad80bb2
+X-MS-Exchange-CrossTenant-Id: f34e5979-57d9-4aaa-ad4d-b122a662184d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=f34e5979-57d9-4aaa-ad4d-b122a662184d;Ip=[4.158.2.129];Helo=[outbound-uk1.az.dlp.m.darktrace.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MI3PEPF00008494.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR08MB6310
 
-From: "Jan Petrous (OSS)" <jan.petrous@oss.nxp.com>
+On 11/23/26 13:46, Pranjal Shrivastava wrote:
+>>>    		u64 old;
+>>> +		/*
+>>> +		 * If the SMMU is suspended/suspending, any new CMDs are elided.
+>>> +		 * This loop is the Point of Commitment. If we haven't cmpxchg'd
+>>> +		 * our new indices yet, we can safely bail. Once the indices are
+>>> +		 * committed, we MUST write valid commands to those slots to
+>>> +		 * avoid indefinite polling in the drain function.
+>>> +		 */
+>>> +		if (Q_STOP(llq.prod)) {
+>> I know that there has already been other comments on this "stop" flag and
+>> whether to use it in this way... but, if CONFIG_PM is unset, could Q_STOP()
+>> ever return true?
+>>
+> No, the flag is only ever set from the suspend path. Since I'm moving
+> the PM bits under CONFIG_PM in v12 anyway (per Will's comment), I'll
+> make Q_STOP() evaluate to false at compile time when CONFIG_PM is unset,
+> i.e. IS_ENABLED(CONFIG_PM) && (p & CMDQ_PROD_STOP_FLAG), so all of these
+> checks (including the one in queue_inc_prod_n()) just compile away. Does
+> that sound good?
 
-The S32G3-VNP-RDB3 wires GMAC0 to an on-board KSZ9031 RGMII PHY by
-default. Add two board variants which route GMAC0 over SerDes_0 for
-SGMII instead:
+That should be fine.
 
-  - mode 1: PCIe x1 on lane 0, GMAC0 SGMII (XPCS0) on lane 1;
-  - mode 3: GMAC0 SGMII (XPCS0) on lane 0. Lane 1 (XPCS1, PFE_MAC2)
-    has no consumer, as there is no PFE driver, and is not described.
+> 
+>> And it would be nice to not add extra logic in this loop. It is very timing
+>> sensitive, and adding extra checks can increase the chance that the cmpxchg
+>> fails (bad for performance).
+>>
+> That's a fair concern. A couple of things here:
+> 
+>       - The check is on our local llq copy, which we've already loaded, so
+>         it's a bit test + a (not-taken) branch, with no extra memory access
+>         before the cmpxchg.
+> 
+>       - Per Will's suggestion, I'm making arm_smmu_cmdq_poll_until_not_full()
+>         bail out on the STOP flag, which lets me drop the check at the top of
+>         the loop and the extra READ_ONCE(), leaving a single unlikely() check
+>         right before the cmpxchg.
+> 
+> It does need to stay in the loop though, since the cmpxchg is the only
+> point where checking the flag and reserving the slots is atomic.. a
+> check any earlier (e.g. in arm_smmu_get_cmdq()) could race with the
+> suspend path setting it.
 
-The variants are full .dts files that include s32g399a-rdb3.dts, not
-overlays: they drop the phy-handle of GMAC0, and /delete-property/ has
-no effect in an overlay.
+I just find it odd that we try to elide commands here (at the point of 
+command submission). I would assume that any commands would not get this 
+far - or even be submitted to the queue - if at the point of entering sleep.
 
-The routing is described by the consumers: the PCIe root ports
-reference lane 0 with PHY_TYPE_PCIE, GMAC0 references its lane with
-PHY_TYPE_SGMII and XPCS0, and takes the PCS from the SerDes through
-pcs-handle.
-
-The mode 1 variant also enables both PCIe root complexes: PCIe_0
-reaches the M.2 slots when board switch SW17-2 is ON, PCIe_1 the PCIe
-card slot. SerDes_1 carries only PCIe_1 on lane 0, as there is no PFE
-driver to reference lane 1, and runs the first matching mode, PCIe x2,
-with an x1 link.
-
-The SGMII lane goes to the on-board SJA1110 switch, which the variants
-do not describe, so the MAC side is a fixed 1G link.
-
-Signed-off-by: Jan Petrous (OSS) <jan.petrous@oss.nxp.com>
----
- arch/arm64/boot/dts/freescale/Makefile             |  2 +
- .../dts/freescale/s32g399a-rdb3-serdes-mode1.dts   | 65 ++++++++++++++++++++++
- .../dts/freescale/s32g399a-rdb3-serdes-mode3.dts   | 40 +++++++++++++
- 3 files changed, 107 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index a80cccf34eb5..f92670254c6a 100644
---- a/arch/arm64/boot/dts/freescale/Makefile
-+++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -1047,5 +1047,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-phygate-tauri-l-rs232-rs485.dtb
- dtb-$(CONFIG_ARCH_S32) += s32g274a-evb.dtb
- dtb-$(CONFIG_ARCH_S32) += s32g274a-rdb2.dtb
- dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3.dtb
-+dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode1.dtb
-+dtb-$(CONFIG_ARCH_S32) += s32g399a-rdb3-serdes-mode3.dtb
- dtb-$(CONFIG_ARCH_S32) += s32n79-rdb.dtb
- dtb-$(CONFIG_ARCH_S32) += s32v234-evb.dtb
-diff --git a/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dts b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dts
-new file mode 100644
-index 000000000000..c881376db27a
---- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode1.dts
-@@ -0,0 +1,65 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
-+/*
-+ * Copyright 2021-2026 NXP
-+ *
-+ * NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3),
-+ * SerDes_0 Mode 1: PCIe x1 (lane 0) + 1G SGMII via GMAC0 (XPCS0, lane 1).
-+ */
-+
-+#include <dt-bindings/phy/phy.h>
-+#include "s32g399a-rdb3.dts"
-+
-+/ {
-+	model = "NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3), SerDes_0 Mode 1";
-+};
-+
-+&serdes0 {
-+	status = "okay";
-+};
-+
-+/*
-+ * SerDes_1: PCIe_1 on lane 0. Lane 1 (PFE) has no consumer, so the first
-+ * matching mode, PCIe x2, is used.
-+ */
-+&serdes1 {
-+	status = "okay";
-+};
-+
-+/*
-+ * PCIe_0 reaches the M.2 slots (M-key or E-key) when board switch SW17-2 is
-+ * ON, PCIe_1 the PCIe card slot.
-+ */
-+&pcie0 {
-+	status = "okay";
-+};
-+
-+&pcie0_rp {
-+	num-lanes = <1>;
-+	phys = <&serdes0 0 PHY_TYPE_PCIE 0 0>;
-+};
-+
-+&pcie1 {
-+	status = "okay";
-+};
-+
-+&pcie1_rp {
-+	num-lanes = <1>;
-+	phys = <&serdes1 0 PHY_TYPE_PCIE 0 0>;
-+};
-+
-+&gmac0 {
-+	/delete-property/ phy-handle;
-+	clocks = <&clks 24>, <&clks 17>, <&clks 16>, <&clks 15>;
-+	clock-names = "stmmaceth", "tx", "rx", "ptp_ref";
-+	phy-mode = "sgmii";
-+	phys = <&serdes0 1 PHY_TYPE_SGMII 0 1000>;
-+	pcs-handle = <&serdes0>;
-+	status = "okay";
-+
-+	/* The lane goes to the on-board SJA1110 switch, not described here */
-+	fixed-link {
-+		speed = <1000>;
-+		full-duplex;
-+		pause;
-+	};
-+};
-diff --git a/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dts b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dts
-new file mode 100644
-index 000000000000..8b90d5f14d2a
---- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/s32g399a-rdb3-serdes-mode3.dts
-@@ -0,0 +1,40 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
-+/*
-+ * Copyright 2021-2026 NXP
-+ *
-+ * NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3),
-+ * SerDes_0 Mode 3: 1G SGMII via GMAC0 (XPCS0, lane 0). Lane 1 (XPCS1,
-+ * PFE_MAC2) is not described.
-+ */
-+
-+#include <dt-bindings/phy/phy.h>
-+#include "s32g399a-rdb3.dts"
-+
-+/ {
-+	model = "NXP S32G3 Reference Design Board 3 (S32G-VNP-RDB3), SerDes_0 Mode 3";
-+};
-+
-+/*
-+ * SerDes_0 mode 3: GMAC0 via XPCS0 on lane 0. Lane 1, PFE_MAC2 via XPCS1,
-+ * has no consumer, as there is no PFE driver.
-+ */
-+&serdes0 {
-+	status = "okay";
-+};
-+
-+&gmac0 {
-+	/delete-property/ phy-handle;
-+	clocks = <&clks 24>, <&clks 17>, <&clks 16>, <&clks 15>;
-+	clock-names = "stmmaceth", "tx", "rx", "ptp_ref";
-+	phy-mode = "sgmii";
-+	phys = <&serdes0 0 PHY_TYPE_SGMII 0 1000>;
-+	pcs-handle = <&serdes0>;
-+	status = "okay";
-+
-+	/* The lane goes to the on-board SJA1110 switch, not described here */
-+	fixed-link {
-+		speed = <1000>;
-+		full-duplex;
-+		pause;
-+	};
-+};
-
--- 
-2.55.0
-
-
+Thanks,
+John
