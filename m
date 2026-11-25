@@ -1,53 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795565430;
-	b=W98iXKXwsuM9ZdI8gOarScWeMEQpCfycufPQqoZrdE/JzA8ifwHd97kVYeVPPOhob6Ta
-	 T3YrMYMtoaw1jCo9YtWKPT9UcQlCi+y4qnHXRKp/2oJ8pKM8Tcgxe4HaiNZZxWVbW/b3Y
-	 xEMaZcp55PpPRTvGU+yEuOPV+MtqrQh9oiI6iiA5K4smGsOuf98ueAm247JOhrCiqcPic
-	 hM2coFkMwKGKotLBr0vGhXC7vr50cYFdrGmUJVBf2wekkkAn/RMxMBO+Xvc2+xzuba0Gg
-	 Ez0KP2l4hfUiqEZVSdHRD9hSY8Kn7Di+r2LiqLvHt9xGbwUn1YUg225tme7gjEj7Nug==
+	t=1795565619;
+	b=lB4Xlc8pVuj592/auq5RLnvJYYuThRy9WAbBe8ySRtG5pQ4Y+RuvpwjpKHcpQ7Buv39V
+	 cuO1pxOmQjxiklg0Xq/05yriRGLG4v3dy1ZDzUypGm3JJTEv8PrLRTjtw5aignrYCo51E
+	 FxtG+XdcpT8Gp7quPIjfl36sN9bMnL/tfnWrrKelDGdyTC0Ld+QZiC72xz/dKDdIQa8Q+
+	 29gvfMFe8gLxc5MjLgS9AWSw3kIo79OxTlhegzK0nsxxtR6GB/43II1Kv5zLjW9jN94P8
+	 kTfy966oVo+aLd894RD6QaNUbJBW1GX4Paki6aag02QfENcT7xmRml+52Pb1HerQSaw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795565430;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=UXIld9QrTe+UE0l/81XlCBtJ2t8TTqOmbpSiK2nPqBM=;
-	b=v7nOtYU42ZGxQmECrch5Gl8NOtbplJ3IfIjKDQbTjXK+hG4dSBEbPW+aGi1alkSpiWDB
-	 aZoPjsphCLFmFm7c0cct7HBMfiou+l0ce+YkEXX9aim1RXcSrYdZBXIeJR4AqeO6i8Q6g
-	 UXTWKFONomNp9h3r654MqElZ841+kzW3Lis3P6BRkpyRYwYON9Ar/rsiMPGgLRhsiS1nQ
-	 rDYQalG6Z1aIx4LviDrOCQPa7nvWa+LG5z+Nze0P1TAPVEjUUT3G9GQXZlabN2/ld70F7
-	 zkyN2yVVu1JhkKkH8aJxOZMhzSkJw8BXYnt4awvImjOoL/jfArDDZOvFewWkW3Iz2aQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795565619;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=H5JA1xiHcuO5av/TCwEs6eB3F56+e7cAUCqQUzm2IKE=;
+	b=z/GVWpB5shUbdYeyEc20Nni5BwyrRwGIT+Mf/H31cdKIrVJNjDaHz2tYCCeI6QKyx3Cz
+	 gBgHsPN2DaW0jqbhjZ3Qap00yfNeZUHAaA2J32M4of197qOapudL3Oj0N9rEvucSEOZDO
+	 /pUy73bIEEJq+/GS67Nl/oJfKBOI2yXFObqU3p4WNcxLhhHksW4yUZYBnKX0fWXvBpzgl
+	 cyke5zG3u21kRrgtpAAxP8MMg3Qvcfu77IqKf7GGdowkauBs4dXqPPoY0nvIRLMQvLbQo
+	 T600N55RD04Vc3aNeUU3EFT3IFWN0nyml1DyyAWq0gHvO186h2pVKIEUli+TfeouePA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gyHLuBJt;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=infradead.org;
+	spf=pass smtp.mailfrom=infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=v9zYfpM3;
+	arc=none smtp.remote-ip=198.137.202.133
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7255C606A31E;
-	Wed, 25 Nov 2026 00:10:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5C80606A31E;
+	Wed, 25 Nov 2026 00:13:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E5C80606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gyHLuBJt
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A1281F000C0;
-	Wed, 25 Nov 2026 00:10:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795565429;
-	bh=UXIld9QrTe+UE0l/81XlCBtJ2t8TTqOmbpSiK2nPqBM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=gyHLuBJt3fYGXFD2OttwhMGc+aj+vkZjnBE+33di7izJVDOoiXGvVgBi4XyXFV8ER
-	 UxfFXEtmtIN7a5Sz9nUNgS8Jf/v9VOAsm9pWjG+VNeE0Jnbzw6ApZnjYjoITt7T0jO
-	 FtMPYzJznhDhrYpigZI0eDuzEbWfIgxm5TEj4Ixfiyn2tzey28WZi0fR9VDKkgppZQ
-	 9iA7usey5lc/xHxF6aWDP1jwUa25nDaOrSKKbg/bSkJnNsbrYES8BVjaJ6ImIRT7Qd
-	 StisrFZkSJQH5xf3MEC39fXTgCGlzHwaayQUguLfB0eBypXYAWvtWDBB3xX0kTYykW
-	 AL1aQC1FUaUAw==
-Date: Tue, 24 Nov 2026 18:10:28 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joshua Machauer <machaujo@amazon.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Dave Jiang <dave.jiang@intel.com>,
-	Richard Cheng <icheng@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
-	nh-open-source@amazon.com
-Subject: Re: [PATCH v2] PCI: Skip the CXL state update for a VF
-Message-ID: <20261125001028.GA1195082@bhelgaas>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=v9zYfpM3
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=H5JA1xiHcuO5av/TCwEs6eB3F56+e7cAUCqQUzm2IKE=; b=v9zYfpM32kAvGWDRKN8MU6P6/i
+	THgQ6XYg3TtUofGeL2k7Si7qt22CXocALWePyGThKmz1qAlHdno0YaX4hMbpi9yfZlUtHK6K1eXlL
+	GeQuqTgf4XWzLJy2chYc+tSG2mRITN+XTa5/pQFz7cU8pYCeZvHTNEpGTic0Ra3Bn7X6rG9WSY590
+	c+OuNmPeBIWBhoTdq/4F/GyhXL88V+9v+Cfhpu0nrLW61HOrtf46r6ZIWqNplXFPNIO5S1UpJrbac
+	fYM0SjlPu530GhgWnDw17IOQ2+0z2pmZF19OsGitN/UbkR2o0ojmQxrw6eR3DwYptge1D3Fb5xrr6
+	9A7gm4og==;
+Received: from [50.53.43.113] (helo=[192.168.254.34])
+	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xW0dS-000000088Rc-0EKa;
+	Wed, 25 Nov 2026 00:13:18 +0000
+Message-ID: <1bc8f048-4d35-484b-af60-2d13541e683f@infradead.org>
+Date: Tue, 24 Nov 2026 16:13:16 -0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,63 +58,86 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261123162035.79133-1-machaujo@amazon.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 21/33] driver core: Introduce a generic device trust
+ level
+To: Leon Romanovsky <leon@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
+ Heiner Kallweit <hkallweit1@gmail.com>, Russell King
+ <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Johannes Berg <johannes@sipsolutions.net>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ "Joerg Roedel (AMD)" <joro@8bytes.org>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ Lu Baolu <baolu.lu@linux.intel.com>, Johan Hovold <johan@kernel.org>,
+ Eric Dumazet <edumazet@kernel.org>, Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Nipun Gupta <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
+ Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+ Chris Lu <chris.lu@mediatek.com>, Mans Rullgard <mans@mansr.com>,
+ Alan Stern <stern@rowland.harvard.edu>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, Andrew Morton <akpm@linux-foundation.org>,
+ Cornelia Huck <cornelia.huck@de.ibm.com>, Andrew Morton <akpm@osdl.org>,
+ Jeff Garzik <jeff@garzik.org>, "Rafael J. Wysocki"
+ <rafael.j.wysocki@intel.com>, Bart Van Assche <bvanassche@acm.org>,
+ Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+ Dan Williams <djbw@kernel.org>
+Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
+ linux-input@vger.kernel.org, netdev@vger.kernel.org,
+ linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, iommu@lists.linux.dev,
+ linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
+ Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
+ Greg Kroah-Hartman <gregkh@suse.de>, linux-sound@vger.kernel.org,
+ Jason Gunthorpe <jgg@ziepe.ca>
+References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
+ <20261124-device-trust-core-v4-21-037eb0d17b1f@nvidia.com>
+Content-Language: en-US
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20261124-device-trust-core-v4-21-037eb0d17b1f@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Nov 23, 2026 at 04:20:35PM +0000, Joshua Machauer wrote:
-> set_pcie_cxl() runs for every added device. It first refreshes the CXL
-> state of the upstream bridge, which walks that bridge's extended
-> capabilities and recurses up to the Root Port, and then searches the
-> device's own extended capabilities for the Flex Bus Port DVSEC.
-> 
-> For a VF neither step changes anything. A CXL device exposes its Flex
-> Bus Port DVSEC through Function 0 (CXL r4.0, sec 8.1.8), so the search
-> in a VF finds nothing and the VF's is_cxl stays false. The bridges
-> above a VF are the ones above its PF, which were already refreshed when
-> the PF was added. Because enabling SR-IOV adds the VFs one after
-> another, each add repeats both walks without effect.
-> 
-> Return early for a VF. Every device keeps the is_cxl value it has
-> today, and the bridges above the PF are no longer refreshed during a
-> VF add.
-> 
-> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-> Signed-off-by: Joshua Machauer <machaujo@amazon.de>
+Hi Leon,
 
-Applied to pci/enumeration for v7.5, thank you!
-
-> ---
-> v2:
-> - Shorten the commit log (Dave)
-> - State that VF adds no longer refresh the bridges above the PF, and
->   cite the spec section in the comment (Richard)
-> 
-> v1: https://lore.kernel.org/all/20261119164219.51540-1-machaujo@amazon.de/
-> 
->  drivers/pci/probe.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 9a178e0e5f7f..e302f9dabddd 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1717,6 +1717,15 @@ static void set_pcie_cxl(struct pci_dev *dev)
->  	if (!pci_is_pcie(dev))
->  		return;
+On 11/24/26 1:43 AM, Leon Romanovsky wrote:
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 0b3c140babd94..8a94482f0b19b 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -1259,6 +1259,20 @@ Kernel parameters
+>  	dell_smm_hwmon.fan_max=
+>  			[HW] Maximum configurable fan speed.
 >  
-> +	/*
-> +	 * A CXL device exposes its Flex Bus Port DVSEC through Function 0
-> +	 * (CXL r4.0, sec 8.1.8 "PCIe DVSEC for Flex Bus Port"), so a VF has
-> +	 * none. Its upstream bridges are the PF's, which were updated when
-> +	 * the PF was added.
-> +	 */
-> +	if (dev->is_virtfn)
-> +		return;
+> +	device_trust	[KNL]
+> +			Enable device trust with blocked as the implicit default.
 > +
->  	/*
->  	 * Update parent's CXL state because alternate protocol training
->  	 * may have changed
-> -- 
-> 2.47.3
-> 
+> +	device_trust.default=
+> +			[KNL] Set initial trust policy for all devices, including
+> +			hotplugged devices.
+> +			Format: { default | blocked | adversarial | unrestricted }
+> +			No trust options selects legacy unrestricted mode, preserving
+
+By "No trust options," do you mean using
+	"device_trust.default="
+or just
+	"device_trust", which says above means "blocked"?
+
+If I want the status quo (before generic trust levels), do I need to do
+anything? If so, what?
+
+> +			bus policy and existing authorization. Otherwise blocked is the> +			implicit default. An explicit value wins regardless of option
+> +			order. default preserves bus policy; other values replace it.
+> +			unrestricted disables runtime policy changes.
+> +			See Documentation/driver-api/driver-model/device-trust.rst.
+
+thanks.
+-- 
+~Randy
+
