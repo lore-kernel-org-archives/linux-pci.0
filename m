@@ -1,107 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795646934;
-	b=NKTq/4Epa2fEW1v/rZPHUeYP1zQwAysPpnl4mCNhe6RMlOkZyZQQoqpd7myof01FV1IZ
-	 ++TWhDt+SFzwUyImhwtMzPuYhtt+sM/eH4RNUgZ/F6y8RoFe3/nrXZEXbXZiHD0W3KaGF
-	 tcQyy12jXKWn8BRDAU8Pf/jwzBjYeCgjyJFqOb+zuwrGkXd8L/I0swcIHu38uDPRZTCr4
-	 3NCFigoHSJTEE/WLMcslByEeSNvV2A6PzllihpCWBQaSqUDpln0/ee/J1ZROfbXqFHiQA
-	 +YZ4WLeeOod/0nVlgEA/ZjZT4JEUk2Pj86r9nCAXzyBxTE58OJPy109ELc7NuLyMR5A==
+	t=1795648183;
+	b=4+CF7cRBb1w6BcnsOXtSf0EeMHskkAL/kS485c224uYulOMefOJFe24gZrDhMZE/P5rp
+	 Jfo+0sjD2dRvSpNCbYiW3MQqFcAjeoTBzjxlFqMIezfGiFQ1oF1EEE1poBtIozhpbnyKl
+	 a9T5/A0gxLKK5SpurXYT3+szuQIdB/yuz8J0HeagmyghMwwznhrLR8Uc3Y67JMn+dxFFe
+	 bkip0nVEkJ3ope7ftrLyNsR+c7YUI4eZdZjOT083or4XS5NtqZwtsNaDPIylK5mxbQZvM
+	 DjA4tQJVjDWd/QtFbEEPFW5TbY2iE8L24cJhoNDGdJptVqNxG1pR1J5JjAYyIUIz2OQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795646934;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=YDsDCXLkXL3cNo22jNaL7+utbyOJuM3+sdQzz79cB1A=;
-	b=tSnpBuYT0HnqyMDz99M28tcHOz/MtRttEVqOLpztC421+82C+hgX4684jvRX9153v4br
-	 uhilBsatt+r3mnRxX0Pa/i3kMyUxRiJ2Xt2IwpXXDDdtQm+SOJtPRhjkmns0Qe4H8xOLQ
-	 f2P+R5c1h4jdq1wW5UZDJuMlOvoCJX45E+ty0+MepJ35d1mXmVI6eEJyAiTWNN1QvWsIp
-	 lCmlpKIpm95N9WNPP4pgjA3tU1aLRqSzvF77qs9SbdeWW15QTSJWtQl50dohghud3Rk19
-	 6+qJyuDdJ5HlJJi4UaWgT2Fbxl0jFIGvnGeuxmDYQ0uCMEq0R9hWJZ+ddtYZJY7kCgA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795648183;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=0K2q2UEeZYBetOeifmL58FNhfj12r0n3qbkEwWcwggE=;
+	b=Z8I0aHhU/mDXqyCi98h8sUd88DGJ7m9AnJG9urGFWw9eGdf2D6nu56YQewjazAbWjEI7
+	 0e/veLXFEXz2J9c1/e9lJ81Tfoa8Vs3IpBo4Z8ppZnCC1uG5uEgPgMFJq4huGIhxLs95p
+	 kIg/61sJ5xMY0Pjm0Hoi7F4ahUUzIchYhuOUoj64Hq0tnIt7unQe7bR0gOnFT75EUiMke
+	 cGmxFNw5zG9K1kWfCd+mCNvbHMgiof2dvfbenZWFAqWkK8hseqAOLBodg5NzDqwAryrbL
+	 CrycNEbmAtNsCbLzmHz4c7qr9K/of1SsjSYh8EUQOueopMvT+wTQwjyYGwW6hqPTdIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lHhUDsm3;
-	arc=none smtp.remote-ip=209.85.215.172
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Lvs3zutK;
+	arc=none smtp.remote-ip=198.175.65.21
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABB40606A6B5
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 22:48:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ABB40606A6B5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B58EB606A31E;
+	Wed, 25 Nov 2026 23:09:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B58EB606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lHhUDsm3
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-cd6028ff33fso3276750a12.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 14:48:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795646926; x=1796251726; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=YDsDCXLkXL3cNo22jNaL7+utbyOJuM3+sdQzz79cB1A=;
-        b=lHhUDsm3vzYxbrG0XKMHpULVIRUum6mQ2gyPAuoK9IQgAQ94X3IXkwhla9s9ac0/ar
-         zxJESCPJbraVYEhyqdQzsE4Vhp48XYK8zEeYSQjwUPqKPKvOCqX3GPwMWe82PhP8uHMj
-         O1jOXSnR9sTWpVtbFr6ptxyGM3tIOGbh3leES2Rh3ziQe4x1WnMDk88dXg1um6Fgu446
-         IHiVmFt4YKFpBhn3n/D8e3a3jHsSDkHXpPTa0P5f4HvsGDmJfRcyzd0L1VF+Ppah8klJ
-         MLICsutSRHytfv9zlJCgUL8z/5nvc678T4dYuYzY2AKebt4yVd8XOs5T6scTQbPnaUQ0
-         o+aA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795646926; x=1796251726;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=YDsDCXLkXL3cNo22jNaL7+utbyOJuM3+sdQzz79cB1A=;
-        b=TdH19CZh/CdQgGw4WVsoMOZW99JFI3/HuQiHmLcxi78dwPADJHNI2eupnAKGRPiWOI
-         lsDD+oyc5Sp0OhgQznMkLQdboyjZZR3e7Q8e0W1gkwKou+fPkTF+xxSoyBtuhGMeLSgr
-         l6KMDrloYJld32e5mc7qmkx1ijHm44e3XTBlUCwxEhSNKXo21qSHlOOIuAW6frQ3s1Uu
-         KLKiik+qpnqiNCLV5c+8XO1dp/cdhUaPnNQwjuhWDpoSpImrojbFWq7HVGgwE6IaWc/b
-         RLhtIBnFeC0hKqC3H4N83OZSiZMAdX9DAvj1xcHrZ4p9OvXtLAq7orE7A915amfENgnt
-         J1UQ==
-X-Forwarded-Encrypted: i=1; AL+hErH+cmvowptquxbzNDvH4nYcS+O4vtThzX1X8kdFYqLq2WbsFZ3XJNdjrj1oz6k7TFHDdVjKxdxJXJo=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9U6KT89f0gBUDpMe2kBJ757w0PFlb66x5lZfr+8nvyELuSYA1B
-	d+lTM7bo9fhz5DmtjmTPq+ehB8imzGlMJtfWCQkshZ1A3rYtPOwm8hGW
-X-Gm-Gg: AZFdTZe2gbmPHYpQqCEIGomChWJeLoeA2z4MO5K2QpiV0G18nCExz5YnhJRTCctplzJ
-	VMJ/rWDnquqTBtq7spKs6LduzGiAP0HYV3NfLwec53mh5HHxpkDYDuuMCnADCgwReLSsyB1LtEp
-	ltMMuBQ55CrA/W7HAIDESzZ7fJD2IK2+p/yyUQlafKPe8gmlU8xZHi6IrW8GNqLnnQP1No2V6FX
-	3iCElc9x5zScxvFLs4aeSwC+61IkMSsHucWoTQoddhbSKQsZmbamVb+cGtoT6IC0jBMg2At1O3l
-	tiCEwVL86pXAR8ZO5s4l6nPlHy3pz5dwBvbaoIg4Y7srfvwBcn7pMKZy1B/bkJLA6nuhYRiok9D
-	vN6usiT2yVqy1iTOft3DWApu8kT8KSudCG40PXz0eLX3ebTWphkBVmeRVzNu+UwWaHNGqquwAoO
-	FUOnUoO1PhyH1fKpeEqzwhO8BtPxYQq+jCm3rwPvALBbeapKLzhIro+wNn1ebvVNgxcHbIbOV0+
-	1Fb5PAHfmhxPtqQuqKSeMDb/2o7HS7LF1Y4GEKX0f9NfGbCMdBQct35S8HBy88OV/yJbRIPiZ5V
-	ouiiC88kq146OQ4ToYzr3IZSCNA=
-X-Received: by 2002:a17:90b:134e:b0:3ac:9a5e:9ce7 with SMTP id 98e67ed59e1d1-3b41c96764dmr18868042a91.49.1795646925992;
-        Wed, 25 Nov 2026 14:48:45 -0800 (PST)
-Received: from localhost ([2001:19f0:8000:4ce8:5400:7ff:fe0e:e6b2])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b4afeaaa84sm13819382a91.10.2026.11.25.14.48.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 14:48:45 -0800 (PST)
-Date: Thu, 26 Nov 2026 06:48:37 +0800
-From: Inochi Amaoto <inochiama@gmail.com>
-To: Niklas Cassel <cassel@kernel.org>, Inochi Amaoto <inochiama@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Randy Dunlap <rdunlap@infradead.org>, Damien Le Moal <dlemoal@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, Aksh Garg <a-garg7@ti.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Rhys Tumelty <rhys@tumelty.co.uk>, 
-	Manikandan K Pillai <mpillai@cadence.com>, "vladimir.oltean@nxp.com" <vladimir.oltean@nxp.com>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>, Hans Zhang <18255117159@163.com>, Yao Zi <me@ziyao.cc>, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
-	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-phy@lists.infradead.org, Yixun Lan <dlan@gentoo.org>, Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v5 8/8] ata: ahci_imx: Use bulk PHY APIs for calibration
- PHYs
-Message-ID: <awdjOLoxBpS6t1KN@inochi.infowork>
-References: <20261125043639.249525-1-inochiama@gmail.com>
- <20261125043639.249525-9-inochiama@gmail.com>
- <awcFIJlCOxB7nXNz@ryzen>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Lvs3zutK
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795648182; x=1827184182;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=91cCZ6mfixzb2eXdcEC2OVnV1XVH8aSgNnKVaLSbNMs=;
+  b=Lvs3zutKyoKsTVhpVftVkdY4dS7a1P2agphKk2oTWDqyMAF9WTpeOQbO
+   XP3OQKMXXeNYveU5PtyffrGua/iQe17ZI/Z2uC5dbOYve5nn+myILyWjJ
+   B4L2iA17Giej4bEwBgcRWVxfCxjSA985YiXOMH+0ziwfLvsJEFPhaRPOs
+   idT0A3p+LwZtfVDyRPd65UbMDjJxX2E+/XUNU4uaBsUvMSraQotjQ+Vc9
+   NdTQY9x5CKXGSHDn0Aw47WaIpZ+F/WDJmphjmVkwZHtnwZ3y/TNdJump5
+   2egHahOomMNpi6GA+ROkGxj0/Z7azyQaVGUJn2whALjSiV3oJEKsX5vxG
+   Q==;
+X-CSE-ConnectionGUID: 06BcWXAiTKuwgKK6GABZ/w==
+X-CSE-MsgGUID: U0eHTzsWT/a8O3s9nc1Kjw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11977"; a="4627801"
+X-IronPort-AV: E=Sophos;i="6.27,233,1787036400"; 
+   d="scan'208";a="4627801"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2026 15:09:41 -0800
+X-CSE-ConnectionGUID: kXqxO/w9Rt24pZgpcbW5wQ==
+X-CSE-MsgGUID: y1EptVulRvmFsIoNCEsJyg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,233,1787036400"; 
+   d="scan'208";a="12475736"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.96])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2026 15:09:37 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	David Matlack <dmatlack@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v3 00/17] PCI: Serialize bridge window sizing and resource assignment
+Date: Thu, 26 Nov 2026 01:08:59 +0200
+Message-ID: <20261125230925.2441-1-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -111,198 +84,108 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <awcFIJlCOxB7nXNz@ryzen>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 25, 2026 at 04:56:16PM +0100, Niklas Cassel wrote:
-> Hello Inochi,
-> 
-> On Wed, Nov 25, 2026 at 12:36:39PM +0800, Inochi Amaoto wrote:
-> > The i.MX8QM SATA PHY relies on the first two HSIO lanes for shared
-> > impedance calibration. Store these calibration PHYs in a bulk array
-> > and acquire them by name with devm_phy_bulk_get().
-> > 
-> > Initialize both calibration PHYs before powering them on in lane order,
-> > then keep the SATA PHY initialization, mode selection and power-on
-> > separate. Use the bulk helpers to release the calibration PHYs after
-> > SATA startup and to unwind failures without repeating power-off after
-> > a failed bulk power-on.
-> > 
-> > Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
-> > ---
-> >  drivers/ata/ahci_imx.c | 57 ++++++++++++++++--------------------------
-> >  1 file changed, 21 insertions(+), 36 deletions(-)
-> > 
-> > diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> > index 6aaa18e29abc..18faa033e44f 100644
-> > --- a/drivers/ata/ahci_imx.c
-> > +++ b/drivers/ata/ahci_imx.c
-> > @@ -25,6 +25,8 @@
-> >  
-> >  #define DRV_NAME "ahci-imx"
-> >  
-> > +#define NUM_CALIPHY		2
-> > +
-> >  enum {
-> >  	/* Timer 1-ms Register */
-> >  	IMX_TIMER1MS				= 0x00e0,
-> > @@ -66,8 +68,7 @@ struct imx_ahci_priv {
-> >  	struct clk *ahb_clk;
-> >  	struct regmap *gpr;
-> >  	struct phy *sata_phy;
-> > -	struct phy *cali_phy0;
-> > -	struct phy *cali_phy1;
-> > +	struct phy_bulk_data cali_phys[NUM_CALIPHY];
-> >  	bool no_device;
-> >  	bool first_time;
-> >  	u32 phy_params;
-> > @@ -428,30 +429,20 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
-> >  	 * Initialize the first two lane PHYs here, although only the
-> >  	 * third lane PHY is used by SATA.
-> >  	 */
-> > -	ret = phy_init(imxpriv->cali_phy0);
-> > +	ret = phy_bulk_init(NUM_CALIPHY, imxpriv->cali_phys);
-> >  	if (ret) {
-> >  		dev_err(dev, "cali PHY init failed\n");
-> >  		return ret;
-> >  	}
-> > -	ret = phy_power_on(imxpriv->cali_phy0);
-> > +	ret = phy_bulk_power_on(NUM_CALIPHY, imxpriv->cali_phys);
-> >  	if (ret) {
-> >  		dev_err(dev, "cali PHY power on failed\n");
-> > -		goto err_cali_phy0_exit;
-> > -	}
-> > -	ret = phy_init(imxpriv->cali_phy1);
-> > -	if (ret) {
-> > -		dev_err(dev, "cali PHY1 init failed\n");
-> > -		goto err_cali_phy0_off;
-> > -	}
-> > -	ret = phy_power_on(imxpriv->cali_phy1);
-> > -	if (ret) {
-> > -		dev_err(dev, "cali PHY1 power on failed\n");
-> > -		goto err_cali_phy1_exit;
-> > +		goto err_cali_phy_exit;
-> 
-> This changes the order the calibration PHYs are brought up in.
-> 
-> The commit message describes the new order:
-> 
->   "Initialize both calibration PHYs before powering them on in lane
->   order"
-> 
-> but doesn't say that it differs from the current sequence. Could the
-> commit message mention the change, and why it is safe for the shared
-> calibration?
-> 
+Hi all,
 
-According to the document, there is no initialization order requirement
-mentioned, so I thought it will be safe to change that since the
-document shows that the calibration is independent in section 19.3.3.5.
+Bridge window sizing and resource assignment can be started from
+multiple entrypoints: rescan and hotplug under pci_rescan_remove_lock,
+and BAR resize from sysfs or driver probe under device_lock() only. As
+the entrypoints hold pci_bus_sem at most for read, nothing prevents two
+sizing and assignment passes from running concurrently on the same
+bridge windows and BARs.
 
-> The cover letter mentions that the PHY timing requirements were checked
-> against the documentation. Has the new sequence also been tested on
-> i.MX8QM hardware?
-> 
+Multiple issues due to these races could be reproduced some on a real
+host and more in QEMU with a synthetic PCI host bridge (not part of
+this series) by looping BAR resize against a rescan through sysfs. The
+failures include spurious BAR resize failures, a WARN in
+pci_dev_res_restore(), a NULL pointer dereference in
+__release_resource(), and a bridge window programmed over RAM. None of
+them occurred with this series applied.
 
-I does not check it on real hardware, the only thing I find is the
-document.
+The series adds pci_bus_size_and_assign_resources() and
+pci_assign_unassigned_slot_resources() so that PCI core can hold the
+locks across both phases. It converts the callers (alpha nautilus
+retains an extra sizing call to avoid complex refactoring). The
+entrypoints are made to consistently hold pci_bus_sem for read and
+use guard(). A per host bridge pci_res_setup_lock is added to
+serialize the sizing and assignment passes. Last, the series converts
+the remaining pci_bus_assign_resources() users and removes it.
 
-> 
-> >  	}
-> >  	ret = phy_init(imxpriv->sata_phy);
-> >  	if (ret) {
-> >  		dev_err(dev, "sata PHY init failed\n");
-> > -		goto err_cali_phy1_off;
-> > +		goto err_cali_phy_off;
-> >  	}
-> >  	ret = phy_set_mode(imxpriv->sata_phy, PHY_MODE_SATA);
-> >  	if (ret) {
-> > @@ -465,10 +456,8 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
-> >  	}
-> >  
-> >  	/* The cali_phy# can be turned off after SATA PHY is initialized. */
-> > -	phy_power_off(imxpriv->cali_phy1);
-> > -	phy_exit(imxpriv->cali_phy1);
-> > -	phy_power_off(imxpriv->cali_phy0);
-> > -	phy_exit(imxpriv->cali_phy0);
-> > +	phy_bulk_power_off(NUM_CALIPHY, imxpriv->cali_phys);
-> > +	phy_bulk_exit(NUM_CALIPHY, imxpriv->cali_phys);
-> >  
-> >  	/* RxWaterMark setting */
-> >  	val = readl(hpriv->mmio + IMX8QM_SATA_AHCI_PTC);
-> > @@ -480,14 +469,10 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
-> >  
-> >  err_sata_phy_exit:
-> >  	phy_exit(imxpriv->sata_phy);
-> > -err_cali_phy1_off:
-> > -	phy_power_off(imxpriv->cali_phy1);
-> > -err_cali_phy1_exit:
-> > -	phy_exit(imxpriv->cali_phy1);
-> > -err_cali_phy0_off:
-> > -	phy_power_off(imxpriv->cali_phy0);
-> > -err_cali_phy0_exit:
-> > -	phy_exit(imxpriv->cali_phy0);
-> > +err_cali_phy_off:
-> > +	phy_bulk_power_off(NUM_CALIPHY, imxpriv->cali_phys);
-> > +err_cali_phy_exit:
-> > +	phy_bulk_exit(NUM_CALIPHY, imxpriv->cali_phys);
-> >  
-> >  	return ret;
-> >  }
-> > @@ -839,19 +824,19 @@ static const struct scsi_host_template ahci_platform_sht = {
-> >  
-> >  static int imx8_sata_probe(struct device *dev, struct imx_ahci_priv *imxpriv)
-> >  {
-> > +	int ret;
-> > +
-> >  	imxpriv->sata_phy = devm_phy_get(dev, "sata-phy");
-> >  	if (IS_ERR(imxpriv->sata_phy))
-> >  		return dev_err_probe(dev, PTR_ERR(imxpriv->sata_phy),
-> >  				     "Failed to get sata_phy\n");
-> >  
-> > -	imxpriv->cali_phy0 = devm_phy_get(dev, "cali-phy0");
-> > -	if (IS_ERR(imxpriv->cali_phy0))
-> > -		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy0),
-> > -				     "Failed to get cali_phy0\n");
-> > -	imxpriv->cali_phy1 = devm_phy_get(dev, "cali-phy1");
-> > -	if (IS_ERR(imxpriv->cali_phy1))
-> > -		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy1),
-> > -				     "Failed to get cali_phy1\n");
-> > +	imxpriv->cali_phys[0].id = "cali-phy0";
-> > +	imxpriv->cali_phys[1].id = "cali-phy1";
-> > +
-> > +	ret = devm_phy_bulk_get(dev, NUM_CALIPHY, imxpriv->cali_phys);
-> > +	if (ret)
-> > +		return dev_err_probe(dev, ret, "Failed to get cali_phy\n");
-> 
-> phy_bulk_get() already reports which PHY failed:
-> 
-> drivers/phy/phy-core.c:phy_bulk_get() {
->     ...
->         for (i = 0; i < num_phys; i++) {
->                 phys[i].phy = phy_get(dev, phys[i].id);
-> 
->                 ret = PTR_ERR_OR_ZERO(phys[i].phy);
->                 if (ret) {
->                         phys[i].phy = NULL;
-> 
->                         dev_err_probe(dev, ret, "Failed to get phy: (%s)\n",
->                                       phys[i].id);
->                         goto err;
->                 }
->         }
->     ...
-> }
-> 
-> so a missing cali-phy1 entry in phy-names now prints two errors, and the
-> second one doesn't name the PHY.
-> 
-> A plain "return ret;" should be enough here.
-> 
-> 
+Drivers that call pci_assign_resource() or pci_release_resource()
+directly are not covered by this series.
 
-Thanks, I will fix it.
+I've another series coming up which will add struct pci_setup_data that
+is to be held across the entire sizing and assignment algorithm, which
+is another reason why those actions have to be kept together going
+forward. The goal of that upcoming series is to size also assigned
+bridge windows properly and we need a place to keep the alignment
+because STARTALIGN is lost when a resource gets assigned.
 
-Regards,
-Inochi
+v3:
+- Move the new lock under pci_host_bridge
+- Make pci_find_host_bridge() input const bus
+- Reduce number of lockdep asserts as finding the lock is more costly now
+
+v2:
+- Expand BAR Resize lock coverage to include the parent window acquire
+  (sashiko)
+- Add pci_assign_unassigned_slot_resources()
+- Refactor acpiphp, replaces sizing call in the loop with one
+  pci_assign_unassigned_slot_resources() after the loop to not hold
+  locks across scan
+- Keep pci_res_setup_lock local to setup-bus.c (drops setup-cardbus.c
+  assert that was of minor importance anyway)
+- Minor language tweaks to changelogs
+
+
+Ilpo Järvinen (17):
+  PCI: Add pci_bus_size_and_assign_resources()
+  alpha/PCI: Convert to pci_bus_size_and_assign_resources()
+  PCI: Use guard() for pci_bus_sem in
+    pci_do_resource_release_and_resize()
+  PCI: Add pci_assign_unassigned_slot_resources()
+  PCI: acpiphp: Use pci_assign_unassigned_slot_resources()
+  PCI: Hold pci_bus_sem across sizing and assignment entrypoints
+  PCI: Make pci_find_host_bridge() take a const bus
+  PCI: Serialize bridge window sizing and resource assignment
+  PCI: Make internal sizing and assignment functions static
+  EDAC/i82875p: Convert to pci_assign_unassigned_bus_resources()
+  platform/x86: asus-wmi: Convert to
+    pci_assign_unassigned_bus_resources()
+  platform/x86: eeepc-laptop: Convert to
+    pci_assign_unassigned_bus_resources()
+  parisc/PCI: Convert to pci_assign_unassigned_bus_resources()
+  PCI: octep_hp: Convert to pci_assign_unassigned_bus_resources()
+  PCI: ftpci100: Convert to pci_assign_unassigned_bus_resources()
+  PCI: hv: Convert to pci_assign_unassigned_bus_resources()
+  PCI: Remove pci_bus_assign_resources()
+
+ arch/alpha/kernel/sys_nautilus.c      |   2 +-
+ arch/arm/kernel/bios32.c              |   5 +-
+ arch/m68k/coldfire/pci.c              |   3 +-
+ arch/mips/pci/pci-legacy.c            |   5 +-
+ arch/sh/drivers/pci/pci.c             |   3 +-
+ drivers/edac/i82875p_edac.c           |   2 +-
+ drivers/parisc/dino.c                 |   2 +-
+ drivers/parisc/lba_pci.c              |   7 +-
+ drivers/pci/controller/pci-ftpci100.c |   2 +-
+ drivers/pci/controller/pci-hyperv.c   |   2 +-
+ drivers/pci/host-bridge.c             |   8 +-
+ drivers/pci/hotplug/acpiphp_glue.c    |   8 +-
+ drivers/pci/hotplug/octep_hp.c        |   2 +-
+ drivers/pci/pci.h                     |   6 +-
+ drivers/pci/probe.c                   |   2 +
+ drivers/pci/setup-bus.c               | 108 ++++++++++++++++++++------
+ drivers/pcmcia/cardbus.c              |   3 +-
+ drivers/platform/x86/asus-wmi.c       |   2 +-
+ drivers/platform/x86/eeepc-laptop.c   |   2 +-
+ include/linux/pci.h                   |  16 +++-
+ 20 files changed, 125 insertions(+), 65 deletions(-)
+
+
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+-- 
+2.47.3
+
