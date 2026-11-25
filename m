@@ -1,166 +1,32 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.84.55
-ARC-Seal: i=3; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795624275;
-	b=wZkbWQoxDsRSKqhvy/qBHTJqnnnkPuHJ7cXaTtaNiqr557hAecJ2AV1MWluLaLhzt9pb
-	 6tBisSQ0czjQou7K9vyZZTatlrIDSw5gZ6wn0/hZRWcZUyJIn6jicxFmcXXyLNxKDAFS8
-	 KvuRCxwIglnEZT0EKUMWXebFM6p2CbUKlE/PMbKDUFDuQL4lrL5fkAWwKtZZM4/GHimkB
-	 KNL/i0LtKIT0kWpLsIaBqxc6ltizQEVcDIC4gX20SMiY/S6a3RUqlAD8Z2GJebFH2zQOo
-	 H4Kl+ejWfNT5Bzmo2VynUHMLuneoXFND7y3QpSO0U1k0F1AhWpjOuzpVYmD8a9aBtBw==
-ARC-Message-Signature: i=3; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795624275;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:
-	 DKIM-Signature:Authentication-Results-Original:Received:Received:
-	 Message-ID:Date:User-Agent:From:Subject:To:Cc:References:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-ClientProxiedBy:MIME-Version:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-LD-Processed:
-	 x-checkrecipientrouted:NoDisclaimer:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam-Untrusted:
-	 X-Microsoft-Antispam-Message-Info-Original:
-	 X-Forefront-Antispam-Report-Untrusted:X-Exchange-RoutingPolicyChecked:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:
-	 X-EOPAttributedMessage:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStripped:
-	 X-MS-PublicTrafficType:X-MS-Office365-Filtering-Correlation-Id-Prvs:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=ouJBIgt+nRZnmYef/AbrhZ2pbzNQtm9kMcG9IWzu2X4=;
-	b=aGLwYXjSxFk3vxmzN0GnDxGW2AVHEhc28VPP3w5+jvNgsxWKaigOUmj0zqwC+iD2c4vW
-	 J7szHn8yBCGbuD+3h2fqmuas8000XRyIZo4xkJtySKOZJonC7VBZgr0w95l5KJTJDKoeT
-	 1H+feX3rlFLThN5TFqhWUSKYY99rpnRqjAVk3buqoC3+yq/8Ua+rKgCGdxNyjzJjCFBa6
-	 ZmR4eDrvhV7rFLl4DcDIWnDiMrEdN2ydCA8DcqM/kEB7njC0aQa9iKUwHAKVQEig07+du
-	 b3jQi0IOzDEcPqJ8Ghipc/+RqwvUHfpyHlyRAzj/kqgosV4yVHssXYK3FggIeN+J4ZQ==
-ARC-Authentication-Results: i=3; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arm.com;
-	spf=pass smtp.mailfrom=arm.com;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=nl7Y8hmh;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=nl7Y8hmh;
-	arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.84.55
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010055.outbound.protection.outlook.com [52.101.84.55])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795624788;
+	b=gvnOU5oESRK1IJ6xZ1Z5NJuKptGknPD37MSOVKzKoggeQGGOxpJGM6NxnJwVRQRqpD7t
+	 VJ6JZwzvOdAz9VoAJe+UTlDvLQnmgoxEhTAxaywiWed4yEXm7IG7iBiJDa1+TLQ+Ti8Kf
+	 C4MDBMjeqmaRfhZ2e9WP8FAn0MpKP6sB8dhX4/YvdRZrBoDz0T3rjFSDhXrtKOBMoxRy5
+	 2j54YjHiyKkCLXNSRu4q05ZS2LreJl5fye5iBt/6Xq3cYOYQSRoQZkeSC4GwfHHbCJHJK
+	 4vCtgLLu6/5FhqrajM4kL1vTfD78sBsp/dt4To0P7hU771GNwkxggTjHtzkbUsMmKmw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795624788;
+	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
+	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key;
+	bh=dIJ6wlWtuq+YDcSjgi8UCsWxVOAWAUMRdLTxJIBzpgw=;
+	b=Jg5W/11CIiwXXO5yqNVk0C7qxWcg6XFklvfmJqYa2ts9MubPRodfGz5MdNc4YLOHj2Mt
+	 CedMcpmHx6D1I42wZSFrGfwrDMp32Y6jJ4htJ02qAZPLCpzXTQAP3kTInE8Ta4y6uG9qH
+	 sqvnyxGV2Fdu0d8e8e28ZSAQ5OQoXB8e632xtReki/aVs3O5Q5yzlfb0FacXqUbEMm/jM
+	 xBxj40e7J3K1QPp7h7ANQyt1BOQBXOXG2noOHefcITEC3hJoD+E2qdjUaMHrNCKj9J4Mn
+	 jC3cVrhrngnz0oBNXX8PiLwI7FOuAAsa/9Li1z0ykd+cR4HWE6QYvOityQFlFUU3elw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D4A606A682;
-	Wed, 25 Nov 2026 16:31:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C9D4A606A682
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=nl7Y8hmh;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=nl7Y8hmh
-ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
- b=AXfRz61icqgewNbv0eot/AcETudYtQY8d0yPm+1NtfNGEVT3jq0HCQv6sfaFU4VYqxQgvjd6adp/sJdFSPbR3aK6TIQ71qMxch17H3EPg4DnO+5F0m2QGCX3YcULHOdvMYWtxsq8qWmBYSg7OQceCTlH5mjrSzTNphm9omHRARVxLnQ5VlWNWlkJf9nZrk2YwuIhznO04xXeTfQA4GsQQOxNgDOxgB+mQs+KFEJRCJrFPuk29eWFRbG+BMGB8NrGyZIaVoXBT5zF7CkW3uKkqmbap0yRXzBU4S//DhunYfWwfGwbauq4B4WBWeX2vvPLujgFdFXa976lLCVcho+f/Q==
-ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ouJBIgt+nRZnmYef/AbrhZ2pbzNQtm9kMcG9IWzu2X4=;
- b=py0Z/y0LYrwxPB9/vvoDac0qzhJ/vpcTxOUtAWTGWLYDeWBRYLSm6JuXXs7QuptRViWWUsTEYkBUsa1HyzJ3EUTMCw1YxJWFi5BM9rGbIpihbyrFUr1pJA+l/7t+U+3k8uzuINEONi3jRP62/842XTKPSF3rCSbxkV87zJRoVmLmCokoa9f52iOWhrpdR0gJ5cbJipY4b915xgORWEBK20mgrv7KQP/aF9CR5VhZqCXMPzOYgFaCDV6vnrX1ukZspHPkSUkGDtkaKvJRRV3kcPBnr+OfLLS3ek2uUK2XB7wcP0wkgqrzQ5obkI34tt3paVuFZWLewA4p8jReQpfmiQ==
-ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
- 4.158.2.129) smtp.rcpttodomain=amd.com smtp.mailfrom=arm.com; dmarc=pass
- (p=none sp=none pct=100) action=none header.from=arm.com; dkim=pass
- (signature was verified) header.d=arm.com; arc=pass (0 oda=1 ltdi=1
- spf=[1,1,smtp.mailfrom=arm.com] dkim=[1,1,header.d=arm.com]
- dmarc=[1,1,header.from=arm.com])
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ouJBIgt+nRZnmYef/AbrhZ2pbzNQtm9kMcG9IWzu2X4=;
- b=nl7Y8hmhHY9GQWKkm8RNbnqfcVeBQ5updElWtju6YuIMBPDKcH9ljNecbcR9BQps9f5wfoToWz6WlSVHS9xGa+0lASAh3I7y6K4K47KjUTk/nS3YNV42zfty+beH/5D73mZLiin+/YpHIZwr1KfkMmu/xJEqJgIZpqu0WGCwToY=
-Received: from ZR2P278CA0060.CHEP278.PROD.OUTLOOK.COM (2603:10a6:910:53::20)
- by PAWPR08MB8815.eurprd08.prod.outlook.com (2603:10a6:102:337::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.6; Wed, 25 Nov
- 2026 16:31:08 +0000
-Received: from ZR1PEPF0000E6AD.eurprd05.prod.outlook.com
- (2603:10a6:910:53:cafe::22) by ZR2P278CA0060.outlook.office365.com
- (2603:10a6:910:53::20) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.7 via Frontend Transport; Wed, 25
- Nov 2026 16:31:07 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 4.158.2.129) smtp.mailfrom=arm.com; dkim=pass (signature was verified)
- header.d=arm.com;dmarc=pass action=none header.from=arm.com;
-Received-SPF: Pass (protection.outlook.com: domain of arm.com designates
- 4.158.2.129 as permitted sender) receiver=protection.outlook.com;
- client-ip=4.158.2.129; helo=outbound-uk1.az.dlp.m.darktrace.com; pr=C
-Received: from outbound-uk1.az.dlp.m.darktrace.com (4.158.2.129) by
- ZR1PEPF0000E6AD.mail.protection.outlook.com (10.167.241.84) with Microsoft
- SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.3
- via Frontend Transport; Wed, 25 Nov 2026 16:31:07 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=EXtJU0HC8IJ3P52tNaPczCXG7X3ZXUFGvQPTLQErgSTEy+nGeQnU5s0Cpql7XhARAMXfnG7A/R2PoZGWOAgwg4w3FWvjS1VOym53oW8zMoTY6aJvP0SRYNXEEEPDhF8cfLhL78lMtMr6YMLmCgTL6Xi+NTtmAFukVwdMmAD0IHw8lJHfedn07ibRkRf3/4u9AwBM5oV0sgzU/UQwNvJAH2yrVSPgJJnCfOemLmyPC09uajl9jtUkImDmtA2v4wpEYC9cAtODDLxf7a8OATYZ+LnAyN2ZpOSEaQxAhnhhMrHG0/ShhRXFIk/uSpDarhtme12RIUeC57k3KcYinzu1Qw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ouJBIgt+nRZnmYef/AbrhZ2pbzNQtm9kMcG9IWzu2X4=;
- b=nqIacdy8Ef6rZeevatnlA1O0rFGr/J7IY/1j8PWKLWwNvYlZF6uHOIAqC/y+vTS3FDrE5vliUIqCdPJ130oOG/oEPuX16kl116pwWulqYrH6SN4mbeO9wSLHjFuf5c2myii9KWoYI4682WaccTr4us+u+v9mHFkmjlmQYvMq7bitxS0Vq437IhjsS8mSDnNbmh4V3rM6aNXJK8d7uwZLak+pOD3kf4pCj/xotwOkNPfknQ4fObV0W2eztapm0Qm5px8BOAeb1dlbuQAUk3ijFh4Hjv3lQxfBfpraXb4uZ5dGuzs/E77ScOAbDgOX28UER8qR4Y1A7VXJmUOgMAMJTA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=arm.com; dmarc=pass action=none header.from=arm.com; dkim=pass
- header.d=arm.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ouJBIgt+nRZnmYef/AbrhZ2pbzNQtm9kMcG9IWzu2X4=;
- b=nl7Y8hmhHY9GQWKkm8RNbnqfcVeBQ5updElWtju6YuIMBPDKcH9ljNecbcR9BQps9f5wfoToWz6WlSVHS9xGa+0lASAh3I7y6K4K47KjUTk/nS3YNV42zfty+beH/5D73mZLiin+/YpHIZwr1KfkMmu/xJEqJgIZpqu0WGCwToY=
-Authentication-Results-Original: mx.microsoft.com 1; dkim=none (message not
- signed) header.d=none;dmarc=none action=none header.from=arm.com;
-Received: from BESPR08MB999898.eurprd08.prod.outlook.com
- (2603:10a6:b10:109::23) by AMBPR08MB11937.eurprd08.prod.outlook.com
- (2603:10a6:20b:761::9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.6; Wed, 25 Nov
- 2026 16:30:34 +0000
-Received: from BESPR08MB999898.eurprd08.prod.outlook.com
- ([fe80::d62a:5300:bc89:9f62]) by BESPR08MB999898.eurprd08.prod.outlook.com
- ([fe80::d62a:5300:bc89:9f62%6]) with mapi id 15.21.0639.012; Wed, 25 Nov 2026
- 16:30:34 +0000
-Message-ID: <92f3a4a7-a4be-40ce-b156-c3fbec150e58@arm.com>
-Date: Wed, 25 Nov 2026 17:30:32 +0100
-User-Agent: Mozilla Thunderbird
-From: Pierre Gondois <pierre.gondois@arm.com>
-Subject: Re: [PATCH v1 19/19] PCI/ERR: Avoid NULL bridge pointer
-To: Yazen Ghannam <yazen.ghannam@amd.com>
-Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
- Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org,
- Ashok Raj <ashok.raj@oss.qualcomm.com>, James Morse <james.morse@arm.com>,
- Mark Brown <broonie@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
- "H. Peter Anvin" <hpa@zytor.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
- Hanjun Guo <guohanjun@huawei.com>, Mauro Carvalho Chehab
- <mchehab@kernel.org>, Shuai Xue <xueshuai@linux.alibaba.com>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Maciej Wieczor-Retman <maciej.wieczor-retman@intel.com>,
- Pawel Chmielewski <pawel.chmielewski@intel.com>,
- Qiuxu Zhuo <qiuxu.zhuo@intel.com>, Avadhut Naik <avadhut.naik@amd.com>,
- Radu Rendec <radu@rendec.net>, Jonathan Cameron <jic23@kernel.org>,
- Dave Jiang <dave.jiang@intel.com>, Kai-Heng Feng <kaihengf@nvidia.com>,
- "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
- Breno Leitao <leitao@debian.org>, Terry Bowman <terry.bowman@amd.com>,
- linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
- acpica-devel@lists.linux.dev
-References: <20261117111444.4185512-1-pierre.gondois@arm.com>
- <20261117111444.4185512-20-pierre.gondois@arm.com>
- <avw_daENKPcY7_04@wunner.de>
- <28da8229-99f9-47c7-b2d6-d301ae34253f@linux.intel.com>
- <ba5f649c-f338-40d1-9e85-b666590835ca@arm.com>
- <20261124160027.GC2156781@yaz-khff2.amd.com>
-Content-Language: en-US
-In-Reply-To: <20261124160027.GC2156781@yaz-khff2.amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: LO2P265CA0504.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:13b::11) To BESPR08MB999898.eurprd08.prod.outlook.com
- (2603:10a6:b10:109::23)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFCC8606A339;
+	Wed, 25 Nov 2026 16:39:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53BE01F000D4;
+	Wed, 25 Nov 2026 16:39:43 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -170,104 +36,87 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-TrafficTypeDiagnostic:
-	BESPR08MB999898:EE_|AMBPR08MB11937:EE_|ZR1PEPF0000E6AD:EE_|PAWPR08MB8815:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2618d542-3f74-4713-2961-08df4b118208
-X-LD-Processed: f34e5979-57d9-4aaa-ad4d-b122a662184d,ExtAddr,ExtAddr
-x-checkrecipientrouted: true
-NoDisclaimer: true
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam-Untrusted:
- BCL:0;ARA:13230040|1800799024|376014|7416014|23010399003|366016|4143699003|261009223027099003|22082099003|18002099003|11063799006|56012099006|10067099003|261102123227099003|261028144727099003|261022075727099003|261022105027099003|261026140227099003|261026121527099003|261021121427099003;
-X-Microsoft-Antispam-Message-Info-Original:
- AhgwumveZmLnHExFaZS/9UmjEzvEMlU7BQ+O48IN1jA8hX0vHLUT5mONwZy/bc3/2o3xkhzQxhmD/vIcA7blJPDk/ZWFo/I8DTzUWj9XUNOJc1utzKb3uuow94GVmm9wNL4hTODySr+bndlrgXOkKwlqVY9M1tKE25t9u5QAv8i49hM9bBSyIChNfatfdybzBwyJblsm0KAfVBuGPr+1M6t2jFzAwwk+5wITNcn4ouHUck58t1IueO6bY+kYWYZvyntuwGZaM8ml67Sdpa8K+HoenmSteb4kiffsSBF1VAqs1ZmUJOVjCpTEbx9JlmYqIma1FLa7e3pLEIQPjKmtWLoGTAtfmtJXDcVAw+E4RujdeFPLeVuH+BERFm0bx43sV6U+czeOvdS+p/VSBPUCZkxNGeAFT96fkUO9V9cJIGjo6i+pWkfEOTmwD7ccq697uJlO0t5FF1u4xWJyZpOIBce6ybD2HTmf9fD5HqJruH+DSqkJFYbi7fgwqh5rGNhlzbWpvEfkyu+TcsHrkXe77xHJaTBvhbX8KjzNEu/rNE0rJ9T4fUtJGjOhnASrk5JmgmZTNy5N7jofOHK5Btk6ugdpTlbS5UdKqep3wZ4FXitXfy0uWs41rrZN5cw5Uc+Lb6NVJsm4/T7GQemLrGB1NPI2zsZ+Fkpct+Bhg3A2Vu0=
-X-Forefront-Antispam-Report-Untrusted:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BESPR08MB999898.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(23010399003)(366016)(4143699003)(261009223027099003)(22082099003)(18002099003)(11063799006)(56012099006)(10067099003)(261102123227099003)(261028144727099003)(261022075727099003)(261022105027099003)(261026140227099003)(261026121527099003)(261021121427099003);DIR:OUT;SFP:1101;
-X-Exchange-RoutingPolicyChecked:
- QzDXR5bI5IIvNKgEV3/XqY2UO/b3eggRqJ0SENyJzoWdifxtD7gUrvy8pePr9eUhgM9eXwPta1edZAEf5pnX5k9phZujDTSsdS0klQxaDoKuSMVdjVTzre/jQSbPhki4Hcmb52yezvK1AgiqZR1JpPt8E9V6hNmyxMjwXCymqMPgA/mDMvb1mbkhWwQlHoLzpiDS6sn1ufuM92SQcIxJHpbvQ6vkW3FJEp4YVORdQmtJHJ0+UcNfOf3V/Ap6rL5ptlSqP21Kwy1IPHZPC3nQmd4096kbHdHko5eQh5tDCPFWWgAmXvu+ACiz8DuplXkQssxHsIjsZAPuw4V472LoXg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AMBPR08MB11937
-X-EOPAttributedMessage: 0
-X-MS-Exchange-Transport-CrossTenantHeadersStripped:
- ZR1PEPF0000E6AD.eurprd05.prod.outlook.com
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id-Prvs:
-	cef271bd-3b92-4f21-41f3-08df4b116df0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|14060799003|23010399003|82310400026|376014|7416014|35042699022|36860700016|1800799024|4143699003|18002099003|261009223027099003|22082099003|10067099003|56012099006|11063799006|261102123227099003|261022075727099003|261022105027099003|261028144727099003|261026121527099003|261026140227099003|261021121427099003;
-X-Microsoft-Antispam-Message-Info:
-	3TA1+R0pGWakgq8Q6WXcdh7XmFM67sWLY1hS9gF7bB/Z2ileumpZMEB7SQezrBxcuJGgUk/c0llV4gRbTnN3J7daaQectl+tFDTCuX73pnuEgVxfA+qUEo6OWwM7rGO1y5MyLUfElI25ouclKZoIHt5OqLqhtdf6EB7LMzG+3NHPeAlrIl6O6u9T1csfapeS2dArIvKeUdhfIGo8Z92DhkdMZ4hMvYUozj5Bko/pb/78mhTaRc1kajesJ9V5WSakbD+qR7NxoUq7kzn4ARabbii39z0Hwe9sghTW8yHfe1zY2KgGqET39ht0GX/wgb8CsAJ6c5hTOIQbj7RdDBav1swS/OuO/Z6PBiKe5SpeudRHp1xEJ9aNJLBW6wEx1yPGyCMbo8fVs864esXlo3joATTfSI8gQL6mb8oD+lamHrzYGdf17iyNdiRbF6Xgb/u/4U2GMhcV7O7SaXxuOwJkyCOGKXj06WjEU3SsASR7yafbI4QYS8IFTy4tbsSMTOlkExnzZLOFNPl3ypUcfCwVJxp9UAIQ9Lohx77+j+Ptalma/HI2zn6Wf18rH4cZXOEwndkEauWczwO6CYqP1KVW+N1GKbhTVpmUtD4C6wmfIR519WHkay09F0BURQ6EVQdEKawk/7KUVPYGpoUybx1+yKRjk/mXmIDzktwKxFW6NPm07FI5ya7Y+rMmh18y0qpix+4/gBUTKLruiW7IgopO8w==
-X-Forefront-Antispam-Report:
-	CIP:4.158.2.129;CTRY:GB;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:outbound-uk1.az.dlp.m.darktrace.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(14060799003)(23010399003)(82310400026)(376014)(7416014)(35042699022)(36860700016)(1800799024)(4143699003)(18002099003)(261009223027099003)(22082099003)(10067099003)(56012099006)(11063799006)(261102123227099003)(261022075727099003)(261022105027099003)(261028144727099003)(261026121527099003)(261026140227099003)(261021121427099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	n+S6GWpjPx2shyhoCu+cS0oriR4wvQ5OB4jbnHW39DLTYWyvTeipFSv9ElyIl/TIUFzqqitKosad8V5dwTLTcHYTIdxc9xYEJAh0tvROI0VapEyqcFt38heeX5w645tlEs6yOuQWtdB4Ooofo21of+/plPAw5h3/jo2OilTM8IwqfS25lbHyOnyMsIsL1qlsg9JC73+1XnOqLcYY5XYyILkM6NG9lx1SqXGcWMsqM+Zzd7L3uK0mPNQDo6xpqkHnoHSLkBKl/4CP0s9wXptxthgxgANH87psx+h3Km/o+38B+EZ4JOwRI8rS0lnoBiWxa1d20yIPAAjzKXeVlqmbYmYUd9ZDHLKOk/cLGw1Y18/6lQoQjWzQ1z9tNOq1Vxcj8dEZ+U67dfR6T0vKtV+n51A93kuilXrND6h3mGkm3fvJ6Oj161aspWdh3S7EhEvR
-X-OriginatorOrg: arm.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2026 16:31:07.6631
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2618d542-3f74-4713-2961-08df4b118208
-X-MS-Exchange-CrossTenant-Id: f34e5979-57d9-4aaa-ad4d-b122a662184d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=f34e5979-57d9-4aaa-ad4d-b122a662184d;Ip=[4.158.2.129];Helo=[outbound-uk1.az.dlp.m.darktrace.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	ZR1PEPF0000E6AD.eurprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAWPR08MB8815
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v7 02/14] PCI: rzg3s-host: Fix runtime PM handling in
+ the NOIRQ suspend/resume phase
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Claudiu Beznea <claudiu.beznea@kernel.org>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
+ robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de, 
+ geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev, 
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-renesas-soc@vger.kernel.org, 
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, stable@vger.kernel.org, 
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <20261019065025.2146539-3-claudiu.beznea@kernel.org>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+ <20261019065025.2146539-3-claudiu.beznea@kernel.org>
+Date: Wed, 25 Nov 2026 22:09:33 +0530
+Message-Id: <179562477303.5580.355686478965853081.b4-reply@b4>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2541;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=5i7lydFJ+0F7rak/+bGf2JUiQghRnvZnvqM+p+ijHX4=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBw9IGXEasvmJCvMTeSF1cGl80UbscjR37EHJj
+ rc6/3QWGXyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcPSAAKCRBVnxHm/pHO
+ 9akgB/915LEZv5ZJ1jtPXakAsYWwbs5Z+HOzgmhNqdPKIt6DJSWsVQHpOW7ThyyGQa78XI4bHRV
+ 4hHwIIH3P5jPzzG+mDu7gYFQmiYowIwa0cAHw5q6rVHVHtvlT2yGO9nsGBofyug2TVIzWmwQ1Y9
+ 0hJ/zde7b8m7zmEs7naUegIrMTpR5AqQ7fvfDkr8NuM/DyKS/q+pfRW8gWMsXuzyKdSgcHCrqtF
+ fDrZCvrczaMWfLUMcXO5u049MQeAG3uatTi60Ib8EOjbQbKt4D3yQMd2xxO4dMV2RYa8jfnB0H1
+ XAGQfmjhyq+l65Zgz4j3MUOvUJnduWeF4bx72CXxgkgMsl2E
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
 
+On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
+> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> 
+> The runtime PM documentation states the following:
+> - During system suspend, pm_runtime_get_noresume() is called for every
+>   device right before executing the subsystem-level .prepare() callback
+>   (in device_prepare()). In addition, the PM core disables runtime PM for
+>   every device right before executing the subsystem-level .suspend_late()
+>   callback (in device_suspend_late()).
+> - During system resume, pm_runtime_enable() is called for every device
+>   right after executing the subsystem-level .resume_early() callback (in
+>   device_resume_early()), and pm_runtime_put() is called right after
+>   executing the subsystem-level .complete() callback (in
+>   device_complete()).
+> 
+> The driver's .suspend_noirq() callback is invoked after .suspend_late(),
+> while .resume_noirq() is invoked before .resume_early().
+> 
+> If:
+> - the device is not part of the wake-up path, and
+> - its runtime PM status is not RPM_SUSPENDED,
+> the generic power domain .suspend_noirq()/.resume_noirq() callbacks
+> (genpd_suspend_noirq()/genpd_resume_noirq()) invoke the driver's
+> .suspend_noirq()/.resume_noirq() callbacks and call
+> genpd_stop_dev()/genpd_start_dev() before and after them, respectively.
+> 
+> Calling genpd_stop_dev()/genpd_start_dev() allows devices whose power is
+> controlled by generic power domains to be powered off and on during
+> system suspend and resume, even though their runtime PM usage count does
+> not reach zero.
+> 
+> Since the runtime PM usage count is incremented in device_prepare() and
+> decremented in device_complete(), runtime PM operations performed from
+> the driver's .suspend_noirq()/.resume_noirq() callbacks are no-ops. The
+> actual power transitions are handled by the generic power domain
+> .suspend_noirq()/.resume_noirq() callbacks.
+> 
+> Moreover, attempting to runtime resume a device while runtime PM is
+> disabled may return -EACCES. This may cause system resume to fail when
+> resuming after a failed Root Port reset, as described in a subsequent
+> patch adding hot-plug support.
+> 
+> Remove the runtime PM calls from the driver's
+> .suspend_noirq()/.resume_noirq() callbacks and rely on the generic power
+> domain callbacks to power the device off and on.
+> 
 
-On 11/24/26 17:00, Yazen Ghannam wrote:
-> On Wed, Nov 18, 2026 at 04:11:48PM +0100, Pierre Gondois wrote:
->> Hello Lukas, Kuppuswamy,
->>
->> On 11/17/26 19:57, Kuppuswamy Sathyanarayanan wrote:
->>> On 11/17/26 03:50, Lukas Wunner wrote:
->>>> On Tue, Nov 17, 2026 at 12:10:29PM +0100, Pierre Gondois wrote:
->>>>> Return PCI_ERS_RESULT_DISCONNECT when no upstream bridge is available,
->>>>> avoiding a NULL pointer dereference in pci_walk_bridge().
->>>> How can that happen?  If it can happen (which I doubt), why isn't this
->>>> patch tagged for stable?
->>> One way I can see is a device without a PCIe capability on a root bus.
->>> pci_pcie_type() returns 0, which is PCI_EXP_TYPE_ENDPOINT, and
->>> pci_upstream_bridge() returns NULL. Native AER never gets there. Only
->>> firmware-first can, through aer_recover_work_func(), and only if
->>> firmware reports a PCIe error section for such a device. If that is
->>> the case, skipping recovery for !pci_is_pcie(pdev) in
->>> aer_recover_work_func() seems a better fit than a check in
->>> pcie_do_recovery().
->>>
->>>> Why is it at the end of this series?  Does the series somehow make it
->>>> possible that there's no upstream bridge?  Which patch does that?
->>>> If the preceding patches are not the cause of a potential NULL
->>>> pointer deref, why isn't this patch submitted separately from the series?
->> To test this serie, I generated and injected synthetic CPER records.
->> The PCI device referenced in some synthetic CPER records did not
->> actually exist. In such case, the kernel crashes due to a NULL
->> pointer deferencement.
->>
->> This use case is indeed slightly unsusual and unlikely to happen
->> in the real world. The patch was still included in the serie.
->>
->> Please let me know if the patch should be either dropped or better
->> documented.
-> It would be good to include these details in the commit message.
->
-> Also, I agree it is fair to be prepared for, and gracefully handle,
-> unexpected data from firmware. A platform may report a CPER to OS with
-> the intention that the data is only for reporting purposes, not recovery
-> action.
->
-> **BUT**, we could argue this is a platform bug. CPER serverity is one
-> item used to decide if recovery should be attempted. The platform should
-> not report a severity that indicates recovery/action is needed while
-> giving bogus/incomplete data.
->
-> If the platform is intending to share data for reporting only, then the
-> CPER severity should be set appropriately.
->
-> Otherwise, this should be a big FW_BUG message "Platform reported
-> recoverable error for unknown device."
+Going by this logic, do you really need the pm_runtime_resume_and_get() in
+probe()? Genpd should also enable the power domain before this driver's probe().
 
-I'm not sure to understand. Are you saying that we should
-try to fetch/resolve the PCI bridge in pci_aer_handle_error()
-before calling pcie_do_recovery() ?
+- Mani
 
