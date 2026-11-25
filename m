@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795625398;
-	b=z2eijaeznc9z0Z89FqJJaYFgdufFQgUy6xQyNHRKmERcwsRVT3WPchkwgodeQnvrMDGQ
-	 OydpKBYxS0c0i9aM7mOYd3fOQdNtjV/0p0qqMlsgXOCxZZUN0adbB5ICwysDZCDbRSZrG
-	 L8R+lXSql9NK2GNyIsS1nwvN8Ga361CapIlVledTDNoaxnw5Iv+DLpKSYblfmlRwEJMXi
-	 NYyDlWtl2N2m5L0RD/HjdD6357vnTUp6H7pBGKrKh41MI7nvYpPikWbLIcT5R1fLfv52A
-	 k/e91M/hmN1NjqPi0vutG+N0m0VGtO/TpK4uWIQHa4pxS9YbPT1KrA9AV+NMPItvSTQ==
+	t=1795625674;
+	b=xRBNBEwUWKaE/pAmKoJh487LV6l/RzpEhDvrQtMg9WAC+PDWJBFb2wHdZp3nIeybFv25
+	 cZVwTmGfSL9UZqUzhIN0CvuLq+3ylWc39JdcO2/gTZtn6JuPPIS/m9/1BuJlYAEwnlEHt
+	 iG6Ohc1oQm5QL04iLqyhx4wqHaCffe1Ndzov32/fAURUMArccv5agsJFW70IfR2TU7cGl
+	 wWnnq9XBWuzrFXpim9EVkc6L6JWiVFshuN3HBhH4WRID6HaUQifrh9Z68XtK7iutZzvg2
+	 0qFgtFjLzVpL8rN6XoOVTNd6bcbM8Egg7TtVijoIMUmCaTrEXhnR057qu+6ToF1E28Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795625398;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795625674;
 	h=Received:MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:
 	 From:To:Cc:In-Reply-To:References:Date:Message-Id:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key;
-	bh=UezByG7U2h9IqUKFRk/D6mBTIPmbDfL92nk/JrUNots=;
-	b=GRQt8dpsbQmHAgoiz17gD0ZTDmXh6R0F8pi2aJgFr6hypRcWEpk/3jQOSdQh2WPnAGBC
-	 B3fX7/JWYKLCSQcCckpmHvRbmXgkBRvog0MtnIdr+RXY/5Y+ALNk6GeYLlwNxcGw/axBp
-	 TVCj1cmGh+WC8XLG2SZ5Dh3bPe0iQzIVbMbDom/8SbqNcaULMFkDDvvzj4YZ9wjWo1Met
-	 uUApPUCEa/uYrZbOq+hZYc0dGeWeCqc2xGWTO6sUCePCtpldHiXBTQLoX7lDcVHRdeC+9
-	 80EzjyuHsU6XDkYJ5hscp+zw1yXuGkjO5n6+SssZ9k7LMja1baaI+SHTrG1c+awDIVA==
+	bh=jr2lASo3LHhhQY05x8Ui7GbgCZ7rkwICfoFLdbyY6ow=;
+	b=E9g/d525Yd4ry2E4d4iAEpIZKgPbdLmdDyeejxkaBKrfHMYNB7CbcrPYEoINi7leXEwF
+	 driPxgFfF2BP95OEaE4xKzgnBQwnSW/VDI5fJLBRkR5iGGkjE5vidiyCsVa5iDv38Mc+P
+	 KYKSoamLTjuDDY3SGL4q3a21B8X28SXAxY/iSVwtqlTE2ooM8SYZBp4LoKB9b2pNVRuGh
+	 JxlPnRZTJoxrQENS8y84IcwKZNBVsPUrOmbB/l+NgZnUO7eXM8JNOSTGFUywE3NxF0w1U
+	 NJl5u8IG32XubV0oCTdklyLrN6yqUyFd835z0V5m6eZnqvlj6LYDm0p4935vRu8nKTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7560F606A32D;
-	Wed, 25 Nov 2026 16:49:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C5A31F000C0;
-	Wed, 25 Nov 2026 16:49:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 121FB606A321;
+	Wed, 25 Nov 2026 16:54:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79A0B1F000C6;
+	Wed, 25 Nov 2026 16:54:28 +0000 (UTC)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -38,8 +38,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v7 05/14] PCI: rzg3s-host: Initialize the IRQ domains
- after the IRQs are masked
+Subject: Re: [PATCH v7 08/14] PCI: rzg3s-host: Drop nop instructions
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 To: Claudiu Beznea <claudiu.beznea@kernel.org>
 Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
@@ -47,64 +46,39 @@ Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
  geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev, 
  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-renesas-soc@vger.kernel.org, 
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, stable@vger.kernel.org
-In-Reply-To: <20261019065025.2146539-6-claudiu.beznea@kernel.org>
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <20261019065025.2146539-9-claudiu.beznea@kernel.org>
 References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
- <20261019065025.2146539-6-claudiu.beznea@kernel.org>
-Date: Wed, 25 Nov 2026 22:19:48 +0530
-Message-Id: <179562538809.5580.13436039230126479202.b4-reply@b4>
+ <20261019065025.2146539-9-claudiu.beznea@kernel.org>
+Date: Wed, 25 Nov 2026 22:24:23 +0530
+Message-Id: <179562566319.5580.8113747221186721413.b4-reply@b4>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1572;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=587;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=ZvF9ztr21DpWZoUrOG9CFbSng8ecM0Pad1c9yPt2Q7E=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBxGwZCu3h+uHdoIiCDAF21b017dHOkwcFi8ki
- fqfxnYyYMaJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcRsAAKCRBVnxHm/pHO
- 9UxjB/9Ny8WXQiS8iBiz2oORKmlANGxRSx2MwqCifikl3Pd1Gr/67B5vEr+dicvb6QKzfNyWPw+
- x96y16moSYEPhWSNrwepreGGh41KmT+hxIwAwMKlLr0Zosy3hJbk1zyPqQlMogIvejSx3OdM01E
- XtYh4jIPue8KwBTJMRj/nfwANlUKgTRcpw7sNCY0kbYqh+4iTtgfC5AYcS4R/SHBgewDHa/Stkv
- /2o6+AhNMtOs6QsdnAp+gGJ+NCJhr4Pdt+XhZKqTMljWaT6ONCNqm6M8htRqcVr83VllXPXV7Lt
- 2JWYZu+S93qzjAgbAoLujGU8NPaYXd4RvSTqBWZj5AQYlnyN
+ bh=l4lWft3rtL1DKNOv8bvA9rRRDUu3sRlxk1cqvDTck9A=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBrBxLDFjeNpP2Vvf2wo7Ol1WzXkNuYiHv1ftaoB
+ 1IQsnQOWRWJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCawcSwwAKCRBVnxHm/pHO
+ 9cALB/9rmTJw0PYqsu5UNEgD7v19D5VLwXcIrneY7whMCTLJvf9evLZee1jV79M1uneaW7iVAHZ
+ Hx+oABx6Ca4ZqwYB2JhZDSh60yEEI/L2GeBxlbdQjt3l1KAeA501K9cKBKNZBZU9LDQy6+81wBX
+ cJ9t06632YUx2RtAnBXJS4n7M6IbCPAIEY8vLrV9o9jQd+kRGDPofVUFUU5szwGnBHieC4KY/AO
+ W/d09frz03GsuPO3t8PlmK1eV5U7E3OkkDRWza8bzc2KT17GMyGCtO+Tmh9Dg+WTrAIQBoBH6QH
+ v+V7cVG1IJmRvOsrzogg5aCJ2ilLIA6nnu3NkK/EVixncymN
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
 > From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 > 
-> The IRQ domain initialization requests the interrupts and installs the
-> chained handlers before rzg3s_pcie_irq_init() masks the controller
-> interrupt sources. An interrupt left enabled (e.g. by the bootloader,
-> or latched from a previous controller state) could therefore fire
-> before the controller initialization is complete and be handled on
-> half-initialized state.
+> On the RZ/G3S PCIe IP variant (which is similar to those used on the
+> RZ/G3E, RZ/V2H, and RZ/V2N SoCs), access to the PCIe Type 1 registers
+> requires setting the PCI_PERM.CFG_HWINIT_EN bit. Since this bit is not
+> set on the code paths where rzg3s_pcie_set_max_link_speed() is called,
+> the writes to PCI_EXP_LNKCTL2.TLS are nops. Drop them.
 > 
-> Move the IRQ domain initialization after rzg3s_pcie_irq_init(), so that
-> all the interrupt sources are masked by the time the handlers are
-> installed.
-> 
-> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> ---
-> 
-> Changes in v7:
-> - none, this patch is new
-> 
->  drivers/pci/controller/pcie-rzg3s-host.c | 31 ++++++++++++------------
->  1 file changed, 15 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-> index cc985020d962..94345d6f0bee 100644
-> --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> @@ -1418,7 +1418,10 @@ static int rzg3s_pcie_host_init_port(struct rzg3s_pcie_host *host)
->  	return ret;
->  }
->  
-> -static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
-> +static int
-> +rzg3s_pcie_host_init(struct rzg3s_pcie_host *host,
 
-This split seems unnecessary.
+Shouldn't you ensure that TLS is written by setting HWINIT_EN? If not required,
+please state the reason.
 
 - Mani
 
