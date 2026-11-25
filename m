@@ -1,57 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795566315;
-	b=dqHhPrTFSlcaTPIfGudodX6n2Co5r7gv1oTTO9va7IsRfina7eCV9pJvAHzqvlR/brpN
-	 8Zgi/QSU8NWLhzujfmApK/YQE0QthB+DqNPbjDkHbQhTXOtrVuzB/ibjF4O8anuRuhDIy
-	 0YykRFJMTofEHf2/fmIIa3aKs+6DjZFR+A+ha0BvvGYI5OL8Pnh4EqokvaNr6Nmj77kGP
-	 Uj3yGbUTxz2EclITezI46d0g4uJ3Qn9kLIrnJCSSu1I0x/mJygJ03p4DCa/ETjEndPp9X
-	 SYI+jTDsU2+Y+NseSssbxNNYKaOY+mTwRM2do5eS8Be7Mq/FR1MCPx53ZhG+6YYpSfg==
+	t=1795566490;
+	b=OD85tzws9qf7jNHlQhi/PJj4Js2woD8OQl0s2jhojN/Fc6SXwxetH0R3S+NGC8Bl7oIu
+	 tWtbRxHR7+QTupNOIYoTP8Ge99FA9PJSPeaJ/R+GlEIN4k8ZHtkUgXldPl+WuZ1cZYSlO
+	 pruG9mYLHCN+519mw3q0GzEEx2PWhRlJ1TNPagrMrsOd4CQYAeuWDXLYu7/fyd39GoICm
+	 PrKSq9Ot+L0ba2CbqJ4p3zjw/ksne5FudJgXeZmwqvujHBfXxKS1tbpRVx+WprYyISZqz
+	 CtNYycBb7eeVhCCr/erhDxiD0slc5q3autbgDhgYCqRHRx8gTJgUXQFRKorwZCD7NwQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795566315;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795566490;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Symlo491TPdhJrREXQmOnSha527963qk4UMvwZkfuiE=;
-	b=w0r5QCCfkAVb+z0EzuEMUHEo6tnIBH1/kvJT8zVZ4TZeXf8WCKe9gr5uFiOx3aKrExSk
-	 pqhqAR6IMNU9Tw3dYtzfZz+yik+AKt81xO3yI2xoubdnM294x1IRJXfQAnJOru6lpf7rS
-	 fx83ejkexwzMgaTKn0/p/o3qnwnWaNAkslmvbn0ugN3ei9kYUGUqV7wXf5chLgBbTQxMK
-	 ILaum5Cz+AJDbyjXmapEkT3BnjsytG7b5EnThy3Vaf+d2FMw46jfGCbYTo4YwWu2lQH1e
-	 llhawXmXySKqUIj5kemEH2sZ71qu79b4bRz5aSnCxB5yTqI9yTJAR0vGyk6mMGtuzYw==
+	bh=ShzhlyGDiRC7J5U37WWxub5Q+gr6NCnkh429eHZhijk=;
+	b=5dxXvpkTJ7rK7FGfltUP3uiB3wdydNUHxEMnDNx0CDNk3laPihesoQ/LwfZFrrug/Q3o
+	 pMN5LBwBEP0e/I3JE0cCncFy/rq29CgfXOzRz20E5R0ma4fh/t/lcO3cTc0FqDgk6dyzw
+	 OieRPeh0RvmI8R0IyUhoquInXyio2LNPvbvs50Pxdb8hDOTIVKU7FojQi20mNKeddmwYv
+	 XFjNZkrX5zVt4x+NjEMp7UtHdZGpWno/ix9HqpQL07zWwpF39w3AAmH/FgfgWGevj6CNf
+	 uQZeKBaHIGZM+b5Tw0sCn5K7sVRPSZj9y/M2LYj3j/HNnzqUgfe7APA8VPc7+JIIrRA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CIWMMnP6;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bPW74Dx3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D329606A31E;
-	Wed, 25 Nov 2026 00:25:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 618C7606A31E;
+	Wed, 25 Nov 2026 00:28:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CIWMMnP6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B37C1F000C0;
-	Wed, 25 Nov 2026 00:25:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bPW74Dx3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B84C81F000CF;
+	Wed, 25 Nov 2026 00:28:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795566314;
-	bh=Symlo491TPdhJrREXQmOnSha527963qk4UMvwZkfuiE=;
+	s=k20260515; t=1795566489;
+	bh=ShzhlyGDiRC7J5U37WWxub5Q+gr6NCnkh429eHZhijk=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=CIWMMnP6ZEeenbdNqfqBhWWv6qeNJmxAmW5C47UB7GUGTSsrzqkPJBB0IV4qt+hAU
-	 f6iHkP3y78pPfgGBY3NbwZZfc1tj6pqf+7yv8C+EJBBflsVIMGzTPHj81/h2qbsQ8j
-	 vnDp8v8o2p++9RnJNsJNTn6CimjoqOt1gBU13B6j2zOAKHgtfRlYnS5OenihQBCuCp
-	 HzOjSTmUXCV4d39zfB/R3oUVrsGbIPM8XKk49+XSZT5IF6OWFVLSjNZ612vt7Mb0zR
-	 TQyJDO/r4sURu1N6jaVRnb8K2fIdmgLIXU5eltHWP5XAc4UZdmGndLkhVKQloTKLuu
-	 v4VNldkEctKgQ==
-Date: Tue, 24 Nov 2026 18:25:13 -0600
+	b=bPW74Dx341iMuPCuB42uOqQiqXrd1Uo401JAnEo1pz0vZ/U9bHXGAplacO6KcZ0Nu
+	 EQ/rrlSFaA/uV9GFJkVqgiOFYhIXDOgIOaDBv6snShD2WoB8HZHlnt+Yx7VBFGZetr
+	 JE69pQAvNPUIbtDtaprkwnpfZZK5Bdt5TmXdyg/4QN54CXQo6WLe6fBuf+h7mw65Wo
+	 XHMpewH9f0Hl8f+mERZn5R+Z4h8nF2f9qD/LvtGvG2i0ey2G4NC/+S+9YyCfGOzKgF
+	 KDcVRC0TWQMwzWiHvelRSNmced/1wVabvOyISlrKNDs6X+C2nrD8IlbcW+ju91QiqL
+	 ZK8MOHHJQzx/w==
+Date: Tue, 24 Nov 2026 18:28:08 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kevin Tian <kevin.tian@intel.com>, Jason Gunthorpe <jgg@nvidia.com>,
-	Anthony Pighin <anthony.pighin@nokia.com>,
-	Dave Jiang <dave.jiang@intel.com>, Dan Williams <djbw@kernel.org>,
-	Ionut Nechita <ionut.nechita@windriver.com>, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2] vfio/pci: Only lock the upstream bridge if the reset
- may need it
-Message-ID: <20261125002513.GA1197529@bhelgaas>
+To: Priyank Rathod <rathodpriyank@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 0/2] PCI: Add Lane Margining at the Receiver debugfs
+ interface
+Message-ID: <20261125002808.GA1198022@bhelgaas>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -63,119 +65,30 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261124212842.1934651-1-skhawaja@google.com>
+In-Reply-To: <20261124174411.4183038-1-rathodpriyank@google.com>
 
-On Tue, Nov 24, 2026 at 09:28:42PM +0000, Samiullah Khawaja wrote:
-> Commit 962ae6892d8b ("vfio/pci: Lock upstream bridge for
-> vfio_pci_core_disable()") makes vfio_pci_core_disable() trylock the
-> upstream bridge before resetting the device, and skips the reset if the
-> trylock fails.
+On Tue, Nov 24, 2026 at 05:44:10PM +0000, Priyank Rathod wrote:
+> Hi Bjorn, Ilpo, Lukas,
 > 
-> All VFs of a PF have the same upstream bridge. Take a device with two
-> VFs, both used by one process. When the process is killed, both VFs can
-> be released at the same time. The first one takes the bridge lock and
-> does its FLR, the second one fails the trylock and is never reset.
+> Gentle ping on this series.
 > 
-> The bridge lock is only needed for a bus reset, which is done through
-> the bridge. Add pci_reset_function_needs_bridge_lock(), which returns
-> false if there is no upstream bridge, if bus resets are disabled for the
-> device, or if the device is a VF. Use it in vfio_pci_core_disable() and
-> pci_reset_function() to only lock the bridge when it is needed.
+> Note that since pci_force_enable_link_state() and the bitmask return
+> value of pcie_aspm_enabled() were deferred before v7.4-rc1, v7 as posted
+> no longer compiles on current pci/next (and has a minor Kconfig context
+> conflict after PCIE_EDR).
 > 
-> Fixes: 962ae6892d8b ("vfio/pci: Lock upstream bridge for vfio_pci_core_disable()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Samiullah Khawaja <skhawaja@google.com>
+> I have rebased the series locally onto pci/next, resolved the Kconfig
+> conflict, and replaced those deferred ASPM calls with a small
+> PCI-internal, reference-counted pcie_aspm_inhibit() helper in
+> drivers/pci/pcie/aspm.c (leaving include/linux/pci.h, pci.c, and
+> pci-driver.c untouched, and preserving existing ASPM/L1SS/Clock PM
+> state across sessions).
+> 
+> Would you like me to post the rebased v8 series now, or hold until any
+> broader ASPM API rework settles?
 
-Applied to pci/reset for v7.5, thanks!
+If you could rebase it, that would be great.  Unless it depends on
+other changes already in pci/next, you could rebase to v7.4-rc1, since
+that's what topic branches are based on.
 
-Minor conflict with Ionut's "PCI: Don't block bridge config access
-while waiting for the device lock", so double check if you have a
-chance:
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=reset
-
-> ---
-> v2:
-> - Replace pci_reset_needs_bridge_lock() with
->   pci_reset_function_needs_bridge_lock() as suggested by Alex, and use it
->   in pci_reset_function() too.
-> ---
->  drivers/pci/pci.c                | 25 ++++++++++++++++++++++---
->  drivers/vfio/pci/vfio_pci_core.c |  3 ++-
->  include/linux/pci.h              |  1 +
->  3 files changed, 25 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7c6f2aba8144..cc6647d091f7 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5256,6 +5256,24 @@ int __pci_reset_function_locked(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
->  
-> +/**
-> + * pci_reset_function_needs_bridge_lock - check whether a function reset of
-> + * @dev may need the upstream bridge to be locked
-> + * @dev: PCI device to check
-> + *
-> + * A bus reset of @dev is done through its upstream bridge, so the caller must
-> + * hold the bridge lock. The bridge doesn't need to be locked if there is no
-> + * upstream bridge, if bus resets are disabled for @dev, or if @dev is a VF.
-> + *
-> + * Return: true if a function reset of @dev may be a bus reset.
-> + */
-> +bool pci_reset_function_needs_bridge_lock(struct pci_dev *dev)
-> +{
-> +	return pci_upstream_bridge(dev) &&
-> +	       !(dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET) && !dev->is_virtfn;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_reset_function_needs_bridge_lock);
-> +
->  /**
->   * pci_init_reset_methods - check whether device can be safely reset
->   * and store supported reset mechanisms.
-> @@ -5313,10 +5331,11 @@ int pci_reset_function(struct pci_dev *dev)
->  		return -ENOTTY;
->  
->  	/*
-> -	 * If there's no upstream bridge, no locking is needed since there is
-> -	 * no upstream bridge configuration to hold consistent.
-> +	 * The upstream bridge only needs to be locked if the reset may be a
-> +	 * bus reset, which is done through the bridge.
->  	 */
-> -	bridge = pci_upstream_bridge(dev);
-> +	bridge = pci_reset_function_needs_bridge_lock(dev) ?
-> +		 pci_upstream_bridge(dev) : NULL;
->  	if (bridge)
->  		pci_dev_lock(bridge);
->  
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index fcbb2da860e2..5dcbefd2eba4 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -777,7 +777,8 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  	 * overwrite the previously restored configuration information.
->  	 */
->  	if (vdev->reset_works) {
-> -		bridge = pci_upstream_bridge(pdev);
-> +		bridge = pci_reset_function_needs_bridge_lock(pdev) ?
-> +			 pci_upstream_bridge(pdev) : NULL;
->  		if (bridge && !pci_dev_trylock(bridge))
->  			goto out_restore_state;
->  		if (pci_dev_trylock(pdev)) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index aa3765a20a96..aee6a178a535 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1486,6 +1486,7 @@ void pcie_print_link_status(struct pci_dev *dev);
->  int pcie_reset_flr(struct pci_dev *dev, bool probe);
->  int pcie_flr(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev);
-> +bool pci_reset_function_needs_bridge_lock(struct pci_dev *dev);
->  int pci_reset_function(struct pci_dev *dev);
->  int pci_reset_function_locked(struct pci_dev *dev);
->  int pci_try_reset_function(struct pci_dev *dev);
-> 
-> base-commit: 7475ea8b58616b33c04afb976cf0fbaad9dd63fb
-> -- 
-> 2.56.1.831.g720f3f5937-goog
-> 
+Bjorn
