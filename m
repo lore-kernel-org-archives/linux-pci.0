@@ -1,55 +1,68 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795582202;
-	b=p4jvEKCOJNcoSmvWncm/epBEnfT+FKDkY4SQ3oSI0u8DwR0TaVZeJmz158LvEbVC/763
-	 3pW56V7pQCSIPyEO8QsysBRiOb3ctOb8aGf5M6IfC3+f/3EftF6tQeb07i1ClXeSsA719
-	 q0mK1P93lzjvki1kHz0Ueu+NSHG/gyF6BViwcPzs8QSxfgpArXL/ZJDgmKST2xAHoT8DG
-	 jR+cYwMeDsV3VRumfmQMEzTRy/ar//imgl1vVug3eOy4UyLFwCxxvky7MfA98k3K3z5hR
-	 SDJC5gadpsBoF/sPg4HIqI5Mw7RU0DTsZqiGnTdmbzXf28icv4AiOy6PJXZybVZwXhg==
+	t=1795582329;
+	b=EKaE21Y6ZSa0gQPByfmA8e89n5LdB9eMwiAbzeEAZzGAowmMV5X9F4FX7MYc7pabv6+F
+	 PhglEHE2eE8lcGzOKWm8UpAR7xJrpvI2Yle158iwHkLaEgZzBi0d0VRcV9QfaIvfAUJeZ
+	 i5IQ0LQ5zR2hgN4wCSBWFSVLMxr5K7iK58BwTjIgYK4UGUNMs1f3JVnpoT9ytM6NenJ/l
+	 vh0JF7AQHunEC17p9fa3aEJ/tydGBjrHzAzyDykelc4e/MfTw6QILOQ2+ohyrfHjwJ7Lb
+	 Rjm06quLSIb6FC/l+SvXgzSi1XXskhfn6SSNhaXKujRjPRCqW1EB3q1V0ehYg01ksLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795582202;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=yU7EOQaldJSRJvVfQ3Ok/L2rmZwO9zQnLjzR2KlyVqw=;
-	b=GWdxvembezSPCyX5X/rVfnwoJn0YM/tTlezmUBRgck634lrzwEP8rPpE6SxgoGxxH3gw
-	 Z56+YZTqEpNZOqexyY2RZogksLlf1ACwWpZl5rfwVPh0tzttIDShHkxqOE6rTfHSHsVGZ
-	 qhsoJ15vcyrCT11H+Aaaw+aYDei0dWt/WgLqkXd15Y2E6IeNQPE7e1qOT4XMmMWMbCAKl
-	 jBsTkGVALtsQwpPdsLeVwUsR942QuLLEXsISTXxPlELFxX4+FPuSdt6EoeGx7AiPRiqLg
-	 5gegCY8lYJsBmMYtxYiERY6BArUpEfzSsOYTGyO/mAHsrzko4iTtWWk4Q7lME6r2B0w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795582329;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=UfsA9CwJ0qOfvuF+NW18HhX6r6LNmP5pTktEx9vryhc=;
+	b=Nka/xV21toAsYEU4JPf2NlQcgNDPDsJ/INhZ12MOghHHdgL30T7B+VwhLAxn4fP632N0
+	 uktw+lbLNky9t90EelMO19rvOWIEZE6miMe9X5cQZvyiulMxbLE2wwykdlJA6owY+LaLX
+	 gIl7HFUD4OZAv8cAZtQrICqxk8thD2OflnKAPWLYoCIuVBPqI2MXKc8dqApOByV9djnQG
+	 56ikF6gn0mIy12buxmRVyBP1gPvHE82PHwRvIuH27hylmcm97E4dxOokIPfRq13iNeeCW
+	 yBROl8CZQF9a92KjSAYgaWuY6zVGFwGL90FKPKgCTjiDwmibVDVWtS08Gf6iPf7Ljww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IuVUTAIm;
+	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=N5WvpHxk;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 390FA606A31E
-	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 04:50:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7754606A31E;
+	Wed, 25 Nov 2026 04:52:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IuVUTAIm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4C2C1F000D8;
-	Wed, 25 Nov 2026 04:50:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795582202;
-	bh=yU7EOQaldJSRJvVfQ3Ok/L2rmZwO9zQnLjzR2KlyVqw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IuVUTAImOHpLtyuIFvlLpw1f3MlqteenL6db/NYALimag8IRJ6+1p59CXSbAlgFNK
-	 KCFJ2zJEtknAsTnAq1aKF/NyhhnBXTMh1EtJHlkdQAhnh7bancSakQc+W0PgZKDCoo
-	 NHPyuVIzem3lvMb6lOXm5h/AyDiy/h2TUdiF3Fa+nPCyYurbUJqviM2CHHuSYR+1nN
-	 OddFwzTLxS7rqwdoKULQhDa/sH0bYWN+ky273GBsbHrTqSCRD0388hYSzY+A9QhWMK
-	 AvfgmwGqFd5qsrdpoD1BOdKSbSmgrQetIdAbwPnitM8gbhrKL3EG9epB5mnb4y0qWA
-	 xBRb0hHUdcakw==
-Message-ID: <sashiko-outbox-232597@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 0/8] phy: core: Add phy bulk helpers support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Inochi Amaoto" <inochiama@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261125043639.249525-1-inochiama@gmail.com>
-References: <20261125043639.249525-1-inochiama@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 25 Nov 2026 04:50:01 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=N5WvpHxk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1500F1F000C6;
+	Wed, 25 Nov 2026 04:52:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1795582327;
+	bh=UfsA9CwJ0qOfvuF+NW18HhX6r6LNmP5pTktEx9vryhc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=N5WvpHxkDSBJ4VG//Q65BqDCUHQS56DYuBT+qbcytUhFnv9Jm42LjFWpw6L1GlrAw
+	 IZkCRljOIpXsCcQJ+sbBv+anljYdVJOoLeyiiS17U92qiqcDM/fNrlLUeR7JjGyoaR
+	 xxq6pzP4k30H/zxRSQZBeExU4iZHTKNAsF0bscd4=
+Date: Wed, 25 Nov 2026 05:52:27 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Alexey Kardashevskiy <aik@amd.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>,
+	"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Steven Price <steven.price@arm.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>,
+	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev,
+	Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v1 01/10] PCI/TSM: Report active IDE streams per host
+ bridge
+Message-ID: <2026112519-hesitant-deviation-9917@gregkh>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <20261123083337.2731019-2-aneesh.kumar@kernel.org>
+ <f377271d-353f-4c8e-94d5-98159a66ab28@amd.com>
+ <20261124024842.GB9566@ziepe.ca>
+ <25fa4ffc-96cd-4851-8ac7-dd3750b71f15@amd.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -58,9 +71,52 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <25fa4ffc-96cd-4851-8ac7-dd3750b71f15@amd.com>
 
-Sashiko has reviewed this 8-patch series and found no issues.
+On Wed, Nov 25, 2026 at 02:30:26PM +1100, Alexey Kardashevskiy wrote:
+> On 24/11/26 13:48, Jason Gunthorpe wrote:
+> > On Tue, Nov 24, 2026 at 11:11:49AM +1100, Alexey Kardashevskiy wrote:
+> > > On 23/11/26 19:33, Aneesh Kumar K.V (Arm) wrote:
+> > > > From: Dan Williams <dan.j.williams@intel.com>
+> > > > 
+> > > > The first attempt at an ABI for this failed to account for naming
+> > > > collisions across host bridges:
+> > > > 
+> > > > Commit a4438f06b1db ("PCI/TSM: Report active IDE streams")
+> > > > 
+> > > > Revive this ABI with a per host bridge link that appears at first stream
+> > > > creation for a given host bridge and disappears after the last stream is
+> > > > removed.
+> > > > 
+> > > > For systems with many host bridge objects it allows:
+> > > > 
+> > > >       ls /sys/class/tsm/tsmN/pci*/stream*
+> > > > 
+> > > > ...to find all the host bridges with active streams without first iterating
+> > > > over all host bridges. Yilun notes that is handy to have this short cut [1]
+> > > > and from an administrator perspective it helps with inventory for
+> > > > constrained stream resources.
+> > > > 
+> > > > Link: http://lore.kernel.org/aXLtILY85oMU5qlb@yilunxu-OptiPlex-7050 [1]
+> > > > Reviewed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> > > > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> > > > Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> > > > ---
+> > > >    Documentation/ABI/testing/sysfs-class-tsm | 13 ++++
+> > > >    drivers/pci/ide.c                         |  4 +
+> > > >    drivers/virt/coco/tsm-core.c              | 95 +++++++++++++++++++++++
+> > > 
+> > > I'll take to the tsm tree, thanks!
+> > 
+> > Lets not take any new sysfs APIs please. These all need a careful
+> > thing and we are not having a good history right now on any of these.
+> 
+> hm okay.
+> 
+> > I'm not even sure what this is supposed to be for, is it debugging?
+> yup, pretty much.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261125043639.2495=
-25-1-inochiama@gmail.com
+Then put it in debugfs please.
