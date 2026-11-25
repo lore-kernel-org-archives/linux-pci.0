@@ -1,73 +1,97 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795591425;
-	b=HVOBExS1lbhzoUcVDoWwVbmXHIDwaM7G5Mk3cfhLQAkMgdZBJwj/Gcrk/+YVi5J47EbV
-	 k1ecxg7sS8QHBViROEbxRTQY/15FMbvBz32NFh5JG1ZTg5LW3tnL17Zyfq6Vu/J2C/45e
-	 hCK4/euEztzkyIHdsfe+ArK3gnrMudKziCY+AXXPj1HovYSnXD7bgCykm6zl/YSRHZgTV
-	 u0lN71KkFWDN3UT+hC5UiekXreBxzDvKuXX6PEwucyJVmj0OyCk1G0np0BlA5LEtxjodX
-	 n4YW1GLTQuQZI9CZa9G57e81UiUkJ3Gw1ejiAaJBMxYYAJAWX/eQrpmOyLCbgRWwT8g==
+	t=1795593986;
+	b=wSltgDbsAccVdwEGEHnb3TFBQLgkll374jz6AxmLTBR5q7/JemsgkOXX8Y/a7kz7W9Yd
+	 lvjjrdNXmAdvwL7AtvJRpLgS+fcXjRY0JzkXqTBtzVNrWecqx2Wm1fHAZST+wHGViE4Cz
+	 FaUDAJFa3R3tdi5eHHBcQXBPCGREn7Q/FJ8IDNKshhoEXWAasEUy1pYeZoDjtILRakBFA
+	 jX1QNlb4SaRSi4hzuQ/EovSBZmgEPQKuCGU1H7qTJJn9FlgYFyoedCbd8bWaut08FaZkt
+	 DOTFPJhDDOtdyEmgNBNwW2K6UENez7kfiDrBw3ECn1SXDqn9BjnfKMNVvlGv496SpJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795591425;
-	h=Received:DKIM-Signature:X-Mailer:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:MIME-Version:Content-Type;
-	bh=q0hHWQYAcpLXZYWDPR8xQDF7EnYAaANCqBcrQywzfyU=;
-	b=UoMrFac7m34Et3F50/BYl0lPsuxYYaVf4gwEPCrosJj0lf+WESompr7lgYdD5ycAXtUj
-	 UCz5N0Rj+UIxwQd1TxTbHiSLv+8Pd6144tD6iF+r0DkLGOlWAEYHClCueqwhudQf8doRi
-	 AuelNPUjK4XJDueNUkUNw2mJpcctUGzf6GWOtRWzMoQ0Zx7aWvysasF/K2Nj/vagohmR+
-	 pKjp1XNDFabaKlA68R9ksjG39plzP1irvMhKV7ZbONC8Ifgbt27W4q0mdbswCmRdqsgYC
-	 lb9y+QI4qkYP6OPdjAVadi4psJfSEtBK09XwRMeRxBFAIQTDDa41Jk4EsoA9+V85hpA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795593986;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=qtWuoC5FN2MELDFAKVm54MaDOVUHKz/6gxfQ29IMYEs=;
+	b=Hsfs2nAM1xkpvXqykcjYZ3W4PurNyQKOBM0CTsfEjnr5F3yE8G1pgnJCjp/9X1TXnDud
+	 uqnQtnpXkseVBGYplG5wJkOIgUDDfAg5xi5AeAFwr3WVrn40cAY9rkRvdj4gwIeejCAQK
+	 WsErRjR8R2BUEI9Xo8z+2uLOCCR1HsTJXfz7HuFFpnLgGKiKzN3qdPuTvP9uBzkdg8t38
+	 WMtl78VLWKrtU98/ImDF29S2l53/SxAvG5I8CwZp1hQdD6UdR8Ylchy9ln97rmbA+7v5B
+	 sXxjP/9S7VkH/ZBJIXQDuPMb/YHo5t3GHMdmFZdgCKiKtXXo2eZ7A03gIVGiP8IUYaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Hnofm9ol;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gUIFb+z3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23F98606A323;
-	Wed, 25 Nov 2026 07:23:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED1C606A31E;
+	Wed, 25 Nov 2026 08:06:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Hnofm9ol
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F13F1F000C4;
-	Wed, 25 Nov 2026 07:23:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gUIFb+z3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0A421F000D4;
+	Wed, 25 Nov 2026 08:06:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795591424;
-	bh=q0hHWQYAcpLXZYWDPR8xQDF7EnYAaANCqBcrQywzfyU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=Hnofm9olul8X7U563TFP9EoBxPQH6Cku69KsUU7t9hAkp1G7O+zSkVsJ+Bkpp0frG
-	 ZSjjNSGxc3K6ajhlxq8OpaFfMOzGPEO5qjmvN/TE3MOIqkAE4hqkyKJa8E/3sCX+oj
-	 9GIj48Rbpb8Rl+AxOtn9LBH2pz9gANgrYN0LyP3g8simq3jeo8oyFbbmjAx+1mNgDQ
-	 4TbSCb5P27rkXsOAJnJdA9m8Z8f++u/h0mFS5FNNGPoaB9w16axwBSN+P2ep1JooBl
-	 J4b6wPabWVhiIlwly9lhGfeSMBacvaND+/vHY7GMKEoeHHZWcY5jlq4JijHtodTLcb
-	 DpgwCjZvWXZSw==
-X-Mailer: emacs 31.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Jason Gunthorpe <jgg@ziepe.ca>,
-	Alexey Kardashevskiy <aik@amd.com>
-Cc: linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
-	Leon Romanovsky <leon@kernel.org>,
+	s=k20260515; t=1795593985;
+	bh=qtWuoC5FN2MELDFAKVm54MaDOVUHKz/6gxfQ29IMYEs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=gUIFb+z3EoGY/k5hBc/4s5BAcJqoX9NRdGz5EQ6vBgq3rKgAr7rBRsJERd4dmZigO
+	 sgMEGylJulCdyIpDhHG6/2txMVQjqrlwfpZxIzCQD9ih0XAAV5jcvSffX4lkzrl50w
+	 cDOqkERHka2UohPOATjzjz7RQTUHWII6+yvEv/39m5kvL8wGeIVNx0KY9I4eCtkGIO
+	 7CyKz2J4/slnL7IdCSuRKiy7aSog5s+20Q6CNmFwovssbysi2Rs0WtFZQmgkhVyUTp
+	 WzzU5qaaMeAJRyM1mX5Ul3b1ERZi7ZWbYDbm/BGlP2UbP3Rj7THpZilyDmxSEyIYfZ
+	 j4WqRkjdYr7Qg==
+Date: Wed, 25 Nov 2026 10:06:21 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v1 01/10] PCI/TSM: Report active IDE streams per host
- bridge
-In-Reply-To: <20261124024842.GB9566@ziepe.ca>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-2-aneesh.kumar@kernel.org>
- <f377271d-353f-4c8e-94d5-98159a66ab28@amd.com>
- <20261124024842.GB9566@ziepe.ca>
-Date: Wed, 25 Nov 2026 12:53:33 +0530
-Message-ID: <yq5azeux9xxm.fsf@kernel.org>
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Vasant Hegde <vasant.hegde@amd.com>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Johan Hovold <johan@kernel.org>, Eric Dumazet <edumazet@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Nipun Gupta <nipun.gupta@amd.com>,
+	Nikhil Agarwal <nikhil.agarwal@amd.com>,
+	Pieter Jansen van Vuuren <pieter.jansen-van-vuuren@amd.com>,
+	Chris Lu <chris.lu@mediatek.com>, Mans Rullgard <mans@mansr.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Cornelia Huck <cornelia.huck@de.ibm.com>,
+	Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Alexander Duyck <alexander.h.duyck@linux.intel.com>,
+	Dan Williams <djbw@kernel.org>, linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org, iommu@lists.linux.dev,
+	linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
+	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>, linux-sound@vger.kernel.org,
+	Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v4 21/33] driver core: Introduce a generic device trust
+ level
+Message-ID: <20261125080621.GW14811@unreal>
+References: <20261124-device-trust-core-v4-0-037eb0d17b1f@nvidia.com>
+ <20261124-device-trust-core-v4-21-037eb0d17b1f@nvidia.com>
+ <1bc8f048-4d35-484b-af60-2d13541e683f@infradead.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -77,76 +101,52 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1bc8f048-4d35-484b-af60-2d13541e683f@infradead.org>
 
-Jason Gunthorpe <jgg@ziepe.ca> writes:
+On Tue, Nov 24, 2026 at 04:13:16PM -0800, Randy Dunlap wrote:
+> Hi Leon,
+> 
+> On 11/24/26 1:43 AM, Leon Romanovsky wrote:
+> > diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> > index 0b3c140babd94..8a94482f0b19b 100644
+> > --- a/Documentation/admin-guide/kernel-parameters.txt
+> > +++ b/Documentation/admin-guide/kernel-parameters.txt
+> > @@ -1259,6 +1259,20 @@ Kernel parameters
+> >  	dell_smm_hwmon.fan_max=
+> >  			[HW] Maximum configurable fan speed.
+> >  
+> > +	device_trust	[KNL]
+> > +			Enable device trust with blocked as the implicit default.
+> > +
+> > +	device_trust.default=
+> > +			[KNL] Set initial trust policy for all devices, including
+> > +			hotplugged devices.
+> > +			Format: { default | blocked | adversarial | unrestricted }
+> > +			No trust options selects legacy unrestricted mode, preserving
+> 
+> By "No trust options," do you mean using
+> 	"device_trust.default="
+> or just
+> 	"device_trust", which says above means "blocked"?
+> 
+> If I want the status quo (before generic trust levels), do I need to do
+> anything? If so, what?
 
-> On Tue, Nov 24, 2026 at 11:11:49AM +1100, Alexey Kardashevskiy wrote:
->> On 23/11/26 19:33, Aneesh Kumar K.V (Arm) wrote:
->> > From: Dan Williams <dan.j.williams@intel.com>
->> > 
->> > The first attempt at an ABI for this failed to account for naming
->> > collisions across host bridges:
->> > 
->> > Commit a4438f06b1db ("PCI/TSM: Report active IDE streams")
->> > 
->> > Revive this ABI with a per host bridge link that appears at first stream
->> > creation for a given host bridge and disappears after the last stream is
->> > removed.
->> > 
->> > For systems with many host bridge objects it allows:
->> > 
->> >      ls /sys/class/tsm/tsmN/pci*/stream*
->> > 
->> > ...to find all the host bridges with active streams without first iterating
->> > over all host bridges. Yilun notes that is handy to have this short cut [1]
->> > and from an administrator perspective it helps with inventory for
->> > constrained stream resources.
->> > 
->> > Link: http://lore.kernel.org/aXLtILY85oMU5qlb@yilunxu-OptiPlex-7050 [1]
->> > Reviewed-by: Xu Yilun <yilun.xu@linux.intel.com>
->> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> > Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
->> > ---
->> >   Documentation/ABI/testing/sysfs-class-tsm | 13 ++++
->> >   drivers/pci/ide.c                         |  4 +
->> >   drivers/virt/coco/tsm-core.c              | 95 +++++++++++++++++++++++
->> 
->> I'll take to the tsm tree, thanks!
->
-> Lets not take any new sysfs APIs please. These all need a careful
-> thing and we are not having a good history right now on any of these.
->
-> I'm not even sure what this is supposed to be for, is it debugging?
+I mean that if you do nothing and do not write to any device_trust*
+knob, the system will continue to work exactly as it does now. That is
+what "No trust options" means.
 
+Thanks
 
-I think this helps users identify active IDE streams and determine how
-many secure streams remain available on the host bridge. I would not
-classify it as a debugging-only aid.
-
-A sample output for a toplogy given below
-# lspci -t   
--[0000:00]-+-01.0-[01]--+-00.0
-           |            \-00.1
-           +-02.0-[02]----00.0
-           \-03.0-[03]----00.0
-# 
-
-# pwd
-/sys/class/tsm/tsm0/pci0000:00
-# ls
-0000:00:01.0  0000:00:03.0              pci_bus  stream0.0.0  trust_policy
-0000:00:02.0  available_secure_streams  power    trust        uevent
-# cat available_secure_streams 
-255
-# ls -al stream0.0.0
-lrwxrwxrwx 1 root root 0 Jan  1 00:48 stream0.0.0 -> 0000:00:02.0/0000:02:00.0
-# 
-
-Here, I have set up an IDE stream with 0000:02:00.0.
-
-The previous discussion cited in the cover letter indicated a need for
-this because the number of streams available at the host bridge level is
-limited.
-
--aneesh
+> 
+> > +			bus policy and existing authorization. Otherwise blocked is the> +			implicit default. An explicit value wins regardless of option
+> > +			order. default preserves bus policy; other values replace it.
+> > +			unrestricted disables runtime policy changes.
+> > +			See Documentation/driver-api/driver-model/device-trust.rst.
+> 
+> thanks.
+> -- 
+> ~Randy
+> 
