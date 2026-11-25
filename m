@@ -1,104 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.22
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.42
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795577347;
-	b=x61e1yHw0/hmHN1Bodp/+md6+iFCYpvmtmGSTVjtDMh/ifacU1KgEQ9s9IBUTj4BFqRV
-	 VWjBejtir27woibzXOXqsYjAUfnHgfyJ4duFXenRHvt5v+dwSQCyNlqtJSMuTsUDQK03J
-	 8AvpRuYIioE8xECK3K/yS4x8JkB7ITNe8knQ9TlyAliUt5xCIs1qUAmWthrZ5TFrGOM7u
-	 psyX4Okqje+SpyFWc/H5GhPcNHm+TNx5XOBBx6l3HS0tj05hJVt1BIfnB8myt199hXVTJ
-	 4vhDVN+PXsfPzO7gRF+zjjjsiBGD6Ui3S53WHcAti/RVwFm6wLK1Y0aTuW9ERS7zkmg==
+	t=1795577460;
+	b=0bN7WRM65VbZthKwQy3ucPYCAvSXZxuhq/HyPMWnWXll3LBoHfpocT8CpPfs75suCG0L
+	 4Kiw9yYPi2HrK1FMEWtk/nUl0hykU7pvqOknMsnS5CJyDxD6NKBv/8oLje2kBtdtI93i7
+	 5wH1zbwJYM4GAlcD4tktJnG+8HgpS4LetWW5x6yPRcOCykyPO9XS6e9n/4mdfP0lVLHMY
+	 O3WlpY+V4gcNRwr9gOgJEvk6NM6/p6h482Kn+P9WaXkN9ANQmpBpVBJfUpKwMuJaOw8nO
+	 D0UB304ErmZoQXmad6F5imtT2X/GcJBEsl7R4FTEIfehBR0OMg3UeyXJTkexWaH75AA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795577347;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type:X-Originating-IP:
-	 X-ClientProxiedBy:X-EOPAttributedMessage:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795577460;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
 	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
 	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
 	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=4YrIK1idyYA3sc5sRmmYYS1l+iOFL/vgHnWeAIY2u4U=;
-	b=uCJxjZy4D+wz6dZ1p44FtEFLG6744BOj1nuQJrQDhD6WIKL2Fz/yyM0JRwpUwo4Kaxz/
-	 JBjPeRxJcXyWz0J1l5aXuBx0YKEOcJveICmnxgBDvN4IR8SILn0fm2/OUKLazahTAcPlt
-	 2q+CvmUWcgqVcz3ekMhN9WXrvtL/H/667uQ9selE7rkTmb1tLzPV+yOLjGjyK5D+bU31n
-	 FUpBzHNdDSPrgcKgTF+kM5zHk3XC7Ag+GzpUaIv1AgdVr3MY4MZ3lBjPg0fUPWM4svVXr
-	 oSlTAbBznN5d/OwSQpX5g6RdXAf0Y7cxK4qfemdnvECeSfNyVPnYZNi4gEXH8YGboRQ==
+	bh=ftLYavOSZFS1lDJ8F5pLiytWF3tJ/P4tIHYMRcZyE+U=;
+	b=LKb7c3hKse44DONHnJTBL4+tIZfBQbvtKg+cEaZJyZ0rB+fKHER/KtRundLH/DuiZ1vA
+	 TqJQK8vVEzE92deXFj5zd1HIguvzvzB5vgyBgUzT/Z+my28fU+A/rLb4T7wwEEX3IlZGP
+	 GEOZ5BHIfKr2teNxiTgpgjPlMJLFVqjGvV59gsVDMKM0VpUqk4iJPDA9wHUD6WReYenNV
+	 3EIO5PgsDVX9pvl8SKGd35w2QGEK/0VVSRKrJof0D4LZhIneBNzl+uCIWxK4pwEP8KoLA
+	 vZ3+rbqyjnDSRqJWwfwol+/HjqiVU7Qp0Qf3V8i1ub75nG3Y4yoE/qcMkei4AUIHMhg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=ZkZmcDJY;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.22
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010022.outbound.protection.outlook.com [52.101.56.22])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b="Jme/g7VP";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.42
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010042.outbound.protection.outlook.com [52.101.56.42])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21164606A326;
-	Wed, 25 Nov 2026 03:29:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21164606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E88606A321;
+	Wed, 25 Nov 2026 03:30:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A3E88606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=ZkZmcDJY
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=Jme/g7VP
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lyZjQ88phiRWnMO75/1FC+s9hqBsnJrUmntUPHSvgNSQOrgj3+FxHQVAUuhfxp48RbGOHOh8O243MXxeMEjZqRQW5GsBtrzt3xiFA6k5SzAENNj0bUDW/GaLH0+AGoKm/Ftfi1Vh/Libv4AqBXaS9DckK2RBXewL70fXnP5XAvfF1mxTBKKKUmFWnHv3LnxbEEHYBFRsTEQPVDZOAix2BnotvRsKxhdV+qA+hI3dPPCE6+rgkUy2ETrIHno1On0u6oY5vhfKxO0YOmZyCa1DPGr5a4pDJgG6DG8FL8bYDz/1KEIYzTKS3DmIQXuxpv9I/qgKSIDTWvz5FgNMMpQewA==
+ b=CJMy1C6zF6LVD+Je+JgUiIiiAOFz6Efy6pYaNq3gwMo3mDki8sjfK8PohkpTRyLHsSv4tB8le1F9v2hhpFeaxVzy6CveyZa5WDVGSrZaDqd6NKmTHsuponmaH2QUlUnT47VIyYVYWXReLvyHkDDm2+jsRVkW2BWcOCUUPlV2auQJqnhn6yYvahXtHUTcTbYAPzgW1be4A9lvznDaIpQoWs14P7fkZ2DMlrhkVGsb/l5BRXNEyEb0L0u60mb+zZUndk6jqr8PbzL/UxZ1GBHJKKmG4JmsN8BaT5qO5qC/igbxVVbzrs3uZ8hIbBLnMXOVrTkwGKZNE9aIImuylDCv7A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4YrIK1idyYA3sc5sRmmYYS1l+iOFL/vgHnWeAIY2u4U=;
- b=l0spUVnS8/lTLIYT8yvgQgCTPSVhFLV/K7H/M/hFzWUAao6Oy9A9B40Pm1+Z5T5xVGrH3BKg/f7zQeg/Cc1ujGUEZprxQIW62BLwtWuzdzTH6GenM0jKk5La5FwX5B7NkqSLLi+eLBPyte9OVPrDwIf4IM4BUMPEZXNPbEM31VuuuWRVchMvSZ2VE+AvWk73Rg4DeXjwiAZnuypLGvZGjdNzhxF6JfejvCpPe1N/4sudUam4hsa3tCY+pmOA1mM3AHt7BXmurDUoreIx9dAruFJN6s20zf3iemjm9OQ8WpKmcGygNdHkga4xZSooDhc6ZL60H4FSw/l7JOtmoaXdKg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none (0)
+ bh=ftLYavOSZFS1lDJ8F5pLiytWF3tJ/P4tIHYMRcZyE+U=;
+ b=oxZI1BkVr+ZsPbgEEM1ZBFjuN0Rglr67sYW6/PfJyiaPl35I/PK0G5qCBQIOFM2E8rU40GYunfJWtYiRQfZG9zKXUtgnW8t86a37w6DV1y9m42ZU7JNZHBF6JAkRZCQsTulU/LWAMiVP5k9GE/DXINp4TmwOQMbwS7qdX3W8vC7KSnOQ+FtVOCaBGEFbr1jFzIhtbDZCTTJx34atW3C+wDEp9TxU8OO+4FGD7lZiIe6WruI4LIm1HbqecvtwpLPKQW3whFpuCCLbF76v114jdlIgQV3KUqkJHG5pMvP33Dpyfww/tqCe/QwCqXNSrmD+zPOd2eywK6YGeBuVthi8cg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4YrIK1idyYA3sc5sRmmYYS1l+iOFL/vgHnWeAIY2u4U=;
- b=ZkZmcDJYsqvOsTOMDz2E2+93yMD+xW/e+9IhnTtLbrxTJMmSRgeFsRxs1rz2XLFwkbIkyUg0QHgfK6g1RFNrFu/dbogHn2BSOzjvFGYS8DlwgS6QDYCxboFTd7hA1X5KVCGmVlOGWaxfPZyiL/a+Sbz0Qqakom7u6wL+zZoepFw=
-Received: from DS1PR03CA0003.namprd03.prod.outlook.com (2603:10b6:8:450::16)
- by DM4PR12MB9071.namprd12.prod.outlook.com (2603:10b6:8:bd::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.13; Wed, 25 Nov
- 2026 03:28:57 +0000
-Received: from DS2PEPF00007109.namprd05.prod.outlook.com
- (2603:10b6:8:450:cafe::55) by DS1PR03CA0003.outlook.office365.com
- (2603:10b6:8:450::16) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.7 via Frontend Transport; Wed, 25
- Nov 2026 03:28:57 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- DS2PEPF00007109.mail.protection.outlook.com (10.167.23.72) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.662.3 via Frontend Transport; Wed, 25 Nov 2026 03:28:57 +0000
-Received: from quartz-7b1chost (10.180.168.240) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Tue, 24 Nov
- 2026 21:28:56 -0600
-From: Yazen Ghannam <yazen.ghannam@amd.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	<bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>, "Kuppuswamy
- Sathyanarayanan" <sathyanarayanan.kuppuswamy@linux.intel.com>, Jon Pan-Doh
-	<pandoh@google.com>, Yazen Ghannam <yazen.ghannam@amd.com>
-Subject: [PATCH v3 1/2] PCI/AER: Reject negative ratelimit interval and burst values
-Date: Tue, 24 Nov 2026 21:28:45 -0600
-Message-ID: <20261125032846.4019744-1-yazen.ghannam@amd.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261123233859.GA1120797@bhelgaas>
-References: <20261123233859.GA1120797@bhelgaas>
+ bh=ftLYavOSZFS1lDJ8F5pLiytWF3tJ/P4tIHYMRcZyE+U=;
+ b=Jme/g7VPOGWEPlU+FxQ/8eiJ0knq83OE8Snf+fWmNiqw+2rXz2dnLWJRqVHRj52g+DluWHk/THM1cxzsq3PzhWL9mTSSGuMzPUuxyQd3vG/hA5LAdOQZFgxDYPo6vrB0fwBg7/4oC6yPxrNuk73Y6HeELcwSEoKhoYnQ2WECXH0=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from CHXPR12MB999219.namprd12.prod.outlook.com
+ (2603:10b6:610:2fd::8) by PH0PR12MB8151.namprd12.prod.outlook.com
+ (2603:10b6:510:299::17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.14; Wed, 25 Nov
+ 2026 03:30:54 +0000
+Received: from CHXPR12MB999219.namprd12.prod.outlook.com
+ ([fe80::da19:941f:da0c:2408]) by CHXPR12MB999219.namprd12.prod.outlook.com
+ ([fe80::da19:941f:da0c:2408%6]) with mapi id 15.21.0662.001; Wed, 25 Nov 2026
+ 03:30:54 +0000
+Message-ID: <25fa4ffc-96cd-4851-8ac7-dd3750b71f15@amd.com>
+Date: Wed, 25 Nov 2026 14:30:26 +1100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 01/10] PCI/TSM: Report active IDE streams per host
+ bridge
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ linux-coco@lists.linux.dev, Dan Williams <djbw@kernel.org>,
+ Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Xu Yilun <yilun.xu@linux.intel.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Steven Price
+ <steven.price@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>,
+ Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, driver-core@lists.linux.dev,
+ linux-pci@vger.kernel.org, kvm@vger.kernel.org, patches@lists.linux.dev,
+ Dan Williams <dan.j.williams@intel.com>
+References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
+ <20261123083337.2731019-2-aneesh.kumar@kernel.org>
+ <f377271d-353f-4c8e-94d5-98159a66ab28@amd.com>
+ <20261124024842.GB9566@ziepe.ca>
+From: Alexey Kardashevskiy <aik@amd.com>
+Content-Language: en-US
+In-Reply-To: <20261124024842.GB9566@ziepe.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SY5P282CA0115.AUSP282.PROD.OUTLOOK.COM
+ (2603:10c6:10:20b::20) To DS3PR12MB999215.namprd12.prod.outlook.com
+ (2603:10b6:8:38f::7)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -108,122 +111,113 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
- (10.181.42.216)
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS2PEPF00007109:EE_|DM4PR12MB9071:EE_
-X-MS-Office365-Filtering-Correlation-Id: 16ac2091-fc16-4d6f-21fa-08df4aa43d74
+X-MS-TrafficTypeDiagnostic: CHXPR12MB999219:EE_|PH0PR12MB8151:EE_
+X-MS-Office365-Filtering-Correlation-Id: 25852d18-e9f7-4d7a-78e2-08df4aa4828d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|82310400026|1800799024|36860700016|376014|22082099003|18002099003|13003099007|260925022911599003|260925021911599003|11063799006|261021121427099003|56012099006|260925021311599003|261028144727099003|261026121527099003|261009223027099003|261021123027099003|261022105027099003|261026140227099003|261102123227099003|10067099003;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|23010399003|6133799003|18002099003|22082099003|261009223027099003|261021121427099003|261021123027099003|261021130227099003|261021135927099003|261026130827099003|261102123227099003|261022105027099003|261026140227099003|261026121527099003|261022115727099003|261022113327099003|261022075727099003|261028144727099003|56012099006|4143699003|10067099003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	LEPKh58SjLv0A0UIwrcx+t0rGThiRZ8BFLgocU/66alcDV1Px5u6IG/Qh6vFOmoJRSEMocYmpaOrlEs9M3aZqgjPZM8lLOd/oP23QymC1R3xrtzIWFvSdy1sDvsQb6aAMNhU+bay5qblMhWoeJxiBYsaxQRpLFjokz5YgadoPdldZDwLo6XvNUdgPAu/LgwmOMwGge+9QKKlwekcG6YFmkLyJFmXWojZfZTxvc8GtHH6rnLnZwaDoq6lQaKBK+ir3V/ZC1i+HZlCjAdJOoKVCMsRXB07hsfkgefTeoF/bFy+XfjbE1lE4hziWxB3rtHMpDPI4YSFw6OBxogmrhPtjJXILeuFR1eMmfSLPXsE7ONBhzLJDE3sFsKHB9qaELAeSPZTSQ4fQZrjfh1/G3ngZlX1yfQj/lq6tzrVWRUTPV61L16ehZY6z118ax09lSZ2c01E24IIdEHIeShIFuBrMdY4jLbkRFU2hm+JsnSs8oWLLWN/DxNC5K8r3nYMxqZGNizktBzO6LVBZBH+dwAUpfpL5x6bRY4l0ePvWQFpFsHernuPzk4C2VaONqkntR8GKXUmuV1ghBR1nvslUA/C6L3uOW+0Rgjojtoj6lN4yeh5Ag6QxL+8zcKf1895qlwHNbTYS7NX4nEZW45J3lngq3uImfSuQLwjspENJEqVyRI=
+	OP7aEvPQgp6TzeQAE7BdZzynUDXqXVHExcCbead3PIPVFsF9Cm9vo1CUX9jzLmzS/4AHIe4ytF/2RAqCNh3EEC/1c+OxlOX3fjAiyljVIu2nXS/MILY915zoZnOaWyGtWqz67lL6Dxs7kXRBUccgBppHJAOvp/Rbq+RFLuZQfy6/VQPMDmwcE78PactYVVii9PnkrhfPPwbwVGIYr+tZi6vQYkplrUsCEjDGdnevaQ30Y2+25vlyyoFlPG6kWQWyBq/bTsrdFszE2bAjeCkHFOHV89kJPghnjWVgzW/ftRSsUaS6J6Hpa1SJillzUf9uP6azlNm+6K0P5x+hnbADT8hinrrRlE5EsLaGfqSM/ggHHS8LlaQGoGI19Fb8zOIAYiFubBRKwevO0WlTnr8OTqabCmK7/NXDmxq/bHJm4wU+ngTfEXnfROxp3ZWhlCLMcyMCdZY5VpDgS/hdATDZC4cymPbYONmNYakoJYiNTmrf+xJZYyFrJq0nucD9IdT2+HWt0ogX40HnuKEJe8EMUMe9KjQt2Ot6sig+2loD/HBbRSKLwgBLeNLdZETPQX83DZOPPEhRMUc4ttHMNWdPmC5vKuzxeTzOcm9hjELipFQ=
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(82310400026)(1800799024)(36860700016)(376014)(22082099003)(18002099003)(13003099007)(260925022911599003)(260925021911599003)(11063799006)(261021121427099003)(56012099006)(260925021311599003)(261028144727099003)(261026121527099003)(261009223027099003)(261021123027099003)(261022105027099003)(261026140227099003)(261102123227099003)(10067099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHXPR12MB999219.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(23010399003)(6133799003)(18002099003)(22082099003)(261009223027099003)(261021121427099003)(261021123027099003)(261021130227099003)(261021135927099003)(261026130827099003)(261102123227099003)(261022105027099003)(261026140227099003)(261026121527099003)(261022115727099003)(261022113327099003)(261022075727099003)(261028144727099003)(56012099006)(4143699003)(10067099003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	hZHI5XynQW5e9Z1rY+ikfgL27koVfJhI9+9l3Y5f+iJNUe+vdF2Xt5irEPJwvpIgkDhf49ypV5MZXwaoQ98XOvTD0IOwSg+q3Q2YVGIiEPr317jhDmdwhrDNknhqlbtjxwyl1HlhuLQZn1iKHDQoLfoMb3IUEhF4HrsNxFwob5dCg+LFawVxbJbAKmtA5uu7tXhOnhm1ksPb5T9jxsNvhgAAcpxeQ2Jr49g/+vUsk1dDauKzVt0ZyIGT1BckNzcs8yg6mutjBlI+PcrgXxHLR+LdkbIXu7NZgo9LLINYscQ3rNCzg/DSKChBcwEGOtN0rQHImPYZT9J6TPuKm12F2+uJFHZ9Jxo/T0BMatXCMwiOdVnG7RPwYtmAYd/tjuucCmuEqgTXuhHfZlghepfGDjjW/rWR0H5AgnCW9T8TsjDx5MDm3Nr3c2sorwabpzV/
+	=?utf-8?B?M002cTFzM0tTTzZCaVpYL01pTUtvb01uWFE4RFdhMlRUZ3IwQzhhUGZkMEZM?=
+ =?utf-8?B?cE93cEhOQ2kvRWltZm9ZWXhmRlEzOXhvS2kyeStGNThjdmhoMHk1OGJKeDRr?=
+ =?utf-8?B?bEVoUWVBWkg5OHFQbWxpSTExZUlUZHB4Njhuc1FibHRMdUFraGg3U1h1R3U1?=
+ =?utf-8?B?RW1zb2w0SEpIdUFNTnh3bWMwL3Z2cmFyRnBSOEkxM204LzBHWTY5QVE0WHBZ?=
+ =?utf-8?B?QnJxYS9nd1VWbjlSYmlTVUdlMFpTRE9iNU4rQzBQNDh2Z3EzeEJpcDE0cUZJ?=
+ =?utf-8?B?WGhRWUcvb0dNRlRuWllCZjZYZW5sb3JFWkRyekQ3RkFzYzR1cGlzMU1vWHFJ?=
+ =?utf-8?B?VDd4QjNRNjJWclRYMnZIcXBOTGJQQUxaU1N4cUIyVmM4VG5QRk5WMHBjelF3?=
+ =?utf-8?B?VS9IcHlXeEdyK0JYam55T1dSVUtyZmJ6VHViV0t5cWdub0MxTWRNZ2ZCdHlQ?=
+ =?utf-8?B?alZQRnJCbjdQQy9JUUdPelI4TWJISDVlbml2NjVLNGozVlQ1OFd5eTMrN0l6?=
+ =?utf-8?B?cTA4QlAvNlZZY0pINzZjR3ExSnl3OWphdlF1OWZ3bis3cGZ1cmFIN2VPWUh0?=
+ =?utf-8?B?ejJoQXMwcVl4UElMSFdMMXhnenJHdDJDV2pYMVFjYXdmL1VWK3V5Ym8vS0Yr?=
+ =?utf-8?B?RUExVTZnRDZGbkdRZENoME5iekFPR1Nlci9oNWlXQlNOTjRTOStUdmhuT0R3?=
+ =?utf-8?B?dmgyNE51MFVjTDd1dmk3NU5KTkIyOHY3SDY3ZlBNSkNyTTIxQU9RNmdMelEw?=
+ =?utf-8?B?SUlRdHFlMXozcTEwcUVVNVIzcjVJRTZHT25helJPMENQN0wzYnQza3hoYU5T?=
+ =?utf-8?B?bXBYVnhDN3YrNW1KVHcwZjVJQS9HYlV1TGNGcnIwbmxyUEw1Zk5USDZMaVBP?=
+ =?utf-8?B?RnFvbEVXNVF2Q0Y3QUdoS0FxVDFHaE5XYks4cEhFVUhObnovRSs4M3dBWDYz?=
+ =?utf-8?B?aDcyZ3AvMUZQRG8yU1dkdGcxUkFqUi8rOGxJbHhlaHc5c3RSQ0swcnRzaXU2?=
+ =?utf-8?B?WWVjclhmVnMyVmJDZ2JRQ2d0dDVuQXpxaDI3TktFSFhHZmhXL3g1ci9ERm5R?=
+ =?utf-8?B?U3EybHJXSHNsT0J4TlZiRWlZb2w5QXZpS0lDNVkvMEFKRWI3MGxCYlB3d3lj?=
+ =?utf-8?B?REhmM0dua3V1UzVOcmlTT2VCM2h1d3Z5QjN4SzMxbGtHOHdmL1N0aVhhaHVI?=
+ =?utf-8?B?R01CcnBMbzNUMmQ3Z1VrUXpzbFhlYVRGR05TbmNYa0FaTHZNT1c3eURXVzQ1?=
+ =?utf-8?B?NmhUNDViNU1ESWJZYmNLcVErd1JscFBkZ0FRNG9nMmF6bGpkMzZiK2YvSlFl?=
+ =?utf-8?B?eS85WmlCS201b0x1Y3R0Zk9tYVFqQ01aSjVnQVg3dWV4VXJ6aHlmL0FVbHRW?=
+ =?utf-8?B?RFY5VHdPYnErQmhjalhRVEU1QVgvOERSWjViR1RSejZwaXlNaXdPbFlDYlA1?=
+ =?utf-8?B?RTVRbjNuYldZRVc5QzBjQ1RoZUJhQWVWVzRaV1pacUJUQkhsanFqWGNlS3kw?=
+ =?utf-8?B?dXdKRFN2WG91Wm1NbmpEazlPUEFLTlA0WkNzT3FFeFY4Y0RFeHgvb0p4cDNv?=
+ =?utf-8?B?OHlJUUcyS1dyRmYwdkNBcEI3ZW5EeExVSmFVRzVYcUx4Z3g5SDRGeW1NZGNC?=
+ =?utf-8?B?TXVhMDdFeVRHc0hrbEd3bGc4UXcya1FTTXRNL1NBUmI3ZTNFQ2ZBRDh3eW95?=
+ =?utf-8?B?N2kvVTJCZXJJcXBuNlZsUENNQTgvODhZcE0wZExZN2JVZXo3Vnc5djdBUVYw?=
+ =?utf-8?B?VjZuVEd6NGZUaWNSZXpSNXNTcnVlOTdXQmdpV0RsN2VsRzlKaVA5Rk9KeVI1?=
+ =?utf-8?B?aWtndzBDYjlKdW56MlVIL0V2Z0pJa0hKVEtRL2tJL0tXdmZENEVZK0JXSHdQ?=
+ =?utf-8?B?VGhCZlZqNVZQVk40eFpKeE5VQlVFYnRaZEhpQXZhNGd6K3hyQU9SY203bXg5?=
+ =?utf-8?B?WUc4SUhmNVNzTml4akszQmM5Ui9ydUF6bHJmNG0wWmw5RVp4NXRpdFU2THNt?=
+ =?utf-8?B?T2FVN3ZObDBvSCtadUthTDNtbVAvWnI1U1MxeDc2NEk2WVZIaVI4SkY4cW9S?=
+ =?utf-8?B?SXF2WWN2bXoxcVNqQlUrUHFrME1DcEVKM04wMHdhSXg0aGo0RjdhUDlSbGNE?=
+ =?utf-8?B?RlFGQTRYZ05oYVJNbWhYU2RiT0ZCdW1GVDNXek5Yd3Z5emlHSm55VkhWNFdz?=
+ =?utf-8?B?czZjbGVQK0gydkRFMTVnalB5VnducnFmNVU1eHRqbVAvTDJnajFmMm1yMjlU?=
+ =?utf-8?B?TkM1MmFqc09ubnYxQ3gvYW9nZjF2TERiaSt2TG1Ka0R2NEpJTlBLVkZWYyt1?=
+ =?utf-8?Q?OZ1HMcZFcMBZ9yuw10?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2026 03:28:57.5271
+X-MS-Exchange-CrossTenant-Network-Message-Id: 25852d18-e9f7-4d7a-78e2-08df4aa4828d
+X-MS-Exchange-CrossTenant-AuthSource: DS3PR12MB999215.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2026 03:30:53.9721
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 16ac2091-fc16-4d6f-21fa-08df4aa43d74
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DS2PEPF00007109.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB9071
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: NZUg9pBg5uA6BEjKTX0HzuKRBHyvw6LC813LdraiAua1OYevQCfb6F/hH39t7V4Hu17wsnZM1rhayNL49QvZsw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB8151
 
-The AER "*_ratelimit_interval_ms" and "*_ratelimit_burst" sysfs
-attributes accept negative values. A negative interval is treated as
-0, which disables ratelimiting. A negative burst is stored as is, and
-___ratelimit() then warns about an uninitialized ratelimit_state.
+On 24/11/26 13:48, Jason Gunthorpe wrote:
+> On Tue, Nov 24, 2026 at 11:11:49AM +1100, Alexey Kardashevskiy wrote:
+>> On 23/11/26 19:33, Aneesh Kumar K.V (Arm) wrote:
+>>> From: Dan Williams <dan.j.williams@intel.com>
+>>>
+>>> The first attempt at an ABI for this failed to account for naming
+>>> collisions across host bridges:
+>>>
+>>> Commit a4438f06b1db ("PCI/TSM: Report active IDE streams")
+>>>
+>>> Revive this ABI with a per host bridge link that appears at first stream
+>>> creation for a given host bridge and disappears after the last stream is
+>>> removed.
+>>>
+>>> For systems with many host bridge objects it allows:
+>>>
+>>>       ls /sys/class/tsm/tsmN/pci*/stream*
+>>>
+>>> ...to find all the host bridges with active streams without first iterating
+>>> over all host bridges. Yilun notes that is handy to have this short cut [1]
+>>> and from an administrator perspective it helps with inventory for
+>>> constrained stream resources.
+>>>
+>>> Link: http://lore.kernel.org/aXLtILY85oMU5qlb@yilunxu-OptiPlex-7050 [1]
+>>> Reviewed-by: Xu Yilun <yilun.xu@linux.intel.com>
+>>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>>> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+>>> ---
+>>>    Documentation/ABI/testing/sysfs-class-tsm | 13 ++++
+>>>    drivers/pci/ide.c                         |  4 +
+>>>    drivers/virt/coco/tsm-core.c              | 95 +++++++++++++++++++++++
+>>
+>> I'll take to the tsm tree, thanks!
+> 
+> Lets not take any new sysfs APIs please. These all need a careful
+> thing and we are not having a good history right now on any of these.
 
-However, a negative value has no meaningful interpretation for either
-attribute.
+hm okay.
 
-Return -EINVAL for negative input.
+> I'm not even sure what this is supposed to be for, is it debugging?
+yup, pretty much.
 
-Fixes: b4fe7398def6 ("PCI/AER: Add sysfs attributes for log ratelimits")
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://lore.kernel.org/linux-pci/20260714191826.BA81E1F000E9@smtp.kernel.org/
-Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
----
-Replaces "PCI/AER: Clamp negative ratelimit burst to zero" in place on
-pci/aer. Patch 2/2 (docs) goes on top of the pci/aer tip.
 
-v2->v3:
-- Split the documentation into its own patch. (Bjorn)
-
-v1->v2:
-- Return -EINVAL for negative interval and burst values instead of
-  clamping. (Bjorn)
-
-This no longer touches the ABI file, so "PCI/AER: Enable baseline
-capability error reporting" applies on top as Lukas posted it, without
-the "or any negative value" merge fixup in its two interval
-descriptions. The rest of pci/aer applies unchanged.
-
-Tested in a QEMU guest with injected correctable and non-fatal errors,
-for every combination of interval {-1, 0, positive} and burst {-1, 0,
-positive}. Negative writes fail with -EINVAL. Every error is counted
-and traced. Interval 0 logs every error, whatever the burst. A positive
-interval with burst 0 logs none.
-
-An LLM coding assistant helped check the ___ratelimit() semantics,
-split and rebase the patches, resolve the conflict and write the QEMU
-test.
-
-v2: https://lore.kernel.org/r/20261123165050.GA1741477@yaz-khff2.amd.com
-v1: https://lore.kernel.org/r/20261110215614.3931232-3-yazen.ghannam@amd.com
-
- drivers/pci/pcie/aer.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 6f2460231422..2c42d6e8bd9a 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -690,7 +690,8 @@ const struct attribute_group aer_stats_attr_group = {
- 
- /*
-  * Ratelimit interval
-- * <=0: disabled with ratelimit.interval = 0
-+ * <0: rejected
-+ * 0: disabled with ratelimit.interval = 0
-  * >0: enabled with ratelimit.interval in ms
-  */
- #define aer_ratelimit_interval_attr(name, ratelimit)			\
-@@ -717,10 +718,10 @@ const struct attribute_group aer_stats_attr_group = {
- 		if (kstrtoint(buf, 0, &interval) < 0)			\
- 			return -EINVAL;					\
- 									\
--		if (interval <= 0)					\
--			interval = 0;					\
--		else							\
--			interval = msecs_to_jiffies(interval); 		\
-+		if (interval < 0)					\
-+			return -EINVAL;					\
-+									\
-+		interval = msecs_to_jiffies(interval);			\
- 									\
- 		pdev->aer_info->ratelimit.interval = interval;		\
- 									\
-@@ -752,6 +753,9 @@ const struct attribute_group aer_stats_attr_group = {
- 		if (kstrtoint(buf, 0, &burst) < 0)			\
- 			return -EINVAL;					\
- 									\
-+		if (burst < 0)						\
-+			return -EINVAL;					\
-+									\
- 		pdev->aer_info->ratelimit.burst = burst;		\
- 									\
- 		return count;						\
 -- 
-2.55.0
+Alexey
 
