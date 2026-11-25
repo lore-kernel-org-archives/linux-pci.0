@@ -1,79 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795613754;
-	b=fjKkFXlyR9pfVYkuOBVGHWFGke1AwT6YE+rjmgs0/YAr7mTwwVPXhPUcNIeMQRC+Iut2
-	 JGCUMUmTpRDbHEf8St6QTDpiRTpQSprSwSkcJBeoi+9/zuXD+68n3LylofXJnSBa0LLnW
-	 +nHZkrgBPDzCq4NCZfzO4oxByq8tQAzSIvp5T50N1HJZIf+pc/2ar3RZci4y866+p5w6x
-	 yx7dPzmsiUTtddlEuktl+rB7g6l7S4ct/pXUREMZ8bwYYt+XaVauoA8D5EVGaG3YJK5pY
-	 VOhSxqa58xnU7UPG+a3OkHI5QBToYCMlxnZAqD4V5i8wixdb3PJpw/h3QSTjRDZnm9w==
+	t=1795614139;
+	b=qOPQqkxlAGDpCT+xJHtyyI9Zcz66T5EkFOIHrEP5hEX5IQ2Vfpxyuo8ItHf0gO2kVQ0m
+	 Xwroj1AehGaEZQVkCcuvy86zUk+c31YxdJoc1XfuzMC3XBJnB5TkYoGqsXmL0svx2FqqT
+	 WlFHOOb4xeXQ6x2SHBchfUjv3KvSOE1siYi66mEhOx8QfBW1I1PpVuOdajEPh1pIoMRLm
+	 Bxgbqb9oJbq6YsHOfQGG3ZBuaAcvLS1OvToWdsPgoEfy6g22It/ePtGnlgjEtz+J78JJi
+	 1P/DL31OuGrdVc9uFiydTf3/8S7eisVPrABn5rjc+3O5+jbjy1/8GlLqplGKFsdIeVg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795613754;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:Date:To:cc:
-	 Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type;
-	bh=sMVLaCsZfua1FXc6eqgSrhaf5aLDUKXRh3463gesKjA=;
-	b=jD9vsUihzYKoXWh1+BuDOk2WFzODPoWH2pCw7F97Dg4EKgOAJPYb8LDICLyUBxUUCnAc
-	 SrmKYr3PH1VWl2Zo2PkO3jCF70D9xR98pOsxyec2RfcvO5MjP3VBs9cuxqGzYYwlKQ0ri
-	 qzxyMmGPyzkLSbAOwDhLfvqlIpnho5ADmqmDVVIf9v4rmAwauGgJkku/0zN4VnKLyaTgb
-	 QKlL6vCchJ8B6oqs2Q73+dk+JiZjd1vcnU72cI6jeMy9enq6tBiJIcyz99VLhYNbJFarM
-	 7ySrzJP1xdkRQs/AvoEmr2Y3ckTEBupxn6MyLkZJQdKd15cCm1VVoOhfrcwsoYV6sEg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795614139;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=RgRBi4Exuv8nq+VhlE2oQhamCxOtxwj2AD7UWFn0Grw=;
+	b=1B5IfgM7ErCpMurnzgb7hNmJinqFMEqLKeLCfzGwgzQSwew16PzPdeu5huyzlc9bVed6
+	 Epv4EF4KeTDqEQL9BcoQ5SrdNqAqsNgQLo30AXsgZDFf8m8FfEmfHs1c579GLxvoEYPVx
+	 h2sCriBIOjMIcWCENW51fe38aZvs2FVYg6j5PYrwwtQeIHjmOFLOGr6WGldZPxzWIo9UV
+	 p2IaJdQRnO5WwXmyINMrHLgozejcGUydMqfgL9VU4QeMr/QK/A4HLP0dtUvQl5SX/+0nf
+	 gyX6grRwKCGzTFl7QjdRQXzuRTBYKmAyG8mvE3gMyGyA9r0VS8tVFZsvNkhbukj7E1A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JJ1Ep+IC;
-	arc=none smtp.remote-ip=198.175.65.12
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=IplUWbgb;
+	arc=none smtp.remote-ip=74.125.82.50
+Received: from mail-dl1-f50.google.com (mail-dl1-f50.google.com [74.125.82.50])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2D00606A329;
-	Wed, 25 Nov 2026 13:35:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A2D00606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF17A606A326
+	for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 13:42:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF17A606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JJ1Ep+IC
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1795613754; x=1827149754;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=1e5Dk/+eHsZ1l5I1tk3VuGlTcyFCG8sOMZ/3BywUnEk=;
-  b=JJ1Ep+ICGP7yZSo3Cg5sW7fFubadenZDM7NBad+7+6SF2SIgmO31qKaR
-   RigINg780Drekf/O0Wn5+rj0PsCcMM7ERoNqFmrLppEK0wI/nc/5IXzXL
-   A6i/pJMU93Qe9QiTq+iY9daa2n4aAGJ8S55ek3sAs59PtaXZq8gR0GSGh
-   HbAh7XBfmcTKN25EZKoq5lbuovNyreshKqfx3ABUlxTt5osnhu/rV+DMx
-   DaxN6oYPOyEy4+IoFnpqahwxgo99q0bg5nKfcaIdO8axk4+3NZhEVGeCo
-   2B7/gLqSYQra925ZLvtnkOV4UkzDgNJTmWYQbUdOlMQNWJuOj6eYJgTVg
-   w==;
-X-CSE-ConnectionGUID: /y134ROzS7ipCKNHq2wRaQ==
-X-CSE-MsgGUID: RhKuKuXKRgigPf+mJ48U4A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11977"; a="4394731"
-X-IronPort-AV: E=Sophos;i="6.27,232,1787036400"; 
-   d="scan'208";a="4394731"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2026 05:35:53 -0800
-X-CSE-ConnectionGUID: EktULjI+TEyOqMp0HSpAaw==
-X-CSE-MsgGUID: ViRb8WpMRBi9VV4ysbg3dw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,232,1787036400"; 
-   d="scan'208";a="11678817"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.96])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2026 05:35:48 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 25 Nov 2026 15:35:44 +0200 (EET)
-To: Priyank Rathod <rathodpriyank@google.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-    Lukas Wunner <lukas@wunner.de>, Manivannan Sadhasivam <mani@kernel.org>, 
-    Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-    Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
-    linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, 
-    linux-kselftest@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v8 1/3] PCI/ASPM: Add internal pcie_aspm_inhibit()
- helper
-In-Reply-To: <20261125-pcie-link-endpoints-v8-1-19d49c17c05f@google.com>
-Message-ID: <115e024d-f49b-256f-550c-7a64b546a076@linux.intel.com>
-References: <20261125-pcie-link-endpoints-v8-0-19d49c17c05f@google.com> <20261125-pcie-link-endpoints-v8-1-19d49c17c05f@google.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=IplUWbgb
+Received: by mail-dl1-f50.google.com with SMTP id a92af1059eb24-150ef97e790so35154c88.1
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 05:42:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1795614138; x=1796218938; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=RgRBi4Exuv8nq+VhlE2oQhamCxOtxwj2AD7UWFn0Grw=;
+        b=IplUWbgbS9FL4a3Nig7c3FEuaowPX3ddyUlH5/bSWhAv0RbvH27O/DEOtT4NhBiLt3
+         Gmeyv6UjCcTcNKK+uGWXxJO4PhmrOqV4NRNYrtevLixqxKUuZLTc0vwPNwMInE7crkis
+         9qX5M9JC7CxsBf2Dilqip1nNJJtTBAKcQnqlx4opSywJ0ropWbsnrRhX0b+wpDbUHAhj
+         ExcGN8E76+RmgC2k5mj8i9rY/HA/jvcexVTtAstYEizUmboiRPeIunb8dxJlCUfgQYdM
+         BoX/4lVbEXCv8pZJmpMY5waHkFZZzcyVI4iM97bKuIl1Xqr4oi0DHoOvxT2/XoByTap0
+         eylg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795614138; x=1796218938;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=RgRBi4Exuv8nq+VhlE2oQhamCxOtxwj2AD7UWFn0Grw=;
+        b=gNT5mvtawwpbfJFcjZxgxgUswg/LiQWjuzxsICqPzxoUgfrJv+v1ydBCxdPngQ/gr+
+         RfrZDPrzdjRvdosVIpeGuKYpAWwxia4f9R5+0N0daK6X2damjCUyJrJO5VP1UVvGe+6l
+         vicyj1uF+1c/nrJhknZdybT+X0A2OP1HPvMHWjZDXpliZm86tWtrFUG+ORIeJl7879dg
+         FctI7IoZsjwbWEAuGa39ZdwKU/vb3KAapZNresLc+uSkcvEjEbBaou30aKzYMV7G5+si
+         /D4OuTLiPxKgjuK5txMqLFpvgRgc6E1WOgbrhQZtt3Sz+OqeVpG1blrrL9ae6V3uUF9m
+         qmGg==
+X-Forwarded-Encrypted: i=1; AL+hErEE0YLcACf1v08fzwyxM4kLY4En7o3dugNeGuxCh9dyGFhCykxoczOab0SNBg25aoAzdfGgs+cSO7Y=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9SGALORvNLh+FNTilf3eOlzODqnV9MBKDP5cxt96dCbmphRPEK
+	PLFJ2IbHQrFhJIzliiBzUxzvIryrrdotjHvrvMtURp1nnR47Gi4xvfNDkZT6fPUnXA==
+X-Gm-Gg: AZFdTZcaDcXTrlaKu1Uh/oIG+Eb1pAwSEsSJNTc6WL4ELBgM7oDTcTrSI/IBFxDQxNh
+	fSkrsvnQT51n75IHI4oTTUPMCyC5OLECXTeZucfNh06nw+nyFz5WtDJ6XvvLuK9qESJapZNlpco
+	Ee+4NLYlFyik3mCmROB75QZu7TK9P8n0DbsCiVKe5YoitxGQJicjamqPElF1yGb4pOmWAMGQCbA
+	4QtHyolJS69h6uWN/9XG7zv4voT2lF/W0pGRkEpP/kOjpuLWY34c5NMXBnPXh+raLFzK5VqykT+
+	KtRggIeOgX+lRixlCBMbuvcNJ34AZ2ks9lH0fwtTEvBVjfxHKWYWEFU1jmv7+/foqZo4Zujaohz
+	+7wlcXln/HK8GJJ6Rh0rBmDKTUIe7+uQjLSNQAOypTOIPADvT7efC2/XCEpPDkcHokKwVmsc040
+	uyxGK95bDFhSpiXfFSRr649u+cboRJ+5Oy4m86ypm5UHnE6MatWsnsPHOTbs7/orHe1CW9TVH8w
+	PThErjQ7R7txb9TbDcYu8+AXRq1dbSC6O/q5hROaqZ/FJgF0trffc4D9ES1xsGePNVCa3kG6mK/
+	aQFCwzmtIQJr/jQUlPzk5SH4AgBzMQVYhh9EvMgStA/x41qSRqJWk2QdOR9sF3jolwY=
+X-Received: by 2002:a05:701a:cca2:20b0:1b3:c4ba:8e0b with SMTP id a92af1059eb24-1b56338d12dmr4008785c88.2.1795614137046;
+        Wed, 25 Nov 2026 05:42:17 -0800 (PST)
+Received: from google.com (105.211.142.34.bc.googleusercontent.com. [34.142.211.105])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-38567cafec4sm61787393eec.26.2026.11.25.05.42.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2026 05:42:16 -0800 (PST)
+Date: Wed, 25 Nov 2026 13:42:08 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: John Garry <john.garry@arm.com>
+Cc: iommu@lists.linux.dev, Will Deacon <will@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Mostafa Saleh <smostafa@google.com>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Ashish Mhetre <amhetre@nvidia.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, rafael@kernel.org,
+	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev
+Subject: Re: [PATCH v11 11/16] iommu/arm-smmu-v3: Add CMDQ_PROD_STOP_FLAG to
+ gate CMDQ submissions
+Message-ID: <awblsA9PMu4jwd3P@google.com>
+References: <20260929034510.2023173-1-praan@google.com>
+ <20260929034510.2023173-12-praan@google.com>
+ <0fe0d909-a01b-4f4f-9faa-c533b8925f25@arm.com>
+ <awRDwxkrZjouy9b9@google.com>
+ <f0cc8236-d06a-4f2d-a9fd-e60977017979@arm.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -83,170 +111,69 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f0cc8236-d06a-4f2d-a9fd-e60977017979@arm.com>
 
-On Wed, 25 Nov 2026, Priyank Rathod wrote:
-
-> Internal PCIe services such as Lane Margining at the Receiver need to
-> temporarily keep ASPM disabled on a link and restore its prior policy
-> afterward without clobbering link->aspm_disable, link->aspm_default,
-> L1 PM Substates, or Clock PM state.
+On Wed, Nov 25, 2026 at 09:37:02AM +0000, John Garry wrote:
+> > 
+> > > And it would be nice to not add extra logic in this loop. It is very timing
+> > > sensitive, and adding extra checks can increase the chance that the cmpxchg
+> > > fails (bad for performance).
+> > > 
+> > That's a fair concern. A couple of things here:
+> > 
+> >       - The check is on our local llq copy, which we've already loaded, so
+> >         it's a bit test + a (not-taken) branch, with no extra memory access
+> >         before the cmpxchg.
+> > 
+> >       - Per Will's suggestion, I'm making arm_smmu_cmdq_poll_until_not_full()
+> >         bail out on the STOP flag, which lets me drop the check at the top of
+> >         the loop and the extra READ_ONCE(), leaving a single unlikely() check
+> >         right before the cmpxchg.
+> > 
+> > It does need to stay in the loop though, since the cmpxchg is the only
+> > point where checking the flag and reserving the slots is atomic.. a
+> > check any earlier (e.g. in arm_smmu_get_cmdq()) could race with the
+> > suspend path setting it.
 > 
-> pci_disable_link_state() permanently sets link->aspm_disable, and
-> pci_enable_link_state() intentionally refuses to clear it.  Introduce a
-> PCI-internal, reference-counted pcie_aspm_inhibit() helper:
-
-As you've discovered, pci_disable_link_state() and pci_enable_link_state() 
-are not symmetric pairs, which is problematic for some use cases like 
-this one.
-
-There's a series to fix that and to me it looks a prerequisite for this 
-LMR series so you shouldn't be duplicate that effort with this inhibit 
-thing.
-
-Perhaps help in reviewing that ASPM series, and/or, if the work has 
-stalled with things left to address, ask the previous submitter if you 
-could take over in finishing that series.
-
-> - Track temporary inhibitors via aspm_inhibit_cnt on struct pcie_link_state
->   under pci_bus_sem and aspm_lock.
-> - Force state = 0 in pcie_config_aspm_link() whenever aspm_inhibit_cnt is
->   non-zero, so concurrent policy or sysfs changes still update the saved
->   state cleanly and take effect once all inhibitors release.
-> - Return -EPERM rather than overriding firmware-enabled ASPM when the OS
->   lacks ASPM control, and return 0 when ASPM support is disabled.
-
-Generally, don't describe things that are not real lists using bullet 
-points (LLM tend to overuse bullets).
-
--- 
- i.
-
+> I just find it odd that we try to elide commands here (at the point of
+> command submission). I would assume that any commands would not get this far
+> - or even be submitted to the queue - if at the point of entering sleep.
 > 
-> Signed-off-by: Priyank Rathod <rathodpriyank@google.com>
-> ---
->  drivers/pci/pci.h       |  6 +++++
->  drivers/pci/pcie/aspm.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 76 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 77efa4c5c960..e24a6dbf48ce 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -1150,6 +1150,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
->  void pci_configure_ltr(struct pci_dev *pdev);
->  void pci_bridge_reconfigure_ltr(struct pci_dev *pdev);
->  void pcie_encode_t_power_on(u32 t_power_on_us, u8 *scale, u8 *value);
-> +int pcie_aspm_inhibit(struct pci_dev *pdev, bool inhibit);
->  #else
->  static inline void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap) { }
->  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
-> @@ -1163,6 +1164,11 @@ static inline void pcie_encode_t_power_on(u32 t_power_on_us, u8 *scale, u8 *valu
->  	*scale = 0;
->  	*value = 0;
->  }
-> +
-> +static inline int pcie_aspm_inhibit(struct pci_dev *pdev, bool inhibit)
-> +{
-> +	return 0;
-> +}
->  #endif
->  
->  #ifdef CONFIG_PCIE_ECRC
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index b039b57f8466..0d43dc517098 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -245,6 +245,8 @@ struct pcie_link_state {
->  	u32 clkpm_enabled:1;		/* Current Clock PM state */
->  	u32 clkpm_default:1;		/* Default Clock PM state by BIOS */
->  	u32 clkpm_disable:1;		/* Clock PM disabled */
-> +
-> +	unsigned int aspm_inhibit_cnt;	/* Reference count of inhibitors */
->  };
->  
->  static bool aspm_disabled, aspm_force;
-> @@ -1055,6 +1057,10 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
->  	/* Enable only the states that were not explicitly disabled */
->  	state &= (link->aspm_capable & ~link->aspm_disable);
->  
-> +	/* Temporary inhibition overrides configured policy without mutating it */
-> +	if (link->aspm_inhibit_cnt)
-> +		state = 0;
-> +
->  	/* Can't enable any substates if L1 is not enabled */
->  	if (!(state & PCIE_LINK_STATE_L1))
->  		state &= ~PCIE_LINK_STATE_L1SS;
-> @@ -1538,6 +1544,70 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool locked
->  	return 0;
->  }
->  
-> +/**
-> + * pcie_aspm_inhibit - Temporarily inhibit or re-allow ASPM on a link
-> + * @pdev: PCI device below the link (Downstream component of the link)
-> + * @inhibit: True to inhibit ASPM, false to release the inhibition
-> + *
-> + * Maintain a reference count of temporary ASPM inhibitions on @pdev's
-> + * upstream link without altering link->aspm_disable, link->aspm_default,
-> + * or Clock PM state.  On the first inhibitor, ASPM is disabled in LNKCTL
-> + * (Downstream component before Upstream component per PCIe r6.0 sec 7.5.3.7).
-> + * When the last inhibitor releases, the configured ASPM policy is restored.
-> + *
-> + * Return: 0 on success, -EINVAL if @pdev has no ASPM link state or on an
-> + * unbalanced release, -EBUSY on counter overflow, or -EPERM if the OS
-> + * lacks ASPM control while firmware has ASPM enabled on the link.
-> + */
-> +int pcie_aspm_inhibit(struct pci_dev *pdev, bool inhibit)
-> +{
-> +	struct pcie_link_state *link;
-> +	int ret = 0;
-> +
-> +	if (!pdev)
-> +		return -EINVAL;
-> +
-> +	if (!aspm_support_enabled)
-> +		return 0;
-> +
-> +	down_read(&pci_bus_sem);
-> +	mutex_lock(&aspm_lock);
-> +
-> +	link = pcie_aspm_get_link(pdev);
-> +	if (!link) {
-> +		ret = -EINVAL;
-> +		goto unlock;
-> +	}
-> +
-> +	if (inhibit) {
-> +		if (aspm_disabled && link->aspm_enabled) {
-> +			pci_warn_once(pdev,
-> +				      "can't inhibit ASPM; OS doesn't have ASPM control\n");
-> +			ret = -EPERM;
-> +			goto unlock;
-> +		}
-> +		if (link->aspm_inhibit_cnt == UINT_MAX) {
-> +			ret = -EBUSY;
-> +			goto unlock;
-> +		}
-> +		if (++link->aspm_inhibit_cnt == 1)
-> +			pcie_config_aspm_link(link, 0);
-> +	} else {
-> +		if (WARN_ON_ONCE(!link->aspm_inhibit_cnt)) {
-> +			ret = -EINVAL;
-> +			goto unlock;
-> +		}
-> +		if (--link->aspm_inhibit_cnt == 0 && !aspm_disabled)
-> +			pcie_config_aspm_link(link, policy_to_aspm_state(link));
-> +	}
-> +
-> +unlock:
-> +	mutex_unlock(&aspm_lock);
-> +	up_read(&pci_bus_sem);
-> +
-> +	return ret;
-> +}
-> +
->  int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
->  {
->  	lockdep_assert_held_read(&pci_bus_sem);
-> 
-> 
+
+They never actually reach the queue: the check is right before we
+reserve any slots, so nothing gets submitted.
+
+As for why the check sits here and not further up, we did try that in
+the earlier versions and have converged on the current design:
+
+ - v1/v2 [1] elided at the call sites (TLBI/CFGI) using
+   pm_runtime_get_if_active(). That raced with the RPM state bouncing,
+   i.e. a caller could see the SMMU active and the suspend could kick in
+   before it actually submitted (as Daniel pointed out).
+ - v3 [2] tried to fix that with a new pm_runtime_get_if_not_suspended()
+   API, and v4/v5 [3] replaced it with a driver-side biased counter
+   (nr_cmdq_users). That worked, but it meant an extra atomic on a shared
+   cache line in every command submission, which isn't great on high
+   core count.
+ - v6 [4] replaced the counter with the STOP flag in prod, and v7-v9
+   [5] dropped the call-site checks entirely, leaving the CMDQ as the
+   single place that decides.
+
+The callers themselves legitimately run while the SMMU is suspended,
+e.g. a client unmapping (or a deferred unmap) while it's off, and we
+don't want to wake the SMMU up just to invalidate TLBs that'll be fully
+invalidated on resume anyway. So these commands do get this far, and the
+only point where "is the SMMU on?" can be answered atomically with "I'm
+committing commands" is the slot reservation itself.. any earlier check
+is racy against the suspend path.
+
+[1] https://lore.kernel.org/all/20250418233409.3926715-1-praan@google.com/
+[2] https://lore.kernel.org/all/20250616203149.2649118-1-praan@google.com/
+[3] https://lore.kernel.org/all/20251117191433.3360130-1-praan@google.com/
+[4] https://lore.kernel.org/all/20260414194702.1229094-1-praan@google.com/
+[5] https://lore.kernel.org/all/20260527221407.1756491-1-praan@google.com/
+
+Thanks,
+Praan
