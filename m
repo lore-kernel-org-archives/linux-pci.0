@@ -1,111 +1,112 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795719582;
-	b=KHwnevtWGS0ccl3KLgCZ09Yf8yOOEglBpvE1tyIkpji4oz78YGn19zxOVk+a3wHNaLQ8
-	 Bb7xGGgYY4JfUQ3+8//FrIGvt71SZRPsvd6s/1oJ8P//xTm0BhgNiWVttBXLdZoIAbxN9
-	 9NHnpFe11XS7TvilKO3s5JdwGq8jneumIAtgs6X8L9dOgZysaH+x4cAF+lpogmxTOIk2H
-	 QYaM+xMD4/CCsWM3JShJpN96p42/2m/OjE6zIzBrZA2IfWE5PlYqmoM+LayeqtYXnFQ6X
-	 Em7cgrfRDCmTt5NJLuP1aMznl4jbBYkvTK2WQdK2GM0lqvoWp81BXc5eQ74SFeHSIqQ==
+	t=1795719589;
+	b=NsqvxcKhzOFpJa86XQFbM4j5CqlKKzungf6ae5lDLnuWbbo5WvV07ffSm1TL2NqnSJoF
+	 l4ScSMQ0C3UaFyMg68aqFdkCl+knyLFWQvGbVQWb18nPRAG4VEIiwJQIZ/XFuJBqkN927
+	 j3XqiZhZkZZMbwAakws841OV+pT8AvUwRgdfj1teAGckJNwxlkputnIGjK+eefCkqYkhN
+	 tLJnS0CMkE68+FJVAgeBv2IfbhByuKXPsFHmpmhqM9Ppoa2/5j/WFQXTje+tGPDvwHIRG
+	 EUcrHKXEQNiYNSUH1t/OljZVs5hKMzbphoIP719WGVx7iIHC3JAx+trPbnbV6XisA3Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795719582;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795719589;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:
-	 Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:X-Proofpoint-GUID:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:Date:
+	 Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
 	 X-Proofpoint-Spam-Details-Enc:X-Authority-Analysis:
 	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=PKnwJGn1kbNBw+OYy82caU/JC92cEMMnvBlOquiaj/U=;
-	b=LfohUobrdW9xKAr1BMFOLcn64ZSvn9i2WnK81NBfeZwSSTqQw+SHyDggFhDF7xdgMjrj
-	 f6aXxtszHgM9J+MAW0DhT9kDiwR6Lgn9hZT0EG6r2h1Pi3wNFW8nVCT1vFuebY6Up6Te8
-	 SbNvJibEpzVtD38cHqWCuK+IwsFpZFGryoBKAcosk+azfNq87h7J6zqaxA6KUAqtaag1I
-	 23VnVtcmiMPwQBoFBQyHZ3w18IftKosywV3IEMPpwbgtE2tPCj7R9sfKIhfm1ZWVFcTtS
-	 7sa4MeEaYW5OrbZtrh5l+A4hualoM3rqHZ9BIHyMv49q39m0DYmwdUwm7LQW3bNvbKg==
+	bh=AhIc54J/K4e2MmEA6laRAf4VD5KH58JtaSUM84rvsJE=;
+	b=mif6fKjTh43elPTZVUryp+0NmcnEFEXX2WV2Slq3ew5860WIWvB/SKkDukg5Zurgca8g
+	 auNZ0BqTMI+Vs9Zu1WjljAh99yTZhXhlprecAo4IV4zAyi2ImQUku+DxjQ/Oi4yxTTx0g
+	 wHrS8/fW5Ha0gtb2uceMmzHBWvPF2lq9gh+nh4J9H0oo5k0YfkJXH+U0VY8GAhyKOSpPZ
+	 rP7Wah1zSg3AiuuqhIqUN1803ZQ97WZp6F3R3upfkahalrOZoN7N/CxJ5s6pkdWn/XZxv
+	 1Y3S4tMtPChEiiCo5+Rxeht+US1AbGppC4BxY7GBXjWKkDgCQKHA+O/6kJ62VFGFaiw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Cu9Wzjj7;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=B2uKOJtf;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=MK+PgnPw;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=A+F22DCc;
 	arc=none smtp.remote-ip=205.220.180.131
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5034C606A326
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:59:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5034C606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F03B606A323
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:59:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2F03B606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Cu9Wzjj7;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=B2uKOJtf
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AQFuCZn275314
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:59:41 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=MK+PgnPw;
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=A+F22DCc
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AQFu37r3357102
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:59:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=PKnwJGn1kbNBw+OYy82caU
-	/JC92cEMMnvBlOquiaj/U=; b=Cu9Wzjj7rorA/u6iXgCIiQ/SUnhbjxcPw6D0t/
-	yzeHlTiXtf0S0fhhEG3F6gbCIHuUQlx+i+YHFzCB6PhjrA0adrp8H70mai82PMTq
-	3FwFFSniXsdqIDXBFxDPvwHI9e3WK+vS4gL3WWXqmQgf2Fo7O6jXtDDGf8VNDDXM
-	dtvdXPnjPDIkHuRb8VD6Q0ie+KWvtyx2r/DSja2F/Q3tyZHKGZ4R1W5at+Ei7KO7
-	a9jq2aQN/f8y9gjCmwG4FEV4LcPcrnzKK+G9Z/rHW4hxuS2MIXIS9HZqi11WbM9g
-	ZsmoTG8dX+QucmIdvvpczclncmDj77KseVifa0mP9rDtU6Bg==
-Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j6hm82243-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	AhIc54J/K4e2MmEA6laRAf4VD5KH58JtaSUM84rvsJE=; b=MK+PgnPwU6+GUzoN
+	AcnNkwEYSUDutNe+H0SmSllz4ZaJzG76xQSMz3DJsiuF5Jfn5ZV1xFW960GJHveo
+	7YuUMcG77MbXc586q1hIhg0i0DMsie+u6dkAGWXMlhScwL9e8dsRGXyWlxUWuq9X
+	pXn28xEzU1yOKA5VeCPVeAzls9p52Bf5ZO1vS2Venca/A8qLpmYdvsn5aG5W3VCZ
+	FWve6x+qpHMQ0Zn1QNt0+p7GahqCyRTn5vawV9RQAuhkpQf4fbPko5k1PGiAm05U
+	ao+IsY1fdtlnsB1urjM0aGrodwgNPrODwj91vto0rFXUSgNnCR+G7kP0VoPFy4wt
+	jwNQ6A==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j66qfc66u-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:59:41 +0000 (GMT)
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-386177b0516so18281673eec.1
-        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 10:59:40 -0800 (PST)
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:59:48 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-30bcb065bfdso7501506eec.0
+        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 10:59:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1795719580; x=1796324380; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=PKnwJGn1kbNBw+OYy82caU/JC92cEMMnvBlOquiaj/U=;
-        b=B2uKOJtf1AV0wfvdDz+dei5DW1Kf5asGqvbZKU8kjHeVSiCa7YUZhJBDGZV0YTti9o
-         SvF9LDld6HaRVDLQCDT3QlrV8auMvxLtdIxK3jvBs6cRY6JIiaw4t3DNMdTYmsTLLUBM
-         hFj/JOHzWxmW0d5D4CF1gesUghyIysv/YVTQbu9pcjq7JO9ECVTCW3hjS9BqgPLCVUpq
-         k+l2soD/ZKhn9OyHGmcdueSHXseFDY+bRMVr51cW+ljxWWngJjUe462J/ZCWy+9J6U4V
-         vAzC+kAPl0Hc5m44O0n+sKab6Rwy6vmF6Ux0HaiM0ALh3+/XXcBFQfuV2o0RyYCZtyx2
-         2BHQ==
+        d=oss.qualcomm.com; s=google; t=1795719587; x=1796324387; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=AhIc54J/K4e2MmEA6laRAf4VD5KH58JtaSUM84rvsJE=;
+        b=A+F22DCcF3PbLhvOQl/jCrD5J0quqQofaH6H20jW6qGF9+L4tArM1IgQwwT15qGDry
+         JqQZkzMH8B2RiTp1cDzNuXW0zPrRChTvZOEWsojFqjdiWvbpnI6WodI9hBA78+gN0aNj
+         Tm47UhuXnAX6hi+G12gXKSm157SJ93rXYmS38zBbI641ixxWRkrv2caAmrUqrLYLlLVi
+         6nBscLxQHADWoQi4lLtkC4etbvLVVWnteDUQXzZrv3juDrnkqi6dFatpca6XjGEWa7fb
+         OJBpTsuMjTU8Yj79/+4bCSba1x7zpt/dke9DlGyfu9RJGCpZSwzYnnaB7xoPRovA88Ft
+         tMeA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795719580; x=1796324380;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=PKnwJGn1kbNBw+OYy82caU/JC92cEMMnvBlOquiaj/U=;
-        b=Ap7s+Uagq0ogE0e+7Hb92OYJFfMzhKXTPiegUMqQyraG/pc2ZwEK4rJVKtYOLnPfNL
-         sv4dwzXazkz3MSYQUB5cqEMX9F6Zl7QjOeEjSa3OmFun/gTzzmdvugzhgs2sSsRO8lXA
-         HCv/x8D6dsVKAqWbnD6Ch5bLMqqqlLwXDokYiA8Q5bdaW6CUY3CNOlT1rUX5hlz1QNtQ
-         LzRaw7b9WHg+83id5m/EKsSIS4A004KeEK1rvb9OYLnubfEMy4s6wEUBDZiPDbRkwqdJ
-         uzoX/HrBKmgh7jZkL2eJFijbvo59Ivy1pwRGi2es2viSkjof4HaQ0wuKMHkPj1eWCUuc
-         dllQ==
-X-Forwarded-Encrypted: i=1; AL+hErHoqCpU+MGptd1J0X+9GTQgd1gq4O4ZJWTNbfM6m7Go0VV4vzm5y3MNvYlAxAC3m+Ljwlp5k9xZSsU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9yn6iwNbuAlclf+HWXQAldXeWq69ORq98zG8Jh4T2PVHpfqz1O
-	IzKg6OhGCl3Ar7btpqTifpZFu4+yEKwnUFH3CYFdpvOz7TvgI8vxGfzo8Yv8U8B+ZkaOlHV643K
-	ng1+FmYSL5vowyC32V0npv6CX1EINPv6uEVpOB4fZKSYQno0xtprp3qhR6uxZdkM=
-X-Gm-Gg: AZFdTZetzlKW52YExb4i6A+jbq5v024y9ynkQdxhxT2n2wMI5Bdv4Fd9XrEkvpb+o09
-	xfG1FohjawEuV1QNuWZg9qToGJOzpprIaMxmGFuoYBX2gx0GAjU64mK5z3IYGcKaL5IRiyjKnjA
-	yRjU5L/hRM2frtz98dhqA1RS7fiM+hGbI2ulz73lNT3uP8gZ5FhZeIF+zwat40w70TNLKE0xc9k
-	wSBZzjBcRYxbUHtea22fmpOgc/81l2zqrwYlSYqbAmO51BzIKCCxWkEyCjjMr/BmKyNmjxnCwqi
-	Ri6Q8kFMSlOFLfuT/v8T/0BXKGvcrMmVbDI8Ck+T7dy4CHK6sbzRnXQaqEvnmqAEbFasTxO+SE7
-	htB+zZk55kbLC43YHe+viF4JQ4hwctE/9iN8R9qfstNDrtOFQ2Nm72H273CnCIJd3UVBnHnqAqH
-	AqEm2s
-X-Received: by 2002:a05:701b:2814:b0:1b5:1a5a:1dc with SMTP id a92af1059eb24-1b5568bcbb3mr25262171c88.12.1795719580016;
-        Thu, 26 Nov 2026 10:59:40 -0800 (PST)
-X-Received: by 2002:a05:701b:2814:b0:1b5:1a5a:1dc with SMTP id a92af1059eb24-1b5568bcbb3mr25262137c88.12.1795719579488;
-        Thu, 26 Nov 2026 10:59:39 -0800 (PST)
+        d=1e100.net; s=20260707; t=1795719587; x=1796324387;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=AhIc54J/K4e2MmEA6laRAf4VD5KH58JtaSUM84rvsJE=;
+        b=mZWtcJLVW1VlJeKNUFMM0erqGb4SMhuEiDxs75MXDJo+ES8rY6OEmMJXvz4o10z4qc
+         LdsIOQyJ5rNdifgw0MsZgcPHMTHlZkz5VxVjETV0gEQo0pNgp0u4Flt/fsqPk3S1ZTQg
+         jRrJPQrtUAwVxaAaADrxmJX8ejsX7D4+KFFvmLFODJ0+daCFNXKJhagaW9x9elVbz1Zp
+         oop3qnPXOi2TsNnOp+grooRwq++d3RpuPGteljacq7dqzw+/RNpcIUCwC9SoL6PyNW8k
+         OIdpsD1nPL3Lu0qJMTkplrI2v1xFZlosPniIaP+iab76KWA9f5PZPxpcghf+Qzf7FJ45
+         SDWw==
+X-Forwarded-Encrypted: i=1; AL+hErHzC7LDVjnoRKgRyhlUTvhLzZr59AJhGJ3C2/RLUT9Ae/uYjHa/426wB3/lTVQsvE0j0y+Mvb/vPrM=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8UWhnu+/jjetxM2XgFMfLFrJs1OmX2UARRoZ6asf5m3j/F1E1j
+	vXjx5yZ5HjfAvMh4POF4PKwe9YlDqiGpGi0SbUvkJs/gwsvRrw+H+NliHdq8cpJSpFvJ2Km3j7s
+	EvliBBLT1GPZd95V/MGYOV7ocuHLT1vV5BZEfGUgZrj4SeEJd2cSyc4Q3MP5oFyg=
+X-Gm-Gg: AZFdTZcQj/slfM2LldOplthd4zioFfxIOvpmUknB7hRDc+ZAWaiDz368OxRTE+GjFo0
+	OQRvL/vQFyC16ypAmOxqnky7mA5MULtN4Qy3eEyooBQGzYRcwQYbr5Z4btdQlmjPayIZxjFcTge
+	/WSTI2YfFk5c4c7xZuQqSQ1G+oz5SzMubYA4fY/HgLJd0kxBe76/oD+WsJ4M5w+aYsEgWye4N/f
+	jZIHT1q3UDmlDOpOOEQUB4V0M31jJZATAvkCopEJv+7R71eiNol4VxEQHtGXYuo/T3HRpLnFl0u
+	CWLdvMrugeZMaiD5faqTVHgXsZz/X/DwYBFUuTYwdwUorvXF3ef4ulJqGDDphpEulfeY8zQJyXd
+	mho//lBRTJVRPqaT+ICRo08ARzFryBaxaQXDmY5hEkZCa49nqHPQG9KQmOr81y7w3GCdCl+bwuX
+	Tgcmda
+X-Received: by 2002:a05:7022:3a83:b0:184:992:c9ec with SMTP id a92af1059eb24-1b55693aaabmr29816997c88.38.1795719587078;
+        Thu, 26 Nov 2026 10:59:47 -0800 (PST)
+X-Received: by 2002:a05:7022:3a83:b0:184:992:c9ec with SMTP id a92af1059eb24-1b55693aaabmr29816968c88.38.1795719586636;
+        Thu, 26 Nov 2026 10:59:46 -0800 (PST)
 Received: from hu-jkona-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b5567ffa8csm60868190c88.7.2026.11.26.10.59.31
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b5567ffa8csm60868190c88.7.2026.11.26.10.59.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2026 10:59:39 -0800 (PST)
+        Thu, 26 Nov 2026 10:59:46 -0800 (PST)
 From: Jagadeesh Kona <jagadeesh.kona@oss.qualcomm.com>
-Subject: [PATCH 0/8] clk: qcom: gdsc: Allow USB and PCIe GDSCs to stay
- enabled across suspend
-Date: Fri, 27 Nov 2026 00:27:08 +0530
-Message-Id: <20261127-usb-pcie-gdsc-suspend-v1-0-485a08ffdc6f@oss.qualcomm.com>
+Date: Fri, 27 Nov 2026 00:27:09 +0530
+Subject: [PATCH 1/8] clk: qcom: gdsc: Use GenPD hwmode to keep GDSC enabled
+ across suspend
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -117,11 +118,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAASBCGsC/y2OSQ6DMAxFrxJlXUeEIaiseo+KRQguRC1TnFRIi
- Ls3QDe23pf8/DdO6CwSr9jGHX4t2WmMIG+Mm16PHYJtI/M0SZWUqYJADczGInQtGaBAM44tlPp
- +N6pRaZ4oHm9nhy+7nt5nfbHDJUS9v0I+IJE+9RW75DKTSRaXkIXKSwUSZqcplvC9eD8mIrEE/
- THTMIg4ji+NJoQjsL5iI64e/jULXu/7D8gvyVncAAAA
-X-Change-ID: 20261126-usb-pcie-gdsc-suspend-7a99c6b62406
+Message-Id: <20261127-usb-pcie-gdsc-suspend-v1-1-485a08ffdc6f@oss.qualcomm.com>
+References: <20261127-usb-pcie-gdsc-suspend-v1-0-485a08ffdc6f@oss.qualcomm.com>
+In-Reply-To: <20261127-usb-pcie-gdsc-suspend-v1-0-485a08ffdc6f@oss.qualcomm.com>
 To: Bjorn Andersson <andersson@kernel.org>, Abel Vesa <abelvesa@kernel.org>,
         Stephen Boyd <sboyd@kernel.org>, Brian Masney <bmasney+clk@redhat.com>,
         Jerome Brunet <jbrunet+clk@baylibre.com>,
@@ -140,102 +139,111 @@ Cc: Ajit Pandey <ajit.pandey@oss.qualcomm.com>,
         linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
         linux-usb@vger.kernel.org, linux-phy@lists.infradead.org,
         linux-pci@vger.kernel.org,
-        Jagadeesh Kona <jagadeesh.kona@oss.qualcomm.com>,
-        Krishna Kurapati <krishna.kurapati@oss.qualcomm.com>,
-        Prashanth K <prashanth.k@oss.qualcomm.com>,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+        Jagadeesh Kona <jagadeesh.kona@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Proofpoint-ORIG-GUID: xkdlVnL1jvC2aPs5Xj7GNjUtecy4dsrl
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI2MDA3NCBTYWx0ZWRfXzlQDPdrb/ZWD
- YggvZKieXrK3T9D6HmwlNmEPLcpLBK+60zIg773m/IJ5EKnp/5uY6dXIzYpTesrm0OvFS6WoJ1l
- YENtZyG3ZlI/GuWYxWv8ArvZYFFZCuk=
-X-Proofpoint-GUID: xkdlVnL1jvC2aPs5Xj7GNjUtecy4dsrl
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI2MDA3NCBTYWx0ZWRfXwqpejwi6EDOA
- uicRynmF7yGtybHKISs1cxYLC++P/1Ny8ZCoPlyZX/6ZB4ySJli0cPyswLzi7wzKiRXgMtd9GWB
- 1ZPn+bsEdIKztXx2d/hX+kNr4iHm0DyxQn4hap3yHzKwT/LrIy1M699UpwjwweHF4VL6eT4KnoN
- mgCtSa39XlieLi+BoMvX0/v3cGgB3vgpqD7qbx8++oGYfnddbVd+hgTZffMmNwYokHfb2MNtgIZ
- uOzTDngem4AgoE3czeaGpgq6PM+4X7i6xAgQRFBSCUg5qu8RvaPsMUkoqIcMsqdahE/8wGPj3l9
- UfqIqTHGPOwlDsXHtoakB3g76oGusFRe4JXAk/CAFtQ5N7at2vOjYHTxGJELKEMN82RQzmR/Gx1
- 3QVosdQDB2CNAzxiaD9qNx/JZ4nJZpQyG02YONY0Jy1VsPXsFBEn70U1VkaqyPcc5CwlugdZ7+E
- MNT+1yGWsoBb1BxWwOg==
-X-Authority-Analysis: v=2.4 cv=O/usLx9W c=1 sm=1 tr=0 ts=6b08819d cx=c_pps
- a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+X-Proofpoint-ORIG-GUID: l2DGiqTJDYbG--nvjxLTl0PwpJW0S95c
+X-Proofpoint-GUID: l2DGiqTJDYbG--nvjxLTl0PwpJW0S95c
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI2MDA3NCBTYWx0ZWRfXwsJrDQl8InIN
+ O0O/Xgl6+UV75HdKSO9/rPqXDSn7t6cmP5UgzUfjhs4j4JGvt9s6404J0dPJ87PtSIAlQMYpnIG
+ qZKLXQ5PneedwppbM0HOzsOn9ufCiY4=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI2MDA3NCBTYWx0ZWRfXyXYsT7qXvj9a
+ f3bab6zGhTEJ1tgvNp2Uyh9yZggKEh85UwAnosmgFpS3WKG+AAA9o+fOR35g//Sv5iMn1z3jUfZ
+ M1dQ319W3IBj56LTZ3hyfVsQecWz9TXsF3LIn9m6GZ6+Y5ez2Osngc9kKATg8D4ApgyJIQaMU7u
+ JToBkxrdSpuY6sXCzKPxDjeizjdWz2V3O9pJVsL99iGK0HJGnls1P0jRIsC/3gfhy6MTxdmis4J
+ ldz+nVbs/BdMxhhVdwk0fg7R8feFIrj18ko0w4bqC+DuBHQFUEGwj4Qj0FnPHYzg1OUJQLmewyF
+ e0CvOGc3v4945R+nsYePtRY3/GVg1YfhmdpqfDD9dmOFIty1Dl3x5/vfjxxhu8PuFCr8Y3knCHU
+ 8pPY3ZeCZFGyztLM/1ikgCHrxTvkESxIn05MEtJUrZxX/T1z7+p3VjVIzbqgNJn3a1izHc6+Qn7
+ FqcP0xKw2ipqqHPPJWA==
+X-Authority-Analysis: v=2.4 cv=Q5VHcI2a c=1 sm=1 tr=0 ts=6b0881a4 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
  a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=IPO9h8n_qQbs29NzXk0A:9 a=QEXdDO2ut3YA:10
- a=6Ab_bkdmUrQuMsNx7PHu:22
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=NuUCN_VPl_z90dSYpTgA:9 a=QEXdDO2ut3YA:10
+ a=bBxd6f-gb0O0v-kibOvt:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-11-26_04,2026-11-26_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 priorityscore=1501 bulkscore=0 adultscore=0 clxscore=1011
- impostorscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0 malwarescore=0
+ impostorscore=0 lowpriorityscore=0 spamscore=0 adultscore=0 bulkscore=0
+ priorityscore=1501 suspectscore=0 malwarescore=0 clxscore=1011 phishscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611260074
 
-USB and PCIe GDSCs on some Qualcomm platforms need to remain enabled
-across system suspend for certain use cases, such as USB host mode and
-PCIe non-D3cold. These GDSCs currently use PWRSTS_RET_ON, which keeps
-them enabled after their first enable even when consumers no longer
-require them.
+USB and PCIe GDSCs need to remain enabled across system suspend for
+certain use cases, such as USB host mode and PCIe non-D3cold. These
+GDSCs currently use PWRSTS_RET_ON, which keeps them enabled after
+their first enable even when consumers no longer require them.
 
 These GDSCs have a HW mechanism to stay enabled during suspend while
 allowing the parent voltage rails to turn off, with HW handling the
 parent transition to active voltage rails. Use the existing GenPD
-hwmode interface to let consumers request this behavior only when
-required, and clear it once no longer needed, allowing the GDSC to be
-powered off when unused.
-
-This series adds the set_hwmode_dev callback for USB and PCIe GDSCs on
-Qualcomm Glymur, QCS615 and Shikra platforms, and updates the corresponding
-USB and PCIe consumer drivers to use dev_pm_genpd_set_hwmode() to control
-the GDSC dynamically.
-
-The clock and USB driver patches need to be picked together on Glymur
-to avoid functional issues, since the existing RET_ON flag is removed
-in this series. This approach can be extended to more targets in the
-future.
-
-This series is based on top of below qmp phy suspend/resume series and
-depends on it:
-https://lore.kernel.org/all/20261113103111.156476-1-prashanth.k@oss.qualcomm.com/
+hwmode interface to let consumers dynamically request this behavior
+only when required, and clear it once no longer needed, allowing the
+GDSC to be powered off when unused.
 
 Signed-off-by: Jagadeesh Kona <jagadeesh.kona@oss.qualcomm.com>
 ---
-Jagadeesh Kona (4):
-      clk: qcom: gdsc: Use GenPD hwmode to keep GDSC enabled across suspend
-      clk: qcom: gcc-glymur: Register set_hwmode_dev callback for USB, PCIe GDSCs
-      clk: qcom: gcc-qcs615: Register set_hwmode_dev callback for USB, PCIe GDSCs
-      clk: qcom: gcc-shikra: Register set_hwmode_dev callback for USB, PCIe GDSCs
+ drivers/clk/qcom/gdsc.c | 21 +++++++++++++++++++++
+ drivers/clk/qcom/gdsc.h |  2 ++
+ 2 files changed, 23 insertions(+)
 
-Krishna Chaitanya Chundru (1):
-      PCI: qcom: Keep GDSC enabled during non-D3cold suspend
+diff --git a/drivers/clk/qcom/gdsc.c b/drivers/clk/qcom/gdsc.c
+index be9c14eb7b064f988bb4b330c8784cab82e43b2d..7b2b9ad0485e6035af6c72d035ceb2bb8f4155e5 100644
+--- a/drivers/clk/qcom/gdsc.c
++++ b/drivers/clk/qcom/gdsc.c
+@@ -345,6 +345,13 @@ static int gdsc_disable(struct generic_pm_domain *domain)
+ 	struct gdsc *sc = domain_to_gdsc(domain);
+ 	int ret;
+ 
++	/*
++	 * Skip GDSC disable if consumer drivers requested
++	 * to keep the GDSC ON in HW even after suspend.
++	 */
++	if (sc->hw_stay_on)
++		return 0;
++
+ 	if (sc->pwrsts == PWRSTS_ON)
+ 		return gdsc_assert_reset(sc);
+ 
+@@ -746,3 +753,17 @@ int gdsc_gx_disable(struct generic_pm_domain *domain)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(gdsc_gx_disable);
++
++/*
++ * set_hwmode_dev callback for GDSCs that let a consumer request that the
++ * GDSC stay powered in HW across suspend, instead of being torn down.
++ */
++int gdsc_set_hw_stay_on(struct generic_pm_domain *domain, struct device *dev, bool enable)
++{
++	struct gdsc *sc = domain_to_gdsc(domain);
++
++	sc->hw_stay_on = enable;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(gdsc_set_hw_stay_on);
+diff --git a/drivers/clk/qcom/gdsc.h b/drivers/clk/qcom/gdsc.h
+index 2f9665b664e606234fcc632c3f6b302a448d06a7..12bf74a1b2a431cefdab955de15ae6b01db7a10a 100644
+--- a/drivers/clk/qcom/gdsc.h
++++ b/drivers/clk/qcom/gdsc.h
+@@ -79,6 +79,7 @@ struct gdsc {
+ 	bool				needs_icc;
+ 	unsigned int			icc_path_index;
+ 	struct icc_path			*icc_path;
++	bool				hw_stay_on;
+ };
+ 
+ struct gdsc_desc {
+@@ -94,6 +95,7 @@ int gdsc_register(struct gdsc_desc *desc, struct reset_controller_dev *,
+ void gdsc_unregister(struct gdsc_desc *desc);
+ int gdsc_gx_do_nothing_enable(struct generic_pm_domain *domain);
+ int gdsc_gx_disable(struct generic_pm_domain *domain);
++int gdsc_set_hw_stay_on(struct generic_pm_domain *domain, struct device *dev, bool enable);
+ #else
+ static inline int gdsc_register(struct gdsc_desc *desc,
+ 				struct reset_controller_dev *rcdev,
 
-Krishna Kurapati (1):
-      usb: dwc3: qcom: Add support to keep GDSC On during host mode bus suspend
-
-Prashanth K (2):
-      phy: qcom: combo: Keep the PHY GDSC ON during host bus suspend
-      phy: qcom: usb: Keep the PHY GDSC ON during host bus suspend
-
- drivers/clk/qcom/gcc-glymur.c             | 46 ++++++++++++++++++++++++-------
- drivers/clk/qcom/gcc-qcs615.c             |  3 ++
- drivers/clk/qcom/gcc-shikra.c             |  3 ++
- drivers/clk/qcom/gdsc.c                   | 21 ++++++++++++++
- drivers/clk/qcom/gdsc.h                   |  2 ++
- drivers/pci/controller/dwc/pcie-qcom.c    |  6 ++++
- drivers/phy/qualcomm/phy-qcom-qmp-combo.c | 14 ++++++++++
- drivers/phy/qualcomm/phy-qcom-qmp-usb.c   | 15 ++++++++++
- drivers/usb/dwc3/dwc3-qcom.c              |  4 +++
- 9 files changed, 104 insertions(+), 10 deletions(-)
----
-base-commit: 47588e4c16d8876d3058bcec030ed8a016794b9e
-change-id: 20261126-usb-pcie-gdsc-suspend-7a99c6b62406
-prerequisite-message-id: 20261113103111.156476-1-prashanth.k@oss.qualcomm.com
-prerequisite-patch-id: d39d8cf075595b668e85fbc6c3cf7234c318602e
-prerequisite-patch-id: 5f7421fa9312a84661ff4a87e946f315e8dc27e8
-
-Best regards,
 -- 
-Jagadeesh Kona <jagadeesh.kona@oss.qualcomm.com>
+2.56.0
 
