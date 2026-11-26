@@ -1,111 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.52
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795706096;
-	b=EJNql6Oac2X3Be+ZhFqOnZf4CDuDPAd33emlCGV86gVxHCRnpVcHNjzEgjJqGmafSuqh
-	 ep2F1kPZjHoobkd3pnw+egRnhMCdj6+ZY//xCSxlcSeCJlO4Tgd46/LzQdQS5KCQixvW6
-	 yJMsGFJuM4pYj70ES81TcYo0Na5iAH3xtZerGQdK/VEIRraZTV95gWuXYgyWfwKw06y+5
-	 6VIHaYOS33oTKXJZSgSPEydAGwHWOoACwCIaadXI/vtIkrf19BF8TsN/u2TqnJdTDSDhB
-	 YyEy2GMzJmoYM4rBhZLmDRLbYTyS5R8s8lvPHfTqr8qB9Ck2Ow9tcHGQAPi7Fl+5DPQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795706096;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.41
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795706171;
+	b=EM2MaD+0e73qKx0luPdUt/zLLcpN2pM3Nz6G+L3cyIuDwWpReJbN+2GKPwlEWrs5A7EZ
+	 v+x4dzEM+TdQvQL5bTr26NWeBVdj2i8H7TuazDTrC8eDmT8zk8EcBlQwsMUMBAWp7yrVB
+	 ThbdRR1YyR7FcFc607WZRA2Erz+5ozC+bm2vR2LbtqkIaqQMV7i3cUAdPjhSDXirw57uE
+	 OfysNDopXg7HFehLT/dxrs74ewoVdvBep7rvpc0BiYqgnj2hRR9scSgj/2vGZ6UgzTUhD
+	 b0HwwxBsfoFMegmGZnGHjm9DNbwnKaCcjwCT5F5LAwAnwZIXyNssK9323UMneptHDkQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795706171;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=Fmk7KvplZu8IqXCFaSm0h6pjbCmnVJRD63HoP6Br6hc=;
-	b=Zyz4TCcbnuMBzZOYC1ngTH/tFq97xOrT2STiPfEZ/WHOTOLqWYqBFSLuE9Z4bgufPw0t
-	 5h//byod9uXm6zelWgBAfffQEPsiB8CZ4O4yT8vbqbY2eDRVJAOHS/5iWMkmHQv4nyBRu
-	 TcOCXVZ0zvOKHablv4ad41e7PYyAoNTsdPdV5pAhZwqBwMsOobmhrlUENHsEzDQBoygLd
-	 ONhJBHPZ9hCDLC1VsF/k3nSrng0Pfu4f/X7zoPU7zVaqcAxIEZ9aU/0aInpUtCF/tRrkd
-	 VDVIubvH1W2ZCCQpIjMwPCAIZgx8VpDEwr8ygxzIhHYt1ORnj5i62ULOGsCxhnRvNHg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	arc=none smtp.remote-ip=209.85.222.52
-Received: from mail-ua1-f52.google.com (mail-ua1-f52.google.com [209.85.222.52])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=mBvXmBLkI+5ZVDxMnAotYXXXMOB1nSxF2QoCNRUPkp8=;
+	b=sX/ozUP3X84Xp9lD8xdZLcmEOwYSs4Ts+toRf7UHyOJrieQhzh8w3K/yMmBdJEh+yFqU
+	 S86hlvArk0Nw1ypJXSOMU1hN4Cl3eejSO+D1GaHUb5BClsdZOjMw0tTohFj/Nur0+Mz0b
+	 SvN4hOMelCY9UUS+nZU3Voj3iSdSWvQCBpLC0YKHd96FXsWtOoduAmwtM9f7B8YoD153b
+	 ThDCnFNPd6gSbfq7dYxYJxdtXzymR+JpescN0koOju8GpsqviysZ0q7ESHW7TGHXUDXId
+	 dNy/68ONUa3iqBwuTOqL6rlG+OvZXXFfzODPtWyseZYRkWYrVsxGz/o0b3x5QeMk1eg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GhoTT+3h;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.41
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D81606A323
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 15:14:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D6D81606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
-Received: by mail-ua1-f52.google.com with SMTP id a1e0cc1a2514c-990fbae94f5so3766625241.3
-        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 07:14:50 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB39C606A330
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 15:16:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CB39C606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=GhoTT+3h
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4bb666304fdso71116545e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 07:16:10 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795706169; cv=none;
+        d=google.com; s=arc-20260327;
+        b=f8Y8ZDSqdBneLpM44Qm/PydaV2WS3yfPC2q13+jyo9eRhEYHdSZC0uE7wUi1FIO123
+         zTwYigxaa45c7QfEOyRQsNVR+JSM9/QJtf6F5tnwxanGEN79FdqjFS0VyhNHH2qGZUlA
+         F9xLRhO+Q2/XRntZCa8PfSYdLBUccIcEAYvGhdEvwUD0/XWu35rTiWQUQUBO1JoT/qPz
+         9BK75PzNJZElLjTG/VCoxIkR1E7iPwOijC1WulRC8sRJDQ2UwKY5A4PpUzLYw2jjOEWS
+         5m6/5Sji2Z09qXV5QKzNFrZWIfaoIWaVfJucOOaIudTUL8Wem8lnt1X+6TgGt4GP0FP6
+         qNEA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=mBvXmBLkI+5ZVDxMnAotYXXXMOB1nSxF2QoCNRUPkp8=;
+        fh=6NdDwpekt3BTQ4bG0kjdQQdHkIP8TZ9vQepnIc6Jej4=;
+        b=dUJiPONiO0GntiiQbQaNAaiL0KRmvuSmRyjwpeJ6nPr6v6DTEJ29Zqyk0F7vnww9zJ
+         RMzbPshlUMTfvAal63DuI/pqOljevEAePF06TEjeTL1+F3VN51HwUB23pV7go0BwfZL/
+         hTgifUjwC2zJM56SslnXT2QYG10y0Qiik1LVD2DRWd38S5NPZIdkBd6VP3/Dc+fdgx2T
+         TWL8AegfSK35VNK0XSnnWntS2/E2xD9Y2kmHBLu369ORlKqM2itcrBs8S4bdswbaWlgD
+         9I1G/izhxfau2bTd+n+ZkoRnO0AW3QYs8ko1FMxZ71G02MDRCFQyA62SMR5RLGrdVSjq
+         lJzQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1795706090; x=1796310890; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=google.com; s=20260707; t=1795706169; x=1796310969; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Fmk7KvplZu8IqXCFaSm0h6pjbCmnVJRD63HoP6Br6hc=;
-        b=at0tl1DT2mSnZt3nOLv37aifBxhKmP5gZR6l3IcV6A0l4PNDh1smzHC9LCyznNI0xy
-         0790xp6rnZ5zk9V9cyzVx2d/FiSPTTVDaIIPdQL2rooFjqMCzmjpZ/i1ORZu5558c9bl
-         vh/VpnMyCZ31i+zeKTRTcR1BG6HzEIngJxPY7adqL+BVSJbErHzd+cKh94xjTC8XMCkw
-         Jkxvk3KYom48V/7Dw4RTi5/jCmYmQs7D+pcov3weNXk1MGV/PpD+BIurNiJ55Gencezo
-         cbUYkldLl52PD8TwtiRrWWLsxqW3+fFC/BbMUuEtJiXgF/YnAAkH+oEXGnNgTG00E70x
-         EdEw==
+        bh=mBvXmBLkI+5ZVDxMnAotYXXXMOB1nSxF2QoCNRUPkp8=;
+        b=GhoTT+3hqhyTVwyAIWWrKhhvS3ulJ3gnLZmpoO8ekmItLfPnswvDvTb1d9fxSE6ODK
+         qbifDHjnqj1LYSaKPeFKR/bKkcyOsXV9khDMPqKx8EhATt2qmZ+UAUJfF1Aw/JaA/+fh
+         HcgqFxa26KkfxEzmerkJAymeRBm4huWFkkX1T6fnTZae8pq5GCUe/dt5h6QgmU2uxKTE
+         USj8hNiuIfDuRFhTHvfAzTq9iJ8CPvgDkIQzlE4J5lOYX/YWKbNikkf+iDWCn/EuWI9s
+         H71z0k9M1ab2zlQOVd/hiwXjMpT83N0jDbdgVatlCoMUYfjwt+5tyY+dw5mrugVQeRli
+         R9wA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795706090; x=1796310890;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1795706169; x=1796310969;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Fmk7KvplZu8IqXCFaSm0h6pjbCmnVJRD63HoP6Br6hc=;
-        b=cCkrviibXDJdtXpIadX0ntHE9YKk4bQfMEIceMz+zdbUzfL/MUX7IVJ0IljTRwFDrO
-         0icfT7AWrHwhJhdbm26TS8qsHDeVEHPk+ErAksAquQ0G6I7wiK7RHWepPkppSdFQG+mS
-         B7/Cp2Zi8GimizzcGPEYP+i2zj2+OHABF4ghIvIE8jv5wqU5Z+HUH2EQm4hzpy0z0IMi
-         DFj8xYIHe0KxlJlp+nIcAaCXbuNPu8kmi8XYDth2SOOI/AtsjzyOqoKVU2oAMrJLbQFX
-         YAN/jNf6W4rfKwEW0TDL+S6oqWovikqVwRgacJrhDzOzURo5E6ERr0ltGo4I0fnaotfl
-         Fwjg==
-X-Forwarded-Encrypted: i=1; AL+hErGq7yrR2BjDE0ICrPVpJA7W2mTacyvRipGNmWIb5PQynIwnVf0yvKTmU8quaAoRat3nUlkDl8/R6Ew=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9o8OsNoFE9gpN8R/cdlN64Q1iu0Fdwx0nptVkESkUiOVviKMdi
-	o0yyHPSaj548IfvrzBNOtBFqo9VpvL8UHjIGIUOIjUs1PzgQzw7b8qAW8slnSBL5RGw=
-X-Gm-Gg: AZFdTZeRe95JPFXW+YMziW157hPyU7Xb57d54Ull0rm9BAG6AmG5N5SzDm4pu4O4I+F
-	eCBbTiwreHqsJ9lCxSizCBYUTUguVCdtGsYtEEOvUhnvtd8jtYNoy3VTcZ55fiLqN37jFvZD5nk
-	B8pp2YASjofVKfW8xJd4dY8lCDpMozHJf+YeRdKFbzt32RM70wUYhOQrKOHWxhahJj1kAk3u+r5
-	UQX/MbTPkePDSaJCsn0QdhQM5qhbrihXOnTCXf6m+1m76iETlzzbj3+glkFbYtI/SJMH5Opw+iP
-	E3I6G893jPNLXUwvjt3uDPwCAlye56frSFb1q/LH7ryoX1aisIM8bhRZ0xlw7VF7e+GHZigTDbw
-	bmnS3B6K4wJpCqf4BP2gh/JGM9Ikz+hVMbcHDbyaTLE2qbLv/dJV+nrGSQ6Lu3dzpDNJdLwgpsJ
-	z7Cx28tIbkhHguHYy09uA0kaWwJptQM1FNSTVC6Xwmju6TXPpgcPCwjvFg8ZsoIhYPs4V6c+KHp
-	KtdRiB/UOCAT2eoJSIuttSTFkolnU7m44OIv0uLYpLL4cZAIfgGb3hUU+Wg1bZskusXqDKWRw9J
-	DTYxycQ=
-X-Received: by 2002:a05:6102:84c8:b0:7c3:2168:d603 with SMTP id ada2fe7eead31-7d71e329ce9mr10299312137.0.1795706089640;
-        Thu, 26 Nov 2026 07:14:49 -0800 (PST)
-Received: from ziepe.ca ([142.177.118.84])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-921349cdfbasm193141456d6.17.2026.11.26.07.14.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2026 07:14:49 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xWbBQ-00000004NdO-2PDc;
-	Thu, 26 Nov 2026 11:14:48 -0400
-Date: Thu, 26 Nov 2026 11:14:48 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: Alexey Kardashevskiy <aik@amd.com>, linux-coco@lists.linux.dev,
-	Dan Williams <djbw@kernel.org>, Leon Romanovsky <leon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Steven Price <steven.price@arm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Lukas Wunner <lukas@wunner.de>, Ashish Kalra <ashish.kalra@amd.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH v1 04/10] PCI/TSM: Defer TSM vDEVICE allocation until
- device setup completes
-Message-ID: <20261126151448.GO246011@ziepe.ca>
-References: <20261123083337.2731019-1-aneesh.kumar@kernel.org>
- <20261123083337.2731019-5-aneesh.kumar@kernel.org>
- <5e04323f-dfdc-4956-acee-bcc09926726d@amd.com>
- <yq5aqzg99uio.fsf@kernel.org>
- <20261125141947.GD246011@ziepe.ca>
- <yq5ald6gul7q.fsf@kernel.org>
+        bh=mBvXmBLkI+5ZVDxMnAotYXXXMOB1nSxF2QoCNRUPkp8=;
+        b=Fv/Jx094NCdnoL27ZJO18BV/0aDt8JNWSketKNuXkQQDUO7LY+myDEcYlfRydMJUE+
+         YHJBedoTOlFUrRrGn4hCi0JAFUoU+R7d0XqRzyhfWjN/AulOxWM9sZ3aOxxO1r+HJhmD
+         ngP0GYJCkODzDDwmsFxrK2SQhdtLefSQNDxy3RHOtjByIu6/xd//Ylp/9jiqUf+J+8I9
+         iY70HscLkGzTJCeYJjH+gMgZnAFjFvhNRgYBmTqMVwLpGZL6U9H9kudzrQCHr8LzFnXv
+         vBIGerrE0BwWqrdUJV3MgbI0Hcb8ojdnkHr6lpOtbb1F5hnzajXkuYAkIV9uBpefgQ3P
+         puZw==
+X-Forwarded-Encrypted: i=1; AL+hErHOr9NuWypGu8RZvpGL6qdlV0YDyhCG20alQl4M9HAl8K695fVVle4Q+zLJimmI6GcW0hg1rLcoGLs=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8MAC4S4pvVacNYQFqDWuAUzlNt5qdn1d+gYzqg4bNfZnQurZS/
+	BMTNK6pYdTHX+hXX4DEal+RLHpbPcZTgwEskdr5CkV6StCBTi5lzGhOFCDzs9yV4QVI1iO5wcy7
+	aKEKU3wrWdgFjY/vMhr8Sv4ax1SD39mATgoYPkcpU
+X-Gm-Gg: AZFdTZePAEToogaIaRd3Dq/NMWBq4hlFxlBax97xtBjlSytEPUulCAPtEg3FITW+uc6
+	tdfwWAhIyPrzkExfnCSiXDycCLTSNQJmx4TwfN25GSPnRS7fNZ3vVATo99M5wEekqIO4C2lbq3n
+	Se+eBVLaY1erJyADsskioEXA8ejCM21jLLAdTRrxhhND/sRBZkZtv/mQXBOMgrCih70YOCgYICc
+	W8hmfyQZRwSMfXacmU1Ivw6vtq8NmX4IwsyC+R2C1BXGlKsivmq/EBEfuXmzzmuu86kMojxmuA2
+	sE6UQLYAAA5gFAS90LcDsvD8UdAOBsyVPdHgxKUqApAGJueeeS/DoUizKqVqoqYTfSCJgQIwEYD
+	QKytM+bSyuvv6T+MPjtpQKc8TpWXlNCa3HrviT+DY6eCzSRmseE/+H4VF7LCdDHNW6ex0urh8BO
+	935NYAFI6m5/SBaAfI7ariMZxMzoRWKPyT7zsrjDzResyr
+X-Received: by 2002:a05:600c:16c9:b0:4bb:7ad9:311d with SMTP id
+ 5b1f17b1804b1-4bb861692a1mr332818735e9.19.1795706168571; Thu, 26 Nov 2026
+ 07:16:08 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -115,35 +105,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5ald6gul7q.fsf@kernel.org>
+References: <20261119215046.2892839-1-xinmengs@nvidia.com> <20261119215046.2892839-8-xinmengs@nvidia.com>
+ <DN4P1UAAVP8G.2TUW0Q8UEQVCG@kernel.org>
+In-Reply-To: <DN4P1UAAVP8G.2TUW0Q8UEQVCG@kernel.org>
+From: Alice Ryhl <aliceryhl@google.com>
+Date: Thu, 26 Nov 2026 15:15:56 +0000
+X-Gm-Features: Aa3M54o7yVaAHH6adwEWSabFuYapgO-QYKd3fskOtzrfMLGKtESTl7nq44reziM
+Message-ID: <CAH5fLggYpTiLKDXMQ9UYBGZ9VuZBWbNfCZn9fs=i82-xf6A-1g@mail.gmail.com>
+Subject: Re: [PATCH v3 7/9] rust: vfio: add PCI variant driver abstractions
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: Simon Song <xinmengs@nvidia.com>, acourbot@nvidia.com, kvm@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org, nova-gpu@lists.linux.dev, 
+	linux-pci@vger.kernel.org, alex@shazbot.org, jgg@nvidia.com, 
+	yishaih@nvidia.com, skolothumtho@nvidia.com, kevin.tian@intel.com, 
+	airlied@gmail.com, simona@ffwll.ch, ojeda@kernel.org, alex.gaynor@gmail.com, 
+	boqun.feng@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com, 
+	lossin@kernel.org, a.hindborg@kernel.org, tmgross@umich.edu, 
+	jhubbard@nvidia.com, ecourtney@nvidia.com, cjia@nvidia.com, smitra@nvidia.com, 
+	kjaju@nvidia.com, alkumar@nvidia.com, ankita@nvidia.com, aniketa@nvidia.com, 
+	kwankhede@nvidia.com, targupta@nvidia.com, linux-kernel@vger.kernel.org, 
+	zhiwang@kernel.org, zhiw@nvidia.com, boqun@kernel.org, 
+	daniel.almeida@collabora.com, tamird@kernel.org, work@onurozkan.dev, 
+	jgg@ziepe.ca, bhelgaas@google.com, kwilczynski@kernel.org, 
+	dri-devel@lists.freedesktop.org, peter@colberg.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 26, 2026 at 12:34:57PM +0530, Aneesh Kumar K.V wrote:
-> Jason Gunthorpe <jgg@ziepe.ca> writes:
-> 
-> > On Wed, Nov 25, 2026 at 02:07:19PM +0530, Aneesh Kumar K.V wrote:
-> >
-> >> That is what this patch does. If IDE setup is not complete but the
-> >> device already has tsm0 attached and connected, pci_tsm_context_get()
-> >> returns an error from cca_vdevice_init(), preventing the device from
-> >> being assigned to the VM.
-> >
-> > If the device has not been fully accepted on the SPDM side then you
-> > should not be able to create an iommufd vdevice for it, nothing else.
-> 
-> That is what this patch does.
+On Wed, Nov 25, 2026 at 11:51=E2=80=AFPM Danilo Krummrich <dakr@kernel.org>=
+ wrote:
 
-Well, it doesn't exactly. It adds some code without any users and
-doesn't explain why we need to export a lock or add more core code for
-this activity.
+I suspect Mapping<'a> should wrap a VmaNew instead of VmaRef.
 
-Nor does any of the naming imply it is only to be used for iommufd
-vdevices.
-
-It is problematic to be hacking the core code without any drivers, I
-know we are kind of stuck with this, but lets try to limit changes to
-supporting stuff that is potentially about to be merged. viommu is
-fairly down the road still due to all the dependencies.
-
-Jason
+Alice
