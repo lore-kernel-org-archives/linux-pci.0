@@ -1,58 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795691015;
-	b=nGwyf/B9GQsITXjrlhWsdHHYS2y2+xVVzc8XW9x5J5P89JqTInsYu4koHpEb8SlUQggo
-	 tcLvDnw5Ai3rOLmVwf2llR9reM71SndsZiolcqCipMAmH5zbVCc4hXpqWMfBtGECCKo0Q
-	 D4790JPuPUiXYk2wIjt7XZFYogtxBeBOoY+R7BQ9XLo3SLm66274N+V8W3JCgXs6PQyjV
-	 kvElK4Rs0xTUzDVKhNNhDUtXx5VorUoLBTaG4Rmdd3wlGShgk3Armqjkiw4IcRpZoISOk
-	 V69QGW0JKMdHRbVzG59T9LibcOXPsjjD1PigjqKr0Wre4m1THUpet6vp1x6dX6dj3YA==
+	t=1795692084;
+	b=U6uNfWtZ6uWB3tP5ZPULRIUIs+MALmE9xpF5rX+/eo0hrr853KgZOECiULo/adWVWd+5
+	 7ayCXdVgQ3PBCdY/UquvZqYPidU+KQyrGYXcOzqxwPI9Lrhx/9eB/nDgREPkSLWxNUVSb
+	 7t+HkixRNWWsgPEcfIGSk8+scfTdjhtweMiIeUC7eqqY7zqTdjG5yZrjvlPdM6Oelbm8c
+	 m6OSe2QzL500tWFhkPapwmD7f/lhv4I5vbWhx0PowWg/akmweewOyVeJDpqegdVGe4xMM
+	 E98aL1FOFmhom9zJmiZU9jz/7Vgha6wgVut3JCTAkYjw0wWGeJHIBi0yKNkk2wlkrQQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795691015;
-	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=iEtcVXXAb2SuDobIw88bqOPlDv3UkXnLdqkxyNZgyc0=;
-	b=didcg+mgHGIprUuAE5YpcQee0p/R84GIgFXRxqKcswRD1gRDXpAidTqEovSOIUoQCkKS
-	 i9cxi1MmuzSzfdBLQw/ahYSXRVoHYMFpQc9/+OMAfFO+QSfF7RWeJiHRzpCZXHY+/Xtvd
-	 wEOZtxms0msgMY+Jil5J6Es/Sw5SX2LZ04XOLkETNWOVMRjlpFIl6OZaK929Yu3CqXJ5G
-	 6W+6ijnHc1jygqCMtqMF0DNesyzg8KrDQF+CFjTC8MTKnv/DeyaOkVazxTRq40fceh9Qr
-	 VbUNBNFilZJXurrEqmwn76PCjFjsXW3r/Qr1UwJBuKM8F+jaxuOnlxsY8aaalw53+2A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795692084;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=3UuAdt7dSVCdcMjg2v0KRdp+uX84J2DmHB+3MfIgCio=;
+	b=VmLc+QW3BGDWa/8a3y7T9Ghy6Zbiq2u4ANb5cygZtzqUmraBuTWipin/MSS7RV6XI6ck
+	 N+Al4AtN5QY31StOz+Cm2P1u399SLkxgeGX3ineelDV8qXZ49gb9reAGqXQZQE84aHY4u
+	 8bUMadaA9TVGHyhQju1KSX4X2lk8cT5GIShs8DIGq8ln/p8nJofP6oKbW8XLEzP795nrR
+	 HiyBMqbjY6VoOi1BWUqujy1Nk4twaQ4G0vCMkYnUOQjCDXAUauyuEpeqeeF1BxUU6+/OM
+	 4PHyQXl+8yIUuu6r2Jcf9xUnwsahbh/tsc+Ejn+9T/sT2FRvrkvP5jqD6jVjVtGlQmw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.alibaba.com;
-	spf=pass smtp.mailfrom=linux.alibaba.com;
-	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=MlWvY8rZ;
-	arc=none smtp.remote-ip=115.124.30.124
-Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fcMpkfYU;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4428D606A32A;
-	Thu, 26 Nov 2026 11:03:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4428D606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45118606A337;
+	Thu, 26 Nov 2026 11:21:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=MlWvY8rZ
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1795691000; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	bh=iEtcVXXAb2SuDobIw88bqOPlDv3UkXnLdqkxyNZgyc0=;
-	b=MlWvY8rZ6X4UM3M6bcd+a5wiwQ0f73Hvw3JHbKAZmuD7uq2I/Uzwnl2oMHKVw98kH5pm6gQvbXUvjZBfeqX7DbDNETibB/mXhEGvQ9s/60/d9Ueo0rIApFw+znKDwH9jlSqR/E9rdV8D3pmhkQD7lgbxOrcAk+BZApBslMctcKU=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=feng.tang@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0XFUKQRX_1795690999;
-Received: from localhost(mailfrom:feng.tang@linux.alibaba.com fp:SMTPD_---0XFUKQRX_1795690999 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Thu, 26 Nov 2026 19:03:20 +0800
-Date: Thu, 26 Nov 2026 19:03:19 +0800
-From: Feng Tang <feng.tang@linux.alibaba.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Anju Zheng <zaj01616726@alibaba-inc.com>
-Subject: Re: [PATCH RFC] PCI: Add warning about possible danger for
- pcie_bus_perf mode
-Message-ID: <awgR92kRQdrjUdBC@U-2FWC9VHC-2323.local>
-References: <20261125155829.77269-1-feng.tang@linux.alibaba.com>
- <awfwUC5vomjlih2U@ryzen>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fcMpkfYU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 721DE1F000CF;
+	Thu, 26 Nov 2026 11:21:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795692083;
+	bh=3UuAdt7dSVCdcMjg2v0KRdp+uX84J2DmHB+3MfIgCio=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=fcMpkfYUPPxSdHrXBEDXH5r0pdjxRpjy93Zt4Kx20zZYirYAJUjl5pIDbOUxZecy9
+	 Z6lQHKg19QGO7V9fxFM3spvdLuYK6N3NLsSac6BlvrOBeV3KF7LnhY/sgcq8gYEInD
+	 yczJOoLOYSUrP88rqweUx8QDgqven4oPCZzNgQ3PvP5hHsn2/TNVrKqvbm8dQl6HjR
+	 1PG6SEttsPiCPgJdmoZU4DHzPCx7skKD2aFyv42T6DcZXpQhgI7rRUU6Nge0FvvTDb
+	 7veKQ6wKzE15RxQQ57HkIOQK+YOe0lgTrA5j0ufjwTuyRf/KkPx77g693TixMxVwx2
+	 89vRCFbq+I60Q==
+Date: Thu, 26 Nov 2026 13:21:10 +0200
+From: Mike Rapoport <rppt@kernel.org>
+To: David Matlack <dmatlack@google.com>
+Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Alex Williamson <alex.williamson@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Chris Down <chris@chrisdown.name>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v11 00/13] PCI: liveupdate: PCI core support for Live
+ Update
+Message-ID: <awgWJok0E3ASR7Q3@kernel.org>
+References: <20261118223704.3286085-1-dmatlack@google.com>
+ <DN0FL1752MH5.1FSZE620OJBM0@google.com>
+ <awKlfqlQYhphXCvf@kernel.org>
+ <DN2TQRX57C04.ZT5UUS6AQ1L6@google.com>
+ <awVjqLFrXY_PCm7X@kernel.org>
+ <DN3L5XQDSVO9.1NJFYQJTS16ID@google.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,63 +84,44 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <awfwUC5vomjlih2U@ryzen>
+In-Reply-To: <DN3L5XQDSVO9.1NJFYQJTS16ID@google.com>
 
-Hi Niklas,
-
-On Thu, Nov 26, 2026 at 09:39:44AM +0100, Niklas Cassel wrote:
-> On Wed, Nov 25, 2026 at 11:58:29PM +0800, Feng Tang wrote:
-> > During stability test, there was a bug that running 'mount' on a type
-> > of commercial NVME disk failed on an arm64 server and raised PCIe RAS
-> > error and panic the kernel later, when using "pci=pcie_bus_perf" kernel
-> > cmdline parameter.
-> > 
-> > The NVME device has MPS(Max Payload Size) capability of 256 bytes while
-> > its corresponding root port is capable of 512 bytes. When enabling
-> > PCIE_BUS_PERFORMANCE mode, its MPS and MRRS(Max Read Request Size) are
-> > both set to 256, while the root port's are both set to 512. But the
-> > NVME device doesn't comply with PCIe spec (v6.3), Section 7.5.3.4:
+On Tue, Nov 24, 2026 at 08:36:22AM -0800, David Matlack wrote:
+> On Tue Nov 24, 2026 at 2:15 AM PST, Mike Rapoport wrote:
+> > On Mon, Nov 23, 2026 at 11:07:04AM -0800, David Matlack wrote:
+> >> On Sun Nov 22, 2026 at 12:19 AM PST, Mike Rapoport wrote:
+> >> 
+> >> Hopefully I did this all correctly... This is my first time sending
+> >> in-reply-to fixup! patches.
+> >
+> > This is my first time merging !fixup patches and it seems b4 managed it
+> > well :)
+> >
+> > Please check I didn't miss anything:
+> >
+> > https://git.kernel.org/liveupdate/linux/l/lu-pci-preservation
 > 
-> I assume that you are using pcie_bus_perf rather than the default strategy,
-> because with the default strategy never raises the Root Port above what
-> firmware programmed, which may be only 128 bytes.
-
-Right, only the 'pcie_bus_perf' mode can reproducde this issue. The
-default mode works just fine.
-
-We reproucded it on one arm64 server and one Intel server, the MPS for
-the NVME device and root port are both set to 256 bytes in default mode
-(no pcie_bus_perf parameter).
-
-> pcie_bus_perf gives a Root Port its own maximum MPS without looking at
-> the devices below it, and relies on MRRS to keep Completions within the
-> endpoint's MPS, so a device that ignores its MRRS gets Completions
-> larger than its MPS.
+> Thanks Mike!
 > 
-> My series [1] avoids this without pcie_bus_perf: with the default strategy,
-> it sets each Root Port hierarchy to the largest MPS that all of its devices
-> support, i.e. 256 bytes for both your Root Port and the NVMe. Since a
-> Function must not generate TLPs larger than its own Max_Payload_Size, the
-> Root Port then returns Completions of at most 256 bytes, even for the
-> 512-byte reads your NVMe issues. The NVMe also gets the same 256-byte
-> payloads as with pcie_bus_perf, so nothing is lost by dropping it: the Root
-> Port's 512 bytes don't help a link whose only device supports 256.
+> I checked the updated lu-pci-preservation branch and the code is
+> identical to the v12 I had prepared locally.
 > 
-> Would you be able to test the series on that server, without
-> pci=pcie_bus_perf?
-
-I can give it a try after the quirk work suggested by Christoph Hellwig.
-
-I haven't read through you patch, one question is, since current kernel
-already works fine without 'pci=pcie_bus_perf', what' the intention of
-this test? 
-
-Thanks,
-Feng
-
-> [1] https://lore.kernel.org/linux-pci/20261020122854.1500883-5-cassel@kernel.org/
+> One commit message nit: "Freeze preservation status during shutdown"
+> ended up with two Link: trailers, the original v11 patch and the amend!
+> patch:
 > 
-> Kind regards,
-> Niklas
+>   Link: https://patch.msgid.link/20261118223704.3286085-12-dmatlack@google.com
+>   Link: https://patch.msgid.link/20261123190045.2166865-4-dmatlack@google.com
+
+I dropped the second link. It's the same thread, so I think it's fine.
+ 
+> whereas "Adopt ACS controls in incoming preserved devices" only has the
+> original Link: (not the amend! Link).
+> 
+> Not sure which is correct.
+
+-- 
+Sincerely yours,
+Mike.
