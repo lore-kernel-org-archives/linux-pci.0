@@ -1,47 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795718294;
-	b=dV8jk0CWe/wYXGJjr8XBStfZOPbB6EqFtnLqVRsoesFKvUo1HZP14NiAiThscb9MofKg
-	 cNfRQUTGrEw+KAuYxHO07KdcEEuxQ+y4twJDJGH1eJFkc5kWVk3h1ZyZ8fPR9zFlDJbuY
-	 cVdLHX4zUw7nvVRpLfBrMxfC0kmMm2AERyfgQcb8A906WYUPVc1LdVFVoTwoW0oAEnyc8
-	 HC8bCIvF9A1koaUC6IUOIfj4i1jCbFthVyxYl8xcIGy96jEGcA/g1DWJtLuzZ9NxCsfK1
-	 iv2eLK5a6xBWz6r9si1p8gHsdpRf795P57v0UW4M6J+/B0Rs9K9gFSiqOAiUe6ARAEw==
+	t=1795718558;
+	b=1VDcTPFzjEFDgcdQGztD8qnSNfNBXI58i8qCw7GSuKGOkt2IBba5aq1Xj8b9f/mv00G9
+	 yQ7yB8yCMUoCAUJKnHgx9gkesFO7AlVUMy/JSAgXwQpY/qTvCp68U2LZAEyP2NaALVlaZ
+	 nRA8tHsFHIv9nAO1PeMNPlu+0XJ9mAciYUfSkNBojAaCa24mJIKjvTRqcewOB/VS1jDiK
+	 QgCniqWXup1PFz3T8GYV3IEsigK2q+3RDEXy9QuTz0aitaP6DEN45F4cVQwzuDfy7ja9A
+	 GddhNhYHbophBnQQG1cuZz8+TE2o6Ae3MRywXas0Y7HZwTt9IlxSUpU0DGS7lyDRWAQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795718294;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=0JG6aovU53Gj28fQBHTFybyaNfmBaXUxB5wClm6BRjM=;
-	b=Ajf3sJXFmBasmL8akVacGKmNsBGSWO17uZy8uuQ5rbwQjN6CLoTkiC0wXya+xfFALKyT
-	 4AL5R3UkhA6yI2E98EDuysGx0w1h7D7KOxVE7x7KbsTtASctbcp5EBE14AV4OJywrPyjY
-	 2ElyL0b56usUQSF4U7LiAwtrGHJ9VdThDLwNkT6kbgpliobANWSctrXFAMc4YAYotPcdg
-	 R4oJz9VCjb+Qc1+Te+gHV8jUsezbv/vfDvSwqU0wGc0Te7qThADcjjBNW+51ZWpC5zylo
-	 OnENFWnHF2WixIdBbcPAGE6YsNGkykAXUheNY7fCOlaGu0//aNYtm2vxYcSXXwsz6pQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795718558;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=YPdlr+kBcmJbKA7MDuZ1f3O91RY5uvGdw0lLhmy90CI=;
+	b=EhfP7QTBnzIBMqid5cvBZyQwL8pb2E7IEWCVH40xdHTyuJWoqz3y5rm20YKmNMRnEm2+
+	 Ly4+k7uhn4w1OBwNzMiEAv9GB9eiJvoLA/WcSkQFRFNufmgIgCtsXhFR44iAtO0GCnCJi
+	 SrhYOVGv3IPMAWFySMwKZFMXhiyr3USNVbv98rbUEMhj+Uz2HpBSkwzynttDzC24soGgw
+	 XW7KavLRLNacrhnhi8Rx2smt2xui7epofFLe5AeNBr2odOc6W0T/8sW6tZyo29xtPXWkB
+	 SkmnI1RiuheCzinov2LomV6TSsN+A7Z2ZamP142xnuhDCsHC3TT/y7DprO1251/FILQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="F/3vuzP+";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lI+yKkpA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4DC8606A32A;
-	Thu, 26 Nov 2026 18:38:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44D80606A31C
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:42:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F/3vuzP+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FB581F000C4;
-	Thu, 26 Nov 2026 18:38:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lI+yKkpA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE83F1F000C4;
+	Thu, 26 Nov 2026 18:42:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795718293;
-	bh=0JG6aovU53Gj28fQBHTFybyaNfmBaXUxB5wClm6BRjM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=F/3vuzP+6n/+79X4tAfOZ1aSAZe4UF9ef3Y85F8LU/Jl9IGTaGLzqvWUbStGYCrcG
-	 wGheNCN2HLV7oh7s/OwpOp9KvQbgFUkSb5K95Xl7a56mt3yx58EpmlBgC4auXUbJN7
-	 KI5QHihgn0ejBG5k4zg6w50K7oYV+EJo2IdN5nG80l2E+5TUsOu1zcAQOIMpzjA+47
-	 4xb/WZqK/0UZIoWsXEZxr+1ZehqXpWThVt3nMpl3aFKuqNnHD6AWtF6pBGdvp+L78b
-	 dAJpoo+VJwjzE8jLmF9X4+2LOGuXXl95FyOgBuRTk1TtRbJ2B9EOlisKwr9/9TFwbr
-	 tKOpT8Q6EJQgg==
-Message-ID: <d125e248-1300-477a-b60d-fc0842103905@kernel.org>
-Date: Thu, 26 Nov 2026 20:38:08 +0200
+	s=k20260515; t=1795718557;
+	bh=YPdlr+kBcmJbKA7MDuZ1f3O91RY5uvGdw0lLhmy90CI=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=lI+yKkpAPQQdrYQWSo1FPSpRvErcXuuf2DxY0enfVmZi3VcVfIC7V0eqaVTu0y3lq
+	 tXqjwiWxi0VVkxPsXycV6hS0TuGxCnH16YHK0tf2xJhhma4rx14yf5EB+cu7/cL/DG
+	 x4tG8yCbGWu6nNBgoq0Dvaa96vqgmGJfTVVs67MWmD7NH0jLUCaJFxS+njXeaFmFdO
+	 ejLp8R2xd1Hx6G5Bc2yPTpo3QpeaFDofmb5FzibmY+SgE4PyCUrx6xQtcumtL1mZhz
+	 gtnvO/166KhoAbgyjvQdp3ZPMdk5h1ogqWE6NV3nYLMt8Z9dBWkTcLgglQ264kmSRR
+	 PwCx8s6RgbRYw==
+Message-ID: <sashiko-outbox-236032@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI/AER: Check error status registers if Error Source
+ ID is zero
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Lukas Wunner" <lukas@wunner.de>, linux-pci@vger.kernel.org
+In-Reply-To: <1ddc35c51b5317988bbf235c467a9534218c6ea4.1795717157.git.lukas@wunner.de>
+References: <1ddc35c51b5317988bbf235c467a9534218c6ea4.1795717157.git.lukas@wunner.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 26 Nov 2026 18:42:37 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -50,78 +58,34 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 00/14] PCI: rzg3s-host: Add PCIe hotplug support
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de,
- geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
- Ovidiu Panait <ovidiu.panait.rb@renesas.com>
-References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
- <179562868433.5580.1979396952125967073.b4-reply@b4>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@kernel.org>
-In-Reply-To: <179562868433.5580.1979396952125967073.b4-reply@b4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Hi, Mani,
+> Since commit 6d69eeae8966 ("PCI/AER: Check validity of Error Source ID
+> register"), the AER driver checks whether the Error Source ID register
+> contains either the ID of the Root Port (or RCEC) itself, or of a device
+> subordinate to the Root Port (or associated with the RCEC).
+>=20
+> If this check succeeds, the Error Source ID register is assumed to contain
+> a valid value and is not double-checked by reading error status registers.
+>=20
+> However per PCIe r7.1 sec 2.2.9.1, devices may send Completions with a
+> zero Completer ID "prior to the initial device Configuration Write
+> Request".  Similarly, CXL r4.0 sec 8.1.5.1 states that a Component may
+> generate a CREDIT_RTN IP2PM message with a zero bus number after reset,
+> which can fail ACS Source Validation and trigger an ACS Violation Error.
+>=20
+> On ARM platforms, there is often a Root Port at address 0000:00:00.0,
+> which makes it impossible to discern whether a zero Error Source ID refers
+> to the Root Port or to an uninitialized device downstream.
+>=20
+> For this reason, always double-check error status registers if the Error
+> Source ID is zero.
+>=20
+> Fixes: 6d69eeae8966 ("PCI/AER: Check validity of Error Source ID register=
+")
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-On 11/25/26 19:44, Manivannan Sadhasivam wrote:
-> On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
->> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
->>
->> Hi,
->>
->> Series adds hotplug support for the rzg3s-host driver. This is a
->> continuation of the series John posted initially at [1]. Along with it,
->> prerequisites fixes and cleanup patches were added.
->>
->> Series was tested on RZ/G3S and RZ/G3E boards by generating consecutive
->> link down/up events. The RZ/G3S has an I2C device which, depending on
->> the way it is programmed, it controls the state of the PCIe link. The
->> board has 3 PCIe interface: PCIE_SLOT, M.2 Key E, M.2 Key B. The
->> following script was executed for ~9 hours:
->>
->> #!/bin/sh
->>
->> echo performance > /sys/module/pcie_aspm/parameters/policy
->>
->> while :; do
->>          i2cset -y 1 0x18 0xf4 0x8 # Link down
->>          i2cset -y 1 0x18 0xf4 0xc # Link up: PCIE_SLOT (NVMe Micron)
->>          i2cset -y 1 0x18 0xf4 0x8 # Link down
->>          i2cset -y 1 0x18 0xf4 0xd # Link up: M.2 Key B (NVMe Transcend)
->>          i2cset -y 1 0x18 0xf4 0x8 # Link down
->>          i2cset -y 1 0x18 0xf4 0xb # Link up: M.2 Key E (WiFi AX200)
->> done
->>
-> 
-> Given that this series is already 14 patches, you should really consider
-> splitting it into atleast two. Patches 1-12 are mere code cleanups/refactors, so
-> they can get merged independently and you can post the follow-up series after
-> incorporating comments for patches 13 and 14.
-I agree. Yesterday, when I got your review comments, I was in the process of 
-preparing a fixes series (patches 1-6 + [1]). I've added [1] since its becoming 
-necessary for our testing (and Ovidiu proposed it like this).
+Sashiko has reviewed this patch and found no issues.
 
-If you consider OK, I can also add the cleanups along with the fixes series, thus:
-- patches 1-6
-- patch [1]
-- patches 7-12
-
-Or go with 3 series:
-1/ fixes (patches 1-2, 4-6, [1])
-2/ cleanups (patches 3, 7-12)
-3/ link event + reset root port
-
-Please let me know which option you would prefer
-
-Thank you for your review,
-Claudiu
-
-[1] https://lore.kernel.org/all/20261029172831.9409-1-ovidiu.panait.rb@renesas.com
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1ddc35c51b5317988bb=
+f235c467a9534218c6ea4.1795717157.git.lukas@wunner.de?part=3D1
