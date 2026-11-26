@@ -1,113 +1,113 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795670247;
-	b=g7x4YPzr0TB85ODuj+yiX8RfpklB/h8Bgykg52QYpI97K7cY7qtTVPp7udC9GDLSzkub
-	 ZpWY9H7GdjX4qcYOHNfz8vUhfoQPmdwFkOSlyLC2gZ+te85a/nt/N+Sbh5/TNlcjAaZol
-	 ddC4mUZ3cxlNUonjmEeVU7ZlLn/AVjG3GDuAY/yk/3FcggEbbQK4FJMN29u43lvGN4qXa
-	 2PDbhzeflafIKf2H18662F1pegLGFj8lzKB0SPHDpROxGym9S411G8WpADfGb0jXQ9g07
-	 FDxek78zI4Cd4BVGiSdpMXmaVOCQ9VnQCA9r3Y/uIpEXMMwJr/1lfhk7p32h0DZ91gw==
+	t=1795670251;
+	b=v05Ffjtul2yZwoG22VSxuWare/6vpJDN8nRmy3ibWzYXLSw0LfMG/fl+D0g9aqSLMeKq
+	 S12Y1P/mYE4M1CiSOWIb6TA2/y7+JIk4RzM+VRfmnMXY+hoi2I90tfdTfyjAm0T5/5NRh
+	 O3ut4bsOZMpb5GUlLP+Zh5qyQEb/qUxSA4gIgr/kYPkVGu23jPTAIdGJKvv5Nbrv0pIRq
+	 S23X2+7kR4+yP0ch5AbJ2U9DrNT32XeexCW8clzteUgodGz8MURaWH0yWEr8Mq9mzIhgd
+	 jEaYHcwFfvZ4+mVpSUuLQgoRMh+nTAO3jOY+U8tj62u0LGubD2acBzp6xTomyv/qAhQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795670247;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795670251;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:Date:
 	 Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-Spam-Details-Enc:X-Authority-Analysis:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=v7SZC9zJJd5Z+k+XKqU0PQUi4gNV89FyWD6yXGlbEqw=;
-	b=bIQ0kF4kT0NOD6bGxh3Cs5Xk/lW6WCp8X7/ciicazkujWHZk1VJtYoWl0/6JIGE/EMoS
-	 OeqigbISnigq7Hp522W1zAPM7+Z3Rp5YzkbnAum7Ole8nXineJf3QP/1PL8nOJYcOh35q
-	 FRc8gVnbDrDcb7UectfgTQ8uYVUAwm0yjd9npk+AckstGaPj8Hw5Pp+/7pm+z4SATCL5H
-	 +zyQuSsh9G5QHBgnckyat0p8Yjr0pcKNN+0upGmrOeDNBQOnkmqtyxhYnLGvcE9FtFI46
-	 LSCSYviZHSQqPoLazIU+0PmY9kzMvSkj0BWRirDetX3pEcUprsbA8IDWkgZoMVEmyig==
+	 X-Developer-Signature:X-Developer-Key:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=sScIlPjGf6pwCcf1w0bGUGMbyCWhp3/IW2P+c5YbTiw=;
+	b=aFs/vpDOkgh0DpAW3dfzC8mVGm0sY9h9GsoLn69CgiyywXyQKR6BRHDLTz6puQ5n6yia
+	 tDAX4zATsJ02yBkaNdB2QBwOzn/9S5TuJ1YsZyhthDG/ryI3YNBTJFx/drpkResLVmxJs
+	 DWD8+C8AJvX6caGMWPWtzBtbnTjqkkyUgUKLl8xDv4mCKLIvUE0vSlV42UNBo+DJVwe7M
+	 YQna9jEcqszt++bM+Cs9mfhgqEJRULrL5jIsVUj/Zn487yQLV+HxNe+djK0kr+T7nyUFq
+	 UapcF4CGgzmRzkWwdWoBir/rNbFU82Np5L5oJQi6+kExl3fGMZ0OEkIgs2n/SMyxZFw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=oss.qualcomm.com;
 	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=mqTINcSo;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=eDhGKTg+;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b="Rm/RtYZE";
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=RH2qDpw9;
 	arc=none smtp.remote-ip=205.220.180.131
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C92BC606A321
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:17:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C92BC606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 894A2606A329
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:17:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 894A2606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=mqTINcSo;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=eDhGKTg+
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AQ36R1q1686572
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:17:25 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=Rm/RtYZE;
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=RH2qDpw9
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AQ36Yql2791304
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:17:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	v7SZC9zJJd5Z+k+XKqU0PQUi4gNV89FyWD6yXGlbEqw=; b=mqTINcSoBgaAg6xi
-	opheCea+AQwN6rldH6rMOaf7b71LBJqjErTN9qHdCg3Kk2CgWBhUAxWvcm/4xjpt
-	q1D3bvFL4p4oehx8G6ZWtijAzrs4xYYm0k4fOp42bu9NqaE4mUhHzz3JEXUx+e69
-	Nf70EW9qnGaNKRi4HM9B+01+cDeAC4a5HaEaD0Kc2VcMSRzWdyCcYJU46sUQM9a0
-	XsznMEO9Xu4KMJbMw3byfUdflPxYLv/beMsJ6rW37XZMRMuEFYPWZKmD5djr4Zkt
-	VnjEjPOgNSOfKSC76TuBlJpBCc83GDQtslFVAXng+ZnN0FT7ZBKfP30jsXPIOlhw
-	xTTArA==
-Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j66qf9c8x-1
+	sScIlPjGf6pwCcf1w0bGUGMbyCWhp3/IW2P+c5YbTiw=; b=Rm/RtYZEpjvuXLUL
+	2SOInYpg9jaNYYpXjpjDEjyUMmWsh5xdVqc4CdwLuMCHtiGGU6v5z74DbKbA0hg1
+	e0L65yxNb1WvyCRp9o8sEBywgp6gDRY73GHcnVTSq5UojZ0cP4m8IVzTfc3MuGFR
+	gmDoMwtQBfcc4ppoIENkkVDMXk9bQcTAJcQmhvlMJf4qW5Ynha0ypy6w+BsTnK1q
+	IouLXzCzVD08SH/GZkAwDjVA2ctFPELMwAHbnUyV6cyH70kEQA7LULj9J0zWrcfS
+	Q+0ANjtShAsIdvIi80BwKBv73pFTSNjDe8PJF77Tv3pfytFECZN4u8dIyFYdwY0E
+	5UWqSw==
+Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j5vvnuyrd-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:17:25 +0000 (GMT)
-Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-1b592e9841bso258327c88.1
-        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 21:17:25 -0800 (PST)
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:17:29 +0000 (GMT)
+Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-1b3ae17c536so6218291c88.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Nov 2026 21:17:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1795670245; x=1796275045; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1795670249; x=1796275049; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=v7SZC9zJJd5Z+k+XKqU0PQUi4gNV89FyWD6yXGlbEqw=;
-        b=eDhGKTg+Lr99zwFn7YY7VESj1n9kxEhZcjR2torV02odGKZjhBMz6axGxQ2QtYYqyA
-         f8FZwI7X4dBTz5VxiXMGZR6Pm54Qel6Rfoe2gqW64DMA70OvaMNSFr5A+k8lHPG0kMV6
-         bKvOaQ2oEzGA/edUQ9hAhNbOrEQlAhYQ+rZIYFDo0i6GSIP9t2C44jvSLT+gPPZI17Su
-         6RwfHp+MfJweMmLVv+S7wIfxMf86Dr9y3LVrLa0cxG9wyy2sWRpLM0es9EitE8X7hbwg
-         6hXjon1rHJzq2eb3ohFAUzy+jfbQonJwZAfR7uaFIVFSuIwLTDOpq+2wC/UF85pA/STx
-         bShg==
+        bh=sScIlPjGf6pwCcf1w0bGUGMbyCWhp3/IW2P+c5YbTiw=;
+        b=RH2qDpw9hWyd6vxrxKJWqypp6FgyhI3WnwetQT8EMWCfJl7aWRw4Bp+eiQNKjGIYxQ
+         a7gcFPYkCKFBw8k9UJkBxj6jzDQVGF6KndMSh517Q/hb3imxPMDu+dOs7MY9V7BpxFE8
+         lf2HNk19QTiwAmDgUyDyh/t2+wTBfxLiVnq3WFnIA16QE3VW+0WiS8cXdg91cBGIyXbn
+         vSPUqifBfYzFdpSJ4RDuBikLCCkuF4HOrQPGa/BGfj36DsfbfrJTvO15TFE2WKc9zcua
+         DsuMA1J8KX0n/Jrc/XwsUIzsR39af/Lm3wY6355MdicqHBfubxmgC7m26Uo6m+aNbEXD
+         xLsw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795670245; x=1796275045;
+        d=1e100.net; s=20260707; t=1795670249; x=1796275049;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=v7SZC9zJJd5Z+k+XKqU0PQUi4gNV89FyWD6yXGlbEqw=;
-        b=pj1p3VvQ+i8C9jokr2BYsvL6Yq6S1FYdW/oDeMe8GEvhoUb8Nlalxld6TnZ4b9h+4R
-         9iLF0bpe5cO98j1qsGn32iXjokREMy4B8zxfv3gWhy8qgrPmATkmw1GUoNsJ6GV9J5k4
-         CTSn67vHVwAuXiuL42P9Zokzrt1ZH52SiJ5zbv7VWiXVkcmDKDkXP8b2qPT5Dhfv0d7i
-         CUQ+gQeymrWkdK3BxyGUViqteQYT1jCQz+WAzGkmG58tOSTHW+h6dAvcfds07fF/Yt6e
-         dTszE1hltj7aVCXqpOqFDU/M87GmwOlIYEsjDa1mfa28+zHwrKmWxLes5oc9YOMVegSl
-         YhnQ==
-X-Forwarded-Encrypted: i=1; AL+hErHw2lyEgVAQBm1D5IUASptTtfkBq8mXEMC6KBid3Fmh7VVcDvx61cr6+kY86ojM2/a1eUats9XwbQY=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/3D5uiADcGrjI5jaVaYg9vQAqfck8sU4RI4FUZ3/yo01IRwg2Y
-	x+6kryq+I9ApKQ8KH1GTU2UTfxLk9IUHgpW/P52rzHQXg8tlO15jw8jRXoJJyX7I5x5OzBETG6I
-	DcPWTmf7eYpBM0zV041Idtbtg629gIkDqG51tCo9jJ4w+KRXDNlXapeJcthfPBcc=
-X-Gm-Gg: AZFdTZdbwifgillxYELb91kS+e/FJYSzJ9zq/fZZKt0qHnvQfxX2vr9NheXwafLbjje
-	xjqydyaM1l4uUCOjAda+dWTFoPoFjKFkZW05pd+rKdULCsiekAw32700QBJXMm0NX4nyQucsJPR
-	Xn5NIHiX4lcgfq4RyxCI2/QTUx2RzUU/qPG3JuV5RcR9DLzEIZIyQtmiB/X0RzVNbs49VivBMHT
-	Zw251tmEBGwkqESB9Xlob52/6xAsENU0ESP6xVEzHin+xHfC/hiU+KXHwJKyk65/knI8voGVMvi
-	frf2opWymoDiTSEcV8Tex+TSEf4EyQe5jGNC+6ZGQ4JhP65duEM4iddE7UvU/NlZPlLdVV5zGYA
-	RFMCh23qSgKFCq/wndGI7VlmECVMd7OGRwItXOd0HTIQI7urMOPN56ALTFXkYMRWW23V6hfp7ri
-	/xfpoHP3WC
-X-Received: by 2002:a05:7022:1103:b0:1b3:b3de:9232 with SMTP id a92af1059eb24-1b5568a15aamr17512712c88.9.1795670244468;
-        Wed, 25 Nov 2026 21:17:24 -0800 (PST)
-X-Received: by 2002:a05:7022:1103:b0:1b3:b3de:9232 with SMTP id a92af1059eb24-1b5568a15aamr17512680c88.9.1795670243786;
-        Wed, 25 Nov 2026 21:17:23 -0800 (PST)
+        bh=sScIlPjGf6pwCcf1w0bGUGMbyCWhp3/IW2P+c5YbTiw=;
+        b=vlW2synD4MwBvLsDlx7kTbn5IqmC8BbC38t1mROX44JnTeC7Hzvpd8fgy7wq31WI2L
+         /VjU+YZ0IRadPdG0cA0HgCp51a4UB2rfay3LLfEj3lm/DwmNvdm6wcg4r+hYqpuueFBu
+         QGr9caPrKW5xXd0EYKgLMQeIp4hwE/fGkTREkAgYjlxtU5IIStQQPB5rHg37wv/nmEg4
+         YZFAe7PozfHs2+s40silATgug9EWyEuvDadRv7qXRVz+9mMubMVE5Y0NkuSzcjncspee
+         2qpavVVY5tqTxis3UXBjg+GR/jCvHtnRl7ux1uE0PMYR9VRvBrPB0SaWXlo2tbC9WOAU
+         WUIA==
+X-Forwarded-Encrypted: i=1; AL+hErGicbS5wxzhQybEXkK/PfJUMLTxNaH1hWBdHLRrO/TFaF9EiG+uPM/MC9sDzJU9xtVjWKykVfTeyH4=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/HTSBQW4RLyH+yfmh9Vne8KFrN35MD3JtSSFXJzDWvBOYOJZiq
+	bJXTApU2zrdkc5QSUUMeorVha9kNX1QcJttIztSjs2FQ4Y9Wqxpc/4XKzkU2sxDiBkLX5MMnCfM
+	jqtfg+4Qj5N+xdVk3SXHvJlkr8hEnIYZScrFu80eoEeuWz6cO94W4ttwW+jZg7p0=
+X-Gm-Gg: AZFdTZcloRGp46A17ArIG5bO4jTkskijM7bfPqNDNMDKCtz9V/BCcHV1nyUsM9NX5xm
+	JnoI7JQUyzfF67Apc4CNB7kOSPUOg0fclxh+ejY/IwZ844DawIbN8B1BLPcOguVms5Xc6/q64vy
+	woAE1qvgAO5VHWeIG8BlXW+fUYMJapByWAnKQyc3Rj+wELOpJFLoU8xEihRD3kKgPk0HF3MUzcd
+	rRs9fSpKNxok+aVS4YTTtAhcmrQHOD1kJafZH+28jJxoPvqJs10c6BuvG5WgmVKwg7m7QojmhfB
+	q15o8aq0Ce+lsknLrM9HY791Bn1ta8uwu+8aTDRvwiwFAdMgXtR4fjkE+4NqAAiwi/N7iU2f712
+	bG3u5jE3deHXAHdyLievG5ib0aNV5JIjGob4GZUCR8++RXfLf+eYSJG7vQMV8cWsSovPaJgFaYl
+	mVbrcXNwCm
+X-Received: by 2002:a05:7022:f90b:b0:18d:5ef2:1644 with SMTP id a92af1059eb24-1b5568ebfaamr18385701c88.30.1795670248420;
+        Wed, 25 Nov 2026 21:17:28 -0800 (PST)
+X-Received: by 2002:a05:7022:f90b:b0:18d:5ef2:1644 with SMTP id a92af1059eb24-1b5568ebfaamr18385673c88.30.1795670247778;
+        Wed, 25 Nov 2026 21:17:27 -0800 (PST)
 Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b556847fdasm52132934c88.13.2026.11.25.21.17.20
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b556847fdasm52132934c88.13.2026.11.25.21.17.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 21:17:23 -0800 (PST)
+        Wed, 25 Nov 2026 21:17:27 -0800 (PST)
 From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Date: Thu, 26 Nov 2026 10:47:00 +0530
-Subject: [PATCH v10 2/4] PCI: dwc: Force L2 link entry on shutdown/reboot
- without D3cold check
+Date: Thu, 26 Nov 2026 10:47:01 +0530
+Subject: [PATCH v10 3/4] PCI: dwc: Add dw_pcie_mask_msi() to mask chained
+ MSI without freeing domain
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -119,7 +119,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261126-shutdown-v10-2-fed60d9687f2@oss.qualcomm.com>
+Message-Id: <20261126-shutdown-v10-3-fed60d9687f2@oss.qualcomm.com>
 References: <20261126-shutdown-v10-0-fed60d9687f2@oss.qualcomm.com>
 In-Reply-To: <20261126-shutdown-v10-0-fed60d9687f2@oss.qualcomm.com>
 To: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
@@ -130,247 +130,130 @@ Cc: konrad.dybcio@oss.qualcomm.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795670232; l=8831;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795670232; l=3971;
  i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
- bh=qbU4YfdzhryKir93LpnQ4Mk3Fg91dCUd9XMJWJuZ9eQ=;
- b=g74Fcj6teXiqcYjkhpsMCh8kgAPp3WNncjt9WQ+K9uzf5c1+5aKIb/1VDwmHngYztgeKbnMQY
- LJRCEzCMrB+Cp2pTzGXAPxE4CmC5o/hUbc1xNa6G0job2fBD4gxKv4N
+ bh=/vmyVk4dz+wXrRT6tQz+Km7L+PUDZ3c6yimuyC/uNnk=;
+ b=DSp4U2tq4ELe6YeAKN/099kZfgoT4nSP8EpgbSa1lH7xnwsRV9dB+lZjvAaOBX75GJGGx8hyC
+ gASrQKKPwmmBIq9m+XrMqYdU0tih5nIl0LpAsMDQ61zAk9bZtcm4sku
 X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
  pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
-X-Proofpoint-ORIG-GUID: 9pbZi72-m_kovNN_5ndBa8DG3Oj7eK05
-X-Proofpoint-GUID: 9pbZi72-m_kovNN_5ndBa8DG3Oj7eK05
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI2MDAxOSBTYWx0ZWRfXx6wzXjGcR0dv
- 2bw5EugR3tlgAd59OG+bt2y4SeDtgZG/bDcoKKXMDN9eMwZNWLUfGzc6GFlKhGdPiuloxYSROP4
- 9OzP5o/Sv4nDwDJLNE5HyxZ0uKnRneQ=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI2MDAxOSBTYWx0ZWRfXxnqBkc6qwAFz
- x6UxcSbosmO9/AUDrPFUWg6RY73tIl0pp1fxrd1QhTukZT8SXS97lveXoXya451fjwbwbkLD4re
- dq0dZLg0+wxeam82m1fTefykmiCoRWpUn3RXwos6X8fHFSBabQAyd/nA+7Nb/C4EGnv1318w0ll
- xvzyumyfBxpueshp7uYwGexoHGAnkFevjKRpR49R7bNitlhPdyZJ4Y2WIgoHPyTz6VA+MrneDsd
- zfJksQSNrYBu4A4EZVIZobZIH87nerxYaZcXCulDHqXhjrgtrYPgIx23TsesyBg9oG45uhrvYYC
- v6fFsbJLz1FSCTSbLgtcMyaCDo8b+5SL9vHHEA/IB62r37VONEY2L84RIQvZBl7oZfc2NKOgYF4
- JeccwWpDdbpkKf1XPoqSPKYcLcebBZhJP5te8UeimD5QqVnx8dN8kBuzNqOHI61LQcpaHxMwwFW
- H5/Sy+I9N0qTaPZJHOg==
-X-Authority-Analysis: v=2.4 cv=Q5VHcI2a c=1 sm=1 tr=0 ts=6b07c0e5 cx=c_pps
- a=kVLUcbK0zfr7ocalXnG1qA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI2MDAxOSBTYWx0ZWRfX+7e6TCBLygxk
+ PVWWlHofc2L1u+q3EHonn/gBqZkhDpZYZrMYvDP8FoY7KJ8XCivPf/eZ80T+7zVzBq/smYxr/Cv
+ +LQsHnletTCdFeAgaGkknvfCky3FnvKJqx7HGlBox+jV7kmtKuXThQpDpiyWu++DfSZQdKnQZfP
+ kevNdy3ezSEioYRuOCqxpV4myInR5ZqxRagtYfEyZ2SvFq1vjoOWArOqnBJgkjX3uBo3OU23UfW
+ eMuAgC8yxQVcwAX8vnIu0N+Yy2a5ggWh0Xpsoo5l+DZBDsDEmvRNMVAXauN76cvbA+uHeTYdXwd
+ Myxb76XPH/153ueNGgg9RWtvFGnHCLE213jwRNCUc/gIHNRjyj1SGQKgc3Yt4wrk9WsXb/0ZtXj
+ t18Qbbv6b4yfI8DgYN6YqLiSdRDg/BfAY84YI2kS+fkB31u82raFXODJ29q9VAxfgp90Bu4UjZb
+ 4AY55rO7Q8ZEnlh6deA==
+X-Proofpoint-ORIG-GUID: re40ZpxEm5WoD5C0GGHgPhychixVsmwb
+X-Proofpoint-GUID: re40ZpxEm5WoD5C0GGHgPhychixVsmwb
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI2MDAxOSBTYWx0ZWRfX4frPcsIN+cko
+ BrDA44M42jxIJtldUD2wF7yqy6z/0tN7STjAu0YdF11Pf1y7QeBvWmlz2i8NWYfWRwTUrtyXnmH
+ HuzxupunHbmwJIeszq525QnvV5obWtQ=
+X-Authority-Analysis: v=2.4 cv=R4mWitRX c=1 sm=1 tr=0 ts=6b07c0e9 cx=c_pps
+ a=bS7HVuBVfinNPG3f6cIo3Q==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
  a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=EUspDBNiAAAA:8 a=-MHXjDPJGaOMKVajueQA:9 a=QEXdDO2ut3YA:10
- a=vr4QvYf-bLy2KjpDp97w:22
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=EUspDBNiAAAA:8 a=h4B-02p0z56_JbXvspoA:9 a=QEXdDO2ut3YA:10
+ a=vBUdepa8ALXHeOFLBtFW:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-11-26_01,2026-11-25_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 lowpriorityscore=0 spamscore=0 adultscore=0 bulkscore=0
- priorityscore=1501 suspectscore=0 malwarescore=0 clxscore=1015 phishscore=0
+ lowpriorityscore=0 suspectscore=0 bulkscore=0 adultscore=0 clxscore=1015
+ impostorscore=0 spamscore=0 phishscore=0 priorityscore=1501 malwarescore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611260019
 
-dw_pcie_suspend_noirq() normally calls pci_host_common_d3cold_possible()
-to check whether every downstream endpoint can be put into D3cold before
-bothering to move the link to L2. If no endpoint supports it, the
-function returns early and leaves the link up.
+dw_pcie_free_msi() detaches the chained MSI handler(s) and then removes
+the MSI IRQ domain via irq_domain_remove(). That is correct for the
+dw_pcie_host_deinit() teardown path, where PCI devices have already been
+removed and no MSI mappings remain.
 
-Querying D3cold support during shutdown is actively harmful, not just
-slow: pci_host_common_d3cold_possible() requires every active endpoint
-to already be in PCI_D3hot, and returns false otherwise. If any endpoint
-is still in D0 -- which is common, since endpoint drivers aren't
-guaranteed to have suspended by the time the host's shutdown path runs
-the check fails and dw_pcie_suspend_noirq() returns early without ever
-moving the link to L2, leaving it up right up to the point where the
-system cuts power/clocks to the controller.
+It is not safe to call from the shutdown()/reboot path. device_shutdown()
+does not remove PCI devices or tear down their per-device child MSI
+domains, so endpoint drivers that do not free their MSI vectors in a
+shutdown callback leave live MSI descriptors parented to the domain.
+Removing the domain there orphans those descriptors and leaves dangling
+references to freed memory: during a subsequent kexec CPU teardown, IRQ
+migration walks irq_data->parent_data and can dereference the freed
+msi_irq_domain.
 
-Add a force parameter to dw_pcie_suspend_noirq() that callers set
-explicitly to force this behavior, still call
-pci_host_common_d3cold_possible() unconditionally, since it's also how
-pme_capable gets set, but ignore its return value and force L2 entry
-regardless when force is set.
+Add dw_pcie_mask_msi(), which clears the chained handler on the MSI
+parent interrupt line(s) via irq_set_chained_handler_and_data(). That
+masks the line(s) at the irqchip under desc->lock while leaving the IRQ
+domain and the downstream MSI mappings intact. disable_irq() is not used
+here: the parent lines are chained handlers, so the standard flow-handler
+disabled-check never runs, and on irqchips without .irq_disable (e.g.
+GIC) a lazy disable would leave the line unmasked and a late MSI could
+still reach dw_handle_msi_irq() and touch unclocked DBI registers.
+
+dw_pcie_free_msi() now reuses the helper, so it is exactly the shutdown
+masking plus irq_domain_remove().
 
 Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c             | 2 +-
- drivers/pci/controller/dwc/pci-layerscape.c       | 2 +-
- drivers/pci/controller/dwc/pcie-designware-host.c | 9 ++++-----
- drivers/pci/controller/dwc/pcie-designware.h      | 4 ++--
- drivers/pci/controller/dwc/pcie-dw-rockchip.c     | 2 +-
- drivers/pci/controller/dwc/pcie-eswin.c           | 2 +-
- drivers/pci/controller/dwc/pcie-nxp-s32g.c        | 2 +-
- drivers/pci/controller/dwc/pcie-qcom.c            | 2 +-
- drivers/pci/controller/dwc/pcie-rcar-gen4.c       | 2 +-
- drivers/pci/controller/dwc/pcie-stm32.c           | 2 +-
- drivers/pci/controller/dwc/pcie-ultrarisc.c       | 2 +-
- 11 files changed, 15 insertions(+), 16 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 17 ++++++++++++++++-
+ drivers/pci/controller/dwc/pcie-designware.h      |  4 ++++
+ 2 files changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 865438ffde87..5a410e89534f 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -1788,7 +1788,7 @@ static int imx_pcie_suspend_noirq(struct device *dev)
- 		imx_pcie_assert_perst(imx_pcie, true);
- 		imx_pcie->drvdata->enable_ref_clk(imx_pcie, false);
- 	} else {
--		return dw_pcie_suspend_noirq(imx_pcie->pci);
-+		return dw_pcie_suspend_noirq(imx_pcie->pci, false);
- 	}
- 
- 	return 0;
-diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-index 7c9fb3bef682..8481fe5a0bf0 100644
---- a/drivers/pci/controller/dwc/pci-layerscape.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape.c
-@@ -370,7 +370,7 @@ static int ls_pcie_suspend_noirq(struct device *dev)
- 	if (!pcie->drvdata->pm_support)
- 		return 0;
- 
--	return dw_pcie_suspend_noirq(pcie->pci);
-+	return dw_pcie_suspend_noirq(pcie->pci, false);
- }
- 
- static int ls_pcie_resume_noirq(struct device *dev)
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index ab343ed53ba5..0837bb9e67e0 100644
+index 0837bb9e67e0..c81424e2f95c 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -1229,23 +1229,22 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
- 	return 0;
+@@ -227,7 +227,16 @@ int dw_pcie_allocate_msi_domains(struct dw_pcie_rp *pp)
  }
+ EXPORT_SYMBOL_GPL(dw_pcie_allocate_msi_domains);
  
--int dw_pcie_suspend_noirq(struct dw_pcie *pci)
-+int dw_pcie_suspend_noirq(struct dw_pcie *pci, bool force)
+-void dw_pcie_free_msi(struct dw_pcie_rp *pp)
++/**
++ * dw_pcie_mask_msi - Detach and mask the chained MSI parent interrupt(s)
++ * @pp: DWC PCIe RP private data
++ *
++ * Detach the chained MSI handler(s), which masks the parent IRQ line(s),
++ * while leaving the MSI domain and downstream mappings intact (unlike
++ * dw_pcie_free_msi()). Safe for the shutdown() path, where PCI devices
++ * and their MSI descriptors are not removed.
++ */
++void dw_pcie_mask_msi(struct dw_pcie_rp *pp)
  {
--	bool d3cold, pme_capable = false;
-+	bool d3cold_possible, pme_capable = false;
- 	int ret = 0;
- 	u32 val;
+ 	u32 ctrl;
  
- 	if (!dw_pcie_link_up(pci))
- 		goto stop_link;
+@@ -235,6 +244,12 @@ void dw_pcie_free_msi(struct dw_pcie_rp *pp)
+ 		if (pp->msi_irq[ctrl] > 0)
+ 			irq_set_chained_handler_and_data(pp->msi_irq[ctrl], NULL, NULL);
+ 	}
++}
++EXPORT_SYMBOL_GPL(dw_pcie_mask_msi);
++
++void dw_pcie_free_msi(struct dw_pcie_rp *pp)
++{
++	dw_pcie_mask_msi(pp);
  
--	d3cold = pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable);
--
- 	/*
- 	 * Enter L2 if D3cold is possible, or if the platform loses RC power
- 	 * during suspend (in which case L2 entry is required to notify
- 	 * endpoints before power loss, regardless of D3cold support).
- 	 */
--	if (!d3cold && !pci->pp.suspend_poweroff)
-+	d3cold_possible = pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable);
-+	if (!d3cold_possible && !force && !pci->pp.suspend_poweroff)
- 		return 0;
- 
- 	if (pci->pp.ops->pme_turn_off) {
+ 	irq_domain_remove(pp->msi_irq_domain);
+ }
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 0ece9c433229..f774fc6d2a24 100644
+index f774fc6d2a24..677e5423c5e4 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -902,7 +902,7 @@ static inline enum dw_pcie_ltssm dw_pcie_get_ltssm(struct dw_pcie *pci)
- const char *dw_pcie_ltssm_status_string(enum dw_pcie_ltssm ltssm);
- 
- #ifdef CONFIG_PCIE_DW_HOST
--int dw_pcie_suspend_noirq(struct dw_pcie *pci);
-+int dw_pcie_suspend_noirq(struct dw_pcie *pci, bool force);
- int dw_pcie_resume_noirq(struct dw_pcie *pci);
- void dw_handle_msi_irq(struct dw_pcie_rp *pp);
+@@ -908,6 +908,7 @@ void dw_handle_msi_irq(struct dw_pcie_rp *pp);
  void dw_pcie_msi_init(struct dw_pcie_rp *pp);
-@@ -915,7 +915,7 @@ int dw_pcie_allocate_msi_domains(struct dw_pcie_rp *pp);
- void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn,
- 				       int where);
- #else
--static inline int dw_pcie_suspend_noirq(struct dw_pcie *pci)
-+static inline int dw_pcie_suspend_noirq(struct dw_pcie *pci, bool force)
+ int dw_pcie_msi_host_init(struct dw_pcie_rp *pp);
+ void dw_pcie_free_msi(struct dw_pcie_rp *pp);
++void dw_pcie_mask_msi(struct dw_pcie_rp *pp);
+ int dw_pcie_setup_rc(struct dw_pcie_rp *pp);
+ int dw_pcie_host_init(struct dw_pcie_rp *pp);
+ void dw_pcie_host_deinit(struct dw_pcie_rp *pp);
+@@ -938,6 +939,9 @@ static inline int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
+ static inline void dw_pcie_free_msi(struct dw_pcie_rp *pp)
+ { }
+ 
++static inline void dw_pcie_mask_msi(struct dw_pcie_rp *pp)
++{ }
++
+ static inline int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
  {
  	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 1ce5f700b9cd..10c508f96ec5 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -1047,7 +1047,7 @@ static int rockchip_pcie_suspend(struct device *dev)
- 	if (rockchip->data->mode == DW_PCIE_EP_TYPE)
- 		return 0;
- 
--	ret = dw_pcie_suspend_noirq(pci);
-+	ret = dw_pcie_suspend_noirq(pci, false);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
-index d08277e8cc69..04fe45e137b9 100644
---- a/drivers/pci/controller/dwc/pcie-eswin.c
-+++ b/drivers/pci/controller/dwc/pcie-eswin.c
-@@ -367,7 +367,7 @@ static int eswin_pcie_suspend_noirq(struct device *dev)
- {
- 	struct eswin_pcie *pcie = dev_get_drvdata(dev);
- 
--	return dw_pcie_suspend_noirq(&pcie->pci);
-+	return dw_pcie_suspend_noirq(&pcie->pci, false);
- }
- 
- static int eswin_pcie_resume_noirq(struct device *dev)
-diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-index 386e44dd0477..cb9cc9327d85 100644
---- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-+++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-@@ -365,7 +365,7 @@ static int s32g_pcie_suspend_noirq(struct device *dev)
- 	struct s32g_pcie *s32g_pp = dev_get_drvdata(dev);
- 	struct dw_pcie *pci = &s32g_pp->pci;
- 
--	return dw_pcie_suspend_noirq(pci);
-+	return dw_pcie_suspend_noirq(pci, false);
- }
- 
- static int s32g_pcie_resume_noirq(struct device *dev)
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index a6a0e3ecd921..532779295734 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -2480,7 +2480,7 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
- 	if (!pcie)
- 		return 0;
- 
--	ret = dw_pcie_suspend_noirq(pcie->pci);
-+	ret = dw_pcie_suspend_noirq(pcie->pci, false);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index ba8e6b297674..e3807da316c8 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -1071,7 +1071,7 @@ static int rcar_gen4_pcie_suspend_noirq(struct device *dev)
- 	if (rcar->drvdata->mode != DW_PCIE_RC_TYPE)
- 		return 0;
- 
--	return dw_pcie_suspend_noirq(&rcar->dw);
-+	return dw_pcie_suspend_noirq(&rcar->dw, false);
- }
- 
- static int rcar_gen4_pcie_resume_noirq(struct device *dev)
-diff --git a/drivers/pci/controller/dwc/pcie-stm32.c b/drivers/pci/controller/dwc/pcie-stm32.c
-index 349618ea5b9c..7b3a8c1b04a4 100644
---- a/drivers/pci/controller/dwc/pcie-stm32.c
-+++ b/drivers/pci/controller/dwc/pcie-stm32.c
-@@ -78,7 +78,7 @@ static int stm32_pcie_suspend_noirq(struct device *dev)
- 	struct stm32_pcie *stm32_pcie = dev_get_drvdata(dev);
- 	int ret;
- 
--	ret = dw_pcie_suspend_noirq(&stm32_pcie->pci);
-+	ret = dw_pcie_suspend_noirq(&stm32_pcie->pci, false);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-index 514e08a12b5a..8cf8b81a0de1 100644
---- a/drivers/pci/controller/dwc/pcie-ultrarisc.c
-+++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
-@@ -187,7 +187,7 @@ static int ultrarisc_pcie_suspend_noirq(struct device *dev)
- 	if (pci->suspended)
- 		return 0;
- 
--	ret = dw_pcie_suspend_noirq(pci);
-+	ret = dw_pcie_suspend_noirq(pci, false);
- 	if (ret)
- 		return ret;
- 
 
 -- 
 2.34.1
