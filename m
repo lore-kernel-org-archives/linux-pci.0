@@ -1,54 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795682389;
-	b=ZvQv1D2Gr38gFrRH2Kb5dFCBsjrgWhruwS0nhI5c69LQQCg85bG320k6AtnGP6biIer7
-	 bLI5JULpEUHDNFjIbOLk4e7UD+cD3vTv+pthqfwhPGMfj8YEt6dsadF49FjjsMgmkRjlS
-	 HEo+LwnY3uEhdZ3kvn/TtHiUo/tyKVUZUBeUbG6kVjEFPhQ1hFbxjUuuKZ5Twcof5T0r7
-	 ZXrKbCECGHsxfEIMKES/xR/xu8Ne9hjyd/TETEuC3D2iTPCZ0XQclhcjyfmu9UJJ5ENcS
-	 oQM0+rAnjQ5DzafQbspVW/3kOGHoGhKB4EKOaXB3PtytjaC2gk1nISjqUWKuNSBee7Q==
+	t=1795682576;
+	b=jVtGGxGAAKgDyND4CTFZGxpwJcc5LPAkPli9lG3JmO6nYKCP3+XnbyQrDYKuugs/+kU8
+	 KxjK77e11cbiJdgfzs5cIz0Zn8wpeAoLRw0xCcjZZ7PL6gLoMqJ5NwSkFePvm9daUjZtg
+	 3NVqXNHaX89VMYv8ixhOT1l1Cx12Iv188r9ZfkAC+X3eAiDDiM1FyPwD5Y9Eb/opbc7Qq
+	 Gq/eqHEflEPPVLTrMu/fSTVflmj5ZH+Kw5+yXCLih3PqoRx/mEme+XbfYU0L76deYcWYi
+	 hszlnkJYqFkZlYDvxYBWS+SWa60o5pi3PSeWo+DFYCHMzL8hKVqvlAG+uLD/z90NiRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795682389;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=vixE8kSfmBY9XhK0Nz/XsFK0GfPBylCEEwcpcXeG1LY=;
-	b=QMHQdFD2b7tIpXfXV4tTb73jkEvoWO8UN6MpdG5wWCMPFWqDs0IrAKsuCXI36Ae85alQ
-	 ffTqQTj37tre2jGO8dnIOkAaC40R/+CDEk+d2aQTXl8qPtb95uczNeMUhAxzGU0CP/Cqn
-	 k5ASa3mvsFKfQZZVWmmhDuZFW9zdmkqDeO7O6hguuMfVyAyVgHkIWmukXtxviRaEU8wfe
-	 avSlqi9ZHqCRrDUD9guDV5/PJFRX6YH82hgTeVlavGoATLGzzUk+TFVEX6hZEKoZwq1wF
-	 497J0mJhGrbDmu4WKhqf1+chhAXuuGuCRpXiShaKPVxYoi0Py6hHtioTBl2Zew2o0JA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795682576;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=SoHmeTtq8FTznN3/QpWzQejfsA/YXZN2aEmckWsCZ8Y=;
+	b=E9OuPGAVTer7QLW3NFx/oDBX5nLZG7NMIVm4w0SOCKRe/9QNtELwonfJ7t2xcKEnyX+i
+	 UcZsGMTVVoGuhFoJ6uSrWc4ywy8RVYFjv5BCgmLy+mQiCVFWUFR4MOh86dBTFyUrOzLXi
+	 QYyyiZj1JfjX269n8ue8BG0pV0p4/QTX8YP52/5rNnV8m/W7Cf7RNJacEcVD/ehyCwMeu
+	 +6UJvFojzpOaWwGfiwuWIh0/V64d65oPHSPEt1BVUhhk4F1Q8i+lVYBHgDadVgNAS0gfJ
+	 80G3IqVQMf8E1EODSQj34za1Lt5Noc/TuoJwY3UtC1z0qN75pGQylAfrwa+cdlWfEIA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oMUUCm2v;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XvYTJuK7;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29313606A31E;
-	Thu, 26 Nov 2026 08:39:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBFD2606A329
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 08:42:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oMUUCm2v
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A4021F000CA;
-	Thu, 26 Nov 2026 08:39:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XvYTJuK7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F0CF1F000F0;
+	Thu, 26 Nov 2026 08:42:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795682388;
-	bh=vixE8kSfmBY9XhK0Nz/XsFK0GfPBylCEEwcpcXeG1LY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oMUUCm2vreLcwoDG/2l/R3mIgVFi7Qmce9g5zqcmiLziAHTB4mafF0MdjbP2HD5Ag
-	 HZ+ApKQwZRJNhVvhDWAGS4bZnudK0KTKWspyDNLAdOfH9Mh/gxy81wzPT+3yIlnm8H
-	 OzlztMTwJtisKLr75H0qRYMpEhbFFWctET2CLl8RRSaYihLAs6+DGKPc1zrh2moIV2
-	 J6/YRDSzD/sFlNPgBeKgIZ+4dhOO8mZyKQNXAZXq0HGOXXm/UDjVkjFntoDgH7SlyM
-	 Ky3fMEb/JhdeTw8zAJwfFpkef8Pq6qW+xFAO3zdMUe673x5E1SkZkJ49ElxbR9rgbI
-	 9Wv6dqcJJ63DQ==
-Date: Thu, 26 Nov 2026 09:39:44 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Feng Tang <feng.tang@linux.alibaba.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Anju Zheng <zaj01616726@alibaba-inc.com>
-Subject: Re: [PATCH RFC] PCI: Add warning about possible danger for
- pcie_bus_perf mode
-Message-ID: <awfwUC5vomjlih2U@ryzen>
-References: <20261125155829.77269-1-feng.tang@linux.alibaba.com>
+	s=k20260515; t=1795682576;
+	bh=SoHmeTtq8FTznN3/QpWzQejfsA/YXZN2aEmckWsCZ8Y=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=XvYTJuK7PFQbOyxDWDeom5f+5Va7NkxOYZDGDERjb8WKypYd5gP8QOf2f1Ehiuzaf
+	 77SpHtOWRTySQE7G+qf4E4j5d4zwmsr8/f9DBsQLwM4MAIi/s8nU5VVsIeQ6ld7zpm
+	 lpD+a9Nj89vpmzFE/4ZVYuXzBRps9ijlIAf6zVUe3XjO6nLfvJaYkLsCISt8Nv2sC/
+	 JSaXpeAp10MoXiTMwasHSaiSGpoNTG2ftH/MvL/8d1hJUEV/69mVyDuPy/L8ZRdlRD
+	 sgpKw9PhoISn4Ieyip2+Sb4opNxHCvhv13qnk+ldJr7oKHKl6S95FBSAdqLDv57Soz
+	 JpYicGbFoUnRg==
+Message-ID: <sashiko-outbox-235048@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: apple: Release port IRQs and domains on driver
+ detach
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Guangshuo Li" <liguangshuo@mail.sdu.edu.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261126-a35bb25eb5-u39-0@mail.sdu.edu.cn>
+References: <20261126-a35bb25eb5-u39-0@mail.sdu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 26 Nov 2026 08:42:55 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -57,45 +59,70 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261125155829.77269-1-feng.tang@linux.alibaba.com>
 
-On Wed, Nov 25, 2026 at 11:58:29PM +0800, Feng Tang wrote:
-> During stability test, there was a bug that running 'mount' on a type
-> of commercial NVME disk failed on an arm64 server and raised PCIe RAS
-> error and panic the kernel later, when using "pci=pcie_bus_perf" kernel
-> cmdline parameter.
-> 
-> The NVME device has MPS(Max Payload Size) capability of 256 bytes while
-> its corresponding root port is capable of 512 bytes. When enabling
-> PCIE_BUS_PERFORMANCE mode, its MPS and MRRS(Max Read Request Size) are
-> both set to 256, while the root port's are both set to 512. But the
-> NVME device doesn't comply with PCIe spec (v6.3), Section 7.5.3.4:
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [High] PCI: apple: missing IS_ERR() check for port->phy in
+  apple_pcie_setup_port() [1]
+--
 
-I assume that you are using pcie_bus_perf rather than the default strategy,
-because with the default strategy never raises the Root Port above what
-firmware programmed, which may be only 128 bytes.
+commit 102d3679b8d5966284cf3435e5c387deb0e77c02
+Author: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
 
-pcie_bus_perf gives a Root Port its own maximum MPS without looking at
-the devices below it, and relies on MRRS to keep Completions within the
-endpoint's MPS, so a device that ignores its MRRS gets Completions
-larger than its MPS.
+PCI: apple: Release port IRQs and domains on driver detach
 
-My series [1] avoids this without pcie_bus_perf: with the default strategy,
-it sets each Root Port hierarchy to the largest MPS that all of its devices
-support, i.e. 256 bytes for both your Root Port and the NVMe. Since a
-Function must not generate TLPs larger than its own Max_Payload_Size, the
-Root Port then returns Completions of at most 256 bytes, even for the
-512-byte reads your NVMe issues. The NVMe also gets the same 256-byte
-payloads as with pcie_bus_perf, so nothing is lost by dropping it: the Root
-Port's 512 bytes don't help a link whose only device supports 256.
+This commit registers device-managed cleanup actions for the per-port
+interrupt domains, link IRQs, and the MSI parent domain, and wires up
+pci_host_common_remove() on driver detach.
 
-Would you be able to test the series on that server, without
-pci=pcie_bus_perf?
+> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller=
+/pcie-apple.c
+> index dfd0e345bc567..79dac3fb9a05c 100644
+> --- a/drivers/pci/controller/pcie-apple.c
+> +++ b/drivers/pci/controller/pcie-apple.c
+[ ... ]
+> @@ -582,6 +602,7 @@ static int apple_pcie_setup_port(struct apple_pcie *p=
+cie,
+>  	port->idx =3D idx >> 11;
+>  	port->pcie =3D pcie;
+>  	port->np =3D np;
+> +	INIT_LIST_HEAD(&port->entry);
+> =20
+>  	raw_spin_lock_init(&port->lock);
 
-[1] https://lore.kernel.org/linux-pci/20261020122854.1500883-5-cassel@kernel.org/
+[Severity: High]
+This problem wasn't introduced by this patch, but can
+apple_pcie_setup_port() [1] dereference an error pointer in
+port->phy when devm_ioremap_resource() fails?
 
-Kind regards,
-Niklas
+Later in apple_pcie_setup_port(), port->phy is mapped without an IS_ERR()
+check and then passed to apple_pcie_setup_refclk() for MMIO access:
+
+drivers/pci/controller/pcie-apple.c:apple_pcie_setup_port() {
+	...
+	snprintf(name, sizeof(name), "phy%d", port->idx);
+	res =3D platform_get_resource_byname(platform, IORESOURCE_MEM, name);
+	if (res)
+		port->phy =3D devm_ioremap_resource(&platform->dev, res);
+	else
+		port->phy =3D pcie->base + CORE_PHY_DEFAULT_BASE(port->idx);
+
+	rmw_set(PORT_APPCLK_EN, port->base + PORT_APPCLK);
+
+	/* Assert PERST# before setting up the clock */
+	gpiod_set_value_cansleep(reset, 1);
+
+	ret =3D apple_pcie_setup_refclk(pcie, port);
+	...
+}
+
+If mapping the named PHY resource fails, rmw_set() in
+apple_pcie_setup_refclk() will dereference the ERR_PTR() value in
+port->phy and crash during probe.
+
+[1] https://sashiko.dev/#/bug/linux-7340dc46-b98f-4a1f-909a-9ae73ed0ddc9
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261126-a35bb25eb5=
+-u39-0@mail.sdu.edu.cn?part=3D1
