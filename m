@@ -1,49 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795718130;
-	b=YE8vvGGzqR4U7cmocDhPa/26gPMhMQwNf1CYIEVDzwwxXChy1msQuvnHJOXG+vDSnSB0
-	 q2VhVbGT2eRxV2I7HDyAiPcUdD935GMBqa+tPJDnABCaqBRToOs4KdgtA8QE0Gwalo4Ks
-	 KpHNUB7ZYuR3mC3fr5ctoNNTfTOQh1K/ESBLCcSgYH7+2BLUl4SipjqPncETW17OA3FZ7
-	 c6cDM1A+AU5jfwuBOyji3OX33SnV61SyQj710L49CEFidwfeJ/N+dPdUVJwEINHa+n2On
-	 xUhx1LvNeK/5lQLL/IejQVERdJBjldnoLmKj5WUaigCmGUlOr0XmTOUd+IFEe5cyHzw==
+	t=1795718294;
+	b=dV8jk0CWe/wYXGJjr8XBStfZOPbB6EqFtnLqVRsoesFKvUo1HZP14NiAiThscb9MofKg
+	 cNfRQUTGrEw+KAuYxHO07KdcEEuxQ+y4twJDJGH1eJFkc5kWVk3h1ZyZ8fPR9zFlDJbuY
+	 cVdLHX4zUw7nvVRpLfBrMxfC0kmMm2AERyfgQcb8A906WYUPVc1LdVFVoTwoW0oAEnyc8
+	 HC8bCIvF9A1koaUC6IUOIfj4i1jCbFthVyxYl8xcIGy96jEGcA/g1DWJtLuzZ9NxCsfK1
+	 iv2eLK5a6xBWz6r9si1p8gHsdpRf795P57v0UW4M6J+/B0Rs9K9gFSiqOAiUe6ARAEw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795718130;
-	h=DMARC-Filter:Received:Received:Message-Id:From:Date:Subject:To:Cc;
-	bh=T8gL3R5Of4fh7/JSzNbmIkuPBYVFqpMyrpx8pK3ARFw=;
-	b=BGWLvleXFkThn7CULkXG4TH5SB8FvRuTzFTQhz60vV4BI1MObbranIkH4CuZtJdRYT91
-	 Ndy+/lcoNj3MZPwC0i9KVv1FfzKJzC98PHEgSvO5Iq6o37ZbOYRsefLgipnyGFCbnMw4k
-	 ysm2KdMOAxsAuo/u0RA4TnQyV40Q1oCTbA1/2b0XoUUevWNogT/Iux7m1d3EPj+PJ/Uv2
-	 1gak8W8M7L7n/DYFz8fi03qb+F47bVrCprlL1hnKHdcJxiAQR3k1rBrcVRN71hxej4faT
-	 TB6MyOIxIMB4Jrpt9CH96ULvs151tb2wa3zRBf8lnTCOBd3CkSDY8GYJ+o3oLfw1x4g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795718294;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=0JG6aovU53Gj28fQBHTFybyaNfmBaXUxB5wClm6BRjM=;
+	b=Ajf3sJXFmBasmL8akVacGKmNsBGSWO17uZy8uuQ5rbwQjN6CLoTkiC0wXya+xfFALKyT
+	 4AL5R3UkhA6yI2E98EDuysGx0w1h7D7KOxVE7x7KbsTtASctbcp5EBE14AV4OJywrPyjY
+	 2ElyL0b56usUQSF4U7LiAwtrGHJ9VdThDLwNkT6kbgpliobANWSctrXFAMc4YAYotPcdg
+	 R4oJz9VCjb+Qc1+Te+gHV8jUsezbv/vfDvSwqU0wGc0Te7qThADcjjBNW+51ZWpC5zylo
+	 OnENFWnHF2WixIdBbcPAGE6YsNGkykAXUheNY7fCOlaGu0//aNYtm2vxYcSXXwsz6pQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=wunner.de;
-	spf=pass smtp.mailfrom=wunner.de;
-	arc=none smtp.remote-ip=144.76.133.104
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="F/3vuzP+";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3A5606A32A
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 18:35:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0E3A5606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 1DEE4DAA;
-	Thu, 26 Nov 2026 19:35:21 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id D77516028ECD; Thu, 26 Nov 2026 19:35:20 +0100 (CET)
-Message-Id: <1ddc35c51b5317988bbf235c467a9534218c6ea4.1795717157.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Thu, 26 Nov 2026 19:35:00 +0100
-Subject: [PATCH] PCI/AER: Check error status registers if Error Source ID is
- zero
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Sourabh Jain <sourabhjain@linux.ibm.com>, Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Keith Busch <kbusch@kernel.org>, Maciej Grochowski <Maciej.Grochowski@sony.com>, Yazen Ghannam <yazen.ghannam@amd.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4DC8606A32A;
+	Thu, 26 Nov 2026 18:38:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F/3vuzP+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FB581F000C4;
+	Thu, 26 Nov 2026 18:38:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795718293;
+	bh=0JG6aovU53Gj28fQBHTFybyaNfmBaXUxB5wClm6BRjM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=F/3vuzP+6n/+79X4tAfOZ1aSAZe4UF9ef3Y85F8LU/Jl9IGTaGLzqvWUbStGYCrcG
+	 wGheNCN2HLV7oh7s/OwpOp9KvQbgFUkSb5K95Xl7a56mt3yx58EpmlBgC4auXUbJN7
+	 KI5QHihgn0ejBG5k4zg6w50K7oYV+EJo2IdN5nG80l2E+5TUsOu1zcAQOIMpzjA+47
+	 4xb/WZqK/0UZIoWsXEZxr+1ZehqXpWThVt3nMpl3aFKuqNnHD6AWtF6pBGdvp+L78b
+	 dAJpoo+VJwjzE8jLmF9X4+2LOGuXXl95FyOgBuRTk1TtRbJ2B9EOlisKwr9/9TFwbr
+	 tKOpT8Q6EJQgg==
+Message-ID: <d125e248-1300-477a-b60d-fc0842103905@kernel.org>
+Date: Thu, 26 Nov 2026 20:38:08 +0200
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -52,63 +50,78 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 00/14] PCI: rzg3s-host: Add PCIe hotplug support
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de,
+ geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+ Ovidiu Panait <ovidiu.panait.rb@renesas.com>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+ <179562868433.5580.1979396952125967073.b4-reply@b4>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@kernel.org>
+In-Reply-To: <179562868433.5580.1979396952125967073.b4-reply@b4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Since commit 6d69eeae8966 ("PCI/AER: Check validity of Error Source ID
-register"), the AER driver checks whether the Error Source ID register
-contains either the ID of the Root Port (or RCEC) itself, or of a device
-subordinate to the Root Port (or associated with the RCEC).
+Hi, Mani,
 
-If this check succeeds, the Error Source ID register is assumed to contain
-a valid value and is not double-checked by reading error status registers.
+On 11/25/26 19:44, Manivannan Sadhasivam wrote:
+> On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
+>> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+>>
+>> Hi,
+>>
+>> Series adds hotplug support for the rzg3s-host driver. This is a
+>> continuation of the series John posted initially at [1]. Along with it,
+>> prerequisites fixes and cleanup patches were added.
+>>
+>> Series was tested on RZ/G3S and RZ/G3E boards by generating consecutive
+>> link down/up events. The RZ/G3S has an I2C device which, depending on
+>> the way it is programmed, it controls the state of the PCIe link. The
+>> board has 3 PCIe interface: PCIE_SLOT, M.2 Key E, M.2 Key B. The
+>> following script was executed for ~9 hours:
+>>
+>> #!/bin/sh
+>>
+>> echo performance > /sys/module/pcie_aspm/parameters/policy
+>>
+>> while :; do
+>>          i2cset -y 1 0x18 0xf4 0x8 # Link down
+>>          i2cset -y 1 0x18 0xf4 0xc # Link up: PCIE_SLOT (NVMe Micron)
+>>          i2cset -y 1 0x18 0xf4 0x8 # Link down
+>>          i2cset -y 1 0x18 0xf4 0xd # Link up: M.2 Key B (NVMe Transcend)
+>>          i2cset -y 1 0x18 0xf4 0x8 # Link down
+>>          i2cset -y 1 0x18 0xf4 0xb # Link up: M.2 Key E (WiFi AX200)
+>> done
+>>
+> 
+> Given that this series is already 14 patches, you should really consider
+> splitting it into atleast two. Patches 1-12 are mere code cleanups/refactors, so
+> they can get merged independently and you can post the follow-up series after
+> incorporating comments for patches 13 and 14.
+I agree. Yesterday, when I got your review comments, I was in the process of 
+preparing a fixes series (patches 1-6 + [1]). I've added [1] since its becoming 
+necessary for our testing (and Ovidiu proposed it like this).
 
-However per PCIe r7.1 sec 2.2.9.1, devices may send Completions with a
-zero Completer ID "prior to the initial device Configuration Write
-Request".  Similarly, CXL r4.0 sec 8.1.5.1 states that a Component may
-generate a CREDIT_RTN IP2PM message with a zero bus number after reset,
-which can fail ACS Source Validation and trigger an ACS Violation Error.
+If you consider OK, I can also add the cleanups along with the fixes series, thus:
+- patches 1-6
+- patch [1]
+- patches 7-12
 
-On ARM platforms, there is often a Root Port at address 0000:00:00.0,
-which makes it impossible to discern whether a zero Error Source ID refers
-to the Root Port or to an uninitialized device downstream.
+Or go with 3 series:
+1/ fixes (patches 1-2, 4-6, [1])
+2/ cleanups (patches 3, 7-12)
+3/ link event + reset root port
 
-For this reason, always double-check error status registers if the Error
-Source ID is zero.
+Please let me know which option you would prefer
 
-Fixes: 6d69eeae8966 ("PCI/AER: Check validity of Error Source ID register")
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
-base-commit: 6d69eeae8966bc3bea0facbd550f45ef9de41cc4
- 
-This fixes a commit queued on pci/aer.  It can either be folded into
-that commit or applied on top of pci/aer, whichever is preferred.
- 
- drivers/pci/pcie/aer.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Thank you for your review,
+Claudiu
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 1973b6e..24b014b 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1158,6 +1158,10 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
- 
- static bool source_id_valid(struct pci_dev *root, u16 id)
- {
-+	/* ID is zero prior to initial device config (PCIe r7.1 sec 2.2.9.1) */
-+	if (id == 0)
-+		return true;
-+
- 	/* The Root Port or RCEC can itself be a valid Error Source */
- 	if (pci_dev_id(root) == id)
- 		return true;
-@@ -1186,7 +1190,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	u16 reg16;
- 
- 	/* Some Root Ports report an invalid Error Source ID */
--	if (e_info->id_valid &&
-+	if (e_info->id && e_info->id_valid &&
- 	    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
- 		/* Device ID match? */
- 		if (e_info->id == pci_dev_id(dev))
--- 
-2.53.0
-
+[1] https://lore.kernel.org/all/20261029172831.9409-1-ovidiu.panait.rb@renesas.com
