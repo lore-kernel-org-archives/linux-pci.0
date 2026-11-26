@@ -1,69 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795713776;
-	b=SEsMZbo4BmUE9QLpSDB0d1pR2PIyCqcvtlrXzLI2YpbRMPzhgc48gFrxKxBJyTQCiczQ
-	 UNFbcgxP8HoP5N4YGk9RG5HoEyqBWViSfXfe3/NEoAVbjBbKhDlA6UqqKQTYvFZbTF6On
-	 0Oi2/FE4WbXRx1/6CFkow0ObUvThLx7Li3dOKMqR3whi2D5w3ceIgUWAwsSlCTHW0PzVC
-	 scHhGpbJLR/NpL0aWa4xPaOOOzorMRjaLQPgi+j9epq3PtFV9Q1U4TQQFPzka1FD5fOxB
-	 jDPKhsA7rRnRtwP59JPkXzNCODTydamo18bZk4mDLBGrcxzYU1eKFaAtu9sM8zvd7Ug==
+	t=1795714846;
+	b=LW7Uc5fcib3nK+2dyocnC4FjA66EgfDEHN/1uGmc4/Pu3Xb2RZjLHFR3xq5j7BYsx8O6
+	 /EszDbSv4vNeiRZWIvHV1oLsAQ2dY2yI/HiTxm6rOUI3i++0ZjcGdDgGyzhU+zrKDvz7A
+	 X1CgX7UQ/ykJVWFucmxQkOQ+RmbWMDZFJ4RIbwdlKrhLt2Vth40LhChslJOQ9QPsluuQI
+	 l0r6ptSbwkftTVRVdUKq2AW2a4YELygUQSSaBilysUQODH3l6tqYYDxV95KS6sU4Y+Lop
+	 ms1wc1fzqpNhlhRT84ZDnEIxuUoQt0aTuMk2+YWKGEMhKvhfjj5Cj/qr+ZhqqsKBOvg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795713776;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:In-Reply-To:References:
-	 Date:Message-ID:User-Agent:MIME-Version:Content-Type;
-	bh=sXzERec3qi0h+0pnbo1I/7rHrxflf5UtHoI6hva8J+I=;
-	b=tN78JFu/UQab9nq1o7ZWXaoQruNHtsrJaRciwLEmesLgvXK9kIs6h1xnXAMY3DzQ8SPl
-	 oqqTlWnF9djFPiFVClO9BHQyEAuK5bYv3h3+dsEMOU1xYH8qA9lsC0FGtbgp3JQ641g74
-	 6J6whyVjEbV+IEyR+Nn2pslPdKVc9LZBJRQKBriWmjeF1BYG28+f0cDDAEhTVCKZjxGEn
-	 +SsSTEop2TgNHYAaW7eH7X3yb16OVdq8qPyiQEl+xhxjnxwUjPZ0khuCAgnEXbcJfbjby
-	 j+NziCsXtDzHxL+9TLjG/5+VNe9SlSWA2Be086/6UjJKikdWZ7Qcwq/qlhcSa1vKsHA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795714846;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=ApPclC69wJu5EaKmPWcUZEw51FK93kFoXwnzGQ73cOU=;
+	b=SJ7U6tbm/uOrpuLojpEOoggidfh8ygYnPRxtf4t5qM0y4unHQGgqNRTppdgRb2SujJ3s
+	 5IKlPOh9Yw0Dl0bQeWg97K4NfuZH3K0qHv6v+CibjCugYd+gNfuwsPfXOrXy/Mx6SVrNy
+	 S7P352uM0fZ+CatE2Z/d/fowOEUhYOTWiYZyUJ4chQuUGc2k4yY63TiFxM8+zuqEkNVSP
+	 WhD48rBBMV1/Qaix6FvyLqeTOENk1mMqXuCyClXcRfjdnOYEBSaajYo0YTObIJYoIGtpy
+	 RmnpLR37+yPfL7cGpHJgnA1StnOMP+jQy2ZwmQtItwOFPogznOf54RCd/lmlE5MJX1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ErCOTW/F";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nMuC1qR1;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46FEE606A321;
-	Thu, 26 Nov 2026 17:22:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A643E606A31C;
+	Thu, 26 Nov 2026 17:40:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ErCOTW/F
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 232E21F000D0;
-	Thu, 26 Nov 2026 17:22:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nMuC1qR1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB3B61F000CA;
+	Thu, 26 Nov 2026 17:40:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795713776;
-	bh=sXzERec3qi0h+0pnbo1I/7rHrxflf5UtHoI6hva8J+I=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=ErCOTW/FmSA/4etDehKpUZ/FnuoYiC4phk3Lc5JABGLvJRGM+yYENk97mUzByHtGL
-	 7WZ/K3Cl4KR4vWeBbAOGDPAGZiZfQeuuZYVnaPT/Go99PAhcfYVGs6duVMibveYiqp
-	 GBZOdDsOLnVq7zUgnrE5q2gV51HIdbAWJfOgXQQ1/5EcbTrk6IGlyLtkDbME4MUxmH
-	 jZ+lJlMDYTH3e8te8W+Yhl+ZgZo6pyhNlr8YlDMWTmeXTGakvoE7i4geuVs0WiNKMu
-	 n0IRwPPC5atBezzVSzIRXDrzkQV5iN2xYKBq8ZU2gwjmErzCyIHg0VYIQpvjgk9kq0
-	 SL8izATY703pQ==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: Tarun Sahu <tarunsahu@google.com>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>,  Mike Rapoport
- <rppt@kernel.org>,  robin.murphy@arm.com,  maz@kernel.org,
-  will@kernel.org,  David Matlack <dmatlack@google.com>,  Alexander Graf
- <graf@amazon.com>,  seanjc@google.com,  jgg@nvidia.com,
-  loganodell@google.com,  arnd@arndb.de,  dwmw2@infradead.org,
-  baolu.lu@linux.intel.com,  Bjorn Helgaas <bhelgaas@google.com>,
-  oupton@kernel.org,  alex@shazbot.org,  gle.com@google.com,
-  pbonzini@redhat.com,  Andrew Morton <akpm@linux-foundation.org>,
-  kevin.tian@intel.com,  joro@8bytes.org,  kvmarm@lists.linux.dev,
-  linux-pci@vger.kernel.org,  Pratyush Yadav <pratyush@kernel.org>,
-  kexec@lists.infradead.org,  kvm@vger.kernel.org,  iommu@lists.linux.dev,
-  linux-arm-kernel@lists.infradead.org,  skhawaja@google.com,
-  sagis@google.com,  linux-arch@vger.kernel.org,  linux-mm@kvack.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
- compatibility
-In-Reply-To: <20261110050202.529473-6-tarunsahu@google.com> (Tarun Sahu's
-	message of "Tue, 10 Nov 2026 05:01:48 +0000")
-References: <20261110050202.529473-1-tarunsahu@google.com>
-	<20261110050202.529473-6-tarunsahu@google.com>
-Date: Thu, 26 Nov 2026 17:22:48 +0000
-Message-ID: <2vxzo6bbwlqv.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	s=k20260515; t=1795714845;
+	bh=ApPclC69wJu5EaKmPWcUZEw51FK93kFoXwnzGQ73cOU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=nMuC1qR1i3+hoilfYdTaW/fzchw6AcBZHiPupI8Ug4LBFBIyQHybLfOHXMW1reE/g
+	 nxsyuAELPczQASCQCWQpL/UOjdqcoxyR1L7iI9819YU44pMlCeweU2xj8Z22FboGKd
+	 KqdmJIus57CIxEcT+F2qD2VdJa5iErN+u9sfYLAWuRgWiolZU1R9z+e1lmUzF/2lbP
+	 yIAWxqtAMOBxTCMdcS5VaUNiKtr6QezcyGzFb14A2HhSU7J1q5EqJc63GUbwWZK2wu
+	 CMoeyX0MMnGFztRB4wneW81BscO9kJ0zOd42+tPJtTAsJ2Q3EIPAZJBC0KsmoxpaFN
+	 RXiB0ZG8Yyy5Q==
+Message-ID: <2618cc81-4594-4ecb-8dda-acb3ab7fafaa@kernel.org>
+Date: Thu, 26 Nov 2026 19:40:41 +0200
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -73,407 +51,133 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 13/14] PCI: rzg3s-host: Re-enumerate the bus on PCIe
+ link-state changes
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de,
+ geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org,
+ John Madieu <john.madieu.xa@bp.renesas.com>,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+ <20261019065025.2146539-14-claudiu.beznea@kernel.org>
+ <179562719476.5580.14610373538848505541.b4-reply@b4>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@kernel.org>
+In-Reply-To: <179562719476.5580.14610373538848505541.b4-reply@b4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi,
 
-Other than the general discussion around how we should lay out the bits,
-here's some quick code review.
 
-On Tue, Nov 10 2026, Tarun Sahu wrote:
-[...]
-> ---
->  include/linux/kho/abi/feature.h | 372 ++++++++++++++++++++++++++++++++
->  1 file changed, 372 insertions(+)
->  create mode 100644 include/linux/kho/abi/feature.h
->
-> diff --git a/include/linux/kho/abi/feature.h b/include/linux/kho/abi/feature.h
-> new file mode 100644
-> index 000000000000..55ff1b9e9b73
-> --- /dev/null
-> +++ b/include/linux/kho/abi/feature.h
-> @@ -0,0 +1,372 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +
-> +/**
-> + * DOC: KHO Serialization Feature Header ABI
-> + *
-> + * Generic feature header for serialized binary data structures preserved
-> + * across kexec via KHO or Live Update Orchestrator (LUO).
-> + *
-> + * Serialized structures start with an 8-byte base header (struct kho_ser_hdr)
-> + * containing the total structure size (size, including header, flags, and
-> + * payload) in bytes, the number of required features (nr_required), and the
-> + * number of optional features (nr_optional). Following the header is a
-> + * flexible array of 64-bit flags entries (flags[]) containing one bit per
-> + * feature.
-> + *
-> + * Feature bits:
-> + *   - Required feature N is at bit N of flags[].
-> + *   - Optional feature N is at bit (nr_required + N) of flags[].
-> + *   - The number of __u64 entries in flags[] is
-> + *     DIV_ROUND_UP(nr_required + nr_optional, 64).
-> + *   - When nr_required == 0 and nr_optional == 0, flags[] has zero entries
-> + *     and the header is exactly 8 bytes.
-> + *
-> + * A set bit indicates that the feature is present in the payload.
-> + *
-> + * Deserialization truth table:
-> + *
-> + *   Source bit       Target            Action
-> + *   ----------       ------            ------
-> + *   Not set          -                 Accept: feature absent
-> + *   Optional set     unknown or known  Accept: ignore or use the data
-> + *   Required set     known             Accept: use the feature data
-> + *   Required set     unknown           Reject: -EOPNOTSUPP
-> + *
-> + * Validation trusts the incoming header: only set required feature bits at or
-> + * beyond the target's known required feature count are rejected (-EOPNOTSUPP).
-> + * Optional feature bits are never validated.
+On 11/25/26 19:19, Manivannan Sadhasivam wrote:
+> On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
+>> From: John Madieu <john.madieu.xa@bp.renesas.com>
+>>
+>> The RZ/G3{E, S}, RZ/V2{H(P), N} PCIe controllers do not expose the
+>> standard PCIe Slot Capability registers, so the generic pciehp driver
+>> cannot be used. The only link-state signal the hardware provides is the
+>> DL_UpDown bit in the PEIS0 event status register, which is raised on every
+>> Data Link layer up/down transition.
+>>
+>> Enable DL_UpDown in PEIE0 and hook up an interrupt handler so the driver
+>> can react to link-state changes: a device that trains after boot gets
+>> enumerated, and a device that disappears on link loss is removed. This
+>> provides hotplug-like behavior without the PCI hotplug core, which is
+>> unavailable for the reason above.
+>>
+>> On a DL_UpDown event the handler acks the W1C status bit and inspects
+>> PCSTAT1.DL_DOWN_STS:
+>>
+>> - Link up: re-run max link speed negotiation, wait for the link to settle
+>>    and rescan the root bus. To cover the case where the device is replaced
+>>    or removed while the system is suspended add the
+>>    rzg3s_pcie_device_replaced(). It reads the vendor ID, device ID,
+>>    revision ID and class code of the device behind the root port and
+>>    compares them against the values cached in the corresponding
+>>    struct pci_dev, along with the Device Serial Number cached in
+>>    struct rzg3s_pcie_host::con_dev_dsn, mirroring pciehp_device_replaced().
+>>    If the device is detected as replaced (or no longer present),
+>>    pci_dev_set_disconnected() is called for all the devices on the bus
+>>    below the root port, so that the teardown of the old devices does not
+>>    end up accessing the newly connected device, and the devices are then
+>>    removed. If a link up/down cycle occurred while devices are on the bus
+>>    (fast link transitions coalesced into a single DL_UpDown event), the
+>>    devices are removed and re-enumerated even if the connected device did
+>>    not change.
+>> - Link down: walk the bus in reverse and pci_stop_and_remove_bus_device()
+>>    each child.
+>>
+>> Both paths take pci_lock_rescan_remove() to serialize against the PCI
+>> core.
+>>
+>> Link events are processed only after the controller has been fully
+>> initialized.
+>>
+>> Add rzg3s_pcie_pm_notifier() to avoid the link event interrupt interfering
+>> with the suspend/resume of the other PCIe devices in the topology, and to
+>> avoid deadlocks caused by pci_dev_lock() being taken from the link event
+>> handler while suspend/resume is in progress. The notifier disables the link
+>> event interrupt before suspend and enables it and rescans the bus, on
+>> resume, to pick up devices that may have been plugged or unplugged while
+>> the system was suspended. struct rzg3s_pcie_host::started was added to
+>> avoid touching the controller registers in case the resume failed.
+>>
+>> While at it, make probe tolerant of an absent device. Previously, if the
+>> link failed to come up during rzg3s_pcie_host_setup(), probe tore the
+>> controller back down and failed. Ignore the timeout returned by
+>> rzg3s_pcie_wait_for_link_up(), leave the controller and refclk running,
+>> and let the link-up path enumerate the device once it appears.
+>>
+> 
+> This patch is doing too much things at once which makes it hard to follow.
+ > I can easily say that you've combined 4-5 patches into one.
 
-I don't understand what this paragraph is supposed to mean.
+If doing otherwise different bits of this functionality will not work as 
+expected. E.g., I you are referring to the code behind 
+rzg3s_pcie_device_replaced() and/or rzg3s_pcie_pm_notifier(): these were pointed 
+out by Sashiko and I tried to address them. W/o these the functionality that the 
+patch tried to cover will not fully work for suspend to RAM. I tried to avoid 
+sets like:
 
-> + *
-> + * Defining features:
-> + *
-> + * A serialized structure defines its features using enums and registers with
-> + * DECLARE_KHO_SER()::
-> + *
-> + *   enum foo_ser_required {
-> + *           FOO_SER_REQ_BAR,
-> + *           __FOO_SER_NR_REQUIRED,
-> + *   };
-> + *
-> + *   enum foo_ser_optional {
-> + *           FOO_SER_OPT_BAZ,
-> + *           __FOO_SER_NR_OPTIONAL,
-> + *   };
-> + *
-> + *   struct foo_ser {
-> + *           __u64 base;     // base fields, always present
-> + *           __u64 bar;      // FOO_SER_REQ_BAR
-> + *           __u64 baz;      // FOO_SER_OPT_BAZ
-> + *   };
-> + *
-> + *   DECLARE_KHO_SER(foo_ser, 24,
-> + *                   __FOO_SER_NR_REQUIRED, __FOO_SER_NR_OPTIONAL);
-> + *
-> + *   // Serialize
-> + *   kho_ser_init(fhdr, foo_ser);
-> + *   ser = kho_ser_payload(fhdr, foo_ser);
-> + *   ser->bar = ...;
-> + *   kho_ser_set_required(fhdr, FOO_SER_REQ_BAR);
-> + *   ser->baz = ...;
-> + *   kho_ser_set_optional(fhdr, FOO_SER_OPT_BAZ);
-> + *
-> + *   // Restore
-> + *   err = kho_ser_validate(fhdr, foo_ser);
-> + *   ser = kho_ser_payload(fhdr, foo_ser);
-> + *   if (kho_ser_has_required(fhdr, FOO_SER_REQ_BAR))
-> + *           use ser->bar;
-> + *   if (kho_ser_has_optional(fhdr, FOO_SER_OPT_BAZ))
-> + *           use ser->baz;
-> + *
-> + * Rules:
-> + *   - Required and optional features each have their own enum, numbered
-> + *     independently from 0.
-> + *   - New features are only appended at the end of their enum, never
-> + *     reordered or reused.
-> + *   - The last entry of each enum (e.g. __FOO_SER_NR_REQUIRED) is the
-> + *     feature count passed to DECLARE_KHO_SER and stays last.
+patch 1: add functionality X
+patch 2: address corner case Y for functionality X
 
-Why are these rules? They read more like design patterns to me. Is there
-a reason for only using enums, and only using them in this form?
+> And even worse, you
+> add code to remove devices in this patch and add recovery in the next patch.
 
-> + *   - The fields of a new feature are appended at the end of the payload.
-> + *   - A reader accesses the fields of a feature only when its bit is set in
-> + *     the incoming header (kho_ser_has_required() or
-> + *     kho_ser_has_optional()), because an older source kernel does not
-> + *     serialize them.
+This split was requested by you in the previous review round:
+https://lore.kernel.org/all/a7koqtuhya3psx7mmest3io5h775jxscivumouv64kbu23pssv@xkkqondobxui
 
-Nit: newer source kernel might also not serialize them. No point in
-saying that. It is enough to say that the field should not be used.
+Please let me know if I misunderstood your request.
 
-> + *   - Use required for data the target must understand to restore
-> + *     correctly, and optional for data it can safely ignore.
-> + *   - Variable length data that follows the payload, such as an array of
-> + *     entries, starts at fhdr->size, the size recorded by the source kernel,
-> + *     so it stays correct when a later feature appends fields to the
-> + *     payload.
+> If
+> you are recovering the link, why do you need to throw the devices away?
 
-I don't understand this line.
+The controller don't support native hotplug, but has only IRQ support for link 
+up/down events. The idea behind this work was to treat the IRQ link up/down 
+events as hotplug events.
 
-> + *
-> + * Writing and reading:
-> + *
-> + * kho_ser_size(), kho_ser_init(), kho_ser_set_required() and
-> + * kho_ser_set_optional() (and the clear variants) use the values this
-> + * kernel registered with DECLARE_KHO_SER(), so they describe this
-> + * kernel's layout and are used when serializing.
-> + *
-> + * A reader of handed-over data uses only the incoming header:
-> + * kho_ser_validate(), kho_ser_hdr_size(), kho_ser_payload(),
-> + * kho_ser_has_required(), kho_ser_has_optional() and fhdr->size, so
-> + * it follows the layout of the kernel that wrote the data. On data
-> + * this kernel serialized, these give the same result.
-> + *
-> + * Use DECLARE_KHO_SER_HDR(name, *fhdr) (or const
-> + * DECLARE_KHO_SER_HDR(name, *fhdr)) to document which registered
-> + * structure a feature header pointer belongs to while verifying at
-> + * compile time that the structure is registered with DECLARE_KHO_SER().
-> + */
-> +
-> +#ifndef _LINUX_KHO_ABI_FEATURE_H
-> +#define _LINUX_KHO_ABI_FEATURE_H
-> +
-> +#include <linux/build_bug.h>
-> +#include <linux/err.h>
-> +#include <linux/errno.h>
-> +#include <linux/math.h>
-> +#include <linux/string.h>
-> +#include <linux/types.h>
-> +
-> +/**
-> + * struct kho_ser_hdr - Header for serialized data structures in KHO.
-> + * @size:        Total size in bytes (header + flags + payload).
-> + * @nr_required: Number of required features known to the source kernel.
-> + * @nr_optional: Number of optional features known to the source kernel.
-> + * @flags:       Bitmask of present features (required, then optional).
-> + */
-> +struct kho_ser_hdr {
-> +	__u32 size;
-> +	__u16 nr_required;
-> +	__u16 nr_optional;
-> +	__aligned_u64 flags[];
-> +};
+The .reset_root_port() was added since it was noticed that on RZ/G3S, the NVME 
+connected to PCIE_SLOT don't work after a link down/up sequence w/o it.
 
-Nit: why __u32 and so on? This isn't a uAPI header.
+Please let me know you thoughts on this approach.
 
-> +
-> +static_assert(sizeof(struct kho_ser_hdr) == 8);
-> +static_assert(__alignof__(struct kho_ser_hdr) == 8);
-> +
-> +#define KHO_SER_NR_FLAGS(nr_required, nr_optional) \
-> +	DIV_ROUND_UP((__u32)(nr_required) + (__u32)(nr_optional), 64)
+> 
+> Please split and organize the patches logically.
 
-That's not number of flags, that the number of bits in the bitmap.
-Reading KHO_SER_NR_FLAGS() would make me think this is just nr_required
-+ nr_optional.
+This is what I've tried. If you are referring to, at least 
+rzg3s_pcie_device_replaced() and/or rzg3s_pcie_pm_notifier(): w/o these, the 
+support won't be fully functional for suspend to RAM, as pointed by sashiko in 
+the previous review rounds.
 
-> +
-> +/**
-> + * kho_ser_hdr_size - Calculate header size in bytes including flags.
-> + * @fhdr: Pointer to the serialization header.
-> + *
-> + * Return: Size of the header and flags array in bytes.
-> + */
-> +static inline size_t kho_ser_hdr_size(const struct kho_ser_hdr *fhdr)
-> +{
-> +	return sizeof(*fhdr) + sizeof(__u64) *
-> +		KHO_SER_NR_FLAGS(fhdr->nr_required, fhdr->nr_optional);
-> +}
-> +
-> +/**
-> + * kho_ser_set_required - Mark a required feature present in the payload.
-> + * @fhdr:  Pointer to the serialization header.
-> + * @feat: Required feature index to set.
-> + */
-> +static inline void kho_ser_set_required(struct kho_ser_hdr *fhdr, unsigned int feat)
-> +{
-> +	if (feat < fhdr->nr_required)
-> +		fhdr->flags[feat / 64] |= 1ULL << (feat % 64);
+> And also take a look at the the
+> issues raised by Sashiko too.
+It's on my list.
 
-fhdr->flags[BIT_ULL_WORD(bit)] |= BIT_ULL_MASK(bit);
+Thank you for your review,
+Claudiu
 
-Is way more readable.
-
-Also,
-
-using the below avoids repeating this incantation multiple times.
-
-static inline void __kho_ser_set_bit(struct kho_ser_hdr *fhdr, unsigned int bit)
-{
-	fhdr->flags[BIT_ULL_WORD(bit)] |= BIT_ULL_MASK(bit);
-}
-
-static inline bool __kho_ser_test_bit(const struct kho_ser_hdr *fhdr, unsigned int bit)
-{
-	return fhdr->flags[BIT_ULL_WORD(bit)] & BIT_ULL_MASK(bit);
-}
-
-> +}
-> +
-> +/**
-> + * kho_ser_clear_required - Clear a required feature in the payload.
-> + * @fhdr:  Pointer to the serialization header.
-> + * @feat: Required feature index to clear.
-> + */
-> +static inline void kho_ser_clear_required(struct kho_ser_hdr *fhdr, unsigned int feat)
-> +{
-> +	if (feat < fhdr->nr_required)
-> +		fhdr->flags[feat / 64] &= ~(1ULL << (feat % 64));
-> +}
-> +
-> +/**
-> + * kho_ser_set_optional - Mark an optional feature present in the payload.
-> + * @fhdr:  Pointer to the serialization header.
-> + * @feat: Optional feature index to set.
-> + */
-> +static inline void kho_ser_set_optional(struct kho_ser_hdr *fhdr, unsigned int feat)
-> +{
-> +	if (feat < fhdr->nr_optional) {
-> +		unsigned int bit = (unsigned int)fhdr->nr_required + feat;
-> +
-> +		fhdr->flags[bit / 64] |= 1ULL << (bit % 64);
-> +	}
-> +}
-> +
-> +/**
-> + * kho_ser_clear_optional - Clear an optional feature in the payload.
-> + * @fhdr:  Pointer to the serialization header.
-> + * @feat: Optional feature index to clear.
-> + */
-> +static inline void kho_ser_clear_optional(struct kho_ser_hdr *fhdr, unsigned int feat)
-> +{
-> +	if (feat < fhdr->nr_optional) {
-> +		unsigned int bit = (unsigned int)fhdr->nr_required + feat;
-> +
-> +		fhdr->flags[bit / 64] &= ~(1ULL << (bit % 64));
-> +	}
-> +}
-> +
-> +/**
-> + * kho_ser_has_required - Check if a required feature is present in the payload.
-> + * @fhdr:  Pointer to the serialization header.
-> + * @feat: Required feature index to check.
-> + *
-> + * Return: True if the feature is present, false otherwise or if the index
-> + *         exceeds the header's known required feature count.
-> + */
-> +static inline bool kho_ser_has_required(const struct kho_ser_hdr *fhdr,
-> +					unsigned int feat)
-> +{
-> +	if (feat >= fhdr->nr_required)
-> +		return false;
-> +	return !!(fhdr->flags[feat / 64] & (1ULL << (feat % 64)));
-> +}
-> +
-> +/**
-> + * kho_ser_has_optional - Check if an optional feature is present in the payload.
-> + * @fhdr:  Pointer to the serialization header.
-> + * @feat: Optional feature index to check.
-> + *
-> + * Return: True if the feature is present, false otherwise or if the index
-> + *         exceeds the header's known optional feature count.
-> + */
-> +static inline bool kho_ser_has_optional(const struct kho_ser_hdr *fhdr,
-> +					unsigned int feat)
-> +{
-> +	unsigned int bit;
-> +
-> +	if (feat >= fhdr->nr_optional)
-> +		return false;
-> +	bit = (unsigned int)fhdr->nr_required + feat;
-> +	return !!(fhdr->flags[bit / 64] & (1ULL << (bit % 64)));
-> +}
-> +
-> +/**
-> + * __kho_ser_init - Initialize a serialization header and flags.
-> + * @fhdr:          Pointer to the memory for the serialization header.
-> + * @payload_size: Size of the payload structure in bytes.
-> + * @nr_required:  Number of required features known by the caller.
-> + * @nr_optional:  Number of optional features known by the caller.
-> + */
-> +static inline void __kho_ser_init(struct kho_ser_hdr *fhdr, __u32 payload_size,
-> +				  __u16 nr_required, __u16 nr_optional)
-
-I really dislike all the __u32, __u16 and so on. This isn't uAPI code,
-so should use plain u32, u16 and so on.
-
-> +{
-> +	__u32 nr_flags = KHO_SER_NR_FLAGS(nr_required, nr_optional);
-
-flags_size or something like that. nr_flags reads like number of
-_actual_ flags.
-
-> +
-> +	fhdr->size = sizeof(*fhdr) + sizeof(__u64) * nr_flags + payload_size;
-> +	fhdr->nr_required = nr_required;
-> +	fhdr->nr_optional = nr_optional;
-> +	memset(fhdr->flags, 0, sizeof(__u64) * nr_flags);
-> +}
-> +
-> +/**
-> + * __kho_ser_payload - Return pointer to the payload following the header.
-> + * @fhdr: Pointer to the serialization header.
-> + *
-> + * Return: Pointer to payload memory immediately after the flags array.
-> + */
-> +static inline void *__kho_ser_payload(const struct kho_ser_hdr *fhdr)
-> +{
-> +	return (void *)((const char *)fhdr + kho_ser_hdr_size(fhdr));
-
-return (void *)fhdr + kho_ser_hdr_size();
-
-does the same thing and is simpler.
-
-> +}
-> +
-> +/**
-> + * __kho_ser_validate - Validate an incoming header against target capabilities.
-> + * @fhdr:                Pointer to the serialization header.
-> + * @target_nr_required: Number of required features supported by the target.
-> + *
-> + * Checks that the source did not set any required feature bits that the target
-> + * kernel does not support (index >= @target_nr_required).
-> + *
-> + * Return: 0 if all required features are supported, or -EOPNOTSUPP on failure.
-> + */
-> +static inline int __kho_ser_validate(const struct kho_ser_hdr *fhdr,
-> +				     __u16 target_nr_required)
-> +{
-> +	unsigned int i;
-> +
-> +	for (i = target_nr_required; i < fhdr->nr_required; i++) {
-> +		if (fhdr->flags[i / 64] & (1ULL << (i % 64)))
-
-Same here, this incantation should go away.
-
-> +			return -EOPNOTSUPP;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * DECLARE_KHO_SER - Register a serialized payload structure with KHO.
-> + * @name:         Structure tag name (e.g. luo_ser).
-> + * @payload_size: Compile-time expected size of struct @name in bytes.
-> + * @nr_required:  Total number of defined required features.
-> + * @nr_optional:  Total number of defined optional features.
-> + *
-> + * Size and 8-byte alignment are asserted under CONFIG_64BIT: KHO and LUO are
-> + * 64-bit only, while !CONFIG_KEXEC_HANDOVER stubs pull ABI headers into
-> + * 32-bit builds where u64 has 4-byte or 2-byte alignment.
-> + */
-> +#define DECLARE_KHO_SER(name, payload_size, nr_required, nr_optional)	\
-> +	static_assert(!IS_ENABLED(CONFIG_64BIT) ||			\
-> +		      sizeof(struct name) == (payload_size),		\
-> +		      "struct " #name " size mismatch");		\
-> +	static_assert(!IS_ENABLED(CONFIG_64BIT) ||			\
-> +		      __alignof__(struct name) == 8,			\
-> +		      "struct " #name " must be 8-byte aligned");	\
-> +	extern struct kho_ser_hdr __kho_ser_hdr_##name;			\
-> +	enum {								\
-> +		__KHO_SER_SIZE_##name = (payload_size),			\
-> +		__KHO_SER_NR_REQUIRED_##name = (nr_required),		\
-> +		__KHO_SER_NR_OPTIONAL_##name = (nr_optional),		\
-> +	}
-
-Yeah, I agree with Pasha and Chris. Plain types are much better.
-
-[...]
-
--- 
-Regards,
-Pratyush Yadav
