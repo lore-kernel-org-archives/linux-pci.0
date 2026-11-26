@@ -1,79 +1,45 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=194.117.254.33
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795732833;
-	b=gX8Q27laC1ROzsmzWhrHvXQjDZj2RzT6/xywia1PGhvIHDsJm1UQbqjcn14T1U61hVmm
-	 c6DTvwIUiuPkX3LOMqG/qcyCRWI6ir8z5jK7/5Rudpr1LuPHMlEFhTVUMl4O6lzMO48vg
-	 xnHUTZ3DNbPOnAwNPWhjMTDoGkSJIpncaxTuqfA3Mo3JewgavmUdgL1UQ6TNl2pyd22fX
-	 TgPf2f4SJ2behDQJ5hp8PvFPNOyJZsnygWXO7jWM7DlXhP0QfGDDRbGyxK1esy8KvZS3y
-	 HR2qlyXAkoXEzLvvUfcn+JGuMOQQ7MWyt1X0V3Qq1ogCo4Zm5SG8InVrkD+TlIo9piA==
+	t=1795734736;
+	b=f64lCHxg118gMXwcyStQtRbjXTkAiykxdGS7CdCwZ76kdjPaX1iG7QioBsAetwpGk8t9
+	 Jndfl3AaSqjvkNHOKOqNTtSWMUgN4lf8dot8C3+GiretL//5DPsON9/fpTvR/bqo+4/wt
+	 89fAWrPOp12v4kOsq4YN1npYRKDizB/ZY+iMojpkKQfUV80PH/GEchCV3OUmZHLfxPIKD
+	 X/OFX0yfw/LD5gkM4Ve7oCRP/QnGBUSvn0NtRx921K+KlBey6VQTOA21923wnaIo9nPHB
+	 9+ATlPJNd7V4aQu2PZxy2A72K3z0LMNkQhVvMq5WstYlIZzV8qwX78Mk5Il86TbORjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795732833;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:X-UD-Smtp-Session:Date:
-	 From:To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=5/KydILYgp1MqJro7NmxMhzqTKDk500tIwuyQxLYRaw=;
-	b=W40hKIkpy7itwGmRZRrh3DwUws4cWyMTc2FndIbkzffuCGrXJ6pE0ZVpbf9Q6YJFPUj3
-	 gh50X3Vhh2foq2A3FKLUDyCM4p6rNFpSsBtPQqZzap8UwylC9Ig9Iz1jftEYdOso8lb/E
-	 j7LYc3SbqDBuzOaSYn6Y6F/RfgMqJHqICPaW1mIRIGrIlSf33npjtDNwA2zDGXj8Mpo/O
-	 0dTkXl9uFdNytnyz4nDhwZI493K3R8I95m3PMr4mSS/Cg9mRY7Q9j9XbwJqE1v6Jgg7Dt
-	 SG4emwo10s6UW6Gn/QOKySKpQ6y/mBBFANehOGlArOQrLS2DyRH0/FbkyTeKt+/sAXw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795734736;
+	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
+	 Content-Type:Date:Message-Id:Subject:Cc:To:From:References:
+	 In-Reply-To;
+	bh=yCg6GFs8aIIt9H7EV8TqGTZ5EaU2Zu9rrP42YjkHPnk=;
+	b=Hjv4/RPNsyjhFSNFXAHvRgDoKmFWUGQmM3OBLkUYxgUrLchk23jz2DwDe3xPSP2p8hDw
+	 L+W8BvyJDiYcjQIRU+3kdCsIkdQHGbTHXEZG+ESry+rYqueMLFyvXSCd62P8ENsOR4UXk
+	 IWHEbnux6XD3s5yjfrOqxFO+D3kNc/nQEnNamCuGUHOmNbt2d6fGjlOOLLHvjcuPzmLSY
+	 tuDCJ2kRf8rF2NmTtzNbc4Ap+5E6RDy6pg9yX09Alzg4xNt4hmIX1Lu+x3aHBUoZGTNWx
+	 XGOoYhPM6lzAs9sE7a+0X6tVAJ7o44PNc17V1mTNSZ1arjfAq+qPSK+EAq3xTaF9UiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=sang-engineering.com;
-	spf=pass smtp.mailfrom=sang-engineering.com;
-	dkim=pass header.d=sang-engineering.com header.i=@sang-engineering.com header.a=rsa-sha256 header.s=k1 header.b=ZQzn9QkR;
-	arc=none smtp.remote-ip=194.117.254.33
-Received: from mail.zeus03.de (zeus03.de [194.117.254.33])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="OLE/5HdM";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CAA6606A31E
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 22:40:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8CAA6606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sang-engineering.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sang-engineering.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB58606A31C;
+	Thu, 26 Nov 2026 23:12:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=sang-engineering.com header.i=@sang-engineering.com header.a=rsa-sha256 header.s=k1 header.b=ZQzn9QkR
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	sang-engineering.com; h=date:from:to:cc:subject:message-id
-	:references:mime-version:content-type:in-reply-to; s=k1; bh=5/Ky
-	dILYgp1MqJro7NmxMhzqTKDk500tIwuyQxLYRaw=; b=ZQzn9QkRXYYLVXowFjeF
-	9/KwQCXjfY7n1nL3GRsUbl6bPgLD0vY97rUitxizM3BkCevuOeT7/3L+1Jw9lXFX
-	Xb7bzITN5dCF6T/wHcopj3IjWtxrEav3YvfNbfabmJNr0mclhlzQd9wa7u++A6CQ
-	/P/uPO75jjRAajIdM1fZ7WWsFXVYjRCNiKrpdnc6tIaITSLCgEu20N/NtXfCmW7W
-	QE3XmECpWUkHDR/mApGR/C2esic6WTNqCU7JRoSLMj5BKc9ufO16GiLFX96aJl/5
-	6buZZQXBxCTN5bTeqc9OUZIzsstzhvsU6eW0MVEMUU7VMFxE4KjOPrbtNBLZltPl
-	Vg==
-Received: (qmail 1773729 invoked from network); 26 Nov 2026 23:40:29 +0100
-Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 26 Nov 2026 23:40:29 +0100
-X-UD-Smtp-Session: l3s3148p1@zClqoTVhHKUujnv5
-Date: Thu, 26 Nov 2026 23:40:28 +0100
-From: Wolfram Sang <wsa+renesas@sang-engineering.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Shawn Lin <Shawn.lin@rock-chips.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 17/17] arm64: dts: renesas: r8a779h0: Describe the
- PCIe AER interrupt
-Message-ID: <awi1WNQZ8jEGLQaS@shikoro>
-References: <20261020031049.969895-1-den@valinux.co.jp>
- <20261020031049.969895-18-den@valinux.co.jp>
- <CAMuHMdWk9pZdJ+eh0dNHrZSMVDe84_rsvmrD=pC1Fjy9wEyp1Q@mail.gmail.com>
- <awhXFPlyc3vnmjtC@z790sl>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OLE/5HdM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93CEB1F000C1;
+	Thu, 26 Nov 2026 23:12:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795734736;
+	bh=yCg6GFs8aIIt9H7EV8TqGTZ5EaU2Zu9rrP42YjkHPnk=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=OLE/5HdMOrzqMoVMzpMOMOMHiwFOsx9zxrVlr3wkAc/3r3feA4bo/4U8T+dquucT7
+	 GoxqIb3GA2Qzhx23dBRIcv/B7pXI/l0P5FqcBZ2JkRB8dKNWtcDk83NE+tFGgfmsDy
+	 Y2+X8Sk3RBM8g/QKSroJurZNSvZCfBzHReXtUL4ZFWqJTFXeExgVVyxjuXWjrWU54x
+	 wRLwe8ecIV18WWvO6CCa3mCpILwAESGiq3BoKYoO7R0FnuW3Fs9WKfUegeovFJCzNe
+	 Wn9z/hNWXG4yDF+b45eJhwRrzPajMgbisyeckxW0kPcFQ8utWEGo0CiWDlzqk7vx7W
+	 dVWYVqxyMLVnw==
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -82,48 +48,106 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="+Y/kQlCkEpvPUpzt"
-Content-Disposition: inline
-In-Reply-To: <awhXFPlyc3vnmjtC@z790sl>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 27 Nov 2026 00:12:07 +0100
+Message-Id: <DN5IU15U2LO1.1NCRHBKWBJG5B@kernel.org>
+Subject: Re: [PATCH v3 7/9] rust: vfio: add PCI variant driver abstractions
+Cc: <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <jgg@nvidia.com>, <yishaih@nvidia.com>,
+ <skolothumtho@nvidia.com>, <kevin.tian@intel.com>, <airlied@gmail.com>,
+ <simona@ffwll.ch>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+ <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <aliceryhl@google.com>,
+ <tmgross@umich.edu>, <jhubbard@nvidia.com>, <ecourtney@nvidia.com>,
+ <cjia@nvidia.com>, <smitra@nvidia.com>, <kjaju@nvidia.com>,
+ <alkumar@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+ <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
+ <boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+ <work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
+ <peter@colberg.org>
+To: "Simon Song" <xinmengs@nvidia.com>, <rafael@kernel.org>,
+ <alex@shazbot.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20261119215046.2892839-1-xinmengs@nvidia.com>
+ <20261119215046.2892839-8-xinmengs@nvidia.com>
+ <DN4P1UAAVP8G.2TUW0Q8UEQVCG@kernel.org>
+ <03b5355c-e8c9-4190-95b8-fb847756ad7f@nvidia.com>
+In-Reply-To: <03b5355c-e8c9-4190-95b8-fb847756ad7f@nvidia.com>
 
---+Y/kQlCkEpvPUpzt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+(Cc: Rafael)
 
-Hi Koichiro Den-san,
+On Thu Nov 26, 2026 at 4:01 PM CET, Simon Song wrote:
+> On 11/25/2026 3:51 PM, Danilo Krummrich wrote:
+>
+>>> +impl RuntimeActive {
+>>> +    fn new(dev: &device::Device<device::Bound>) -> Result<Self> {
+>>> +        // SAFETY: `dev` is a valid device. This is `pm_runtime_get_sy=
+nc()`, which takes a usage
+>>> +        // reference even if it fails.
+>>> +        #[cfg(CONFIG_PM)]
+>>> +        let ret =3D
+>>> +            unsafe { bindings::__pm_runtime_resume(dev.as_raw(), bindi=
+ngs::RPM_GET_PUT as c_int) };
+>>> +        #[cfg(not(CONFIG_PM))]
+>>> +        let ret =3D 0;
+>>> +        // INVARIANT: `this` owns the usage reference, and drops it if=
+ the resume failed.
+>>> +        let this =3D Self(dev.into());
+>>> +        to_result(ret)?;
+>>> +        Ok(this)
+>>> +    }
+>>> +}
+>>> +
+>>> +impl Drop for RuntimeActive {
+>>> +    fn drop(&mut self) {
+>>> +        // SAFETY: `self.0` is a valid device, and `new()` took the us=
+age reference dropped
+>>> +        // here. This is `pm_runtime_put()`.
+>>> +        #[cfg(CONFIG_PM)]
+>>> +        unsafe {
+>>> +            bindings::__pm_runtime_idle(
+>>> +                self.0.as_raw(),
+>>> +                (bindings::RPM_GET_PUT | bindings::RPM_ASYNC) as c_int=
+,
+>>> +            )
+>>> +        };
+>>> +    }
+>>> +}
+>>=20
+>> This seems reasonable, but doesn't belong into VFIO core code. This shou=
+ld e.g.
+>> go under rust/kernel/device/pm.rs.
+>>=20
+>> However, it would become dead code once we land the runtime PM stuff and=
+ enable
+>> it for PCI, right? I think an alternative could be to just make nova-vgp=
+u depend
+>> on !PM.
+>>=20
+>
+> Right, this goes away once driver has runtime PM callbacks, I tried !PM a=
+nd it
+> works, but CONFIG_PM is set in x86_64_defconfig and allmodconfig, so driv=
+er
+> won't be built there with default option for x86, would you rather keep
+> RuntimeActive and moved it to pm.rs or prefer to depend on the CONFIG_PM =
+until
+> the runtime PM for PCI lands?
 
-> Mani, mind if I ask whether the series still in your review queue (it looks so
-> on patchwork [1]), or whether there's no hope of it landing for some reason?
+Right, in this case I'd just inline the call to __pm_runtime_resume() into
+Registration::new() and the call to __pm_runtime_idle() into
+Registration::drop() to keep it as local as possible.
 
-You added more people to CC and got no response. Maybe it is time to
-send out v6 now? Maybe this will get attention then... sometimes it is
-easier to talk over code.
+We can then replace it with the proper bus PM handling once the core PM cod=
+e
+lands; I will send the corresponding PCI changes soon.
 
-Happy hacking,
+Rafael, please let me know if you have any concerns.
 
-   Wolfram
-
-
---+Y/kQlCkEpvPUpzt
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmsItVgACgkQFA3kzBSg
-KbZIMhAAk+dqUXk+MuLSLKoKuO+Biu//82UdOdypJYIsTOH8C2ycdMkd3QyKQZlu
-Mfz0AsrrExl6f1eoDVrtgSl4PbDPwC+FGkomdl5+xjLhHydSj4vVYMyb2aRA+LR0
-FsCQVkNdQxionGgQ7sKtdryFannXETGGywUvtL3Q0V/sCpwh7sUl21LExUjS0Ie6
-YfMZgElbXsn2dEn23FHE7PveumSWapjOty/qFrwZJStaaDKaO1grsrOQkeuYJcnJ
-YAEHfF2//Oh/V9LK5y2AZT05q7QqFskU3FtXBJKop3j7gPZ1oovfN3Lm+k9CpLUc
-b8KjFDMgo6obv1G2m6Hlbd8IjnyDrPJPEO/ameJCSAc3aQsZKZIVUEztEXWcBkbp
-lxnfj3Vl8XZ/+yef6huoegXbbpABGTjQ1ocbAd8/71HW5295mmHN8Bto3fSYW7dJ
-Yi7W5UGSpfEX6cvPxVogZk4HplZy42ThA8lYPc7H+Y/v4XgN26O/zz1Epnvt1jqP
-pg8wK12mdXpu/N1QABqieSOgQAMUdw6kdbWB428a8Z5c4iRw4RlfZ6mPkx/tc8oy
-KG8A1ogmewmI9hMFaXuPTu/tMtdqFKaDEO7aoEyztTjgFSni4TEEy5Cwp+DSKu2z
-s1+kNTcY/uSNPe6iFtXgfq3WO945rGDoz/OzotdgNKI/c3n538Q=
-=pJea
------END PGP SIGNATURE-----
-
---+Y/kQlCkEpvPUpzt--
+Thanks,
+Danilo
