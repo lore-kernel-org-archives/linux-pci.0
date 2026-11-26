@@ -1,76 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795698647;
-	b=40G3sssIWj0OAZ403qPrBBHTT/q55FQs0U30IO0/H2cJQdmw6QAVbZtEtmpylrzo3suy
-	 7mc248c7j5edIhFNvKAOu2bBb5W99atiDUT2Nn9wTd+qT88EEnimVbTry2hxVsGSfYbWM
-	 mYYBo8Dk9k+ytAor9xPVXhxUW+7FvcLZC1mV/fr6Z1W5/GN774ZguNcEhjOAApl70gHFP
-	 aazQ32mqz4h3VMP3Q7lOC1X3nom7af0MqvsnbuV07P//GTd6OG7SB8PYKMF+ItjbNFbnV
-	 Hl/A3C7Vm5YH9mEovT+YIhH4GA09fr6PdBSeqEDJRuQ7daXc7zfERhjPBW3p+qmAQqQ==
+	t=1795698989;
+	b=d52GZOJsjpTr+58BmNEhGb6vw+xHBa1lkbexyVBUhVmUiy+mWpi5iXsvCJWJKW5OaBJc
+	 QyH8jNmQytQLIug/WUgQ/mhAnxggy5nmG1M8apjt7BrrqKWAeq/apWTbHPyEpemVsSiQZ
+	 8/0uQ60tyIqRgmDJlutRK1pmi+gp5tClV/0f4ICb2w98WTjZZEUnI+byV5WCi3RSEyz0t
+	 ocLDd6nGQY688Q0IgmAH48iuEP73MLvAuDJ1O2zqGRbc0F+gfma6giD4rXnjEGVMqvgBu
+	 RF9LY7gqyagfh95Jb3/C9noqQAmOUABfNjBx7qJTaYXU5mtN6O9UDnz3Qc9ibkHbGOQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795698647;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795698989;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:
 	 X-Forwarded-Encrypted:X-Received:MIME-Version:References:In-Reply-To:
 	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
 	 Subject:To:Cc:Content-Type;
-	bh=8lzx438I9zhWgrnJA+oH7tC0er2jtBCrxj4IPB3U0cU=;
-	b=P2K74i7kJWaw21DF0BZWAx7nnPdy/IZEXll0nyO3AtD7JDHTuvoLrEEcADKOeLuG5AUC
-	 GM6UUso7xtwGDAWkQiTezBdadd7rLabgfIGx2KiswjbPHYkLO1y6sup8m3QVi9yKN4P/u
-	 STAYHwpD1U3PvhN91OIcdC3XfT+YttaHYTbzFqqLMlOEUGmPhx3o7iSZGltUVOZPb2g3b
-	 IDoHk1KfD51oUbHGbqe4c+BIpW9DkevtZhm9lpQv31UtNSC0YPsoc2GSnaVi+fUg2wput
-	 0TOo/+PwcVAYjcH+ou3SiGNEWtrMt1lGF3d4EAt6+AMQS3GBXMGK0N6oZYqwBU7eeTA==
+	bh=z5gsJ+BDz+8hzJBQw/xAOysO2V3ppLgl3lpNGd2ZXi4=;
+	b=z5brofDXK6lCLGDXTMVyoLQyeBzGtHBABUQ/DhvnKY50tKQsYlALKf8YWJf+lgd0FwDH
+	 xl7SKtowjQOlBXPGhWyq3xVr9Iu1y5JHwBSqTFWDsViEKNRjDWtPVyIAXa+M1+FRCZY77
+	 mMhKceu/jtEnk9AdyHZ4JQoQcux2ahVOaHjUlrRsPJLhRSYlwahsDyEoRHdbUp/qeMhx7
+	 WWz2LveGTGuWctEjxg0DZdHIMnUiLKzQle4l+6ZQLVit7x2h/BcwstbraoySfeftSnvuH
+	 7gkNQjx9lV5vQWcUDXcj1R7jtKr9jMf5giWApSUItXFxnlfsdPNbjxoSrQWjFAeBfzg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=linux-m68k.org;
 	spf=pass smtp.mailfrom=gmail.com;
-	arc=none smtp.remote-ip=209.85.160.180
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+	arc=none smtp.remote-ip=209.85.222.171
+Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09FFC606A31E
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 13:10:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 09FFC606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3714E606A68E
+	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 13:16:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3714E606A68E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-537548b811aso56663211cf.3
-        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:10:46 -0800 (PST)
+Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-93f20b304c0so629438785a.3
+        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:16:29 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795698646; x=1796303446;
+        d=1e100.net; s=20260707; t=1795698988; x=1796303788;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=8lzx438I9zhWgrnJA+oH7tC0er2jtBCrxj4IPB3U0cU=;
-        b=MiCxANOHV9zAZ1W9KjGsLqszq3lV8GzN8m4ejTJhbbCqYm1klX7oHPE2Y47Yv6VfMC
-         K8nHPSvwdD0XdFdfxyKb8gXTHwv2rWvXzscPBela6D5FE8H1vsFvaO6Ue+rWacCJLfEU
-         6sxfpSJ9pKPpke74BqSLxkR07/CCF2k6JS/2RbC2duyO2yzVnvGYd9j5N1BoYQNiKfFH
-         vBxfXuJ470WP4uy1nluAKIy33O9TXThg6Z015DIJ/K3aAV2g1P3yemNun/4pCVxkWG9t
-         NKcfiY+PurHtTfJ6jU3RkKC0D6IQFKa6YpqOaz+2LSlwrfO91c4WSgA2Q10Zt4VCG+lE
-         +TGw==
-X-Forwarded-Encrypted: i=1; AL+hErHSnEABAi28RTas/qtqK5FiyVSd0DJ/FQ/mLSiXYR4uTXHRPkuk0QcG0k81kgCZAjK2+dEM8b0+jPk=@vger.kernel.org
-X-Gm-Message-State: APuU4Z/MM2Bnt7bhnXzmcTqC0xgRm1gt2x3NOoHR9CmWZ01OnKjDVGSD
-	ptv+q/YYEdHkOT1Z0TqyOQxBc+AJBbWABYQdnE0ZtTWMIU9KAl0feLDju5iyd58a
-X-Gm-Gg: AZFdTZd1tnqrFYVzqdoekLNp+FtJxv1XiXKLJ69JD01FLtwXMlbQDQG1+Omvb+Wk/1F
-	QXj+LAL7zZevgUyEFkVC5kc1IS3Ici3x44HTc66mFUPq7DyfGWSD8kJ1HVZmRm9v+WxdYb6XhX8
-	NsT8hAF8cidB2ZgAIUqSMgsii0u2szUxLOmvnKI41TTae667T9m8kygaq91WGQhyOx55S1T53wL
-	9qAWQGidOuJuprRD3t4cn7U58kOwirzy78xHG4+Wt73e0DjheVBMelbVZFvmC4qi6Paq83koH9P
-	zd4gp7MPWBqY3VxBCzbSdcuSTCXyN8GHve00vTI/kv9gzS3CLFGfggBGvOq63f32mXNLkjf0/eh
-	FAyWTffE1/FxkE3Z8RSqQ/mdyQqT1U1u7sLYlcKc4WW+XvoYV1JS5lmZ1zqNFYQgJ68LZ83s6FU
-	UzM0QeErjjg3NHYx+/dqDOU/5byS8rlDB7XkHEYc6v9c7QehUOj5/lEG2UOa2wleVLq2HuGr2nu
-	yUer7EUW9sP6/Xb+6QpsMSMZp4kPH8jualKWuedbrnrElciO8y/1ftSUxa9kRsb/tZdE0dZkB14
-	PIjw2dIRp27rXCYDXv1OCPLGU43oGH/ZbVdbsTiswOYWtT4BR4t8/L62ZtUyLhItktY=
-X-Received: by 2002:a05:622a:2447:b0:535:ed1:cdbb with SMTP id d75a77b69052e-55d7688e8cbmr370478461cf.1.1795698645707;
-        Thu, 26 Nov 2026 05:10:45 -0800 (PST)
-Received: from mail-ua1-f49.google.com (mail-ua1-f49.google.com. [209.85.222.49])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-55dbeae112bsm30588141cf.8.2026.11.26.05.10.44
+        bh=z5gsJ+BDz+8hzJBQw/xAOysO2V3ppLgl3lpNGd2ZXi4=;
+        b=yur+ZTVVts0FSbsLNwl/k50CfqOvYYCIDBdpEdQolSAIv0pHcF3EL0jv2+1WXVFuwL
+         geDz0sk18OW9Yk/yk1H7Zq8wp4p04tfnMlPS/aruJWkWkVJhwkHs1YQTLujv3y1eOzB1
+         E7KMKwd+PkZkc87KMeESbkJa1J5q/67JZ6Wf14wUmavEq3sQwltqjrPXpuntMUXHNk2O
+         asA+gBABMD7b9at8D7/BHzd8znaBySwuSIgLIDCjaKY3FI8N6qyHKWaSO20u4oOwtwEj
+         5XvDFTiOmbZ0FqJlOjnFthL/HFOZWopQskDI0CEu2H2zf1P5IwQc70ZkkYjRSauC7oh7
+         cvVg==
+X-Forwarded-Encrypted: i=1; AL+hErHmUSAtOPGr7lBGzVci+9UEfSoipdqbTwZ8Lk/SFmmvaqQvjkjkMVGz0t6EEq7FET6lqyC36GUv6iU=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9+W4MBozFl30Nl+Sm9opp5C515MzetIBwshFAhnmWeFdM5/OXe
+	NWxflt7YjDt6pJWmwSJ5Tl64wOe4gP9qITD9mQ/OX9xI/XoNv2FcQLMZQLQ5dOwq
+X-Gm-Gg: AZFdTZdAOdfYGXYzyIBclmHXMeYAzkS4QzxZ1NShqgI8kB5QzNKZKGIAmdQfUeVAxKr
+	6lZ8hoerccM7SloOIErd2TwXzu6SrSO272SYTmibagfo6z/X0rumQc6V7HFLOZwhw8X1RZcOMsE
+	40GJhzUsHJ+ciGM6ArjfmJNIazJLYzVn0TjZwidrB16MULOWb0rna0oFNOA0xwuSKQyOidyNkqq
+	KvMeo2Tv2+djTNt+fWjE2EgiyncS/sh3Jp1QLPeHSQ1qKigobiSQK58TTjnh5vkq9+50fHPWZE6
+	QA+tEx/8VOF+XKAfN+INP+wNDgsw60r25TQ52Tx0dRSvw9DnY3+MD4aV5Azi1ulDVk4Bq3z/fCZ
+	Sd/BxBLDV6K5ebJOR70ehl5VZxdHS7CCX2RDC0eI8Dz9YXWQ4GI4AnDbOELjPxQ770vG9vZL8kO
+	ertqqv5g3N1SviRCsEW57z1KSuO+5y+NrUBQ0Wk2QucLS0ljchi+UO12h3+pCO3535cAI0pRMMZ
+	7Ajux16abExPBjo00HZGI0BmsV7AAvB2WwEXGIpaVBNddWniRvrpi0neT94HEMtDyJmeMFBQSl7
+	H9avxzugKZ/FeCo8WV6SQm4gKvEufMz5aeL2PALJxsTOyk16q8CGptHANfRjRVn9dlBh7FQcSzF
+	Osg+abIZNGzIJ2utR
+X-Received: by 2002:a05:620a:17a2:b0:949:6e15:e1ca with SMTP id af79cd13be357-949ba965b33mr3753111585a.19.1795698986665;
+        Thu, 26 Nov 2026 05:16:26 -0800 (PST)
+Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com. [209.85.222.175])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-949bb4004e8sm1570063685a.33.2026.11.26.05.16.26
         for <linux-pci@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Nov 2026 05:10:44 -0800 (PST)
-Received: by mail-ua1-f49.google.com with SMTP id a1e0cc1a2514c-98c7798ce74so1950836241.1
-        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:10:44 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErG/i/T3hrceF1cvbkNxIoOrAN8sM2m82GnNL03wtfta9BKmrJIS2egZMyhu7sQU2YljgxsD2/CdER0=@vger.kernel.org
-X-Received: by 2002:a05:6122:1352:b0:5ea:d1c4:7cbe with SMTP id
- 71dfb90a1353d-5ee8af79c4emr10201505e0c.23.1795698643771; Thu, 26 Nov 2026
- 05:10:43 -0800 (PST)
+        Thu, 26 Nov 2026 05:16:26 -0800 (PST)
+Received: by mail-qk1-f175.google.com with SMTP id af79cd13be357-94965745d92so691120285a.2
+        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:16:26 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AL+hErG3WZH4NseQTJGzCR+W4JubAS0QV7Kg4eayMorGTwgKA2VLWY8nmh6OFUROYgB6LvwyYShduwCFP/4=@vger.kernel.org
+X-Received: by 2002:a05:6122:e16c:b0:5ea:bfe3:6035 with SMTP id
+ 71dfb90a1353d-5ee8aecb450mr12500493e0c.8.1795698622003; Thu, 26 Nov 2026
+ 05:10:22 -0800 (PST)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -80,15 +81,15 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261020031049.969895-1-den@valinux.co.jp> <20261020031049.969895-18-den@valinux.co.jp>
-In-Reply-To: <20261020031049.969895-18-den@valinux.co.jp>
+References: <20261020031049.969895-1-den@valinux.co.jp> <20261020031049.969895-17-den@valinux.co.jp>
+In-Reply-To: <20261020031049.969895-17-den@valinux.co.jp>
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 26 Nov 2026 14:10:32 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdWk9pZdJ+eh0dNHrZSMVDe84_rsvmrD=pC1Fjy9wEyp1Q@mail.gmail.com>
-X-Gm-Features: Aa3M54pKW-6JgYTYZWdXwvcVTMAw8E4E5W6RppZyD7aVJ1bsffJTTTgDbIyWkEQ
-Message-ID: <CAMuHMdWk9pZdJ+eh0dNHrZSMVDe84_rsvmrD=pC1Fjy9wEyp1Q@mail.gmail.com>
-Subject: Re: [PATCH v5 17/17] arm64: dts: renesas: r8a779h0: Describe the PCIe
- AER interrupt
+Date: Thu, 26 Nov 2026 14:10:09 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdVpV=FLZG6iiNMj8Mq39RQ3u8JxKyTVws7J0O9Y__2EqA@mail.gmail.com>
+X-Gm-Features: Aa3M54rTYSp7n6mDEivRvXB3zz9tm8FUTty6In8Jlz7Pqa2lf3sYsYsJuOUeaRc
+Message-ID: <CAMuHMdVpV=FLZG6iiNMj8Mq39RQ3u8JxKyTVws7J0O9Y__2EqA@mail.gmail.com>
+Subject: Re: [PATCH v5 16/17] arm64: dts: renesas: r8a779g0: Describe the PCIe
+ AER interrupts
 To: Koichiro Den <den@valinux.co.jp>
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
 	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Shawn Lin <Shawn.lin@rock-chips.com>, 
@@ -104,12 +105,12 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 Content-Type: text/plain; charset="UTF-8"
 
 On Tue, 20 Oct 2026 at 05:11, Koichiro Den <den@valinux.co.jp> wrote:
-> The PCIe controller reports Root Port AER notifications through SPI 454,
-> separately from the integrated MSI receiver interrupt. Describe this
-> interrupt with the "aer" name so the controller driver can use it for
-> Root Port error reporting.
+> The PCIe controllers report Root Port AER notifications through SPI 454
+> and SPI 461, respectively, separately from the integrated MSI receiver
+> interrupts. Describe these interrupts with the "aer" name so the
+> controller driver can use them for Root Port error reporting.
 >
-> Append the new interrupt to preserve the existing interrupt indices.
+> Append the new interrupts to preserve the existing interrupt indices.
 >
 > Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 > Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
