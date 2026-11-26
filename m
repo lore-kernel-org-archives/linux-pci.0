@@ -1,104 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.125.78
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795711919;
-	b=eZ6xMIEgfrzAin1vAJpMSt66ZGwLIm3lSXj1VJkEO6coWBLubPatKoNlfho06PVHqkZH
-	 LaWmkK13VJpp8iom5FPuTNpWNIYTCpyeLy4HF1zffHTyFKGAMJMN52XXmgDIyGg4qUpZp
-	 clQ4inPbKuvs3G+8S0ixeDc2XteZcJ1XiCFPSQUTaBoLcx9Sm2i5qRWmD/MsL8Zyi0BIE
-	 8GrrQNEw0NnMzw+U8L2ydG7Rb4FYu60mexTsHMnbm/Hm0B5f9QH8xNQFOsAh3z6LMv+IL
-	 TZzXGvq3e3ogxcRMkUPWb6P84ZxVaWuAul6fA8ZSD5wzIIrZn9Txry+oWSuzYaok4Xg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795711919;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=GrQ7CcCxbHBOb1kmfS64tuCJXEF7/0dFGu+SdJ/GHFk=;
-	b=bId67XG6PlCgYwL6LccBiUVaf2P05xCZDUVogUvMCnvu2CPM+0qaH8V+HY8Ky8/5F0ml
-	 BfuLcItM23YaTw58wpmRwVbFJzzbS7MJOImm7frT+ihVOHgtI/yflCRLXWK8090Z0UrgS
-	 z6XxutjnU3LJNm/TLSrUDjIQu7VuAM+rxanFmCuBw2Uyt6O2Esr3QYcSMx/1H8LA1snfP
-	 qxwAQViJYgKiApbUwiA7basmDaJ5V922oi9CCDiSQpUbIvdlurxL4TieFrOi8uRJyCBXB
-	 SxH5MHtwkChwE9tYJEvqk7dJG9/hNj2xen0SmD+hIrD8OfjLF2Rg5Vkz9Z48q0BQ59Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=valinux.co.jp;
-	spf=pass smtp.mailfrom=valinux.co.jp;
-	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=p1e3QahJ;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.125.78
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021078.outbound.protection.outlook.com [52.101.125.78])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795712674;
+	b=AOgHWFZ+fHVhVbqrFogt5WixRFKwdbH17ITsShGCYYSwRCXIQRhi/ifbkMRNJkpJ1sIM
+	 KlHn9Nj+n3mYRxpTO15TDh6pjudcsL4FxmnPmr4nfTqHJRNAy1kpIUsyh8AqgN+JbZpGR
+	 5QukQQo7BqVUeOg3NslrspR87stFcuVztuVqMK/bc1fPk5tHKbbdkMHZBBSUlVIfjhIb+
+	 3sLl7opzRVngVdjZmXUQAG2IIbzWwjQKtQBHzMMCPoI03hTNdbt+0b4SzMNK64MxmGuNN
+	 Z2CEfcQSVrQbPgH4HF7aHA58UdShwjkeekcHS5WcwkkcwKCTsWndfyBvXYepogkvKEQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795712674;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=X9gxt+mz/TULmt9o/Nqc5NO9HE0PhI4S9ybbS41Z5BI=;
+	b=nTSHU8o7uJYZsbm63TVGXNJQCYPlFCXDImHEsyUuWQHEuwbuaFkYhfC/MrOViyasJVkS
+	 BaV6f7RWqL3VZP0qcKZBIYDG9SENfs1Hqy67m7N2kxVOo39Ln6SKEWuTozRlxh8wsiLGh
+	 jZi/LYYNagHhTh1+PKv/Mp8dcR91zTxZW5Bhi/SmiASoUxBh/ZMlP9Ka+kbgxJy2PYXz8
+	 sc+b8VnO+oIR/WEkboup1CnY6mE4VZf7Am24z0ypDtD9yqBdnhBG/7Dvr2MihskYpgXYc
+	 qOwzNy6lyUbNFVJmoarp8bNML9AeocRwU7eImL3PJyihaukYYqJdWHcsShY3T+IawRQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iubu2FL4;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88C6C606A31E;
-	Thu, 26 Nov 2026 16:51:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 88C6C606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B62F8606A31C;
+	Thu, 26 Nov 2026 17:04:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=p1e3QahJ
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=nc7s8VwnMHSJZ8JA3xUJkcGR/sklme8BD5sklawJYQteR8K7iapXeZbKkEgSeAObv6GBVps1VrzMsTA5v+R8L37tVKYo/KSb/ysiusgBKx5hm1oFfuN9TQ09RLhxPAEpsL4loZtjx1BB/NLtEzUTyz+v5eSG3nSKNH6ucCjTpwkRtxHS6TnP/0dLuKw9By8VdtwdhWoY182Java3Z6JHBwElUz+n5QBuBWRHS4qtshSteNxFuWmk1BEOgur7x2EtPt9C/QK+jrT+hjPlTx5BecxzJk9abPAvUjXFRngy2Ja9ttNsugJrMJ/qv9xalaaW2pBJGAGuuwlpwjIltwHFhw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GrQ7CcCxbHBOb1kmfS64tuCJXEF7/0dFGu+SdJ/GHFk=;
- b=j8ILMqhCyEoUXtMcBIQbhHCrujN1CifdxZrWSUmK1QPEWvsvWjxrNzN/eZPta4QuP+IqI33ul/DhNUUnhVizv9UiZPCzvVsEqCMuBnw1BpxQU4jQQ73WhDAWMQAGFhuAbrduycnVCC2jDauB/dmKhaENWWK54DpULBXQaeyi0wjZ7S3/8LyYjtX7j1NRvriurwGRs9RXPkc1IC7NOW6BYCECOWDFzmcFyPWOqwqzpZUXjSlE7aGu3FddY1nXQTTXvQAUoIq6Ddg1foBInORjoNS4AXzUNUqIDPdKR0pmJIyz663H07p+/kCvH66ayDTGCEWxhbrQQKSJgKY95z60mg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GrQ7CcCxbHBOb1kmfS64tuCJXEF7/0dFGu+SdJ/GHFk=;
- b=p1e3QahJYikThVY80vrPThH8b6SBxDPFlPkNd+JaYr0rNzjpqtKXMwl0eJ55Gk6iyZHZ+AWnIcrh27Germ3U0CPSo8k8geAFPX0TC73ra+M2txNA69C2ruSFJi1nWjWblCBsb19GWiwPhHlEW1ucCcTI62t9JLTz6Gu8ZVXg0nI=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
- by TYYP286MB4125.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:14d::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.7; Thu, 26 Nov
- 2026 16:51:54 +0000
-Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0662.004; Thu, 26 Nov 2026
- 16:51:54 +0000
-Date: Fri, 27 Nov 2026 01:51:53 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Shawn Lin <Shawn.lin@rock-chips.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>, Niklas Cassel <cassel@kernel.org>, 
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>, Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH v5 17/17] arm64: dts: renesas: r8a779h0: Describe the
- PCIe AER interrupt
-Message-ID: <awhiSQ_A0V4K5fBW@z790sl>
-References: <20261020031049.969895-1-den@valinux.co.jp>
- <20261020031049.969895-18-den@valinux.co.jp>
- <CAMuHMdWk9pZdJ+eh0dNHrZSMVDe84_rsvmrD=pC1Fjy9wEyp1Q@mail.gmail.com>
- <awhXFPlyc3vnmjtC@z790sl>
- <0c3d98cb-6641-47a5-9f15-0cf315979069@app.fastmail.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0c3d98cb-6641-47a5-9f15-0cf315979069@app.fastmail.com>
-X-ClientProxiedBy: TY4P286CA0007.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:26d::16) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:325::11)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iubu2FL4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12BB81F000C0;
+	Thu, 26 Nov 2026 17:04:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795712674;
+	bh=X9gxt+mz/TULmt9o/Nqc5NO9HE0PhI4S9ybbS41Z5BI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=iubu2FL4KRJ2u18YDk746L5Ty2aFXo4hJYjX9pu/ddFTDz2P+jXrrlejY9eT46bE6
+	 QZdKWRNzUCwteC7p5iKz/Q/avMm1aa96D1lOJVEE+Qk3JviJMPorwl/ODwnnJRkuhR
+	 jjscqSgiS5ZHn9zgXZG4LICOLFKgy610ib8Jw1Mw0gHNb20SPB/SQEtwfEzxoIFlk/
+	 t9tP2noO9a3IVXUDKFiy65ggfcledvLWs8MSjq0TdoMrrlGsM9jDsBCqiGQgEmMndY
+	 lKgjOK6oyF6NL6KmGRW58QAyhLskCiM01AxdaNMgSsIxyM65cUEu8LKk1wC23Is1HO
+	 2frQEgH6P/OZA==
+Message-ID: <f4805e08-06ac-4668-a081-668b180422f2@kernel.org>
+Date: Thu, 26 Nov 2026 19:04:28 +0200
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -108,106 +51,175 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYYP286MB4125:EE_
-X-MS-Office365-Filtering-Correlation-Id: 89abb153-b39d-417e-3aae-08df4bdd936d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|10070799003|366016|1800799024|7416014|376014|4143699003|22082099003|261009223027099003|18002099003|56012099006|10067099003|261022105027099003|261026140227099003|261021121427099003|261021135927099003|261028144727099003|261102123227099003;
-X-Microsoft-Antispam-Message-Info:
-	s6GCfux5LkPNCq2bKDjVLX5iJQ5Igbi/52SG2SQdohphWdLFsGiEeTvKCDBCM6F6pdSTJHP8Fw1EoXRua/51XwXd+JmSgZOmyBFhrMkTIxKAw2y3gPZpiup/ESUP2HarIiLKrEbqZ5VgpqqQ29RZkJF/C47WIN5vQKMJF9Umvv+b+5D6wdv/pa50x7H1aw//DnjGlC7yOdw+osN2Xsk4BzEj1baOxgXgaCnolBJnEzvxmf05h/Mkym/0k10ojKjQvFD6HI1BQKrDtydXnxp7Ozi4T28Y6MgKmLjU2RmsoZfdSqhynwUH/d/+whGgPpRn9r90Kxufha/QjFoe8nG2HUIZVx0JRdgwQx4CpmnseRkqkCAPgpYN+rQ5s9QhxZ1U4FzXdQ8+FuQtt1SKVtqEyhqQ/pVLTJFJaNl/Is0W/YwH3GOZmu3DmTpcyf/MIJK4sZDAfzdv8fesM3jsXSflGcYFzZtglAq5IaBZwFELTpqJDcRoXyCEG25ELnq7J8gu216YwPw7nsdel4WmTpCd5W03FBrIOfzTeR989pDqyM547loCiiY7CG3iUT30Vjvpn/wME1LX3Q0ChwpBZCpuxgE+HoHFJpckygduS0nVBvn4D73OIGBs1sdPmtrBHwql
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(10070799003)(366016)(1800799024)(7416014)(376014)(4143699003)(22082099003)(261009223027099003)(18002099003)(56012099006)(10067099003)(261022105027099003)(261026140227099003)(261021121427099003)(261021135927099003)(261028144727099003)(261102123227099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?9e0a60UAmnH5rGm+v1a/Qd6/3ZC8zW/ctvo7MOF+Yl5PA+DaSN5NS1RtzUQx?=
- =?us-ascii?Q?3+E5lORt7FJ4E+H4wyQgYTZQs5ZJOzfnHnfbbUU1OvkSKs0fFSX4k5aYbjGF?=
- =?us-ascii?Q?eJcfzBICiiu5mvjHm4yKQzW9UBLarQ2LZdBLizHUgtNZFA39PNVqgpHSXGdm?=
- =?us-ascii?Q?VaulOOq2UwFNhSXOKcDT5Cj+eiqQrOO4FOfjwhOrjwERrdaySS7Owq4aGPwD?=
- =?us-ascii?Q?tQjKVzRuxoxLS2vDSI/rUs9d70uwOWiaMi3NFIzi6iPQwdG47O3qWa7zXs2M?=
- =?us-ascii?Q?AqC7e5ujxAP9QOVTj9DZhin8umOSrUQCdFoYWKG93yK+O5DqAzwyK4AfoE0r?=
- =?us-ascii?Q?kTGTJq2wnPxlUILnw86hlTuZD36hzw6VJ9uQwjrUjff2W/1JcEKRFo4+v7Nw?=
- =?us-ascii?Q?zg5+HicpIxN4nxUvAXGj59DXE3h5gAsiZq9EnW0L6KkIgw3EN4O/O/8l6Prm?=
- =?us-ascii?Q?4RIVWIDrhkcyHiWvCD+2phbfTY+DSNBsJES0PXVFrXVXbpr1b4eKEtig/Tjd?=
- =?us-ascii?Q?i63DqU4xnLtHAm3wpsoR+ul5Ylw9HCPhYHw95crvsjc5UpI8ngqLvlvSo1Tk?=
- =?us-ascii?Q?oqOCLbylqtg2ZHVXTEbCAvwrFBNgssS/FxiWUMjJGSU1RYQgHd40l6vYok0h?=
- =?us-ascii?Q?l2u+XT8m/QLMUvxmGM3yWBNMVXc3MlN43aDLkvfGs6xal8FvSBxexMez1seM?=
- =?us-ascii?Q?2FXwTbfxTe89+Hiu+69Gzjhjks65Et4fZzI8mCt5kfQ1MBTBSxEx5G2atRBx?=
- =?us-ascii?Q?3aTsCf3IJVKl/cOlHa9N79I6z0hcFs7Wv+aJ5agn8zI7aw35Ew1cDnShMlOF?=
- =?us-ascii?Q?wG2vPmgmMhWUR9NkD9cY2XG9WdrnATdG1/tiR3Bg9XDASTfU+3fDduCCM3nP?=
- =?us-ascii?Q?4Th+geKpeIhiG4qVPpsQh92FhTqTFve9ycKjvcdiUE6EZ8I0iypYbpPYdbzv?=
- =?us-ascii?Q?UtfHy6CYgNMi8QqxWU2G01/ujZr1lUeAdOxuvEwK8xv4Sqyu7RPXZVdU7oW3?=
- =?us-ascii?Q?TbJobPfoY43igtA+vtIy9dfj8GsVYa5RtRclmJUhMnV2YtCJjj7VCicMUzkj?=
- =?us-ascii?Q?CU1Xi/CmD5vZ4QLYqOjRgfRgNosf5w8O/h3JXTp2p35LIztbfV3tOxZIWLB6?=
- =?us-ascii?Q?h/5SMn+stq9vp4gXpVxmBkLyiT4qs6ebV4ZjKT6Xy+LnNhDgq0ljZGRKhMea?=
- =?us-ascii?Q?HVxksOzh6W/BGLWneNzwUkxuc8x8RoF58YR8IHAM1+hS/Z15L1btSZM9ZmY8?=
- =?us-ascii?Q?8jvb5PNrkdEwZ+rsnal69YUm7ojGAoCL8eDnJF0J9MRBEnrrigPuokdK7Sdw?=
- =?us-ascii?Q?ToaMT33KtynO5F/HY2vqf0t7BOGEua2GEyvKtGK+5dcZMjtOlcQZqef+B1DB?=
- =?us-ascii?Q?Jhtfk9jr8apePzCaF3gKSqZkd8vcSFejLJqjLrbWGw09vu2Umb5LJ+zxjeZh?=
- =?us-ascii?Q?UPvn8Rt9Kf34bzD9/55aRPMxkxFaYP9XpYj/j7P2+v/c435HTETCjKyROoZR?=
- =?us-ascii?Q?3x105FqSLIuVtPByIyjlyBAZSVGFkJ9qzXxSQEufKgOIqN0wgHfTpMBtu2bi?=
- =?us-ascii?Q?ZtfCFyC7eeCeOBuHOqVO3akJwrj7fgIRsMSBdGmBA8/u+4ZXMhkvWXM8+EVa?=
- =?us-ascii?Q?hdbmARvyfyuOyaV7oglY2ClXr93ZWvv+f1IJvn5/q5jIFQ7QRX8xRDhnwqc9?=
- =?us-ascii?Q?p5BDEF7wUb1pjkS2BBPNHjIMjJKWW5r8rmVgOL++Mf81vUZyR3bWyn1crW14?=
- =?us-ascii?Q?c/mDJqrzAgYrjeHdoifx46NHUdLqTkM79uTyh7orPfhbZrqXYFiJ?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 89abb153-b39d-417e-3aae-08df4bdd936d
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Nov 2026 16:51:54.4211
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: NNmUqhLyxlIK9UZWwNrwX98gOuKvX2y2dNifE929qeA3zTYTQKDvQ9x09l9aVcV+4cKbgF1TdYiijVh5Z6ZVRg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB4125
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 02/14] PCI: rzg3s-host: Fix runtime PM handling in the
+ NOIRQ suspend/resume phase
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de,
+ geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, stable@vger.kernel.org,
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
+ <20261019065025.2146539-3-claudiu.beznea@kernel.org>
+ <179562477303.5580.355686478965853081.b4-reply@b4>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@kernel.org>
+In-Reply-To: <179562477303.5580.355686478965853081.b4-reply@b4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Nov 26, 2026 at 05:37:08PM +0100, Geert Uytterhoeven wrote:
-> Hi Den-san,
-> 
-> On Thu, Nov 26, 2026, at 17:24, Koichiro Den wrote:
-> > On Thu, Nov 26, 2026 at 02:10:32PM +0100, Geert Uytterhoeven wrote:
-> >> On Tue, 20 Oct 2026 at 05:11, Koichiro Den <den@valinux.co.jp> wrote:
-> >> > The PCIe controller reports Root Port AER notifications through SPI 454,
-> >> > separately from the integrated MSI receiver interrupt. Describe this
-> >> > interrupt with the "aer" name so the controller driver can use it for
-> >> > Root Port error reporting.
-> >> >
-> >> > Append the new interrupt to preserve the existing interrupt indices.
-> >> >
-> >> > Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> >> > Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> >> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> >> 
-> >> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> >> i.e. will queue in renesas-devel for v7.5.
-> >
-> > Thanks, Geert. TBH I'm worried that the rest of the series might possibly not
-> > get picked up, in which case dtbs_check will keep warning indefinitely.
-> >
-> > Mani, mind if I ask whether the series still in your review queue (it looks so
-> > on patchwork [1]), or whether there's no hope of it landing for some reason?
-> >
-> > [1] https://patchwork.kernel.org/project/linux-pci/list/?series=1189393
-> 
-> Oops, I incorrectly assumed your DT bindings patch had been applied,
-> as my grep for "aer" matched Marek's addition of "aer" for R-Car Gen5
-> in commit 2fcb7513361b4493 ("dt-bindings: PCI: rcar-gen4-pci-host:
-> Replace sft_ce IRQ with AER IRQ on R-Car Gen5")...
 
-Ah, that explains it :) Thanks!
 
-Koichiro
+On 11/25/26 18:39, Manivannan Sadhasivam wrote:
+> On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
+>> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+>>
+>> The runtime PM documentation states the following:
+>> - During system suspend, pm_runtime_get_noresume() is called for every
+>>    device right before executing the subsystem-level .prepare() callback
+>>    (in device_prepare()). In addition, the PM core disables runtime PM for
+>>    every device right before executing the subsystem-level .suspend_late()
+>>    callback (in device_suspend_late()).
+>> - During system resume, pm_runtime_enable() is called for every device
+>>    right after executing the subsystem-level .resume_early() callback (in
+>>    device_resume_early()), and pm_runtime_put() is called right after
+>>    executing the subsystem-level .complete() callback (in
+>>    device_complete()).
+>>
+>> The driver's .suspend_noirq() callback is invoked after .suspend_late(),
+>> while .resume_noirq() is invoked before .resume_early().
+>>
+>> If:
+>> - the device is not part of the wake-up path, and
+>> - its runtime PM status is not RPM_SUSPENDED,
+>> the generic power domain .suspend_noirq()/.resume_noirq() callbacks
+>> (genpd_suspend_noirq()/genpd_resume_noirq()) invoke the driver's
+>> .suspend_noirq()/.resume_noirq() callbacks and call
+>> genpd_stop_dev()/genpd_start_dev() before and after them, respectively.
+>>
+>> Calling genpd_stop_dev()/genpd_start_dev() allows devices whose power is
+>> controlled by generic power domains to be powered off and on during
+>> system suspend and resume, even though their runtime PM usage count does
+>> not reach zero.
+>>
+>> Since the runtime PM usage count is incremented in device_prepare() and
+>> decremented in device_complete(), runtime PM operations performed from
+>> the driver's .suspend_noirq()/.resume_noirq() callbacks are no-ops. The
+>> actual power transitions are handled by the generic power domain
+>> .suspend_noirq()/.resume_noirq() callbacks.
+>>
+>> Moreover, attempting to runtime resume a device while runtime PM is
+>> disabled may return -EACCES. This may cause system resume to fail when
+>> resuming after a failed Root Port reset, as described in a subsequent
+>> patch adding hot-plug support.
+>>
+>> Remove the runtime PM calls from the driver's
+>> .suspend_noirq()/.resume_noirq() callbacks and rely on the generic power
+>> domain callbacks to power the device off and on.
+>>
+> 
+> Going by this logic, do you really need the pm_runtime_resume_and_get() in
+> probe()?
 
-> 
-> Gr{oetje,eeting}s,
-> 
->                                                 Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                                             -- Linus Torvalds
+Yes, it's needed. I just dropped it and it leads to:
+
+[    0.688377] rzg3s-pcie-host 11e40000.pcie: host bridge /soc/pcie@11e40000 ranges:
+[    0.688484] rzg3s-pcie-host 11e40000.pcie:      MEM 
+0x0030000000..0x0037ffffff -> 0x0030000000
+[    0.688525] rzg3s-pcie-host 11e40000.pcie:   IB MEM 
+0x0040000000..0x013fffffff -> 0x0040000000
+[    0.690412] 1004b800.serial: ttySC3 MMIO:0x000000001004b800 (irq = 44, 
+base_baud = 0) is a scif
+[    0.690581] printk: legacy console [ttySC3] enabled
+[    1.814157] SError Interrupt on CPU0, code 0x00000000be000011 -- SError
+[    1.814180] CPU: 0 UID: 0 PID: 37 Comm: kworker/u4:1 Tainted: G   M 
+      7.4.0-rc3-next-20261120-00008-gd09508e93329-dirty #251 PREEMPT(full)
+[    1.814193] Tainted: [M]=MACHINE_CHECK
+[    1.814197] Hardware name: Renesas SMARC EVK version 2 based on r9a08g045s33 (DT)
+[    1.814204] Workqueue: async async_run_entry_fn
+[    1.814234] pstate: 20400005 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[    1.814242] pc : rzg3s_pcie_host_setup+0x17c/0x830
+[    1.814261] lr : 0x(____ptrval____)
+[    1.814271] sp : ffff80008383baf0
+[    1.814275] x29: ffff80008383baf0 x28: ffff00000cbcdb58 x27: 0000000000000000
+[    1.814287] x26: ffff00000cbcdbc0 x25: ffff00000cb70e40 x24: 0000000000000001
+[    1.814297] x23: ffff800081e532b8 x22: ffff00000ba72010 x21: ffff00000cbcd800
+[    1.814307] x20: ffff8000807d0b84 x19: 0000000000001014 x18: ffff800083a21044
+[    1.814317] x17: ffff00000cb8b2c0 x16: 8000000000000000 x15: ffffffffffffffff
+[    1.814327] x14: 0000000000001000 x13: 0000000140000000 x12: 000000013fffffff
+[    1.814337] x11: 0000000000001010 x10: fffffffffffffff8 x9 : fffffffffffffff4
+[    1.814347] x8 : fffffffffffffff0 x7 : 0000000000000001 x6 : 0000000100000000
+[    1.814356] x5 : ffff800083a21054 x4 : 0000000100000000 x3 : 0000000040000000
+[    1.814365] x2 : ffffffffffffffec x1 : 0000000000000002 x0 : fffffffffffffffc
+[    1.814379] Kernel panic - not syncing: Asynchronous SError Interrupt
+[    1.814386] CPU: 0 UID: 0 PID: 37 Comm: kworker/u4:1 Tainted: G   M 
+      7.4.0-rc3-next-20261120-00008-gd09508e93329-dirty #251 PREEMPT(full)
+[    1.814396] Tainted: [M]=MACHINE_CHECK
+[    1.814399] Hardware name: Renesas SMARC EVK version 2 based on r9a08g045s33 (DT)
+[    1.814403] Workqueue: async async_run_entry_fn
+[    1.814412] Call trace:
+[    1.814418]  show_stack+0x18/0x24 (C)
+[    1.814437]  dump_stack_lvl+0x38/0x90
+[    1.814455]  dump_stack+0x18/0x24
+[    1.814465]  vpanic+0x39c/0x3b4
+[    1.814478]  nmi_panic+0xf0/0x108
+[    1.814487]  arm64_serror_panic+0x70/0x80
+[    1.814496]  arm64_is_fatal_ras_serror+0x3c/0xb4
+[    1.814504]  do_serror+0x58/0x78
+[    1.814511]  el1h_64_error_handler+0x34/0x54
+[    1.814523]  el1h_64_error+0x78/0x7c
+[    1.814531]  rzg3s_pcie_host_setup+0x17c/0x830 (P)
+[    1.814542]  rzg3s_pcie_probe+0x3d8/0x5f8
+[    1.814552]  platform_probe+0x5c/0xac
+[    1.814567]  really_probe+0xbc/0x2a0
+[    1.814576]  __driver_probe_device+0x16c/0x19c
+[    1.814585]  driver_probe_device+0x3c/0x114
+[    1.814595]  __device_attach_driver+0xb8/0x118
+[    1.814604]  bus_for_each_drv+0x80/0xdc
+[    1.814613]  __device_attach_async_helper+0xec/0x134
+[    1.814622]  async_run_entry_fn+0x34/0xe0
+[    1.814631]  process_one_work+0x180/0x2dc
+[    1.814646]  worker_thread+0x190/0x2f0
+[    1.814656]  kthread+0x120/0x124
+[    1.814667]  ret_from_fork+0x10/0x20
+[    1.814683] Kernel Offset: disabled
+[    1.814685] CPU features: 0x0,80000000,00800050,02300a02,0800e21b
+[    1.814692] Memory Limit: none
+[    2.083468] ---[ end Kernel panic - not syncing: Asynchronous SError 
+Interrupt ]---
+
+Genpd should also enable the power domain before this driver's probe().
+Genpd calls genpd_power_on() through platform_probe() but the clock power 
+domains implemented for the devices that uses this driver [1], [2], don't 
+implement genpd .power_on()/.power_off().
+
+On platform drivers probe:
+
+platform_probe() ->
+   dev_pm_domain_attach() ->
+     genpd_dev_pm_attach() ->
+       __genpd_dev_pm_attach(dev, dev, 0, 1, true) ->
+         if (power_on) {
+           genpd_lock(pd);
+           ret = genpd_power_on(pd, dev, 0);
+           genpd_unlock(pd);
+         } 
+
+
+pm_runtime_resume_and_get() calls genpd_start_dev(), which is, for [1] and [2]:
+
+genpd->dev_ops.start = pm_clk_resume;
+
+This enable the clocks for us and is what genpd calls on its own though resume.
+
+Thank you for your review,
+Claudiu
+
+[1] 
+https://elixir.bootlin.com/linux/v7.4-rc1/source/drivers/clk/renesas/rzg2l-cpg.c#L2607
+
+[2] 
+https://elixir.bootlin.com/linux/v7.4-rc1/source/drivers/clk/renesas/rzv2h-cpg.c#L1533
