@@ -1,77 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795698989;
-	b=d52GZOJsjpTr+58BmNEhGb6vw+xHBa1lkbexyVBUhVmUiy+mWpi5iXsvCJWJKW5OaBJc
-	 QyH8jNmQytQLIug/WUgQ/mhAnxggy5nmG1M8apjt7BrrqKWAeq/apWTbHPyEpemVsSiQZ
-	 8/0uQ60tyIqRgmDJlutRK1pmi+gp5tClV/0f4ICb2w98WTjZZEUnI+byV5WCi3RSEyz0t
-	 ocLDd6nGQY688Q0IgmAH48iuEP73MLvAuDJ1O2zqGRbc0F+gfma6giD4rXnjEGVMqvgBu
-	 RF9LY7gqyagfh95Jb3/C9noqQAmOUABfNjBx7qJTaYXU5mtN6O9UDnz3Qc9ibkHbGOQ==
+	t=1795702714;
+	b=aI6RY/woUlPCXoFnlCwn0Fyxl0feB3Y3eLo9bjZXvE2ZTfySMGTZg9k1WRePO0tzHuct
+	 DdLllQvs2snZ2asvO5VExhCu+rbirsKUVrGj9ymjQ33gcAN0E3hw8Ki3LQLjvuHIROFFJ
+	 7dCo0Cz6YAiMg62UEQbm6vd7Tgmk4x6Tmsq4Kpa4w/b4jG1e/fvD8c+5KVUlJ8iMtsBLI
+	 aul1+U/Bd1RuLKuB1B0H5U/eBdKp5oeO/UVwZh1VKXsvF1C/w2YijkNtl+Azj5F79ttBU
+	 ZLF5h90icICSNSlCvZLHKHIn5qKS6fW1mXmtcLhV05TDYNDHcXC6kucLtqoxxvySOPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795698989;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:
-	 X-Forwarded-Encrypted:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type;
-	bh=z5gsJ+BDz+8hzJBQw/xAOysO2V3ppLgl3lpNGd2ZXi4=;
-	b=z5brofDXK6lCLGDXTMVyoLQyeBzGtHBABUQ/DhvnKY50tKQsYlALKf8YWJf+lgd0FwDH
-	 xl7SKtowjQOlBXPGhWyq3xVr9Iu1y5JHwBSqTFWDsViEKNRjDWtPVyIAXa+M1+FRCZY77
-	 mMhKceu/jtEnk9AdyHZ4JQoQcux2ahVOaHjUlrRsPJLhRSYlwahsDyEoRHdbUp/qeMhx7
-	 WWz2LveGTGuWctEjxg0DZdHIMnUiLKzQle4l+6ZQLVit7x2h/BcwstbraoySfeftSnvuH
-	 7gkNQjx9lV5vQWcUDXcj1R7jtKr9jMf5giWApSUItXFxnlfsdPNbjxoSrQWjFAeBfzg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795702714;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=NyKzTXadaH80KPU41rwaODjR1cCn4hE+RiYMnZpd86g=;
+	b=hnPWp49HbeFGWBNcRo9l0LOoTO84syeYQWFcpKNmOEVx2xPBNP/fYy5/dBkfrWby5CJb
+	 LgaDu0gKk7a9X27sGnF5ekP54KeolAVEVu9N3QVTDh42NgWdcnQwEWH1axWdXT2QsnWdD
+	 m5BT03zvEoWouwJE99G0LaUifClHFYaaLpebvrTgz7L64hEENxBDWFcz7XVcHWhFpmhoM
+	 b3qgjuywwkZonTfI95Ugl9Nw4sc1PXD1dZaiWSP3bFF00KVLXzF9F3Vm4LRu0nFTh46vu
+	 teT14Ack2A/y+H02vQ5hPeU0kAlm2cu8CatUbQzUhiCvxTUWMTB/IuF4WgA4mWsT38Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=linux-m68k.org;
-	spf=pass smtp.mailfrom=gmail.com;
-	arc=none smtp.remote-ip=209.85.222.171
-Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TKkG0YX2;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3714E606A68E
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 13:16:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3714E606A68E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-93f20b304c0so629438785a.3
-        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:16:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795698988; x=1796303788;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=z5gsJ+BDz+8hzJBQw/xAOysO2V3ppLgl3lpNGd2ZXi4=;
-        b=yur+ZTVVts0FSbsLNwl/k50CfqOvYYCIDBdpEdQolSAIv0pHcF3EL0jv2+1WXVFuwL
-         geDz0sk18OW9Yk/yk1H7Zq8wp4p04tfnMlPS/aruJWkWkVJhwkHs1YQTLujv3y1eOzB1
-         E7KMKwd+PkZkc87KMeESbkJa1J5q/67JZ6Wf14wUmavEq3sQwltqjrPXpuntMUXHNk2O
-         asA+gBABMD7b9at8D7/BHzd8znaBySwuSIgLIDCjaKY3FI8N6qyHKWaSO20u4oOwtwEj
-         5XvDFTiOmbZ0FqJlOjnFthL/HFOZWopQskDI0CEu2H2zf1P5IwQc70ZkkYjRSauC7oh7
-         cvVg==
-X-Forwarded-Encrypted: i=1; AL+hErHmUSAtOPGr7lBGzVci+9UEfSoipdqbTwZ8Lk/SFmmvaqQvjkjkMVGz0t6EEq7FET6lqyC36GUv6iU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9+W4MBozFl30Nl+Sm9opp5C515MzetIBwshFAhnmWeFdM5/OXe
-	NWxflt7YjDt6pJWmwSJ5Tl64wOe4gP9qITD9mQ/OX9xI/XoNv2FcQLMZQLQ5dOwq
-X-Gm-Gg: AZFdTZdAOdfYGXYzyIBclmHXMeYAzkS4QzxZ1NShqgI8kB5QzNKZKGIAmdQfUeVAxKr
-	6lZ8hoerccM7SloOIErd2TwXzu6SrSO272SYTmibagfo6z/X0rumQc6V7HFLOZwhw8X1RZcOMsE
-	40GJhzUsHJ+ciGM6ArjfmJNIazJLYzVn0TjZwidrB16MULOWb0rna0oFNOA0xwuSKQyOidyNkqq
-	KvMeo2Tv2+djTNt+fWjE2EgiyncS/sh3Jp1QLPeHSQ1qKigobiSQK58TTjnh5vkq9+50fHPWZE6
-	QA+tEx/8VOF+XKAfN+INP+wNDgsw60r25TQ52Tx0dRSvw9DnY3+MD4aV5Azi1ulDVk4Bq3z/fCZ
-	Sd/BxBLDV6K5ebJOR70ehl5VZxdHS7CCX2RDC0eI8Dz9YXWQ4GI4AnDbOELjPxQ770vG9vZL8kO
-	ertqqv5g3N1SviRCsEW57z1KSuO+5y+NrUBQ0Wk2QucLS0ljchi+UO12h3+pCO3535cAI0pRMMZ
-	7Ajux16abExPBjo00HZGI0BmsV7AAvB2WwEXGIpaVBNddWniRvrpi0neT94HEMtDyJmeMFBQSl7
-	H9avxzugKZ/FeCo8WV6SQm4gKvEufMz5aeL2PALJxsTOyk16q8CGptHANfRjRVn9dlBh7FQcSzF
-	Osg+abIZNGzIJ2utR
-X-Received: by 2002:a05:620a:17a2:b0:949:6e15:e1ca with SMTP id af79cd13be357-949ba965b33mr3753111585a.19.1795698986665;
-        Thu, 26 Nov 2026 05:16:26 -0800 (PST)
-Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com. [209.85.222.175])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-949bb4004e8sm1570063685a.33.2026.11.26.05.16.26
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Nov 2026 05:16:26 -0800 (PST)
-Received: by mail-qk1-f175.google.com with SMTP id af79cd13be357-94965745d92so691120285a.2
-        for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 05:16:26 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErG3WZH4NseQTJGzCR+W4JubAS0QV7Kg4eayMorGTwgKA2VLWY8nmh6OFUROYgB6LvwyYShduwCFP/4=@vger.kernel.org
-X-Received: by 2002:a05:6122:e16c:b0:5ea:bfe3:6035 with SMTP id
- 71dfb90a1353d-5ee8aecb450mr12500493e0c.8.1795698622003; Thu, 26 Nov 2026
- 05:10:22 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with UTF8SMTPS id E62DB606A31E;
+	Thu, 26 Nov 2026 14:18:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TKkG0YX2
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0721D1F000D1;
+	Thu, 26 Nov 2026 14:18:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795702713;
+	bh=NyKzTXadaH80KPU41rwaODjR1cCn4hE+RiYMnZpd86g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TKkG0YX2wb7BkJBT5asY8jsFXrQuwOipsZzhH1M+s97eq57mxGxAVspA9aqxFr0Hr
+	 9neyTwJY+BHUAYaaHfuU10yUrLzQGp7ycUQWDNTFUyhxVjmfdz3iggeF3XU8ZB4c3f
+	 pZUQ3eICTufypMiM0p/bNzAbXp36P8eamOlf4ImvMPz6awcJ1DjPqsnGsiSyGwKpbh
+	 P2RFvo3LeHh+dMgbhDrftSeP5hZpl2NeCw45q1OU/44oI2PPlxw631sma+ciNlTA6F
+	 6umxiR38hL4E1QuAlqx3q+5NAVSIYOyyoog8HlNZF+mpB9wA/UbqqOcqdVBDmSbKND
+	 2M0+hbriCKn6Q==
+Date: Thu, 26 Nov 2026 15:18:29 +0100
+From: Bartosz Golaszewski <brgl@kernel.org>
+To: Xilin Wu <sophon@radxa.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Andrzej Hajda <andrzej.hajda@intel.com>, Neil Armstrong <neil.armstrong@linaro.org>, 
+	Robert Foss <rfoss@kernel.org>, Laurent Pinchart <Laurent.pinchart@ideasonboard.com>, 
+	Jonas Karlman <jonas@kwiboo.se>, Jernej Skrabec <jernej.skrabec@gmail.com>, 
+	Luca Ceresoli <luca.ceresoli@bootlin.com>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Linus Walleij <linusw@kernel.org>, 
+	Abel Vesa <abelvesa@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>, 
+	dragon@radxa.com
+Subject: Re: [PATCH v4 4/4] firmware: qcom: scm: Allow QSEECOM for Radxa
+ Dragon Q8B
+Message-ID: <p3kffrgkkxa2gzszqa73rro6vcxtc3aho4srjvinq4cxfbierh@xm3esomojnns>
+References: <20261029-q8b-dts-v4-0-e8e7438f5545@radxa.com>
+ <20261029-q8b-dts-v4-4-e8e7438f5545@radxa.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -81,51 +70,15 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261020031049.969895-1-den@valinux.co.jp> <20261020031049.969895-17-den@valinux.co.jp>
-In-Reply-To: <20261020031049.969895-17-den@valinux.co.jp>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 26 Nov 2026 14:10:09 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdVpV=FLZG6iiNMj8Mq39RQ3u8JxKyTVws7J0O9Y__2EqA@mail.gmail.com>
-X-Gm-Features: Aa3M54rTYSp7n6mDEivRvXB3zz9tm8FUTty6In8Jlz7Pqa2lf3sYsYsJuOUeaRc
-Message-ID: <CAMuHMdVpV=FLZG6iiNMj8Mq39RQ3u8JxKyTVws7J0O9Y__2EqA@mail.gmail.com>
-Subject: Re: [PATCH v5 16/17] arm64: dts: renesas: r8a779g0: Describe the PCIe
- AER interrupts
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Shawn Lin <Shawn.lin@rock-chips.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Magnus Damm <magnus.damm@gmail.com>, Jingoo Han <jingoohan1@gmail.com>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, Frank Li <Frank.Li@nxp.com>, 
-	Niklas Cassel <cassel@kernel.org>, Wilfred Mallawa <wilfred.mallawa@wdc.com>, 
-	Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261029-q8b-dts-v4-4-e8e7438f5545@radxa.com>
 
-On Tue, 20 Oct 2026 at 05:11, Koichiro Den <den@valinux.co.jp> wrote:
-> The PCIe controllers report Root Port AER notifications through SPI 454
-> and SPI 461, respectively, separately from the integrated MSI receiver
-> interrupts. Describe these interrupts with the "aer" name so the
-> controller driver can use them for Root Port error reporting.
->
-> Append the new interrupts to preserve the existing interrupt indices.
->
-> Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+On Thu, Oct 29, 2026 at 06:13:38PM +0800, Xilin Wu wrote:
+> Add Radxa Dragon Q8B to the QSEECOM allowlist for enabling access to
+> efivars and uefi bootloader.
+> 
+> Signed-off-by: Xilin Wu <sophon@radxa.com>
+> ---
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-i.e. will queue in renesas-devel for v7.5.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
