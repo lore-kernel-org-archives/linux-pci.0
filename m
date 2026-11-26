@@ -1,56 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795722330;
-	b=L9M6xHIQGwmgaymUfxGxig4y7N5A+WqNTwXo65sdFFPLnxkZuGKlyThOhC/B4BUNLGws
-	 AL+hkZVs1a585X8pa590keOJTcRAkZMaQRhaMxu0Z/EsubalZkXQszyIPeX9y5pTHCi49
-	 Zo6DGLTTJsCkltWFAbf928WOnx+HjhysQaQ6OcBe+qG51SU7Z4QIdSlvK3+YkGHRiZ5Ci
-	 Znzhvo8u8WHoK05Wc6iUrbIfkLji9Fv3/2u2FpLUbLF4k0ZAVUff0odO9HTUAE7lgAKiW
-	 F75iPGjFy5UqAJswkgFyf5ICR0a8N3BzB9BmojiUNRrVBCbjkju86GmMUrdhx3hFK4A==
+	t=1795729128;
+	b=WqKLV3EJ/j5lVd8YMckLFZNxLnCO8gVwo2ydZKyX1WZkjeEPov7NigLuK2YWge5X3yMb
+	 gEDIXQRE5qoEgsxXBCTmUZ1yth1feAS3UJemhEPi6kwoDmzfIoxeXe9pAxTGyoRz1wd4J
+	 KgVwXCwYf14kBlRSydyuheaCKdN2cGi9VmpMbEKOm3FVGHTGkM4TnDHHe3iEHTyg5WEpk
+	 V0DwuFZkENIjcs9ItSs0xOKIJiz5bDZNcaww8VuSgn1cWKFgnMdtjMGYRcrA6mTKqGubG
+	 5nh61wSvu4024ZYQYOSt94ik1axS+kXdHH6ciKv4Z0WvGVbuzyVswPrHCDFrHXLtt2A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795722330;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=VnSmb/l+TiH3q5AEz+6FON6wO1AuQpm7dHMMVQRNKIU=;
-	b=BkUFrrQSdxrZ0LD6j+7HxuKXFbPD0Qs/4v1CrHI5T3Q/yZWY8Er9nA/7WqeIypyE6Lq6
-	 XlDPC25QKLiSfHkvdsxV1xklzTkItJLju8h3k0SmJRJQ7ORhnyEjKbuvh9rY4wUrdGPcc
-	 9qke8VlV6codGMn9oM2iB+0pNr9PiM954wpUeBvGlQ3ynSSvGaml0HexCP/UuKR2/vX/A
-	 L32b/QPUuPDByJWs6tOwvL5vbUupcvmISohSEN9KtLP3luXWW7+/4CInaI/b67aCBGzZC
-	 p/sHsfzY/BcfP9vJ4nkKKGzQOEU+T/i/QMSh9BwpKsmXo3LdpL6lZzv5vWxGFLGZsJw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795729128;
+	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
+	 Content-Type:Date:Message-Id:Subject:Cc:To:From:References:
+	 In-Reply-To;
+	bh=le0OILRxgvc/hUwSc0GSpHpYWxUpD6OdgP9vLsaiIbk=;
+	b=QF7ZWWk6MTKfsRBTgLIXWkEe98+mImR3HMX8UlXrFM4v/R3xPhW+EK7mA1d9JVg9pqsq
+	 S5RC8wJ5PDbZIto558q6rzOvl1hRnGrW36Q/sa1jgrdr7pYdCc53/qG2lkYAo4bNZRf8M
+	 Xuq4cyjkZ4/0v+YMgLRruBGAbVaOC+cbSNRJKxb1c3+hXKFGPanaz+nTKb39EmwruURfs
+	 8dQWvRNXSlMz2kphqk/xPKSUmDYNedz4ZVG0IYkIL0qUeZOpuGbJ+WL3ca5I2o5TSPtLT
+	 zwoDyViZsPYjyVuvGPwPcFrkhYmrPF7rDZojue/SnQPWhaNH7FrmbeNIVlv/vAL0vgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Uut3rkSb;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AKPy7iDP;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519F5606A326
-	for <linux-pci@vger.kernel.org>; Thu, 26 Nov 2026 19:45:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49A4A606A31E;
+	Thu, 26 Nov 2026 21:38:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Uut3rkSb
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB59C1F000C6;
-	Thu, 26 Nov 2026 19:45:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AKPy7iDP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 534771F000C1;
+	Thu, 26 Nov 2026 21:38:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795722330;
-	bh=VnSmb/l+TiH3q5AEz+6FON6wO1AuQpm7dHMMVQRNKIU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Uut3rkSbkOdxcbL/YVEL0jzlJ/l4EIZYDvR5Bhv3hevXZSvEz0nnG6DvsGualSVA0
-	 4mevRpqCc3VPPsY+XjbfEEZVkgl7rjx+lqswys30vwKUqpLEXZ+707IdTaUKij+wIU
-	 6VDBNXPl1EI78iexotVP9f1JpS5hMTdvuhrJ4RR8A5k+vpSZNuK34NYjKpm423Qxmp
-	 r8tZ8tBNzjSRlUVodkDpAV5lvJQZjUMNn04lh85vKAGvwCM5/U2qdt4khyrxYmRuN2
-	 a4IYcdCrEn4e8DQOKvgx1kjT3QiOCXSjBo1vB2gsyVx12mIGRQrmOXBOozWU7BRVej
-	 kg/3QblFPkCUA==
-Message-ID: <sashiko-outbox-236118@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: dwc: Skip the empty CFG1 window for a two-bus
- ECAM range
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Felipe Infante de Castro" <felipe.infante.de.castro@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <CADy1qsZ_j7FnfZHQnwqFWiQKyxoQGLt+LJKG=Y-63Yi71uiNZQ@mail.gmail.com>
-References: <CADy1qsZ_j7FnfZHQnwqFWiQKyxoQGLt+LJKG=Y-63Yi71uiNZQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 26 Nov 2026 19:45:29 +0000
+	s=k20260515; t=1795729127;
+	bh=le0OILRxgvc/hUwSc0GSpHpYWxUpD6OdgP9vLsaiIbk=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=AKPy7iDPt/3jLSg1ILgmyKSkFOltCY3Ucnzt5Hl7PX6j8e0Lxz+e88gkonwy0iB3w
+	 oXn8TzcdYJKNy9BhpU5/ZEG8iy1nTE6N6h3QP9Su/m/dNb4gAonlk9zFG9aGx4CEbi
+	 BUf6VM87VU4wxGkdsUvyztLA4catj3jXsC+AcrLxCg4dt8J8z+fx842cr+azOI7crz
+	 TzhTc1utDtT25sVqdnZ7jApzTBlIEQXOpQxutWJOgEirKtkzn5EZAa0aN1Qv15FZd9
+	 +J018XK8m3xzNH/z3bTiSH/0iwihYID8VQ7JVV5zm185giQqttiy9/Hjp25Y1J5+6z
+	 90VGWeq31swRg==
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,35 +48,63 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 26 Nov 2026 22:38:37 +0100
+Message-Id: <DN5GUG9ZOIR0.1MSRUTV4H8B67@kernel.org>
+Subject: Re: [PATCH v5 15/35] gpu: nova-core: mm: add SharedGpuMm
+Cc: <acourbot@nvidia.com>, <kvm@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <alex@shazbot.org>, <jgg@nvidia.com>,
+ <yishaih@nvidia.com>, <skolothumtho@nvidia.com>, <kevin.tian@intel.com>,
+ <airlied@gmail.com>, <simona@ffwll.ch>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <aliceryhl@google.com>, <tmgross@umich.edu>, <markus.probst@posteo.de>,
+ <jhubbard@nvidia.com>, <apopple@nvidia.com>, <joelagnelf@nvidia.com>,
+ <ecourtney@nvidia.com>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <kjaju@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+ <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, <zhiw@nvidia.com>,
+ <boqun@kernel.org>, <daniel.almeida@collabora.com>, <tamird@kernel.org>,
+ <work@onurozkan.dev>, <jgg@ziepe.ca>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <dri-devel@lists.freedesktop.org>,
+ <peter@colberg.org>, <xinmengs@nvidia.com>
+To: "Alok Kumar" <alkumar@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20261124135937.18583-1-alkumar@nvidia.com>
+ <20261124135937.18583-16-alkumar@nvidia.com>
+In-Reply-To: <20261124135937.18583-16-alkumar@nvidia.com>
 
-> From: Felipe Infante de Castro <felipe.infante.de.castro@gmail.com>
-> Date: Thu, 26 Nov 2026 13:54:01 -0500
-> Subject: [PATCH v2] PCI: dwc: Skip the empty CFG1 window for a two-bus EC=
-AM range
->=20
-> With the iATU-based ECAM mechanism and a host bus resource of [bus 00-01]
-> (bus-range =3D <0 1> in a device tree), dw_pcie_config_ecam_iatu() progra=
-ms
-> the CFG0 window for bus 1 and then requests a CFG1 window of zero bytes:
->=20
->   atu.size =3D (SZ_1M * bus_range_max) - SZ_2M;
->=20
-> dw_pcie_prog_outbound_atu() rejects a zero-size window with -EINVAL, the
-> error propagates through dw_pcie_host_init() and the host bridge is never
-> registered.
->=20
-> resource_size() counts both ends of the range, so [bus 00-01] holds two
-> [ ... ]
->=20
-> Fixes: f6fd357f7afb ("PCI: dwc: Prepare the driver for enabling ECAM mech=
-anism using iATU 'CFG Shift Feature'")
-> Assisted-by: OpenAI Codex
-> Assisted-by: Claude Fable 5.2
-> Signed-off-by: Felipe Infante de Castro <felipe.infante.de.castro@gmail.c=
-om>
+On Tue Nov 24, 2026 at 2:59 PM CET, Alok Kumar wrote:
+> +/// A [`GpuMm`] shared between several users, serialized by a mutex.
+> +#[pin_data]
+> +pub(crate) struct SharedGpuMm<'gpu>
+> +where
+> +    // Hide the mutex's invariant resource lifetime so `SharedGpuMm` rem=
+ains covariant.
+> +    exists<'res>: 'gpu,
+> +{
+> +    #[pin]
+> +    #[uses('res: invariant)]
+> +    inner: Mutex<GpuMm<'res>>,
+> +}
 
-Sashiko has reviewed this patch and found no issues.
+I don't think GpuMm should have a global lock; it contains GpuBuddy, Pramin=
+ and
+Tlb.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/CADy1qsZ_j7FnfZHQnw=
-qFWiQKyxoQGLt+LJKG=3DY-63Yi71uiNZQ@mail.gmail.com?part=3D1
+The reason some APIs want &mut GpuMm<'a> is that the contained Pramin does =
+not
+implement mutal exclusion; GpuBuddy and Tlb already have inner locks.
+
+Please also consider, if GpuBuddy, Pramin and Tlb share a common lock, this
+would violate DMA fence rules if Pramin and Tlb are used from the fence
+signaling critical path.
+
+I just came across this independently from this series and sent out a patch
+series [1] for this.
+
+[1] https://lore.kernel.org/nova-gpu/20261126213652.3716162-1-dakr@kernel.o=
+rg/
