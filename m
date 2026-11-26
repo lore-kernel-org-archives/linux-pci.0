@@ -1,58 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.119
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795686519;
-	b=owgIciedOjwtHa+k7E60YQsW4C1y0/sUMYWgqL4MzW+eHCAC8lUabCs95gEb6Rjwa3gj
-	 ByopzhMZj1aRw0m40Lp/c6J8NqNPAWzDCClaKo+KFjkgzUC49Iq0ssO8wn8ZGlyrxOtU3
-	 VPxpSHPZ/j3lmlR5RnMTcJEgGGNXiMLmszB7QyzzXO5mJkNTcHj49IYT6mNpdohwHL+UV
-	 Hrr5db9B75Npc6GWhyYJ8DkOZLayFzRaAgn1zeDQUVglDxabUZ6ZP0z920yvD9tsUyA9b
-	 KdQRQn0F+PqZLbavZiOoT/+wdP2p8E1zBhfd+A6KmxkgK/SOhNU5IjqfrpV6LatH5CA==
+	t=1795691015;
+	b=nGwyf/B9GQsITXjrlhWsdHHYS2y2+xVVzc8XW9x5J5P89JqTInsYu4koHpEb8SlUQggo
+	 tcLvDnw5Ai3rOLmVwf2llR9reM71SndsZiolcqCipMAmH5zbVCc4hXpqWMfBtGECCKo0Q
+	 D4790JPuPUiXYk2wIjt7XZFYogtxBeBOoY+R7BQ9XLo3SLm66274N+V8W3JCgXs6PQyjV
+	 kvElK4Rs0xTUzDVKhNNhDUtXx5VorUoLBTaG4Rmdd3wlGShgk3Armqjkiw4IcRpZoISOk
+	 V69QGW0JKMdHRbVzG59T9LibcOXPsjjD1PigjqKr0Wre4m1THUpet6vp1x6dX6dj3YA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795686519;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795691015;
 	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Date:From:To:
 	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To;
-	bh=n5CxSxj2Z/BPqrfQa8+YneA3h2dB1tJc27NAivjJmn4=;
-	b=AMbzXOkKj+E3yZT35NIfP2eSQEQ1nCz85DaLchO7+t9DdNWzKCrGtmbjjDB3r6xaYWLk
-	 xMbxchaeL/L1ISn00/c267w1EpPHOPMZGas8fHCoKwm4sHJsUTAPSQ2jXjdka6lid6h0S
-	 IGX1PUiapOO/oMXHcH1wgw+Pa5XN8xMU+drMnwFkaruQLGZN2x8HD3CinH+hvjX5DC38c
-	 mAMstmoL2yFJCTlyE+HQX/tyeZ5GMpIYHBP+STgpIdaa4orgu4dEnKxSUvYZJ3VzXe3AF
-	 R9WxKTd+n0vhY135kQgNY2b3+OQkYt4T8XOXpPQoGnNuXVViDnCFVxeCIrNEVP7pVIw==
+	bh=iEtcVXXAb2SuDobIw88bqOPlDv3UkXnLdqkxyNZgyc0=;
+	b=didcg+mgHGIprUuAE5YpcQee0p/R84GIgFXRxqKcswRD1gRDXpAidTqEovSOIUoQCkKS
+	 i9cxi1MmuzSzfdBLQw/ahYSXRVoHYMFpQc9/+OMAfFO+QSfF7RWeJiHRzpCZXHY+/Xtvd
+	 wEOZtxms0msgMY+Jil5J6Es/Sw5SX2LZ04XOLkETNWOVMRjlpFIl6OZaK929Yu3CqXJ5G
+	 6W+6ijnHc1jygqCMtqMF0DNesyzg8KrDQF+CFjTC8MTKnv/DeyaOkVazxTRq40fceh9Qr
+	 VbUNBNFilZJXurrEqmwn76PCjFjsXW3r/Qr1UwJBuKM8F+jaxuOnlxsY8aaalw53+2A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.alibaba.com;
 	spf=pass smtp.mailfrom=linux.alibaba.com;
-	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b="Qz44/99L";
-	arc=none smtp.remote-ip=115.124.30.119
-Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
+	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=MlWvY8rZ;
+	arc=none smtp.remote-ip=115.124.30.124
+Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E3C606A334;
-	Thu, 26 Nov 2026 09:48:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A9E3C606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4428D606A32A;
+	Thu, 26 Nov 2026 11:03:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4428D606A32A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=Qz44/99L
+	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=MlWvY8rZ
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1795686515; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	bh=n5CxSxj2Z/BPqrfQa8+YneA3h2dB1tJc27NAivjJmn4=;
-	b=Qz44/99LzMBKmMInXEo9Crdcua18RMbMJrZKo6BIrZlHTSn47PIW9EdC6mqPJE2bEG+5Ytkjym3XhsmF3sCXM+nc1JjvbyOUgVQX/QSSrop84jhLCWucsPJlP+9NkqPnrWr5jlnulWOf0rYqPnIXBLDzLN6qVPMYJWrA+HNUPUA=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=feng.tang@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0XFUDm3A_1795686514;
-Received: from localhost(mailfrom:feng.tang@linux.alibaba.com fp:SMTPD_---0XFUDm3A_1795686514 cluster:ay36)
+	t=1795691000; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
+	bh=iEtcVXXAb2SuDobIw88bqOPlDv3UkXnLdqkxyNZgyc0=;
+	b=MlWvY8rZ6X4UM3M6bcd+a5wiwQ0f73Hvw3JHbKAZmuD7uq2I/Uzwnl2oMHKVw98kH5pm6gQvbXUvjZBfeqX7DbDNETibB/mXhEGvQ9s/60/d9Ueo0rIApFw+znKDwH9jlSqR/E9rdV8D3pmhkQD7lgbxOrcAk+BZApBslMctcKU=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=feng.tang@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0XFUKQRX_1795690999;
+Received: from localhost(mailfrom:feng.tang@linux.alibaba.com fp:SMTPD_---0XFUKQRX_1795690999 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Thu, 26 Nov 2026 17:48:34 +0800
-Date: Thu, 26 Nov 2026 17:48:33 +0800
+          Thu, 26 Nov 2026 19:03:20 +0800
+Date: Thu, 26 Nov 2026 19:03:19 +0800
 From: Feng Tang <feng.tang@linux.alibaba.com>
-To: Christoph Hellwig <hch@infradead.org>
+To: Niklas Cassel <cassel@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Anju Zheng <zaj01616726@alibaba-inc.com>
 Subject: Re: [PATCH RFC] PCI: Add warning about possible danger for
  pcie_bus_perf mode
-Message-ID: <awgAccPedwuAt-Tu@U-2FWC9VHC-2323.local>
+Message-ID: <awgR92kRQdrjUdBC@U-2FWC9VHC-2323.local>
 References: <20261125155829.77269-1-feng.tang@linux.alibaba.com>
- <awfv0WKc6iblVA9E@infradead.org>
+ <awfwUC5vomjlih2U@ryzen>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -64,9 +64,11 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <awfv0WKc6iblVA9E@infradead.org>
+In-Reply-To: <awfwUC5vomjlih2U@ryzen>
 
-On Thu, Nov 26, 2026 at 12:37:37AM -0800, Christoph Hellwig wrote:
+Hi Niklas,
+
+On Thu, Nov 26, 2026 at 09:39:44AM +0100, Niklas Cassel wrote:
 > On Wed, Nov 25, 2026 at 11:58:29PM +0800, Feng Tang wrote:
 > > During stability test, there was a bug that running 'mount' on a type
 > > of commercial NVME disk failed on an arm64 server and raised PCIe RAS
@@ -79,20 +81,44 @@ On Thu, Nov 26, 2026 at 12:37:37AM -0800, Christoph Hellwig wrote:
 > > both set to 256, while the root port's are both set to 512. But the
 > > NVME device doesn't comply with PCIe spec (v6.3), Section 7.5.3.4:
 > 
-> Please add a quirk for these devices now that you have identified
-> this problem.
+> I assume that you are using pcie_bus_perf rather than the default strategy,
+> because with the default strategy never raises the Root Port above what
+> firmware programmed, which may be only 128 bytes.
 
-Good suggestion! Will work on this.
+Right, only the 'pcie_bus_perf' mode can reproducde this issue. The
+default mode works just fine.
 
-One naughty point is, during the debug, we have 2 models from the
-same vendor, which has the same Vendor ID and Device ID, one is
-3.8TB, and the other is 1.9TB. Only the 1.9TB model has this
-issue, while the 3.8TB one works fine with "pcie_bus_safe" mode.
+We reproucded it on one arm64 server and one Intel server, the MPS for
+the NVME device and root port are both set to 256 bytes in default mode
+(no pcie_bus_perf parameter).
 
-'lspci -xvvv' of these 2 models are also almost the same, so there
-is no way to tell these 2 models? 
+> pcie_bus_perf gives a Root Port its own maximum MPS without looking at
+> the devices below it, and relies on MRRS to keep Completions within the
+> endpoint's MPS, so a device that ignores its MRRS gets Completions
+> larger than its MPS.
+> 
+> My series [1] avoids this without pcie_bus_perf: with the default strategy,
+> it sets each Root Port hierarchy to the largest MPS that all of its devices
+> support, i.e. 256 bytes for both your Root Port and the NVMe. Since a
+> Function must not generate TLPs larger than its own Max_Payload_Size, the
+> Root Port then returns Completions of at most 256 bytes, even for the
+> 512-byte reads your NVMe issues. The NVMe also gets the same 256-byte
+> payloads as with pcie_bus_perf, so nothing is lost by dropping it: the Root
+> Port's 512 bytes don't help a link whose only device supports 256.
+> 
+> Would you be able to test the series on that server, without
+> pci=pcie_bus_perf?
 
-Any suggestion? Or we just add the quirks for this VID/DID for safe?
+I can give it a try after the quirk work suggested by Christoph Hellwig.
+
+I haven't read through you patch, one question is, since current kernel
+already works fine without 'pci=pcie_bus_perf', what' the intention of
+this test? 
 
 Thanks,
 Feng
+
+> [1] https://lore.kernel.org/linux-pci/20261020122854.1500883-5-cassel@kernel.org/
+> 
+> Kind regards,
+> Niklas
