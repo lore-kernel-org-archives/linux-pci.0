@@ -1,47 +1,68 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795714846;
-	b=LW7Uc5fcib3nK+2dyocnC4FjA66EgfDEHN/1uGmc4/Pu3Xb2RZjLHFR3xq5j7BYsx8O6
-	 /EszDbSv4vNeiRZWIvHV1oLsAQ2dY2yI/HiTxm6rOUI3i++0ZjcGdDgGyzhU+zrKDvz7A
-	 X1CgX7UQ/ykJVWFucmxQkOQ+RmbWMDZFJ4RIbwdlKrhLt2Vth40LhChslJOQ9QPsluuQI
-	 l0r6ptSbwkftTVRVdUKq2AW2a4YELygUQSSaBilysUQODH3l6tqYYDxV95KS6sU4Y+Lop
-	 ms1wc1fzqpNhlhRT84ZDnEIxuUoQt0aTuMk2+YWKGEMhKvhfjj5Cj/qr+ZhqqsKBOvg==
+	t=1795716212;
+	b=DPOAndpujJCljNgrDhXccahCN6QJ/6D8odLzFXG489KhXkntmJBYif8imdnQE/r0ASog
+	 Yn6uml/nCynOqmP/jGWye9d8qU5MnI2TY+nR4pGTMcMdlSLMuvr1ZnjRTz9Xghcj9np/5
+	 xOoQ5ZWhC68o1OoyC8AAVIUK7uYTIIz4Tx7jo7MtiYUEGNC9F18CTGfdH+OTATFuH4TAA
+	 Hv0Th45Rwjt8bfo1c+RioGKA5rh2KbOyhgp7KzFlobx2fHpdAa60YJ4aSDQxUVxhI/l5t
+	 VJ1d4bGPTxQ0BB609ExdDEvLBHw/iduIY5V3n14xpkhmzEj/zTlnHng8S/SoBZ4T8sQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795714846;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=ApPclC69wJu5EaKmPWcUZEw51FK93kFoXwnzGQ73cOU=;
-	b=SJ7U6tbm/uOrpuLojpEOoggidfh8ygYnPRxtf4t5qM0y4unHQGgqNRTppdgRb2SujJ3s
-	 5IKlPOh9Yw0Dl0bQeWg97K4NfuZH3K0qHv6v+CibjCugYd+gNfuwsPfXOrXy/Mx6SVrNy
-	 S7P352uM0fZ+CatE2Z/d/fowOEUhYOTWiYZyUJ4chQuUGc2k4yY63TiFxM8+zuqEkNVSP
-	 WhD48rBBMV1/Qaix6FvyLqeTOENk1mMqXuCyClXcRfjdnOYEBSaajYo0YTObIJYoIGtpy
-	 RmnpLR37+yPfL7cGpHJgnA1StnOMP+jQy2ZwmQtItwOFPogznOf54RCd/lmlE5MJX1g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795716212;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:In-Reply-To:References:
+	 Date:Message-ID:User-Agent:MIME-Version:Content-Type;
+	bh=SRMbopjT2ZDCp3S0bduHH4K2gvQ2HvHqic8ibWdFK5o=;
+	b=lIw3B1KkhNJJZUceqREmThcW7u00HidKLvvGtrkQtxWRqbq831o+vpyfrZeGayc69d5X
+	 xEXmasKjRKjTQD10Sb22AfusP94L9aUfHG1vYAQVuy2SDkou+kpA0QL0M7KG0p+LrGpiF
+	 OnOs6Wz9itaUQdMFkk3sWxQFVoRMz9jTdFWuhpkf30kWgbC3jMHM1aYeyVGOB/F9aIWW1
+	 GkiJ6JCcSkNySIUexFQhJTxQemjmgyg3HwBG68xn1/FoWVOQeaCvw4FJHi5ez+sZxNPmk
+	 Bq1IqhM9/lCk4w3TTM8RCOi0eQwgir6PP+wC8+yWvA6rCFa7wklMUgXp4XwDbwnTAfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nMuC1qR1;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OGnBv2u0;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A643E606A31C;
-	Thu, 26 Nov 2026 17:40:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 360C7606A333;
+	Thu, 26 Nov 2026 18:03:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nMuC1qR1
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB3B61F000CA;
-	Thu, 26 Nov 2026 17:40:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OGnBv2u0
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89F3F1F00AE3;
+	Thu, 26 Nov 2026 18:03:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795714845;
-	bh=ApPclC69wJu5EaKmPWcUZEw51FK93kFoXwnzGQ73cOU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=nMuC1qR1i3+hoilfYdTaW/fzchw6AcBZHiPupI8Ug4LBFBIyQHybLfOHXMW1reE/g
-	 nxsyuAELPczQASCQCWQpL/UOjdqcoxyR1L7iI9819YU44pMlCeweU2xj8Z22FboGKd
-	 KqdmJIus57CIxEcT+F2qD2VdJa5iErN+u9sfYLAWuRgWiolZU1R9z+e1lmUzF/2lbP
-	 yIAWxqtAMOBxTCMdcS5VaUNiKtr6QezcyGzFb14A2HhSU7J1q5EqJc63GUbwWZK2wu
-	 CMoeyX0MMnGFztRB4wneW81BscO9kJ0zOd42+tPJtTAsJ2Q3EIPAZJBC0KsmoxpaFN
-	 RXiB0ZG8Yyy5Q==
-Message-ID: <2618cc81-4594-4ecb-8dda-acb3ab7fafaa@kernel.org>
-Date: Thu, 26 Nov 2026 19:40:41 +0200
+	s=k20260515; t=1795716211;
+	bh=SRMbopjT2ZDCp3S0bduHH4K2gvQ2HvHqic8ibWdFK5o=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=OGnBv2u03WCFZWsDn0SqFklZyJny8+Af7jkPORwbwrdfJO9Uuyh3rw7lkea/8Q6vB
+	 cSIp8xQifnWtaWmwzYmEuwcFqqquwhEDZYU9qydrjf+sBZlYdV0Uh4OcohneorzOIF
+	 dQPa+xbeiqQcdPDC9Oa7jdvVgs4qB+n6553AGLoeNcTPRVh325vt+HhS5HZHGL1sQs
+	 OkUadX01xuDVnzUkH625JGfejnQ3/CAK3j6h3DWaPExj7QpjphDplmcLYj/MRIcgd0
+	 eVototx5kDwOQb/DevkWMQPYQDKm10UmfNq6zCKguaXM2lSgE0EpwfzgMQkEYxMgnP
+	 jCJ1NS7tAygTQ==
+From: Pratyush Yadav <pratyush@kernel.org>
+To: Tarun Sahu <tarunsahu@google.com>
+Cc: Pasha Tatashin <pasha.tatashin@soleen.com>,  Mike Rapoport
+ <rppt@kernel.org>,  robin.murphy@arm.com,  maz@kernel.org,
+  will@kernel.org,  David Matlack <dmatlack@google.com>,  Alexander Graf
+ <graf@amazon.com>,  seanjc@google.com,  jgg@nvidia.com,
+  loganodell@google.com,  arnd@arndb.de,  dwmw2@infradead.org,
+  baolu.lu@linux.intel.com,  Bjorn Helgaas <bhelgaas@google.com>,
+  oupton@kernel.org,  alex@shazbot.org,  gle.com@google.com,
+  pbonzini@redhat.com,  Andrew Morton <akpm@linux-foundation.org>,
+  kevin.tian@intel.com,  joro@8bytes.org,  kvmarm@lists.linux.dev,
+  linux-pci@vger.kernel.org,  Pratyush Yadav <pratyush@kernel.org>,
+  kexec@lists.infradead.org,  kvm@vger.kernel.org,  iommu@lists.linux.dev,
+  linux-arm-kernel@lists.infradead.org,  skhawaja@google.com,
+  sagis@google.com,  linux-arch@vger.kernel.org,  linux-mm@kvack.org,
+  linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 07/19] kho: vmalloc: Add the feature header
+In-Reply-To: <20261110050202.529473-8-tarunsahu@google.com> (Tarun Sahu's
+	message of "Tue, 10 Nov 2026 05:01:50 +0000")
+References: <20261110050202.529473-1-tarunsahu@google.com>
+	<20261110050202.529473-8-tarunsahu@google.com>
+Date: Thu, 26 Nov 2026 18:03:23 +0000
+Message-ID: <2vxzh5h3wjv8.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -51,133 +72,125 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 13/14] PCI: rzg3s-host: Re-enumerate the bus on PCIe
- link-state changes
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, bhelgaas@google.com, p.zabel@pengutronix.de,
- geert+renesas@glider.be, magnus.damm@gmail.com, claudiu.beznea@tuxon.dev,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org,
- John Madieu <john.madieu.xa@bp.renesas.com>,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-References: <20261019065025.2146539-1-claudiu.beznea@kernel.org>
- <20261019065025.2146539-14-claudiu.beznea@kernel.org>
- <179562719476.5580.14610373538848505541.b4-reply@b4>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@kernel.org>
-In-Reply-To: <179562719476.5580.14610373538848505541.b4-reply@b4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
+On Tue, Nov 10 2026, Tarun Sahu wrote:
 
+> Register struct kho_vmalloc with the KHO serialization feature header
+> mechanism to allow future additive fields or feature extensions without
+> breaking live update ABI compatibility.
+>
+> Add DECLARE_KHO_SER(kho_vmalloc, 16, 0, 0) to register the 16-byte
+> structure with 0 required and 0 optional features. Update function
+> prototypes in include/linux/kexec_handover.h to take
+> DECLARE_KHO_SER_HDR(kho_vmalloc, *fhdr) parameters, documenting which
+> registered structure the feature header belongs to while enforcing
+> compile-time type verification.
+>
+> In kho_preserve_vmalloc(), initialize the feature header with
+> kho_ser_init() and access the payload fields via kho_ser_payload().
+> In kho_restore_vmalloc(), validate incoming required features with
+> kho_ser_validate() and access payload fields via kho_ser_payload().
+> In kho_unpreserve_vmalloc(), access payload fields via kho_ser_payload().
+> The chunk page format and traversal remain unchanged.
+>
+> Update memfd_luo and test_kho to pass typed feature header pointers
+> and use kho_ser_size() for allocation sizing.
+>
+> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+[...]
+> diff --git a/include/linux/kho/abi/memfd.h b/include/linux/kho/abi/memfd.h
+> index 7b49dd6d7e2a..b0597c438973 100644
+> --- a/include/linux/kho/abi/memfd.h
+> +++ b/include/linux/kho/abi/memfd.h
+> @@ -80,9 +80,9 @@ static_assert(!IS_ENABLED(CONFIG_64BIT) ||
+>   * @seals:     The seals present on the memfd. The seals are uABI so it is safe
+>   *             to directly use them in the ABI.
+>   * @flags:     Flags for the file. Unused flag bits must be set to 0.
+> - * @nr_folios: Number of folios in the folios array.
+> - * @folios:    Pointer to KHO vmalloc descriptor for the array of
+> - *             struct memfd_luo_folio_ser.
+> + * @nr_folios:   Number of folios in the folios array.
+> + * @folios_fhdr: Pointer to KHO vmalloc descriptor for the array of
+> + *               struct memfd_luo_folio_ser.
+>   */
+>  struct memfd_luo_ser {
+>  	u64 pos;
+> @@ -90,7 +90,7 @@ struct memfd_luo_ser {
+>  	u32 seals;
+>  	u32 flags;
+>  	u64 nr_folios;
+> -	DECLARE_KHOSER_PTR(folios, struct kho_vmalloc *);
+> +	DECLARE_KHOSER_PTR(folios_fhdr, DECLARE_KHO_SER_HDR(kho_vmalloc, *));
 
-On 11/25/26 19:19, Manivannan Sadhasivam wrote:
-> On 2026-10-19 09:50 +0300, Claudiu Beznea wrote:
->> From: John Madieu <john.madieu.xa@bp.renesas.com>
->>
->> The RZ/G3{E, S}, RZ/V2{H(P), N} PCIe controllers do not expose the
->> standard PCIe Slot Capability registers, so the generic pciehp driver
->> cannot be used. The only link-state signal the hardware provides is the
->> DL_UpDown bit in the PEIS0 event status register, which is raised on every
->> Data Link layer up/down transition.
->>
->> Enable DL_UpDown in PEIE0 and hook up an interrupt handler so the driver
->> can react to link-state changes: a device that trains after boot gets
->> enumerated, and a device that disappears on link loss is removed. This
->> provides hotplug-like behavior without the PCI hotplug core, which is
->> unavailable for the reason above.
->>
->> On a DL_UpDown event the handler acks the W1C status bit and inspects
->> PCSTAT1.DL_DOWN_STS:
->>
->> - Link up: re-run max link speed negotiation, wait for the link to settle
->>    and rescan the root bus. To cover the case where the device is replaced
->>    or removed while the system is suspended add the
->>    rzg3s_pcie_device_replaced(). It reads the vendor ID, device ID,
->>    revision ID and class code of the device behind the root port and
->>    compares them against the values cached in the corresponding
->>    struct pci_dev, along with the Device Serial Number cached in
->>    struct rzg3s_pcie_host::con_dev_dsn, mirroring pciehp_device_replaced().
->>    If the device is detected as replaced (or no longer present),
->>    pci_dev_set_disconnected() is called for all the devices on the bus
->>    below the root port, so that the teardown of the old devices does not
->>    end up accessing the newly connected device, and the devices are then
->>    removed. If a link up/down cycle occurred while devices are on the bus
->>    (fast link transitions coalesced into a single DL_UpDown event), the
->>    devices are removed and re-enumerated even if the connected device did
->>    not change.
->> - Link down: walk the bus in reverse and pci_stop_and_remove_bus_device()
->>    each child.
->>
->> Both paths take pci_lock_rescan_remove() to serialize against the PCI
->> core.
->>
->> Link events are processed only after the controller has been fully
->> initialized.
->>
->> Add rzg3s_pcie_pm_notifier() to avoid the link event interrupt interfering
->> with the suspend/resume of the other PCIe devices in the topology, and to
->> avoid deadlocks caused by pci_dev_lock() being taken from the link event
->> handler while suspend/resume is in progress. The notifier disables the link
->> event interrupt before suspend and enables it and rescans the bus, on
->> resume, to pick up devices that may have been plugged or unplugged while
->> the system was suspended. struct rzg3s_pcie_host::started was added to
->> avoid touching the controller registers in case the resume failed.
->>
->> While at it, make probe tolerant of an absent device. Previously, if the
->> link failed to come up during rzg3s_pcie_host_setup(), probe tore the
->> controller back down and failed. Ignore the timeout returned by
->> rzg3s_pcie_wait_for_link_up(), leave the controller and refclk running,
->> and let the link-up path enumerate the device once it appears.
->>
-> 
-> This patch is doing too much things at once which makes it hard to follow.
- > I can easily say that you've combined 4-5 patches into one.
+This doesn't _only_ point to the feature header. It points to the
+vmalloc buffer of of folios, conceptually. So it should be called
+"folios". Reading folios_fhdr everywhere is super confusing and hard to
+read. Users of KHO vmalloc should be pointing to the KHO malloc
+serialization structure, not to its headers or so on.
 
-If doing otherwise different bits of this functionality will not work as 
-expected. E.g., I you are referring to the code behind 
-rzg3s_pcie_device_replaced() and/or rzg3s_pcie_pm_notifier(): these were pointed 
-out by Sashiko and I tried to address them. W/o these the functionality that the 
-patch tried to cover will not fully work for suspend to RAM. I tried to avoid 
-sets like:
+The feature header is an implementation detail of kho_vmalloc (same for
+others). It should not be visible to its callers.
 
-patch 1: add functionality X
-patch 2: address corner case Y for functionality X
+>  };
+>  
+>  static_assert(sizeof(struct memfd_luo_ser) == 40);
+> diff --git a/kernel/liveupdate/kexec_handover.c b/kernel/liveupdate/kexec_handover.c
+> index 641a3b4c88fb..6e428df717cc 100644
+> --- a/kernel/liveupdate/kexec_handover.c
+> +++ b/kernel/liveupdate/kexec_handover.c
+> @@ -1378,20 +1378,20 @@ static void kho_vmalloc_unpreserve_chunk(struct kho_vmalloc_chunk *chunk,
+>  /**
+>   * kho_preserve_vmalloc - preserve memory allocated with vmalloc() across kexec
+>   * @ptr: pointer to the area in vmalloc address space
+> - * @preservation: placeholder for preservation metadata
+> + * @fhdr:         placeholder for preservation metadata
+>   *
+>   * Instructs KHO to preserve the area in vmalloc address space at @ptr. The
+>   * physical pages mapped at @ptr will be preserved and on successful return
+> - * @preservation will hold the physical address of a structure that describes
+> - * the preservation.
+> + * @fhdr will hold the preservation metadata.
+>   *
+>   * NOTE: The memory allocated with vmalloc_node() variants cannot be reliably
+>   * restored on the same node
+>   *
+>   * Return: 0 on success, error code on failure
+>   */
+> -int kho_preserve_vmalloc(void *ptr, struct kho_vmalloc *preservation)
+> +int kho_preserve_vmalloc(void *ptr, DECLARE_KHO_SER_HDR(kho_vmalloc, *fhdr))
+>  {
+> +	struct kho_vmalloc *vmalloc_ser;
+>  	struct kho_vmalloc_chunk *chunk;
+>  	struct vm_struct *vm = find_vm_area(ptr);
+>  	unsigned int order, flags, nr_contig_pages;
+> @@ -1404,13 +1404,18 @@ int kho_preserve_vmalloc(void *ptr, struct kho_vmalloc *preservation)
+>  	if (vm->flags & ~KHO_VMALLOC_SUPPORTED_FLAGS)
+>  		return -EOPNOTSUPP;
+>  
+> +	kho_ser_init(fhdr, kho_vmalloc);
+> +
+> +	vmalloc_ser = kho_ser_payload(fhdr, kho_vmalloc);
+> +
+>  	flags = vmalloc_flags_to_kho(vm->flags);
+>  	order = get_vm_area_page_order(vm);
+> +	vmalloc_ser->order = order;
 
-> And even worse, you
-> add code to remove devices in this patch and add recovery in the next patch.
+Nit: Why is this moving around? Seems like a stray change.
 
-This split was requested by you in the previous review round:
-https://lore.kernel.org/all/a7koqtuhya3psx7mmest3io5h775jxscivumouv64kbu23pssv@xkkqondobxui
+Also, renaming preservation to vmalloc_ser adds a lot of noise to your
+diff. Perhaps keep it as-is for now?
+>  
+>  	chunk = new_vmalloc_chunk(NULL);
+>  	if (!chunk)
+>  		return -ENOMEM;
+> -	KHOSER_STORE_PTR(preservation->first, chunk);
+> +	KHOSER_STORE_PTR(vmalloc_ser->first, chunk);
+>  
+>  	nr_contig_pages = (1 << order);
+>  	for (int i = 0; i < vm->nr_pages; i += nr_contig_pages) {
+[...]
 
-Please let me know if I misunderstood your request.
-
-> If
-> you are recovering the link, why do you need to throw the devices away?
-
-The controller don't support native hotplug, but has only IRQ support for link 
-up/down events. The idea behind this work was to treat the IRQ link up/down 
-events as hotplug events.
-
-The .reset_root_port() was added since it was noticed that on RZ/G3S, the NVME 
-connected to PCIE_SLOT don't work after a link down/up sequence w/o it.
-
-Please let me know you thoughts on this approach.
-
-> 
-> Please split and organize the patches logically.
-
-This is what I've tried. If you are referring to, at least 
-rzg3s_pcie_device_replaced() and/or rzg3s_pcie_pm_notifier(): w/o these, the 
-support won't be fully functional for suspend to RAM, as pointed by sashiko in 
-the previous review rounds.
-
-> And also take a look at the the
-> issues raised by Sashiko too.
-It's on my list.
-
-Thank you for your review,
-Claudiu
-
+-- 
+Regards,
+Pratyush Yadav
