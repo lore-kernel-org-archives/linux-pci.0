@@ -1,56 +1,72 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795694213;
-	b=F98zzcUHs6yiZIopICMbmMuCyd9rhNRWNns8kN8f8Q0FFnb4wapxlX+35/RCbwpdVz92
-	 7ATOQ1dSJ7s8xKEGuTCKPNxG7v8KlVMXV5M9Bsh/Ehcy43WD9VT/CvJmQwjm/kE5jgaVR
-	 YiHzHjrE9Kp9K4MsPyu7hDJPvsVcZYIVKFt1kh0SXrjYlZxz5OdU1BZM1iWnesQ9tytwT
-	 Sq5rRM2yqFWYDMi3bDy89E8LHCPlU7QKUSTAQVZ8Du94p9kVJKzuduvcaWJdxYtC5nBqD
-	 PwhvSk5k2chti8CJUZTNYpzEG5embBg9xkyl/lJDU4ZMc/2jrmWJpt8+7bEXnXlsOUQ==
+	t=1795695486;
+	b=xAm2++LcbI2PG7Wvt5ZI8/q/Ti01PO1exXNXBQPLsYKjQZTJy3bg4tXEL/drD+RgmUle
+	 bUtDMHJZ3j6grCGWgZ8uP/y+8PbL4Y5bFt+n7nNLUryJ2faHeyqgJ0NXbPjwB3McXq+Gs
+	 SY3tJ3bsatky5ozU7rWj73ilpoJacqeDcmbHN+BxiCNkOM2ZZReyvkrxdte33SuoQTy5F
+	 C8GMUP5qPWWN8+fyux1l9ydGj3Yqd+RPDrj41535Jk1MLbobEL31bH5OREnxoHMfU+713
+	 SzmzpclAsDunWmGueL9+IuVQjisu+Whyqn2mv5wI8tJQKSnIuli5ongzZIyTmCvpbZQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795694213;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=rnp9x/iKkvmTWJnyUgHpkKblZzqwUu/F3hmLLdm2yXY=;
-	b=r9WiTIQoy3hZEZt6Cbp8qfii83GqHsnTpU8Twn/1NaO3dcYtrRBA51wfrxuQ9YNIYSSZ
-	 kB24LiT1UrmhBI5+ztd60NktxHOkzjSP8yJ0Naw64XoCA5KN4FtS58epz+xN707tl1hj7
-	 q/r2q3GM+SHcDTgOtvRWVg7MuX25LImmCnsTLSgz8HgzZ4C3HCJGHm7EDKlyP9xhUaQEV
-	 /UI9aEuWitY2JIV+noi2skKMurdJp+ctNEJDFU/Xq9viIo83XDdNEauaqTykXKdltr4+S
-	 Nr5fSdwrWALfaskYpAz8PHjq3GHo/1PGmOE9OHWpiAX2otTKl+GOwRbvcLJyJBXWcyQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795695486;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:In-Reply-To:References:
+	 Date:Message-ID:User-Agent:MIME-Version:Content-Type;
+	bh=fv3YfealIuJOICIo52kCGcexbGGkcP1zYkCoBpg/CRc=;
+	b=0px4tKwvyeKRbrBvaZGnKkMNCmzR110AbzLL7PvwSD16WMrh/dvEzU2yJ0NT3CViuXsx
+	 RbUSVdNfu+0TR0y5TZXQ+UCz+pkUd0TvURkia4/kpV1Og0J1UfpIuTvalzCwXOD8MK9G2
+	 vLf8+gh6Ir46WOfq3wr0ua06jo3yaG1UFfFHvaM16bqGrXwLzlkuSr0+lq52nZbBz2OoP
+	 SKM9f/44R0Q0XElSB/mVjFij+ovHG1VGYUpheT3WsaLKXqb2u6lFK/kt52QaOnCp+Y5Ih
+	 s1qLygWP4qYlxRMWurbQ5bAHYlKr9BYpw6MdQ2R4g4xfhxNR+uSwxfOz/z28nJ6RYmw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cyX3pu+G;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="d7FHZ7/q";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B57A606A31C;
-	Thu, 26 Nov 2026 11:56:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A65B606A337;
+	Thu, 26 Nov 2026 12:18:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cyX3pu+G
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EFB81F000CA;
-	Thu, 26 Nov 2026 11:56:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d7FHZ7/q
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6A351F000E0;
+	Thu, 26 Nov 2026 12:17:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795694212;
-	bh=rnp9x/iKkvmTWJnyUgHpkKblZzqwUu/F3hmLLdm2yXY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cyX3pu+GMCg4pbhj5F51z6yg9ypFJEnWkcr3awheE/X4O2UNxy+6sYXXIdjJYt8oe
-	 hdBecQzxO5wVTBvHQQzkA2Ft/xJJcaBEILLgOTUh47Wth7x9G+jCsI5lhov8Z+t3ck
-	 2jh5n96hhStH9ALN4paMyJ9tta84nAX7GPI4BJR0rBQOZdvr4L63Sc9KP/IKOldvYu
-	 6S9rzXJCu7ShI5sNEmxOW29f6ys6zXQlLGsnrUmjTg7z0y65SOKLqPYuIWXbkyMvVp
-	 R1UDulbX2YIWQSXTDpnRqQMdh4nVttO5IBsoKvjc5ZTYGwrRqVjhqOi9Lgn6coEAip
-	 sJXK1BKrg1e4g==
-Date: Thu, 26 Nov 2026 12:56:49 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Feng Tang <feng.tang@linux.alibaba.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Anju Zheng <zaj01616726@alibaba-inc.com>
-Subject: Re: [PATCH RFC] PCI: Add warning about possible danger for
- pcie_bus_perf mode
-Message-ID: <awgegQfp969zHL2m@ryzen>
-References: <20261125155829.77269-1-feng.tang@linux.alibaba.com>
- <awfwUC5vomjlih2U@ryzen>
- <awgR92kRQdrjUdBC@U-2FWC9VHC-2323.local>
+	s=k20260515; t=1795695486;
+	bh=fv3YfealIuJOICIo52kCGcexbGGkcP1zYkCoBpg/CRc=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=d7FHZ7/qUp6WWqybny1XNnHENYGPzZQbY033qB8LP+ktd04t0YBSNl5E0O+sG4tfb
+	 qYjI0sP/lnADMjPMofkcXeziLzNt7GqRbBheXfA2+1yhLE0CUrcyMTtSlYaCCY7H09
+	 uoMkRwHYyHZRx5vDQSEUejVWNr5nGWk78t+OYL5ASbIHgkGtkdyCcdhFJV2QYRTSX/
+	 AntiUF73LI7CSYKoLAM+NcGDiRodxjxMn3ADxZ3atvxtzb+Myp9Q0iMVOVib4BIMtZ
+	 Fakbv0fVxZv2UKoKkwnrXPj8HzqFSo+iA92jTp57TPWKBAjOTopU0UM3cZv4WOkqPY
+	 L5VoV6BiLk/zg==
+From: Pratyush Yadav <pratyush@kernel.org>
+To: "David Matlack" <dmatlack@google.com>
+Cc: "Pratyush Yadav" <pratyush@kernel.org>,  "Tarun Sahu"
+ <tarunsahu@google.com>,  "Pasha Tatashin" <pasha.tatashin@soleen.com>,
+  "Mike Rapoport" <rppt@kernel.org>,  <robin.murphy@arm.com>,
+  <maz@kernel.org>,  <will@kernel.org>,  "Alexander Graf"
+ <graf@amazon.com>,  <seanjc@google.com>,  <jgg@nvidia.com>,
+  <loganodell@google.com>,  <arnd@arndb.de>,  <dwmw2@infradead.org>,
+  <baolu.lu@linux.intel.com>,  "Bjorn Helgaas" <bhelgaas@google.com>,
+  <oupton@kernel.org>,  <alex@shazbot.org>,  <gle.com@google.com>,
+  <pbonzini@redhat.com>,  "Andrew Morton" <akpm@linux-foundation.org>,
+  <kevin.tian@intel.com>,  <joro@8bytes.org>,  <kvmarm@lists.linux.dev>,
+  <linux-pci@vger.kernel.org>,  <kexec@lists.infradead.org>,
+  <kvm@vger.kernel.org>,  <iommu@lists.linux.dev>,
+  <linux-arm-kernel@lists.infradead.org>,  <skhawaja@google.com>,
+  <sagis@google.com>,  <linux-arch@vger.kernel.org>,  <linux-mm@kvack.org>,
+  <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 05/19] kho: Add feature header for fine-grained ABI
+ compatibility
+In-Reply-To: <DN3O9LHR4XNH.1EYLA6D1F0J2P@google.com> (David Matlack's message
+	of "Tue, 24 Nov 2026 11:02:12 -0800")
+References: <20261110050202.529473-1-tarunsahu@google.com>
+	<20261110050202.529473-6-tarunsahu@google.com>
+	<2vxzse0rzjdn.fsf@kernel.org> <DN2RQ7LGX224.3W3PSQ2PBHTJZ@google.com>
+	<2vxz33sqz1xj.fsf@kernel.org> <DN3O9LHR4XNH.1EYLA6D1F0J2P@google.com>
+Date: Thu, 26 Nov 2026 12:17:58 +0000
+Message-ID: <2vxz5wxjyefd.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -60,78 +76,107 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <awgR92kRQdrjUdBC@U-2FWC9VHC-2323.local>
+Content-Type: text/plain
 
-On Thu, Nov 26, 2026 at 07:03:19PM +0800, Feng Tang wrote:
-> Hi Niklas,
-> 
-> On Thu, Nov 26, 2026 at 09:39:44AM +0100, Niklas Cassel wrote:
-> > On Wed, Nov 25, 2026 at 11:58:29PM +0800, Feng Tang wrote:
-> > > During stability test, there was a bug that running 'mount' on a type
-> > > of commercial NVME disk failed on an arm64 server and raised PCIe RAS
-> > > error and panic the kernel later, when using "pci=pcie_bus_perf" kernel
-> > > cmdline parameter.
-> > > 
-> > > The NVME device has MPS(Max Payload Size) capability of 256 bytes while
-> > > its corresponding root port is capable of 512 bytes. When enabling
-> > > PCIE_BUS_PERFORMANCE mode, its MPS and MRRS(Max Read Request Size) are
-> > > both set to 256, while the root port's are both set to 512. But the
-> > > NVME device doesn't comply with PCIe spec (v6.3), Section 7.5.3.4:
-> > 
-> > I assume that you are using pcie_bus_perf rather than the default strategy,
-> > because with the default strategy never raises the Root Port above what
-> > firmware programmed, which may be only 128 bytes.
-> 
-> Right, only the 'pcie_bus_perf' mode can reproducde this issue. The
-> default mode works just fine.
-> 
-> We reproucded it on one arm64 server and one Intel server, the MPS for
-> the NVME device and root port are both set to 256 bytes in default mode
-> (no pcie_bus_perf parameter).
-> 
-> > pcie_bus_perf gives a Root Port its own maximum MPS without looking at
-> > the devices below it, and relies on MRRS to keep Completions within the
-> > endpoint's MPS, so a device that ignores its MRRS gets Completions
-> > larger than its MPS.
-> > 
-> > My series [1] avoids this without pcie_bus_perf: with the default strategy,
-> > it sets each Root Port hierarchy to the largest MPS that all of its devices
-> > support, i.e. 256 bytes for both your Root Port and the NVMe. Since a
-> > Function must not generate TLPs larger than its own Max_Payload_Size, the
-> > Root Port then returns Completions of at most 256 bytes, even for the
-> > 512-byte reads your NVMe issues. The NVMe also gets the same 256-byte
-> > payloads as with pcie_bus_perf, so nothing is lost by dropping it: the Root
-> > Port's 512 bytes don't help a link whose only device supports 256.
-> > 
-> > Would you be able to test the series on that server, without
-> > pci=pcie_bus_perf?
-> 
-> I can give it a try after the quirk work suggested by Christoph Hellwig.
-> 
-> I haven't read through you patch, one question is, since current kernel
-> already works fine without 'pci=pcie_bus_perf', what' the intention of
-> this test? 
+On Tue, Nov 24 2026, David Matlack wrote:
 
-For this NVMe drive, it won't change anything.
+> On Tue Nov 24, 2026 at 7:25 AM PST, Pratyush Yadav wrote:
+>> I don't think it buys us any functionality. It just hides the problem in
+>> some lucky cases.
+>
+> Following up on our offline discussion: I think it's worth keeping
+> support for optional features, both before and after the spec changes
+> land.
+>
+> Before the spec lands, optional features are the only way to enable new
+> features at all. For example, the PCI follow-up series [1] preserves
+> BARs and bridge windows using an optional flag. It's purely additive: a
+> kernel that doesn't understand it keeps behaving the way it does today.
+> With optional features it can be enabled as soon as it lands, and Live
+> Update keeps working in both directions, including rollback. If every
+> feature is required, there is no way to enable it until the outgoing
+> kernel can learn what its target supports.
 
-My series matters where the default strategy currently leaves the MPS
-lower than what a device and its Root Port support, because it never
-raises a Root Port above what firmware programmed. Which is normally
-the reason why people use pcie_bus_perf. But unlink my series,
-pcie_bus_perf does not reduce the Root Port's MPS to that of the max
-supported by the endpoint, after the the MPS has been raised above
-what the firmware programmed.
+Right, that's a fair point. But I really do hope we land the spec API,
+because I don't think we will get very far with only optional features.
+More on this below.
 
-But if you get 256 bytes with the default strategy, which is the limit
-of your NVMe device, why are you using pcie_bus_perf?
+>
+> After the spec lands, optional features are still useful, and at worst
+> harmless:
+>
+>  - Kernels that predate the spec mechanism can't provide a spec. As long
+>    as one of them is a possible target (e.g. for rollback), optional
+>    features are still the only features the outgoing kernel can use.
 
-Perhaps you are using pcie_bus_perf to get a larger MPS for other devices
-(other than the NVMe) on these servers. If that is the case, using my
-series would allow you to still change to the default policy, and still
-get the benefit of pcie_bus_perf (without the downsides of pcie_bus_perf).
+Technically speaking, you can generate their spec by hand and feed it
+into the outgoing kernel, as long as they use the same flags format
+(which they should).
 
+>
+>  - The outgoing kernel doesn't need to consult the spec for optional
+>    features at all (less complexity), since by definition the target can
+>    ignore them. It can always produce the same payload, and only
+>    required features need to be gated on what the target supports.
+>
+>  - Nothing prevents an outgoing kernel that has a spec from choosing not
+>    to set optional bits its target doesn't understand, if we ever want
+>    that.
 
-Kind regards,
-Niklas
+Makes sense.
+
+>
+> The cost of keeping them is negligible in the current design: the same
+> number of bits in the header, and one range check on the incoming side.
+
+Yeah. The ABI ends up being a tiny bit more complex, but I think it
+should be fine. It does plug a gap until we land the spec API, and since
+PCI would use it in the near future, I think it is fine to keep both.
+
+>
+> The one rule we need is that optional really means safe to ignore, e.g.
+> optional data must not reference preserved memory or carry restrictions
+> that the next kernel has to act on. Anything like that must be a
+> required feature.
+
+Right. If an optional feature preserves any memory, it will get leaked
+if the next kernel doesn't understand it. So I think it is only useful
+for adding extra information in the main serialization structure.
+
+While we're on this topic, here's a brain dump of my ideas of how the
+feature flags should be used.
+
+I don't think feature flags from the spec should be a passive check of
+"can the next kernel understand my payload?". I think it should take an
+active role in deciding how serialization works. Each serializer should
+look at the spec to figure out what tools it can use to best describe
+the object being preserved.
+
+I'll take the example of memfd and KHO map once again. If we already had
+the spec API available, multi-index entries would be added as a required
+feature.
+
+Then, during preserve(), memfd_luo should look at the spec of the next
+kernel, and decide if it can use multi-index entries, or if it should
+fall back to single-index entries. Userspace does not directly dictate
+any of this. memfd_luo makes this decision based on the spec it has for
+the next kernel (set at a system-wide level). It figures out the best
+way to describe the memfd with the features that the next kernel can
+understand.
+
+Another example to demonstrate this would be LUO moving from a fixed
+buffer to hold LUO sessions and files to KHO block.
+
+Assuming the spec and feature flags were available at that time, we
+should have added a new feature flag for KHO block, but still kept the
+old code around for the fixed buffer. When doing the serialization, the
+kernel decides if the spec has KHO block enabled. If it does, LUO uses
+KHO block. Otherwise, it falls back to the fixed buffer.
+
+I think this scheme will be a lot more flexible and future proof than
+using the spec passively for validation and trying to write a payload
+that can be understood by as many kernels as possible.
+
+-- 
+Regards,
+Pratyush Yadav
