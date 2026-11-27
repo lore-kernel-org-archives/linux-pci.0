@@ -1,65 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795782369;
-	b=WAcXtD8YkzvVIEKHdk/Onkw15VCUQkZuoNHYW7euPevK/8/YHsKzV44EqXcA2WAOh/Bw
-	 lrAR7qp0eKJ8e63N0RW4DavVWHTEJoXahriMkLLtnntxWOxtdThYpfMhM1Dja0SoGvUzr
-	 ZBoWY3NWVMlmIhU2CvgrfwKAgXNZQCKAIDV1dWfvIoUIXZ88L/3DALOvwh61gaoA19RAR
-	 cynCxBp03r4P9rKUuomPnNgssr6ixUWuYzZdZzgk2jkH03MdRaqRmxL5iPIW1xL0F1UOP
-	 j5INdEgcUeGvOhoa0I9ZMiSMRSE033TwEkz2W4l43d7QxZMLA8bJegN2RYSzBJhIJ0Q==
+	t=1795783450;
+	b=zQoGTszBTuxKVJcmodIFjW2Fn3ncMuqjt3psdN+5ERi7ITf2ixNDOw4HQqjTaX3CkMHE
+	 l9yoNtEj0/kWzGdaq8UzPqOmdyViWIE5glzIyQtq8D+NIItcTtxAlliWnWvYTL38aEj8y
+	 vL3fQFZlmIQqPOwgZAuxiVgmfg6xMpIh+dMcmlUOUDHRbpVM22OJNwMLvofvrWzthiaJT
+	 JO3ADFb11JyOhqBAPmtu/EOjSi8fWKC2XR6UHDQyW+DAakzpM2Tzm4dHd0L+SJMbgOUWh
+	 MrbMtg68OoRatfWI3vmFlOOEvBFyfY3KjXRrZTjMZL/FoMlI7bfklvRmJh/XdoRFODQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795782369;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=75kKPzvsdMlgmlPcHulcGoHaZEGP7r10gYVkY3tBkZo=;
-	b=OcL58An0qQaEn7TrVbHS5Bu3gqLXdc7UiYR2NR67tCCQHMWSmijPO9KcAcERXdm0DGUB
-	 g7XpKC4w88AR+lGCzWTZwHpXWh6dhoxHu5/sV+mtqjPmeynXfruoOXDn5H+Fv4qxRQOqi
-	 9gUz83O7WsmK57+aqEnjyZODx5yACyQ39yP9Ufru2UKLZ8B2VjXFuef2wmA1w2pum90ti
-	 b51YM8K5gZD19ucZggv74jtv3cFesmFmDvV6BPbJPgb1IiYzq++9FyNI4uaC1VCy2ueh3
-	 zXWeWByqPrds/MHxrQRvdJ8cYyzE43h5pmQt9sXMmj6iCfcCOHw2LvzTunj+sJx9hDg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795783450;
+	h=Received:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
+	 Content-Type:Date:Message-Id:Subject:Cc:To:From:References:
+	 In-Reply-To;
+	bh=s97IOTm5/rXBV3ZdRIfid6XH5xn9938zK2WxzL34EEo=;
+	b=hjYAaVZ4jtagsj3sp2/67eHe+pre22CnPp8GV8rbbZnNGcF3GPQlTlzgGFIBIfXujrlP
+	 xzG3+y378rIMUefN3uShnsIO+yITM0CstdRUv8EtkeKG8lD8NhFZ33iLhnynK0bn+602G
+	 n/wYoiI1fS3+ixsqmv2K4F8iarxoWWL6psEWiW+7x21R+mGZlT1fxRjVQTou9zY3CiEmO
+	 Ry+wvwaQR1ln1jnWcX2fsJo2NcsZwXsYxKQKStV0IaKl1/8BeACiTLcQihAalaBb8sPvc
+	 avtQp4yInM5icCHe1hLBuIbo9Yz9G15+ld3nWBXGdCvJ5wc008iw62hS0ugNO56M6LA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T8QpTmvZ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gfRiJfyu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E80C606A339;
-	Fri, 27 Nov 2026 12:26:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE11606A31C;
+	Fri, 27 Nov 2026 12:44:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T8QpTmvZ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 136911F0089A;
-	Fri, 27 Nov 2026 12:26:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gfRiJfyu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80BAE1F000C1;
+	Fri, 27 Nov 2026 12:44:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795782368;
-	bh=75kKPzvsdMlgmlPcHulcGoHaZEGP7r10gYVkY3tBkZo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=T8QpTmvZiK0wxgukaP82PoaUJV9KSkEPe8hR9/n0t45x0yoja6sGvUlEKdXYd94H9
-	 cBYtfJaP7iOIcee8+9eETlZ/Gmqj9ijRoN1j9/PE5Xx5OoqT+SHNtmcDpz6+meH1qx
-	 JXfxFtV6NcGPCT38HRmFKBnny+8kTBGa2ce+0AszmskMfLGqt/r+mdtmfnbkINb1Xh
-	 WC5b3ykpU6M8mNrY+veveaaOqPJFnlt2bWyEWGej+lBoEyxQMZrSmpL8HXyLt5ApzA
-	 gnmEecpZ4JThgjK1qM6II+l7qeNwwBoyIVBrw3nDZXXsJS08LvqwF3RjLmRTz9rz+U
-	 QYAYHjfLIafEA==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: Mike Rapoport <rppt@kernel.org>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Alexander Graf <graf@amazon.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	David Matlack <dmatlack@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: kexec@lists.infradead.org,
-	linux-mm@kvack.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 6/6] kho: don't reference subtree blobs as FDTs
-Date: Fri, 27 Nov 2026 12:25:32 +0000
-Message-ID: <20261127122536.3708770-7-pratyush@kernel.org>
-X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
-In-Reply-To: <20261127122536.3708770-1-pratyush@kernel.org>
-References: <20261127122536.3708770-1-pratyush@kernel.org>
+	s=k20260515; t=1795783449;
+	bh=s97IOTm5/rXBV3ZdRIfid6XH5xn9938zK2WxzL34EEo=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=gfRiJfyugR/55cIxCb0DD9FbKrYxSkewGFaV66svCV6I6kjkQlkLhePEFUK1iH9kD
+	 cEUhgtsegnDqOlHpwD8xAeLmRH3DsaD1gLoSJQBNAjj7Njp1xkTgKyr2Sf6/xqgPci
+	 aerwv8M9oHbyFOUesiv5O2A0RkS3eMfk8R6KuLeWFbpbE+ZyMi2bxKECjs4TRgSLsK
+	 70N/AvvKAbg+dZIA8J+dEP3XXOJqQJdMtwQUdzVF9VXSnpKgXS3B7TM/sSgC21hq/8
+	 PzhuTsjjIiKo/+3mQvcUq0jAfmNVlfi0TJv3G8R3amVao8FwxI8vLVPR2sT/QijUdp
+	 K7YbrgtEl9paA==
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -68,173 +48,89 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 27 Nov 2026 13:44:02 +0100
+Message-Id: <DN603ORZA8KY.30W58KXH3Q8Y4@kernel.org>
+Subject: Re: [PATCH 2/3] rust: pci: return a bitfield type for dev_id
+Cc: "Yury Norov" <yury.norov@gmail.com>, "Miguel Ojeda" <ojeda@kernel.org>,
+ "Boqun Feng" <boqun@kernel.org>, "Gary Guo" <gary@garyguo.net>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
+ Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Daniel
+ Almeida" <daniel.almeida@collabora.com>, "Tamir Duberstein"
+ <tamird@kernel.org>, =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
+ "David Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>,
+ "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Alistair
+ Popple" <apopple@nvidia.com>, "John Hubbard" <jhubbard@nvidia.com>, "Timur
+ Tabi" <ttabi@nvidia.com>, "Eliot Courtney" <ecourtney@nvidia.com>, "Zhi
+ Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
+ <dri-devel@lists.freedesktop.org>, <linux-pci@vger.kernel.org>
+To: "Alexandre Courbot" <acourbot@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20261127-nova-gsp-dbd-v1-0-0fb5f7c2ce63@nvidia.com>
+ <20261127-nova-gsp-dbd-v1-2-0fb5f7c2ce63@nvidia.com>
+In-Reply-To: <20261127-nova-gsp-dbd-v1-2-0fb5f7c2ce63@nvidia.com>
 
-From: "Pratyush Yadav (Google)" <pratyush@kernel.org>
+On Fri Nov 27, 2026 at 12:46 PM CET, Alexandre Courbot wrote:
+> +bitfield! {
+> +    /// Bus-Device-Function ID of a PCI device. Equivalent of C's `PCI_D=
+EVID`.
 
-KHO started out with using FDT for all subtrees. This is why debugfs
-used "sub_fdts" as the directory name and in the code. Since then, KHO
-subtrees started also using raw C structs for serialization. Commit
-4916ae386760 ("kho: rename fdt parameter to blob in
-kho_add/remove_subtree()") updated some of the code to match this
-reality.
+Please make the reference to the C API a separate line.
 
-Still, references to sub FDTs were left around. The data structure to
-track the blobs is still called fdt_debugfs, the list of blobs is called
-"fdt_list", and most importantly, the subdirectory holding them in
-debugfs is called "sub_fdts".
+Additional nit, I'm not sure I'd use "equivalent" as Bdf is a type that can=
+ do a
+few more things.
 
-Update all this to use blob in the naming.
+> +    pub struct Bdf(u16) {
+> +        /// Bus number.
+> +        15:8 bus;
+> +        /// Device number.
+> +        7:3 device;
+> +        /// Function number.
+> +        2:0 function;
+> +        /// Aggregation of `device` and `function`, which are commonly u=
+sed together in code.
+> +        7:0 devfn;
+> +    }
+> +}
+> +
+> +/// Formats the ID as `bus:device.function`, like the corresponding part=
+ of C's `pci_name()`.
+> +impl fmt::Display for Bdf {
+> +    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+> +        write!(
+> +            f,
+> +            "{:02x}:{:02x}.{}",
+> +            self.bus(),
+> +            self.device(),
+> +            self.function()
+> +        )
+> +    }
+> +}
+> +
+>  /// Abstraction for the PCI device ID structure ([`struct pci_device_id`=
+]).
+>  ///
+>  /// [`struct pci_device_id`]: https://docs.kernel.org/PCI/pci.html#c.pci=
+_device_id
+> @@ -700,10 +729,10 @@ pub fn revision_id(&self) -> u8 {
+> =20
+>      /// Returns the PCI bus device/function.
+>      #[inline]
+> -    pub fn dev_id(&self) -> u16 {
+> +    pub fn dev_id(&self) -> Bdf {
 
-The only functional change is the rename of the debugfs subdirectory
-from "sub_fdts" to "sub_blobs". Everything else is a pure rename.
+At a first glance I wasn't sure if the naming should align, i.e. whether Bd=
+f
+should be DevId instead, but I think this strikes a good balance: dev_id()
+remains aligned with the C API and Bdf as a type is more on point than DevI=
+d.
 
-Signed-off-by: Pratyush Yadav (Google) <pratyush@kernel.org>
----
- kernel/liveupdate/kho_debugfs.c  | 50 ++++++++++++++++----------------
- kernel/liveupdate/kho_internal.h |  4 +--
- 2 files changed, 27 insertions(+), 27 deletions(-)
+With the above nit fixed,
 
-diff --git a/kernel/liveupdate/kho_debugfs.c b/kernel/liveupdate/kho_debugfs.c
-index 8d04368c1978..1580e1a27566 100644
---- a/kernel/liveupdate/kho_debugfs.c
-+++ b/kernel/liveupdate/kho_debugfs.c
-@@ -17,7 +17,7 @@
- 
- static struct dentry *debugfs_root;
- 
--struct fdt_debugfs {
-+struct kho_debugfs_blob {
- 	struct list_head list;
- 	struct debugfs_blob_wrapper wrapper;
- 	struct dentry *file;
-@@ -27,24 +27,24 @@ static int __kho_debugfs_blob_add(struct list_head *list, struct dentry *dir,
- 				  const char *name, const void *blob,
- 				  size_t size)
- {
--	struct fdt_debugfs *f;
-+	struct kho_debugfs_blob *b;
- 	struct dentry *file;
- 
--	f = kmalloc_obj(*f);
--	if (!f)
-+	b = kmalloc_obj(*b);
-+	if (!b)
- 		return -ENOMEM;
- 
--	f->wrapper.data = (void *)blob;
--	f->wrapper.size = size;
-+	b->wrapper.data = (void *)blob;
-+	b->wrapper.size = size;
- 
--	file = debugfs_create_blob(name, 0400, dir, &f->wrapper);
-+	file = debugfs_create_blob(name, 0400, dir, &b->wrapper);
- 	if (IS_ERR(file)) {
--		kfree(f);
-+		kfree(b);
- 		return PTR_ERR(file);
- 	}
- 
--	f->file = file;
--	list_add(&f->list, list);
-+	b->file = file;
-+	list_add(&b->list, list);
- 
- 	return 0;
- }
-@@ -57,20 +57,20 @@ int kho_debugfs_blob_add(struct kho_debugfs *dbg, const char *name,
- 	if (root)
- 		dir = dbg->dir;
- 	else
--		dir = dbg->sub_fdt_dir;
-+		dir = dbg->sub_blob_dir;
- 
--	return __kho_debugfs_blob_add(&dbg->fdt_list, dir, name, blob, size);
-+	return __kho_debugfs_blob_add(&dbg->blob_list, dir, name, blob, size);
- }
- 
- void kho_debugfs_blob_remove(struct kho_debugfs *dbg, void *blob)
- {
--	struct fdt_debugfs *ff;
-+	struct kho_debugfs_blob *b;
- 
--	list_for_each_entry(ff, &dbg->fdt_list, list) {
--		if (ff->wrapper.data == blob) {
--			debugfs_remove(ff->file);
--			list_del(&ff->list);
--			kfree(ff);
-+	list_for_each_entry(b, &dbg->blob_list, list) {
-+		if (b->wrapper.data == blob) {
-+			debugfs_remove(b->file);
-+			list_del(&b->list);
-+			kfree(b);
- 			break;
- 		}
- 	}
-@@ -99,7 +99,7 @@ __init void kho_in_debugfs_init(struct kho_debugfs *dbg, const void *fdt)
- 	struct dentry *dir;
- 	int err;
- 
--	INIT_LIST_HEAD(&dbg->fdt_list);
-+	INIT_LIST_HEAD(&dbg->blob_list);
- 
- 	dir = debugfs_create_dir("in", debugfs_root);
- 	if (IS_ERR(dir)) {
-@@ -107,7 +107,7 @@ __init void kho_in_debugfs_init(struct kho_debugfs *dbg, const void *fdt)
- 		goto err_out;
- 	}
- 
--	err = __kho_debugfs_blob_add(&dbg->fdt_list, dir, "fdt", fdt,
-+	err = __kho_debugfs_blob_add(&dbg->blob_list, dir, "fdt", fdt,
- 				     fdt_totalsize(fdt));
- 	if (err)
- 		goto err_rmdir;
-@@ -131,16 +131,16 @@ __init void kho_in_debugfs_init(struct kho_debugfs *dbg, const void *fdt)
- 
- __init int kho_out_debugfs_init(struct kho_debugfs *dbg)
- {
--	struct dentry *dir, *f, *sub_fdt_dir;
-+	struct dentry *dir, *f, *sub_blob_dir;
- 
--	INIT_LIST_HEAD(&dbg->fdt_list);
-+	INIT_LIST_HEAD(&dbg->blob_list);
- 
- 	dir = debugfs_create_dir("out", debugfs_root);
- 	if (IS_ERR(dir))
- 		return -ENOMEM;
- 
--	sub_fdt_dir = debugfs_create_dir("sub_fdts", dir);
--	if (IS_ERR(sub_fdt_dir))
-+	sub_blob_dir = debugfs_create_dir("sub_blobs", dir);
-+	if (IS_ERR(sub_blob_dir))
- 		goto err_rmdir;
- 
- 	f = debugfs_create_file("bootmem_phys", 0400, dir, NULL,
-@@ -154,7 +154,7 @@ __init int kho_out_debugfs_init(struct kho_debugfs *dbg)
- 		goto err_rmdir;
- 
- 	dbg->dir = dir;
--	dbg->sub_fdt_dir = sub_fdt_dir;
-+	dbg->sub_blob_dir = sub_blob_dir;
- 	return 0;
- 
- err_rmdir:
-diff --git a/kernel/liveupdate/kho_internal.h b/kernel/liveupdate/kho_internal.h
-index 5b349f451cf6..22950fe3bcc8 100644
---- a/kernel/liveupdate/kho_internal.h
-+++ b/kernel/liveupdate/kho_internal.h
-@@ -11,8 +11,8 @@
- 
- struct kho_debugfs {
- 	struct dentry *dir;
--	struct dentry *sub_fdt_dir;
--	struct list_head fdt_list;
-+	struct dentry *sub_blob_dir;
-+	struct list_head blob_list;
- };
- 
- #else
--- 
-2.56.1.839.g22a8290db9-goog
-
+Acked-by: Danilo Krummrich <dakr@kernel.org>
