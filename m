@@ -1,50 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=54.243.244.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=18.194.254.142
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795780265;
-	b=loDRu4QbkHVW9qvtqrsLfZBhe2kxY13qslbAhePZk6zyiY2Ee9GDYqXQXGY99sopXqHC
-	 ybB0I1+yAVaCzsjTdIYKj8PYjCHjcgaVnv1AGfcVMtH7zCMdj7Eo+eZWKg4x+6hd8iYB/
-	 G6B/ANA463lIGngLCMJw8ifjs2/AEHUFHREYZ+SvutY8fkfqlYO+lU3efVCpj8fxx/LhY
-	 oIVQCLZDM7kHFmDkSAeIywS3qK6++QOykvcTOb+Fxg94RLy+uFaPXfRBmneFUdzUwKsM8
-	 4NikWsTg+/x9FNfA4uoPzjC0hDKjL1wUCEmWs55zVFmMaTLXUyFvmVeEF1JFPC8WFXQ==
+	t=1795780271;
+	b=HzERs9/0PbvJbIs3ERFAISHHsDzzijOMS3gR1rMTTpR3eF9oV5BljkKia1gwbQXp8Szx
+	 aGr+Zq0n0O59s/K5+FaleHWHbDQGKMSfNkOAFAbFivz+jJ3W/slkRIkDh3UhjKY1h4JqT
+	 iHll+5oTAA5FQGI8IaL5ZCxCEBw7jNZZqJlg2kBf+0m0EzKaPOSboRebU7L+L+W3pcT1e
+	 7RT7Njw2uG/Osm+xENsidqxTvFOAceKeWwxiT4xI83jrsH96uZ7kfWz3uxbdQlxmPRP9/
+	 szTw/geKMKWYV4lr+abe3XERhgaaOgw5C+ln3WM5BMNZZT1jl1nHOn03dMjLOsIzwag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795780265;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795780271;
 	h=DMARC-Filter:X-QQ-mid:X-QQ-Originating-IP:Received:X-QQ-SSF:
-	 X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:From:Date:Subject:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
-	 References:In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:
-	 X-Developer-Key:X-QQ-SENDSIZE:Feedback-ID:X-QQ-XMAILINFO:X-QQ-XMRINFO:
-	 X-QQ-RECHKSPAM;
-	bh=LeIkLzKkDvUFHkvwd+1spI4HrRS2YPMbvTtXbbEthrQ=;
-	b=SFdQK4zh6K09In4LbhL2ndQL5CUhTMtTU1y5NHsSj5TMP3zsqTNBg1VzNrmMAp2qYzB+
-	 M/5Nm00cmYexitpTj7FdUuCgo+UHixc4PbotLZUYDkkfIFQQPHKBOUwWKJ4niOV/YBn4h
-	 MaxlA9JCsVOBS4A+RN9yCFM27D/GlYJ/K+EtHmewqkeL0T7Rw0a4GpJCF1Yf7j2tQKqa+
-	 Cr5IO9opRzqLzBTI3R27t6X55xGeL5lBQf0gkl5zUfn8drzo3wefL0QwXjazpGwYduSvp
-	 /9zQc4w2WKUTi7iR+Umu6IAUADMeBZQIBixHuMawk68+ETZCc0nWUk3hu5l3IVfr6iw==
+	 X-QQ-GoodBg:X-BIZMAIL-ID:EX-QQ-RecipientCnt:From:Subject:Date:
+	 Message-Id:MIME-Version:Content-Type:Content-Transfer-Encoding:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key:X-QQ-SENDSIZE:
+	 Feedback-ID:X-QQ-XMAILINFO:X-QQ-XMRINFO:X-QQ-RECHKSPAM;
+	bh=Cxz5HqWwc0Tf+woQsIa7iHRYSs7MniS7hkEWff8PtSg=;
+	b=l4pQcv0KkTomo/g36fUN0CQN55QIPoZ1qh57ciJ2oAmTWHDhQzJpOFvyu5mKEBrvc+6N
+	 FnnQg31F9RRjFMhj0xF3JnKEcqPfPzf0ThsLO6CQWWgw02JmB/GxZKgPxUqCfO4spFJIW
+	 raD1LI/5sMns60J9U2pBcx6FSmmdANghAKpbZKQng+nfVAFDgR9KbST/VyVuBS3YehDEs
+	 z22l9q1WDOljzckt2fNAIZhEnv9KYz+hDy1TxVttK+8m5eowzbFtzkoG0AIdAF0eNTFFt
+	 gPUDNRY49BDqkbvXDLgrheP82bq8z1Q2kz15TgxA/lY7ZopTybNM2o7GMCvJ/BJ9YiQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=radxa.com;
 	spf=pass smtp.mailfrom=radxa.com;
-	arc=none smtp.remote-ip=54.243.244.52
-Received: from smtpbguseast3.qq.com (smtpbguseast3.qq.com [54.243.244.52])
+	arc=none smtp.remote-ip=18.194.254.142
+Received: from smtpbgeu2.qq.com (smtpbgeu2.qq.com [18.194.254.142])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2746F606A326;
-	Fri, 27 Nov 2026 11:51:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2746F606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B040606A321;
+	Fri, 27 Nov 2026 11:51:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B040606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
-X-QQ-mid: zesmtpip2t1795780183t4d1fda40
-X-QQ-Originating-IP: G7ajAXhux6tUPStxBQXe0BE92Mg7JngGoim0GO4Wasw=
+X-QQ-mid: zesmtpip2t1795780180t43244851
+X-QQ-Originating-IP: nDKpBYq75ro2Gw+Tphk0DHhGS/9QtPiVEmZvro0mv7U=
 Received: from [192.168.30.32] ( [localhost])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Fri, 27 Nov 2026 19:49:41 +0800 (CST)
+	id ; Fri, 27 Nov 2026 19:49:37 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 13024802239966438896
-EX-QQ-RecipientCnt: 12
+X-BIZMAIL-ID: 14761476019748613940
+EX-QQ-RecipientCnt: 13
 From: Xilin Wu <sophon@radxa.com>
-Date: Fri, 27 Nov 2026 19:49:32 +0800
-Subject: [PATCH RESEND 1/2] PCI: of: Correct pci_set_of_node() return value
- documentation
+Subject: [PATCH RESEND 0/2] PCI: of: Skip config reads for disabled bridges
+Date: Fri, 27 Nov 2026 19:49:31 +0800
+Message-Id: <20261127-pci-of-disabled-bridges-v1-0-3bedcbe51cda@radxa.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -56,76 +55,96 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261127-pci-of-disabled-bridges-v1-1-3bedcbe51cda@radxa.com>
-References: <20261127-pci-of-disabled-bridges-v1-0-3bedcbe51cda@radxa.com>
-In-Reply-To: <20261127-pci-of-disabled-bridges-v1-0-3bedcbe51cda@radxa.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
  linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
  linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Stephen Chen <stephen@radxa.com>, Junhao Xie <bigfoot@radxa.com>, 
  Daniele Briguglio <hello@superkali.me>, dragon@radxa.com, 
- Xilin Wu <sophon@radxa.com>
+ Xilin Wu <sophon@radxa.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1099; i=sophon@radxa.com;
- h=from:subject:message-id; bh=k/kLlokSneUeoKS4FVw2ibyiWAgmHjBwSfjL3GuN8sA=;
- b=owGbwMvMwCVmdFg0fe08Iz/G02pJDNmceUGTLP+yv2dbcGRJzNTbEx9ILVvGKWDQxG2S9KNm/
- Zqkr8sudpSyMIhxMciKKbIoxDPMZa/MvfZUrFQPZg4rE8gQBi5OAZjIMxmG/8ExnAY7zOui/San
- Sc7fZiTEITeDY+bM6CPdT5Xdum0uuDAy3J+u3sFopZtwyGuSM//ujoMVM86KOe2qT/q2edmtxgN
- /2QE=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2210; i=sophon@radxa.com;
+ h=from:subject:message-id; bh=Ihy8RgXbArIZ+Di5WHCfFkez4ZaM9ywlSfd7Xggdjbo=;
+ b=owGbwMvMwCVmdFg0fe08Iz/G02pJDNmceUHvJbfcYBF/FdGWxn6hVn661YxXMovk1k4pijB9f
+ vvBVouLHaUsDGJcDLJiiiwK8Qxz2Stzrz0VK9WDmcPKBDKEgYtTACay9gbDT8Y7yslvZu5/+/74
+ pXe2F6U4NnwSzG36FFObIPR481blW9sY/spcqzydL6g384P46d0zd/5L3NOlHcmw70mpVklzTtn
+ EjwwA
 X-Developer-Key: i=sophon@radxa.com; a=openpgp;
  fpr=205F009D07796DD6E516752E32C31567AD9E324E
 X-QQ-SENDSIZE: 520
 Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
-X-QQ-XMAILINFO: NYzuS3BMnxktMljWXz3mVi0hqyL4cM1fkfE9voHCt3Y+swAm85wH7ndV
-	Ib2Q+0Xv4axQiXT5FkyqvGGEr/eBYydL9S53++lKcOGGh25DGTYUeAYfEvnve2vOzOljHI+
-	y5A7doNV7AZlibD4T5JWejIezdNdwWd7gdG6eZCPaIp8CXt8dA5YuvmHeyedEN94CbvRZgG
-	qKM3rN9wdqiLz7xy4HTMq7JHFVDIp9+MlDsE1/lo5Gz6mhqwi92cN4tjZ0dfdpApuTrzRkd
-	v3UgDvXCVi36XuWn6c4agv6YjNIV7WK804tZKsStzR1ecMr34br8jRpxaoRwX4YY9fNrrTO
-	3X2AzERFdJ4ZMsUuPIyKW4LAtAcBcp6isQPzaA447ZinISEfxYpS8SdB8Jl1bgt60CoCTnw
-	cZQnRpRYdKibRoFUhfk/NfIFgyXiYHi6g06XlL1mAPwHcRcxNY50e64glwKjfiiTanlfOEx
-	ldTa7KoMT5FNWNv6V7fv7+esdKZQmDfeXgB63IlXre4l/GFueYSylm8CiycrAu4LO7C69IY
-	dJDjxUOOfZ3E84LGJTyeENGEY3pAHhz1YMlx7NyD0g3ngsnyllEd0kguL/5e/ML2eEabT5U
-	BwM0scGkqLAy14gW8I2dDggx3yoGIVlKFhZEmDyO5LQobKtxtR3fZd03AxZs7NRFaJtZYr0
-	JhwT/g0o4b/IM1r3M6oYW66G2Zl9zRvmwGPK5gsorNanDqrph09ap+v6uSKWgcMio5CzRhV
-	Hs6niD7AiGQ7Xhrfd5d6ke/tk1Ei11wHlClRvZX3YQO7EvPUu9EzBA9h2by8xqOV+zrROJ6
-	5WeLa2XJA2IpeQBpgXfGSa8wPUzbb/gTKPy/5T71k2JgOW/lNCTIqLyFBhrIWn20L94qXAB
-	+5CYE0h7nO9Ceh7VaGhLir2MwRa9bnpGntLMBO8qdVywgeATVTStNHSDX/iwv5r734IsXXE
-	8CbojH3YkeSSabXstc/ODQoXrHXkpok0lDkKBYy0iu/CS8CgyWZvNo39tJ9wCfeUUBHjnCd
-	WlQ9G193P72+ZPO18T/5FudrcE0BRbINjU0yQ2l84uKKiv64yAFQuN5maXyBy3XWBq2V2RW
-	BMCh9fUyHeImwiwz1qbLlTOOr9Kz2NrVA==
-X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
+X-QQ-XMAILINFO: MgxwSif07E1rr63McogQ0HA/bFrau7o+DHpmjVG/qbv51zl1KK1BeRfI
+	6gJqsVKaJeYxvEUytox1SS1r1iMpBU7+bi7JWL8yJxaiynU9+HDg4sI69I+arp/59VUja51
+	m1uD92OEmsmk5Ft5iXS+HyDLKUAMFflqqJU7YtuRvMQazg6FvAiVVlPJtzlHC7G+o75f1hy
+	Rskj5sV40AFITf2oJangBQJGBl3InVyhM03uaUGAkRYM53mZSDTgC47cxY+RpIYfFovQ9/K
+	JN4EDkk4QFE1fzHygCpCVyQUad/4lwN57hFGgGKpbXgcbPGAsJnNsYnxuUvql8RWQAkDjeF
+	oE30V5sYngvIyGrFTEVMHxBa2T2VAHWkSSRjKgiMPnrX1R7KzBi3yJybHvx6MH1xqrwR6AM
+	kh52mPQ47+HxN6w2YfwIK155pL7ff+RXCiOnqJ/MESzPka12nsbekP81dL8g4cKXu37wu1p
+	6yRWFCKvY+Ap5ljbaAgZ7NOQPSfwKXvohxvULrNWomiJGbrk6pmJGGuUXrw90fP/Tb9sgnz
+	ftMstEdmcbuM1naUGTTZHyhwRxw93Wg6ACNxpOxy6lcho5s9ttUOqzP58rqIyarumO+BxlE
+	0PqTBujxgiz4yWF+aHQG+aTi0n/57L7slBm3fBK6Gs/v/tcg+3xVf/QCF6YmpjFGag4eJMa
+	9zRApsWARZU020/3N6vI66QjuSnK+eiV71N/Bsru/GjovaNOUD4fprDl31A0hTsKAOmq0rq
+	4H9KWL2TYjd0vm10FYclaEPx/XbQyWetj8PPnuccNdEgqys0DLOSlDr1eq8BD7ALDek6rvt
+	Xc+/kwUpltqNrBdBSLyFMDal4CIcmosxGUDL/Vuf5tw4a9juhyTd3sf0Ifmz1ldfpXOPbUQ
+	9zRIqqNzEN58ZcKeVbUgp65O1CCKIr+yrcyYUvFs7e5As6ejzjPGit1b36mYhHIXwLTFuNS
+	8oFgvHrgcR1454xE7dBCPyTjG0AOkrXWwAhZBtYa3QLtq3pfXMv+VVM2KqDBxnDpNSdavM5
+	T0megYnbnHx4O4uOAoeFz17MhutLwJ6+SCudLri7pxf67DcNmaSSHAQ6FSwFY7D19KyXLv7
+	EcZd2VgtXVgy4Ln9OgKIDk=
+X-QQ-XMRINFO: OWPUhxQsoeAVwkVaQIEGSKwwgKCxK/fD5g==
 X-QQ-RECHKSPAM: 0
 
-Commit 1a8c251cff20 ("PCI: move OF status = "disabled" detection to
-dev->match_driver") removed the availability check from pci_set_of_node().
-The function now returns 0 even when the device is disabled in the device
-tree, but its kernel-doc still says that it can return -ENODEV.
+Hi,
 
-Remove the stale -ENODEV description and use the kernel-doc Return:
-heading for the return value.
+This series extracts the PCI change from the Radxa Dragon Q8B board
+support series for review and application through the PCI tree, as
+requested by Manivannan Sadhasivam.
+
+The TC9563 PCI power-control driver powers off downstream ports marked
+disabled in the device tree. Probing these port functions on the Dragon
+Q8B causes a Completion Timeout, which the Root Complex reports as an AXI
+bus error, triggering an Arm SError and preventing boot. The Root Port
+to switch upstream link remains up, so a config-access blocker triggered
+by Root Port link-down does not address this case.
+
+Patch 1 corrects the stale return value documentation for
+pci_set_of_node(). Patch 2 skips Vendor ID reads for unavailable
+DT-described PCI bridges before any config access. Disabled endpoints
+remain discoverable so that PCI fixups can run, with driver binding
+suppressed as before.
+
+Compared with the PCI patch in the original board support series:
+- Split the unrelated kernel-doc correction into a separate patch.
+- Explain the Completion Timeout and SError path in the commit message.
+- Retain the generic PCI implementation, since the issue is not specific
+  to Qualcomm hosts.
+
+The functional change is required by the Dragon Q8B device tree, but this
+series has no dependency on the board or display patches.
+
+Previous posting:
+https://lore.kernel.org/all/20260901-q8b-dts-v1-1-7de0b6a73d08@radxa.com/
+Review discussion:
+https://lore.kernel.org/all/fsrr5xg4plfknfcvv5co4ciklz5pywa5bbfxbthwsnjevysr5v@myghuxblnend/
+https://lore.kernel.org/all/r22to3joold7ugzwolni4qahyumcekbyugrl2bms3xmiysqtgo@hu5s3dnyqwsj/
 
 Signed-off-by: Xilin Wu <sophon@radxa.com>
 ---
- drivers/pci/of.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Xilin Wu (2):
+      PCI: of: Correct pci_set_of_node() return value documentation
+      PCI: of: Avoid config reads for disabled bridge nodes
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index a51dff91b196..9e82c79be3d8 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -24,8 +24,8 @@
-  * pci_set_of_node - Find and set device's DT device_node
-  * @dev: the PCI device structure to fill
-  *
-- * Returns 0 on success with of_node set or when no device is described in the
-- * DT. Returns -ENODEV if the device is present, but disabled in the DT.
-+ * Return: 0 on success with of_node set or when no device is described in the
-+ * DT.
-  */
- int pci_set_of_node(struct pci_dev *dev)
- {
+ drivers/pci/of.c    | 27 +++++++++++++++++++++++++--
+ drivers/pci/pci.h   |  5 +++++
+ drivers/pci/probe.c |  5 +++++
+ 3 files changed, 35 insertions(+), 2 deletions(-)
+---
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+change-id: 20261009-pci-of-disabled-bridges-8406f7c92de2
 
+Best regards,
+--
+Xilin Wu <sophon@radxa.com>
 -- 
-2.56.1
+Xilin Wu <sophon@radxa.com>
 
