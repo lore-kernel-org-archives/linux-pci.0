@@ -1,13 +1,13 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.125.110
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795749148;
-	b=U71uB7cjWenk9HmVlFMo4LB+pHBNyYp4wEE5b+koB+cxnqRDzjyDBvI3mp6b9s3QVlXp
-	 d9/PcmNuQW7neJwDtvcZal2h2tCFX9BqqDNipeSK8HHAbPESoq3ajJXXLm7rILfKuuBmF
-	 3QIC3RXgIP0bRNFwRbnF3dj3beGbCkQDuye76SHLhxHSKfUimTX+7dSkRXfairZn6LyrY
-	 6xXUokcL1wxeCRCuUGLCb3ctKju50x/xm8z5Mvb2XC7pXpa961O3yQbcPAksaoINdIy6V
-	 xVBA0FqBUvWpOt3aKTDa49m/Zw5XINRfhTLTnYf3sQKDATEVD4dzQIXAMvHBRwPrVoA==
+	t=1795749149;
+	b=KgFeMhJ4xY5vfifFby5wbHh39mrE+/j8baBHnznm6u0XGqQV6ak3WHiGGuDLd9nPlKFS
+	 k5EXKc/MqqTflIxX3p+gQFeWPhwHFyJaNVorw28NPhNiKughKIVOBhkoZY7TBJXz/D+HR
+	 g4TbXt612mLwr6Th1rC+qoHD3nLszcHgBzXxJgXQpqbtFhZ7P57oySMItJoNecJDUGhEL
+	 Uwuu9lsYTtHNU8OdvRJcc35z0fdPuk8cv5zJ1TzQZ63HGqeI3Jr+ax/WQcu68smh0H6ai
+	 PIooF7flMG5OnixkJ9WF4daXrML/Wk3cqtUjhS675rPjNq7VWWm7KNzS6s8BDT1t/Tg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795749148;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795749149;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 Content-Transfer-Encoding:Content-Type:X-ClientProxiedBy:MIME-Version:
@@ -24,54 +24,54 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=EiwLirU7SFbB9M+232oshIpCqts/tFuZULmWDH2e0lA=;
-	b=bRimcsJyUFBbOCpbfYNavVdn0UdPaHhgCubzlVxff+t6+B/lWBnlt5BCIorQopkZSTbH
-	 kE517WYtI0JeG0JnZQn22rlhqX+Uwi7VVWZlK7icfd3gUsZ2CwvT4Cl5G+WExHDfNASoT
-	 D9224muA5GnJSXF7xwrcAKeuZcpscImNficvnZb9434gzPW3FeKCFeCI12CkdUK3n5zc6
-	 NlxggNsVCFDJr+nvJnTcMfw++LGtooyz2amy50sD+sepC/n6h2DwKsvZp1Nw4v/+CbqZs
-	 yVXgixnqQIBhwgGmZBZ19xRCfvwsoPcrRk1irYvwPHA4TnFIuC7TQmYf11F3H/tltBg==
+	bh=x0VtTxDDUozFud8mF45CeAKEGsbVeE5i3Q5KIU1Lnr4=;
+	b=n4LlcoquhQJGF8FLpYTjrZgBEP3FSL25BVr5bwY8TN4G5INs1Zt0vfkH+8u+kQ5PQ8mk
+	 U6fcFxaDSM/fLbv3n9UEraRQDcsG/J8O2rDDP4FDkTde2CO1PRJXDidseAQrkSo//Jvxo
+	 aeTLoHFnFRCW+ezdOqXqvFzJYkslfCc49G8vZGDmxVGeb4rf55NLectlGIbZ2qmzLEEX3
+	 PwFL1dW5gYwM6uLvvNks3n8P6GYdx83pCerlBoyal6QHK03o9Dzw4n+y1AhQk8ZNCDYqI
+	 11OpK7ZcsaP6mMJue/Hq/23/mldiMrw9DMOY927EIT3LbDGVflqBfVU4HqMpKcU3MVg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=valinux.co.jp;
 	spf=pass smtp.mailfrom=valinux.co.jp;
-	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=PerVAi0Q;
+	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=SM0dJOh6;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.125.110
 Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021110.outbound.protection.outlook.com [52.101.125.110])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BCA960A381D;
-	Fri, 27 Nov 2026 03:12:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9BCA960A381D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CEBA60A2625;
+	Fri, 27 Nov 2026 03:12:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0CEBA60A2625
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=PerVAi0Q
+	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=SM0dJOh6
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=o7c2m+Up7MoxeYIyMR+X2jLLmJqzX2jyaiV06nN+U4Q6fJbGE4A/gfHvs6MOBW2Dk10QgFyVtYoK1STmLA5jPoTjKOZdauf0GaiqV0odyauMcAbkb9IjNWg9IeFDNGcxQjbrPYtQ6/ueCB7ILAvhKq16I86Zrqbj8nwKCftsWUWyQ+UQhSg+KNrt/s71PuUZq9lw8SigN1xqn+LL2j1su7JhsAUSlei2xuCs2fUfN78wHM++RKuQoz+++wq3tui24aEvqxXMIC73iP8/l2olb2D+b7QoAhbYA5hmCcD8xkvHhHLrvsal1kcG/Coedmr0+/YxNucZvlteZ4YdHHxPpg==
+ b=XGQuwhMKeWC6VQmn1foMuAKiYbKQKnF1L8NMIoiJUTCIRvwx9e8uCpkc9+MBoHDnRL+R30mC0kcEdoGmbEx1r2uzsbTtvaKyxUi2YVTg4s9o1y/fbdI76tirQ99yoN+TiF515GSeR45ABaXQA8FuF7T7MaQHfiJTdvXpKC1rzJ5ef6jpOIrP72MEQvcsfJ/qpQy3suF01lwKMw/mTbWaio2VgUzc++K3SPct7AZY55j/YCKJH5tZsiZER6TvRTY6nW+BF8Cv4wfSWLQsVJD4MmfrtRbeia/lIoMhP/6LujVXQKqkUkq/NYWGOc6co2d0B6yMmXSAWba/3aIZO5DsNg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EiwLirU7SFbB9M+232oshIpCqts/tFuZULmWDH2e0lA=;
- b=PwYgUVj+RuNThrvrhvbHwDiUIRgklKW99DjHu9mgR304BQxpjDVWNcstf7CRFa1wJ03M0xwNtI6uZ3A7JcVMMB7YENXQCKoIWQY57PD5zZbGcSUAwY4t9Dtv3Y+haoJp6U9/Q2YziXvfoni7QyHh9lsMnBO2TMJUbN/LebXwUvPzBDznqWbohERX0i3YXLeGTVS+nQaTYBYz3MMmmkgY32VbLWb1HAlpcfcSkhGBAWm2o+KidSLbLoO2kBwds8zWMKVXq8QA2FtmtJyLkg6PfumeRpZd6LTPeKiEGWmIEUi3dQK/D+ECgKbbKN3+BPiikopMFxbJmDyplVuHDGSOMA==
+ bh=x0VtTxDDUozFud8mF45CeAKEGsbVeE5i3Q5KIU1Lnr4=;
+ b=XY6IpaKhFtSuayWKy1yQiQMea/CFAWDfIU4ADIEc5enqGqgC3FR1x3FiCBMz7OvqXhaeHxmsa9J4d5Spt/YH9c9cRcm66KfwI9fOt02e1zx+THhhVahUJnj9wU7Um9IFRiljajGY0Pb5pS7hc89TQj5VMEZGhnXaFpkk543Ubzt2ByhDM0CzZWvYORThAl+fV7Cuk5TtlqEYXXT5pXrhllV+EQz9kDZBuVyJgBv1zg4LbV0kxQzIw1tCfcbkPHjXarW2YUYBSyrDjQIjSKocU26ft8y1rKdfJoJWVZfE9bkQZpA9tkDIKBLNQY9wVh6bygiHslEdx3r/LI8LIJwS/A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EiwLirU7SFbB9M+232oshIpCqts/tFuZULmWDH2e0lA=;
- b=PerVAi0QsITU1VEnWeVXPgBe+nykYYP3XJkExMgFHjckZzEpLNF1Mz2pkHagiq7lKU+x6XrxNi72+UXlum+V4szsm3iLfasmjb+IC4uD93hl/XazVQSbPltcNItV7+62aLlinkfdRH+JmAsGsOjLRoh1kUtgXda+gZt7OfwfdzQ=
+ bh=x0VtTxDDUozFud8mF45CeAKEGsbVeE5i3Q5KIU1Lnr4=;
+ b=SM0dJOh6DSspocvqQiPHbxuHAE/J/kBQvGhsBXk1k6iKJu8N1wjjm05ipaxWPa9VvZysrrCqHOP0t2UKd07RKpi0qZDbZlaPAO5RUhJU7gUnxbl14i2VsDiwIgx1yaEyLpvUIYMqkBkSC6RB0Ln5rgMjSVdi5K8S3xofXZVopeM=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
  by TYYP286MB4873.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:143::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.9; Fri, 27 Nov
- 2026 03:12:24 +0000
+ 2026 03:12:25 +0000
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0662.007; Fri, 27 Nov 2026
- 03:12:24 +0000
+ 03:12:25 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Manivannan Sadhasivam <mani@kernel.org>,
 	Marek Vasut <marek.vasut+renesas@mailbox.org>,
@@ -97,16 +97,16 @@ Cc: Qiang Yu <qiang.yu@oss.qualcomm.com>,
 	linux-renesas-soc@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v6 14/17] PCI: rcar-gen4: Route Root Port PME and bandwidth notifications
-Date: Fri, 27 Nov 2026 12:11:42 +0900
-Message-ID: <20261127031145.2521228-15-den@valinux.co.jp>
+Subject: [PATCH v6 16/17] arm64: dts: renesas: r8a779g0: Describe the PCIe AER interrupts
+Date: Fri, 27 Nov 2026 12:11:44 +0900
+Message-ID: <20261127031145.2521228-17-den@valinux.co.jp>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261127031145.2521228-1-den@valinux.co.jp>
 References: <20261127031145.2521228-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0349.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:7c::18) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TYCPR01CA0193.jpnprd01.prod.outlook.com
+ (2603:1096:400:2b0::12) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:325::11)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -119,160 +119,105 @@ Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYYP286MB4873:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6800b192-831a-4b76-9ca7-08df4c3440eb
+X-MS-Office365-Filtering-Correlation-Id: 33d593c2-031a-4e83-b3dc-08df4c344278
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|10070799003|23010399003|1800799024|366016|376014|7416014|261009223027099003|18002099003|22082099003|921020|10067099003|56012099006|261102123227099003|261028144727099003|261026140227099003|261026121527099003|261021121427099003|261021123027099003|261022105027099003;
 X-Microsoft-Antispam-Message-Info:
-	w5iEX6jMfNSOG5ScIyPsrYQNcadOzB0Wkoyouz16Vacd+MyOxsbTVRQmXFek2aZKrGfdTf8Yp28nrwgzexqrtJf+RO9i30rLK/G0+gbgJrU6q0S/UD39HuVK6nzEQs9JBzD/IeUxFKQZdgeB+UainUwwKGlbKdHgHncItKxMYvqogLFBCus67Ye/jrHznLeDqoq3d/wtm/+gyrIOFCMHrKPopnVwZvAv1852pL4O/ovnZOhXeiQKi5QmsSO/sNXk8QdxICcgYnUsTDZS/VCW85UeA91C8mJA0/FRg+g3384QyXkYxUfXcReg82DfERJgmZP267FzaVKav3y3bqXeyHW9uMDZKba4wjQ/u0l+3DcGVh9z+GqO/BP0YDhAUCrud9J/gqh49UJMJ3Umrr7YDx0uYjRyiC0HVCfEyRTkhdxuX+toVbX1wYoFXVlfPKQ0A4oRm8Vguq0IqHqn0rEJ+GvPXfJlTXT/t/jVe0uFDfifaL7RRaTpxxlX3M6svpNSFYzg0DMgZCjkXXvBJI0v+RLRnM6njf0yXY8s0Nhk6r+ckgfiNS6iFZxdqDihV+jV8QbV/MOHsJWWE30jzSaAjk46eiPH7g0Lp6QdIEHNHSgL/zCNBUQAXZ38cOyTt+OmEORVH0O/x258N/nirBU4udihy5SW8e1d6Nmgax1POjF5iaLOav7gofDlfMUObROxBkIqz1N8WceDpkzEkiZWNA==
+	lb9+04ZmbL1NyKq4TUSOdLsCfOJUOniZRIu36jyGlVyNYfThYV7nN1yEwWECDDPYc9uge4BUmhvUcIA3uXk+lq10rU5ecUCgapPqcUvWIrrve/UyQad9DkwnXJtHddww3j3qvUmKpjJhwzauwCeUg++lmXgEpHX7qxuRdETX0T5aeyG2uH7XoPwHlLFiY+OkVZMd+7TyLJ6/4SnADbnFx95LM6azpp5X5l6VzGYX6g1t3GSZX7CvPsJyvVpj3J6Ir+U1DVgBldiAbCSmFKVRRRY56uXzBqEIiYu3sWbkrf4mAd2XE1RFL2rTaHbJ004n1lanucI0sxqwKgv0TDfy53F2d5yxNvlPjDCKNFSBP+cNocxDiTJGWIppaG17x/40UdbC9N1ivfmyrG6IbZb2+v1YtaBMjDTu+hHbzpv9cSTTRbSdXIyWZ9xZgEk5It0il1iUZY92uGOiYK8rXAH+AuPqZSYEcxc72+ffrLON3SSXcmqLFvvLLKEyd4ARQUEb0dq8l+vL7N/oe5/tlc/j7torOR5oNBggiO71M1AkIOsRZVIGlWoTl4Dwwp6BT0JspmCjMnqtTwf2KBxSPTiPlCfRnYm/jAUxDSvM31X73nw1kmi4WGHArrivRpbDpyfGg3/uG8Pti6c0YorkZ3XODoAPdp6/65W9+Fy3axynJ7Hf9AjYIyg8b3OUcSNIrgYBWClmwwfltnsQSQ+idDWhGw==
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(23010399003)(1800799024)(366016)(376014)(7416014)(261009223027099003)(18002099003)(22082099003)(921020)(10067099003)(56012099006)(261102123227099003)(261028144727099003)(261026140227099003)(261026121527099003)(261021121427099003)(261021123027099003)(261022105027099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?kVaqhF+gtAnhj3JL7kU7ePtqcSxWbP1d+cmddcTE6w02XB3m44rVj0qFMs9w?=
- =?us-ascii?Q?UbRtRRfK2TxXpX8RDfJu+2NFaKryyjvtz5rbxbUNplV81uf165E0AHTLQ/KZ?=
- =?us-ascii?Q?Vjosac3q+4yckPvct0UNztDSbx0SEuOy7j713mPTVEaDF0h6MJbMW4MjfFOq?=
- =?us-ascii?Q?Feq1Hl0wB3S1OZCqOnHBMr0IEdfE7whp9ft5zI4xOJp9SPSUjR1Rs2FoLyGy?=
- =?us-ascii?Q?Q/dknFm3MFuB+oDFQbHLO2/jbgaXP9qoJDI4sZUzgiTQOUGetxw3IB7sQ7Oq?=
- =?us-ascii?Q?NZfZHe3jGgebMW88eKrWMZ9IrCtIrZg+Jt04hFi6rUtga5nzI51lk8r8jbBb?=
- =?us-ascii?Q?aTf4uW8OUuRhqRqfZFDHsjyVg/Ac5M/bEglf2ykwlcsFs4510BrHKFPVxaLB?=
- =?us-ascii?Q?62s1GKd+gAfmiyRQTfm+PPlnvgpvJKLfyiIOlwX1px3nnQPK5trx2ILsWR4r?=
- =?us-ascii?Q?zFVLm3x1lN9CaXcgtY+bbOianm008SPv8bwQzgC9u7SIm8r9UKKPXP9kWhqe?=
- =?us-ascii?Q?FGE6r4/I8/iy5S9rvQVtEm07YDYbIhf5fS1F7ERCqozT2L4bQdjW5HOyN1dm?=
- =?us-ascii?Q?Ip8Bb1hSKCIKAGk0mJpK3oly/cnAkvN30kSHQP+dSFBOY07sST3kRvO2rxHE?=
- =?us-ascii?Q?TcIzQVsTD7fzSNaloxYtGgJBM44P2sn/Jux04vIOv2ZMmdido671DN+JVN5h?=
- =?us-ascii?Q?0+2X07Yh/ka+oljDcvsJtVaj/3j+rt3NwJdxzz3cuUQ1OVnTYFbzLZy35DAt?=
- =?us-ascii?Q?eA4syB3sgCcYRjD2eewWR5k7pbDkYpuUGGFsFbQ7xmqgsAGWtkHue8eRt6/k?=
- =?us-ascii?Q?iqtsg4VQD9W7jKKgdBGt0+2sDdVBLXDJGltr3WhzbaEQy+43vD3g0vHh8XlX?=
- =?us-ascii?Q?teZpotDUnc9UW3pcBJn+CbM40SKn4DQS+GNw9/mOGU851FFYrnb55pw8KbXv?=
- =?us-ascii?Q?ho4EqtejxAIKR+Rmv/rOD5O+WW+mxSrhgaR9hy+5NiWf/xpwTcTUhe0rrPtZ?=
- =?us-ascii?Q?X0r6TpgLT2bKbzoS1QnJiDCx3p1U9TgIzWpKALK9ynrcsDt2h/Qzsnp97Ua0?=
- =?us-ascii?Q?WAxx4zdt1NA90UcXrf02RHD9S8OESk802nA8pvH09itHEY6NBReNWa2e3LLk?=
- =?us-ascii?Q?WaM95gyWGoM18WAGNKFyG/0VjcAzh3W8BtbXVP4ulYFcXj8c80TV6m1WmAaw?=
- =?us-ascii?Q?zCh8jPbVpdiWlKe8wNB0Ls83w6GlSXR26OW+LXN+7WKwgGLQ+O/PGW7ewNb7?=
- =?us-ascii?Q?oGdV0/n2qAghEgg6RbiMqfmqMlWKDFIx/mrxRvLCqA69LGqRqymmYlQavft4?=
- =?us-ascii?Q?VOlTbKazVL/6ip/BZfQuxpSlF3kFe0ndd9oPjZotd/JlL3a1WgsCIHN+TW8E?=
- =?us-ascii?Q?zdHs/AzHWJRvJnX1eOvdRYoDSiQ8OHwzBsMMjhoq7TF4MFPK8UhhzJOAGcAe?=
- =?us-ascii?Q?HkvJD2yIvE0gzjcs1AL828hCb/XFIaYGm4NpSEEkOleRPoedckaRo+F0LN42?=
- =?us-ascii?Q?+O6UXM1l/xqyI1laQEWe9+RzPTjNrgu7zoutvpFVltBrbmC7FxrIlJmwOKGY?=
- =?us-ascii?Q?zKhbs/gltB0y7kiehrIuySLvNmyEtKVZLElLqTKZD1W9xu06gclVcRPmgmCT?=
- =?us-ascii?Q?BELEg+l1ZR2iyFfU5ZcSrNVOVlM+xEeqf6C8XkidOy6Z+FJdhonpx59d6IX2?=
- =?us-ascii?Q?73ui04p8cmynX1O5rIRoQpptAvgWJbvyDwnr/Zuwq6Qtm7Gn7OKtyIxi+cvN?=
- =?us-ascii?Q?xLlHVJKMwRiGvbxThHe7fgp6OOslvGkG+psqh/G0iL0/UjZ7mBE1?=
+	=?us-ascii?Q?VnF9Uzj8+4K7L9OpqCivOzanNOjbLxhU0tRH/9GR3rq+bCG5j4ip65T5yzAA?=
+ =?us-ascii?Q?Kkk6dsVcEtsrfIpxRt9zfTYHwyCoTu9dp9u9MQsADYjBLT/yt6wUyPAqTows?=
+ =?us-ascii?Q?GJKFSbYCAFDdTkXVSuKfm4HbtB1p3lhSb1Tqx3qn6lG9QbJQya79dRuUgUbX?=
+ =?us-ascii?Q?cDT49/zYoEj4VZjkGrOonQE5voUu8XrP8d02P7rr8pKhTvn1ddVALrXBcHJa?=
+ =?us-ascii?Q?sntQGEMYOjubRNE5PemH8ug1ZvEVxYGlFU1n3fZjobo6CttVNz0eZGERH83I?=
+ =?us-ascii?Q?3QF79zwkO+f1BDoL4N/toeqG+cYt6DVekAra0vi6udOvwjOEbfqFwg3G0urO?=
+ =?us-ascii?Q?luYNrNzC17H+Krt2xxaVsSTJ/gowVvvXqqNjNvoSEJjfebV6KGMdqFX+jAJx?=
+ =?us-ascii?Q?VC9/fdSGaVxEcquz9596orWQcfDOusnFKixRfdLf6LMr5IgT58A+XMcu/gHP?=
+ =?us-ascii?Q?RBkSQsP2P8/8Nd0k0nPkSHM8R0QTUlFt2IFBFQ3abaxOG+7z0kivzo2n76hZ?=
+ =?us-ascii?Q?J5WG3aT2bd0Dh/z30/XMtCyO2f+Edc5JwNNYBN4bQPBQFslxZd45bCJmZgBE?=
+ =?us-ascii?Q?wrxtNQiHffc3b0dEc09BpRnZIzeP5F3OOwiXoOm8djiEyiPpI4J1pbmugNAf?=
+ =?us-ascii?Q?CzTGnQSnbK5DE0U6XfDkWufxEBJt8pD/qVmXEa/j1aTFZPhBl5rALvkARvxm?=
+ =?us-ascii?Q?1ad3XlFS4o01xWT9uG+7ZZCASd0E6v9rOS2/P/5Gk66YOPjcOMB12q6Pbbac?=
+ =?us-ascii?Q?7oy9W5hy1RRwkOwwSS0P2N/NHn393oaSjpfWdfTMSTIipll2uiTc7ABzHyon?=
+ =?us-ascii?Q?plCI3hZiqq4cOxrZSoIPDc055iRd4du7A6aKynOiCSYsuS2PQ1LnUCqKl7fb?=
+ =?us-ascii?Q?E8IizP25+rNwpvrxWP8lXAJQay+uZ/7hfpiR73ZfTdDi5ejOPlkVNcRATX9F?=
+ =?us-ascii?Q?hF3ZAWhAkqTMRSLJLTmHV698/+tv2fIUy+zaTiZFreEmc8ARWfpL9XKiyTMY?=
+ =?us-ascii?Q?IczUeXrsPBZejeTPQ7d7oz4HKyVYaxMwNfGJkrOISOCFdesQtM6TLTRSfq0L?=
+ =?us-ascii?Q?OvPEH03Hr5S7QGdDVCuyM15F/WrOFvcEFkbazDmo/AWV6EZbacfe+F+HiT8a?=
+ =?us-ascii?Q?8R1WCgRez4AtWqJrCnzs+4IOvO8t+rDX4gD4VS4hfT2XU8ezj3czExxDMxG2?=
+ =?us-ascii?Q?HnLPUkaGVTaOBWUXZgqZun7JdhJwAMJkLGyPPLnKsV83jflKb/SXOS2WuOo7?=
+ =?us-ascii?Q?OzMifSvHIBWg8SWH9zagCaJ8NiC7rzn+g+X6mFFb6RTgK4CLH2jGfkKpIqsT?=
+ =?us-ascii?Q?zUhJ0V+31C8CKHu+S8ahPodqMyHacqs4M9VzWHJMtaaLJyal0VAz9jGZ6YdI?=
+ =?us-ascii?Q?/j3EFqdJfxqa5HiokIt7PFjaFa58hvcSR5m3QbTmYcYAL4A8nPKTTQowk/Ej?=
+ =?us-ascii?Q?0YkyITa09KqpWWWsBeNo5ZP+x10mPs9STwMFWYTP5MG6wGenOdCR5CSvw7KN?=
+ =?us-ascii?Q?gpFjpuIUl17Acb1RpvSucboI9kJ1ajPoR3EPQSXgU5Wh4wOpvjF3jwT/nd1D?=
+ =?us-ascii?Q?9SAclNNgNRqy3zRN7C7vUhYr0hdOQA3OoyyWbJl5QJtb/1CaTMZr32/TFQWi?=
+ =?us-ascii?Q?Z/btdoGmlF5HJYbzZWwOU3tsF8ydaF/ZVPJ8mX834bh3dlNUaOggUT0Mp5B2?=
+ =?us-ascii?Q?eL0CZQzA2iklLNx98MN5ezDT8ShQcPqMEvPjpLzGW+kgKPa6t95W0fh/mrjr?=
+ =?us-ascii?Q?Cei68jojTaGj3d+kIGiaN6XvZGBCS5FIvUYN644ZkAZWbjx/trzU?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6800b192-831a-4b76-9ca7-08df4c3440eb
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33d593c2-031a-4e83-b3dc-08df4c344278
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Nov 2026 03:12:22.3368
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Nov 2026 03:12:24.8167
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: KhnF4bSTEKgplRnn+bYXNZCnTtTikoSfHqS7ugpc2N65ZcGVTgRSNSfxwz8ZTmZ0l8YsSO+tipQocyj+edAGMw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: eRIllJiaKSokSynBuirpGteS/6U0lapKxhBfTGtxvE7Zw4LcgTgN4i249Xe/XopyqkSlSc6fMsYyYDszmx0JWg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB4873
 
-The Root Port's PME and link bandwidth notifications are reported in
-PCIEINTSTS0 and routed to intreq_pcim_sub, the interrupt shared with the
-integrated MSI receiver and the reset requests. Dispatch these
-notifications to the virtual Root Port IRQ from the "msi" IRQ handler
-after handling any pending iMSI-RX interrupts. This keeps Root Port
-service handling out of the path between the reset-request check and
-the iMSI-RX status reads. The existing dispatcher rechecks reset requests
-before invoking the port services.
+The PCIe controllers report Root Port AER notifications through SPI 454
+and SPI 461, respectively, separately from the integrated MSI receiver
+interrupts. Describe these interrupts with the "aer" name so the
+controller driver can use them for Root Port error reporting.
 
-Enable the sources only while the Root Port IRQ is unmasked, and clear
-the MSI-form latches in irq_ack together with the AER one. On an R-Car
-S4 with the GIC ITS as MSI parent, a notification from a link retrain
-now reaches the bandwidth controller service, which clears LnkSta.LBMS.
+Append the new interrupts to preserve the existing interrupt indices.
 
+Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
-Changes since v3:
-  - None.
+Changes since v5:
+  - Add Geert's Reviewed-by tag. No code changes.
 
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 30 ++++++++++++++++-----
- 1 file changed, 23 insertions(+), 7 deletions(-)
+ arch/arm64/boot/dts/renesas/r8a779g0.dtsi | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 51702e604793..548e7033d401 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -66,6 +66,16 @@
- #define AER_RC_ERR_INT		BIT(27)
- #define RP_AER_MASK		(AER_RC_ERR_MSI | AER_RC_ERR_INT)
- 
-+/* Root Port notifications routed to intreq_pcim_sub ("msi") */
-+#define BW_MGT_MSI		BIT(23)
-+#define BW_MGT_INT		BIT(22)
-+#define LINK_AUTO_BW_MSI	BIT(21)
-+#define LINK_AUTO_BW_INT	BIT(20)
-+#define PME_MSI			BIT(12)
-+#define PME_INT			BIT(10)
-+#define RP_SUB_MASK		(BW_MGT_MSI | BW_MGT_INT | LINK_AUTO_BW_MSI | \
-+				 LINK_AUTO_BW_INT | PME_MSI | PME_INT)
-+
- /* PCIe DMA Interrupt Status Enable */
- #define PCIEDMAINTSTSEN		0x0314
- #define PCIEDMAINTSTSEN_INIT	GENMASK(15, 0)
-@@ -75,7 +85,8 @@
- 
- /* PCIe Interrupt Status 0 Clear */
- #define PCIEINTSTS0CLR		0x0340
--#define RP_LATCHED_MASK		AER_RC_ERR_MSI
-+#define RP_LATCHED_MASK		(AER_RC_ERR_MSI | BW_MGT_MSI | LINK_AUTO_BW_MSI | \
-+				 PME_MSI)
- 
- /* Port Logic Registers 89 */
- #define PRTLGC89		0x0b70
-@@ -136,7 +147,7 @@ struct rcar_gen4_pcie {
- 	struct platform_device *pdev;
- 	struct reset_control *perst;
- 	const struct rcar_gen4_pcie_drvdata *drvdata;
--	/* intreq_pcim_sub ("msi"): iMSI-RX and other controller notifications */
-+	/* intreq_pcim_sub ("msi"): iMSI-RX, reset requests, Root Port PME/bandwidth */
- 	int msi_irq;
- 	struct work_struct link_down_work;
- 	/* Allow Root Port event handling after enumeration and until teardown. */
-@@ -579,7 +590,7 @@ static void rcar_gen4_pcie_app_irq_sync_locked(struct rcar_gen4_pcie *rcar)
- 	lockdep_assert_held(&rcar->app_lock);
- 
- 	val = readl(rcar->base + PCIEINTSTS0EN);
--	val &= ~(MSI_CTRL_INT | RP_AER_MASK);
-+	val &= ~(MSI_CTRL_INT | RP_AER_MASK | RP_SUB_MASK);
- 	/*
- 	 * Note that rcar->rp_events_armed is not checked here because device
- 	 * removal may still need iMSI-RX interrupts after Root Port events have
-@@ -589,6 +600,8 @@ static void rcar_gen4_pcie_app_irq_sync_locked(struct rcar_gen4_pcie *rcar)
- 		val |= MSI_CTRL_INT;
- 	if (rp_events && rcar->rp_irq_enabled && rcar->aer_irq > 0)
- 		val |= RP_AER_MASK;
-+	if (rp_events && rcar->rp_irq_enabled)
-+		val |= RP_SUB_MASK;
- 	writel(val, rcar->base + PCIEINTSTS0EN);
- 
- 	val = readl(rcar->base + PCIERSTSTSEN);
-@@ -736,12 +749,15 @@ static irqreturn_t rcar_gen4_pcie_msi_irq_handler(int irq, void *data)
- 
- 	status = readl(rcar->base + PCIEINTSTS0) &
- 		 readl(rcar->base + PCIEINTSTS0EN);
--	if (!(status & MSI_CTRL_INT))
--		return IRQ_NONE;
-+	if (status & MSI_CTRL_INT)
-+		dw_handle_msi_irq(&rcar->dw.pp);
-+	if (status & RP_SUB_MASK)
-+		rcar_gen4_pcie_rp_irq_dispatch(rcar);
- 
--	dw_handle_msi_irq(&rcar->dw.pp);
-+	if (status & (MSI_CTRL_INT | RP_SUB_MASK))
-+		return IRQ_HANDLED;
- 
--	return IRQ_HANDLED;
-+	return IRQ_NONE;
- }
- 
- static int rcar_gen4_pcie_msi_irq_init(struct rcar_gen4_pcie *rcar)
+diff --git a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
+index 5284923b6cef..8342d3c6f988 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779g0.dtsi
+@@ -801,8 +801,9 @@ pciec0: pcie@e65d0000 {
+ 			interrupts = <GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 451 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>;
+-			interrupt-names = "msi", "dma", "sft_ce", "app";
++				     <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 454 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi", "dma", "sft_ce", "app", "aer";
+ 			clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
+ 			clock-names = "core", "ref";
+ 			power-domains = <&sysc R8A779G0_PD_ALWAYS_ON>;
+@@ -850,8 +851,9 @@ pciec1: pcie@e65d8000 {
+ 			interrupts = <GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 457 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 458 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 462 IRQ_TYPE_LEVEL_HIGH>;
+-			interrupt-names = "msi", "dma", "sft_ce", "app";
++				     <GIC_SPI 462 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 461 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi", "dma", "sft_ce", "app", "aer";
+ 			clocks = <&cpg CPG_MOD 625>, <&pcie1_clkref>;
+ 			clock-names = "core", "ref";
+ 			power-domains = <&sysc R8A779G0_PD_ALWAYS_ON>;
 -- 
 2.54.0
 
