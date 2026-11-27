@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795782366;
-	b=y9P8AgrZtvq0gU0cvZmiAyGt96Xl7xNo8fbEU9iSj09f7gXBBfbg7N/UVG9VdjOBL/Jc
-	 Zf0klpiYgS3ydF1m73u3JBZinNvGWfoZVObLZcwzuPRKZQ1H9Tm8CCFCqoQlUW1BHMIkx
-	 X9rqRTpCgaFXCpTjWscDjWBV79LmwjWmyavV7eCn+vJgQs/+6fTOjW9ANBTMf0PKIPfOJ
-	 2BbVPpQfWgY0S7jSz8vyHk9/xvLUkQDNwpayw8kp1VI65tHgdKHyJYiu/ejy2UkbCr0mD
-	 Tq7uE5TihgArVcolEgUilA8hLDlacK8QjpiH08/0Vy4wreDDuclOP9fcm4bayLU7sXA==
+	t=1795782362;
+	b=kkNWLxKTwYUfRrxBPH+8/HiZPSUS3CfRXKgqxBcX9DhcdKxRui3TFaP/spBKiSjgxC8T
+	 zLg+CeS0h/GfOGIUTX8LkTm/3uFtY47lvQ8B4tLqK+kc+xpmg7FJP0dTOJRWSD1yJiWkt
+	 jmL83ZHsnB7eGSkdO6Nghb/36Wb2unK8zVnO6fB9z9zt7XX/CtPVTOF17pXu98XP0ZprK
+	 fN5M5rrZ23jMpGqasNYV8jNW9rfD5u/os3IIQYVi/VSW7ruNU+vRhFJH5GP7rx0sW52qf
+	 Uyh2es4eZHbm8UoUfPfgCEt1gYa/eP3qY/ED1Sq0CZf5FKdEfmzgpY6XQno9j1X/AuA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795782366;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795782362;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=bg93s8E2qpiOXI1yg+RWP0SFq8cNRtNnpPDwdNib6R8=;
-	b=Hzep4rZaSo5pFxqbNCJWHdbTD1gvh33tAXGR3NnF0k6SFzv5pN0wBiJ41/5vbzAJyeRv
-	 l60BPvEUcfEKsBoCpvB1RpYDrLeCv2oVHDqFm95KY8RN6EASzFvD73sX/pyu7xLI4iVS6
-	 BwjEp8YpdiuzPQ9j+UgVtrsIIPemsrJPBl3Bd0lXda2LinHMy9BBngXpLjpXwp/Oc+jt7
-	 pfLUt8Obidhdkd00uL6uxrO2o+meGsNwaDCVjkS4tbZnEkYmcQdd2lMpVI3CbJAuUB66f
-	 gRR3LN8qnyd766qS1vNWvhYnwPSzqAC2XFTCeuYeGJkFdv+W6y0KME59oJv5vUSMXiA==
+	bh=wO/IOEvgfeJp88G3JhgG/noxUD2JKBD20IHHFxKJYuc=;
+	b=KEWdusu+n4xCDqJU6SDdiviAghbihhw/sFeNQzT+mGnXFP6fJTC7MrqYTeHhWPXPr3UJ
+	 66ZSM1qMEkLWKaDRunoKei8pDJ+AoWpCOVxWTypVZCSfm0jMNbxa/ZSwFsPHp1ezau7Pz
+	 qPRqboJh3txXc1qDVdZ0cnQAuCG89wfP0CBS0rc1R02kOI7jl5SdJFWBoxb6y4PUtUOsh
+	 qRzyZin5aIfHAqH7siPMEq4uYlVfrJngpF5xRap+wIpdRMwnc4/HJNon6L85tWgatLvHF
+	 yPmnCnzGvo3JXSSoN11meMzrzMAZheqJLf2kGNYryFUkBzkZHxUwAZPLu9FXuD6iK0Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H0IIX6t+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LW6u8bF2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1D71606A338;
-	Fri, 27 Nov 2026 12:26:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00936606A690;
+	Fri, 27 Nov 2026 12:26:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H0IIX6t+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D1371F00893;
-	Fri, 27 Nov 2026 12:26:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LW6u8bF2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D49071F00A02;
+	Fri, 27 Nov 2026 12:25:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795782365;
-	bh=bg93s8E2qpiOXI1yg+RWP0SFq8cNRtNnpPDwdNib6R8=;
+	s=k20260515; t=1795782361;
+	bh=wO/IOEvgfeJp88G3JhgG/noxUD2JKBD20IHHFxKJYuc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=H0IIX6t+zutMiF55Susal3PFvq6aiLSRkmxkwqPipXuMFrZ93zliUC5V2CKvPwfdQ
-	 krRhxyZjzHgjMJXE6FWBLzxTw73NHDgXMGmglqeselfTCPTNx30Xv6xv59vp2KWumb
-	 eM9M6RX5iSa+q1vc1gt8I7WY71fPqlxMbqOTJ/J8WRgvaoRzE/tlkNOEj9+3vZFA36
-	 KhmaJZedzie2/kNbRDe7B+NTJheXmcpOqX6JOTPLBUoafGU8IErF1ucWcpBjtArpiz
-	 Roq3DD1iyJaiquku45grPzzBTugp3kwhQ6cgusx6rE/XoMzx54PyZBvaOvBRuNXMvi
-	 ePpFfD2N+Q1BA==
+	b=LW6u8bF2kVNmuWmelsSivsj/jA5wffvdi1FVsMa7rCrDRU+cLnvmXnjGR0S3F8lPO
+	 LOrTRj6a/JAKn+Gq3xSuQO7JUVjDJwaouUu7nd4dAS8GKHcBKYF930PNt8ZwwHF0AW
+	 nKqXWh71uaU/BVIfWWajGCudQT9HMdSkeb3oFplARqAvV1SonkUm65FWTfaYQWbFjS
+	 5jIZ98K93cxNnS4JzZKAv6rChjYiqXdfsDEquIKozcQgejaSHF6uCRo3emRX8gTPdO
+	 lVwAZkwlLtUOft+qQqhQ+wchhSggb3UE+b3EVp3rL98D4TXA4i3uupInAHV3TaDw6M
+	 bNy8IM7TEipew==
 From: Pratyush Yadav <pratyush@kernel.org>
 To: Mike Rapoport <rppt@kernel.org>,
 	Pasha Tatashin <pasha.tatashin@soleen.com>,
@@ -54,9 +54,9 @@ Cc: kexec@lists.infradead.org,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 5/6] kho: fix kernel-doc return for kho_alloc_preserve()
-Date: Fri, 27 Nov 2026 12:25:31 +0000
-Message-ID: <20261127122536.3708770-6-pratyush@kernel.org>
+Subject: [PATCH 4/6] kho: use unsigned long for kho_preserve_pages() and co when KHO=n
+Date: Fri, 27 Nov 2026 12:25:30 +0000
+Message-ID: <20261127122536.3708770-5-pratyush@kernel.org>
 X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
 In-Reply-To: <20261127122536.3708770-1-pratyush@kernel.org>
 References: <20261127122536.3708770-1-pratyush@kernel.org>
@@ -73,30 +73,49 @@ Content-Transfer-Encoding: 8bit
 
 From: "Pratyush Yadav (Google)" <pratyush@kernel.org>
 
-kernel-doc complains:
+Commit 840fe43d371f ("kho: use unsigned long for nr_pages") changed
+nr_pages to unsigned long, but it forgot to update the KEXEC_HANDOVER=n
+stubs.
 
-  No description found for return value of 'kho_alloc_preserve'
-
-It does not recognize '@return'. Use 'Return' instead.
-
+Fixes: 840fe43d371f ("kho: use unsigned long for nr_pages")
 Signed-off-by: Pratyush Yadav (Google) <pratyush@kernel.org>
----
- kernel/liveupdate/kho_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/kernel/liveupdate/kho_core.c b/kernel/liveupdate/kho_core.c
-index 3f9d408b9d29..580cdb3ea070 100644
---- a/kernel/liveupdate/kho_core.c
-+++ b/kernel/liveupdate/kho_core.c
-@@ -1584,7 +1584,7 @@ EXPORT_SYMBOL_GPL(kho_restore_vmalloc);
-  * Note: The actual allocated size will be rounded up to the nearest
-  * power-of-two page boundary.
-  *
-- * @return A virtual pointer to the allocated and preserved memory on success,
-+ * Return: A virtual pointer to the allocated and preserved memory on success,
-  * or an ERR_PTR() encoded error on failure.
-  */
- void *kho_alloc_preserve(size_t size)
+---
+
+I don't think this is stable material since there is no problem in
+practice.
+---
+ include/linux/kexec_handover.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/kexec_handover.h b/include/linux/kexec_handover.h
+index ef2b188c8ed0..a20456b8da20 100644
+--- a/include/linux/kexec_handover.h
++++ b/include/linux/kexec_handover.h
+@@ -66,12 +66,12 @@ static inline int kho_preserve_folio(struct folio *folio)
+ 
+ static inline void kho_unpreserve_folio(struct folio *folio) { }
+ 
+-static inline int kho_preserve_pages(struct page *page, unsigned int nr_pages)
++static inline int kho_preserve_pages(struct page *page, unsigned long nr_pages)
+ {
+ 	return -EOPNOTSUPP;
+ }
+ 
+-static inline void kho_unpreserve_pages(struct page *page, unsigned int nr_pages) { }
++static inline void kho_unpreserve_pages(struct page *page, unsigned long nr_pages) { }
+ 
+ static inline int kho_preserve_vmalloc(void *ptr,
+ 				       struct kho_vmalloc *preservation)
+@@ -95,7 +95,7 @@ static inline struct folio *kho_restore_folio(phys_addr_t phys)
+ }
+ 
+ static inline struct page *kho_restore_pages(phys_addr_t phys,
+-					     unsigned int nr_pages)
++					     unsigned long nr_pages)
+ {
+ 	return NULL;
+ }
 -- 
 2.56.1.839.g22a8290db9-goog
 
