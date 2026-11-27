@@ -1,44 +1,44 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795782347;
-	b=4y6xWWpvz+wkJo6uPmdebJn5uo8tTtWWhxPxLnveyfLjv5KDlms5UFkfWTdCZPRVY0R8
-	 JUfoyKxU/GLCr9na2Bky/wPpvVqeXHxKFook3JpNyl2cLvBK6O9QFVAd9U53gsS4ofRO8
-	 rbxc4yPbJOtjhNbFHyl1Ud+G/xVoH65JKCCSRJXJLGeTKXCW3xu+h+kGspRI1+fF8k5fV
-	 m+2e2pgTNQ0N2hGRB/ivNnps3u/f+s2UsiFTXIQzj2d1y99K1yPpN2ufUcU8l1U0vQyZ8
-	 3UJZYbWPcFVrtElAdpC07uAr3vmGzPhe8rF6JmAzsBc1xs5uvLZAcGGdXbjUvkHLXnA==
+	t=1795782366;
+	b=y9P8AgrZtvq0gU0cvZmiAyGt96Xl7xNo8fbEU9iSj09f7gXBBfbg7N/UVG9VdjOBL/Jc
+	 Zf0klpiYgS3ydF1m73u3JBZinNvGWfoZVObLZcwzuPRKZQ1H9Tm8CCFCqoQlUW1BHMIkx
+	 X9rqRTpCgaFXCpTjWscDjWBV79LmwjWmyavV7eCn+vJgQs/+6fTOjW9ANBTMf0PKIPfOJ
+	 2BbVPpQfWgY0S7jSz8vyHk9/xvLUkQDNwpayw8kp1VI65tHgdKHyJYiu/ejy2UkbCr0mD
+	 Tq7uE5TihgArVcolEgUilA8hLDlacK8QjpiH08/0Vy4wreDDuclOP9fcm4bayLU7sXA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795782347;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795782366;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=vIra0SPO6KCMA7V7+wMdA0YK65SWM0LHFYgUPK6Xstg=;
-	b=ZJZ2fuphssGgc3bfCbngcO3Nto7jvInTY0Y6tp7oXzxpo2DmBmCGEmfWvkfmZOPuF7Eh
-	 my0F3Nb0WfdalaExs7G0/lPqKuHRx0L3Q+HLa7bJeTRlNPSs0Yx60HYtmKxfOboHldtuc
-	 exalaG0QU2hcbtS2r/9d6kQN+Azq18wXweYcKWl7q9MOpK8O80CFhbJQ3g7DgWCHxjAyc
-	 KFUIpG/rQExWK6W0Pen/g7HkyVSHnKssr5Gqk4wGIaq69PNDMC0xzmG4TprcSEpywo+eK
-	 AC70LBvf5zSi+W/zyRpyTAZ1wiIKBtCNs5S5DjJb2CLAt30l6QHnNJWM3uYV7ye/m9A==
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=bg93s8E2qpiOXI1yg+RWP0SFq8cNRtNnpPDwdNib6R8=;
+	b=Hzep4rZaSo5pFxqbNCJWHdbTD1gvh33tAXGR3NnF0k6SFzv5pN0wBiJ41/5vbzAJyeRv
+	 l60BPvEUcfEKsBoCpvB1RpYDrLeCv2oVHDqFm95KY8RN6EASzFvD73sX/pyu7xLI4iVS6
+	 BwjEp8YpdiuzPQ9j+UgVtrsIIPemsrJPBl3Bd0lXda2LinHMy9BBngXpLjpXwp/Oc+jt7
+	 pfLUt8Obidhdkd00uL6uxrO2o+meGsNwaDCVjkS4tbZnEkYmcQdd2lMpVI3CbJAuUB66f
+	 gRR3LN8qnyd766qS1vNWvhYnwPSzqAC2XFTCeuYeGJkFdv+W6y0KME59oJv5vUSMXiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NqTI2cWq;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H0IIX6t+;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BA91606A31C;
-	Fri, 27 Nov 2026 12:25:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1D71606A338;
+	Fri, 27 Nov 2026 12:26:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NqTI2cWq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA1CD1F000C1;
-	Fri, 27 Nov 2026 12:25:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=H0IIX6t+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D1371F00893;
+	Fri, 27 Nov 2026 12:26:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795782346;
-	bh=vIra0SPO6KCMA7V7+wMdA0YK65SWM0LHFYgUPK6Xstg=;
-	h=From:To:Cc:Subject:Date;
-	b=NqTI2cWqT7sayH9ORaHeylVAF7fwQWncs7cD1N5+FvdBR+UTvK99Alc4u8fqJafnE
-	 UZ86EaZGc/EuW4a0MJrKqXsyQ8vQXSr8yL+e1C6Nobnr8pCzSPZK21j6YlULugFMmy
-	 R7e6RX27cnS5xW1ZtCxapH03I4ZLO7oRXvUXi+Wxe4L4XuR+X5bVnlXO7yBqxQnztI
-	 pRFvRynI9ct60n6Jhz/RmUpKwi7PjWmNDUPEjm7keqf9tiZqIJcw2oDloU2wKC+vtr
-	 EMvlxd73jP4ZtLE0d/kQftOpg9E8r+U8WMdPCT/CmUQ3TPBcl8t3ivNicv/1LtntRD
-	 HWZWcPjbgMMyw==
+	s=k20260515; t=1795782365;
+	bh=bg93s8E2qpiOXI1yg+RWP0SFq8cNRtNnpPDwdNib6R8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=H0IIX6t+zutMiF55Susal3PFvq6aiLSRkmxkwqPipXuMFrZ93zliUC5V2CKvPwfdQ
+	 krRhxyZjzHgjMJXE6FWBLzxTw73NHDgXMGmglqeselfTCPTNx30Xv6xv59vp2KWumb
+	 eM9M6RX5iSa+q1vc1gt8I7WY71fPqlxMbqOTJ/J8WRgvaoRzE/tlkNOEj9+3vZFA36
+	 KhmaJZedzie2/kNbRDe7B+NTJheXmcpOqX6JOTPLBUoafGU8IErF1ucWcpBjtArpiz
+	 Roq3DD1iyJaiquku45grPzzBTugp3kwhQ6cgusx6rE/XoMzx54PyZBvaOvBRuNXMvi
+	 ePpFfD2N+Q1BA==
 From: Pratyush Yadav <pratyush@kernel.org>
 To: Mike Rapoport <rppt@kernel.org>,
 	Pasha Tatashin <pasha.tatashin@soleen.com>,
@@ -54,10 +54,12 @@ Cc: kexec@lists.infradead.org,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 0/6] kho: housekeeping
-Date: Fri, 27 Nov 2026 12:25:26 +0000
-Message-ID: <20261127122536.3708770-1-pratyush@kernel.org>
+Subject: [PATCH 5/6] kho: fix kernel-doc return for kho_alloc_preserve()
+Date: Fri, 27 Nov 2026 12:25:31 +0000
+Message-ID: <20261127122536.3708770-6-pratyush@kernel.org>
 X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
+In-Reply-To: <20261127122536.3708770-1-pratyush@kernel.org>
+References: <20261127122536.3708770-1-pratyush@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -71,50 +73,30 @@ Content-Transfer-Encoding: 8bit
 
 From: "Pratyush Yadav (Google)" <pratyush@kernel.org>
 
-Hi,
+kernel-doc complains:
 
-This series is a collection of miscellaneous cleanups for KHO. The
-patches are all independent of each other for the most part. They are
-kept in a series mainly to keep things easier to track and manage.
+  No description found for return value of 'kho_alloc_preserve'
 
-Patch 1 is lifted from [0]. All others are new.
+It does not recognize '@return'. Use 'Return' instead.
 
-[0] https://lore.kernel.org/kexec/20261116134013.1636689-3-pratyush@kernel.org/
+Signed-off-by: Pratyush Yadav (Google) <pratyush@kernel.org>
+---
+ kernel/liveupdate/kho_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-Pratyush Yadav
-
-Pratyush Yadav (Google) (6):
-  kho: build KHO objects into a single kho.o
-  kho: use acronym for KHO .c files
-  kho: move kho_{block,radix_tree}.h into include/linux/kho/
-  kho: use unsigned long for kho_preserve_pages() and co when KHO=n
-  kho: fix kernel-doc return for kho_alloc_preserve()
-  kho: don't reference subtree blobs as FDTs
-
- Documentation/core-api/kho/index.rst          |  6 +--
- MAINTAINERS                                   |  3 +-
- drivers/pci/liveupdate.c                      |  2 +-
- include/linux/kexec_handover.h                |  6 +--
- include/linux/{kho_block.h => kho/block.h}    |  0
- .../{kho_radix_tree.h => kho/radix_tree.h}    |  0
- kernel/liveupdate/Makefile                    | 12 +++--
- kernel/liveupdate/kho_block.c                 |  2 +-
- .../{kexec_handover.c => kho_core.c}          |  8 +--
- ...kexec_handover_debugfs.c => kho_debugfs.c} | 54 +++++++++----------
- ...xec_handover_internal.h => kho_internal.h} | 10 ++--
- kernel/liveupdate/luo_core.c                  |  2 +-
- kernel/liveupdate/luo_internal.h              |  2 +-
- kernel/liveupdate/luo_session.c               |  2 +-
- 14 files changed, 56 insertions(+), 53 deletions(-)
- rename include/linux/{kho_block.h => kho/block.h} (100%)
- rename include/linux/{kho_radix_tree.h => kho/radix_tree.h} (100%)
- rename kernel/liveupdate/{kexec_handover.c => kho_core.c} (99%)
- rename kernel/liveupdate/{kexec_handover_debugfs.c => kho_debugfs.c} (75%)
- rename kernel/liveupdate/{kexec_handover_internal.h => kho_internal.h} (87%)
-
-
-base-commit: fcddbfa7a3693f1225a4d32b28401543b3bbedaf
+diff --git a/kernel/liveupdate/kho_core.c b/kernel/liveupdate/kho_core.c
+index 3f9d408b9d29..580cdb3ea070 100644
+--- a/kernel/liveupdate/kho_core.c
++++ b/kernel/liveupdate/kho_core.c
+@@ -1584,7 +1584,7 @@ EXPORT_SYMBOL_GPL(kho_restore_vmalloc);
+  * Note: The actual allocated size will be rounded up to the nearest
+  * power-of-two page boundary.
+  *
+- * @return A virtual pointer to the allocated and preserved memory on success,
++ * Return: A virtual pointer to the allocated and preserved memory on success,
+  * or an ERR_PTR() encoded error on failure.
+  */
+ void *kho_alloc_preserve(size_t size)
 -- 
 2.56.1.839.g22a8290db9-goog
 
