@@ -1,82 +1,114 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.33
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795815324;
-	b=Nj/t8JQO/1MTMFAZhDWOkJq1kZM+trnypiQvkQbQkuIiMElthsqmhvPJ008SIU01f4Gi
-	 CQMtn2b7YSAH13VwLPGXMOdIlYzCawDVO0kVELXwLjgWKzxZPM50PNGXULy61fx1TN7pK
-	 pCG+aZmX1dS0px8MAPG1kX68dkMaZ0xflsNf0XzDxcO1YSCY9GuOAZ8wmXBzrSbR1MJgt
-	 wYFgGA73qgFgIUGjZwCznQ8d+bc4SDEbRL6lzYtZfvUyljDTtQKi06kyx1xuJg0OMExTR
-	 1VcBJAknC8AGAN+hEVJCJ4Flx//Hy2527WYQs9MWpW+vH7kZaOelzLeUVbEuho7yBqg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795815324;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=0rF4OiVYIL+9GB5/MBr7yNG2ilz35VyTt1U9kvbWsvY=;
-	b=3O6+YZMvzudKimr18TViFpWsLZdaFGetQ0Fbs19miAzEg3MKbZabXbuqA1sSbq0xscZE
-	 e+dGMro73e6eZfuv05fG8G7Xe52d23tOFM9boYEYZwElR0S8ie5C7RfV9TPkmuNKD9glB
-	 1hMtKU75RmIgYIFktX7AgyH2rvZ2+0AhRfMLcpdRaZx9i/o+b7pf+ZeKBM57An6vihLuE
-	 I58GPodww4R9y+ZB455TkxTdVpm4SqvaavSuWDzyGxL7SVyKoVHE2P+gc2r2JF27f2BmZ
-	 OQDe+N990zO0ucaKMm2dsK1S4GaMD+in8SBc9nO9KdlNzA1Y35JunvYn/uyO44PlhYQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=sKYLUba3;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.33
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010033.outbound.protection.outlook.com [52.101.61.33])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=202.12.124.140
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795817105;
+	b=Igjqw9M5t/QXmqbQUeQ+2ZmdNZ2Dciqa3/Qlz7gHLO6hOHE7KsozTk8CwzjKXN4gM6vH
+	 y6PSvYHFr+LG+Ci4ak2sJyBlQ4R4GZRBo+pAOky5hl5Bo0tjMdApwaVGa9ZBGrMiOP/8r
+	 M/aZZDO+vSI1THq+N7EP1JFKK0zAKlumG9XqIxaB4QozzajBEuFoUOpP7KfErcBitzJaN
+	 DUNGfx4FF4Us85k8bQ4S+q2YegstH9SG5djKUAkRPojVeCCv+6FAJhXatwAFM/4DWukZh
+	 brjgIl0Z4UjfZ4BM2bvGWzop0Rz1VMLMSbtfzBkmWCILqZh0A3KyteW3nnPTaTt1QwA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795817105;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
+	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
+	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
+	 Received:Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 X-Mailer:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=ruSTi2KXnNElVne/1XJA5zErngKPBaYI+3TNP5Q+jOA=;
+	b=DF7k47laht1SGjldEc7QdS/CZ8u/rmDPCQumE4NN2NBWOBWmrpjRLy661c4LHsZqLEJz
+	 zdRIBANa1FUunhL6cJFrdNqP8B5YWbkbvgUDU9mg6dGdcpuRPMJ4WLPTZTRwow08GLNeh
+	 /XxNPZU0ErrLdwpshWAfiuxgbTDoOnuxbbIFFVD6Crcq95N9DPSNibfuAcnHV2dbyhXN9
+	 aQDMD7CJRCA15+Qy+ESjmWVbDDJg+/9TIX+fptwZ9ikj71fMjU0AE7+27kCbmCaockS9v
+	 8AU/6w6ieKrbnBAQmyfsovcPpd+5oifA/NB+C0AY37CcLQjVaLGhiEsvDXiSX2zlCig==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=shazbot.org;
+	spf=pass smtp.mailfrom=shazbot.org;
+	dkim=temperror header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=H2Cmp6h+;
+	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=1Rp09Bfw;
+	arc=none smtp.remote-ip=202.12.124.140
+Received: from flow-b5-smtp.messagingengine.com (flow-b5-smtp.messagingengine.com [202.12.124.140])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25A60606A32F;
-	Fri, 27 Nov 2026 21:35:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25A60606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3439E606A321
+	for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2026 22:05:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3439E606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=sKYLUba3
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=sQHIWQngeqAMHoNIJDUcfeko3hD9l+jfIRHOYQRqG0Jzo+ZiWKTdtsTku7D7GXbZ02JyIvpJeo/Ce+5LbV6RhVjHyiLZwlj1Id4uVbSy5ZSY3+sSbbr/VXtoRiHgQmcHM0jp+7sOrzdXeWu8arwjVa8P2LJSr+QKu4Az6Gb4QzynHr7uQlxJi/EeHGnyF9rC0uEdrYXRsD9F+6w6AkgnHW2m6ky+Xk42LWbNqzd1LgM+9ZXSOVFNAziIvK91kSoPMoNvXmkGaii8IaNTV6qesKMZdXJLP5fF6lOvBh3RLDKiLWsZv+6Rd8KZeLqzDnTDlME75OBHlw/RL+SdCvfI+g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0rF4OiVYIL+9GB5/MBr7yNG2ilz35VyTt1U9kvbWsvY=;
- b=I11DerbNp0xVjJHZ7txTMe1dLMgDigtmoDwC/0juvT13A488z2nfXJKxzJJNhHxxFHHY2HcgkH7ko2eRbz4eBdRf5qT7HEnaUYPkQ+55do3YkNdrY/VTpkX3xMSkebUKiSwpfxL4Kj5Sm7ROfPLqTPnBxBUEzjpTI0mp9QtSUSwlChF8MsbvND64NjJpl1yDyjhc04631AKmm0HPlBcNxyi2GyE1keiYzMEQTPiFyFh+1RYgCimSHjVLkUtGv1iEAuf75+8MfHHUAk3c01s8+Mwm3Zj4SLKzZLqgIo3Q5+JvI07wfssMBGS8nkJGbUxJslkKuQAjdbeb64IrjJwR2g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0rF4OiVYIL+9GB5/MBr7yNG2ilz35VyTt1U9kvbWsvY=;
- b=sKYLUba3QdzIdyWAX+tR+AqYIh+fi2mUoEMzzKB5y/UVpzbkuOMzAlPB4bUY/pyqRhUP4SUKxTb70oH/Lf4Zzj8OX7jaq0LK6Pa3c57Zeju8M+810v+7l8oVOkkgXbStUteh50tMMe4E/kYnS6n2EzzoyMb5p3ugpeiaxV6bXoVyhPuTTk2P2LpPs3XXhVy70q+VmNGtcCkKXz1f8M5hquC2evfDgGgI9mjwTvPsMApyB7Qhoa4LHRGgtvzscVInWUyO0Dmz/AyW1lRnfTWClY/poskTVmJF/l4VCbZzXFXF7wCZUge6Xv1sdGShRN3bkhMGjcJ1SmMVHWtBU1RfCQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CY5PR12MB6549.namprd12.prod.outlook.com (2603:10b6:930:43::6)
- by SA1PR12MB8843.namprd12.prod.outlook.com (2603:10b6:806:379::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.11; Fri, 27 Nov
- 2026 21:35:18 +0000
-Received: from CY5PR12MB6549.namprd12.prod.outlook.com
- ([fe80::2cdd:a549:db13:202b]) by CY5PR12MB6549.namprd12.prod.outlook.com
- ([fe80::2cdd:a549:db13:202b%4]) with mapi id 15.21.0662.004; Fri, 27 Nov 2026
- 21:35:17 +0000
-Message-ID: <ad773f07-bf03-4042-b79b-f82cc2d64579@nvidia.com>
-Date: Fri, 27 Nov 2026 16:35:10 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 9/9] vfio/nova-vgpu: add the Rust VFIO variant driver
-To: Alex Williamson <alex@shazbot.org>
+	dkim=temperror header.d=shazbot.org header.i=@shazbot.org header.a=rsa-sha256 header.s=fm2 header.b=H2Cmp6h+;
+	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=1Rp09Bfw
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailflow.stl.internal (Postfix) with ESMTP id B6BFA1303349
+	for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2026 17:04:59 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Fri, 27 Nov 2026 17:04:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1795817098;
+	 x=1795824298; bh=ruSTi2KXnNElVne/1XJA5zErngKPBaYI+3TNP5Q+jOA=; b=
+	H2Cmp6h+LZGx9f0bQnDfTD/mrFYtXbkzK+rXTkUYR5pU021YammeG2K3MeYucaFM
+	NmgMdpTE9MXujDVHLvXUNk0z9yqRkXpJpUYFdfNtPQcK1+ybgPrO+THRJyb0QbfM
+	NZYtfuwCRSBym+06RvCpT8HXTeWNdoQ/JpteGKuPSsa7lQ1QQ1eNda2XsGujwS1n
+	769FI7ntsYsQVdOZyNETx1l2kw0SOie8DcrNR5kJyc4N1IpuQp1nJxNyTJP6Qv8x
+	5KpATTU5XacwMY/h0d9W1k07cuco7/KcfXCxV5nqyuofPfi5i9u8oUyEpA3fM8Fb
+	D0lKdjC7VtSUmizrLe+K0w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1795817098; x=
+	1795824298; bh=ruSTi2KXnNElVne/1XJA5zErngKPBaYI+3TNP5Q+jOA=; b=1
+	Rp09BfwURwtupcfc9BQnP0xBC2kpqHBoXafW0PQRhRS5Yy8uyPJgI1oHOW9SMyBx
+	nL1rh18j+qXSRsMczrcOEWcmE1jGgI9PDQPWAqrb7VlrIZ7AfOqH6lOgqCvTfG6s
+	fLWKm6g8DnKe5yFiszv0oYotaHBlUv2Jsj21jdeTrus8VKxCwNdf4qUEtItt4Mvo
+	Lyq7q7og5HC7V+NHiENtaXKa9I+X9w3pnrENY9qMOD/se58JWkJBK3QSmYO8DzvJ
+	LWyY9Tx4xkiI86zgzmcd4QDCFpB1pw6c1dBzVbSmdpapEP3qO+LX4wTI6J/c1toz
+	2WIUsY/Wa8LnKHpfHrnrw==
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=sign d=shazbot.org a=rsa-sha256;
+DKIM2-Signature: i=1; m=1; t=1795817098; d=shazbot.org;
+	mf=PGFsZXhAc2hhemJvdC5vcmc+;
+	rt=PGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+;
+	s=fm2:rsa-sha256:SOHE0qDnZMR/QXLgxejXk+s6uVOonM5VDfvxsxYhiL93heA
+	oD+FRzfUnKek8RnsjsPAluFtvBoFLPO5FKnWTxvRi8RdhCYcQSIyDp4hl4WLpF1R
+	Qy3YglowPlM9rRXGaDw74uUh6efkHoA2KXNdw90dCXDpQstifkGQP9TXABCOHDxy
+	tEZw5oO2fnVBU6258fxHo4toB9rLIKLq8QOndMfTG+kkztO6p84ViZneIMcfCjLU
+	/a1A9gTtqe35dMoUKdOFVmE5VvhkKPBRGmcN9WkuJzdPQrXEUxZOx3Z+/ktjyXJY
+	rc36yXpFDMmQI9K7n/vGsrDxV+cEHn/Sru3RVYA==;
+X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
+	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
+	action=mi-m=1; hc=12;
+	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
+	from,in-reply-to,message-id,mime-version,references,subject,to;
+Message-Instance: m=1; h=sha256:0/gjl7sT3nacJr3v+xNspH0IHXx9HtVAOimrDYWjgp4=:VtKoA94nBuwKQPdehHAdkaiDSgvkIeIqZH8gzxzVZf0=;
+X-ME-Sender: <xms:if4Ja32y9uccKKWgA6awKiUv1jsGnifiarSTqXHKpNdk2405PeVa-Q>
+    <xme:if4Ja1GuK9qZubZpc7tiETesteIEMXaSGyYLu30X-k5SNhajo8yHNgT85hpYffCf1
+    zQx1bYlsDGKWPYzWa-O90ieHdbQSF-drzGxgCt_PpFLo9B-f6y17pU>
+X-ME-Received: <xmr:if4JawKWiEMjKTJcNjQKUk2MQpn-Q8JrYKNspHnC9IxfAIyb4LhLqZcKXYNV0g>
+X-ME-Proxy-Cause: dmFkZTFjoLBAvKIejJlSbE4Q3c7bkxlwYcgKg00iy/1FtMqgE0UdHsF+zkRGYeqeIRPxUo
+    Iwd9jRHRKNfQ9hDSzZCbQRpCbytMCSe5RbXFr5dsjvcES8LL1AaH39Ywx2JBlqO1XAK980
+    fT1E3+bKrWsl1e2eZp2tDDY6Em9VuPuj/fcK3NR5NhAMehQQcp1ZK6MkNzHoSfXTPUKBnk
+    xz35R79TqFIpzvcDmSZksFlk95TX8eYyGE7JxUOXuRvieaCQa2CuWVJ5K/gfCk9HehMrYk
+    oIep/2Sm621WsrtQQS+Cbkh8XXCK+vBZcwj+I7FB7jnkybhrFuKbwwbbjXImziG4O2TZfh
+    AbKogQ7P03x0oUsBf5l4zFHiJP39hzK/oDWZksyVD81l7WlsrRfLhL0KRIGhmeAsStmO7Q
+    qJw1PoIvQU4ttXMOHScaWA7aaPwxD3fzXavZXikiAWp6fHurIZMOn84YvIuOrCeUKJ6e0k
+    xEMBmiG+vu0+/y8Fi57kiWtYHq4BN6Ausxugj7ol0vbMIvod7U2rqAtptPnlIu4eulW+QY
+    TRhnuM9D3d+v/B29vt9UF1NG4zzseTSKWMPA9cA+Xh0svixSfX1tZFbDi36vLGCVCYMBSp
+    A/A4Uc7hTuwMLCW688CoK/C/58IQhbeb/r89C3k2DgnProwfkI5fSp15bvvg
+X-ME-Proxy: <xmx:if4Ja5PAN6NdHFNG7OZ7_UnTCfMxe3tG6bpy35Zf_MAgXQB53LFk1A>
+    <xmx:if4Jazon5onLn2WLqaJA6_cFMlo3NtcZmEPrBEei0ykviuniNnmcBQ>
+    <xmx:if4Ja6ffYlYIoFiPFJLmYci-181LdzyKk_cEIWYn6UsmVwoUr7EvlA>
+    <xmx:if4Ja0bJpmV5ratTRzHTZVYYzR4YxwwakIDTYkn9TpxNkFodqK3sjQ>
+    <xmx:iv4Ja4aTdJ5d9t4-fak9OuiXx4z4FAU3UYUlLPKdqc_oOGilNnuxnd4C>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 27 Nov 2026 17:04:54 -0500 (EST)
+Date: Fri, 27 Nov 2026 15:04:52 -0700
+From: Alex Williamson <alex@shazbot.org>
+To: Simon Song <xinmengs@nvidia.com>
 Cc: dakr@kernel.org, acourbot@nvidia.com, kvm@vger.kernel.org,
  rust-for-linux@vger.kernel.org, nova-gpu@lists.linux.dev,
  linux-pci@vger.kernel.org, jgg@nvidia.com, yishaih@nvidia.com,
@@ -90,20 +122,18 @@ Cc: dakr@kernel.org, acourbot@nvidia.com, kvm@vger.kernel.org,
  targupta@nvidia.com, linux-kernel@vger.kernel.org, zhiwang@kernel.org,
  zhiw@nvidia.com, boqun@kernel.org, daniel.almeida@collabora.com,
  tamird@kernel.org, work@onurozkan.dev, jgg@ziepe.ca, bhelgaas@google.com,
- kwilczynski@kernel.org, dri-devel@lists.freedesktop.org, peter@colberg.org
+ kwilczynski@kernel.org, dri-devel@lists.freedesktop.org, peter@colberg.org,
+ alex@shazbot.org
+Subject: Re: [PATCH v3 9/9] vfio/nova-vgpu: add the Rust VFIO variant driver
+Message-ID: <20261127150452.03a1c163@shazbot.org>
+In-Reply-To: <ad773f07-bf03-4042-b79b-f82cc2d64579@nvidia.com>
 References: <20261119215046.2892839-1-xinmengs@nvidia.com>
- <20261119215046.2892839-10-xinmengs@nvidia.com>
- <20261124201931.55c65263@shazbot.org>
- <abc4a0e3-2478-4b12-8a06-ffc81196bd20@nvidia.com>
- <20261125230830.48e768b7@shazbot.org>
-Content-Language: en-US
-From: Simon Song <xinmengs@nvidia.com>
-In-Reply-To: <20261125230830.48e768b7@shazbot.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR05CA0003.namprd05.prod.outlook.com
- (2603:10b6:a03:33b::8) To CY5PR12MB6549.namprd12.prod.outlook.com
- (2603:10b6:930:43::6)
+	<20261119215046.2892839-10-xinmengs@nvidia.com>
+	<20261124201931.55c65263@shazbot.org>
+	<abc4a0e3-2478-4b12-8a06-ffc81196bd20@nvidia.com>
+	<20261125230830.48e768b7@shazbot.org>
+	<ad773f07-bf03-4042-b79b-f82cc2d64579@nvidia.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -113,432 +143,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY5PR12MB6549:EE_|SA1PR12MB8843:EE_
-X-MS-Office365-Filtering-Correlation-Id: 55735170-25c6-4226-a311-08df4cce5473
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|376014|7416014|366016|261102123227099003|261028144727099003|261022105027099003|261022075727099003|261021121427099003|261021123027099003|261026121527099003|261026140227099003|4143699003|11063799006|56012099006|10067099003|18002099003|22082099003|6133799003|261009223027099003|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	oiXqGDtZPnRNSzRqdPX3qFyEy3DUZ6Iub1Cu6+BuaZodYEWxTwSLj4i+df2FjhnCH1ywv5psikfuGM6abIkWRCTG06/WBFJompLUNRBlMBnXOFQU5KotAQrptHygVDw1RSIBYsbuWsKer5AsxgEcJKrvl8mQzk1vAgvap4LJ2ZOiN7AsDxPts4b4aLO12aai4I6k5L7YxwAwQHz+fPf4OpRupDIGy2tPsQhR/15vU13ufKrlij1R5QVzyMbbyNzXPPAp9iaRvnUBqVxsUmv5fbnsUrwi26Zwu0PDkoYWGKmMY2SINp55Bw1TzAy7pFJ/5ej71vNCDYyTLbi0uPN4Dc8UaOSm5b0TWM96QWuTJSVB3CttkZg0q4x4+0zQSsAxLiXhE8P/MGF8U7Ai2c5Zabt0+SWncs/xs2OUPh53mZm7hEmFR0bKLwzr85YIjGithm3KRj3URRr7ficvvC8LCli9pnmaKvt/mmlUjqmj3w873Ep7okBkWV3qiUDeNTl33FBgTsE0ZaeLKWiUUtMHXMbCW0p/Je6jBbFErzkBuhDBp9F8r/mgLI/rhQpYw+jRFDEcRUo+3/qF06E1Z3pdVxTXrl7840xgw+kG9QaVsUDvS2hJXUMcsZPfAawkPjlluh+q0FG2ISsQC1oaLo1OfGoSdRyXQ9LVgtNklxs1ivc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY5PR12MB6549.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(376014)(7416014)(366016)(261102123227099003)(261028144727099003)(261022105027099003)(261022075727099003)(261021121427099003)(261021123027099003)(261026121527099003)(261026140227099003)(4143699003)(11063799006)(56012099006)(10067099003)(18002099003)(22082099003)(6133799003)(261009223027099003)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dnAyZmljbDBRdnpoWmx3VVJ4NDNTYTRPTEFYRUxwS2pINlhjTU1VQWpubWxQ?=
- =?utf-8?B?cUZPSFBoenU5cENBYm9PTDdGMDZhb25hVTRYZmdGU1JCUUYyRFdaN2dpbjNj?=
- =?utf-8?B?VzlYNStXYWhmRVltb1d0eDd1U05TcGlYNG1wcFlGRnpSK3NMZ05rM1ZvcjJo?=
- =?utf-8?B?VFRKb3F2Y3dzZGJkWW0wV21kdWZiQWwzUlJrT1lOVHArTTNNSWJraFo5bjI1?=
- =?utf-8?B?UFRXemo2ZSs2WE9ZOGh1MzdBelZlREZGRWUwQ2ZoWUJQS0VKa0RUWHFKSWll?=
- =?utf-8?B?bTdxQTdJQUYrVi8wbVZFU2FFT2ZNSUJIM0h1cDhsdHpYa1A4ejdxYmFpL05s?=
- =?utf-8?B?YUNVTlNsaFl0TXVZbmU1VmFqUkRFUGtNaGpQbXI2YlE5TysvZCtPZWhScUhu?=
- =?utf-8?B?enY4NXRoWjk0OW41N3JFN3hFKzhkM0tpdkpyaUZ1eFlqTWMxcGc3dW8xWE1r?=
- =?utf-8?B?R0xjL0RtcjVrOXNVU0ltQkdGWm9XT3F1WUFNODhKdGp3aU1tNkkwdER6cWVo?=
- =?utf-8?B?YjdPazhOVDBBTGhpcy9PVHBoaTdsTlcwTHA5YVREazNWSURGWTFSSzFISi9Z?=
- =?utf-8?B?RWxFYUZSc0ljdlFieUExL3h5Vzl0WWxaVXJzYk10TjhnUVkyYXpZZ3h0RUJ5?=
- =?utf-8?B?MWo2OUUzUU9JQ3BMVGVDZVU3ZE81ZXZOYzRaSEFza1daaURiT28rVWs0S1VG?=
- =?utf-8?B?SFdmOEMyZFJBYnNuUGF3U2UyV3VkOWt1UEVCVmFGMGlGUXM3N25NYzFXUFVz?=
- =?utf-8?B?dmdLNHgrSk5YUTllWUk0R1pEWExOTHdTcDR5MmdyS1paRFVQVWY1c0JEUng1?=
- =?utf-8?B?anQ4UG1QRzdiSTgwcHJvbFFtNUNLRmUvOG1QYWliUUhSb0ZER01lOVJiTDRk?=
- =?utf-8?B?dzNOcGx1SUdqT1g0R2R4OTFuMy9TcDBKZHJOS1gwT1lOUzZBR2pGKytaTG0r?=
- =?utf-8?B?V0xGc1k2Z292N3pLM1hlRngyaWlnVlNPd1hSWTRPMWRPQU5uYXE4bis5WFlN?=
- =?utf-8?B?VnFFNm9NZXluc2tvYTBCOEEvVnpBaWpwakFocGxqSzUyQTFxcW95SUloZHRY?=
- =?utf-8?B?aDZ3Nzd2VjhOakxVbzRkNldOQkNkS2VRVEZOZUlvYTVMa0RMT0pLMHpEK09N?=
- =?utf-8?B?SWcvdG9BV2lZWlo0MURZTnNoVFBHMlpFd01Kc2xpSWNIaFNycmRUYzdERXpE?=
- =?utf-8?B?SFJuZk9tcFFWeGZ2U3FqVTdKbFlsTjc1SDFwbkFUb1l5bmVaeTNwMVNveFVP?=
- =?utf-8?B?d1VCbkNLalpYaU9rQW9sOXMvOGY1cnk1VVNGM09jVGo4VzBtS1RvZTZCSFpO?=
- =?utf-8?B?VVF4emM2K1JsTVVkR2V0Y0RXTFl5clJIMEJHSmJEdFdaMVB5YnlOUmY0R1lu?=
- =?utf-8?B?V3lqa3pPelpucEVQMXI1aE1oK1pHZDhtZjQ1dVRPdVVFTWN6aENRVHllclFU?=
- =?utf-8?B?Ujl3TUpzbktEdzZkcUNQY2JGeEZsQ0krMXkrL0FSSEhmTXovVW5UTVFaUDNQ?=
- =?utf-8?B?aUc4enQ2R3NPbjI0c3hVOVdsU0lNRnUyc2R0bzlMdWFuUUZLbUhGZDlleWNT?=
- =?utf-8?B?bU9jMUxFMitwMGZ4UkVpRDFxSVRaVDNGZFdyL3M3dnBic3RnalZkRVFUM1ZX?=
- =?utf-8?B?YmZyd0JzUkVjeDEzbWhnemhrZDc0L2xsVVZQTWNkNFRMRzg3MzVSeDZwYU16?=
- =?utf-8?B?cURFdFcrYm1YOWJpVUp4NE5HeVhtcXJHcGk4WjZVaVpkb1E0M1g3amI0Tjls?=
- =?utf-8?B?QWZ5bEpTWFBiZjBuNVo3V1pxbVhNSW5XQ2tSNEVmczI1dXVOL1ZWU1MyOHVN?=
- =?utf-8?B?b3hRcHppZ1hkNGYzY1ZUdzhtMnB1Qjg4Mnc0eEcwbDNxWFB1cExVQW1OekdM?=
- =?utf-8?B?ZEtIak5FUTBNZnpRdi9UcUIyWTcvaFhTaU9BQmhNV3NKZTd4Ti9qRWZVT2JT?=
- =?utf-8?B?b2ZFanVHUCtad3JzWjlBZFJtbzJVUGFZeFZNRFk5MFJzUnMxWHlsZlpsYU1Y?=
- =?utf-8?B?dlZqSFQzRjhWUHB5SjNaTUNNVmlWbHRreUJRVnJzaEJkZ09QR3RxWmpjQ0M1?=
- =?utf-8?B?ZXZRVC9aSzRCOUgzaDlHRTNCMUdUQmtGL09KSXhZZTN2Zk03SHRuVlpsSFRv?=
- =?utf-8?B?TUFHNVRYakRXR1FjWGZBVTNPZWxVMC9iS0RybDhHcjY3QmFPdXJNVjRBRG5E?=
- =?utf-8?B?a0hENUZjTEU4TzdrMUFxL2YyVUw0b1JqTVFaUGYxeVJqR083VllZWjlqN1hy?=
- =?utf-8?B?RTJiQk5OVTIyUkVtL3V6SE5jNlZhLzBadWVEWjBoSDlQbm1jWG5QSGt5VjBB?=
- =?utf-8?B?S0wyb00vQWdjMTRLenZpVjdoTFZpejROa3U0c3ZpWWhSTFQzaVEzUT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 55735170-25c6-4226-a311-08df4cce5473
-X-MS-Exchange-CrossTenant-AuthSource: CY5PR12MB6549.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Nov 2026 21:35:17.7572
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BkqFh4wqPdMHfcq960ThVbuotQLg5U3mz44gx3Wy2kOtLbIKVSNEFOMVW1N/UtqbzdKJX2eQak+eBAXZtwuRRg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8843
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On 11/26/2026 1:08 AM, Alex Williamson wrote:
-> On Wed, 25 Nov 2026 21:45:13 -0500
-> Simon Song <xinmengs@nvidia.com> wrote:
-> 
->> On 11/24/2026 7:19 PM, Alex Williamson wrote:
->>
->>>> +    fn bar1_size(&self) -> Result<Option<u64>> {
->>>> +        let Some(instance) = &self.instance else {
->>>> +            return Ok(None);
->>>> +        };
->>>> +        let physical = self
->>>> +            .registration
->>>> +            .pdev
->>>> +            .resource_len(self.registration.fb_bar)?;
->>>> +        let size = instance
->>>> +            .type_info()
->>>> +            .bar1_length
->>>> +            .checked_mul(1 << 20)
->>>> +            .ok_or(EOVERFLOW)?;
->>>> +        Ok(Some(if size == 0 {
->>>> +            physical
->>>> +        } else {
->>>> +            size.min(physical)
->>>> +        }))
->>>> +    }  
->>>
->>> Does this provide a power-of-two size?
->>>   
->> currently it does not, we can add a check for is_power_of_two:
->> --- a/drivers/vfio/pci/nova-vgpu/nova_vgpu.rs
->> +++ b/drivers/vfio/pci/nova-vgpu/nova_vgpu.rs
->> @@ -120,6 +120,9 @@ fn bar1_size(&self) -> Result<Option<u64>> {
->>              .bar1_length
->>              .checked_mul(1 << 20)
->>              .ok_or(EOVERFLOW)?;
->> +        if size != 0 && !size.is_power_of_two() {
->> +            return Err(EINVAL);
->> +        }
->>
->> on a side note, i think vf bar1 of 0 can be a valid case too, so i should remove that check in next respin
-> 
-> The real question is whether the PF tells us a power-of-two size based
-> on the vGPU profile.  If it's expected to, this is a maybe a good
-> sanity test, it if doesn't then maybe we'd want to extend the BAR to a
-> power-of-two size with a sparse mmap to indicate we can't map past the
-> implemented size.
-> 
-Yes, vGPU types define bar1 size as power of two and PF passes it through, so i'll add as sanity test in respin
->>>> +
->>>> +    fn limit_bar1(&self, buf: &mut vfio::UserBuf, position: &Position<'_>) -> Result {
->>>> +        if buf.is_empty() || position.region_index() != self.registration.fb_bar {
->>>> +            return Ok(());
->>>> +        }
->>>> +        if let Some(size) = self.bar1_size()? {
->>>> +            let offset = position.region_offset();
->>>> +            if offset >= size {
->>>> +                return Err(EINVAL);
->>>> +            }
->>>> +            if size - offset < buf.len() as u64 {
->>>> +                buf.truncate((size - offset) as usize);
->>>> +            }
->>>> +        }
->>>> +        Ok(())
->>>> +    }
->>>> +}
->>>> +
->>>> +impl Drop for NovaVgpuOpenData<'_, '_> {
->>>> +    fn drop(&mut self) {
->>>> +        let mut state = self.registration.lock_instance();
->>>> +        state.active = false;
->>>> +        drop(self.instance.take());
->>>> +    }
->>>> +}
->>>> +
->>>> +impl vfio::pci::Operations for NovaVgpuOps {
->>>> +    const NAME: &'static CStr = c"nova-vgpu-vfio-pci";
->>>> +    type RegistrationData<'a> = NovaVgpuRegData<'a>;
->>>> +    type OpenData<'a, 'data: 'a> = NovaVgpuOpenData<'a, 'data>;
->>>> +
->>>> +    fn open_device<'a, 'data: 'a>(
->>>> +        dev: &'a vfio::pci::Device<Self, Open>,
->>>> +        rd: &'a NovaVgpuRegData<'data>,
->>>> +    ) -> impl PinInit<Self::OpenData<'a, 'data>, Error> + 'a {
->>>> +        NovaVgpuOpenData::new(dev, rd)
->>>> +    }
->>>> +
->>>> +    fn ioctl<'data>(
->>>> +        dev: &vfio::pci::Device<Self, Ioctl>,
->>>> +        rd: &NovaVgpuRegData<'data>,
->>>> +        _open_data: Pin<&Self::OpenData<'_, 'data>>,
->>>> +        cmd: u32,
->>>> +        arg: usize,
->>>> +    ) -> Result<isize> {
->>>> +        let reset = cmd == vfio::DEVICE_RESET || cmd == vfio::pci::DEVICE_PCI_HOT_RESET;
->>>> +        if reset {
->>>> +            if let Some(error) = rd.state.lock().reset_error {
->>>> +                return Err(error);
->>>> +            }  
->>>
->>> Is a previous reset error effectively unrecoverable?
->>>   
->> yes, currently the behaviour makes reset error sticky, we could make the the vfio driver to be able to try again, 
->> so errors in reset_prepare would be stateless and allow vf to try to reset again, something like:
->>
->> @@ -171,14 +170,8 @@ fn ioctl<'data>(
->>          cmd: u32,
->>          arg: usize,
->>      ) -> Result<isize> {
->> -        let reset = cmd == vfio::DEVICE_RESET || cmd == vfio::pci::DEVICE_PCI_HOT_RESET;
->> -        if reset {
->> -            if let Some(error) = rd.state.lock().reset_error {
->> -                return Err(error);
->> -            }
->> -        }
->>          let result = dev.core_ioctl(cmd, arg)?;
->> -        if reset {
->> +        if cmd == vfio::DEVICE_RESET || cmd == vfio::pci::DEVICE_PCI_HOT_RESET {
->>              if let Some(error) = rd.state.lock().reset_error {
->>                  return Err(error);
->>
->> @@ -260,11 +253,10 @@ fn reset_prepare(rd: &NovaVgpuRegData<'_>) {
->>          // close release this mutex before entering the VFIO core.
->>          let mut state = rd.state.lock();
->>          state.resetting = true;
->> +        state.reset_error = None;
->>          if state.active {
->>              if let Some(vgpu) = &rd.vgpu {
->> -                if let Err(error) = vgpu.api.reset(vgpu.gfid) {
->> -                    state.reset_error.get_or_insert(error);
->> -                }
->> +                state.reset_error = vgpu.api.reset(vgpu.gfid).err();
->>              }
->>          }
->>
->> this also remove the hot-reset check and address the comment regarding intercepting hot-reset:
-> 
-> Why were we trying to make it sticky?  I don't know why this is still
-> trying to handle a hot-reset.  A hot-reset is a bus reset, we can't bus
-> reset a VF.  Reiterating reset_prepare comments below.
-> 
-sorry I forgot to delete DEVICE_PCI_HOT_RESET in my previous comment, 
-there's no point in making it sticky and i'll fix it in next respin
+On Fri, 27 Nov 2026 16:35:10 -0500
+Simon Song <xinmengs@nvidia.com> wrote:
 
->>> vGPUs are VFs, why are we intercepting hot-reset?  That's a different
->>> class of reset that VFs don't support (unless we're running on s390).
->>>   
->>>> +        }
->>>> +        let result = dev.core_ioctl(cmd, arg)?;
->>>> +        if reset {
->>>> +            if let Some(error) = rd.state.lock().reset_error {
->>>> +                return Err(error);
->>>> +            }
->>>> +        }
->>>> +        Ok(result)
->>>> +    }
->>>> +
->>>> +    fn read<'data>(
->>>> +        dev: &vfio::pci::Device<Self, Read>,
->>>> +        _rd: &NovaVgpuRegData<'data>,
->>>> +        open_data: Pin<&Self::OpenData<'_, 'data>>,
->>>> +        buf: &mut vfio::UserBuf,
->>>> +        position: &mut Position<'_>,
->>>> +    ) -> Result<isize> {
->>>> +        if let Some(instance) = &open_data.instance {
->>>> +            if position.region_index() == vfio::pci::CONFIG_REGION_INDEX {
->>>> +                let offset = position.region_offset();
->>>> +                return position.with_temporary(|next| {
->>>> +                    let count = dev.core_read(buf, next)?;
->>>> +                    buf.write_overlapping(
->>>> +                        offset,
->>>> +                        count.try_into()?,
->>>> +                        u64::from(bindings::PCI_SUBSYSTEM_ID),
->>>> +                        &(instance.type_info().pci_subsys_id as u16).to_le_bytes(),
->>>> +                    )?;
->>>> +                    Ok(count)
->>>> +                });
->>>> +            }
->>>> +        }
->>>> +        open_data.limit_bar1(buf, position)?;
->>>> +        dev.core_read(buf, position)
->>>> +    }  
->>>
->>> Why do we virtualize the subsystem ID on read and the device ID on open?
->>>   
->>
->> This is done intentially, as core viratualized it in vconfig, where it is set
->> at open, while the core read subsystem id from hardware, will add a comment: 
->>
->>  // A VF has no device ID of its own, so the core keeps it in vconfig, where
->>  // it is set once at open. The core reads the subsystem ID from the hardware,
->>  // as a firmware update can change it there, so replace it on every read.
+> On 11/26/2026 1:08 AM, Alex Williamson wrote:
+> > On Wed, 25 Nov 2026 21:45:13 -0500
+> > Simon Song <xinmengs@nvidia.com> wrote:
+> >   
+> >> On 11/24/2026 7:19 PM, Alex Williamson wrote:
+> >>>> +
+> >>>> +    fn reset_prepare(rd: &NovaVgpuRegData<'_>) {
+> >>>> +        // PCI holds the device lock, and VFIO may hold its memory lock. Open and
+> >>>> +        // close release this mutex before entering the VFIO core.
+> >>>> +        let mut state = rd.state.lock();
+> >>>> +        state.resetting = true;
+> >>>> +        if state.active {
+> >>>> +            if let Some(vgpu) = &rd.vgpu {
+> >>>> +                if let Err(error) = vgpu.api.reset(vgpu.gfid) {
+> >>>> +                    state.reset_error.get_or_insert(error);
+> >>>> +                }
+> >>>> +            }
+> >>>> +        }
+> >>>> +    }    
+> >>>
+> >>> This seems very wrong, why are we calling the PF driver reset in
+> >>> reset_prepare()?  Isn't there still an FLR happening between prepare
+> >>> and done?  Does it do anything?
+> >>>     
+> >> It will not reset the PF, vgpu.api.reset will reset this vgpu instance behind this VF,
+> >> the PF driver would ask firmware to reset the instance and scrub its memory, then FLR
+> >> follows  
+> > 
+> > PF reset is not the question.  We're calling into the PF driver to reset
+> > the VF, but we should not be doing that from reset_prepare().  This
+> > also still doesn't explain what the FLR that follows the PF initiated
+> > VF reset actually does.  Why can't we just use FLR?  Do we need a
+> > device specific reset quirk?
+> >   
+> FLR resets the VF itself, and firmware stops VF channels and reset registers,
+> but doesn't reset vGPU state inside the firmware, and only PF driver can ask firmware to do that
 > 
-> Right, I'd forgotten that device ID is virtualized for this purpose but
-> subsystem ID is not, so we require this split.
-> 
->>>> +
->>>> +    fn write<'data>(
->>>> +        dev: &vfio::pci::Device<Self, Write>,
->>>> +        _rd: &NovaVgpuRegData<'data>,
->>>> +        open_data: Pin<&Self::OpenData<'_, 'data>>,
->>>> +        buf: &mut vfio::UserBuf,
->>>> +        position: &mut Position<'_>,
->>>> +    ) -> Result<isize> {
->>>> +        open_data.limit_bar1(buf, position)?;
->>>> +        dev.core_write(buf, position)
->>>> +    }
->>>> +
->>>> +    fn mmap<'data>(
->>>> +        dev: &vfio::pci::Device<Self, Mmap>,
->>>> +        rd: &NovaVgpuRegData<'data>,
->>>> +        open_data: Pin<&Self::OpenData<'_, 'data>>,
->>>> +        mapping: &mut Mapping<'_>,
->>>> +    ) -> Result {
->>>> +        if mapping.region_index() == rd.fb_bar {
->>>> +            if let Some(size) = open_data.bar1_size()? {
->>>> +                if mapping.region_end()? > size {
->>>> +                    return Err(EINVAL);
->>>> +                }
->>>> +            }
->>>> +        }
->>>> +        dev.core_mmap(mapping)
->>>> +    }
->>>> +
->>>> +    fn get_region_info<'data>(
->>>> +        dev: &vfio::pci::Device<Self, GetRegionInfo>,
->>>> +        rd: &NovaVgpuRegData<'data>,
->>>> +        open_data: Pin<&Self::OpenData<'_, 'data>>,
->>>> +        info: &mut bindings::vfio_region_info,
->>>> +        caps: &mut vfio::InfoCap<'_>,
->>>> +    ) -> Result {
->>>> +        dev.core_get_region_info(info, caps)?;
->>>> +        if info.index == rd.fb_bar && info.size != 0 {
->>>> +            if let Some(size) = open_data.bar1_size()? {
->>>> +                info.size = info.size.min(size);
->>>> +            }
->>>> +        }
->>>> +        Ok(())
->>>> +    }  
->>>
->>> BAR sizing in config space also needs to reflect the virtualized BAR
->>> size.
->>>   
->> right, the BAR sizing through config space still not handled in this version, sizing through
->> config space will still return the physical size, in the next version, i will add code to
->> return virtual bar size to match what region info reports.
->>
->>>> +
->>>> +    fn reset_prepare(rd: &NovaVgpuRegData<'_>) {
->>>> +        // PCI holds the device lock, and VFIO may hold its memory lock. Open and
->>>> +        // close release this mutex before entering the VFIO core.
->>>> +        let mut state = rd.state.lock();
->>>> +        state.resetting = true;
->>>> +        if state.active {
->>>> +            if let Some(vgpu) = &rd.vgpu {
->>>> +                if let Err(error) = vgpu.api.reset(vgpu.gfid) {
->>>> +                    state.reset_error.get_or_insert(error);
->>>> +                }
->>>> +            }
->>>> +        }
->>>> +    }  
->>>
->>> This seems very wrong, why are we calling the PF driver reset in
->>> reset_prepare()?  Isn't there still an FLR happening between prepare
->>> and done?  Does it do anything?
->>>   
->> It will not reset the PF, vgpu.api.reset will reset this vgpu instance behind this VF,
->> the PF driver would ask firmware to reset the instance and scrub its memory, then FLR
->> follows
-> 
-> PF reset is not the question.  We're calling into the PF driver to reset
-> the VF, but we should not be doing that from reset_prepare().  This
-> also still doesn't explain what the FLR that follows the PF initiated
-> VF reset actually does.  Why can't we just use FLR?  Do we need a
-> device specific reset quirk?
-> 
-FLR resets the VF itself, and firmware stops VF channels and reset registers,
-but doesn't reset vGPU state inside the firmware, and only PF driver can ask firmware to do that
+> I agree it doesn't belong in reset_prepare, in next respin, I moved it to reset_done(), so it runs
+> after FLR
 
-I agree it doesn't belong in reset_prepare, in next respin, I moved it to reset_done(), so it runs
-after FLR
->>>> +
->>>> +    fn reset_done(rd: &NovaVgpuRegData<'_>) -> Result {
->>>> +        let mut state = rd.state.lock();
->>>> +        let error = state.reset_error;
->>>> +        state.resetting = false;
->>>> +        rd.reset_done.notify_all();
->>>> +        error.map_or(Ok(()), Err)
->>>> +    }
->>>> +}
->>>> +
->>>> +struct NovaVgpuDriver;
->>>> +
->>>> +kernel::pci_device_table!(
->>>> +    PCI_TABLE,
->>>> +    <NovaVgpuDriver as pci::Driver>::IdInfo,
->>>> +    [(
->>>> +        pci::DeviceId::from_id_vfio_override(pci::Vendor::NVIDIA, bindings::PCI_ANY_ID as u32),
->>>> +        (),
->>>> +    ),]
->>>> +);  
->>>
->>> Whoah, this would break a ton of users that are assigning NVIDIA devices
->>> and depend on the module options supported by vfio-pci (that aren't
->>> supported here).  This entry marks this driver as the preferred over
->>> the vfio-pci driver for any NVIDIA vendor ID device.  We don't want
->>> that blast radius.
->>>
->>> This should list the specific VF device IDs we want to claim?
->>>   
->>
->> True, i will update the list to include only 0x2bb3 and 0x2bb5, which are the 2 GPUs we currently claim to support
->>
->>>> +
->>>> +#[pin_data]
->>>> +struct NovaVgpuData<'bound> {
->>>> +    reg: vfio::pci::Registration<'bound, NovaVgpuOps>,
->>>> +}
->>>> +
->>>> +#[vtable]
->>>> +impl pci::Driver for NovaVgpuDriver {
->>>> +    type IdInfo = ();
->>>> +    type Data<'bound> = NovaVgpuData<'bound>;
->>>> +    const ID_TABLE: pci::IdTable<Self::IdInfo> = &PCI_TABLE;
->>>> +    // SAFETY: VFIO hands the DMA ownership of the device to userspace. This driver never uses
->>>> +    // the kernel DMA API for its devices, directly or through helpers.
->>>> +    const DRIVER_MANAGED_DMA: Option<pci::DriverManagedDma<Self>> =
->>>> +        Some(unsafe { pci::DriverManagedDma::new() });
->>>> +
->>>> +    fn probe<'bound>(
->>>> +        pdev: &'bound pci::Device<Core<'_>>,
->>>> +        _info: Option<&'bound Self::IdInfo>,
->>>> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
->>>> +        try_pin_init!(NovaVgpuData {
->>>> +            reg: {
->>>> +                let vgpu = match NovaCoreVfApi::handle(pdev) {
->>>> +                    Ok(api) => Some(VgpuRegistration {
->>>> +                        api,
->>>> +                        gfid: u32::from(pdev.vf_id()?) + 1,
->>>> +                    }),
->>>> +                    Err(_) => None,
->>>> +                };
->>>> +                let dev = if vgpu.is_some() {
->>>> +                    vfio::pci::Device::<NovaVgpuOps>::new(pdev)?
->>>> +                } else {
->>>> +                    vfio::pci::Device::<NovaVgpuOps>::new_passthrough(pdev)?
->>>> +                };  
->>>
->>> My LLM tells me that the new constructor installs ops that don't
->>> support get_dmabuf_phys, therefore can't expose dma-buf to iommufd,
->>> therefore cannot support P2P with iommufd.  But type1 uses a different
->>> mechanism, so we would be able to map the vGPU BARs for P2P with the
->>> legacy backend.  Is this true?  If so, why?  It needs to support
->>> dma-buf.
->>>   
->> yes it's true, the vgpu path has no get_dmabuf_phys, would it be acceptable to add this in a follow-up series?
->> P2P is not in the scope of the first verssion, and i would rather add it together with a P2P test
-> 
-> It seems incomplete without this.  We're suggesting that iommufd is the
-> preferred IOMMU backend, but we're introducing a device here that only
-> supports P2P using the legacy type1 IOMMU backend.  What's the
-> difficulty in hooking up vfio_pci_core_get_dmabuf_phys()?  Thanks,
-> 
-> Alex
-i looked into this, i think i can hook up vfio_pci_core_get_dmabuf_phys, let me update in the next version 
+Both seem like an abuse of the setup/cleanup wrappers.  Is this a gap
+in FLR support?  If so, this is why we have device specific reset
+support in PCI-core.  Depending on the PF driver is going to be a
+challenge though.  When and where specifically do we need this firmware
+state reset?  Isn't the firmware already involved in the FLR?  Thanks,
 
+Alex
