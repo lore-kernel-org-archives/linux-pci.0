@@ -1,127 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.59
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795773714;
-	b=HXepw6KdEiCxb5B3kHlDFp7HoIOnN5QL3anzFc+P7WElt3sGYDWy3Vyi7vpTSb2wMSLP
-	 XHeJg+3PbkcsLgJW9G2e0g4a1YIjjVvXGhlyF2C5jvy3JGXJkm9oeCu8YG0eW8RVLuBfY
-	 csvo43dZS3ibYEWfB4pbs3ppwcGP2icouVTfgsX/Q0/tPEBMcVXsIIJSuPTjdgXTTJrUF
-	 xtM5DyngHUtdRJGUr7+9ZjnCKvd6ndpgnkL1kNYObPSS4kjzCb/xZuCgheloG25SEQKOd
-	 LNBG/M3Zyy+FaMvKjBojlmR8dh/pf2BFXP7IY5h2rIY9no2mEszm6ajLqKQ/lz8NjEA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795773714;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:
-	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 Received:Received:Date:From:To:CC:Subject:Message-ID:In-Reply-To:
-	 References:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-NV-OnPremToCloud:X-EOPAttributedMessage:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-Id:
-	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=l0w7m78Q3t7NafSqffnDLuqKONPoccVan1Yqy46w+7A=;
-	b=17MtVZtb9ljayIXOt4wox8JFIt7jVwxzLC54t4I8U4dgVmCXsVlsqT0nwP2Wyf1YPeLe
-	 lVKVk9ALX53Od0QqE9Kv2AK+RVgcRjh+3NAQj0klQvS8FzeAtoKQUWr5oG8cRCi0ZOSPb
-	 TCXHLTiJcYqwTBF7DVjX3dO31UX70MZNdf5YvmAZRxaIGwt4PeNiY5PYYWpAZ+lAPA8I1
-	 k/bGktYN0BX+lrLDVTB/4TL5IOwwYv9VXSu/nMKUCW2G7D8S4g4Tu7+e+XTHJulvuiap0
-	 Q9nsKeeiN/2wqgvZ5yuSLTVExLJQVsHngr8DmPucLKTPk5lbesg1DcK3IFJTmYeLJRg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=hfGhu9vf;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.56.59
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010059.outbound.protection.outlook.com [52.101.56.59])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.43
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795774066;
+	b=rzG0bWOVZK2Px65lqslu0wh+4gtClc0eYH5b+ol5oWTzbWnN7Ddym/b4TJ0ElT50ySER
+	 kMR0slT+bQzt+tnQ5S16FruQEDt84fwkHl6d2QMWmP6j7FwUpu7UwWDPrOuUaGErInliu
+	 804vVZJdOfWm/grlWtLeom4kdedenBWEteBdsh7HzrtZb55PKase0AsxDLLjkOYmKdXuz
+	 hvdhl+uZVKlMB24+0jh92tuQpY1GKpLWmP1jitgl2W7IZ1hH+JKzxW4V/dJAj6HE89wWg
+	 g3Y3gA6loura+MF3QdHGdekQ8u0dw6x2TC41aWiqcEr7DkaTVEo++tJHHCs8r+nrCBg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795774066;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=2TsM750EvEyHCTYANfGa2Nzz7ULmsTnF7jQbx8T+XDI=;
+	b=XSw694qbDDR7ZTNQgKafFu911NoNn+vr+4uY/J5GghErXkmKqEHyEPtIcMrppdIXWdhY
+	 7DIbYi/g+9rzxSyiA1WuamN0ytOvuIQH8p/6X0ZQ/Xg5TsGkwSJecE+LxlakCct7gJI2h
+	 A6gYMTBVpdjfTJpBPdnzern7NMSKWyFSW3UR2lQ9ZdvI0y3Do76li+NqHjU2pzGy3OTK4
+	 YVVckvlMhx+IS+s7H7cGG8XQchbKZsuCCfcPRfjiNiv7btHMucDGLzqPfo8RLRMev4yat
+	 Px/kHyoQGbgQB9eGUf9V7wnanniYlopel6A4iAREfOEIyMUtNKfFeFgvb/fRgjlF6iA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=BU2ZaTq0;
+	arc=none smtp.remote-ip=209.85.221.43
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B7F5606A33F;
-	Fri, 27 Nov 2026 10:01:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B7F5606A33F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D46B6606A31C
+	for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2026 10:07:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D46B6606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=hfGhu9vf
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rIl0Ry0EswVbofiZABrg18/soxaGjsQHWCaMi+GpBBGD3MbihGNfom52vbGdS5oaUt76lDhzW2QDH95wpB3ti+NBgZYtde6JyOoWtRfTU+4tRth/vkMK696Ex8lHeEn5E1jLrxqAIICtIghlfV4FxwnsCS6QNU9BmT/NKbyySDcUSAfIkreupzBLt1V/lqaSbBp8OvSWyQPBnGMDil1aTAAG+q5zpTFI11vCVYPb3FOhwdvjXkKYhUZKs+/3Ipe43UJnESZBUQMXIUNyrH+CVx/dWI5NO0ZOxyq/MqbdJDOyPmJyWHU3Os6VdzIwcrt4PhhfYWCgqpWnuao7JnseOg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=l0w7m78Q3t7NafSqffnDLuqKONPoccVan1Yqy46w+7A=;
- b=HVucWkf9xuY8G+0A0VE3YWFz07/uQ17d7rfDOX6Ke56SOLqgnMolXNaTizZYFuu9ywNrAmYqHAE3Q7Jgru9rQWpWrXVdQbxclBrEXDtzCCCNpiKKl9z/6g1n0Szg6zq9/B6zOceTO7e8xBXrzDYehigu5oHgKF2Db360gzA49UJHAvvUD+vo/nE8dYean4WJJyAErPV8vEidRlMwKVb/xd+UiP2KWdOcuc1hTSzivCyR3PAlx58y7Tip22I6xQw+fwP23aCpLmuAllFf7I/NzRuT2ikYpnt/nnxrEVEJbDmZXsaBlwLrVqm1QhbkpSWSGc9BiXsMFuql1LJlbophxg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l0w7m78Q3t7NafSqffnDLuqKONPoccVan1Yqy46w+7A=;
- b=hfGhu9vfQGbENvcRA5asNK0tSwx66j5AIdq0kkUVOIb1+1c615ull1O2hfEHGY/xm4MBHn03aV5PRHmQ4o3HOcJqFzvOQDEoSLn7+85nli8df6WkIQvcY59rZlXxHybXImtj+XVjtSu5L9ltxAXnuOEVEzRzZcZbh/UTkICEfeM1i9+hzZoYGkvPZoyq965QvbbVQ4c8US0ILZ8DSxNZMprxDf2DwDbYravNxLkkYGEy6PyFM31sh7RsAP51STJnnuGmxLJhkeKjMQijp889EjSxDTLaful1RrK84Y+lP+hOBTyJNgeOyeKpaqY9CGu1Dz7NHMwsBIk44LEzoU5I5Q==
-Received: from CH2PR18CA0038.namprd18.prod.outlook.com (2603:10b6:610:55::18)
- by DS2PR12MB9590.namprd12.prod.outlook.com (2603:10b6:8:279::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.4; Fri, 27 Nov
- 2026 10:01:45 +0000
-Received: from CH7PEPF00000017.namprd21.prod.outlook.com
- (2603:10b6:610:55:cafe::58) by CH2PR18CA0038.outlook.office365.com
- (2603:10b6:610:55::18) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.662.10 via Frontend Transport; Fri,
- 27 Nov 2026 10:01:45 +0000
-X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
- is 216.228.117.160) smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- CH7PEPF00000017.mail.protection.outlook.com (10.167.244.166) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.615.2 via Frontend Transport; Fri, 27 Nov 2026 10:01:45 +0000
-Received: from rnnvmail202.nvidia.com (10.129.68.7) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Fri, 27 Nov
- 2026 02:01:28 -0800
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail202.nvidia.com
- (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57; Fri, 27 Nov
- 2026 02:01:28 -0800
-Received: from inno-dell (10.127.8.12) by mail.nvidia.com (10.129.68.8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.57 via Frontend
- Transport; Fri, 27 Nov 2026 02:01:16 -0800
-Date: Fri, 27 Nov 2026 12:01:14 +0200
-From: Zhi Wang <zhiw@nvidia.com>
-To: Danilo Krummrich <dakr@kernel.org>
-CC: Alok Kumar <alkumar@nvidia.com>, <acourbot@nvidia.com>,
-	<kvm@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
-	<nova-gpu@lists.linux.dev>, <linux-pci@vger.kernel.org>, <alex@shazbot.org>,
-	<jgg@nvidia.com>, <yishaih@nvidia.com>, <skolothumtho@nvidia.com>,
-	<kevin.tian@intel.com>, <airlied@gmail.com>, <simona@ffwll.ch>,
-	<ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
-	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
-	<a.hindborg@kernel.org>, <aliceryhl@google.com>, <tmgross@umich.edu>,
-	<markus.probst@posteo.de>, <jhubbard@nvidia.com>, <apopple@nvidia.com>,
-	<joelagnelf@nvidia.com>, <ecourtney@nvidia.com>, <cjia@nvidia.com>,
-	<smitra@nvidia.com>, <kjaju@nvidia.com>, <ankita@nvidia.com>,
-	<aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
-	<linux-kernel@vger.kernel.org>, <zhiw@nvidia.com>, <boqun@kernel.org>,
-	<daniel.almeida@collabora.com>, <tamird@kernel.org>, <work@onurozkan.dev>,
-	<jgg@ziepe.ca>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
-	<dri-devel@lists.freedesktop.org>, <peter@colberg.org>, <xinmengs@nvidia.com>
-Subject: Re: [PATCH v5 12/35] gpu: nova-core: mm: add VramBlock
-Message-ID: <20261127120106.6f63485d@inno-dell>
-In-Reply-To: <DN5HKLQK65L0.1L9NVW750P85W@kernel.org>
-References: <20261124135937.18583-1-alkumar@nvidia.com>
-	<20261124135937.18583-13-alkumar@nvidia.com>
-	<DN5HKLQK65L0.1L9NVW750P85W@kernel.org>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=BU2ZaTq0
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-497614c95f0so4502324f8f.1
+        for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2026 02:07:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795774064; x=1796378864; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2TsM750EvEyHCTYANfGa2Nzz7ULmsTnF7jQbx8T+XDI=;
+        b=BU2ZaTq0d6nf1kovPAqoaEy2B2Z5juQ86UZVsyi7FuGSzKihaXuQNzdd9WoQLSo0aM
+         P/cXUEp9Cq6z31xzVzvNqN4PsDGGRlJA9l0YVzY8kORBXq0HCy9XTMBUlgYoBKEB/+kH
+         IL0Ddpwbyvi/NKWtVoybkKI/qsVd/SO//vMsn0OIWuTdk/ogGN/eMjoxufZ9tTUMRgJu
+         aIr9AGk4gLT81BSknWgNFrXZ0ecEPnsWBwvpyBWSn/8bQUJ0Ge98uGy+cLaAMIeiDyeL
+         5IbxBwpY4v/lcrhdUGRT/qtIIUmL0RpW4dv6yYQ7ZN/jacHFp8DvBkpzBY6C/gSIlzjS
+         qaRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795774064; x=1796378864;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=2TsM750EvEyHCTYANfGa2Nzz7ULmsTnF7jQbx8T+XDI=;
+        b=dqZVXTXBc0KZbvwILhUrMWAydJE15nIFB2XcKSyhYym9kT3PCfhACscQsbBy7gZZ7E
+         B/0GKseI3kmJdavAlXFWu7Px0iXl/Q5ZqoucDR2u9/ooYVTfHru0tXQkUtxI5U0pDtzL
+         i/o5T5wlc28kccZzpehvB9/0QBr1JjRaKabyvPzZyUUW5L2Wz1X3dRznjCMB6uVB4zpI
+         dkUvQ6ZXeFLrLw+1cTGRPREk3sEpERQyJROxos6D+bDtqYFuabepm5qCvVchHT9SxtG+
+         WRUZbOcs8iXW3BI/mJn80k771YdcfNBWwjjZiZYtRoJK3rZpJvhpgnuiL2OvDT/uXZd9
+         69yA==
+X-Forwarded-Encrypted: i=1; AL+hErG+L2yCtegsIayQenPnhJtxPOaKoN/xb+fLCK6Uz/wOZuPGUvPjWXqlNIu26ORRxKeN7WlTK45lE68=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8WPPBXylvL7h1k/O5sHiBInIzUPdbw2g3gIq69zgm/1nhVwucT
+	is3W+6WXcg11duGNJWVvWoMJx6mgoKLtczyeCfVnICz5EILQ/kacFaGh
+X-Gm-Gg: AZFdTZe3oFr/eY5qrLbO9nFQxdUUUCkkaeWKPEw34ZuMru42KjnnTJUXB3mKL2zCJv0
+	PPlh4I69j1qIjGsusr6+sT7VJHRwleWQtsZ+A0SutcqznII5c5LL2B+R1hjbQlQcfC4h24ngMJo
+	RNgQ//SwzEN3eQJoN8eaMjh+H+TOheOTe5XLb2hT/A2//xARWl+shSsYxVJnLzH6l3eUYSl2tXx
+	YBanReoUcBqbglKvSKvVl5IpBSDL6OoFXvMmqeYdkx5qwis0usRJIp2qSyskRok1KsHLfUlecG7
+	ZS36O4JbvcxpIHtXdNRT7byhA8cQM0Ee6zIRvhf5wuw7YeDJYrjUCeA5/ryMbMprpmyrehbDXXF
+	31YV6l5XkkQgLGCTqDCvcXewDFdCU+jUCn+n30SZfkddCfdAKLUqJF7lIgpmvv1/RorF/wKvx6C
+	mnf04KNe1jByXDEMbzOxCxyK+z+j/kHaEYDFJJNX4IYl16r/pXM8zSn+m/jYHmSO9asBmms0ZmJ
+	3paMOAud8Gw6KWn6UX75AaIEAUZjFyIH1MckJfHXSsELFWKrb8IWhr4yf6tM09wJihKRWRT45a3
+	22QzZAKZs1tIFubVr3wHyGsVEx6iJscR+aznagmvJWuy8PE=
+X-Received: by 2002:a05:600c:4514:b0:4bb:6823:3d3c with SMTP id 5b1f17b1804b1-4bb888169d0mr516683475e9.20.1795774064226;
+        Fri, 27 Nov 2026 02:07:44 -0800 (PST)
+Received: from localhost.localdomain ([2a04:ee41:4:b2de:1ac0:4dff:fe0f:3782])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bba6a0d65fsm196561955e9.3.2026.11.27.02.07.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Nov 2026 02:07:43 -0800 (PST)
+From: Anton Protopopov <a.s.protopopov@gmail.com>
+To: Vignesh Raghavendra <vigneshr@ti.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Aksh Garg <a-garg7@ti.com>,
+	linux-pci@vger.kernel.org,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Cc: Anton Protopopov <a.s.protopopov@gmail.com>
+Subject: [PATCH] PCI: j721e: Properly check the error of a syscon lookup
+Date: Fri, 27 Nov 2026 10:19:13 +0000
+Message-ID: <20261127101915.1348807-1-a.s.protopopov@gmail.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -131,153 +104,33 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH7PEPF00000017:EE_|DS2PR12MB9590:EE_
-X-MS-Office365-Filtering-Correlation-Id: ea6f90ef-a66d-4e2b-cad1-08df4c6d71b7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|376014|36860700016|82310400026|1800799024|10067099003|11063799006|4143699003|261022105027099003|56012099006|261026140227099003|261021121427099003|261102123227099003|261028144727099003|261026121527099003|18002099003|261009223027099003|22082099003|13003099007;
-X-Microsoft-Antispam-Message-Info:
-	RWaKKCeTx/dM1sI3YzWoWaq57o5tUQLXVjioVZwiMiw3ZlBVUE7ZsoHaYB//K/UL3cRTNBTSZiWZmbFBvSeDEmO158vNLNmef3RXgVXkj49fjKq0Tz9jMq7D5uFTucCdni0dr1r+DbeZ3MJ4x9ZWxqYfShZXOCA8imOaPLQATLXa+u2wKezEBYqdpRfxzA9SJfYDZLPt78Z5w2Lvs/4E+2nNKOghUz38+hXOrwFtU0p5V4bcDzPJH0vrxjwD+12jRpYa4tPqgyR6L+q7/ja9MsWCUfr4xCxMYJb6e4KBkHdW1FArfq20oyzQpygFHJMrRGtJj5zyaG8YYCiLWsLXAJoRyxfajCv4N9k8euvBN67Me9yYgngpk/Rk126OTHpsUHhgZpeFFCemRnHTMrpV/Nuoly/qERyDK16qD4jdc87Ypeh+S2U0f/k5N2jyVQDm5EESbxb3eZhhQMaZgOz+YN0cjgWNBlYYtBG+CTGDz3mTTDB+2OBhIR9i2x2LI+ZSxttmCwHcaTTPXC35lAYvg0mDM3l16eSywg8MvVmkgs9N1X4u7tnprB0tBPjjF+/XHx/lUuVfpu0PQqW4bgNfLbPOpJP9YWR4rqnhiJEfpISvfs99jj2iOzAXtgc6y4RUei0sxAfKV2TGMxjmh3nb1pEGrjBrQKufMjR+6Bd8m/ayHOv2Tfe+jy0nnVn/fhtGJf1o9pUwSpVugY3B4K3MGQ==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(376014)(36860700016)(82310400026)(1800799024)(10067099003)(11063799006)(4143699003)(261022105027099003)(56012099006)(261026140227099003)(261021121427099003)(261102123227099003)(261028144727099003)(261026121527099003)(18002099003)(261009223027099003)(22082099003)(13003099007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	tL7ajNcNCeAA+x20392y0qsckveTj5DllMil7v7AqM3cZmBHKx9EQ5dYvQCmNO3J6gzCSFAB5RSN2urRMbQTS+ZhDJEzeWuHhunEOeWhrVXpTCpq13+Tf1MdONYtRTHs43Ya5bzkpaLrEOOwxQSXt0wLTXoza2nU1RLRgQ0nSXN3QcDQsl4/9fpHcuG7Rzm6rHb8kOCc+zkVNqMKfu2/5X+pttsgZW01oUwQ5cACeA8y42V0NstjG9ZO4FnoZjVc1yxuTrm/eTn+bNB9lgzeMv3iAT2ua6ohruGDiI+VwFqQE43s8Ctq5voFdygYk7HlvxBREqdDE0iyeqc1xcRaYGSKPoIwKv7kHBl6n6OF531DSDTozyTtYA/eDVVIfE2CUsku6+EREt6HhW/sZ+3JexhCUBG2k4Xlg0tqKW1iEsd4u3XCxWasdHswEjKiWLw4
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Nov 2026 10:01:45.1848
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ea6f90ef-a66d-4e2b-cad1-08df4c6d71b7
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH7PEPF00000017.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR12MB9590
+Content-Transfer-Encoding: 8bit
 
-On Thu, 26 Nov 2026 23:12:47 +0100
-"Danilo Krummrich" <dakr@kernel.org> wrote:
+The syscon_regmap_lookup_by_phandle_optional() function returns NULL
+only when the property is missing (-ENODEV). On other errors it returns
+an error pointer. The j721e_pcie_ctrl_init() function checks only for
+NULL and passes an error pointer to j721e_enable_acspcie_refclk(),
+which uses it as a regmap. Propagate the error instead.
 
-> On Tue Nov 24, 2026 at 2:59 PM CET, Alok Kumar wrote:
-> > +/// A physically contiguous VRAM allocation.
-> > +///
-> > +/// # Invariants
-> > +///
-> > +/// `range.start <= range.end`.
-> > +pub(crate) struct VramBlock {
-> > +    _blocks: Pin<KBox<AllocatedBlocks>>,
-> > +    range: Range<u64>,
-> > +}
-> 
-> This allocation seems unnecessary, VramBlock can itself be
-> constructed as pin initializer...
-> 
+Fixes: 82c4be4168e2 ("PCI: j721e: Enable ACSPCIE Refclk if "ti,syscon-acspcie-proxy-ctrl" exists")
+Signed-off-by: Anton Protopopov <a.s.protopopov@gmail.com>
+---
 
-make sense.
+(Accidentally bumped into this while working on BPF stuff.)
 
-> > +
-> > +impl VramBlock {
-> > +    /// Returns the range covered by this VRAM block.
-> > +    pub(crate) const fn range(&self) -> &Range<u64> {
-> > +        &self.range
-> > +    }
-> > +}
+ drivers/pci/controller/cadence/pci-j721e.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-snip
-
-> > +        Ok(Arc::new(
-> > +            VramBlock {
-> > +                _blocks: blocks,
-> > +                // INVARIANT: `range.start <= range.end` was
-> > checked above, hence
-> > +                // `address <= end`.
-> > +                range: start..end,
-> > +            },
-> > +            GFP_KERNEL,
-> > +        )?)
-> 
-> To me it seems that reference counting is not needed here.
-> 
-
-This patch was cooked long time before the VgpuVramSlotPool and mm
-settled. At that time I didn't know how the final ownership view will
-look like among those components. So I just put an Arc to ensure the
-backing allocation stayed alive for as long as any region or BAR
-mapping needed it, without tying those users to a particual owner's
-lifetime at that stage.
-
-And you are right, looking at the current ownership view, there
-shouldn't be any user of the backing allocation needs to outlive struct
-VgpuInstances at this time so we can definitely remove the Arc. 
-
-> AFAICS, a VramBlock does not actually have shared ownership, it is
-> owned by the VgpuVramSlotPool of the VgpuInstances.
-> 
-> A VgpuInstance owns a VgpuVramSlot, and a VgpuVramSlot owns a
-> VramRegion. The VramRegion borrows (a range) from the
-> VgpuVramSlotPool's VramBlock.
-> 
-> Finally, a BarMapping (also owned by a VgpuInstance) also borrows
-> from the VgpuVramSlotPool's VramBlock.
-> 
-> Do I miss anything? I tried to double check and asked my clanker to
-> inline all the relevant structures, and it came up with this:
-> 
-> 	struct VgpuInstances {
-> 	    vram_slots: Option<VgpuVramSlotPool {
-> 	        backing: VramBlock {
-> 	            _blocks: Pin<KBox<AllocatedBlocks {
-> 	                buddy: &'mm GpuBuddy,
-> 	                // Allocated buddy blocks.
-> 	            }>>,
-> 	            range: Range<u64>,
-> 	        },
-> 	        layout: VgpuVramLayout,
-> 	        fb_region_size: u64,
-> 	    }>,
-> 	
-> 	    instances: KVec<VgpuInstance {
-> 	        vram_slot: VgpuVramSlot {
-> 	            index: u32,
-> 	            fbmem: VramRegion {
-> 	                backing: &'pool VramBlock,
-> 	                range: Range<u64>,
-> 	            },
-> 	            mgmt_heap: VramRegion {
-> 	                backing: &'pool VramBlock,
-> 	                range: Range<u64>,
-> 	            },
-> 	        },
-> 	
-> 	        plugin_rpc: PluginRpc {
-> 	            comm: CommBufferRegion {
-> 	                map: BarMapping {
-> 	                    region: VramRegion {
-> 	                        backing: &'pool VramBlock,
-> 	                        range: Range<u64>,
-> 	                    },
-> 	                    access: BarUserAccess {
-> 	                        bar_user: &BarUser,
-> 	                        mapped: Option<MappedRange>,
-> 	                    },
-> 	                    mm: &SharedGpuMm,
-> 	                    unmap_error: Option<Error>,
-> 	                },
-> 	            },
-> 	            // Other RPC state omitted.
-> 	        },
-> 	    }>,
-> 	}
-> 
-> (In case you wonder why it says &'a GpuBuddy for AllocatedBlocks, I
-> have [1] applied locally.)
-> 
-> [1]
-> https://lore.kernel.org/nova-gpu/20261126221108.3768637-1-dakr@kernel.org/
-
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 822602836b12..fdae51e368e0 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -334,6 +334,8 @@ static int j721e_pcie_ctrl_init(struct j721e_pcie *pcie)
+ 						"ti,syscon-acspcie-proxy-ctrl");
+ 	if (!syscon)
+ 		return 0;
++	if (IS_ERR(syscon))
++		return PTR_ERR(syscon);
+ 
+ 	return j721e_enable_acspcie_refclk(pcie, syscon);
+ }
