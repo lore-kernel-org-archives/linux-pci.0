@@ -1,56 +1,65 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795780929;
-	b=aXFPpd2Ko4aF8kxOzd1K/aAsOzFzp74R9ey5xmeF+z/Rk/CkeQ7aAdBPGh1ZnPu+IVFw
-	 fe+n3DtPLMXauzcOucQC4tqaacjjKPRWzT0evYuRJxfHa4bHQxE/sQYXpHAkQxLYVFGZa
-	 QPt8Iegm/I4L48nBR56fjLyLB8wyLru3d9OGRMWDIkqkL6RjbQfVDSm8MmpJnePtrxEU1
-	 k8Msm0Ewlx3q3NC64iXKr0yr3s2nf7Oyxd/fXNt/mPntL+xGO589winKYXTGjCB/AUvXS
-	 7nu+JM0nAAMIPugFD4Slkcay4g+VJTXMJfSOQTJcFjI+7Q37o6k74RygipUp9dLpetw==
+	t=1795782351;
+	b=BmuGicKtHC6mz/m9X6bmf0Kg4Wm9a4M2mfbVW3tGSiTYaKhd+DCIfXOu9hg0axIa1vSG
+	 Gzv1blqIN/TY9Rb2R5rgGvKK5l3QB1Kj09tWm8dwbEBWr/djkOatCCZwcEt8+IWGF8z7C
+	 Eb7xhHOkFEGTfVzIgYP/Hlhmq5VP9QYaUVuV9rtbpViiY9TrfjdruMCeQkhFE/TQnUnOJ
+	 ZgQG2/+Wf3vtHNS0vM/a1xBMfTL60w8wqXAivstJ0TAUYPzw02D32jQcbOJkSzKnGZjCO
+	 WESj20fXgdIx6hMpExgyOJHaF1pN2k3pkNdG+s7pn0/7zLwI1DEENxumHL+GDkNHs0w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795780929;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mfciCZ2p6eV+0uJxQz1WoLBNX8b+WC5/jSoUTKNbnfY=;
-	b=tLAfI3GPMUfMhGEH8JInIvK4JehzZPysXupXYAJtV5zUM5GPdBDn4OHZaRIjKvEiw9Rk
-	 kFmtLtzZaZLQkFDsNcUzFQWE/ZGgYjT2Y7PZNXL1QsdFG5tD/9Dic0pnQjHHIifu4iw4N
-	 n6ZqCG98KzjGDf88eBP2UxCvYwYAfv52HEbAKhsqRGg7bctlMEeLMF1S73jzqdgFpExh0
-	 YAI8b8MQIzlpo5PrfwDwrr3j9JzCd0c8IxCM3RMLu87OzZl+eLNiNzLB2SmegDzpz/M35
-	 3pXxTKnQx4smGBh5df8FpM+gtik7RDAkvgV9xHddfEY9Kez1Roddc+qgO1nPCqIrBPw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795782351;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=a0qu0j6AmOnocb4ErsG1/P7x86Ov3PdyD2eIAJ7Q9CI=;
+	b=Ru8HgvogscnBcx/1E8dE9lbkVwVoFHm8kBecx4E6J30QAZdp0JlAsihO2gQan95CNp+x
+	 6OnSQD2SunuK/5PcQTSrfNWFIFsr/u6qYxqyq25RuvoI/zA2+OX+dQlq6fnz/KsRapJ3O
+	 qWx+CLjezXvkJtKfs6TFaCIjbAmdeLsHTnFixYM426idnthvSvj7g1Nd4jgyoHoQVQZV/
+	 UL0Cz7IrR1ID05xhjWHJH2S4S1EpuHS7zER24+WvNtpmlXLedtLIWPWrTN265QEAC/b8W
+	 5c8nf64Dlke5dxJfdQDZlrFY/eaXjjGjSWNoDfiUGdYytHsORZljZAl5VawpqY9ZwaQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kreWVapZ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XcjiUnC+;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B64A606A333
-	for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2026 12:02:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05705606A336;
+	Fri, 27 Nov 2026 12:25:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kreWVapZ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 686221F02814;
-	Fri, 27 Nov 2026 12:02:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XcjiUnC+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74CEE1F0089A;
+	Fri, 27 Nov 2026 12:25:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795780928;
-	bh=mfciCZ2p6eV+0uJxQz1WoLBNX8b+WC5/jSoUTKNbnfY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kreWVapZmTVVUUt1LQ0G0W3Ix/KAZBm7ti0dXB4h+83VsLa55fMT2oiwXWqLGzx3w
-	 FyyLX0AXmrAh20pJP2i6t3uTwgyx5NVvEOQ2N7PmhXr27W5GJktr9BsTZAtHKMbRz6
-	 pwhj15IuYM8vepa3nZ0DAUWstmBG7ph2MhSthf+RtuNqd/HNNTPT0i2SJ+7ckVwGb6
-	 Mo+RMhuE2wBArmXggQUpFS8j4k2zZvng1i/WRhH3NnkIcE8ZZ5PF2DdicL13I+SihP
-	 E253Hgx8bccdrIJm/A4AOXGevdD7UUEKNUCc2/y4OSH6uhAK2aFry7W7oOg5P1+k0t
-	 QV/bD49l+F/iQ==
-Message-ID: <sashiko-outbox-237313@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND 0/2] PCI: of: Skip config reads for disabled
- bridges
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xilin Wu" <sophon@radxa.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20261127-pci-of-disabled-bridges-v1-0-3bedcbe51cda@radxa.com>
-References: <20261127-pci-of-disabled-bridges-v1-0-3bedcbe51cda@radxa.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 27 Nov 2026 12:02:07 +0000
+	s=k20260515; t=1795782350;
+	bh=a0qu0j6AmOnocb4ErsG1/P7x86Ov3PdyD2eIAJ7Q9CI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=XcjiUnC+QzW1+A5q+f0vI+yQYATvfZE3rf+/VClnaksrClJRA0VBOqNUxEFicVdAO
+	 Xowu3GA9Xxw1sQ5V2Q3Pqd7gy6qqh5ePMP/Vv3jRF2bdQ2bfVMfFIQnwhQ9V7IlXBX
+	 ZAPjUnFKFmFoAIAk/cza7ql5yzSaEa4Xw7zeiTxVpYKgN9WfOzODcvW28KstEe5yQz
+	 9zqoCOZdGaipyqB97hbfWemWwSggmOFhvhGIlMIW5zeIFtV7xn47pGJ8UxEA50LdBx
+	 Dl23WXcx4qmnaGRNVdfYSMZwNeMmsbUB7+jH32gQj42UlCl9eiYwNCxJ8VyaP2WXxC
+	 ARwmGerIkA2iQ==
+From: Pratyush Yadav <pratyush@kernel.org>
+To: Mike Rapoport <rppt@kernel.org>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Alexander Graf <graf@amazon.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	David Matlack <dmatlack@google.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: kexec@lists.infradead.org,
+	linux-mm@kvack.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 1/6] kho: build KHO objects into a single kho.o
+Date: Fri, 27 Nov 2026 12:25:27 +0000
+Message-ID: <20261127122536.3708770-2-pratyush@kernel.org>
+X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
+In-Reply-To: <20261127122536.3708770-1-pratyush@kernel.org>
+References: <20261127122536.3708770-1-pratyush@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -59,9 +68,49 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Sashiko has reviewed this 2-patch series and found no issues.
+From: "Pratyush Yadav (Google)" <pratyush@kernel.org>
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261127-pci-of-dis=
-abled-bridges-v1-0-3bedcbe51cda@radxa.com
+kho_block.o is part of the KHO infrastructure, but is currently built as
+part of luo.o, which ties it to CONFIG_LIVEUPDATE.
+
+Group all KHO objects into a composite kho.o, built for
+CONFIG_KEXEC_HANDOVER, the same way the LUO objects are grouped into
+luo.o. This also gives a single place to add new KHO objects.
+
+Signed-off-by: Pratyush Yadav (Google) <pratyush@kernel.org>
+---
+ kernel/liveupdate/Makefile | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/kernel/liveupdate/Makefile b/kernel/liveupdate/Makefile
+index d9f469462556..bc679905ce3f 100644
+--- a/kernel/liveupdate/Makefile
++++ b/kernel/liveupdate/Makefile
+@@ -1,13 +1,17 @@
+ # SPDX-License-Identifier: GPL-2.0
+ 
++kho-y :=								\
++		kexec_handover.o				\
++		kho_block.o
++
++kho-$(CONFIG_KEXEC_HANDOVER_DEBUGFS) += kexec_handover_debugfs.o
++
++obj-$(CONFIG_KEXEC_HANDOVER)		+= kho.o
++
+ luo-y :=								\
+-		kho_block.o						\
+ 		luo_core.o						\
+ 		luo_file.o						\
+ 		luo_flb.o						\
+ 		luo_session.o
+ 
+-obj-$(CONFIG_KEXEC_HANDOVER)		+= kexec_handover.o
+-obj-$(CONFIG_KEXEC_HANDOVER_DEBUGFS)	+= kexec_handover_debugfs.o
+-
+ obj-$(CONFIG_LIVEUPDATE)		+= luo.o
+-- 
+2.56.1.839.g22a8290db9-goog
+
