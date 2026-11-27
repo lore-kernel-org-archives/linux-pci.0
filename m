@@ -1,50 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795795487;
-	b=K5PPercTFX+j56Hx1wwr3oc3AOLONKfVyY/4HxykiiNFBd4cQD4vH9hO2PTwTGlMIjie
-	 STg7dZMVlKTwWke1Y71U3CzeVJ0iV0NiPtbX7mLmxOlGWlk8/fjHMUmwT0fzN4+qTkxWX
-	 I1qh++3d8mkyQNbsmh8w7hF/5vSRC1SkonA7I7JIXPzKX++9K2y5743gk459rkcyvvPZa
-	 DpDnx0XlqOiJ8n2xzyWT/e/G5xKUWomCz2uFzPABR2IKBFdYaZ/17Ts6XSbcOjRb7cWP9
-	 sFFRtoK9Mk/uAI/tZBACTSf5rQfJSCshnk/+Vcb7k3LaxII/c4e3fVQc2UQndAIHClA==
+	t=1795797103;
+	b=E0X2KkkCKYYgtBFvQX5rTxmsf5okaE9X8Jl3lczehDxc0aJ6dTnq8YI9r+Q/bRGZkFGn
+	 Nf+6x9Df6gm7tC9X5D2OQxYc6XnWy20vKu3irTZvQPG4qOJRA67RgKDjurTTCXpY4FlIc
+	 SPFQ42rUBnQkmtt9nLnYMerrxYqYEOM6NOWCsSqiJjj5ihYLV9drQilzmFRmZ7ITLdSq8
+	 9HhFD5NCcUAOVA4MaQyPeOoVemUp9lF8CbaTOAtYmktzSp4PYfdBktXEv7IUCBPiLEVNF
+	 d5h4m18dlRbQpKoOyEVEWEKUcc1Y0FGnsrIsyLZJS+uZyk/s8EjQXHnGyO9taaKgE+A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795795487;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=du+kCgH6C65GuTE5Y2Keo+v1Xg9c1ajtG7VUQ+O4zgk=;
-	b=IOzdNevOmW0aIuT9Pgi7SxPCETImNALbyERO0ZKEJp8Iz5RarTF3qNdi1v5xKOjXBxmE
-	 RYDMsyIX9/6qyHSs4hw2EbyK0jVNfjflsozqtRuATFLBmta6OwVJe2RzCF4RcSjOAuBNN
-	 T+ld+aXGeudVAcz2WCCCIL+7a5D4oTmiCMsKbCGzbpoQXXNvO0YvAozfczxgpicCJhwwS
-	 3fGCgsKe1pVGbSEDZovhWEhHUXobdZr24ptbwA/03nVsrygbUQ7+Q5IbRCEoHhdURgDC/
-	 Eq8GMplc5siD5GlxxdCDLXEWWse7sZz9mq+jJ0eFI8IInVhxYd5ZlUU5OKkc+D8n/lw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795797103;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:CC:Subject:User-Agent:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=5RPYgSF1XDHYafp5XjEHe2Hos/Amzm3Q5tQ+HDP2AiE=;
+	b=e/FuTcG/A9GECx4zJaIXeEIsiyoOBKBZLF02XF6ToaEN0DgYMQmK+wsark6YNjA90xPI
+	 6po0bh3dFa4yLCkOGnBHM2j+/4upt9UF95Vi2ny2Wzk/qtX8dQh4mIkj1j/0iGX/QZb6X
+	 8WW0jhIhz79GjgN1XQFo+t6agG0Xw9Z8x1m9zm4u4YVsJMgdOWeN3GxWmxGcP4u2dOkKb
+	 jsDJJGotK2Q5/EMf2vmUEhYjo57qxsymL5I6fGNKQr30aXbngMTkn/ppaXlfPXOOYS1Q3
+	 3soABV5gxZLe4wLw2X/Ccn3FbhxUheZJWBhGxSftDLw1638Do3dvl1mbO1s9SP+uBLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=cj2VUp5D;
-	arc=none smtp.remote-ip=220.197.31.2
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=p41YKBnh;
+	arc=none smtp.remote-ip=209.85.222.51
+Received: from mail-ua1-f51.google.com (mail-ua1-f51.google.com [209.85.222.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE40606A31E;
-	Fri, 27 Nov 2026 16:04:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FE40606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9BEB606A31F
+	for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2026 16:31:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A9BEB606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=cj2VUp5D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=du+kCgH6C65GuTE5Y2Keo+v1Xg9c1ajtG7VUQ+O4zgk=;
-	b=cj2VUp5DzPWpjFHy9cJTO+muzqstXl85uwmSMzGBMK5rvIPeOMYMdOFAjxrtfF
-	VF5ft1Wahin3XrzV9lFXlgYAI9SpMiK9ZqfTg/MW0xQE7WsIg0CHWyHDHPxHqRQn
-	vHhaNUtlfUmsLEshCNJW+x1I+SAziZ0W/NQlHUMY3QD/U=
-Received: from [IPV6:240e:b8f:91b3:d000:4e56:5474:4160:163a] (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDXH0zfqQlr75mOLQ--.5291S2;
-	Sat, 28 Nov 2026 00:03:44 +0800 (CST)
-Message-ID: <c09512dc-b926-48b6-99eb-d7ba13cc276b@163.com>
-Date: Sat, 28 Nov 2026 00:03:45 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=p41YKBnh
+Received: by mail-ua1-f51.google.com with SMTP id a1e0cc1a2514c-98301b325c4so2396203241.1
+        for <linux-pci@vger.kernel.org>; Fri, 27 Nov 2026 08:31:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795797101; x=1796401901; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id
+         :references:in-reply-to:user-agent:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=5RPYgSF1XDHYafp5XjEHe2Hos/Amzm3Q5tQ+HDP2AiE=;
+        b=p41YKBnhuyOT+TpvRIHrMxScjBU7bBWKCDfLL0udUkj50hiYT7nd821dY/PTgq6Zqz
+         YEgrBb02dHDhK3M8p7WSqluOSGQ94A/hj6um6azi8xgzJmejaGASDlqysDAmUnqIuw8E
+         YTAr+gTmSk+g+TKbhv8+qD/tqAklezgjEbwQHVkwe0iQ8/m3qBaQavkXPZBH+NDykzyr
+         GsZWI7geCD3MmYYglHrpPSrKlWnZ/y7Gdf8QGZjM9mNuiBR4OvIUI02U+wEDWW2wFJXu
+         2GR74dMshWTG+CAgfL+L5QXyjaB2nVMXUIj1nl7jfccm7WQqAdj0hXei0CLhKI1gzf6p
+         f/0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795797101; x=1796401901;
+        h=content-transfer-encoding:content-type:mime-version:message-id
+         :references:in-reply-to:user-agent:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=5RPYgSF1XDHYafp5XjEHe2Hos/Amzm3Q5tQ+HDP2AiE=;
+        b=NCLQzeGfYvsJwrGxFTs1RMC2qiohUX5xmmr13ILKMsHCbSnEkeN6daSU0Q736530Zw
+         soPxf+NaMtqgL1PUPvKAOl4M9X2eBNYO4cHv/UqiEsBf/TMKapRTsavNPOOCvw25WFuh
+         lC9yCTzM3dvU7FNweQeHD7AbB70TvFo5TBneZYee98q+zBs0swfkYI6ua3Ir7aNddoTH
+         njotni4e+q/C/UQcCKP/RfEdJwNzSG9pOhzEn6RDed/xheSYixF4D2BlyANXQ9zzUxUr
+         ahOe2GVxcjJoJRM7JZNPkL9YfulBVNa/TXSmwHaNlEuJAPuwBS1ZMwXEhQ2cBPa3jY50
+         wvrg==
+X-Forwarded-Encrypted: i=1; AL+hErG+oduQDd/ztBmvQod9pNR+Qnl4xxd1LbbR6npv+xdPh+svaa4e64eiWJcjJ8biY8kgKkNxBO722RA=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/ef1reTUcCgZ9T6np6zi+HE7CCG9MClYH//bszANU0SBtH4lDE
+	Q5JjLFDR0Eda8kQfBWwv72MQZwZGq9s6TbumLtw0uG65B/D7fAdw3RAB
+X-Gm-Gg: AZFdTZcE8wcUBPLhQuPukiHwXsIDidMoKPW2/jyOuepr3lrkGkuQeukKBbOrEVDBiTC
+	lcHYqpdPQ5j+4KzHF2WpCmYnBGPRQD/Rw/ZqVajL6hWTxxidGalZMg/pMzNZuoLpA1s2NAmGVZb
+	5N2w3yH4tSPEqGpEPb+3jSCfgz9h/elCBnDI2GOfcEIjCjiB69ajNqRfjWdjQn+P6CNGQ97bYXY
+	Ra6y2JwAARVRuAC81mxjwaeXWkTkhd5a/xoDHen0587oj4KPoINsCyXjEePw5EASoaNhQo+RJVL
+	T++4iL9ur8dNQSHkTZLEj2IIaJg+J4hzDkyDjPaDFT5BFP72kxJbOoau+QXHVJHZdZk0vgeNeE1
+	8iiTayCXX8uoroWWwngVQ1ZzqHRHRYcl/i/KWOiWXnDlWOI6GFycLP8euJ80joNXiJxlSUfLdVS
+	XMbfOmXJ+hCvcQf7F8V2IT8GvOO9fm/wVCNMbBX8UypyGODqqPu00qEEv+8unYY5rVfbK1w93WC
+	Lib+VFpmBMOGdx3XSpZVneCdjFsl5mkLQwussKTlCl9qUY7cnKkGVFE0x1mpN1ZKXN3y4sazMqi
+	DbGmVvHwsnvwmpAqyNfGZYCGGIXw7191C4XRAS/xxfRZe/U=
+X-Received: by 2002:a05:6122:3b8c:b0:5ea:f220:fd6e with SMTP id 71dfb90a1353d-5ee8aeefceamr14730581e0c.11.1795797101340;
+        Fri, 27 Nov 2026 08:31:41 -0800 (PST)
+Received: from ehlo.thunderbird.net ([2804:388:90c1:771c:18eb:ef7b:e7f8:aab3])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-99eab8e7b9esm10043528241.3.2026.11.27.08.31.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 27 Nov 2026 08:31:40 -0800 (PST)
+Date: Fri, 27 Nov 2026 13:31:35 -0300
+From: Arnaldo Melo <arnaldo.melo@gmail.com>
+To: linux-perf-users@vger.kernel.org, Suzuki K Poulose <suzuki.poulose@arm.com>,
+ Arnaldo Carvalho de Melo <acme@kernel.org>, Sizhe Liu <liusizhe5@huawei.com>
+CC: rostedt@goodmis.org, mhiramat@kernel.org, mathieu.desnoyers@efficios.com,
+ corbet@lwn.net, skhan@linuxfoundation.org, bhelgaas@google.com,
+ yangyccccc@gmail.com, jic23@kernel.org, john.g.garry@oracle.com,
+ will@kernel.org, james.clark@linaro.org, mike.leach@arm.com,
+ leo.yan@linux.dev, peterz@infradead.org, mingo@redhat.com,
+ namhyung@kernel.org, mark.rutland@arm.com,
+ alexander.shishkin@linux.intel.com, jolsa@kernel.org, irogers@google.com,
+ adrian.hunter@intel.com, wangyushan12@huawei.com, wuzongyu1@huawei.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+ linuxarm@huawei.com, prime.zeng@hisilicon.com
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4_0/8=5D_Enhance_TLP_packet_deco?=
+ =?US-ASCII?Q?der_with_field-level_parsing_and_versioning?=
+User-Agent: Thunderbird for Android
+In-Reply-To: <b1733f2a-ed03-4f38-8c40-6e0e535f1632@arm.com>
+References: <20260908140509.2485649-1-liusizhe5@huawei.com> <aqB37YCMUYKodo3N@x2> <b1733f2a-ed03-4f38-8c40-6e0e535f1632@arm.com>
+Message-ID: <D6C7F85D-0A2C-4569-98FD-ADB616FA106E@gmail.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -54,78 +109,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC] PCIe host controller async probe vs PHY request_module
- deadlock
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: hkallweit1@gmail.com, davem@davemloft.net, edumazet@kernel.org,
- kuba@kernel.org, pabeni@redhat.com, bhelgaas@google.com, mani@kernel.org,
- linux@armlinux.org.uk, netdev@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20261127074329.747914-1-18255117159@163.com>
- <00ca72a9-ff50-4842-8aa9-d68416212e8b@163.com>
- <582bbeb8-13ec-4533-92d4-7216c20fb78f@lunn.ch>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <582bbeb8-13ec-4533-92d4-7216c20fb78f@lunn.ch>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXH0zfqQlr75mOLQ--.5291S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Aw4kuF1kAF15KFW5Gr4rKrg_yoW8Aw45pF
-	W5JrWSkFnaqFW0k395u3yYkFyjq3Z3JrZxurWDuw13u3yavrW8GF1ftFWYg3s7Wrn2kr42
-	qr1UJrZ7AFZxAFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Uc4SwUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AG-Y2sJqeFyygAA3j
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
 
 
-On 11/27/26 22:59, Andrew Lunn wrote:
->> Andrew suggested：
->>
->> drivers/pci/controller/cadence/pci-sky1.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/controller/cadence/pci-sky1.c
->> b/drivers/pci/controller/cadence/pci-sky1.c
->> index 82f4ae5c04a8..4448ee3d5e73 100644
->> --- a/drivers/pci/controller/cadence/pci-sky1.c
->> +++ b/drivers/pci/controller/cadence/pci-sky1.c
->> @@ -235,7 +235,7 @@ static struct platform_driver sky1_pcie_driver = {
->>   	.driver = {
->>   		.name = "sky1-pcie",
->>   		.of_match_table = of_sky1_pcie_match,
->> -		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
->> +		.probe_type = PROBE_FORCE_SYNCHRONOUS,
-> 
-> Sorry, i was ambiguous. I meant the MAC driver should probe
-> synchronous, not the PCIe bus driver.
-> 
-> I don't know the details, but i assume this is some sort of tree, and
-> a list. The root node enumerates, and adds to the list of things to be
-> probed. The device core then has a bunch of workers which take stuff
-> off the list and does the probe. Those probes can add more things to
-> the list, and it works its way down the tree. The first iteration will
-> only pull jobs of the list which have PROBE_PREFER_ASYNCHRONOUS, so
-> you can prevent branches of the tree from enumerating by setting
-> PROBE_FORCE_SYNCHRONOUS on the driver at that level in the tree.
-> 
-> So i assume you can mark the MAC driver hanging of the PCIe bus probe
-> to happen later, while other sorts of PCIe devices probe async?
-> 
+On November 27, 2026 12:12:14 PM GMT-03:00, Suzuki K Poulose <suzuki=2Epou=
+lose@arm=2Ecom> wrote:
+>Hi Arnaldo,
+>
+>On 08/09/2026 22:02, Arnaldo Carvalho de Melo wrote:
+>> On Tue, Sep 08, 2026 at 10:05:01PM +0800, Sizhe Liu wrote:
+>>> The original hisi-ptt-decoder only prints raw hex values with generic =
+field
+>>> names for DW0/DW1/DW2/DW3, without classifying TLP types or decoding
+>>> DW0/DW1/DW2/DW3 fields according to the hardware-defined packet format=
+=2E
+>>>=20
+>>> This series enhances the HiSilicon PTT (PCIe Trace and Tuning) packet
+>>> decoder in perf tool to provide detailed field-level parsing of TLP he=
+aders
+>>> based on message type, and adds a versioning mechanism for backward
+>>> compatibility both in hisi_ptt driver and perf tool=2E
+>>=20
+>> Series is sashiko clean by now, has a Reviewed-by, but it touches both
+>> kernel and tools, I wouldn't have a problem if it was processed by
+>> whoever maintains the kernel part=2E
+>>=20
+>> - Arnaldo
+>
+>Please could you add your Ack on the series, so that I can pick it via
+>Coresight tree=2E
 
+Acked-by: Arnaldo Carvalho de Melo <acme@redhat=2Ecom>
 
-Hello Andrew,
+But you could have taken my "I don't have a problem if this gets processed=
+" by somebody else as an Acked-by me, documentation says so=2E
 
-
-Would you have time to review the previous discussion? Additionally, I 
-will continue to conduct tests based on your previous reply.
-
-https://lore.kernel.org/driver-core/DGZJBMG2Y738.2MU5LXVGEDD47@kernel.org/
-
-The modification will be made in the MAC driver.
-
-
-Best regards,
-Hans
-
-
+- Arnaldo 
