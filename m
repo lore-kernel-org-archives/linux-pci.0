@@ -1,49 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795792341;
-	b=gtjOFSmXPv4m4jkUiw1VGVu27zsLxYs/1uflFSP/4iFFHGGt9Tr3mBMF4diQi87jYwfC
-	 dAfo18kSqLJdhjrelXkwvKuUytoUDAOFfTZ8QakRFIv3P/B6SM06pWkZLUkRwzgO6uTcC
-	 sbXOm1hcIrSUuhsqlToelOUskX0fP/A9SbFuKck7w5jPY8/EVhtPXj6SoZB4E3piy1qOq
-	 nRb5F95qyRHhU7qVViEFIDV2NNaJMaeXthsSZ+EZ5G4y+2QIOMxmMLkq4ls0TI+YERkYg
-	 khZvrAcSYyh29vdOMkj3IzZ1Ui6Hs5/7j5UhphD5cUw+RtG+apK/1PByDyQKgsl5MUQ==
+	t=1795795332;
+	b=XK7KYEfmbgT+RC+fN0FmAcFYPgGSo9Y21cnkCHrBZ0Wg9wv7WpDoNBHLv0FCp9Hfg9vb
+	 Qb3z6ZXMx3EYz0cWYL5igD8/7yDuSM/iJLBLUWvLQhuXNVHI4rzXDNnL8M7Rfng6Lx2FM
+	 pW3KxPtSW9kYDj3pnfUeQbDk19imw6g3UhjDKjNvcVIzzbyfI14+yVmYQN/JQvAJ/F/cT
+	 PMFyCa3qCMczKj7kf0/XdhgciADrvp+7fyfoKhRW9qq6ySBD9IUEGo6+/o94JFwpD9Fdi
+	 g65a09N0o0mnbRKuntqQUDr5HVPzjPTD156Mpl2APDQdsrM3Fq0ih2GxWOqUMPo4Yvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795792341;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:Content-Language:To:Cc:References:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=hG1UcIeD5kDsTZ/j31mkrP5xd0P4UvuVoAKHdexqypg=;
-	b=5pRJku3gVLJzeKp0T6uZK+vNt66P52nR7G84MT++P4IIwPLk+ZKC01Fp7uOVFPvxEGmi
-	 FPPK1Km2Qlgi7QVxpDZ6vzxCaOE9RzrxBfP9n1P74K+MCRI9Fn6UAWWi/2SBSHQa2usRD
-	 6ucPmY4vTMwq0CEOZ9dAtfDt9Sz5n6DCt3iXEpbPwgFevljrL2wEHvxO+6zI4OSnwbEMF
-	 TViWkw8gbPsR1bNz7zwLZPykWoUkL1Gk0VtrPJCpRiI6/XH38oXE0WWRG3tUZRrbFpmy1
-	 KF2QB6jnd1ew/L9giR5GDb38hUXxi+GqH5O851mfNPRG8bPRAFOI53sF/GRSTOiShzg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795795332;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=bRsuVcrQyfmLz+pq40jwwjKSrSxpTonxyuhsiPTJNsQ=;
+	b=QIFk64DdNF9NPNvyDFjtSditaW+crqa7l8JJHjU8Y0b0VekNNSzIo0RYRSU0mfSCFJkf
+	 k9/r/qClm2eaGliN+7Cs1UT9Ti2fRScUj2rlg46lj9FYlSm26RRP39Ia7EuVmp2T6BhNu
+	 ue9tGMfSaTvasXFpX4qY5+z8qvLDALZ3KHPYrcF6p+s153U8zzjk/y9RMbuy57F/N1py/
+	 3LSKS6nzQQnsVlPXZnAEcq4Sj3OQvI426LH0iOUrWAfbjOoWO9En0QFW4sq57v2zFK1Kj
+	 MHkw/Q9ig3VhomsDcSrwSfWBsVYsCLsNqtInPPTgqCXXGn8pmIK5Z6NA89pkTvKd0aw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arm.com;
-	spf=pass smtp.mailfrom=arm.com;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=Aliu6mPB;
-	arc=none smtp.remote-ip=217.140.110.172
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 36C8A606A336;
-	Fri, 27 Nov 2026 15:12:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 36C8A606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=iL3iZ2Tr;
+	arc=none smtp.remote-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB71606A339;
+	Fri, 27 Nov 2026 16:02:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2AB71606A339
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=Aliu6mPB
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BEC59169E;
-	Fri, 27 Nov 2026 07:12:17 -0800 (PST)
-Received: from [10.57.71.121] (unknown [10.57.71.121])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 391CF3F632;
-	Fri, 27 Nov 2026 07:12:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1795792340; bh=UhKmPuC8DACVoypwIe16TXINMMAoEKBWaFZcV9+dSjo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Aliu6mPBwYN5HSMdptjc8jnPjK5BOd8wx9RKcKPyfNS43GcRQaSwUj25U3P1SnHAG
-	 8xkH6zd4yykKSeWXRHwyLkTXOsmF5IqkPe4GzVXq7CVj3Yqh+r31vXJuppbFq1Fwe1
-	 qxHQdEPjVzc2b7w4z6dBLBzE+oViDmSYGQd/rozE=
-Message-ID: <b1733f2a-ed03-4f38-8c40-6e0e535f1632@arm.com>
-Date: Fri, 27 Nov 2026 15:12:14 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=iL3iZ2Tr
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=bRsuVcrQyfmLz+pq40jwwjKSrSxpTonxyuhsiPTJNsQ=;
+	b=iL3iZ2TrqhQiQMK7KMAOkx5JWJxVgyAO27j7yzgnMZ/cWff6Z4NGLzezIn4vxb
+	sA+XkIW8d4r5TzIR8fFRz8bD+/YlaK8gzvs5qAVAkIiZSyaWZQxSMalaeRDRi6cd
+	pUMbk3SpB9K8jo7Upc4eI0a2gi3O09uj/HO0bs0P169uw=
+Received: from [IPV6:240e:b8f:91b3:d000:4e56:5474:4160:163a] (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDXtiMwqQlrKSDnKg--.18141S2;
+	Sat, 28 Nov 2026 00:00:49 +0800 (CST)
+Message-ID: <65f6df0c-1bf2-4a1d-8049-44dea14b70f4@163.com>
+Date: Sat, 28 Nov 2026 00:00:51 +0800
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -54,106 +55,57 @@ List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/8] Enhance TLP packet decoder with field-level
- parsing and versioning
-Content-Language: en-GB
-To: Arnaldo Carvalho de Melo <acme@kernel.org>,
- Sizhe Liu <liusizhe5@huawei.com>
-Cc: rostedt@goodmis.org, mhiramat@kernel.org, mathieu.desnoyers@efficios.com,
- corbet@lwn.net, skhan@linuxfoundation.org, bhelgaas@google.com,
- yangyccccc@gmail.com, jic23@kernel.org, john.g.garry@oracle.com,
- will@kernel.org, james.clark@linaro.org, mike.leach@arm.com,
- leo.yan@linux.dev, peterz@infradead.org, mingo@redhat.com,
- namhyung@kernel.org, mark.rutland@arm.com,
- alexander.shishkin@linux.intel.com, jolsa@kernel.org, irogers@google.com,
- adrian.hunter@intel.com, wangyushan12@huawei.com, wuzongyu1@huawei.com,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-perf-users@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-doc@vger.kernel.org, linuxarm@huawei.com, prime.zeng@hisilicon.com
-References: <20260908140509.2485649-1-liusizhe5@huawei.com>
- <aqB37YCMUYKodo3N@x2>
-From: Suzuki K Poulose <suzuki.poulose@arm.com>
-In-Reply-To: <aqB37YCMUYKodo3N@x2>
+Subject: Re: [RFC] PCIe host controller async probe vs PHY request_module
+ deadlock
+To: Shawn Lin <shawn.lin@rock-chips.com>, andrew@lunn.ch,
+ hkallweit1@gmail.com, davem@davemloft.net, edumazet@kernel.org,
+ kuba@kernel.org, pabeni@redhat.com, bhelgaas@google.com, mani@kernel.org,
+ linux@armlinux.org.uk, netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20261127074329.747914-1-18255117159@163.com>
+ <00ca72a9-ff50-4842-8aa9-d68416212e8b@163.com>
+ <2587e8fc-018d-426a-8459-4e88e733a38c@rock-chips.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <2587e8fc-018d-426a-8459-4e88e733a38c@rock-chips.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDXtiMwqQlrKSDnKg--.18141S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrur18AF1DJr4DXF1rCw47XFb_yoW3ArbE93
+	47CFy09w1rKF4j9a1ktrs3urs0qw1jga45Gr92qr43GryrAFZrGan2y3sxXa4xJFZ2kFyI
+	qF9Iq3y7tFn09jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUjFAp7UUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xKTN2sJqTIjHgAA3Z
 
-Hi Arnaldo,
 
-On 08/09/2026 22:02, Arnaldo Carvalho de Melo wrote:
-> On Tue, Sep 08, 2026 at 10:05:01PM +0800, Sizhe Liu wrote:
->> The original hisi-ptt-decoder only prints raw hex values with generic field
->> names for DW0/DW1/DW2/DW3, without classifying TLP types or decoding
->> DW0/DW1/DW2/DW3 fields according to the hardware-defined packet format.
->>
->> This series enhances the HiSilicon PTT (PCIe Trace and Tuning) packet
->> decoder in perf tool to provide detailed field-level parsing of TLP headers
->> based on message type, and adds a versioning mechanism for backward
->> compatibility both in hisi_ptt driver and perf tool.
+
+On 11/27/26 23:01, Shawn Lin wrote:
+> Hi Hans
 > 
-> Series is sashiko clean by now, has a Reviewed-by, but it touches both
-> kernel and tools, I wouldn't have a problem if it was processed by
-> whoever maintains the kernel part.
 > 
-> - Arnaldo
-
-Please could you add your Ack on the series, so that I can pick it via
-Coresight tree.
-
-Suzuki
-
-
->   
->> ---
->> Changes in v4:
->> - Add missing space in hisi-ptt.rst (Sashiko).
->> - Widen the pattern bit field in struct hisi_ptt_trace_ctrl (Sashiko).
->> - Add protocol defined TLP header length parsing in patch 05/08.
->> - Add MRd and DMRr message types parsing in patch 05/08.
->> - Add comment for enum hisi_ptt_pkt_msg_type in patch 05/08.
->> - Add DW0 and DW1 fields analysing in patch 06/08.
->> - Refine bit-fields parsing of DW0/DW1/DW2/DW3 based on different requests
->>    in patch 06/08.
->> - Refine the description of pattern=1 in the document in patch 07/08.
->> - Extract the bit-field printing of v1 version into functions in
->>    patch 08/08.
->> - Link to v3: https://lore.kernel.org/linux-pci/20260903075241.1445338-1-liusizhe5@huawei.com/
+> 在 2026/11/27 星期五 16:02, Hans Zhang 写道:
+>> Hi all,
 >>
->> Changes in v3:
->> - Add explicit inclusion of <stdbool.h> (Sashiko).
->> - Make patch 07/08 apply cleanly to mainline (Yushan).
->> - Pick up the reviewed-by tag (Yushan).
->> - Link to v2: https://lore.kernel.org/linux-pci/20260827140442.2031128-1-liusizhe5@huawei.com/
+>> The patching process under discussion：
 >>
->> Changes in v2:
->> - Split patch 01/10 and patch 02/10 from series v1 into independent patch
->>    series for backporting (Bjorn).
->> - Use bitwise operations instead of C bitfields for cross-platform cases
->>    (Sashiko).
->> - Add `pattern` parameter in hisi_ptt driver for layout compatibility.
->> - Link to v1: https://lore.kernel.org/linux-pci/20260604075005.2219785-1-liusizhe5@huawei.com/
+>> https://patchwork.kernel.org/project/netdevbpf/ 
+>> patch/20261124070753.25972-1-18255117159@163.com/  (include v3 patch)
+>> https://patchwork.kernel.org/project/netdevbpf/ 
+>> patch/20261124070753.25972-1-18255117159@163.com/
 >>
->> ---
->> Sizhe Liu (8):
->>    perf hisi-ptt: Abstract trace data buf and offset
->>    perf hisi-ptt: Complete the field names for 4DW and 8DW packets
->>    perf hisi-ptt: Extract the raw data printing part
->>    perf hisi-ptt: Merge 4DW and 8DW HEAD0 printing
->>    perf hisi-ptt: Add parsing of supported message types and proto length
->>    perf hisi-ptt: Add field-level parsing for header DW0/DW1/DW2/DW3
->>    hwtracing: hisi_ptt: Add pattern PMU config for trace format selection
->>    perf hisi-ptt: Pass pattern version to decoder for compatibility
->>
->>   Documentation/trace/hisi-ptt.rst              |  26 +-
->>   drivers/hwtracing/ptt/hisi_ptt.c              |  25 +-
->>   drivers/hwtracing/ptt/hisi_ptt.h              |   4 +
->>   tools/perf/arch/arm64/util/hisi-ptt.c         |  18 +
->>   .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c   | 593 ++++++++++++++++--
->>   .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.h   | 241 ++++++-
->>   tools/perf/util/hisi-ptt.c                    |  51 +-
->>   tools/perf/util/hisi-ptt.h                    |   9 +-
->>   8 files changed, 872 insertions(+), 95 deletions(-)
->>
->> -- 
->> 2.33.0
 > 
+> This had been discussed for several times and the lastest one I
+> remembered  is from here:
+> 
+> https://lists.infradead.org/pipermail/linux-rockchip/2026-March/068879.html
+> 
+
+Hi Shawn,
+
+Thank you for your reminder. I missed the discussion of this series. But 
+it seems that I haven't witnessed the final plan being implemented.
+
+Best regards,
+Hans
+
 
