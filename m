@@ -1,13 +1,13 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.228.135
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795749130;
-	b=jPsBx4yEVYcgr7X0IBBwCK12MDbwv/br7tSUW+XeEl+V8AdnijaAxGoMIA41kymwFWmi
-	 qL66W6XOAtcvmpRxzquphvY6W8if+HjoIHDlbGWNlnBh2Q/U9x5lDQUkf8HrwhSeGXAA1
-	 wCFiZe/qZ/zVrFC1+TpuRF+h7wDpXjJlh4LnL7Mo/EWo+DLeNkJMu5jvgG2E6JXcBn69+
-	 XmQlsG1s4GK5ro2vvq8nT0j3vdRw3FHjL/ulVJgDkXyFrHZPsIT+PwU+urLW7qsNuNSKY
-	 YFoao9gDM6NOPjBRmR0rBpzBAWHXvsrT9vOaqerxOrLBtznLy2Xp085ZulnSFCHeN/g==
+	t=1795749131;
+	b=Yn+GMsOd3lmY0IUoOJ1tfnMGKH5mFISOhfEI3zN43usXSgQspuVlpJU6IuEwoyIOkQBO
+	 xpZLzGRn7BLaFYyhddABEh9j81lm5EugYTzLJZfZxLNCUVtkVVA9Kg9ePVcjdrfavTOQV
+	 v4pkC64oEXpsRL24/6cUP0PoiyeX1gIxxbpj8t3Ygsc5PEbN8jPqb3kbHi9fY17RozDZY
+	 fHdsJwa1oOI8BX84anHQ8Mz1aMV5T74yPoJtzPE6u8vVuCAlCCtaitDpSAvcuU2qWn3qK
+	 ia0mnTi78KM+qvvHOFDWNKztnO7LkRb2EBJdtQqyYnpfCqGdgyryPMGSceXxw1Iikbg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795749130;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795749131;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 Content-Transfer-Encoding:Content-Type:X-ClientProxiedBy:MIME-Version:
@@ -24,54 +24,54 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=tF3v4j9o8+2QGYEAmagYSAueCZ3WLPDpJcNvXt/3c50=;
-	b=c7TrOPNQBLAm5xubl8p+Taj9crDqnUxAa5xL88YMKJHbQARaVqbDUpFE1JrLOtTFBVhl
-	 FSDyy3o8SP518yEPwVF1B9A0sSK+3rXRIzCrHx3/Seg+Xbxwo430JjgjLsqo4prhC1Pkb
-	 LrOss373TvsO41sKgTU+i7je3w8//X0+wI2W4wtWIwnMwoJYwzv7yzPLjmz93UsVZhCKw
-	 H5MMyKecBJ7dsONuLVaTUJlf5bzelZvjofeNtYcWiQPZfF+Hx3HRu4VcK3TlkIQs+9as8
-	 0wMkvzZ6YjF/WYZsRgjMMSSxMzvdMJunLwOCeRERZLM/3iAG8utjOImMO7CJBfaErZg==
+	bh=ucNJQRkwyV2v98aXVl/8Xr/bHgYxyY8lT3lF3fubUPA=;
+	b=mcEcg+GfGBEgfCSUgwefEcIlRC+1jMfnBcM+Eb+DTFhHV4zRDKjaSIORZ0kkdErC18EH
+	 zxVLlr+FBRpO2n9f8Msb3YT5Q+WxCMg/bgSGHMUSMcRjAtX4kaevG7XwrxSsNLwy1Cbxh
+	 BfWDtir5GMfcf5V8EVpESKMbKmp5eVy2x6bfYjEUm4Uvvk1uXD9zdA18ZDudn0XPJPH5I
+	 XnT1wx6l4W0vWJnyjPIW8LEkWZM26fWHM1oLcsUrsepqtjUCm+itVbMD7mbVGTyNPL091
+	 nKK+vCVdLTtjn99dzIwq4ksEhQ96fAFqgNHjcNDQ/BTOkn5kM3rpMtD3FFNp7nKoOGg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=valinux.co.jp;
 	spf=pass smtp.mailfrom=valinux.co.jp;
-	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=gkSFBtOT;
+	dkim=pass header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=GPOt84pn;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.228.135
 Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020135.outbound.protection.outlook.com [52.101.228.135])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BD27606A32A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD0F606A682;
 	Fri, 27 Nov 2026 03:12:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0BD27606A32A
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BBD0F606A682
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=gkSFBtOT
+	dkim=pass (1024-bit key, unprotected) header.d=valinux.co.jp header.i=@valinux.co.jp header.a=rsa-sha256 header.s=selector1 header.b=GPOt84pn
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MPGpYH7R4wVQf6uODneVtXdNfyrrQPNGxcwn3oyLenfHC+5NwteUQkuSTAcOKbFwwmD7n6TZNbjlQgPkAFek13nSuk4Z2VN/z1Z2qWv+w6lIGi6nlAeVQCvcC5VgDbR+EOaIRU69+1XfOMMC5X+675EJerAUrw4vA/uO7cXs/WcZeeiHkkpUOHebA9UWT/vJmUcWRsrsZRlYTzWucpyL1I9l24IoMuXTg2nW15yc3ztUoAXetsypIkNArNq3qI3MRx/LppLppY4+8/2ZXElurGGNFm5wmK4RhPg0UMzodIMbRfKPLlXprWtxm+dXGQ/tkSifCjWSfncp3NBxE9HSFw==
+ b=pgukcf5rQ2B9n4BeserLSPSLYP58XNUIccGhBL7dhsSZYmTXyCHoz2RV8wdx8pGne3XUmp/VwvB2tpndkOt6LlUAmTAJ09N5WTxmu99kwpbSrRbjq+oY7SlV67w40+DopEY0WX26mnqqDe2JbyXN4R5FWSzl1mg4Rl1nJbZzm9ln2QLS7AlkMWYx4/fQPsXuM+E5LXPL8vRuSvwYnRugts/4XqtNVPHOF151z7g5nlxuMbzbRQmRyXbqBafuZxQeK7FJld2FT5H3GnA5zLEmte7oscX+LOQ8fMmY4RjT51k2nRr9oGODUq/y3mN8vbm2suyn6iMgi81Enp9Mdu3fww==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tF3v4j9o8+2QGYEAmagYSAueCZ3WLPDpJcNvXt/3c50=;
- b=Daqngb88RIfFzudFKMEBx4MWhktb/CiALAScx9NPV9MV8YNljuDgiXkNvNgI5cHo+yYjzOesW0uAOM6PQd8+tlbblMwKMTjmS6rzfONqv3d3HlcLuyot7NJR4HU4BGNisULusi0z5g6R/mhUA+4oglB+7Q/r21slGEoC7BoOkak3L8kffztC86J8Witea96Sb+oFX/kr5ZyXJDWtx3DSd2Ym9M6lvEPnfP2W2WAyYinD6etgOXcZejbsQBEmDsHpIWS/E6FZytKaRzClapbQFLz/maVX7uPc8mDQbMvNN+CERxxVqEo338KvUljWk4F0ae31bNwLd3njq8XGisyboA==
+ bh=ucNJQRkwyV2v98aXVl/8Xr/bHgYxyY8lT3lF3fubUPA=;
+ b=qf1zSGe7/f8/7HHw/ONcdAZUGyiF4acAb83U8Em+Q2mhpFF+mVCBQW92j9dkquQ54PqnLVZWPD7AHyUQvQDzGww2sTt9um5QLdBezKh35Okv06TKF/mLgLOjHu2cZtWBoQqNm8VOFBvqdMRB9pLRHV/aq8sYs8I+GGycNgivm+8JOIIfQiF1wFdoDliXvWRGdZ/yIg+/7c5WCFyrjVncQHFfhl9hsWS7oyHstWczuqrjGC6WNUxfT6ycex1aTfNINYXvW0NI6toWGfqD0n19+BwcB0nYZa8MSqPUZccFptAEO+ijrbztHQ9sHicsOxescU/w/Wem/E2f5cnArDnl3g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tF3v4j9o8+2QGYEAmagYSAueCZ3WLPDpJcNvXt/3c50=;
- b=gkSFBtOTnBm/hMZ4/rOeGi00jel0hQVOZE1dYT5IgUZFNUIwcLsF/m7jkZrMwM1wzHtrJh1tuiAUuzn2hA8XEjm+h3xDDhiMYsUM7Gq9pjBz+PBLcKGK49/SKgfU9y4il1/FiN7p08ROyleAFzepXBJ2em45WG5xD7jnArZ5m7c=
+ bh=ucNJQRkwyV2v98aXVl/8Xr/bHgYxyY8lT3lF3fubUPA=;
+ b=GPOt84pnheP73gY5sCW4XDxU/l5xT1a8hdozcdGGma63Ox53QtNZWfS+FDicCqzWWZI8BVb1xoHzKQX+8/veiYzCsWgfYIelWbKU93toto/qTlYVENQgsF96tGB/olpa9sANf7c7loxoX8qIx9CQ3TkRLUrtwDSLiyZXdXiiHpg=
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:325::11)
  by TYYP286MB4873.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:143::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.9; Fri, 27 Nov
- 2026 03:12:05 +0000
+ 2026 03:12:06 +0000
 Received: from TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9]) by TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  ([fe80::cce5:2aa8:53f9:dba9%5]) with mapi id 15.21.0662.007; Fri, 27 Nov 2026
- 03:12:05 +0000
+ 03:12:06 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Manivannan Sadhasivam <mani@kernel.org>,
 	Marek Vasut <marek.vasut+renesas@mailbox.org>,
@@ -97,16 +97,16 @@ Cc: Qiang Yu <qiang.yu@oss.qualcomm.com>,
 	linux-renesas-soc@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v6 02/17] PCI: dwc: Factor out the PORT_LINK_DEBUG1 link-up check
-Date: Fri, 27 Nov 2026 12:11:30 +0900
-Message-ID: <20261127031145.2521228-3-den@valinux.co.jp>
+Subject: [PATCH v6 03/17] PCI: rcar-gen4: Check live link status in link_up()
+Date: Fri, 27 Nov 2026 12:11:31 +0900
+Message-ID: <20261127031145.2521228-4-den@valinux.co.jp>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20261127031145.2521228-1-den@valinux.co.jp>
 References: <20261127031145.2521228-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TY4PR01CA0049.jpnprd01.prod.outlook.com
- (2603:1096:405:372::14) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TY4P301CA0036.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:2be::19) To TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:325::11)
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -119,127 +119,133 @@ Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TY7P286MB6866:EE_|TYYP286MB4873:EE_
-X-MS-Office365-Filtering-Correlation-Id: c9f3939d-cfe0-488e-9e7a-08df4c3436db
+X-MS-Office365-Filtering-Correlation-Id: a57c9e73-04ac-4a21-30ec-08df4c343781
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|23010399003|1800799024|366016|376014|7416014|261009223027099003|18002099003|22082099003|921020|10067099003|56012099006|261102130727099003|261102123227099003|261028144727099003|261026140227099003|261026121527099003|261021121427099003|261021123027099003|261022105027099003|261022075727099003;
+	BCL:0;ARA:13230040|10070799003|23010399003|1800799024|366016|376014|7416014|261009223027099003|18002099003|22082099003|921020|10067099003|56012099006|261102123227099003|261028144727099003|261026140227099003|261026121527099003|261021121427099003|261021123027099003|261022105027099003;
 X-Microsoft-Antispam-Message-Info:
-	i539GhuND5S5G5Y7Ve8SrJGv+eFl4luPnnQHlgfReYz89gvWC0CRgEK8leH1FuDufrzb71tm4ii4P++UuHFCp8AWStN66KvuLfJGXHelNEeY0aDO4XJZAsWQXLMAjNAvqRGWBOhm0Bxix+Ux21jMLC2w5HYR9hZnHTcV9fRjl/SsHoIUWrvr+FSnrjJh9/oxOz8R/JNQ+PINQ+Jxgws1Usxx1xTO/VqxUnQYG1eHRCHnXTbNYehBRarxt6nyYWZ7kgGhpQzTnLLfpl9MM3WJmGDHESNbZOYN17fQTvtR+PI6LMxOrXqyTMNWZo2kmIfqEPUhhXQBKt9iSrfN/VbAP6DQYA9oc0NgdKLr2yG5yqi8juyCVIOdeDZIllXwYQOriknHfikj38/TDRIoWpfcl31QXEj3yQ+PqpNOqMoujx+W3i2yf0Q/9R8EUkyZcXY767tJhLty+YjbA4oBsTwhNGMoOy86v1iZpdhnXsmbGXqgLWWtwDmzkVvl3KWfE064RyHMmsCf0NUgbZ0fIcXUjC9fbl7MpApEIbRVKOw7kZtpZf7M3QK9zbt9tyud2gC90lABmABwpNPmulC7NecoHZlaVCwaSiBQAP2ubHSm4tKbS+6wXpu+yRplfqWoZGW6Zi2+8I6jM1mFkMtFvczMucTksLfFCkIwLh39Y6I2IdeC1szF1IwsVJdFUrxTJYB08uQnhibueFynQqRMLPjMag==
+	XvM0eHQrispuKRNejL6KNl5Xa42xyc3IhbN9HkblT8dt/yl7D1TfpeiVXVfrRaYzCkQSKhPxVkMfovwa2MdDNYjt56TRcLJXjVczp5OewvbsdjaN4xV358gOzM10YsgBYxXtFP41xqbfCPri8yk3A2B8aJmV7v+NNPaS0Ea6fWfPgfTdbbf/2H66ZktpVDlza49Vxg16SbGdyk6hEA9SLuAsChbK5XrbzhhuXmkhQ/4dO60u+4sOV7HPZGhDCdmWrV2OJUnwsiQ/4RKpNKi+M1MtBwsUmGhNB/66N8RFDWB49s7dr66/HWAlj9P5i/io1liPT4pafEkHEuUUFoOJ43OWXsSWTS4uQOCTQ1kh8U/FtiWblV393AHLFdof1mN00c7JQ7zPCxU7N1BaeDA9mbr2XdQWdN20sCohPSxK0eaVpE3MB6ErZukRlpyAysw4LUKf/k6KIhWoTQE0TgTQ7SCHeMYuU6fYEFu9R9MV6pAbd4GFGiHa0A6jvZn5iAlds2H/0Shqsi6+N7fE9y32Ge8jDVwfd3zweIeU1sqjGB4mfZxzVjvghtrYO0YP4/75vgiY2gIq5UvoTlIPqGCHUW4VrmtAbSJjjvky3/iRPv55vnZKFopn0UtEIAocfMDt+sLcTv5YxHltchiPDcFl/RdNjfS83pYcUc5Ih3Feepj2Fbj+wNJa5B34+4i3fnhBaoq5M7EUtVbhburd8+xI4g==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(23010399003)(1800799024)(366016)(376014)(7416014)(261009223027099003)(18002099003)(22082099003)(921020)(10067099003)(56012099006)(261102130727099003)(261102123227099003)(261028144727099003)(261026140227099003)(261026121527099003)(261021121427099003)(261021123027099003)(261022105027099003)(261022075727099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(23010399003)(1800799024)(366016)(376014)(7416014)(261009223027099003)(18002099003)(22082099003)(921020)(10067099003)(56012099006)(261102123227099003)(261028144727099003)(261026140227099003)(261026121527099003)(261021121427099003)(261021123027099003)(261022105027099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?yDD3Qj6kYqfi/VU/FP8+v/WJLIUsJPe6yhPa3SEdHv7AUmhDrepyap8OXiu2?=
- =?us-ascii?Q?kOLyF15134YxBY7JzszdOFhoGv+owXo02Z/3BAeeJRrJNAdoCQ4vMPW6sU36?=
- =?us-ascii?Q?s5PpZjR63mELaLGCWq7hEZ+5D3IK8taxdqh3IJxLVKjSxVuOFGsJcmtCth/1?=
- =?us-ascii?Q?JoPyDEaq3RshNCgQEx0aiTH8P+GzjQjf1/j5+tUyqAgtI2keTo12NoU/AJwm?=
- =?us-ascii?Q?SyHkTVZxtDXMCbZfP9wW8KEbDl1jLTL7uy43rdAJFnY0e7vdAaZRKT3sUvhB?=
- =?us-ascii?Q?2Cr8aYpFozuf02mlgaXbiSY8Fmacn57enjAFlCXEQd83pCW6aka213y5MiKA?=
- =?us-ascii?Q?FxqhwU/VmGop1VBRZzcFhruiWtHTcODgklnD/VdcvSJPRiyHr/BoXUYPl8LT?=
- =?us-ascii?Q?80lhrOi18iP4/mhzti/qjBJvDF63RSfY/Zd3J7ZKGeVv+7Xh4e8gG1GHIGJk?=
- =?us-ascii?Q?vG8tfhznp0BGBrTpzqvCBe/ItKqhKZKNl5pZo11e50lKMXlVqKpr18D2DVi9?=
- =?us-ascii?Q?q3w0tmd2IVXRKFQ2Y4w6ZGAKF0WpPJstaqM7vr7RASLb+qdSr+LH32rj3WZu?=
- =?us-ascii?Q?JcsSjxultslP1yVAdo368l7QpsDbWtm+0zlYVIhILJE6Wgn1Ef1PzWe7rPcf?=
- =?us-ascii?Q?6fq1M+xEMUgNP4q+9ML17uUBuwBGRPy+lSEPXvwlpGlflyZM+ozCEUy6ANq6?=
- =?us-ascii?Q?hzCAA25SFhd5T0+sm5OrhLoAM7LsNQsPXr9lygGRCz923PujdINyPN43aENz?=
- =?us-ascii?Q?eCC+iA+bOafosvjJRFonvwr/4smgIpsptbWumXq2nUKp4wT2AGjfSxADWEdb?=
- =?us-ascii?Q?FtYHZTyDcmmy2WT4jJx6CsyX62/DK20MMnyyaaUz5+1ee0sPZYjawULvazMa?=
- =?us-ascii?Q?DVF27I2PXYgTBsJfbET4HzDJ/8+58ZcP4gyJl7ZO1Xm4OGI/YTDsK3tsxlWw?=
- =?us-ascii?Q?iKFDil1PuZXjrruunlVdAZs+lyF/In9sglXfyUJCL0RLmH60EoCdLHdkHa5l?=
- =?us-ascii?Q?pUXvsyVp/LqZXyT6Ir3Apai1qUJ1ZcjMskoQG/McAU8qaSG10I7pawL0ORMv?=
- =?us-ascii?Q?PeWhO5LIWe4X/KixukJ+nJ1ZiSJyI+1sUYmuepIRIB4r62DQayGB6uAIVB6v?=
- =?us-ascii?Q?WGcI+mzrtz665yFj/IxxumhmuOSo79G+MMBaIuBLEcm7sZ9+LClqfJZSBqWP?=
- =?us-ascii?Q?nXGJ7/Inr+n6h36/ey3eAUOJgdOBgB27hBySvk5T4OizkU10tFdIQL0UVMfa?=
- =?us-ascii?Q?k7MbhUP9aulVWSgXLaZgIF0HqloZivfgn+ufIwJnP96DpKlHGrdtkrAYOxOG?=
- =?us-ascii?Q?AZmdG6StimFmmRMkc7IhUbQe8D/fSozkM1Qo7oaL8G2TkZxlvjqVHrpiIx9b?=
- =?us-ascii?Q?in94iocovTmAATCLudwXE1azi9YfWtFG1/XzUuY3lUtOzFsb2fvg90aWbfF8?=
- =?us-ascii?Q?YfQ3kLmksjRcUDO6F4OSOJqmzYLi5fUnRDspg6hDDPlI87JL1MKLgytFg3ss?=
- =?us-ascii?Q?/i1VErz7P6Xu04obDPYL3fz+lMa37BtPIeillD9M3AUqdUjnhrKubF/2NQ+Q?=
- =?us-ascii?Q?oEKfmnWUTP9egvYbuYmwKpyK09Wj3mnLCeceNrbxtVuqGZZE4IPaV3xU0zrk?=
- =?us-ascii?Q?qdOnUVVDKTUuFkfefL6bkS2aEfH6YR2xciEWj6j4IdNspeehBVXmBlpBH32v?=
- =?us-ascii?Q?b8bTVy+L4TbgTaU0vJc/iYtlneQXWWRndr+fMKX1s85Wvkho0MV6aoIuv4VK?=
- =?us-ascii?Q?cqdgWpzDbxZreujO4bAyAqLBu9Wc86HPsKUnh4YtkFTpbO3fgwFy?=
+	=?us-ascii?Q?B48nMDMuy8Pl2bk3bA8LauDTLsYOByVtNPXkEzo0IIZ/h/WHr2WFxasHAc7d?=
+ =?us-ascii?Q?K+LJBpnACLixoGGJoipYMBqsLlH05H/hkxzwslZ8K3MmcE6xEZcw6WdkFODF?=
+ =?us-ascii?Q?gSfIZUVFurSJeYN8oCBYhze9Zvqkmu8p3j0nERAwQdt/cZg658kuf8QtzIs2?=
+ =?us-ascii?Q?4Ab0042V21R0mW/Jwclkuiui/miX/0VcOO3Np1a9X/qFQcpho1ba0Mkvpju2?=
+ =?us-ascii?Q?IXB1/aqufcD8xO/eFKlmK3Ke9N9fBl+IOL4PwXRE9RJzNjkt0ZRDGZSGQnt3?=
+ =?us-ascii?Q?62ZqkEPx4Ai+wiep14Egiiad4RV062a2or0kQ1k6mWiwRNe/mmpG1QceE93T?=
+ =?us-ascii?Q?S9uwdJ3oMd/RdSssoeflvnI8QVKnyTSMFR58TxSFOQfZsZGZi7QzZdot6BM5?=
+ =?us-ascii?Q?GYB3BJBj4W3UsKnFBeJE2YdaE0w7vkdwTSGlDAK04IzGDJQykX+m/VwcjG2x?=
+ =?us-ascii?Q?yYb4SpUnsI5ERB5L0lmZI7wMhSAdDgraZHlfdyigP3NHtGfXpHIxGEj3DSzf?=
+ =?us-ascii?Q?JO7/o1U+aqMVY1bc7p1BbBriDNDm00HFbwtiCBYt748fSEIpPn8Z5H7b3U35?=
+ =?us-ascii?Q?Mih/IMgEYsz5ZqyCiHZkOrRKBb4lVcCA2oWGbmFggt0UTpGlz0pkFng4x2Vj?=
+ =?us-ascii?Q?Qr/SqdNbUhgZ1JUe20r0OiiM08NUxKiDxFOXRdHoELIi+VYZSuo1/ItZj5cO?=
+ =?us-ascii?Q?ptLF/fOmIqahpW9DAj43WxHxYIqMIxgl8ij0olHdSLGrB24YpqqDZAwb4UI+?=
+ =?us-ascii?Q?PioiQ0Acs7TgF5XXpe/TEIYJSKtTlvcxZoSdEQp7f7y81Cjk1YTNBzTyVh0O?=
+ =?us-ascii?Q?wtW0MvlHBeZXVBWXbbqnHSGNlCfgA1RokqrF83PwUdM6bOMDzIR5DuvUmtgi?=
+ =?us-ascii?Q?VJLIE92ZEogePYYlys+xBUKQJzwDXO49ZJ8xF6NttgWjCD+ZvF4s/YbFfNA6?=
+ =?us-ascii?Q?u7hGAknc/+Wpx9kOJ/vi2uQPwLoQXMXl5xAHJ+DyRXGZsWWJ/DMGbbutQ+ky?=
+ =?us-ascii?Q?AKQ1eaXjq7zXAQouF9z1sRlMaXjnUcaf1sGhzklTEDZ5B/6DqNC5w2eBJqA0?=
+ =?us-ascii?Q?yzIag4Jg8GYra3EPmer8xRd7alP2sF8qCZdRQNNrN7MjZW9LfZioE8HKQghR?=
+ =?us-ascii?Q?5bNV/Q0iJc2h7oXxBwcqItFxCISf3bo5l5bNbIcr2/uHaHAgDImxV1/0KJvo?=
+ =?us-ascii?Q?VzKmKGGXQ8VGpqn2J73QxbuMP+yH7cgvGFq2U8nrcxlEY5DHoA5I4i8CHDna?=
+ =?us-ascii?Q?RjUGWNcM5HA2uOpOXlNNB0ONzrZqR6lAndYFEOI914OQ9Sg7XK3Ow184hODw?=
+ =?us-ascii?Q?+QaltErGWEQ5Fs5ob9CdkhBw6C0cT6qCFzeqi7kN4I38uUGAO9vOF/oM6XrQ?=
+ =?us-ascii?Q?xcPRRAPFYhh03edATZVfEIWX3/eZ8LxGVwjiolrwWR+QuXoe2iORbhMtOXvc?=
+ =?us-ascii?Q?uWUdtbekA2gs/iQ5dmYGdt+QJ4GlUGbHZstJAFLlbBNSZlERWCfKUQ+wlsBO?=
+ =?us-ascii?Q?VMzE2ootiZXll56LpaX58mcJiWzs+jk+eU0mZ2dB2T4HE23Bm7ZeEsHyvy9L?=
+ =?us-ascii?Q?Dmch1tq4dYZIgBHXbsm+9VyD/cJxT7Gosl2ws46KbUq2JqSAt/3bXOTMR+jx?=
+ =?us-ascii?Q?fl3426O5ncxNOX8zCOohKJkFu2t/wc6AE6Z3dJYLV3jk/pBtNtOwGaRoP82X?=
+ =?us-ascii?Q?2NagMtHH3iY1ZmDidjYp6zWZIquVqwk8GXfpOap7z46qrBL11DkGlwwUXpB1?=
+ =?us-ascii?Q?JsC3aV+HIW8CZCnT7W1pJJMvw/dlJtQtFGhK/BMDxz/60Gmxtb/I?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: c9f3939d-cfe0-488e-9e7a-08df4c3436db
+X-MS-Exchange-CrossTenant-Network-Message-Id: a57c9e73-04ac-4a21-30ec-08df4c343781
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB6866.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Nov 2026 03:12:05.4360
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Nov 2026 03:12:06.5891
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jWd49n036DrzPVTr6ecMAhVLNgbOmc0uKg/AUCx3G0g5hjnehmqPHg79eobQZVbOKEE6ck57Hi2iFydDiydBoA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: ODrrnFLr4Rmr1JNDs+eHKJcZf2Tv8PqhP19baacXCgqaqDREhIlJAYovmuEuYg4RTP39yr8jW+2UURPNgEGCiQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB4873
 
-dw_pcie_link_up() reads PORT_LINK_DEBUG1 when the glue driver provides
-no .link_up() callback. A callback that needs a platform-specific check
-on top of that register would have to duplicate the register read.
+rcar_gen4_pcie_link_up() checks link state using SMLH_LINK_UP and
+RDLH_LINK_UP in PCIEINTSTS0. However, these bits do not reflect the live
+link state. On an R-Car S4, after taking down the endpoint, a link-down
+interrupt saw PCIEINTSTS0 = 0x20a000c5 with both bits still set. Even
+after resetting the controller with the LTSSM back in Polling, they read
+0xa000c5, still set.
 
-Factor the check out into dw_pcie_link_up_debug_check() and export it
-for modular glue drivers. pcie-rcar-gen4 will be the first user: its APP
-link-up events remain latched after the link goes down, so it has to
-combine them with the live PORT_LINK_DEBUG1 state.
+As a result, dw_pcie_link_up() keeps reporting the link as up after it
+has gone down. That defeats the check in dw_pcie_other_conf_map_bus(),
+which is supposed to stop config accesses to downstream devices while
+the link is down, so such accesses go out on the dead link and stall the
+host. It also makes the callback useless for the link-down recovery
+added later, which has to wait for the link to actually come back after
+resetting the controller.
 
-No functional change.
+Keep the APP link-up event check from Figure 104.5 of the R-Car S4
+reference manual, but also require PORT_LINK_DEBUG1 to report the link
+up and not in training, through dw_pcie_link_up_debug_check(). The
+callback then rejects a downed link even if the APP link-up events
+remain latched.
 
+Clear the APP latches before enabling LTSSM to discard events from a
+previous start, and only read them in .link_up(). RC startup uses
+dw_pcie_wait_for_link() to poll the combined condition.
+
+Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
 Suggested-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Reviewed-by: Shawn Lin <Shawn.lin@rock-chips.com>
 Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Tested-by: Marek Vasut <marek.vasut+renesas@mailbox.org> # R-Car V4H
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
-Changes since v5:
+Changes since v3:
   - None.
 
- drivers/pci/controller/dwc/pcie-designware.c | 15 +++++++++++----
- drivers/pci/controller/dwc/pcie-designware.h |  1 +
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 12f102f48d5d..0f6b896b3b73 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -819,17 +819,24 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
- }
- EXPORT_SYMBOL_GPL(dw_pcie_wait_for_link);
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index ba8e6b297674..c9ccdd0a7ee5 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -53,6 +53,9 @@
+ #define PCIEDMAINTSTSEN		0x0314
+ #define PCIEDMAINTSTSEN_INIT	GENMASK(15, 0)
  
--bool dw_pcie_link_up(struct dw_pcie *pci)
-+/* Link state from PORT_LINK_DEBUG1: up and not in training */
-+bool dw_pcie_link_up_debug_check(struct dw_pcie *pci)
- {
- 	u32 val;
- 
--	if (pci->ops && pci->ops->link_up)
--		return pci->ops->link_up(pci);
--
- 	val = dw_pcie_readl_dbi(pci, PORT_LINK_DEBUG1);
- 	return ((val & PORT_LINK_DEBUG1_LINK_UP) &&
- 		(!(val & PORT_LINK_DEBUG1_LINK_IN_TRAINING)));
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_link_up_debug_check);
++/* PCIe Interrupt Status 0 Clear */
++#define PCIEINTSTS0CLR		0x0340
 +
-+bool dw_pcie_link_up(struct dw_pcie *pci)
-+{
-+	if (pci->ops && pci->ops->link_up)
-+		return pci->ops->link_up(pci);
-+
-+	return dw_pcie_link_up_debug_check(pci);
-+}
- EXPORT_SYMBOL_GPL(dw_pcie_link_up);
+ /* Port Logic Registers 89 */
+ #define PRTLGC89		0x0b70
  
- void dw_pcie_upconfig_setup(struct dw_pcie *pci)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 6d788aa00011..f665643fb3ed 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -618,6 +618,7 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val);
- u32 dw_pcie_read_dbi(struct dw_pcie *pci, u32 reg, size_t size);
- void dw_pcie_write_dbi(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
- void dw_pcie_write_dbi2(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
-+bool dw_pcie_link_up_debug_check(struct dw_pcie *pci);
- bool dw_pcie_link_up(struct dw_pcie *pci);
- void dw_pcie_upconfig_setup(struct dw_pcie *pci);
- int dw_pcie_wait_for_link(struct dw_pcie *pci);
+@@ -120,8 +123,11 @@ static bool rcar_gen4_pcie_link_up(struct dw_pcie *dw)
+ 
+ 	val = readl(rcar->base + PCIEINTSTS0);
+ 	mask = RDLH_LINK_UP | SMLH_LINK_UP;
++	if ((val & mask) != mask)
++		return false;
+ 
+-	return (val & mask) == mask;
++	/* The APP link-up events remain latched after the link goes down. */
++	return dw_pcie_link_up_debug_check(dw);
+ }
+ 
+ /*
+@@ -208,6 +214,9 @@ static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+ 	int ret;
+ 
++	/* Clear link-up events from the previous start. */
++	writel(RDLH_LINK_UP | SMLH_LINK_UP, rcar->base + PCIEINTSTS0CLR);
++
+ 	if (rcar->drvdata->ltssm_control) {
+ 		ret = rcar->drvdata->ltssm_control(rcar, true);
+ 		if (ret)
 -- 
 2.54.0
 
