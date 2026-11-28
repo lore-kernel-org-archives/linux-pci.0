@@ -1,58 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795858980;
-	b=k/7J7HOYFyHv5q/uBb6SR+Px5aRmW5SmkjPMtJhr58ngusBvv/dAbecr44kbtbcS4jSb
-	 i46dmkGXl7LdAV1u8RxfG8iFHWztSn9H2Y/qyByOa3PCjwh0x4e7g759Uy9XlBvUI6VEF
-	 4iNPUou9uNTGZ/LuQh/zhm0bdGQLOdSa1xIMTIzQ1aNSpWNtWvRpmYFygkrmQ5seMtmtI
-	 sh9wgV2lIzf377YFu2G6C7QwCGvN78ZSSHzcIfKCUIh6PdFE4nXmNxR3jTTGWY0aT8j1/
-	 /bdfghaFwaXm4vWidkHnzzlbMtyIX8qctMMIlvH5GfD4HFFreWJ8s0ASPqm+AP23AXA==
+	t=1795860337;
+	b=YIcnUIEHdxjloUDP6BXCUR5hnr9UhCT41KjqOjBvOUpBZ61bzePueFfXufJj+Xv4BpLo
+	 VAjvPKmlnRJxv+XF0qbLcgzZQYsGAQQKgW5V91m7+9e1LQjQVuanTpUSiLppmg9Jjmzez
+	 m8/3qT5mLNrpnn9Jd238hTtSeZ7d6kzE7iqENMYUnQgAMxAxny8icZK0mq1tI9QEw5Ykr
+	 YBfvpMjNzUSjMN5FWwp7lDarGN6hRho0zq3rqoP4WwZNILv+7vwSHb8Q8gl2aH7DWCa0S
+	 kprVPiI383H7w5BLnUcTQF0arj7wO3Ig6zHucQxGbSLDlKRr1XcC3ELNxjhLrsp8bIw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795858980;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:
-	 X-HM-Spam-Status:DKIM-Signature;
-	bh=S1hQEu5trwXKmGr1HfNKzlYezMNzp0YmSQ2509eW2SU=;
-	b=BljaCyZR18ja3BR+8BNnIJzZfmHn03i1LjugCQqdnkC1J3Hi/l2oh4cMESHW0OFHv8D8
-	 MEk3SsQFseRMzhhnz1PRKLBAesaWhKVoj+Uhn5niG9pHCiqW1VWAalFff4764gVxi2ApS
-	 RilrJSdseKG/EGVoKRhApevqFlxrmSO19eyrXdvJBmE0PVrLxH6r1syou6JNDR0KGL+cu
-	 LP+Ih6LD0bFUsmcba23IUdgcyBHyuFpJH3yztPooWLlBe8xkygDTWcJacLlvh9wRT3j7S
-	 7mxn1CBJA2gXREY/jDOpbmuPIvoi33/HlDd8TYRY93kxWzEu9AQXgbSrXlsfoohzZXw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795860337;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=9w5PclelKfVmUJafutjcKw+jTDY6Jg40PncxFjeX0Yc=;
+	b=kIKYw1PLHcbULuB51dscxEQ+8wS3BQxaUn0q8OUAJ//4ENfBaOD7E4gu9QIG+plEsb0f
+	 4Apb1x+KD0vYI38lW25lbfcZXtvLWKOZYciOOXz5ROsp9xOvSOVajzzHp8D0WPGKU0g+V
+	 X1R7jIZgt4o9gea1jkwzwgeaHguJGmIkTjyJhyuy1JzCwoSWdpH3j1lf+MenBiyfTS4xk
+	 xzcPa4oqoQdKJLZLab1CTEpuN57PWTxa3GqhmOxnAT09HKIy8+OfhPXfxh6d9iTP8HlC/
+	 bhQad++S8SNYzLXUJT2KI2w7ChQ19vYLUMXRI99NYWLdH7seZ5U0pijNbyzRTD7a7+g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mail.sdu.edu.cn;
-	spf=pass smtp.mailfrom=mail.sdu.edu.cn;
-	dkim=pass header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=ZrUB12Qi;
-	arc=none smtp.remote-ip=101.71.155.101
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gOm3Q16o;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B68CF606A31C;
-	Sat, 28 Nov 2026 09:42:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B68CF606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.sdu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.sdu.edu.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B11606A31C
+	for <linux-pci@vger.kernel.org>; Sat, 28 Nov 2026 10:05:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=ZrUB12Qi
-Received: from lgs.. (unknown [101.76.249.61])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 5655b0821;
-	Sat, 28 Nov 2026 17:42:53 +0800 (GMT+08:00)
-From: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
-To: vigneshr@ti.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	bhelgaas@google.com,
-	jg1.han@samsung.com,
-	kishon@kernel.org
-Cc: s-vadapalli@ti.com,
-	robh@kernel.org,
-	linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: dra7xx: Remove the IRQ domain with the root port
-Date: Sat, 28 Nov 2026 17:42:52 +0800
-Message-ID: <20261128-f81b700d6c-u40-0@mail.sdu.edu.cn>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gOm3Q16o
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 575FA1F00898;
+	Sat, 28 Nov 2026 10:05:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795860337;
+	bh=9w5PclelKfVmUJafutjcKw+jTDY6Jg40PncxFjeX0Yc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=gOm3Q16oL41o1A6Yrs9s3cAeJKFSjO1OHCk3FXoKTzCOClZrKiArXQRmLgRKa8Vzt
+	 3yPJDrZg/G7fE1Iir2d0F9rxLWnlshecKpK3I76m+WuShBZDSWF87vmnC1A7fDyzuF
+	 6DAhL8z2cqpJICX1dU6pbjTQxKE+ESCE2vl+uZt5vtJq8L7IrE++jmj9ayUVxBAdvR
+	 Z8SRZjKk335c80fdq2Ixa5EJqIPJv9p6Fnh3T+w8zG7C1AfnlBGfmzWtX+JQ8WadHZ
+	 N5Qu/FiAeMIWPyXRBgSHH/hfT6Bdfv/M1slXDBgaIMqZiq77VX9M8vZymV9NW0rL/d
+	 rw6AlX7ySWDFg==
+Message-ID: <sashiko-outbox-238619@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: dra7xx: Remove the IRQ domain with the root port
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Guangshuo Li" <liguangshuo@mail.sdu.edu.cn>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20261128-f81b700d6c-u40-0@mail.sdu.edu.cn>
+References: <20261128-f81b700d6c-u40-0@mail.sdu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 28 Nov 2026 10:05:36 +0000
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -61,180 +58,55 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa22189427003a1kunmb84ad43e451e5e
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDSx5OVhlPH0wZSEwZQx1NTFYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKS0pVTE1VSU9CVU1KWVdZFhoPEhUdFFlBWU9LSFVKS0lCQ0
-	NMVUpLS1VLWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=ZrUB12Qi+AzWm4+5bS0ywAP1fEfYa3S3kRVuWRxpsLItr5XJFmu6mbMsSNF31380XzYS5PUIvjh0Tx1MUpHtmYR+qd0mo0Rx5+7RVdONg4XtNpi2561DjuuKZ+ZcIzCLEl/wXspPA+Y9BJ+ejScGDXPf4cJ5W9WE7/F8+TyVuMk=; c=relaxed/relaxed; s=default; d=mail.sdu.edu.cn; v=1;
-	bh=S1hQEu5trwXKmGr1HfNKzlYezMNzp0YmSQ2509eW2SU=;
-	h=date:mime-version:subject:message-id:from;
 
-The platform driver leaves its INTx domain and chained handler pointing
-to released controller data. Create them in the host init callback and
-remove them from its matching deinit callback. On driver removal, stop
-the controller before releasing its PHY and runtime PM reference.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] PCI: dra7xx: missing link stop and EPC deinit in
+  dra7xx_pcie_deinit()
+--
 
-This issue was found by our static analysis tool under development.
+commit d00611bbb3d39d9987ab2f13aa6f0204c6621bbb
+Author: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
 
-Fixes: 47ff3de911a7 ("PCI: dra7xx: Add TI DRA7xx PCIe driver")
-Signed-off-by: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
----
- drivers/pci/controller/dwc/pci-dra7xx.c | 60 ++++++++++++++++---------
- 1 file changed, 39 insertions(+), 21 deletions(-)
+PCI: dra7xx: Remove the IRQ domain with the root port
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 1d8eeb013769..509d0068ee3f 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -91,6 +91,7 @@ struct dra7xx_pcie {
- 	struct phy		**phy;
- 	struct irq_domain	*irq_domain;
- 	struct clk              *clk;
-+	int			main_irq;
- };
- 
- struct dra7xx_pcie_of_data {
-@@ -176,16 +177,6 @@ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
- 	dra7xx_pcie_enable_msi_interrupts(dra7xx);
- }
- 
--static int dra7xx_pcie_host_init(struct dw_pcie_rp *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
--
--	dra7xx_pcie_enable_interrupts(dra7xx);
--
--	return 0;
--}
--
- static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 				irq_hw_number_t hwirq)
- {
-@@ -342,7 +333,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static int dra7xx_pcie_init_irq_domain(struct dw_pcie_rp *pp)
-+static int dra7xx_pcie_host_init(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct device *dev = pci->dev;
-@@ -355,8 +346,6 @@ static int dra7xx_pcie_init_irq_domain(struct dw_pcie_rp *pp)
- 		return -ENODEV;
- 	}
- 
--	irq_set_chained_handler_and_data(pp->irq, dra7xx_pcie_msi_irq_handler,
--					 pp);
- 	dra7xx->irq_domain = irq_domain_create_linear(of_fwnode_handle(pcie_intc_node),
- 						      PCI_NUM_INTX, &intx_domain_ops, pp);
- 	of_node_put(pcie_intc_node);
-@@ -365,11 +354,25 @@ static int dra7xx_pcie_init_irq_domain(struct dw_pcie_rp *pp)
- 		return -ENODEV;
- 	}
- 
-+	irq_set_chained_handler_and_data(pp->irq, dra7xx_pcie_msi_irq_handler, pp);
-+	dra7xx_pcie_enable_interrupts(dra7xx);
- 	return 0;
- }
- 
-+static void dra7xx_pcie_host_deinit(struct dw_pcie_rp *pp)
-+{
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(to_dw_pcie_from_pp(pp));
-+	unsigned int i;
-+
-+	irq_set_chained_handler_and_data(pp->irq, NULL, NULL);
-+	for (i = 0; i < PCI_NUM_INTX; i++)
-+		irq_dispose_mapping(irq_find_mapping(dra7xx->irq_domain, i));
-+	irq_domain_remove(dra7xx->irq_domain);
-+}
-+
- static const struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
- 	.init = dra7xx_pcie_host_init,
-+	.deinit = dra7xx_pcie_host_deinit,
- };
- 
- static int dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
-@@ -490,10 +493,6 @@ static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	/* MSI IRQ is muxed */
- 	pp->msi_irq[0] = -ENODEV;
- 
--	ret = dra7xx_pcie_init_irq_domain(pp);
--	if (ret < 0)
--		return ret;
--
- 	pci->dbi_base = devm_platform_ioremap_resource_byname(pdev, "rc_dbics");
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
-@@ -671,6 +670,14 @@ static int dra7xx_pcie_configure_two_lane(struct device *dev,
- 	return 0;
- }
- 
-+static void dra7xx_pcie_deinit(struct dra7xx_pcie *dra7xx)
-+{
-+	if (dra7xx->pci->mode == DW_PCIE_RC_TYPE)
-+		dw_pcie_host_deinit(&dra7xx->pci->pp);
-+	else
-+		dw_pcie_ep_deinit(&dra7xx->pci->ep);
-+}
-+
- static int dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
-@@ -814,6 +821,7 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 		dev_err(dev, "INVALID device type %d\n", mode);
- 	}
- 	dra7xx->pci->mode = mode;
-+	dra7xx->main_irq = irq;
- 
- 	ret = devm_request_threaded_irq(dev, irq, NULL, dra7xx_pcie_irq_handler,
- 					IRQF_SHARED | IRQF_ONESHOT,
-@@ -826,10 +834,7 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	return 0;
- 
- err_deinit:
--	if (dra7xx->pci->mode == DW_PCIE_RC_TYPE)
--		dw_pcie_host_deinit(&dra7xx->pci->pp);
--	else
--		dw_pcie_ep_deinit(&dra7xx->pci->ep);
-+	dra7xx_pcie_deinit(dra7xx);
- 
- err_gpio:
- err_get_sync:
-@@ -840,6 +845,18 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
-+static void dra7xx_pcie_remove(struct platform_device *pdev)
-+{
-+	struct dra7xx_pcie *dra7xx = platform_get_drvdata(pdev);
-+	struct device *dev = &pdev->dev;
-+
-+	devm_free_irq(dev, dra7xx->main_irq, dra7xx);
-+	dra7xx_pcie_deinit(dra7xx);
-+	pm_runtime_put_sync(dev);
-+	pm_runtime_disable(dev);
-+	dra7xx_pcie_disable_phy(dra7xx);
-+}
-+
- static int dra7xx_pcie_suspend(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-@@ -923,6 +940,7 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
- 
- static struct platform_driver dra7xx_pcie_driver = {
- 	.probe = dra7xx_pcie_probe,
-+	.remove = dra7xx_pcie_remove,
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
+This commit moves the INTx IRQ domain and chained handler setup into the
+root port host init callback and removes them in a matching host deinit
+callback, while also adding a platform driver remove callback.
 
-base-commit: 647e1e846730c6aad27e9b858df292f5d4377f63
--- 
-2.43.0
+> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/contro=
+ller/dwc/pci-dra7xx.c
+> index 0d56fd5a19ea0..0264cd4fbe8d4 100644
+> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
 
+[ ... ]
+
+> @@ -671,6 +670,14 @@ static int dra7xx_pcie_configure_two_lane(struct dev=
+ice *dev,
+>  	return 0;
+>  }
+> =20
+> +static void dra7xx_pcie_deinit(struct dra7xx_pcie *dra7xx)
+> +{
+> +	if (dra7xx->pci->mode =3D=3D DW_PCIE_RC_TYPE)
+> +		dw_pcie_host_deinit(&dra7xx->pci->pp);
+> +	else
+> +		dw_pcie_ep_deinit(&dra7xx->pci->ep);
+> +}
+
+[Severity: Medium]
+In the endpoint branch, should dra7xx_pcie_deinit() also call
+dw_pcie_stop_link() and pci_epc_deinit_notify() before
+dw_pcie_ep_deinit()?
+
+Unlike dw_pcie_host_deinit(), dw_pcie_ep_deinit() does not stop the link
+or notify bound endpoint functions of deinitialization (to pair with
+pci_epc_init_notify() in dra7xx_add_pcie_ep()).  When
+dra7xx_pcie_remove() then disables runtime PM and the PHYs, LTSSM_EN can
+remain active and epc->init_complete stays true, causing a later EPF
+unbind to access unclocked DBI registers.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261128-f81b700d6c=
+-u40-0@mail.sdu.edu.cn?part=3D1
