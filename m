@@ -1,59 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795868799;
-	b=prP3miFy9RM/SMPXZb+bBM52DCMRDFCQBlBwWZX6q+y9owpAEPA2QgxroqRP93lOSER/
-	 l9bFOc3vnIkCQwbGoMP0sZBbvYlT+v10Lk8QRaZB9zJVaCMJB1Tp7FgOXduxAmVDp5CUl
-	 9qQu+yLwcdfgfX7bvVxRzC4J1JdxV5gaY8tdNUKgliyc+Zwjr4CUL9AorQ2RYhUfuYxGn
-	 x2nD+RMpLC5GIjv40dk+cFWAIt77gn8eJXCM53pb84YyMGOqCaLwNCkS+u2BNkbhWZ6z8
-	 GRhS7tMH4zzkDEm4kKTeG5wqqva9u82nIcms9uAbWhjd8rRN/qTR8ODzi2Ya0UTNW/w==
+	t=1795870828;
+	b=ysas/mBJNaKWepJfst0VtH9GSRR1mVkrNjhBsb9X7t9oTxx7klNXqfUqllHtjm7Xo815
+	 6+Z5iO1yc6L3BAwAVx1fJRk1Eft7s35RzTyt2IkgaFT8WUrjcLpabfgqe2xgT3AGLmm4r
+	 5hJCmX4lEpO5t8RXdsOQbW1fLA2HGazs5FCNSZ3iYSLIxrzo2wfFyng9weFV/bWiyXA39
+	 wVz0Vx0ZJLE5uA/3YhOgr5gwwoJSq5Lfxf/dbgYshY+2+bef2/OSeE2gOotyLNtkGsAno
+	 YlQXKspqpq93XALDmu+23cJFMEG2f6Gx9jwPSGegL6ovv3Rpk76lk+nlRssp6c7tP3w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795868799;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=QP5xxOk3TtiXC7aqF5ul4oSYLJF6/7yQvq7C7sPOAwI=;
-	b=WJfxw614RGYS2ZHpOzrHyXAKAJeD6qS5aT1y0AGlF7/QfPSmVFV0kBWVg4giWnZZ1EZa
-	 KEBz0kXV1jBnLsTWgtGiEpnOef82DmSl7YIzWl7lGWPv6HCxU+0XBUFaP1o6w7MUt8hEs
-	 LCp89wPGkEW2BydQvvEmGiJPuS/GZdyC53p1Yptl9G7ElAJB20pBkRRMx+AGLSwxAnUlr
-	 F3P/hnSekV37zpfmJyexk6798DP5RyxXNL7Bsz6T/GJFmjdVtNUw0jh/SJdixTO/zmU3f
-	 tV4LI3uJEbPe8ArIAZD+K2ERoL0FbCJJq12RYhaPNkqBzuWQAsO4f+3Mulhfp2+ONbw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795870828;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=d6BkAp7ECdk7km8IXzswx291+eDVbqVT1bK4nfJre9c=;
+	b=FqW5wEQlgOdKWT651ovy+S1m6NIaDYlkUZrS5P2f4Vc4fJviaOCvEcQDErDS7OzaU+9H
+	 KF5wGelb9pSurTkufeknSlBWt1Z2WSA/DmG9vu1kEyRv/DUotw2PRbvtFt/pjJhKUUcbq
+	 HPivVZqkKKxqG4k3Or3X6n7vK91q/i/cI8eOuiZM6uUUvU7BQH3RzsQZGTBcBjkAlPr1X
+	 N74t7ljF7HXbuqVDrSRazaQEUovOeIvn3muIB27AJj7f0z40vcsOcuhUWsyUJybW3J21c
+	 wGsu/ui8be4ibMLxmrElHnmnxkjHRUPiK2wJYgWQEvfMz0eK1jaahrhYJFWa/7pJ0qA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I9wzZAMZ;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=CiK14xPr;
+	arc=none smtp.remote-ip=209.85.218.72
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A96E606A31C
-	for <linux-pci@vger.kernel.org>; Sat, 28 Nov 2026 12:26:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E03C606A31F
+	for <linux-pci@vger.kernel.org>; Sat, 28 Nov 2026 13:00:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E03C606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I9wzZAMZ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2C581F00923;
-	Sat, 28 Nov 2026 12:26:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795868799;
-	bh=QP5xxOk3TtiXC7aqF5ul4oSYLJF6/7yQvq7C7sPOAwI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=I9wzZAMZDRfEz7QebcBQTCf6PA7hqEoF0OXBUFjBmnsZdTN8KyWB45zEMKZpKdchc
-	 iuqlCMwaIs4m5QNrhjKACWS04qq/jC+K1scL8BH9epQoHwd8MdhDYGRPiBPpkzzl9M
-	 Vr7f/3WsKIMaiGWVMpybYAXEyFE6Uh9Y/kqxOR5Gi42c8KfG8JXa6k0koQ6hJlsAQS
-	 z70PeE3BgJRe9T6PIJiYexhmbDYDmtoh+bZ9JNii00qLEXJX/tBwT3vEjwShNs0RD2
-	 P0E3dYed+T5PLnJ9Kcs2UUurqCX9W1Rjc5KVFeIUVL6FnIy+p8M94ra98O+qQcXK3k
-	 ES4YRuxYQKJPg==
-Message-ID: <sashiko-outbox-238691@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 0/6] kho: housekeeping
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pratyush Yadav" <pratyush@kernel.org>, "Mike Rapoport" <rppt@kernel.org>, "Pasha
- Tatashin" <pasha.tatashin@soleen.com>, "Alexander Graf" <graf@amazon.com>, "Jonathan
- Corbet" <corbet@lwn.net>, "Shuah Khan" <skhan@linuxfoundation.org>, "Randy
- Dunlap" <rdunlap@infradead.org>, "David Matlack" <dmatlack@google.com>, "Bjorn
- Helgaas" <bhelgaas@google.com>
-Cc: kexec@lists.infradead.org, linux-pci@vger.kernel.org
-In-Reply-To: <20261127122536.3708770-1-pratyush@kernel.org>
-References: <20261127122536.3708770-1-pratyush@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 28 Nov 2026 12:26:38 +0000
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=CiK14xPr
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-c40aa03ded8so847759066b.2
+        for <linux-pci@vger.kernel.org>; Sat, 28 Nov 2026 05:00:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1795870826; x=1796475626; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=d6BkAp7ECdk7km8IXzswx291+eDVbqVT1bK4nfJre9c=;
+        b=CiK14xPrrxHAZcwKgPYEry9+8DB6qjeyuPWTq4AOlSVBmohXvdN4g7RiDUUIXGWP4p
+         1JLJPdNM1KahxhvxRDlR5yzyG/cKY2PmiAyPQCGDNSfCO7Aq4vuHTneXz+O+lHn2O1sc
+         aacTiStOd/Tjxgy8E+neiHJjfDoIAj87Iceg2tSkzteWsgc5HryrdqU3QtswvgtHyCaT
+         iVfB1J6NV4MkUAgzkS6Ka9jB6ZMKFSaHki8xW4WHrEch7/skS6RFRYGpUCUi4zDaXQMd
+         sjxqXzPk+sSwfqw4lkErvjgRg+nPbfR+hNo8mMTFKsvYFrxuuaCh1TbpC2c8vla+9MRq
+         0u5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795870826; x=1796475626;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=d6BkAp7ECdk7km8IXzswx291+eDVbqVT1bK4nfJre9c=;
+        b=1lTYNLnqpVX8huGGJ/z+eKbvn6I63+yBKbn8OioLjfmTwlEs6I7bMrxvnitV6fXS6A
+         AqiqIR/1Gbwi310Qw3HW97l2yspZXud8ymTYVzHuqqoWFkNVO4JopA3FpB80gbd27fHG
+         rY21aOUqvBp6rtLfAXBSX9quFTXX4jwpi1tazzrdRZuGVWusJyo3UAANZXBVuVS5xmoi
+         WZ0eb2lzUV38XYcFo2M2lgzXnNDIQSt+VGJdVn9ZEuwPMKm5DYMYV8YtdodkMtJ6otTz
+         lvWuStyKLawvqyG+foQcU2ZHryUp76J3FrJ7i/YYlN1LEOLcHfw8lfuaVyh/1F71J3p6
+         ZcKg==
+X-Forwarded-Encrypted: i=1; AL+hErGQtb3VDP3yue2xPEUwA6uWW9xDDjPPiUbmGOVpap7G5Q0+fViv/ypV3LsBSJP4Dsh/KrDhqNbwz68=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9Comuu8oLbdOoTZ7mhqq0Yn8I/kCmP6dp3flWmMVTReGOJClbO
+	uku8wKhkKZJCpHCfTwpoLPfeue1MCgSZ8Zn+tYc7nMG2CoYC0UnxOpwloJLibpmmF+rgd/h5OyG
+	tvlrGMA/wDFoNeyBIng==
+X-Received: from ejtf9.prod.google.com ([2002:a17:906:4949:b0:c31:8840:5c0c])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:906:3d21:b0:c51:24a4:1dfb with SMTP id a640c23a62f3a-c513ac7edecmr1624478866b.40.1795870826056;
+ Sat, 28 Nov 2026 05:00:26 -0800 (PST)
+Date: Sat, 28 Nov 2026 13:00:25 +0000
+In-Reply-To: <avnuP7SWE2BdBFBL@kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -62,15 +77,98 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
+Mime-Version: 1.0
+References: <20261110050202.529473-1-tarunsahu@google.com> <20261110050202.529473-3-tarunsahu@google.com>
+ <avnuP7SWE2BdBFBL@kernel.org>
+Message-ID: <9huzpkvpglg6.fsf@tarunix.c.googlers.com>
+Subject: Re: [PATCH v4 02/19] kho: block: Record the entry size in the block header
+From: tarunsahu@google.com
+To: Mike Rapoport <rppt@kernel.org>
+Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, robin.murphy@arm.com, maz@kernel.org, 
+	will@kernel.org, David Matlack <dmatlack@google.com>, Alexander Graf <graf@amazon.com>, 
+	seanjc@google.com, jgg@nvidia.com, loganodell@google.com, arnd@arndb.de, 
+	dwmw2@infradead.org, baolu.lu@linux.intel.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, oupton@kernel.org, alex@shazbot.org, 
+	gle.com@google.com, pbonzini@redhat.com, 
+	Andrew Morton <akpm@linux-foundation.org>, kevin.tian@intel.com, joro@8bytes.org, 
+	kvmarm@lists.linux.dev, linux-pci@vger.kernel.org, 
+	Pratyush Yadav <pratyush@kernel.org>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
+	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
+	skhawaja@google.com, sagis@google.com, linux-arch@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Sashiko has finished reviewing this 6-patch series:
+Mike Rapoport <rppt@kernel.org> writes:
 
-- Patches 1-5: no issues found.
-- Patch 6 ("kho: don't reference subtree blobs as FDTs"): 1 potential
-  issue (1 Low)
+> On Tue, Nov 10, 2026 at 05:01:45AM +0000, Tarun Sahu wrote:
+>> Subsystems using the KHO Serialization Blocks framework currently do
+>> not record the serialized entry size in the block header. The entry size
+>> is only known to individual callers, which must track and store it in an
+>> owning serialized data structure. If a newer source kernel adds fields
+>> to an entry, the changed entry size breaks the stride when an older
+>> target kernel iterates over blocks.
+>> 
+>> Add an entry_size field to struct kho_block_header_ser. On the outgoing
+>> side, record bs->entry_size into every block header during allocation.
+>> During restoration, derive the entry stride directly from the block
+>> header instead of relying on caller-supplied dimensions. The
+>> kho_block_set_init() interface remains unchanged. A zero entry size,
+>> or one that differs between blocks of a set, is rejected during
+>> restoration.
+>> 
+>> This change modifies the serialized layout of struct kho_block_header_ser
+>
+> Imperative voice please.
 
-A detailed review has been sent as a separate reply to patch 6.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261127122536.3708=
-770-1-pratyush@kernel.org
+Okay, Will take care of that everywhere. Thanks
+>
+>> and shifts the offset of serialized entries within preserved blocks.
+>> Bump KHO_FDT_COMPATIBLE from kho-v4 to kho-v5 so that pre-v5 and post-v5
+>> kernels cleanly reject mismatched handover state during boot. Also
+>> update the stale compatible string example in the documentation.
+>> 
+>> Suggested-by: Pratyush Yadav <pratyush@kernel.org>
+>> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+>> ---
+>>  include/linux/kho/abi/block.h          | 10 ++++----
+>>  include/linux/kho/abi/kexec_handover.h |  6 ++---
+>>  kernel/liveupdate/kho_block.c          | 32 +++++++++++++++++++++++---
+>>  3 files changed, 38 insertions(+), 10 deletions(-)
+>> 
+>> @@ -264,8 +274,21 @@ int kho_block_set_restore(struct kho_block_set *bs, u64 head_pa)
+>>  	}
+>>  
+>>  	while (next_pa) {
+>> +		u64 capacity;
+>> +
+>>  		ser = phys_to_virt(next_pa);
+>> -		if (!ser->count || ser->count > bs->count_per_block) {
+>> +		if (!ser->entry_size || (entry_size && ser->entry_size != entry_size)) {
+>> +			pr_warn("Block contains invalid entry size: %llu\n",
+>> +				ser->entry_size);
+>> +			err = -EINVAL;
+>> +			goto err_destroy;
+>> +		}
+>> +		entry_size = ser->entry_size;
+>> +		bs->entry_size = entry_size;
+>> +		capacity = (KHO_BLOCK_SIZE - sizeof(*ser)) / bs->entry_size;
+>> +		bs->count_per_block = capacity;
+>
+> Nit: can't we just initialize bs->count_per_block directly and drop
+> 'capacity' and the change of the following line?
+>
+> We are not very strict with 80-chars limit in kho/luo anyway.
+>
+Sounds good. I will update it.
+
+~Tarun
+>> +
+>> +		if (!ser->count || ser->count > capacity) {
+>>  			pr_warn("Block contains invalid entry count: %llu\n",
+>>  				ser->count);
+>>  			err = -EINVAL;
+>
+> -- 
+> Sincerely yours,
+> Mike.
