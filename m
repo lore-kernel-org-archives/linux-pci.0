@@ -1,74 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795870828;
-	b=ysas/mBJNaKWepJfst0VtH9GSRR1mVkrNjhBsb9X7t9oTxx7klNXqfUqllHtjm7Xo815
-	 6+Z5iO1yc6L3BAwAVx1fJRk1Eft7s35RzTyt2IkgaFT8WUrjcLpabfgqe2xgT3AGLmm4r
-	 5hJCmX4lEpO5t8RXdsOQbW1fLA2HGazs5FCNSZ3iYSLIxrzo2wfFyng9weFV/bWiyXA39
-	 wVz0Vx0ZJLE5uA/3YhOgr5gwwoJSq5Lfxf/dbgYshY+2+bef2/OSeE2gOotyLNtkGsAno
-	 YlQXKspqpq93XALDmu+23cJFMEG2f6Gx9jwPSGegL6ovv3Rpk76lk+nlRssp6c7tP3w==
+	t=1795872458;
+	b=HE8/6JGo3LYSaGkTciS8mNJrUweNQe8AjijZY+sjD7OOeR7svp/n845o+VIz/rGwY+I/
+	 JetotlUQbVdd2sPKyjiDPQBXOuYuBYM3s3pbDMjJaCuOoy14z4o7o7A4NxbdSb+/pTgeS
+	 X5WOxJkg0q/l8dROLzfBuMBrPAS3jN0JGs3S7GEkZfYKscb4gYAc6mYNxMhlElT9YM0Li
+	 0V1DVKPnNSihammmU2kSzb6xTtqzdPnE+rgXNPcLkssGki7FBFc5xfBQSikXAly6+wgSN
+	 TLW1Yb0nYrIKvouUawyP+2XD63G2+CzCiFOzKNhFnBGlmh/7R+V8TIFpZERJyLlRQUg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795870828;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=d6BkAp7ECdk7km8IXzswx291+eDVbqVT1bK4nfJre9c=;
-	b=FqW5wEQlgOdKWT651ovy+S1m6NIaDYlkUZrS5P2f4Vc4fJviaOCvEcQDErDS7OzaU+9H
-	 KF5wGelb9pSurTkufeknSlBWt1Z2WSA/DmG9vu1kEyRv/DUotw2PRbvtFt/pjJhKUUcbq
-	 HPivVZqkKKxqG4k3Or3X6n7vK91q/i/cI8eOuiZM6uUUvU7BQH3RzsQZGTBcBjkAlPr1X
-	 N74t7ljF7HXbuqVDrSRazaQEUovOeIvn3muIB27AJj7f0z40vcsOcuhUWsyUJybW3J21c
-	 wGsu/ui8be4ibMLxmrElHnmnxkjHRUPiK2wJYgWQEvfMz0eK1jaahrhYJFWa/7pJ0qA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795872458;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=z/Mx7FrYRyjcMUQ7L/H2F9WrTTWfG8Nx8r2n762Dl3I=;
+	b=MYrVM/Lh/zG/L45A0opF+d314guuADfWfw5YlocolI8uniXltQ13sxA7blpUHo6Ravu8
+	 Skpl0nelZz6ui3vSkT3CnXbrzRw/QTyvPXYooinEo4qvXVNxWRjzJ0Mjut/DU+L9baCeq
+	 oOZiJh5E4ieG/1OCY6VlKMZBVzCP0ONRcan2iJTX7wfUZ4HEM7bpVMo/jK+Au1WrtADLh
+	 MTUTjC3om4EMRhQiXBTS6fJmHL0avIsPZlcIKj+KRZnhfZ1VO+pxZV3gyp1GHcnmhatqE
+	 eLsfsr8nMEktaotemGBPfanQZA3eOeewbv++z6tEHnbGkmuC9qEhFZd7qxXUSZi+DCQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=CiK14xPr;
-	arc=none smtp.remote-ip=209.85.218.72
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JoDOy79E;
+	arc=none smtp.remote-ip=192.198.163.18
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E03C606A31F
-	for <linux-pci@vger.kernel.org>; Sat, 28 Nov 2026 13:00:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E03C606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70778606A31F;
+	Sat, 28 Nov 2026 13:27:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 70778606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=CiK14xPr
-Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-c40aa03ded8so847759066b.2
-        for <linux-pci@vger.kernel.org>; Sat, 28 Nov 2026 05:00:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795870826; x=1796475626; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=d6BkAp7ECdk7km8IXzswx291+eDVbqVT1bK4nfJre9c=;
-        b=CiK14xPrrxHAZcwKgPYEry9+8DB6qjeyuPWTq4AOlSVBmohXvdN4g7RiDUUIXGWP4p
-         1JLJPdNM1KahxhvxRDlR5yzyG/cKY2PmiAyPQCGDNSfCO7Aq4vuHTneXz+O+lHn2O1sc
-         aacTiStOd/Tjxgy8E+neiHJjfDoIAj87Iceg2tSkzteWsgc5HryrdqU3QtswvgtHyCaT
-         iVfB1J6NV4MkUAgzkS6Ka9jB6ZMKFSaHki8xW4WHrEch7/skS6RFRYGpUCUi4zDaXQMd
-         sjxqXzPk+sSwfqw4lkErvjgRg+nPbfR+hNo8mMTFKsvYFrxuuaCh1TbpC2c8vla+9MRq
-         0u5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795870826; x=1796475626;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=d6BkAp7ECdk7km8IXzswx291+eDVbqVT1bK4nfJre9c=;
-        b=1lTYNLnqpVX8huGGJ/z+eKbvn6I63+yBKbn8OioLjfmTwlEs6I7bMrxvnitV6fXS6A
-         AqiqIR/1Gbwi310Qw3HW97l2yspZXud8ymTYVzHuqqoWFkNVO4JopA3FpB80gbd27fHG
-         rY21aOUqvBp6rtLfAXBSX9quFTXX4jwpi1tazzrdRZuGVWusJyo3UAANZXBVuVS5xmoi
-         WZ0eb2lzUV38XYcFo2M2lgzXnNDIQSt+VGJdVn9ZEuwPMKm5DYMYV8YtdodkMtJ6otTz
-         lvWuStyKLawvqyG+foQcU2ZHryUp76J3FrJ7i/YYlN1LEOLcHfw8lfuaVyh/1F71J3p6
-         ZcKg==
-X-Forwarded-Encrypted: i=1; AL+hErGQtb3VDP3yue2xPEUwA6uWW9xDDjPPiUbmGOVpap7G5Q0+fViv/ypV3LsBSJP4Dsh/KrDhqNbwz68=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9Comuu8oLbdOoTZ7mhqq0Yn8I/kCmP6dp3flWmMVTReGOJClbO
-	uku8wKhkKZJCpHCfTwpoLPfeue1MCgSZ8Zn+tYc7nMG2CoYC0UnxOpwloJLibpmmF+rgd/h5OyG
-	tvlrGMA/wDFoNeyBIng==
-X-Received: from ejtf9.prod.google.com ([2002:a17:906:4949:b0:c31:8840:5c0c])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:906:3d21:b0:c51:24a4:1dfb with SMTP id a640c23a62f3a-c513ac7edecmr1624478866b.40.1795870826056;
- Sat, 28 Nov 2026 05:00:26 -0800 (PST)
-Date: Sat, 28 Nov 2026 13:00:25 +0000
-In-Reply-To: <avnuP7SWE2BdBFBL@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=JoDOy79E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795872458; x=1827408458;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=YomhLU7Q+1ydoqrD0+PS6LLn+g7AH77gVzrh2Q31O8M=;
+  b=JoDOy79EuhI5A4wcHZditl1y+PKl6wV1NCPqdEeu2uCNFLulxUaczOre
+   kpTAks3uaxAGpS7/qKMzsMjF4FM4Xr9Vs69uYClM+wyOLo8/lTbzhJkVM
+   vufVFzCROAPmbsycFzgaMZsqauX6EhGyJxCyid5gL6Vd7ZI7PXMXdFhz5
+   6u1vuR5mB55dUhF2aOeupphJF6YhHlSw2X+MvV7HJ8mjeAjn6rPLmCwzD
+   /35U0oUcikKlRrsUgWkXhNbTIOWR1N4ovH8//nwLgVmrwSIFX2gpElYxe
+   zJIieZXHIxdr/w7gMtGHKEJC7g74Im6JBDVKlqkzpO/mpJxsfEheXlZ3d
+   A==;
+X-CSE-ConnectionGUID: 6jX/jZpoREKQ9UNAZ0G24A==
+X-CSE-MsgGUID: jB3/Uej2TPi1EXbor1HnMw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11980"; a="4765805"
+X-IronPort-AV: E=Sophos;i="6.27,238,1787036400"; 
+   d="scan'208";a="4765805"
+Received: from fmviesa013.fm.intel.com ([10.60.135.153])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Nov 2026 05:27:37 -0800
+X-CSE-ConnectionGUID: wnprmHliRYeeQrE5ZQ9RVQ==
+X-CSE-MsgGUID: xlzUgupwT2qRFfp/6RsWAA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,238,1787036400"; 
+   d="scan'208";a="14595601"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.47.46])
+  by fmviesa013.fm.intel.com with ESMTP; 28 Nov 2026 05:27:34 -0800
+Date: Sat, 28 Nov 2026 21:17:11 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Chao Gao <chao.gao@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-coco@lists.linux.dev, kvm@vger.kernel.org,
+	rick.p.edgecombe@intel.com, kevin.tian@intel.com,
+	yilun.xu@intel.com, chao.p.peng@intel.com, baolu.lu@linux.intel.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kiryl Shutsemau <kas@kernel.org>,
+	Dave Hansen <dave.hansen@linux.intel.com>
+Subject: Re: [RFC PATCH 5/7] coco/tdx-host: Configure an IDE stream
+Message-ID: <awrUV1hbcekti2ym@yilunxu-OptiPlex-7050>
+References: <20261116111037.3478844-1-chao.gao@intel.com>
+ <20261116111037.3478844-6-chao.gao@intel.com>
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Post: <mailto:linux-pci@vger.kernel.org>
@@ -77,98 +83,35 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-pci+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261110050202.529473-1-tarunsahu@google.com> <20261110050202.529473-3-tarunsahu@google.com>
- <avnuP7SWE2BdBFBL@kernel.org>
-Message-ID: <9huzpkvpglg6.fsf@tarunix.c.googlers.com>
-Subject: Re: [PATCH v4 02/19] kho: block: Record the entry size in the block header
-From: tarunsahu@google.com
-To: Mike Rapoport <rppt@kernel.org>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, robin.murphy@arm.com, maz@kernel.org, 
-	will@kernel.org, David Matlack <dmatlack@google.com>, Alexander Graf <graf@amazon.com>, 
-	seanjc@google.com, jgg@nvidia.com, loganodell@google.com, arnd@arndb.de, 
-	dwmw2@infradead.org, baolu.lu@linux.intel.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, oupton@kernel.org, alex@shazbot.org, 
-	gle.com@google.com, pbonzini@redhat.com, 
-	Andrew Morton <akpm@linux-foundation.org>, kevin.tian@intel.com, joro@8bytes.org, 
-	kvmarm@lists.linux.dev, linux-pci@vger.kernel.org, 
-	Pratyush Yadav <pratyush@kernel.org>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
-	iommu@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
-	skhawaja@google.com, sagis@google.com, linux-arch@vger.kernel.org, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261116111037.3478844-6-chao.gao@intel.com>
 
-Mike Rapoport <rppt@kernel.org> writes:
+> +static int tdx_ide_stream_setup(struct tdx_tsm_link *tlink)
+> +{
+> +	struct pci_dev *pdev = tlink->pci.base_tsm.pdev;
+> +	struct pci_ide *ide;
+> +	int ret;
+> +
+> +	ide = pci_ide_stream_alloc(pdev);
+> +	if (!ide)
+> +		return -ENOMEM;
+> +
+> +	/* Configure IDE capability for RP & get stream_id */
+> +	ret = tdx_ide_stream_create(tlink, ide);
+> +	if (ret)
+> +		goto out_pci_ide_stream_free;
+> +
+> +	ide->stream_id = tlink->stream_id;
 
-> On Tue, Nov 10, 2026 at 05:01:45AM +0000, Tarun Sahu wrote:
->> Subsystems using the KHO Serialization Blocks framework currently do
->> not record the serialized entry size in the block header. The entry size
->> is only known to individual callers, which must track and store it in an
->> owning serialized data structure. If a newer source kernel adds fields
->> to an entry, the changed entry size breaks the stride when an older
->> target kernel iterates over blocks.
->> 
->> Add an entry_size field to struct kho_block_header_ser. On the outgoing
->> side, record bs->entry_size into every block header during allocation.
->> During restoration, derive the entry stride directly from the block
->> header instead of relying on caller-supplied dimensions. The
->> kho_block_set_init() interface remains unchanged. A zero entry size,
->> or one that differs between blocks of a set, is rejected during
->> restoration.
->> 
->> This change modifies the serialized layout of struct kho_block_header_ser
->
-> Imperative voice please.
+Nits:
 
+Maybe we don't save stream_id in tlink, it can later be accessed by
+tlink->ide->stream_id.
 
-Okay, Will take care of that everywhere. Thanks
->
->> and shifts the offset of serialized entries within preserved blocks.
->> Bump KHO_FDT_COMPATIBLE from kho-v4 to kho-v5 so that pre-v5 and post-v5
->> kernels cleanly reject mismatched handover state during boot. Also
->> update the stale compatible string example in the documentation.
->> 
->> Suggested-by: Pratyush Yadav <pratyush@kernel.org>
->> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
->> ---
->>  include/linux/kho/abi/block.h          | 10 ++++----
->>  include/linux/kho/abi/kexec_handover.h |  6 ++---
->>  kernel/liveupdate/kho_block.c          | 32 +++++++++++++++++++++++---
->>  3 files changed, 38 insertions(+), 10 deletions(-)
->> 
->> @@ -264,8 +274,21 @@ int kho_block_set_restore(struct kho_block_set *bs, u64 head_pa)
->>  	}
->>  
->>  	while (next_pa) {
->> +		u64 capacity;
->> +
->>  		ser = phys_to_virt(next_pa);
->> -		if (!ser->count || ser->count > bs->count_per_block) {
->> +		if (!ser->entry_size || (entry_size && ser->entry_size != entry_size)) {
->> +			pr_warn("Block contains invalid entry size: %llu\n",
->> +				ser->entry_size);
->> +			err = -EINVAL;
->> +			goto err_destroy;
->> +		}
->> +		entry_size = ser->entry_size;
->> +		bs->entry_size = entry_size;
->> +		capacity = (KHO_BLOCK_SIZE - sizeof(*ser)) / bs->entry_size;
->> +		bs->count_per_block = capacity;
->
-> Nit: can't we just initialize bs->count_per_block directly and drop
-> 'capacity' and the change of the following line?
->
-> We are not very strict with 80-chars limit in kho/luo anyway.
->
-Sounds good. I will update it.
+And the function could be like:
 
-~Tarun
->> +
->> +		if (!ser->count || ser->count > capacity) {
->>  			pr_warn("Block contains invalid entry count: %llu\n",
->>  				ser->count);
->>  			err = -EINVAL;
->
-> -- 
-> Sincerely yours,
-> Mike.
+	ret = tdx_ide_stream_create(tlink, ide, &stream_id);
+
+which aligns better with the comment "get stream_id".
